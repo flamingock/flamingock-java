@@ -1,0 +1,18 @@
+spring:
+  data:
+    couchbase:
+      bucket-name: bucket
+  couchbase:
+    connection-string: couchbase://localhost:11210
+    username: Administrator
+    password: password
+
+flamingock:
+  couchbase:
+    scope: examplescope
+    collection: examplecollection
+  stages:
+    - name: stage1
+      code-packages:
+        - io.flamingock.examples.community.couchbase.changes
+  transactionEnabled: false

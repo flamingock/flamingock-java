@@ -1,0 +1,6 @@
+flamingock:
+  stages:
+    - name: stage1
+      file-directories:
+        - flamingock/stage1
+  transactionEnabled: true
