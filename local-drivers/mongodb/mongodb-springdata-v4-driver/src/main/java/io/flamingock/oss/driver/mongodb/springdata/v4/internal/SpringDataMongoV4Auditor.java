@@ -21,7 +21,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
-import io.flamingock.core.util.Result;
+import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.oss.driver.mongodb.springdata.v4.internal.mongodb.SpringDataMongoV4CollectionWrapper;

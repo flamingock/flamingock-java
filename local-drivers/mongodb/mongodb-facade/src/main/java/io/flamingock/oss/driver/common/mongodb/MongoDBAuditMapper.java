@@ -17,8 +17,7 @@
 package io.flamingock.oss.driver.common.mongodb;
 
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.engine.audit.writer.AuditEntryStatus;
-import io.flamingock.core.util.TimeUtil;
+import io.flamingock.commons.utils.TimeUtil;
 
 import java.util.function.Supplier;
 
@@ -69,7 +68,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
                 entry.getString(KEY_CHANGE_ID),
                 entry.getString(KEY_AUTHOR),
                 TimeUtil.toLocalDateTime(entry.get(KEY_TIMESTAMP)),
-                entry.containsKey(KEY_STATE) ? AuditEntryStatus.valueOf(entry.getString(KEY_STATE)) : null,
+                entry.containsKey(KEY_STATE) ? AuditEntry.Status.valueOf(entry.getString(KEY_STATE)) : null,
                 entry.containsKey(KEY_TYPE) ? AuditEntry.ExecutionType.valueOf(entry.getString(KEY_TYPE)) : null,
                 entry.getString(KEY_CHANGELOG_CLASS),
                 entry.getString(KEY_CHANGESET_METHOD),

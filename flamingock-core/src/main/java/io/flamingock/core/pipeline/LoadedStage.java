@@ -16,7 +16,7 @@
 
 package io.flamingock.core.pipeline;
 
-import io.flamingock.core.engine.audit.writer.AuditEntryStatus;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.executable.ExecutableTask;
@@ -50,7 +50,7 @@ public class LoadedStage {
 
     public ExecutableStage applyState(AuditStageStatus state) {
 
-        Map<String, AuditEntryStatus> statesMap = state.getEntryStatesMap();
+        Map<String, AuditEntry.Status> statesMap = state.getEntryStatesMap();
 
         List<ExecutableTask> tasks = taskDescriptors
                 .stream()

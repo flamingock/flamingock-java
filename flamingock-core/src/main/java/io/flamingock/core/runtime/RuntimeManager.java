@@ -26,8 +26,8 @@ import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.exception.DependencyInjectionException;
 import io.flamingock.core.runtime.proxy.LockGuardProxyFactory;
-import io.flamingock.core.util.Constants;
-import io.flamingock.core.util.StringUtil;
+import io.flamingock.commons.utils.Constants;
+import io.flamingock.commons.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

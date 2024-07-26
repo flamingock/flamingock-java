@@ -19,7 +19,7 @@ package io.flamingock.core.engine.audit;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditEntryMapper;
 import io.flamingock.core.engine.audit.domain.AuditItem;
-import io.flamingock.core.util.Result;
+import io.flamingock.commons.utils.Result;
 
 /**
  * This class implements the Facade pattern containing the responsibility to log the taskStep, map it to Entry

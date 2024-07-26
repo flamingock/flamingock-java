@@ -16,6 +16,9 @@
 
 package io.flamingock.core.cloud.auth;
 
+import io.flamingock.core.cloud.api.auth.AuthRequest;
+import io.flamingock.core.cloud.api.auth.AuthResponse;
+
 public class AuthManager {
 
     private final AuthClient authClient;

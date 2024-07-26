@@ -17,6 +17,7 @@
 package io.flamingock.core.engine.audit.writer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -24,20 +25,39 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.flamingock.core.engine.audit.writer.AuditEntryStatus.EXECUTED;
-import static io.flamingock.core.engine.audit.writer.AuditEntryStatus.EXECUTION_FAILED;
-import static io.flamingock.core.engine.audit.writer.AuditEntryStatus.ROLLBACK_FAILED;
-import static io.flamingock.core.engine.audit.writer.AuditEntryStatus.ROLLED_BACK;
+import static io.flamingock.core.engine.audit.writer.AuditEntry.Status.EXECUTED;
+import static io.flamingock.core.engine.audit.writer.AuditEntry.Status.EXECUTION_FAILED;
+import static io.flamingock.core.engine.audit.writer.AuditEntry.Status.ROLLBACK_FAILED;
+import static io.flamingock.core.engine.audit.writer.AuditEntry.Status.ROLLED_BACK;
 
 public class AuditEntry {
 
-    public static final Set<AuditEntryStatus> RELEVANT_STATES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+    public static final Set<Status> RELEVANT_STATES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             EXECUTED,
             ROLLED_BACK,
             EXECUTION_FAILED,
             ROLLBACK_FAILED)));
 
-    public enum ExecutionType {EXECUTION, BEFORE_EXECUTION;}
+
+    public enum Status {
+        EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
+
+        public static boolean isRequiredExecution(Status entryStatus) {
+            return entryStatus == null || entryStatus == EXECUTION_FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;
+        }
+        public AuditEntryRequest.Status toRequestStatus() {
+            return AuditEntryRequest.Status.valueOf(name());
+        }
+
+    }
+
+    public enum ExecutionType {
+        EXECUTION, BEFORE_EXECUTION;
+
+        public AuditEntryRequest.ExecutionType toRequestExecutionType() {
+            return AuditEntryRequest.ExecutionType.valueOf(name());
+        }
+    }
 
     private final String executionId;
 
@@ -49,7 +69,7 @@ public class AuditEntry {
 
     private final LocalDateTime createdAt;
 
-    private final AuditEntryStatus state;
+    private final Status state;
 
     private final String className;
 
@@ -72,7 +92,7 @@ public class AuditEntry {
                       String taskId,
                       String author,
                       LocalDateTime timestamp,
-                      AuditEntryStatus state,
+                      Status state,
                       ExecutionType type,
                       String className,
                       String methodName,
@@ -120,7 +140,7 @@ public class AuditEntry {
         return createdAt;
     }
 
-    public AuditEntryStatus getState() {
+    public Status getState() {
         return state;
     }
 

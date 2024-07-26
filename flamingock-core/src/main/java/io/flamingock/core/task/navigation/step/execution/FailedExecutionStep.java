@@ -21,7 +21,7 @@ import io.flamingock.core.task.navigation.step.FailedWithErrorStep;
 import io.flamingock.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.core.task.navigation.step.afteraudit.FailedExecutionOrAuditStep;
 import io.flamingock.core.task.executable.ExecutableTask;
-import io.flamingock.core.util.Result;
+import io.flamingock.commons.utils.Result;
 
 public final class FailedExecutionStep extends ExecutionStep implements FailedWithErrorStep {
     private final Throwable throwable;

@@ -20,7 +20,7 @@ import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.audit.domain.RuntimeContext;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
-import io.flamingock.core.util.ThrowableUtil;
+import io.flamingock.commons.utils.ThrowableUtil;
 
 public final class AuditEntryMapper {
 
@@ -49,13 +49,13 @@ public final class AuditEntryMapper {
         );
     }
 
-    private static AuditEntryStatus getAuditStatus(AuditItem auditable) {
+    private static AuditEntry.Status getAuditStatus(AuditItem auditable) {
         switch (auditable.getOperation()) {
             case EXECUTION:
-                return auditable.getRuntimeContext().isSuccess() ? AuditEntryStatus.EXECUTED : AuditEntryStatus.EXECUTION_FAILED;
+                return auditable.getRuntimeContext().isSuccess() ? AuditEntry.Status.EXECUTED : AuditEntry.Status.EXECUTION_FAILED;
             case ROLLBACK:
             default:
-                return auditable.getRuntimeContext().isSuccess() ? AuditEntryStatus.ROLLED_BACK : AuditEntryStatus.ROLLBACK_FAILED;
+                return auditable.getRuntimeContext().isSuccess() ? AuditEntry.Status.ROLLED_BACK : AuditEntry.Status.ROLLBACK_FAILED;
         }
     }
 

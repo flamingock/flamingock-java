@@ -58,7 +58,7 @@ public final class SqlTestUtil {
         }
     }
 
-    public static void insertOngoingTask(Connection connection, String taskId) throws SQLException {
+    public static void insertOngoingExecution(Connection connection, String taskId) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(SQL_INSERT)) {
             DatabaseMetaData meta = connection.getMetaData();
             ResultSet resultSet = meta.getTables(null, null, "ONGOING_TASKS", new String[]{"TABLE"});

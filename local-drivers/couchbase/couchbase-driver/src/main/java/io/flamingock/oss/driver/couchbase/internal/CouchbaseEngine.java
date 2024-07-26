@@ -22,9 +22,9 @@ import io.flamingock.community.internal.LocalExecutionPlanner;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.LocalConnectionEngine;
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.core.util.TimeService;
+import io.flamingock.commons.utils.TimeService;
 import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 
 import java.util.Optional;

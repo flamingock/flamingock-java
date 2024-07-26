@@ -24,7 +24,7 @@ import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.cloud.CloudConnectionEngine;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.springboot.v3.SpringDependencyContext;
 import io.flamingock.springboot.v3.SpringRunnerBuilder;
 import io.flamingock.springboot.v3.SpringUtil;

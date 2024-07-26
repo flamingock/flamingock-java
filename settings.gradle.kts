@@ -14,6 +14,11 @@ include("cloud-transactioners:sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").projectDir = file("cloud-transactioners/sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").name = "sql-cloud-transactioner"
 
+
+include("flamingock-core-cloud-api")
+project(":flamingock-core-cloud-api").projectDir = file("flamingock-core-cloud-api")
+project(":flamingock-core-cloud-api").name = "flamingock-core-cloud-api"
+
 include("flamingock-core")
 project(":flamingock-core").projectDir = file("flamingock-core")
 project(":flamingock-core").name = "flamingock-core"
@@ -112,6 +117,18 @@ project(":examples:databases:couchbase-standalone").projectDir = file("examples/
 include("examples:databases:couchbase-springboot-v2")
 project(":examples:databases:couchbase-springboot-v2").name = "couchbase-springboot-v2"
 project(":examples:databases:couchbase-springboot-v2").projectDir = file("examples/databases/couchbase-springboot-v2")
-include("examples:databases:mysql-standalone")
-findProject(":examples:databases:mysql-standalone")?.name = "mysql-standalone"
 
+
+include("examples:databases:mysql-standalone")
+project(":examples:databases:mysql-standalone").name = "mysql-standalone"
+project(":examples:databases:mysql-standalone").projectDir = file("examples/databases/mysql-standalone")
+
+
+include("utils-test")
+project(":utils-test").name = "utils-test"
+project(":utils-test").projectDir = file("utils-test")
+
+
+include("utils")
+project(":utils").name = "utils"
+project(":utils").projectDir = file("utils")

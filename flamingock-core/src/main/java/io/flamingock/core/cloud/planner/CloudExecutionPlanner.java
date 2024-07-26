@@ -17,9 +17,11 @@
 package io.flamingock.core.cloud.planner;
 
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
+import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.cloud.lock.CloudLockService;
 import io.flamingock.core.cloud.planner.client.ExecutionPlannerClient;
-import io.flamingock.core.cloud.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.cloud.transaction.OngoingStatusRepository;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.domain.AuditItem;
@@ -28,10 +30,10 @@ import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.core.pipeline.Pipeline;
-import io.flamingock.core.runner.RunnerId;
-import io.flamingock.core.util.StopWatch;
-import io.flamingock.core.util.ThreadSleeper;
-import io.flamingock.core.util.TimeService;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.StopWatch;
+import io.flamingock.commons.utils.ThreadSleeper;
+import io.flamingock.commons.utils.TimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +130,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
         Map<String, AuditItem.Operation> ongoingStatusesMap = getOngoingStatuses()
                 .stream()
-                .collect(Collectors.toMap(OngoingStatus::getTaskId, OngoingStatus::getOperation));
+                .collect(Collectors.toMap(OngoingStatus::getTaskId, onGoingStatus -> AuditItem.Operation.valueOf(onGoingStatus.getOperation().name())));
 
         ExecutionPlanRequest requestBody = ExecutionPlanMapper.toRequest(
                 loadedStages,

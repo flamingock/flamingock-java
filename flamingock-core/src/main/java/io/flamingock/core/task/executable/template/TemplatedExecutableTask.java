@@ -20,13 +20,11 @@ import io.flamingock.core.runtime.RuntimeManager;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.task.descriptor.TemplatedTaskDescriptor;
 import io.flamingock.core.task.executable.ReflectionExecutableTask;
-import io.flamingock.core.util.FileUtil;
-import io.flamingock.core.util.Pair;
-import io.flamingock.core.util.ReflectionUtil;
+import io.flamingock.commons.utils.FileUtil;
+import io.flamingock.commons.utils.ReflectionUtil;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Optional;
 
 public class TemplatedExecutableTask extends ReflectionExecutableTask<TemplatedTaskDescriptor> {
     private final Method configValidatorMethod;

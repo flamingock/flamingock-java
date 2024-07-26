@@ -16,75 +16,144 @@
 
 package io.flamingock.core.cloud;
 
-import io.flamingock.core.cloud.planner.ExecutionPlanResponse;
-import io.flamingock.core.cloud.transaction.OngoingStatus;
-import io.flamingock.core.cloud.utils.CloudMockBuilderOld;
+import io.flamingock.common.test.cloud.AuditEntryExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
+import io.flamingock.core.cloud.changes.CloudChange1;
+import io.flamingock.core.cloud.changes.CloudChange2;
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.cloud.utils.TestCloudTransactioner;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
-import io.flamingock.core.engine.audit.domain.AuditItem;
+import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.pipeline.Stage;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.core.util.http.Http;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
 
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 
 public class CloudEngineTransactionTest {
 
+    private final String apiToken = "FAKE_API_TOKEN";
+    private final String organisationId = UUID.randomUUID().toString();
+    private final String organisationName = "MyOrganisation";
 
-    @Test
-    @DisplayName("Should follow the transactioner lifecycle")
-    void happyPath() {
-        try (MockedStatic<Http> http = Mockito.mockStatic(Http.class)) {
-            CloudMockBuilderOld cloudMockBuilder = new CloudMockBuilderOld();
-            cloudMockBuilder
-                    .addSingleExecutionPlanResponse("stage1", "create-persons-table-from-template", "create-persons-table-from-template-2")
-                    .addContinueExecutionPlanResponse()
-                    .setHttp(http)
-                    .mockServer();
+    private final String projectId = UUID.randomUUID().toString();
+    private final String projectName = "MyOrganisation";
 
-            TestCloudTransactioner cloudTransactioner = Mockito.spy(new TestCloudTransactioner());
+    private final String serviceName = "clients-service";
+    private final String environmentName = "development";
+    private final String serviceId = "clients-service-id";
+    private final String environmentId = "development-env-id";
+    private final String credentialId = UUID.randomUUID().toString();
+    private final int runnerServerPort = 8888;
+    private final String jwt = "fake_jwt";
 
-            Runner runner = FlamingockStandalone.cloud()
-                    .setApiToken("FAKE_API_TOKEN")
-                    .setHost("https://fake-cloud-server.io")
-                    .setService("test-service")
-                    .setEnvironment("test-environment")
-                    .setCloudTransactioner(cloudTransactioner)
-                    .addStage(new Stage("stage-name")
-                            .setName("stage1")
-                            .setCodePackages(Collections.singletonList("io.flamingock.core.cloud.changes")))
-                    .build();
-            runner.execute();
+    private MockRunnerServer mockRunnerServer;
+    private StandaloneCloudBuilder flamingockBuilder;
 
-            //2 execution plans: First to execute and second to continue
-            verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute(ExecutionPlanResponse.class);
-            //2 audit writes
-            verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute();
-            //DELETE LOCK
-            verify(cloudMockBuilder.getBasicRequest(), new Times(1)).execute();
+    private static final List<AuditEntryExpectation> auditEntries = new LinkedList<>();
 
-            //Transaction
-            verify(cloudTransactioner, new Times(2)).getOngoingStatuses();
-            verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new OngoingStatus("create-persons-table-from-template", AuditItem.Operation.EXECUTION));
-            verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template");
+    @BeforeAll
+    static void beforeAll() {
+        auditEntries.add(new
 
-            verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new OngoingStatus("create-persons-table-from-template-2", AuditItem.Operation.EXECUTION));
-            verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template-2");
+                AuditEntryExpectation(
+                "create-persons-table-from-template",
+                AuditEntryRequest.Status.EXECUTED,
+                CloudChange1.class.getName(),
+                "execution"
+        ));
+        auditEntries.add(new
 
+                AuditEntryExpectation(
+                "create-persons-table-from-template-2",
+                AuditEntryRequest.Status.EXECUTED,
+                CloudChange2.class.getName(),
+                "execution"
+        ));
+    }
 
-        }
+    @BeforeEach
+    void beforeEach() {
+        mockRunnerServer = new MockRunnerServer()
+                .setServerPort(runnerServerPort)
+                .setOrganisationId(organisationId)
+                .setOrganisationName(organisationName)
+                .setProjectId(projectId)
+                .setProjectName(projectName)
+                .setServiceId(serviceId)
+                .setServiceName(serviceName)
+                .setEnvironmentId(environmentId)
+                .setEnvironmentName(environmentName)
+                .setCredentialId(credentialId)
+                .setApiToken(apiToken)
+                .setJwt(jwt);
+
+        flamingockBuilder = FlamingockStandalone.cloud()
+                .setApiToken(apiToken)
+                .setHost("http://localhost:" + runnerServerPort)
+                .setService(serviceName)
+                .setEnvironment(environmentName)
+                .addStage(new Stage("stage-1")
+                        .setCodePackages(Collections.singletonList("io.flamingock.core.cloud.changes")));
+    }
+
+    @AfterEach
+    void afterEach() {
+
+        //tear down
+        mockRunnerServer.stop();
     }
 
 
+    @Test
+    @DisplayName("Should run successfully happy path")
+    void happyPath() {
+        //GIVEN
+        String executionId = "execution-1";
+        mockRunnerServer
+                .addSimpleStageExecutionPlan(executionId, "stage-1", auditEntries)
+                .addExecutionWithAllTasksRequestResponse(executionId)
+                .addExecutionContinueRequestResponse();
+
+        mockRunnerServer.start();
+
+        //WHEN
+        TestCloudTransactioner cloudTransactioner = Mockito.spy(new TestCloudTransactioner());
+
+        Runner runner = flamingockBuilder
+                .setCloudTransactioner(cloudTransactioner)
+                .build();
+        runner.execute();
+
+        //THEN
+        verify(cloudTransactioner, new Times(2)).getOngoingStatuses();
+        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new OngoingStatus("create-persons-table-from-template", OngoingStatus.Operation.EXECUTION));
+        verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template");
+
+        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new OngoingStatus("create-persons-table-from-template-2", OngoingStatus.Operation.EXECUTION));
+        verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template-2");
+
+//        //2 execution plans: First to execute and second to continue
+//        verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute(ExecutionPlanResponse.class);
+//        //2 audit writes
+//        verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute();
+//        //DELETE LOCK
+//        verify(cloudMockBuilder.getBasicRequest(), new Times(1)).execute();
+
+
+    }
 
 
 }

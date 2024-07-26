@@ -20,7 +20,7 @@ import io.flamingock.core.engine.local.driver.ConnectionDriver;
 import io.flamingock.springboot.v3.SpringRunnerBuilder;
 import io.flamingock.springboot.v3.builder.FlamingockSpringboot;
 import io.flamingock.springboot.v3.builder.SpringbootBaseBuilder;
-import io.flamingock.core.util.Constants;
+import io.flamingock.commons.utils.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;

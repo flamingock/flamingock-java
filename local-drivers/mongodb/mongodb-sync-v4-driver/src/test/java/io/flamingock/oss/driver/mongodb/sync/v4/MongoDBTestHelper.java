@@ -18,7 +18,7 @@ package io.flamingock.oss.driver.mongodb.sync.v4;
 
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.util.TimeUtil;
+import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.MongoSync4DocumentWrapper;
 import org.bson.Document;

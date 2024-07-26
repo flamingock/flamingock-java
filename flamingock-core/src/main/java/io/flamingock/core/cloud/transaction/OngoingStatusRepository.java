@@ -16,7 +16,7 @@
 
 package io.flamingock.core.cloud.transaction;
 
-import io.flamingock.core.engine.audit.domain.AuditItem;
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.task.executable.ExecutableTask;
 import java.util.Set;
 
@@ -45,10 +45,10 @@ public interface OngoingStatusRepository {
     void saveOngoingStatus(OngoingStatus status);
 
     default void setOngoingExecution(ExecutableTask ongoingTask) {
-        saveOngoingStatus(new OngoingStatus(ongoingTask.getDescriptor().getId(), AuditItem.Operation.EXECUTION));
+        saveOngoingStatus(new OngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.Operation.EXECUTION));
     }
 
     default void setOngoingRollback(ExecutableTask ongoingTask) {
-        saveOngoingStatus(new OngoingStatus(ongoingTask.getDescriptor().getId(), AuditItem.Operation.ROLLBACK));
+        saveOngoingStatus(new OngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.Operation.ROLLBACK));
     }
 }

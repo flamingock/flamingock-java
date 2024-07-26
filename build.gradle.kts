@@ -49,8 +49,6 @@ subprojects {
         testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
         testImplementation("org.mockito:mockito-inline:4.11.0")
 
-        testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
-
     }
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()

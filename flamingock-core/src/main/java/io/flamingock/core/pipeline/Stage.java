@@ -16,16 +16,14 @@
 
 package io.flamingock.core.pipeline;
 
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.descriptor.ReflectionTaskDescriptorBuilder;
 import io.flamingock.core.task.descriptor.TemplatedTaskDescriptorBuilder;
 import io.flamingock.core.task.filter.TaskFilter;
-import io.flamingock.core.task.navigation.navigator.StepNavigator;
 import io.flamingock.template.TemplatedTaskDefinition;
-import io.flamingock.core.util.FileUtil;
-import io.flamingock.core.util.ReflectionUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.flamingock.commons.utils.FileUtil;
+import io.flamingock.commons.utils.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -185,7 +183,7 @@ public class Stage {
         }
         return codePackages.
                 stream()
-                .map(ReflectionUtil::loadClassesFromPackage)
+                .map(packagePath -> ReflectionUtil.loadClassesFromPackage(packagePath, ChangeUnit.class))
                 .flatMap(Collection::stream)
                 .filter(source -> filters.stream().allMatch(filter -> filter.filter(source)))
                 .map(ReflectionTaskDescriptorBuilder.recycledBuilder()::setSource)
@@ -199,7 +197,7 @@ public class Stage {
             return Collections.emptyList();
         }
         return directories.stream()
-                .map(FileUtil::loadFilesFromDirectory)
+                .map(directoryPath -> FileUtil.loadFilesFromDirectory(directoryPath, Stage.class.getClassLoader()))
                 .flatMap(Collection::stream)
                 .map(file -> FileUtil.getFromYamlFile(file, TemplatedTaskDefinition.class))
 //                .filter(source -> filters.stream().allMatch(filter -> filter.filter(source)))

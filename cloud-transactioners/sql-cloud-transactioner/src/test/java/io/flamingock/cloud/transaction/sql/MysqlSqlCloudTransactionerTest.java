@@ -16,24 +16,31 @@
 
 package io.flamingock.cloud.transaction.sql;
 
-import io.flamingock.cloud.transaction.sql.utils.CloudMockBuilder;
+import io.flamingock.cloud.transaction.sql.changes.unhappypath.UnhappyCreateTableClientsChange;
+import io.flamingock.cloud.transaction.sql.changes.unhappypath.UnhappyInsertionClientsChange;
+import io.flamingock.cloud.transaction.sql.changes.happypath.HappyCreateTableClientsChange;
+import io.flamingock.cloud.transaction.sql.changes.happypath.HappyInsertClientsChange;
 import io.flamingock.cloud.transaction.sql.utils.SqlTestUtil;
-import io.flamingock.core.cloud.planner.ExecutionPlanRequest;
-import io.flamingock.core.cloud.planner.ExecutionPlanResponse;
-import io.flamingock.core.cloud.planner.StageRequest;
+import io.flamingock.common.test.cloud.AuditEntryExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
+
+import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.EXECUTED;
+import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.EXECUTION_FAILED;
+import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.ROLLED_BACK;
+
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.pipeline.execution.StageExecutionException;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.core.util.http.Http;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.internal.verification.Times;
 import org.testcontainers.containers.MySQLContainer;
 
 import java.sql.Connection;
@@ -41,7 +48,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
@@ -50,13 +59,58 @@ public class MysqlSqlCloudTransactionerTest {
 
     private static final MySQLContainer<?> mysql = SqlTestUtil.getMysqlContainer();
 
+
+    private final String apiToken = "FAKE_API_TOKEN";
+    private final String organisationId = UUID.randomUUID().toString();
+    private final String organisationName = "MyOrganisation";
+
+    private final String projectId = UUID.randomUUID().toString();
+    private final String projectName = "MyOrganisation";
+
+    private final String serviceName = "clients-service";
+    private final String environmentName = "development";
+    private final String serviceId = "clients-service-id";
+    private final String environmentId = "development-env-id";
+    private final String credentialId = UUID.randomUUID().toString();
+    private final int runnerServerPort = 8888;
+    private final String jwt = "fake_jwt";
+
+    private MockRunnerServer mockRunnerServer;
+    private StandaloneCloudBuilder flamingockBuilder;
+
     @BeforeAll
     static void beforeAll() {
         mysql.start();
     }
 
+
+    @BeforeEach
+    void beforeEach() {
+        mockRunnerServer = new MockRunnerServer()
+                .setServerPort(runnerServerPort)
+                .setOrganisationId(organisationId)
+                .setOrganisationName(organisationName)
+                .setProjectId(projectId)
+                .setProjectName(projectName)
+                .setServiceId(serviceId)
+                .setServiceName(serviceName)
+                .setEnvironmentId(environmentId)
+                .setEnvironmentName(environmentName)
+                .setCredentialId(credentialId)
+                .setApiToken(apiToken)
+                .setJwt(jwt);
+
+        flamingockBuilder = FlamingockStandalone.cloud()
+                .setApiToken(apiToken)
+                .setHost("http://localhost:" + runnerServerPort)
+                .setService(serviceName)
+                .setEnvironment(environmentName);
+    }
+
     @AfterEach
-    void afterEch() throws SQLException {
+    void afterEach() throws SQLException {
+        //tear down
+        mockRunnerServer.stop();
         SqlTestUtil.cleanTable(mysql, "ONGOING_TASKS");
         SqlTestUtil.dropTableSafe(mysql, "CLIENTS");
         SqlTestUtil.dropTableSafe(mysql, "CLIENTS_2");
@@ -65,46 +119,50 @@ public class MysqlSqlCloudTransactionerTest {
     @Test
     @DisplayName("Should follow the transactioner lifecycle")
     void happyPath() throws SQLException {
-
+        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        auditEntryExpectations.add(new
+                AuditEntryExpectation(
+                "create-table-clients",
+                EXECUTED,
+                HappyCreateTableClientsChange.class.getName(),
+                "execution"
+        ));
+        auditEntryExpectations.add(new
+                AuditEntryExpectation(
+                "insert-clients",
+                EXECUTED,
+                HappyInsertClientsChange.class.getName(),
+                "execution"
+        ));
         //GIVEN
         try (
-                MockedStatic<Http> http = Mockito.mockStatic(Http.class);
-                Connection connection = SqlTestUtil.getConnection(mysql)
+                Connection connection = SqlTestUtil.getConnection(mysql);
+                SqlCloudTransactioner transactioner = new SqlCloudTransactioner()
         ) {
-            CloudMockBuilder cloudMockBuilder = new CloudMockBuilder();
-            cloudMockBuilder
-                    .addSingleExecutionPlanResponse("stage1", "create-table-clients", "insert-clients")
-                    .addContinueExecutionPlanResponse()
-                    .setHttp(http)
-                    .mockServer();
 
-            SqlCloudTransactioner sqlCloudTransactioner = Mockito.spy(new SqlCloudTransactioner()
+
+            String executionId = "execution-1";
+            String stageName = "stage-1";
+            mockRunnerServer
+                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations)
+                    .addExecutionWithAllTasksRequestResponse(executionId)
+                    .addExecutionContinueRequestResponse()
+                    .start();
+
+            SqlCloudTransactioner sqlCloudTransactioner = Mockito.spy(transactioner
                     .setUrl(mysql.getJdbcUrl())
                     .setUser(mysql.getUsername())
                     .setPassword(mysql.getPassword())
-                    .setDialect(SqlDialect.MYSQL));
-
-            Runner runner = FlamingockStandalone.cloud()
-                    .setApiToken("FAKE_API_TOKEN")
-                    .setHost("https://fake-cloud-server.io")
-                    .setService("test-service")
-                    .setEnvironment("test-environment")
-                    .setCloudTransactioner(sqlCloudTransactioner)
-                    .addStage(new Stage("stage-name")
-                            .setName("stage1")
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.happypath")))
-                    .build();
+                    .setDialect(SqlDialect.MYSQL)
+            );
 
             //WHEN
-            runner.execute();
-
-            //THEN
-            //2 execution plans: First to execute and second to continue
-            verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute(ExecutionPlanResponse.class);
-            //2 audit writes
-            verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute();
-            //DELETE LOCK
-            verify(cloudMockBuilder.getBasicRequest(), new Times(1)).execute();
+            flamingockBuilder
+                    .setCloudTransactioner(sqlCloudTransactioner)
+                    .addStage(new Stage(stageName)
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.happypath")))
+                    .build()
+                    .execute();
 
             // check clients changes
             try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, name FROM CLIENTS")) {
@@ -131,101 +189,134 @@ public class MysqlSqlCloudTransactionerTest {
 
     @Test
     @DisplayName("Should rollback the ongoing deletion when a task fails")
-    void failedTasks() throws SQLException {
+    void failedTasks()  throws SQLException {
+        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        auditEntryExpectations.add(new
+                AuditEntryExpectation(
+                "unhappy-create-table-clients",
+                EXECUTED,
+                UnhappyCreateTableClientsChange.class.getName(),
+                "execution"
+        ));
+
+        auditEntryExpectations.add(new
+                AuditEntryExpectation(
+                "unhappy-insert-clients",
+                EXECUTION_FAILED,
+                UnhappyInsertionClientsChange.class.getName(),
+                "execution"
+        ));
+
+        auditEntryExpectations.add(new
+                AuditEntryExpectation(
+                "unhappy-insert-clients",
+                ROLLED_BACK,
+                UnhappyInsertionClientsChange.class.getName(),
+                "native_db_engine"
+        ));
         //GIVEN
         try (
-                MockedStatic<Http> http = Mockito.mockStatic(Http.class);
-                Connection connection = SqlTestUtil.getConnection(mysql)
+                Connection connection = SqlTestUtil.getConnection(mysql);
+                SqlCloudTransactioner transactioner = new SqlCloudTransactioner()
         ) {
-            CloudMockBuilder cloudMockBuilder = new CloudMockBuilder();
-            cloudMockBuilder
-                    .addSingleExecutionPlanResponse("stage1", "create-table-clients", "failed-insert-clients")
-                    .addContinueExecutionPlanResponse()
-                    .setHttp(http)
-                    .mockServer();
+            String executionId = "execution-1";
+            String stageName = "stage-1";
+            mockRunnerServer
+                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations)
+                    .addExecutionWithAllTasksRequestResponse(executionId)
+                    .addExecutionContinueRequestResponse()
+                    .start();
 
-            SqlCloudTransactioner sqlCloudTransactioner = Mockito.spy(new SqlCloudTransactioner()
+            SqlCloudTransactioner sqlCloudTransactioner = Mockito.spy(transactioner
                     .setUrl(mysql.getJdbcUrl())
                     .setUser(mysql.getUsername())
                     .setPassword(mysql.getPassword())
-                    .setDialect(SqlDialect.MYSQL));
+                    .setDialect(SqlDialect.MYSQL)
+            );
 
-            Runner runner = FlamingockStandalone.cloud()
-                    .setApiToken("FAKE_API_TOKEN")
-                    .setHost("https://fake-cloud-server.io")
-                    .setService("test-service")
-                    .setEnvironment("test-environment")
-                    .setCloudTransactioner(sqlCloudTransactioner)
-                    .addStage(new Stage("stage-name")
-                            .setName("stage1")
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.failed")))
-                    .build();
             //WHEN
-            Assertions.assertThrows(RuntimeException.class, runner::run);
-
-            //THEN
-            //1 execution plans: First to execute and second(to continue) is not performed because the first execution failed in second task
-            verify(cloudMockBuilder.getRequestWithBody(), new Times(1)).execute(ExecutionPlanResponse.class);
-            //1 audit writes: Only one because second task failed
-            verify(cloudMockBuilder.getRequestWithBody(), new Times(3)).execute();
-            //DELETE LOCK
-            verify(cloudMockBuilder.getBasicRequest(), new Times(1)).execute();
+            Runner runner = flamingockBuilder
+                    .setCloudTransactioner(sqlCloudTransactioner)
+                    .addStage(new Stage(stageName)
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.unhappypath")))
+                    .build();
+            StageExecutionException ex = Assertions.assertThrows(StageExecutionException.class, runner::run);
 
             // check clients changes
             SqlTestUtil.checkCount(connection, "CLIENTS_2", 0);
             // check ongoing status
             SqlTestUtil.checkAtLeastOneOngoingTask(connection);
+
+
         }
     }
 
+
+    //TODO verify the server is called with the right parameters. among other, it sends the ongoing status
     @Test
     @DisplayName("Should send ongoing task in execution when is present in local database")
     void shouldSendOngoingTaskInExecutionPlan() throws SQLException {
         //GIVEN
         try (
-                MockedStatic<Http> http = Mockito.mockStatic(Http.class);
-                Connection connection = SqlTestUtil.getConnection(mysql)
+                Connection connection = SqlTestUtil.getConnection(mysql);
+                SqlCloudTransactioner transactioner = new SqlCloudTransactioner()
         ) {
-            SqlTestUtil.insertOngoingTask(connection, "failed-insert-clients");
+            List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+            auditEntryExpectations.add(new
+                    AuditEntryExpectation(
+                    "unhappy-create-table-clients",
+                    EXECUTED,
+                    UnhappyCreateTableClientsChange.class.getName(),
+                    "execution"
+            ));
 
-            CloudMockBuilder cloudMockBuilder = new CloudMockBuilder();
-            cloudMockBuilder
-                    .addSingleExecutionPlanResponse("stage1", "create-table-clients", "failed-insert-clients")
-                    .addContinueExecutionPlanResponse()
-                    .setHttp(http)
-                    .mockServer();
+            auditEntryExpectations.add(new
+                    AuditEntryExpectation(
+                    "unhappy-insert-clients",
+                    EXECUTION_FAILED,
+                    UnhappyInsertionClientsChange.class.getName(),
+                    "execution"
+            ));
 
-            SqlCloudTransactioner sqlCloudTransactioner = Mockito.spy(new SqlCloudTransactioner()
+            auditEntryExpectations.add(new
+                    AuditEntryExpectation(
+                    "unhappy-insert-clients",
+                    ROLLED_BACK,
+                    UnhappyInsertionClientsChange.class.getName(),
+                    "native_db_engine"
+            ));
+            String executionId = "execution-1";
+            String stageName = "stage-1";
+
+
+            SqlTestUtil.insertOngoingExecution(connection, "failed-insert-clients");
+            List<OngoingStatus> ongoingStatuses = Collections.singletonList(new OngoingStatus("failed-insert-clients", OngoingStatus.Operation.EXECUTION));
+            mockRunnerServer
+                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations, ongoingStatuses)
+                    .addExecutionWithAllTasksRequestResponse(executionId)
+                    .addExecutionContinueRequestResponse()
+                    .start();
+
+            SqlCloudTransactioner sqlCloudTransactioner = Mockito.spy(transactioner
                     .setUrl(mysql.getJdbcUrl())
                     .setUser(mysql.getUsername())
                     .setPassword(mysql.getPassword())
-                    .setDialect(SqlDialect.MYSQL));
-
-            Runner runner = FlamingockStandalone.cloud()
-                    .setApiToken("FAKE_API_TOKEN")
-                    .setHost("https://fake-cloud-server.io")
-                    .setService("test-service")
-                    .setEnvironment("test-environment")
-                    .setCloudTransactioner(sqlCloudTransactioner)
-                    .addStage(new Stage("stage-name")
-                            .setName("stage1")
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.failed")))
-                    .build();
+                    .setDialect(SqlDialect.MYSQL)
+            );
 
             //WHEN
-            Assertions.assertThrows(RuntimeException.class, runner::run);
 
-            //1 execution plans: First is tokenRequest, second to execute and third(to continue) is not performed because
-            // the first execution failed in second task
-            ArgumentCaptor<Object> bodyCaptor = ArgumentCaptor.forClass(Object.class);
-            verify(cloudMockBuilder.getRequestWithBody(), new Times(5)).setBody(bodyCaptor.capture());
 
-            ExecutionPlanRequest planRequest = (ExecutionPlanRequest) bodyCaptor.getAllValues().get(1);
-            List<StageRequest.Task> tasks = planRequest.getClientSubmission().getStages().get(0).getTasks();
-            assertEquals("create-table-clients", tasks.get(0).getId());
-            assertEquals(StageRequest.TaskOngoingStatus.NONE, tasks.get(0).getOngoingStatus());
-            assertEquals("failed-insert-clients", tasks.get(1).getId());
-            assertEquals(StageRequest.TaskOngoingStatus.EXECUTION, tasks.get(1).getOngoingStatus());
+            Runner runner = flamingockBuilder
+                    .setCloudTransactioner(sqlCloudTransactioner)
+                    .addStage(new Stage(stageName)
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.unhappypath")))
+                    .build();
+
+            //then
+            StageExecutionException ex = Assertions.assertThrows(StageExecutionException.class, runner::run);
+
+
         }
     }
 

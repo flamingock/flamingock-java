@@ -25,7 +25,8 @@ import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.core.pipeline.execution.StageExecutor;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.core.util.StringUtil;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.StringUtil;
 
 public final class PipelineRunnerCreator {
 

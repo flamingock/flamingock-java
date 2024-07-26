@@ -20,10 +20,9 @@ import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.community.internal.lock.LockEntry;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.engine.audit.writer.AuditEntryStatus;
 import io.flamingock.core.engine.lock.LockStatus;
-import io.flamingock.core.runner.RunnerId;
-import io.flamingock.core.util.TimeUtil;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.TimeUtil;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -56,7 +55,7 @@ public final class CouchBaseUtil {
                 jsonObject.getString(KEY_CHANGE_ID),
                 jsonObject.getString(KEY_AUTHOR),
                 jsonObject.get(KEY_TIMESTAMP) != null ? TimeUtil.toLocalDateTime(jsonObject.getLong(KEY_TIMESTAMP)) : null,
-                jsonObject.get(KEY_STATE) != null ? AuditEntryStatus.valueOf(jsonObject.getString(KEY_STATE)) : null,
+                jsonObject.get(KEY_STATE) != null ? AuditEntry.Status.valueOf(jsonObject.getString(KEY_STATE)) : null,
                 jsonObject.get(KEY_TYPE) != null ? AuditEntry.ExecutionType.valueOf(jsonObject.getString(KEY_TYPE)) : null,
                 jsonObject.getString(KEY_CHANGELOG_CLASS),
                 jsonObject.getString(KEY_CHANGESET_METHOD),

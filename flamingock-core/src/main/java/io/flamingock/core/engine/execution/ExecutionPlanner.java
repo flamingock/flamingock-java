@@ -20,9 +20,7 @@ import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.Pipeline;
-import io.flamingock.core.util.TriConsumer;
-
-import java.util.function.BiConsumer;
+import io.flamingock.commons.utils.TriConsumer;
 
 public abstract class ExecutionPlanner {
 

@@ -18,8 +18,8 @@ package io.flamingock.oss.driver.common.mongodb;
 
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.community.internal.lock.LockEntry;
-import io.flamingock.core.runner.RunnerId;
-import io.flamingock.core.util.TimeUtil;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.TimeUtil;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

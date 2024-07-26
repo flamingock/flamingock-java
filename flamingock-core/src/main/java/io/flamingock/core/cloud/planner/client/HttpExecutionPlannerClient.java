@@ -17,12 +17,12 @@
 package io.flamingock.core.cloud.planner.client;
 
 import io.flamingock.core.cloud.auth.AuthManager;
-import io.flamingock.core.cloud.planner.ExecutionPlanRequest;
-import io.flamingock.core.cloud.planner.ExecutionPlanResponse;
+import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
+import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.configurator.core.EnvironmentId;
 import io.flamingock.core.configurator.core.ServiceId;
-import io.flamingock.core.runner.RunnerId;
-import io.flamingock.core.util.http.Http;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.http.Http;
 
 public class HttpExecutionPlannerClient implements ExecutionPlannerClient {
 

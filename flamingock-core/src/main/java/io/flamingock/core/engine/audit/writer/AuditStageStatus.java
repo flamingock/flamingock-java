@@ -29,13 +29,13 @@ public class AuditStageStatus {
         return new StatusBuilder();
     }
 
-    private final Map<String, AuditEntryStatus> entryStatesMap;
+    private final Map<String, AuditEntry.Status> entryStatesMap;
 
-    private AuditStageStatus(Map<String, AuditEntryStatus> entryStatesMap) {
+    private AuditStageStatus(Map<String, AuditEntry.Status> entryStatesMap) {
         this.entryStatesMap = entryStatesMap;
     }
 
-    public Map<String, AuditEntryStatus> getEntryStatesMap() {
+    public Map<String, AuditEntry.Status> getEntryStatesMap() {
         return entryStatesMap;
     }
 
@@ -51,7 +51,7 @@ public class AuditStageStatus {
         }
 
         public AuditStageStatus build() {
-            Map<String, AuditEntryStatus> statesMap = entryMap.values().stream()
+            Map<String, AuditEntry.Status> statesMap = entryMap.values().stream()
                     .collect(Collectors.toMap(AuditEntry::getTaskId, AuditEntry::getState));
             return new AuditStageStatus(statesMap);
         }
@@ -60,9 +60,9 @@ public class AuditStageStatus {
 
     public static class StatusBuilder {
 
-        private final Map<String, AuditEntryStatus> statesMap = new HashMap<>();
+        private final Map<String, AuditEntry.Status> statesMap = new HashMap<>();
 
-        public void addState(String taskId, AuditEntryStatus status) {
+        public void addState(String taskId, AuditEntry.Status status) {
             statesMap.put(taskId, status);
         }
 

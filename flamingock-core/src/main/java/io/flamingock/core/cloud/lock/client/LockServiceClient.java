@@ -16,10 +16,10 @@
 
 package io.flamingock.core.cloud.lock.client;
 
-import io.flamingock.core.cloud.lock.LockExtensionRequest;
-import io.flamingock.core.cloud.lock.LockResponse;
+import io.flamingock.core.cloud.api.lock.LockExtensionRequest;
+import io.flamingock.core.cloud.api.lock.LockResponse;
 import io.flamingock.core.engine.lock.LockKey;
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 
 public interface LockServiceClient {
 

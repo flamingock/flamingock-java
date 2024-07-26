@@ -18,10 +18,9 @@ package io.flamingock.core.engine.execution;
 
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.ExecutableStage;
-import io.flamingock.core.util.TriConsumer;
+import io.flamingock.commons.utils.TriConsumer;
 
 import java.util.Collection;
-import java.util.function.BiConsumer;
 
 public class ExecutionPlan implements AutoCloseable {
 

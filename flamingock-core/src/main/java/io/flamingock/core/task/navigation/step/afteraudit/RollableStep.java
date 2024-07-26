@@ -20,7 +20,7 @@ import io.flamingock.core.task.navigation.step.AbstractTaskStep;
 import io.flamingock.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.core.runtime.RuntimeManager;
 import io.flamingock.core.task.executable.Rollback;
-import io.flamingock.core.util.StopWatch;
+import io.flamingock.commons.utils.StopWatch;
 
 public final class RollableStep extends AbstractTaskStep {
     private final Rollback rollback;

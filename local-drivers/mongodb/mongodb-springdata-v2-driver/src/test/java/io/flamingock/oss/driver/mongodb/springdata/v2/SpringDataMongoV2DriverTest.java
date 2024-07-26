@@ -23,7 +23,6 @@ import com.mongodb.client.MongoClients;
 
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
-import io.flamingock.core.engine.audit.writer.AuditEntryStatus;
 import io.flamingock.core.pipeline.Stage;
 import io.flamingock.core.pipeline.execution.StageExecutionException;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
@@ -151,11 +150,11 @@ class SpringDataMongoV2DriverTest {
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
         assertEquals("insert-another-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
 
         //Checking clients collection
         Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
@@ -185,11 +184,11 @@ class SpringDataMongoV2DriverTest {
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
         assertEquals("insert-another-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
 
         //Checking clients collection
         Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
@@ -221,9 +220,9 @@ class SpringDataMongoV2DriverTest {
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
 
         //Checking clients collection
         Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
@@ -254,11 +253,11 @@ class SpringDataMongoV2DriverTest {
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
         assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntryStatus.ROLLED_BACK, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(2).getState());
 
         //Checking clients collection
         Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
@@ -289,11 +288,11 @@ class SpringDataMongoV2DriverTest {
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
         assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntryStatus.EXECUTION_FAILED, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditLog.get(2).getState());
 
         //Checking clients collection
         Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)

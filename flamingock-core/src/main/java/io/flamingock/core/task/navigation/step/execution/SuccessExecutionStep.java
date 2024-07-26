@@ -21,7 +21,7 @@ import io.flamingock.core.task.navigation.step.afteraudit.AfterExecutionAuditSte
 import io.flamingock.core.task.navigation.step.afteraudit.FailedExecutionOrAuditStep;
 import io.flamingock.core.task.navigation.step.complete.CompletedSuccessStep;
 import io.flamingock.core.task.executable.ExecutableTask;
-import io.flamingock.core.util.Result;
+import io.flamingock.commons.utils.Result;
 
 public final class SuccessExecutionStep extends ExecutionStep {
     public static SuccessExecutionStep instance(ExecutableStep initialStep, long executionTimeMillis) {

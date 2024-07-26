@@ -25,11 +25,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.flamingock.core.util.CollectionUtil.assignOrEmpty;
-import static io.flamingock.core.util.Constants.DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
-import static io.flamingock.core.util.Constants.DEFAULT_MIGRATION_AUTHOR;
-import static io.flamingock.core.util.Constants.DEFAULT_QUIT_TRYING_AFTER_MILLIS;
-import static io.flamingock.core.util.Constants.DEFAULT_TRY_FREQUENCY_MILLIS;
+import static io.flamingock.commons.utils.CollectionUtil.assignOrEmpty;
+import static io.flamingock.commons.utils.Constants.DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
+import static io.flamingock.commons.utils.Constants.DEFAULT_MIGRATION_AUTHOR;
+import static io.flamingock.commons.utils.Constants.DEFAULT_QUIT_TRYING_AFTER_MILLIS;
+import static io.flamingock.commons.utils.Constants.DEFAULT_TRY_FREQUENCY_MILLIS;
 
 public class CoreConfiguration implements CoreConfigurable {
 

@@ -41,7 +41,7 @@ import io.flamingock.core.task.navigation.step.rolledback.FailedManualRolledBack
 import io.flamingock.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.core.task.navigation.summary.StepSummarizer;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.core.util.Result;
+import io.flamingock.commons.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

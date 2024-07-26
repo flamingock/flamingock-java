@@ -18,7 +18,7 @@ package io.flamingock.cloud.transaction.sql;
 
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.core.cloud.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
@@ -33,7 +33,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
@@ -109,7 +108,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
             while (resultSet.next()) {
                 String taskId = resultSet.getString("task_id");
                 AuditItem.Operation operation = AuditItem.Operation.valueOf(resultSet.getString("operation"));
-                ongoingStatuses.add(new OngoingStatus(taskId, operation));
+                ongoingStatuses.add(new OngoingStatus(taskId, operation.toOngoingStatusOperation()));
             }
             return ongoingStatuses;
         } catch (SQLException e) {
@@ -162,7 +161,9 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     @Override
     public void close() {
         try {
-            connection.close();
+            if(connection != null) {
+                connection.close();
+            }
         } catch (SQLException e) {
             logger.warn("Flamingock SQL Cloud trasactioner connection cannot be closed", e);
         }

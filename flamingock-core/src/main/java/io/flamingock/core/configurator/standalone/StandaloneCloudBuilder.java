@@ -25,7 +25,7 @@ import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
 import io.flamingock.core.cloud.CloudConnectionEngine;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

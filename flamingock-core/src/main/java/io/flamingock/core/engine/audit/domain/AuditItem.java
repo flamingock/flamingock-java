@@ -16,14 +16,22 @@
 
 package io.flamingock.core.engine.audit.domain;
 
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
-import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 
 public class AuditItem {
 
 
-    public enum Operation {EXECUTION, ROLLBACK}
+    public enum Operation {
+
+        EXECUTION, ROLLBACK;
+
+        public OngoingStatus.Operation toOngoingStatusOperation() {
+            return OngoingStatus.Operation.valueOf(this.name());
+        }
+
+    }
 
     private final Operation operation;
     private final TaskDescriptor taskDescriptor;

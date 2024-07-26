@@ -20,11 +20,11 @@ import io.flamingock.core.api.annotations.BeforeExecution;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackBeforeExecution;
 import io.flamingock.core.api.annotations.RollbackExecution;
-import io.flamingock.core.engine.audit.writer.AuditEntryStatus;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.task.descriptor.ReflectionTaskDescriptor;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
-import io.flamingock.core.util.ReflectionUtil;
-import io.flamingock.core.util.StringUtil;
+import io.flamingock.commons.utils.ReflectionUtil;
+import io.flamingock.commons.utils.StringUtil;
 
 import java.lang.reflect.Method;
 import java.util.LinkedList;
@@ -38,7 +38,7 @@ import java.util.Optional;
 public class ChangeUnitFactory implements ExecutableTaskFactory {
 
     @Override
-    public List<ReflectionExecutableTask<ReflectionTaskDescriptor>> extractTasks(String stageName, TaskDescriptor descriptor, AuditEntryStatus initialState) {
+    public List<ReflectionExecutableTask<ReflectionTaskDescriptor>> extractTasks(String stageName, TaskDescriptor descriptor, AuditEntry.Status initialState) {
         //It assumes "matchesDescriptor" was previously called for this descriptor.
         if (ReflectionTaskDescriptor.class.equals(descriptor.getClass())) {
             return getTasksFromReflection(stageName, (ReflectionTaskDescriptor) descriptor, initialState);
@@ -50,7 +50,7 @@ public class ChangeUnitFactory implements ExecutableTaskFactory {
 
     private List<ReflectionExecutableTask<ReflectionTaskDescriptor>> getTasksFromReflection(String stageName,
                                                                                             ReflectionTaskDescriptor taskDescriptor,
-                                                                                            AuditEntryStatus initialState) {
+                                                                                            AuditEntry.Status initialState) {
 
         Method executionMethod = ReflectionUtil.findFirstMethodAnnotated(taskDescriptor.getSourceClass(), Execution.class)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(
@@ -62,7 +62,7 @@ public class ChangeUnitFactory implements ExecutableTaskFactory {
         ReflectionExecutableTask<ReflectionTaskDescriptor> task = new ReflectionExecutableTask<>(
                 stageName,
                 taskDescriptor,
-                AuditEntryStatus.isRequiredExecution(initialState),
+                AuditEntry.Status.isRequiredExecution(initialState),
                 executionMethod,
                 rollbackMethodOpt.orElse(null));
 
@@ -84,7 +84,7 @@ public class ChangeUnitFactory implements ExecutableTaskFactory {
 
     private Optional<ReflectionExecutableTask<ReflectionTaskDescriptor>> getBeforeExecutionOptional(String stageName,
                                                                                                     ReflectionExecutableTask<ReflectionTaskDescriptor> baseTask,
-                                                                                                    AuditEntryStatus initialState) {
+                                                                                                    AuditEntry.Status initialState) {
         //Creates a new TaskDescriptor, based on the main one, but with the "beforeExecution id, also based on the main one"
         ReflectionTaskDescriptor taskDescriptor = new ReflectionTaskDescriptor(
                 StringUtil.getBeforeExecutionId(baseTask.getDescriptor().getId()),
@@ -105,7 +105,7 @@ public class ChangeUnitFactory implements ExecutableTaskFactory {
         return Optional.of(new ReflectionExecutableTask<>(
                 stageName,
                 taskDescriptor,
-                AuditEntryStatus.isRequiredExecution(initialState),
+                AuditEntry.Status.isRequiredExecution(initialState),
                 beforeExecutionMethod,
                 rollbackBeforeExecution.orElse(null)));
 

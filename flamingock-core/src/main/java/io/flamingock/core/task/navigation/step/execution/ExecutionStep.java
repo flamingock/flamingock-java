@@ -20,7 +20,7 @@ import io.flamingock.core.task.navigation.step.AbstractTaskStep;
 import io.flamingock.core.task.navigation.step.SuccessableStep;
 import io.flamingock.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.core.task.executable.ExecutableTask;
-import io.flamingock.core.util.Result;
+import io.flamingock.commons.utils.Result;
 
 public abstract class ExecutionStep extends AbstractTaskStep implements SuccessableStep {
 

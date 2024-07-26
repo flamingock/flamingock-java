@@ -18,8 +18,8 @@ package io.flamingock.core.runtime.proxy;
 
 import io.changock.migration.api.annotations.NonLockGuarded;
 import io.flamingock.core.engine.lock.Lock;
-import io.flamingock.core.util.Constants;
-import io.flamingock.core.util.JdkUtil;
+import io.flamingock.commons.utils.Constants;
+import io.flamingock.commons.utils.JdkUtil;
 import javassist.util.proxy.ProxyFactory;
 import org.objenesis.ObjenesisStd;
 

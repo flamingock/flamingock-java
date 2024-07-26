@@ -1,6 +1,8 @@
 val jacksonVersion = "2.16.0"
 dependencies {
+    api(project(":flamingock-core-cloud-api"))
     api(project(":flamingock-template"))
+    api(project(":utils"))
     api("javax.inject:javax.inject:1")
     api("org.reflections:reflections:0.10.1")
     api("org.objenesis:objenesis:3.2")
@@ -11,5 +13,5 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
 
-
+    testImplementation(project(":utils-test"))
 }

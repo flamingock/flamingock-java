@@ -23,7 +23,7 @@ import com.mongodb.client.result.UpdateResult;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.core.engine.local.Auditor;
-import io.flamingock.core.util.Result;
+import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.oss.driver.mongodb.springdata.v2.internal.mongodb.SpringDataMongoV2CollectionWrapper;

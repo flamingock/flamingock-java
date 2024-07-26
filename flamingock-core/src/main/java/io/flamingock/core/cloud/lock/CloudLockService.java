@@ -16,13 +16,15 @@
 
 package io.flamingock.core.cloud.lock;
 
+import io.flamingock.core.cloud.api.lock.LockExtensionRequest;
+import io.flamingock.core.cloud.api.lock.LockResponse;
 import io.flamingock.core.cloud.lock.client.LockServiceClient;
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.LockService;
 import io.flamingock.core.engine.lock.LockServiceException;
-import io.flamingock.core.runner.RunnerId;
-import io.flamingock.core.util.ServerException;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

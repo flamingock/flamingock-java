@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.mongodb.springdata.v2.internal;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.util.TimeService;
+import io.flamingock.commons.utils.TimeService;
 import io.flamingock.oss.driver.mongodb.v3.internal.Mongo3LockService;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
 

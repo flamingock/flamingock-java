@@ -16,8 +16,10 @@
 
 package io.flamingock.core.cloud.planner;
 
+import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
+import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
+import io.flamingock.core.cloud.api.planner.StageRequest;
 import io.flamingock.core.cloud.lock.CloudLockService;
-import io.flamingock.core.cloud.transaction.OngoingStatus;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.ServiceId;
 import io.flamingock.core.engine.audit.domain.AuditItem;
@@ -25,12 +27,11 @@ import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
-import io.flamingock.core.util.TimeService;
+import io.flamingock.commons.utils.TimeService;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.engine.audit.writer.AuditEntryStatus.EXECUTED;
+import static io.flamingock.core.engine.audit.writer.AuditEntry.Status.EXECUTED;
 
 public final class ExecutionPlanMapper {
 

@@ -26,7 +26,7 @@ import io.flamingock.core.engine.local.LocalConnectionEngine;
 import io.flamingock.core.engine.local.driver.ConnectionDriver;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

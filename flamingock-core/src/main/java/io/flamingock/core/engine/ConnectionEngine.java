@@ -17,7 +17,7 @@
 package io.flamingock.core.engine;
 
 import io.flamingock.core.engine.execution.ExecutionPlanner;
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 import java.util.Optional;

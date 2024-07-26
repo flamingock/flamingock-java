@@ -16,7 +16,7 @@
 
 package io.flamingock.core.engine.lock;
 
-import io.flamingock.core.runner.RunnerId;
+import io.flamingock.commons.utils.RunnerId;
 
 /**
  * <p>Repository interface to manage lock in database, which will be used by LockManager</p>
