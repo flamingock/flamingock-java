@@ -43,9 +43,8 @@ public class SqlTemplate {
         execute(connection, configuration.getExecutionSql());
     }
 
-    @TemplateRollbackExecution
+    @TemplateRollbackExecution(conditionalOnAllConfigurationPropertiesNotNull = {"rollbackSql"})
     public void rollback(Connection connection) {
-        //TODO what if there is no rollback configuration provided, should be ignored?
         execute(connection, configuration.getRollbackSql());
     }
 

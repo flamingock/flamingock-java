@@ -16,22 +16,24 @@
 
 package io.flamingock.core.task.executable.template;
 
+import io.flamingock.commons.utils.ReflectionUtil;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.template.annotations.TemplateConfigSetter;
-import io.flamingock.template.annotations.TemplateConfigValidator;
-import io.flamingock.template.annotations.TemplateExecution;
-import io.flamingock.template.annotations.TemplateRollbackExecution;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.descriptor.TemplatedTaskDescriptor;
 import io.flamingock.core.task.executable.ExecutableTaskFactory;
 import io.flamingock.core.task.navigation.navigator.StepNavigator;
-import io.flamingock.commons.utils.ReflectionUtil;
+import io.flamingock.template.annotations.TemplateConfigSetter;
+import io.flamingock.template.annotations.TemplateConfigValidator;
+import io.flamingock.template.annotations.TemplateExecution;
+import io.flamingock.template.annotations.TemplateRollbackExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -61,8 +63,7 @@ public class TemplatedExecutableTaskFactory implements ExecutableTaskFactory {
                         "Templated[%s] without %s method",
                         taskDescriptor.getSourceClass().getName(),
                         TemplateExecution.class.getSimpleName())));
-        Optional<Method> rollbackMethodOpt = ReflectionUtil
-                .findFirstMethodAnnotated(taskDescriptor.getSourceClass(), TemplateRollbackExecution.class);
+        Optional<Method> rollbackMethod = getRollbackMethodOpt(taskDescriptor);
 
         Optional<Method> configurationSetterOpt = ReflectionUtil
                 .findFirstMethodAnnotated(taskDescriptor.getSourceClass(), TemplateConfigSetter.class);
@@ -77,14 +78,37 @@ public class TemplatedExecutableTaskFactory implements ExecutableTaskFactory {
                 taskDescriptor,
                 AuditEntry.Status.isRequiredExecution(initialState),
                 executionMethod,
-                rollbackMethodOpt.orElse(null),
+                rollbackMethod.orElse(null),
                 configurationSetterOpt.orElse(null),
                 configurationValidatorOpt.orElse(null)
         );
 
     }
 
+    private static Optional<Method> getRollbackMethodOpt(TemplatedTaskDescriptor taskDescriptor) {
+        Optional<Method> rollbackMethodOpt = ReflectionUtil
+                .findFirstMethodAnnotated(taskDescriptor.getSourceClass(), TemplateRollbackExecution.class);
+        Optional<Method> rollbackMethod;
+        if (rollbackMethodOpt.isPresent()) {
+            Method potentialRollbackMethod = rollbackMethodOpt.get();
+            TemplateRollbackExecution rollbackExecutionAnnotation = potentialRollbackMethod.getAnnotation(TemplateRollbackExecution.class);
+            String[] conditionalOnAllConfigurationPropertiesNotNull = rollbackExecutionAnnotation.conditionalOnAllConfigurationPropertiesNotNull();
+            if (conditionalOnAllConfigurationPropertiesNotNull == null || conditionalOnAllConfigurationPropertiesNotNull.length == 0) {
+                rollbackMethod = Optional.of(potentialRollbackMethod);
+            } else {
+                Map<String, Object> configMap = taskDescriptor.getTemplateConfiguration();
+                if (Arrays.stream(conditionalOnAllConfigurationPropertiesNotNull).allMatch(configMap::containsKey)) {
+                    rollbackMethod = Optional.of(potentialRollbackMethod);
+                } else {
+                    rollbackMethod = Optional.empty();
+                }
+            }
 
+        } else {
+            rollbackMethod = Optional.empty();
+        }
+        return rollbackMethod;
+    }
 
 
 }

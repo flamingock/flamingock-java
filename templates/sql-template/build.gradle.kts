@@ -1,4 +1,4 @@
 dependencies {
-    implementation(project(":flamingock-springboot-v2-runner"))
+    implementation(project(":flamingock-core"))
     implementation(project(":flamingock-template"))
 }

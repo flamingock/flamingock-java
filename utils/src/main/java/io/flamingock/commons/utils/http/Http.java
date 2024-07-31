@@ -250,7 +250,7 @@ public final class Http {
                             error = mapResult(response.getEntity(), FlamingockError.class);
 
                         } catch (Throwable ex) {
-                            error = new FlamingockError(GENERIC_ERROR, response.getEntity().toString());
+                            error = new FlamingockError(GENERIC_ERROR, false, response.getEntity().toString());
                         }
 
                         throw new ServerException(request.toString(), getBodyIfPresent(), new HttpFlamingockError(statusCode, error));
@@ -259,10 +259,12 @@ public final class Http {
                     }
                 }
 
+            } catch (ServerException e) {
+              throw e;
             } catch (IOException e) {
-                throw new ServerException(request.toString(), getBodyIfPresent(), new FlamingockError(HTTP_CONNECTION_ERROR, e.getMessage()));
+                throw new ServerException(request.toString(), getBodyIfPresent(), new FlamingockError(HTTP_CONNECTION_ERROR, false, e.getMessage()));
             } catch (Throwable e) {
-                throw new ServerException(request.toString(), getBodyIfPresent(), new FlamingockError(GENERIC_ERROR, e.getMessage()));
+                throw new ServerException(request.toString(), getBodyIfPresent(), new FlamingockError(GENERIC_ERROR, false, e.getMessage()));
             }
         }
 

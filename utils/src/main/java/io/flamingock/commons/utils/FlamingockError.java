@@ -18,30 +18,33 @@ package io.flamingock.commons.utils;
 
 public class FlamingockError {
 
-    public static final int GENERIC_ERROR = 0;
+    public static final String GENERIC_ERROR = "CLIENT_GENERIC_ERROR";
 
-    public static final int OBJECT_MAPPING_ERROR = 1;
+    public static final String OBJECT_MAPPING_ERROR = "CLIENT_OBJECT_MAPPING_ERROR";
 
-    public static final int HTTP_CONNECTION_ERROR = 2;
+    public static final String HTTP_CONNECTION_ERROR = "CLIENT_HTTP_CONNECTION_ERROR";
 
-    private int errorCode;
+    private String code;
 
     private String message;
+
+    private boolean recoverable;
 
     public FlamingockError() {
     }
 
-    public FlamingockError(int errorCode, String message) {
-        this.errorCode = errorCode;
+    public FlamingockError(String code, boolean recoverable, String message) {
+        this.code = code;
+        this.recoverable = recoverable;
         this.message = message;
     }
 
-    public int getErrorCode() {
-        return errorCode;
+    public String getCode() {
+        return code;
     }
 
-    public void setErrorCode(int errorCode) {
-        this.errorCode = errorCode;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getMessage() {
@@ -52,8 +55,20 @@ public class FlamingockError {
         this.message = message;
     }
 
+    public boolean isRecoverable() {
+        return recoverable;
+    }
+
+    public void setRecoverable(boolean recoverable) {
+        this.recoverable = recoverable;
+    }
+
     @Override
     public String toString() {
-        return "Error{errorCode[" + getErrorCode() + "], message['" + getMessage() + "']";
+        return "FlamingockError{" +
+                "code='" + code + '\'' +
+                ", message='" + message + '\'' +
+                ", recoverable=" + recoverable +
+                '}';
     }
 }

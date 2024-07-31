@@ -22,13 +22,13 @@ public class HttpFlamingockError extends FlamingockError {
 
     private final int statusCode;
 
-    public HttpFlamingockError(int statusCode, int errorCode, String message) {
-        super(errorCode, message);
+    public HttpFlamingockError(int statusCode, String errorCode, String message) {
+        super(errorCode, statusCode < 500, message);
         this.statusCode = statusCode;
     }
 
     public HttpFlamingockError(int statusCode, FlamingockError error) {
-        super(error.getErrorCode(), error.getMessage());
+        super(error.getCode(), error.isRecoverable(), error.getMessage());
         this.statusCode = statusCode;
     }
 
@@ -38,6 +38,7 @@ public class HttpFlamingockError extends FlamingockError {
 
     @Override
     public String toString() {
-        return "Error{httpStatus[" + statusCode+ "], errorCode[" + getErrorCode() + "], message['" + getMessage() + "']";
+        return "Error{httpStatus[" + statusCode + "], code[" + getCode() + "], message['" + getMessage() + "', recoverable[" + isRecoverable() + "]]";
     }
+
 }
