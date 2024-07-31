@@ -39,7 +39,6 @@ public class MysqlStandaloneApplication {
 
     }
 
-
     public void run() throws ClassNotFoundException {
         try (CloudTransactioner cloudTransactioner = getSqlCloudTransactioner()) {
             FlamingockStandalone
@@ -49,7 +48,7 @@ public class MysqlStandaloneApplication {
                     .setEnvironment(ENVIRONMENT)
                     .setService(SERVICE_NAME)
                     .setCloudTransactioner(cloudTransactioner)//for cloud transactions with Sql
-                    .setLockAcquiredForMillis(60 * 1000L)//this is just to show how is set. Default value is still 60 * 1000L
+                    .setLockAcquiredForMillis(6 * 1000L)//this is just to show how is set. Default value is still 60 * 1000L
                     .setLockQuitTryingAfterMillis(10 * 1000L)//this is just to show how is set. Default value is still 3 * 60 * 1000L
                     .setLockTryFrequencyMillis(3000L)//this is just to show how is set. Default value is still 1000L
                     .addStage(new Stage("database_stage").addFileDirectory("flamingock/stage1"))

@@ -20,17 +20,17 @@ import java.util.List;
 
 public class ExecutionPlanRequest {
 
-    private final long acquiredForMills;
+    private final long lockAcquiredForMillis;
 
     private final ClientSubmission clientSubmission;
 
-    public ExecutionPlanRequest(long acquiredForMills, List<StageRequest> stages) {
-        this.acquiredForMills = acquiredForMills;
+    public ExecutionPlanRequest(long lockAcquiredForMillis, List<StageRequest> stages) {
+        this.lockAcquiredForMillis = lockAcquiredForMillis;
         this.clientSubmission = new ClientSubmission(stages);
     }
 
-    public long getAcquiredForMills() {
-        return acquiredForMills;
+    public long getLockAcquiredForMillis() {
+        return lockAcquiredForMillis;
     }
 
     public ClientSubmission getClientSubmission() {

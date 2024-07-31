@@ -16,12 +16,16 @@
 
 package io.flamingock.core.cloud.planner;
 
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.StopWatch;
+import io.flamingock.commons.utils.ThreadSleeper;
+import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.cloud.lock.CloudLockService;
 import io.flamingock.core.cloud.planner.client.ExecutionPlannerClient;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.cloud.transaction.OngoingStatusRepository;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.domain.AuditItem;
@@ -30,10 +34,6 @@ import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.core.pipeline.Pipeline;
-import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.commons.utils.StopWatch;
-import io.flamingock.commons.utils.ThreadSleeper;
-import io.flamingock.commons.utils.TimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,15 +100,19 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                     if (lastOwnerGuid == null || !lastOwnerGuid.equals(response.getLock().getAcquisitionId())) {
                         //if the lock's guid has been changed, the stopwatch needs to be reset
                         logger.info(
-                                "counter per lock GUID re-started: lastOwnerGuid[{}] and response guid[{}] - elapsed[{}ms]",
-                                lastOwnerGuid,
+                                "counter per lock GUID {}: lastOwnerGuid[{}] and response guid[{}] - elapsed[{}ms]",
+                                lastOwnerGuid == null ? "started" : "reset",
+                                lastOwnerGuid != null ? lastOwnerGuid : "not-initialised",
                                 response.getLock().getAcquisitionId(),
                                 counterPerGuid.getElapsed());
                         counterPerGuid.reset();
                     }
                     lastOwnerGuid = response.getLock().getAcquisitionId();
                     long remainingTimeForSameGuid = response.getLock().getAcquiredForMillis() - counterPerGuid.getElapsed();
-                    logger.info("AWAIT response from server - elapsed[{}ms]", counterPerGuid.getElapsed());
+                    logger.info("AWAIT response from server - acquired by other process for[{}ms] and elapsed[{}ms]",
+                            response.getLock().getAcquiredForMillis(),
+                            counterPerGuid.getElapsed()
+                    );
                     lockThreadSleeper.checkThresholdAndWait(
                             Math.min(remainingTimeForSameGuid, coreConfiguration.getLockTryFrequencyMillis())
                     );
