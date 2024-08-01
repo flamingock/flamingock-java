@@ -159,10 +159,6 @@ public class ExecutionPlanResponse {
 
     public static class Lock {
 
-        private String organizationId;
-        private String projectId;
-        private String environment;
-
         private String key;
 
         private String owner;
@@ -173,30 +169,6 @@ public class ExecutionPlanResponse {
 
 
         public Lock() {
-        }
-
-        public String getOrganizationId() {
-            return organizationId;
-        }
-
-        public void setOrganizationId(String organizationId) {
-            this.organizationId = organizationId;
-        }
-
-        public String getProjectId() {
-            return projectId;
-        }
-
-        public void setProjectId(String projectId) {
-            this.projectId = projectId;
-        }
-
-        public String getEnvironment() {
-            return environment;
-        }
-
-        public void setEnvironment(String environment) {
-            this.environment = environment;
         }
 
         public String getKey() {
