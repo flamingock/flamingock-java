@@ -27,7 +27,10 @@ public interface CoreConfigurable {
 
     void setStages(List<Stage> stages);
 
-    List<Stage> getStages();
+    void addStage(Stage stage);
+
+    Iterable<Stage> getStages();
+
 
     void setLockAcquiredForMillis(long lockAcquiredForMillis);
 

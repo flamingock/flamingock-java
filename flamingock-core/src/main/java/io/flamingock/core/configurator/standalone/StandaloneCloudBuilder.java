@@ -16,28 +16,35 @@
 
 package io.flamingock.core.configurator.standalone;
 
+import io.flamingock.core.api.CloudSystemModule;
+import io.flamingock.commons.utils.JsonObjectMapper;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.http.Http;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.configurator.cloud.CloudConfiguration;
 import io.flamingock.core.configurator.cloud.CloudConfigurator;
 import io.flamingock.core.configurator.cloud.CloudConfiguratorDelegate;
+import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
+import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
-import io.flamingock.core.cloud.CloudConnectionEngine;
+import io.flamingock.core.engine.CloudConnectionEngine;
+import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 public class StandaloneCloudBuilder
-        extends AbstractStandaloneBuilder<StandaloneCloudBuilder>
+        extends AbstractStandaloneBuilder<StandaloneCloudBuilder, CloudSystemModule, CloudSystemModuleManager>
         implements CloudConfigurator<StandaloneCloudBuilder> {
     private static final Logger logger = LoggerFactory.getLogger(StandaloneCloudBuilder.class);
 
-    private final CoreConfiguratorDelegate<StandaloneCloudBuilder> coreConfiguratorDelegate;
+    private final CoreConfiguratorDelegate<StandaloneCloudBuilder, CloudSystemModule, CloudSystemModuleManager> coreConfiguratorDelegate;
 
     private final StandaloneConfiguratorDelegate<StandaloneCloudBuilder> standaloneConfiguratorDelegate;
 
@@ -46,10 +53,11 @@ public class StandaloneCloudBuilder
 
     StandaloneCloudBuilder(CoreConfiguration coreConfiguration,
                            CloudConfiguration cloudConfiguration,
-                           DependencyInjectableContext dependencyInjectableContext) {
-        this.coreConfiguratorDelegate = new CoreConfiguratorDelegate<>(coreConfiguration, () -> this);
+                           DependencyInjectableContext dependencyInjectableContext,
+                           CloudSystemModuleManager systemModuleManager) {
+        this.coreConfiguratorDelegate = new CoreConfiguratorDelegate<>(coreConfiguration, () -> this, systemModuleManager);
         this.standaloneConfiguratorDelegate = new StandaloneConfiguratorDelegate<>(dependencyInjectableContext, () -> this);
-        this.cloudConfiguratorDelegate = new CloudConfiguratorDelegate<>(coreConfiguration, cloudConfiguration, () -> this);
+        this.cloudConfiguratorDelegate = new CloudConfiguratorDelegate<>(cloudConfiguration, () -> this);
 
     }
 
@@ -59,7 +67,7 @@ public class StandaloneCloudBuilder
     ///////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected CoreConfiguratorDelegate<StandaloneCloudBuilder> coreConfiguratorDelegate() {
+    protected CoreConfiguratorDelegate<StandaloneCloudBuilder, CloudSystemModule, CloudSystemModuleManager> coreConfiguratorDelegate() {
         return coreConfiguratorDelegate;
     }
 
@@ -72,22 +80,46 @@ public class StandaloneCloudBuilder
     public Runner build() {
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);
-        CloudConnectionEngine cloudEngine = cloudConfiguratorDelegate.getAndInitializeConnectionEngine(runnerId);
+
+
+        CloudConnectionEngine.Factory engineFactory = CloudConnectionEngine.newFactory(
+                runnerId,
+                coreConfiguratorDelegate.getCoreConfiguration(),
+                cloudConfiguratorDelegate.getCloudConfiguration(),
+                getCloudTransactioner().orElse(null),
+                Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE)
+        );
+
+        CloudConnectionEngine engine = engineFactory.initializeAndGet();
+
+        coreConfiguratorDelegate.getSystemModuleManager().initialize(engine.getEnvironmentId(), engine.getServiceId());
+
+        coreConfiguratorDelegate.getSystemModuleManager()
+                .getDependencies()
+                .forEach(d -> addDependency(d.getName(), d.getType(), d.getInstance()));
 
         registerTemplates();
+
+        CoreConfigurable coreConfiguration = coreConfiguratorDelegate().getCoreConfiguration();
+
+        Pipeline pipeline = buildPipeline(
+                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesBefore(),
+                coreConfiguration.getStages(),
+                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter()
+        );
+
         return PipelineRunnerCreator.create(
                 runnerId,
-                buildPipeline(),
-                cloudEngine.getAuditWriter(),
-                cloudEngine.getTransactionWrapper().orElse(null),
-                cloudEngine.getExecutionPlanner(),
-                coreConfiguratorDelegate.getCoreConfiguration(),
+                pipeline,
+                engine,
+                coreConfiguration,
                 buildEventPublisher(),
                 getDependencyContext(),
                 getCoreConfiguration().isThrowExceptionIfCannotObtainLock(),
-                cloudEngine::close
+                engineFactory.getCloser()
         );
     }
+
 
     @Override
     public StandaloneCloudBuilder setHost(String host) {

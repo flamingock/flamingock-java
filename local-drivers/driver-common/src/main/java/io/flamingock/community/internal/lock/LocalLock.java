@@ -16,6 +16,7 @@
 
 package io.flamingock.community.internal.lock;
 
+import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockException;
@@ -51,7 +52,7 @@ public class LocalLock extends Lock {
                       RunnerId owner,
                       LocalLockService lockService,
                       TimeService timeService) {
-        super(owner, new LocalLockKey("DEFAULT_KEY"), leaseMillis, stopTryingAfterMillis, retryFrequencyMillis, lockService, timeService);
+        super(owner, LockKey.fromString("DEFAULT_KEY"), leaseMillis, stopTryingAfterMillis, retryFrequencyMillis, lockService, timeService);
     }
 
     private LocalLockService getLockService() {

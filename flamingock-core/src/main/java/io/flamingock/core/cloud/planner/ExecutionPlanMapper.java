@@ -21,10 +21,10 @@ import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.planner.StageRequest;
 import io.flamingock.core.cloud.lock.CloudLockService;
 import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.configurator.core.ServiceId;
 import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.core.engine.lock.Lock;
+import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.commons.utils.RunnerId;
@@ -113,7 +113,7 @@ public final class ExecutionPlanMapper {
                                                TimeService timeService) {
         return new Lock(
                 owner,
-                ServiceId.fromString(response.getLock().getKey()),
+                LockKey.fromString(response.getLock().getKey()),
                 response.getLock().getAcquiredForMillis(),
                 coreConfiguration.getLockQuitTryingAfterMillis(),
                 coreConfiguration.getLockTryFrequencyMillis(),

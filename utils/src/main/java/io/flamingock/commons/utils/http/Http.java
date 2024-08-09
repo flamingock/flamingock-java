@@ -18,6 +18,7 @@ package io.flamingock.commons.utils.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.ServerException;
 import io.flamingock.commons.utils.FlamingockError;
@@ -32,6 +33,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,9 @@ public final class Http {
     private enum Method {
         GET, POST, PUT, DELETE
     }
+
+
+    public static final RequestBuilderFactory DEFAULT_INSTANCE = Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
 
     public static RequestBuilderFactory builderFactory(CloseableHttpClient client,
                                                        ObjectMapper objectMapper) {

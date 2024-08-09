@@ -1,11 +1,11 @@
 /*
- * Copyright 2023 Flamingock ("https://oss.flamingock.io")
+ * Copyright 2023 Flamingock (https://oss.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package io.flamingock.community.internal.lock;
+package io.flamingock.core.api.annotations;
 
-import io.flamingock.core.engine.lock.LockKey;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class LocalLockKey implements LockKey {
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface SystemChange {
 
-    private final String key;
-
-    public LocalLockKey(String key) {
-        this.key = key;
-    }
-
-    @Override
-    public String toString(){
-        return key;
-    }
 }

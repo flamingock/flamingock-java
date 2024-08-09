@@ -16,6 +16,8 @@
 
 package io.flamingock.springboot.v2.context;
 
+import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
+import io.flamingock.core.configurator.local.LocalSystemModuleManager;
 import io.flamingock.core.engine.local.driver.ConnectionDriver;
 import io.flamingock.springboot.v2.SpringRunnerBuilder;
 import io.flamingock.springboot.v2.builder.FlamingockSpringboot;
@@ -56,18 +58,20 @@ public class SpringbootContext {
                                                       FlamingockConfigurationProperties configurationProperties,
                                                       ApplicationContext springContext,
                                                       ApplicationEventPublisher applicationEventPublisher) {
-        SpringbootBaseBuilder<?> springRunnerBuilder;
+        SpringbootBaseBuilder<?, ?, ?> springRunnerBuilder;
         if (connectionDriverOptional.isPresent() && configurationProperties.isCloudConfigurationEmpty()) {
             springRunnerBuilder = FlamingockSpringboot.localBuilder(
                     configurationProperties.getCoreConfiguration(),
                     configurationProperties.getSpringbootConfiguration(),
-                    configurationProperties.getLocalConfiguration()
+                    configurationProperties.getLocalConfiguration(),
+                    new LocalSystemModuleManager()
             ).setDriver(connectionDriverOptional.get());
         } else {
             springRunnerBuilder = FlamingockSpringboot.cloudBuilder(
                     configurationProperties.getCoreConfiguration(),
                     configurationProperties.getSpringbootConfiguration(),
-                    configurationProperties.getCloudProperties()
+                    configurationProperties.getCloudProperties(),
+                    new CloudSystemModuleManager()
             );
         }
         return springRunnerBuilder
@@ -75,6 +79,5 @@ public class SpringbootContext {
                 .setEventPublisher(applicationEventPublisher);
 
     }
-
 
 }

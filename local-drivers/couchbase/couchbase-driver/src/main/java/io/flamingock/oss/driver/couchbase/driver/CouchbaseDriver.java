@@ -18,6 +18,7 @@ package io.flamingock.oss.driver.couchbase.driver;
 
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.driver.ConnectionDriver;
@@ -67,13 +68,15 @@ public class CouchbaseDriver implements ConnectionDriver<CouchbaseConfiguration>
     }
 
     @Override
-    public LocalConnectionEngine getConnectionEngine(CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
-        return new CouchbaseEngine(
+    public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
+        CouchbaseEngine couchbaseEngine = new CouchbaseEngine(
                 cluster,
                 collection,
                 coreConfiguration,
                 communityConfiguration,
                 driverConfiguration != null ? driverConfiguration : CouchbaseConfiguration.getDefault());
+        couchbaseEngine.initialize(runnerId);
+        return couchbaseEngine;
     }
 
     private static void logWarningFieldIgnored(String name, long value) {

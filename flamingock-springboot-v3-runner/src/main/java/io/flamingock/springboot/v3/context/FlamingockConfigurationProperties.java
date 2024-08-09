@@ -16,11 +16,11 @@
 
 package io.flamingock.springboot.v3.context;
 
-import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.cloud.CloudConfigurable;
 import io.flamingock.core.configurator.cloud.CloudConfiguration;
+import io.flamingock.core.configurator.core.CoreConfigurable;
+import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.legacy.LegacyMigration;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.configurator.local.LocalConfiguration;
@@ -66,14 +66,18 @@ public class FlamingockConfigurationProperties
         return cloudConfiguration;
     }
 
-
     @Override
     public void setStages(List<Stage> stages) {
         coreConfiguration.setStages(stages);
     }
 
     @Override
-    public List<Stage> getStages() {
+    public void addStage(Stage stage) {
+        coreConfiguration.addStage(stage);
+    }
+
+    @Override
+    public Iterable<Stage> getStages() {
         return coreConfiguration.getStages();
     }
 

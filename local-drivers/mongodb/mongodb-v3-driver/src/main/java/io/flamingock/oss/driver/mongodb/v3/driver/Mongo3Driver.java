@@ -17,6 +17,7 @@
 package io.flamingock.oss.driver.mongodb.v3.driver;
 
 import com.mongodb.client.MongoClient;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.driver.ConnectionDriver;
@@ -67,13 +68,16 @@ public class Mongo3Driver implements ConnectionDriver<MongoDB3Configuration> {
     }
 
     @Override
-    public LocalConnectionEngine getConnectionEngine(CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
-        return new Mongo3Engine(
+    public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
+        Mongo3Engine engine =new Mongo3Engine(
                 mongoClient,
                 databaseName,
                 coreConfiguration,
                 communityConfiguration,
                 driverConfiguration != null ? driverConfiguration : MongoDB3Configuration.getDefault());
+
+        engine.initialize(runnerId);
+        return engine;
     }
 
     private static void logWarningFieldIgnored(String name, long value) {

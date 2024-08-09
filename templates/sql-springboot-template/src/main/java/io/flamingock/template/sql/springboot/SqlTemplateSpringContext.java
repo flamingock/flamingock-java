@@ -24,11 +24,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SqlTemplateSpringContext {
-    
+
     @Bean
-    public SqlTemplateModule mongoCreateCollectionTemplateModule(CoreConfigurator<?> CoreConfigurator) {
+    public SqlTemplateModule mongoCreateCollectionTemplateModule(CoreConfigurator<?, ?, ?> coreConfigurator) {
         SqlTemplateModule module = new SqlTemplateModule();
-        CoreConfigurator.addTemplateModule(module);
+        coreConfigurator.addTemplateModule(module);
         return module;
     }
 }

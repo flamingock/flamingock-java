@@ -16,6 +16,7 @@
 
 package io.flamingock.commons.utils;
 
+import io.flamingock.commons.utils.id.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -28,10 +28,6 @@ subprojects {
         }
     }
 
-
-
-
-
     val implementation by configurations
     val testImplementation by configurations
     val testRuntimeOnly by configurations

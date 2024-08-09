@@ -17,6 +17,8 @@
 package io.flamingock.core.configurator.core;
 
 
+import io.flamingock.core.api.SystemModule;
+import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.legacy.LegacyMigration;
 import io.flamingock.core.pipeline.Stage;
@@ -26,13 +28,22 @@ import io.flamingock.template.TemplateModule;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class CoreConfiguratorDelegate<HOLDER> implements CoreConfigurator<HOLDER>{
+public class CoreConfiguratorDelegate<
+        HOLDER,
+        SYSTEM_MODULE extends SystemModule,
+        SYSTEM_MODULE_MANAGER extends SystemModuleManager<SYSTEM_MODULE>>
+        implements CoreConfigurator<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER> {
+
     private final Supplier<HOLDER> holderSupplier;
     private final CoreConfiguration configuration;
+    private final SYSTEM_MODULE_MANAGER systemModuleManager;
 
-    public CoreConfiguratorDelegate(CoreConfiguration configuration, Supplier<HOLDER> holderSupplier) {
+    public CoreConfiguratorDelegate(CoreConfiguration configuration,
+                                    Supplier<HOLDER> holderSupplier,
+                                    SYSTEM_MODULE_MANAGER systemModuleManager) {
         this.configuration = configuration;
         this.holderSupplier = holderSupplier;
+        this.systemModuleManager = systemModuleManager;
     }
 
     @Override
@@ -42,7 +53,7 @@ public class CoreConfiguratorDelegate<HOLDER> implements CoreConfigurator<HOLDER
 
     @Override
     public HOLDER addStage(Stage stage) {
-        configuration.getStages().add(stage);
+        configuration.addStage(stage);
         return holderSupplier.get();
     }
 
@@ -206,5 +217,18 @@ public class CoreConfiguratorDelegate<HOLDER> implements CoreConfigurator<HOLDER
     public TransactionStrategy getTransactionStrategy() {
         return configuration.getTransactionStrategy();
     }
+
+
+    @Override
+    public SYSTEM_MODULE_MANAGER getSystemModuleManager() {
+        return systemModuleManager;
+    }
+
+    @Override
+    public HOLDER addSystemModule(SYSTEM_MODULE systemModule) {
+        getSystemModuleManager().add(systemModule);
+        return holderSupplier.get();
+    }
+
 
 }

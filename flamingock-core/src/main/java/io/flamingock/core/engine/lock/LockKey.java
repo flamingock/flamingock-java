@@ -16,6 +16,22 @@
 
 package io.flamingock.core.engine.lock;
 
-public interface LockKey {
 
+import io.flamingock.commons.utils.id.Id;
+
+public class LockKey extends Id {
+
+    public static LockKey fromString(String value) {
+        return new LockKey(value);
+    }
+
+    private LockKey(String key) {
+        super(key);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o) && o instanceof LockKey;
+    }
 }

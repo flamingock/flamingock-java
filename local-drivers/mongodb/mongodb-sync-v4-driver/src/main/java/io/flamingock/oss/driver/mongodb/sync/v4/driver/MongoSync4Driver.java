@@ -17,6 +17,7 @@
 package io.flamingock.oss.driver.mongodb.sync.v4.driver;
 
 import com.mongodb.client.MongoClient;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.driver.ConnectionDriver;
@@ -66,14 +67,17 @@ public class MongoSync4Driver implements ConnectionDriver<MongoDBSync4Configurat
         return this;
     }
 
+
     @Override
-    public LocalConnectionEngine getConnectionEngine(CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
-        return new MongoSync4Engine(
+    public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
+        MongoSync4Engine engine = new MongoSync4Engine(
                 mongoClient,
                 databaseName,
                 coreConfiguration,
                 communityConfiguration,
                 driverConfiguration != null ? driverConfiguration : MongoDBSync4Configuration.getDefault());
+        engine.initialize(runnerId);
+        return engine;
     }
 
     private static void logWarningFieldIgnored(String name, long value) {

@@ -16,6 +16,7 @@
 
 package io.flamingock.core.configurator.core;
 
+import io.flamingock.core.api.SystemModule;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.legacy.LegacyMigration;
 import io.flamingock.core.pipeline.Stage;
@@ -25,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.flamingock.commons.utils.CollectionUtil.assignOrEmpty;
 import static io.flamingock.commons.utils.Constants.DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
 import static io.flamingock.commons.utils.Constants.DEFAULT_MIGRATION_AUTHOR;
 import static io.flamingock.commons.utils.Constants.DEFAULT_QUIT_TRYING_AFTER_MILLIS;
@@ -90,15 +90,24 @@ public class CoreConfiguration implements CoreConfigurable {
     private List<Stage> stages = new ArrayList<>();
 
 
+    private List<SystemModule> systemModules = new ArrayList<>();
+
+
     @Override
     public void setStages(List<Stage> stages) {
-        this.stages = assignOrEmpty(stages);
+        this.stages.addAll(stages);
     }
 
     @Override
-    public List<Stage> getStages() {
+    public void addStage(Stage stage) {
+        stages.add(stage);
+    }
+
+    @Override
+    public Iterable<Stage> getStages() {
         return stages;
     }
+
 
     @Override
     public void setLockAcquiredForMillis(long lockAcquiredForMillis) {

@@ -17,17 +17,14 @@
 package io.flamingock.core.engine;
 
 import io.flamingock.core.engine.execution.ExecutionPlanner;
-import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 import java.util.Optional;
 
-public interface ConnectionEngine  extends AutoCloseable{
+public interface ConnectionEngine {
 
-  void initialize(RunnerId runnerId);
+    ExecutionPlanner getExecutionPlanner();
 
-  ExecutionPlanner getExecutionPlanner();
-
-  Optional<?  extends TransactionWrapper> getTransactionWrapper();
+    Optional<? extends TransactionWrapper> getTransactionWrapper();
 
 }

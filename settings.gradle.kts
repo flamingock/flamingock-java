@@ -15,6 +15,10 @@ project(":cloud-transactioners:sql-cloud-transactioner").projectDir = file("clou
 project(":cloud-transactioners:sql-cloud-transactioner").name = "sql-cloud-transactioner"
 
 
+include("flamingock-core-api")
+project(":flamingock-core-api").name = "flamingock-core-api"
+project(":flamingock-core-api").projectDir = file("flamingock-core-api")
+
 include("flamingock-core-cloud-api")
 project(":flamingock-core-cloud-api").projectDir = file("flamingock-core-cloud-api")
 project(":flamingock-core-cloud-api").name = "flamingock-core-cloud-api"
@@ -123,6 +127,10 @@ include("examples:databases:mysql-standalone")
 project(":examples:databases:mysql-standalone").name = "mysql-standalone"
 project(":examples:databases:mysql-standalone").projectDir = file("examples/databases/mysql-standalone")
 
+include("examples:databases:legacy-mongodb-importer")
+project(":examples:databases:legacy-mongodb-importer").name = "legacy-mongodb-importer"
+project(":examples:databases:legacy-mongodb-importer").projectDir = file("examples/databases/legacy-mongodb-importer")
+
 
 include("utils-test")
 project(":utils-test").name = "utils-test"
@@ -132,3 +140,14 @@ project(":utils-test").projectDir = file("utils-test")
 include("utils")
 project(":utils").name = "utils"
 project(":utils").projectDir = file("utils")
+
+
+
+
+//////////////////////////////////////
+// INTERNAL
+//////////////////////////////////////
+include("internal:legacy-importer-mongodb")
+project(":internal:legacy-importer-mongodb").name = "legacy-importer-mongodb"
+project(":internal:legacy-importer-mongodb").projectDir = file("internal/legacy-importer-mongodb")
+

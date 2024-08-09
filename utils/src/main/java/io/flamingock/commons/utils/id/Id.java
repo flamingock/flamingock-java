@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.commons.utils;
+package io.flamingock.commons.utils.id;
 
 public abstract class Id {
 

@@ -16,9 +16,6 @@
 
 package io.flamingock.core.configurator.cloud;
 
-import io.flamingock.core.configurator.core.EnvironmentId;
-import io.flamingock.core.configurator.core.ServiceId;
-
 public interface CloudConfigurable {
 
     default String getApiVersion() {

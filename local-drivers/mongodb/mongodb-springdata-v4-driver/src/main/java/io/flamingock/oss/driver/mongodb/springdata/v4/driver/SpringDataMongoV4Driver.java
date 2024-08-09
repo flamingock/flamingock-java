@@ -16,6 +16,7 @@
 
 package io.flamingock.oss.driver.mongodb.springdata.v4.driver;
 
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.oss.driver.mongodb.springdata.v4.config.SpringDataMongoV4Configuration;
@@ -63,12 +64,14 @@ public class SpringDataMongoV4Driver implements ConnectionDriver<SpringDataMongo
     }
 
     @Override
-    public LocalConnectionEngine getConnectionEngine(CoreConfigurable coreConfiguration, LocalConfigurable localConfiguration) {
-        return new SpringDataMongoV4Engine(
+    public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
+        SpringDataMongoV4Engine engine = new SpringDataMongoV4Engine(
                 mongoTemplate,
                 coreConfiguration,
-                localConfiguration,
+                communityConfiguration,
                 driverConfiguration != null ? driverConfiguration : SpringDataMongoV4Configuration.getDefault());
+        engine.initialize(runnerId);
+        return engine;
     }
 
     private static void logWarningFieldIgnored(String name, long value) {

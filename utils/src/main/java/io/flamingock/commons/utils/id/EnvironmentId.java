@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.configurator.core;
+package io.flamingock.commons.utils.id;
 
-import io.flamingock.core.engine.lock.LockKey;
-import io.flamingock.commons.utils.Id;
+public class EnvironmentId extends Id {
 
-public class ServiceId extends Id implements LockKey {
-
-    public static ServiceId fromString(String value) {
-        return new ServiceId(value);
+    public static EnvironmentId fromString(String value) {
+        return new EnvironmentId(value);
     }
 
-    private ServiceId(String value) {
+    private EnvironmentId(String value) {
         super(value);
     }
 
     @Override
     public boolean equals(Object o) {
-        return super.equals(o) && o instanceof ServiceId;
+        return super.equals(o) && o instanceof EnvironmentId;
     }
 
 

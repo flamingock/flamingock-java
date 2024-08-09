@@ -31,7 +31,6 @@ public interface CloudConfigurator<HOLDER> {
     HOLDER setApiToken(String clientSecret);
 
     HOLDER setCloudTransactioner(CloudTransactioner cloudTransactioner);
-
     Optional<CloudTransactioner> getCloudTransactioner();
 
 }

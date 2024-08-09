@@ -23,8 +23,13 @@ import java.util.function.Supplier;
 public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLDER> {
 
     private final LocalConfigurable LocalConfiguration;
+
     private final Supplier<HOLDER> holderSupplier;
+
     private ConnectionDriver<?> connectionDriver;
+
+    private LocalSystemModuleManager systemModules = new LocalSystemModuleManager();
+
 
     public LocalConfiguratorDelegate(LocalConfigurable communityConfiguration, Supplier<HOLDER> holderSupplier) {
         this.LocalConfiguration = communityConfiguration;
@@ -47,4 +52,6 @@ public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLD
     public LocalConfigurable getLocalConfiguration() {
         return LocalConfiguration;
     }
+
+
 }

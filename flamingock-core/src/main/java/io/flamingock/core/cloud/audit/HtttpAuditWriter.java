@@ -16,14 +16,10 @@
 
 package io.flamingock.core.cloud.audit;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
 import io.flamingock.core.cloud.auth.AuthManager;
-import io.flamingock.core.configurator.core.EnvironmentId;
-import io.flamingock.core.configurator.core.ServiceId;
+import io.flamingock.commons.utils.id.EnvironmentId;
+import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.commons.utils.RunnerId;
@@ -34,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-
-import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 public class HtttpAuditWriter implements AuditWriter {
 
