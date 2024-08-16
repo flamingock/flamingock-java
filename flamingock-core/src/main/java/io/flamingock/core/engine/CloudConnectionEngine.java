@@ -56,6 +56,7 @@ public final class CloudConnectionEngine implements ConnectionEngine {
     private final AuditWriter auditWriter;
 
     private final ExecutionPlanner executionPlanner;
+    private final String jwt;
 
     public static Factory newFactory(RunnerId runnerId,
                                      CoreConfigurable coreConfiguration,
@@ -67,11 +68,13 @@ public final class CloudConnectionEngine implements ConnectionEngine {
 
     private CloudConnectionEngine(EnvironmentId environmentId,
                                   ServiceId serviceId,
+                                  String jwt,
                                   AuditWriter auditWriter,
                                   ExecutionPlanner executionPlanner,
                                   CloudTransactioner cloudTransactioner) {
         this.environmentId =environmentId;
         this.serviceId = serviceId;
+        this.jwt = jwt;
         this.auditWriter = auditWriter;
         this.executionPlanner = executionPlanner;
         this.cloudTransactioner = cloudTransactioner;
@@ -83,6 +86,10 @@ public final class CloudConnectionEngine implements ConnectionEngine {
 
     public ServiceId getServiceId() {
         return serviceId;
+    }
+
+    public String getJwt() {
+        return jwt;
     }
 
     public AuditWriter getAuditWriter() {
@@ -136,6 +143,8 @@ public final class CloudConnectionEngine implements ConnectionEngine {
 
             EnvironmentId environmentId = EnvironmentId.fromString(authResponse.getEnvironmentId());
             ServiceId serviceId = ServiceId.fromString(authResponse.getServiceId());
+            String jwt = authResponse.getJwt();
+
             AuditWriter auditWriter = new HtttpAuditWriter(
                     cloudConfiguration.getHost(),
                     environmentId,
@@ -178,6 +187,7 @@ public final class CloudConnectionEngine implements ConnectionEngine {
             return new CloudConnectionEngine(
                     environmentId,
                     serviceId,
+                    jwt,
                     auditWriter,
                     executionPlanner,
                     transactioner

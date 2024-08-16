@@ -12,8 +12,8 @@ public class CloudSystemModuleManager implements SystemModuleManager<CloudSystem
 
     private final Set<CloudSystemModule> systemModules = new LinkedHashSet<>();
 
-    public void initialize(EnvironmentId environmentId, ServiceId serviceId) {
-        systemModules.forEach(m -> m.initialise(environmentId, serviceId));
+    public void initialize(EnvironmentId environmentId, ServiceId serviceId, String jwt) {
+        systemModules.forEach(m -> m.initialise(environmentId, serviceId, jwt));
     }
 
     @Override
