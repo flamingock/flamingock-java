@@ -32,6 +32,7 @@ import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.execution.ExecutionPlan;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.LockException;
+import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.core.pipeline.Pipeline;
 import org.slf4j.Logger;
@@ -74,7 +75,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    protected ExecutionPlan getNextExecution(Pipeline pipeline) throws LockException {
+    public ExecutionPlan getNextExecution(Pipeline pipeline) throws LockException {
 
         List<LoadedStage> loadedStages = pipeline.getLoadedStages();
 
@@ -91,7 +92,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 ExecutionPlanResponse response = createExecution(loadedStages, lastOwnerGuid, counterPerGuid.getElapsed());
                 logger.info("Obtained cloud execution plan: {}", response.getAction());
                 if (response.isContinue()) {
-                    return ExecutionPlan.CONTINUE();
+                    List<ExecutableStage> executableStages = ExecutionPlanMapper.getExecutableStages(response, loadedStages);
+                    return ExecutionPlan.CONTINUE(executableStages);
 
                 } else if (response.isExecute()) {
                     return buildNextExecutionPlan(loadedStages, response);

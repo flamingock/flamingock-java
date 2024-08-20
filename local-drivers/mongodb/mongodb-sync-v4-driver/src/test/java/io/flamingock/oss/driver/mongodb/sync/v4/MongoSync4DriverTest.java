@@ -21,11 +21,10 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-
-import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.pipeline.Stage;
-import io.flamingock.core.pipeline.execution.StageExecutionException;
+import io.flamingock.core.runner.PipelineExecutionException;
 import io.flamingock.oss.driver.mongodb.sync.v4.driver.MongoSync4Driver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,8 +42,10 @@ import java.util.Set;
 
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.LEGACY_DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
 class MongoSync4DriverTest {
@@ -205,7 +206,7 @@ class MongoSync4DriverTest {
     @DisplayName("When standalone runs the driver with transactions enabled and execution fails should persist only the executed audit logs")
     void failedWithTransaction() {
         //Given-When
-        assertThrows(StageExecutionException.class, () -> {
+        assertThrows(PipelineExecutionException.class, () -> {
             FlamingockStandalone.local()
                     .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithTransaction"))
@@ -238,7 +239,7 @@ class MongoSync4DriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
     void failedWithoutTransactionWithRollback() {
         //Given-When
-        assertThrows(StageExecutionException.class, () -> {
+        assertThrows(PipelineExecutionException.class, () -> {
             FlamingockStandalone.local()
                     .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithRollback"))
@@ -273,7 +274,7 @@ class MongoSync4DriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
     void failedWithoutTransactionWithoutRollback() {
         //Given-When
-        assertThrows(StageExecutionException.class, () -> {
+        assertThrows(PipelineExecutionException.class, () -> {
             FlamingockStandalone.local()
                     .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithoutRollback"))

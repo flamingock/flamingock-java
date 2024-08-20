@@ -64,7 +64,7 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    protected ExecutionPlan getNextExecution(Pipeline pipeline) throws LockException {
+    public ExecutionPlan getNextExecution(Pipeline pipeline) throws LockException {
         AuditStageStatus currentAuditStageStatus = auditReader.getAuditStageStatus();
         logger.debug("Pulled remote state:\n{}", currentAuditStageStatus);
 
@@ -74,7 +74,7 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
                 .map(loadedStage -> loadedStage.applyState(currentAuditStageStatus))
                 .collect(Collectors.toList());
 
-        if (executableStages.stream().anyMatch(ExecutableStage::doesRequireExecution)) {
+        if (executableStages.stream().anyMatch(ExecutableStage::isExecutionRequired)) {
             Lock lock = acquireLock();
             if (configuration.isEnableRefreshDaemon()) {
                 new LockRefreshDaemon(lock, TimeService.getDefault()).start();
@@ -83,7 +83,7 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
             return ExecutionPlan.newExecution(executionId, lock, executableStages);
 
         } else {
-            return ExecutionPlan.CONTINUE();
+            return ExecutionPlan.CONTINUE(executableStages);
         }
     }
 

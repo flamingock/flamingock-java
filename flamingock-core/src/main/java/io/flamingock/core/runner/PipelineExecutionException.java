@@ -14,25 +14,29 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.task.navigation.summary;
+package io.flamingock.core.runner;
 
-import io.flamingock.core.summary.Summary;
-import io.flamingock.core.summary.SummaryLine;
+import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.runner.PipelineSummary;
 
-import java.util.List;
-import java.util.stream.Collectors;
+public class PipelineExecutionException extends FlamingockException {
 
-public interface StepSummary extends Summary {
+    private final PipelineSummary summary;
 
-    List<? extends StepSummaryLine> getLines();
 
-    @Override
-    default String getPretty() {
-        return getLines()
-                .stream()
-                .map(SummaryLine::getPretty)
-                .map(line -> "\t" + line)
-                .collect(Collectors.joining("\n"));
+    public PipelineExecutionException(PipelineSummary summary) {
+        super("\n\n" + summary.getPretty() + "\n");
+        this.summary = summary;
     }
+
+    public PipelineExecutionException(Throwable throwable, PipelineSummary summary) {
+        super(throwable);
+        this.summary = summary;
+    }
+
+    public PipelineSummary getSummary() {
+        return summary;
+    }
+
 
 }

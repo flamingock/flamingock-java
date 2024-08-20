@@ -16,6 +16,8 @@
 
 package io.flamingock.core.task.descriptor;
 
+import java.util.StringJoiner;
+
 public class ReflectionTaskDescriptor extends AbstractTaskDescriptor implements TaskDescriptor {
 
     protected final Class<?> source;
@@ -36,13 +38,23 @@ public class ReflectionTaskDescriptor extends AbstractTaskDescriptor implements 
 
     @Override
     public String pretty() {
-        return toString();
+        String fromParent = super.pretty();
+        return fromParent + String.format("\n\t\t[class: %s]", getSourceName());
+
     }
+
 
     @Override
     public String toString() {
-        return "ReflectionTaskDescriptor{" +
-                "source=" + source +
-                '}';
+        return new StringJoiner(", ", ReflectionTaskDescriptor.class.getSimpleName() + "[", "]")
+                .add("source=" + source)
+                .add("sourceClass=" + getSourceClass())
+                .add("sourceName='" + getSourceName() + "'")
+                .add("id='" + getId() + "'")
+                .add("runAlways=" + isRunAlways())
+                .add("transactional=" + isTransactional())
+                .add("order=" + getOrder())
+                .add("sortable=" + isSortable())
+                .toString();
     }
 }

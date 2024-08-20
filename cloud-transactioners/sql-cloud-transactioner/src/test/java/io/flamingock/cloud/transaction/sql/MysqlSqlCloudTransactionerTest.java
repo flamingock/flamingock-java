@@ -32,7 +32,7 @@ import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.pipeline.Stage;
-import io.flamingock.core.pipeline.execution.StageExecutionException;
+import io.flamingock.core.runner.PipelineExecutionException;
 import io.flamingock.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -240,7 +240,7 @@ public class MysqlSqlCloudTransactionerTest {
                     .addStage(new Stage(stageName)
                             .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.unhappypath")))
                     .build();
-            StageExecutionException ex = Assertions.assertThrows(StageExecutionException.class, runner::run);
+            PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
 
             // check clients changes
             SqlTestUtil.checkCount(connection, "CLIENTS_2", 0);
@@ -314,7 +314,7 @@ public class MysqlSqlCloudTransactionerTest {
                     .build();
 
             //then
-            StageExecutionException ex = Assertions.assertThrows(StageExecutionException.class, runner::run);
+            PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
 
 
         }

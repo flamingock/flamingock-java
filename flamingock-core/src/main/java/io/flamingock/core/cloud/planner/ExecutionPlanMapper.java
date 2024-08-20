@@ -16,6 +16,8 @@
 
 package io.flamingock.core.cloud.planner;
 
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.planner.StageRequest;
@@ -27,11 +29,10 @@ import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
-import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
-import io.flamingock.commons.utils.TimeService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ public final class ExecutionPlanMapper {
 
     private static StageRequest.Task mapToTaskRequest(TaskDescriptor descriptor,
                                                       Map<String, AuditItem.Operation> ongoingStatusesMap) {
-        if(ongoingStatusesMap.containsKey(descriptor.getId())) {
+        if (ongoingStatusesMap.containsKey(descriptor.getId())) {
             if (ongoingStatusesMap.get(descriptor.getId()) == AuditItem.Operation.ROLLBACK) {
                 return StageRequest.Task.ongoingRollback(descriptor.getId());
             } else {
@@ -74,12 +75,13 @@ public final class ExecutionPlanMapper {
         }
     }
 
-    public static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<LoadedStage> loadedStages) {
+    static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<LoadedStage> loadedStages) {
         //Create a set for the filter in the loop
-        Set<String> stageNameSet = response.getStages().stream().map(ExecutionPlanResponse.Stage::getName).collect(Collectors.toSet());
+        List<ExecutionPlanResponse.Stage> stages = response.getStages() != null ? response.getStages() : Collections.emptyList();
+        Set<String> stageNameSet = stages.stream().map(ExecutionPlanResponse.Stage::getName).collect(Collectors.toSet());
 
         //Create a map to allow indexed access when looping
-        Map<String, ExecutionPlanResponse.Stage> responseStagesMap = response.getStages()
+        Map<String, ExecutionPlanResponse.Stage> responseStagesMap = stages
                 .stream()
                 .collect(Collectors.toMap(ExecutionPlanResponse.Stage::getName, Function.identity()));
 
@@ -91,7 +93,10 @@ public final class ExecutionPlanMapper {
     }
 
     private static ExecutableStage mapToExecutable(LoadedStage loadedStage, ExecutionPlanResponse.Stage stageResponse) {
-        Set<String> taskPresentInResponse = new HashSet<>(stageResponse.getTasks()).stream().map(ExecutionPlanResponse.Task::getId).collect(Collectors.toSet());
+
+        Map<String, ExecutionPlanResponse.TaskState> taskStateMap = stageResponse.getTasks()
+                .stream()
+                .collect(Collectors.toMap(ExecutionPlanResponse.Task::getId, ExecutionPlanResponse.Task::getState));
 
         AuditStageStatus.StatusBuilder builder = AuditStageStatus.statusBuilder();
 
@@ -100,7 +105,7 @@ public final class ExecutionPlanMapper {
                 .getTaskDescriptors()
                 .stream()
                 .map(TaskDescriptor::getId)
-                .filter(id -> !taskPresentInResponse.contains(id))
+                .filter(taskId -> taskStateMap.get(taskId) != ExecutionPlanResponse.TaskState.PENDING_EXECUTION)
                 .forEach(taskId -> builder.addState(taskId, EXECUTED));
 
         return loadedStage.applyState(builder.build());

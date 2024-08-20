@@ -16,54 +16,55 @@
 
 package io.flamingock.core.engine.execution;
 
-import io.flamingock.core.engine.lock.Lock;
-import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.commons.utils.TriConsumer;
+import io.flamingock.core.engine.lock.Lock;
+import io.flamingock.core.pipeline.ExecutablePipeline;
+import io.flamingock.core.pipeline.ExecutableStage;
 
-import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class ExecutionPlan implements AutoCloseable {
 
 
-    private static final ExecutionPlan CONTINUE = new ExecutionPlan();
-
-    public static ExecutionPlan newExecution(String executionId, Lock lock, Collection<ExecutableStage> stages) {
+    public static ExecutionPlan newExecution(String executionId,
+                                             Lock lock,
+                                             List<ExecutableStage> stages) {
         return new ExecutionPlan(executionId, lock, stages);
     }
 
-    public static ExecutionPlan CONTINUE() {
-        return CONTINUE;
+    public static ExecutionPlan CONTINUE(List<ExecutableStage> stages) {
+        return new ExecutionPlan(stages);
     }
 
     private final String executionId;
 
-    private final boolean executable;
-
     private final Lock lock;
 
-    private final Collection<ExecutableStage> stages;
+    private final ExecutablePipeline pipeline;
 
-    private ExecutionPlan(String executionId, Lock lock, Collection<ExecutableStage> stages) {
+    private ExecutionPlan(List<ExecutableStage> stages) {
+        this(null, null, stages);
+    }
+
+    private ExecutionPlan(String executionId, Lock lock, List<ExecutableStage> stages) {
         this.executionId = executionId;
-        this.executable = true;
         this.lock = lock;
-        this.stages = stages;
+        this.pipeline = new ExecutablePipeline(stages);
     }
 
-    private ExecutionPlan() {
-        executionId = null;
-        executable = false;
-        this.lock = null;
-        this.stages = null;
+    public boolean isExecutionRequired() {
+        return pipeline.isExecutionRequired();
     }
 
-    public boolean isExecutable() {
-        return executable;
+    public ExecutablePipeline getPipeline() {
+        return pipeline;
     }
 
     public void applyOnEach(TriConsumer<String, Lock, ExecutableStage> consumer) {
-        if (executable && stages != null) {
-            stages.forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
+        if (isExecutionRequired()) {
+            pipeline.getExecutableStages()
+                    .forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
         }
     }
 

@@ -5,6 +5,9 @@ plugins {
 }
 
 
+
+
+
 val jacksonVersion = "2.16.0"
 dependencies {
     implementation(project(":flamingock-core"))
@@ -27,7 +30,7 @@ dependencies {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "io.flamingock.examples.mysql.standaloneMysqlStandaloneApplication"
+        attributes["Main-Class"] = "io.flamingock.examples.mysql.standalone.MysqlStandaloneApplication"
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(sourceSets.main.get().output)
@@ -38,3 +41,4 @@ tasks.withType<Jar> {
         }.map { zipTree(it) }
     })
 }
+

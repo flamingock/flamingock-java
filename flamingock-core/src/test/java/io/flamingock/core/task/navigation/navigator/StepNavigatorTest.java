@@ -19,6 +19,7 @@ package io.flamingock.core.task.navigation.navigator;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
+import io.flamingock.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.core.task.executable.ParentExecutableTaskFactory;
 import io.flamingock.core.task.navigation.navigator.beforeExecution_1.TaskWithBeforeExecution;
 import io.flamingock.core.task.navigation.summary.StepSummarizer;
@@ -58,13 +59,6 @@ class StepNavigatorTest {
         TaskWithBeforeExecution.checker.reset();
     }
 
-
-    @Test
-    public void testasda() {
-        System.out.println(UUID.randomUUID());
-    }
-
-
     @Test
     @DisplayName("SHOULD run beforeExecution.Rollback IF task contains beforeExecution WHEN task fails")
     void test1() {
@@ -72,7 +66,9 @@ class StepNavigatorTest {
         AuditWriter auditWriterMock = mock(AuditWriter.class);
         when(auditWriterMock.writeStep(any(AuditItem.class))).thenReturn(Result.OK());
 
-        StepSummarizer stepSummarizerMock = mock(StepSummarizer.class);
+        String taskId = "task-with-before-execution";
+
+        TaskSummarizer stepSummarizerMock = new TaskSummarizer(taskId);
         RuntimeManager runtimeManagerMock = RuntimeManager.builder()
                 .setDependencyContext(mock(DependencyInjectableContext.class))
                 .setLock(mock(Lock.class))
@@ -80,7 +76,7 @@ class StepNavigatorTest {
 
         //AND
         TaskDescriptor taskDescriptor = new ReflectionTaskDescriptor(
-                "task-with-before-execution",
+                taskId,
                 "1",
                 TaskWithBeforeExecution.class,
                 false,
@@ -119,7 +115,8 @@ class StepNavigatorTest {
         AuditWriter auditWriterMock = mock(AuditWriter.class);
         when(auditWriterMock.writeStep(any(AuditItem.class))).thenReturn(Result.OK());
 
-        StepSummarizer stepSummarizerMock = mock(StepSummarizer.class);
+        String taskId = "task-with-before-execution";
+        TaskSummarizer stepSummarizerMock = new TaskSummarizer(taskId);
         RuntimeManager runtimeManagerMock = RuntimeManager.builder()
                 .setDependencyContext(mock(DependencyInjectableContext.class))
                 .setLock(mock(Lock.class))
@@ -127,7 +124,7 @@ class StepNavigatorTest {
 
         //AND
         TaskDescriptor taskDescriptor = new ReflectionTaskDescriptor(
-                "task-with-before-execution",
+                taskId,
                 "1",
                 TaskWithBeforeExecution.class,
                 false,

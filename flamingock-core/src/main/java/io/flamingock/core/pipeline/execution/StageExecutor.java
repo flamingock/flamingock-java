@@ -22,11 +22,7 @@ import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.core.task.executable.ExecutableTask;
 import io.flamingock.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
-import io.flamingock.core.task.navigation.navigator.StepNavigationOutput;
 import io.flamingock.core.task.navigation.navigator.StepNavigatorBuilder;
-import io.flamingock.core.task.navigation.summary.DefaultStepSummarizer;
-import io.flamingock.core.task.navigation.summary.StageSummary;
-import io.flamingock.core.task.navigation.summary.StepSummary;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 import java.util.stream.Stream;
@@ -42,8 +38,8 @@ public class StageExecutor {
     }
 
     public StageExecutor(DependencyContext dependencyContext,
-                          AuditWriter auditWriter,
-                          TransactionWrapper transactionWrapper) {
+                         AuditWriter auditWriter,
+                         TransactionWrapper transactionWrapper) {
         this.dependencyContext = dependencyContext;
         this.auditWriter = auditWriter;
         this.transactionWrapper = transactionWrapper;
@@ -53,7 +49,7 @@ public class StageExecutor {
                                ExecutionContext executionContext,
                                Lock lock) throws StageExecutionException {
 
-        StageSummary summary = new StageSummary();
+        StageSummary summary = new StageSummary(executableStage.getName());
 
         StepNavigatorBuilder stepNavigatorBuilder = getStepNavigatorBuilder(executableStage.isParallel());
 
@@ -67,16 +63,18 @@ public class StageExecutor {
                             .setStaticContext(dependencyContext)
                             .setLock(lock)
                             .setTransactionWrapper(transactionWrapper)
-                            .setSummarizer(new DefaultStepSummarizer())//todo reuse Summarizer
+                            .setSummarizer(new TaskSummarizer(task.getDescriptor().getId()))
                             .build()
                             .executeTask(task, executionContext)
                     ).peek(summary::addSummary)
-                    .filter(StepNavigationOutput::isFailed)
+                    .filter(TaskSummary::isFailed)
                     .findFirst()
                     .ifPresent(failed -> {
                         throw new StageExecutionException(summary);
                     });
 
+        } catch (StageExecutionException stageExecutionException) {
+            throw stageExecutionException;
         } catch (Throwable throwable) {
             throw new StageExecutionException(throwable, summary);
         }
@@ -98,13 +96,13 @@ public class StageExecutor {
 
     public static class Output {
 
-        private final StepSummary summary;
+        private final StageSummary summary;
 
-        public Output(StepSummary summary) {
+        public Output(StageSummary summary) {
             this.summary = summary;
         }
 
-        public StepSummary getSummary() {
+        public StageSummary getSummary() {
             return summary;
         }
     }

@@ -209,7 +209,7 @@ public final class RuntimeManager implements DependencyInjectable {
         String arguments = changelogInvocationParameters.stream()
                 .map(RuntimeManager::getParameterType)
                 .collect(Collectors.joining(", "));
-        logger.info("method[{}] with arguments: [{}]", methodName, arguments);
+        logger.debug("method[{}] with arguments: [{}]", methodName, arguments);
 
     }
 

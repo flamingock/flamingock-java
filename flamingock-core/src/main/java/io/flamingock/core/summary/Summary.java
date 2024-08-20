@@ -19,14 +19,14 @@ package io.flamingock.core.summary;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface Summary {
+public interface Summary extends SummaryLine{
 
     List<? extends SummaryLine> getLines();
 
     default String getPretty() {
         return getLines()
                 .stream()
-                .map(SummaryLine::getLine)
+                .map(SummaryLine::getPretty)
                 .collect(Collectors.joining("\n"));
     }
 }

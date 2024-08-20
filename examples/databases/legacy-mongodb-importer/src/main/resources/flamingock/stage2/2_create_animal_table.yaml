@@ -1,10 +1,9 @@
-id: create-clients-table-from-template
+id: create-animals-table-from-template
 order: 2
-transactional: false #DDL are not transactional in Mysql, so it won't be rolled back
 templateName: sql-template
 templateConfiguration:
     executionSql: |
-        CREATE TABLE Clients (
+        CREATE TABLE Animals (
             PersonID int,
             LastName varchar(255),
             FirstName varchar(255),
@@ -12,4 +11,4 @@ templateConfiguration:
             City varchar(255)
         )
     rollbackSql: |
-        DROP TABLE IF EXISTS Clients
+        DROP TABLE IF EXISTS Animals

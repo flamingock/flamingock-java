@@ -41,7 +41,9 @@ public class LoadedStage {
 
     private final ParentExecutableTaskFactory factory;
 
-    public LoadedStage(String name, Collection<? extends TaskDescriptor> taskDescriptors, boolean parallel) {
+    public LoadedStage(String name,
+                       Collection<? extends TaskDescriptor> taskDescriptors,
+                       boolean parallel) {
         this.name = name;
         this.taskDescriptors = taskDescriptors;
         this.parallel = parallel;

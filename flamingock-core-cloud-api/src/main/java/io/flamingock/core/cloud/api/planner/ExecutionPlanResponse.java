@@ -24,7 +24,6 @@ public class ExecutionPlanResponse {
         CONTINUE, EXECUTE, AWAIT
     }
 
-
     private Action action;
 
     private String executionId;
@@ -32,6 +31,7 @@ public class ExecutionPlanResponse {
     private Lock lock;
 
     private List<Stage> stages;
+
 
     public ExecutionPlanResponse() {
     }
@@ -63,7 +63,6 @@ public class ExecutionPlanResponse {
     public void setStages(List<Stage> stages) {
         this.stages = stages;
     }
-
 
     public boolean isContinue() {
         return action == Action.CONTINUE;
@@ -129,15 +128,20 @@ public class ExecutionPlanResponse {
         }
     }
 
+    public enum TaskState {
+        PENDING_EXECUTION, ALREADY_EXECUTED
+    }
+
     public static class Task {
         private String id;
-        private String ongoingStatus;
+        private TaskState state;
 
         public Task() {
         }
 
-        public Task(String id) {
+        public Task(String id, TaskState state) {
             this.id = id;
+            this.state = state;
         }
 
         public String getId() {
@@ -148,12 +152,12 @@ public class ExecutionPlanResponse {
             this.id = id;
         }
 
-        public String getOngoingStatus() {
-            return ongoingStatus;
+        public TaskState getState() {
+            return state;
         }
 
-        public void setOngoingStatus(String ongoingStatus) {
-            this.ongoingStatus = ongoingStatus;
+        public void setState(TaskState state) {
+            this.state = state;
         }
     }
 

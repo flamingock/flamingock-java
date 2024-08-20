@@ -20,7 +20,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import io.flamingock.core.cloud.api.auth.AuthRequest;
 import io.flamingock.core.cloud.api.auth.AuthResponse;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
@@ -28,22 +27,20 @@ import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.planner.StageRequest;
 import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.flamingock.common.test.cloud.JsonMapper.toJson;
+import static io.flamingock.core.cloud.api.planner.ExecutionPlanResponse.TaskState.PENDING_EXECUTION;
 
 public final class MockRunnerServer {
 
@@ -184,9 +181,9 @@ public final class MockRunnerServer {
                 .stream()
                 .map(taskId -> {
                     OngoingStatus.Operation operation = ongoingOperationByTask.get(taskId);
-                    if(operation == null) {
+                    if (operation == null) {
                         return StageRequest.Task.task(taskId);
-                    } else if (operation == OngoingStatus.Operation.ROLLBACK){
+                    } else if (operation == OngoingStatus.Operation.ROLLBACK) {
                         return StageRequest.Task.ongoingRollback(taskId);
                     } else {
                         return StageRequest.Task.ongoingExecution(taskId);
@@ -379,7 +376,9 @@ public final class MockRunnerServer {
     private static ExecutionPlanResponse.Stage toStageResponse(StageRequest stageRequest) {
         ExecutionPlanResponse.Stage stage = new ExecutionPlanResponse.Stage();
         stage.setName(stageRequest.getName());
-        stage.setTasks(stageRequest.getTasks().stream().map(task -> new ExecutionPlanResponse.Task(task.getId())).collect(Collectors.toList()));
+        stage.setTasks(stageRequest.getTasks().stream()
+                .map(onGoingTask -> new ExecutionPlanResponse.Task(onGoingTask.getId(), PENDING_EXECUTION))
+                .collect(Collectors.toList()));
         return stage;
     }
 

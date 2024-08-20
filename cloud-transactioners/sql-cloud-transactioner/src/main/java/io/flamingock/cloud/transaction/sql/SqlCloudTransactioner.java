@@ -121,7 +121,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
         try (PreparedStatement preparedStatement = connection.prepareStatement(dialect.getDeleteOngoingTask())) {
             preparedStatement.setString(1, taskId);
             int rows = preparedStatement.executeUpdate();
-            logger.info("removed ongoing task[{}]: [{}] rows affected", taskId, rows);
+            logger.trace("removed ongoing task[{}]: [{}] rows affected", taskId, rows);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -134,7 +134,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
             preparedStatement.setString(2, status.getOperation().toString());
             int rows = preparedStatement.executeUpdate();
             connection.commit();
-            logger.info("saved ongoing task[{}]: [{}] rows affected", status.getTaskId(), rows);
+            logger.debug("saved ongoing task[{}]: [{}] rows affected", status.getTaskId(), rows);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

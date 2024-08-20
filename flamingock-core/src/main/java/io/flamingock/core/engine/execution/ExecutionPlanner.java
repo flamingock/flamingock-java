@@ -24,16 +24,7 @@ import io.flamingock.commons.utils.TriConsumer;
 
 public abstract class ExecutionPlanner {
 
-    abstract protected ExecutionPlan getNextExecution(Pipeline pipeline) throws LockException;
+    abstract public ExecutionPlan getNextExecution(Pipeline pipeline) throws LockException;
 
-    public final boolean executeIfRequired(Pipeline pipeline, TriConsumer<String, Lock, ExecutableStage> consumer) {
-        try(ExecutionPlan execution = getNextExecution(pipeline)) {
-            if (execution.isExecutable()) {
-                execution.applyOnEach(consumer);
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
+
 }

@@ -14,36 +14,52 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.task.navigation.navigator;
+package io.flamingock.core.pipeline.execution;
 
 import io.flamingock.core.task.navigation.summary.StepSummary;
 import io.flamingock.core.task.navigation.summary.StepSummaryLine;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class StepNavigationOutput implements StepSummary {
+public class TaskSummary implements StepSummary, StepSummaryLine {
 
+    private final String taskId;
     private final boolean success;
 
-    private final StepSummary summary;
+    private final List<StepSummaryLine> lines = new LinkedList<>();
 
-    public StepNavigationOutput(boolean success, StepSummary summary) {
-        this.summary = summary;
+    public TaskSummary(String taskId, boolean success) {
+        this.taskId = taskId;
         this.success = success;
+    }
+
+    public void addLine(StepSummaryLine summary) {
+        lines.add(summary);
+    }
+
+    @Override
+    public String getId() {
+        return taskId;
     }
 
     @Override
     public List<StepSummaryLine> getLines() {
-        return summary.getLines();
+        return lines;
     }
 
     @Override
     public String getPretty() {
-        return summary.getPretty();
+        return String.format("\nTask: %s\n%s", taskId, StepSummary.super.getPretty());
     }
 
 
+    public boolean isSuccess() {
+        return success;
+    }
+
     public boolean isFailed() {
-        return !success;
+        return !isSuccess();
     }
 }

@@ -145,11 +145,10 @@ public class Lock {
      * the lock is released(closed) and another instances acquire the lock, before process A has finished.
      */
     public final void release() {
-        logger.info("Flamingock waiting to release the lock");
+        logger.debug("Flamingock waiting to release the lock");
         synchronized (this) {
             try {
-                logger.info("Flamingock releasing the lock");
-                logger.debug("Flamingock expiring the lock");
+                logger.debug("Flamingock releasing the lock");
                 updateLease(timeService.daysToMills(-1));//forces expiring
                 logger.debug("Flamingock removing the lock from database");
                 lockService.releaseLock(lockKey, owner);

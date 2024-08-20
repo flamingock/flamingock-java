@@ -31,7 +31,11 @@ public interface TaskDescriptor extends Comparable<TaskDescriptor> {
     Optional<String> getOrder();
 
     default String pretty() {
-        return getOrder().isPresent() ? String.format("%s) %s ", getOrder().get(), getId()) : String.format(" %s ", getId());
+        if (getOrder().isPresent()) {
+            return String.format("%s) id: %s ", getOrder().get(), getId());
+        } else {
+            return String.format(" id: %s ", getId());
+        }
     }
 
     default boolean isSortable() {
