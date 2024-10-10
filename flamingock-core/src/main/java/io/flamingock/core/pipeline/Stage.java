@@ -16,21 +16,19 @@
 
 package io.flamingock.core.pipeline;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.SystemChange;
 import io.flamingock.commons.utils.FileUtil;
-import io.flamingock.commons.utils.ReflectionUtil;
 import io.flamingock.core.task.descriptor.ReflectionTaskDescriptorBuilder;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.descriptor.TemplatedTaskDescriptorBuilder;
 import io.flamingock.core.task.filter.TaskFilter;
+import io.flamingock.core.utils.ExecutionUtils;
 import io.flamingock.template.TemplatedTaskDefinition;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -129,8 +127,6 @@ public class Stage {
     }
 
     public Stage addFilters(Collection<TaskFilter> filters) {
-        Collection<TaskFilter> allFilters = this.filters != null ? new LinkedList<>(this.filters) : new LinkedHashSet<>();
-        if (filters != null) allFilters.addAll(filters);
         if (filters != null) {
             filters.forEach(this::addFilter);
         }
@@ -205,9 +201,10 @@ public class Stage {
         if (codePackages == null) {
             return Collections.emptyList();
         }
+
         Collection<Class<?>> classes = codePackages.
                 stream()
-                .map(packagePath -> ReflectionUtil.loadClassesFromPackage(packagePath, ChangeUnit.class))
+                .map(ExecutionUtils::loadExecutionClassesFromPackage)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
 
@@ -220,13 +217,14 @@ public class Stage {
         }
         return classes.
                 stream()
-                .filter(clazz -> clazz.isAnnotationPresent(ChangeUnit.class))
+                .filter(ExecutionUtils::isExecutableClass)
                 .filter(filterOperator)
                 .map(ReflectionTaskDescriptorBuilder.recycledBuilder()::setSource)
                 .map(ReflectionTaskDescriptorBuilder::build)
                 .collect(Collectors.toList());
     }
 
+    //TODO add filter
     private static Collection<TaskDescriptor> getFilteredDescriptorsFromDirectory(Collection<String> directories, Predicate<Class<?>> filterOperator) {
 
         if (directories == null) {
@@ -240,16 +238,13 @@ public class Stage {
                 .map(TemplatedTaskDescriptorBuilder.recycledBuilder()::setFromDefinition)
                 .map(TemplatedTaskDescriptorBuilder::build)
                 .collect(Collectors.toList());
-
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Stage stage = (Stage) o;
-
         return Objects.equals(name, stage.name);
     }
 

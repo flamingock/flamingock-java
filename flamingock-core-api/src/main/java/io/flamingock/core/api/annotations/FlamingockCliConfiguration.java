@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.cloud.changes;
+package io.flamingock.core.api.annotations;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.utils.TaskExecutionChecker;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@ChangeUnit(id = "create-persons-table-from-template-2", order = "2")
-public class CloudChange2 {
-    public static final TaskExecutionChecker checker = new TaskExecutionChecker();
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface FlamingockCliConfiguration {
 
-    @Execution
-    public void execution() {
-        checker.markExecution();
-    }
-
+  Class<?>[] sources() default {};
 
 }

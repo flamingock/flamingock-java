@@ -1,12 +1,5 @@
-package io.changock.migration.api.annotations;
+package io.flamingock.core.api.annotations;
 
-/**
- * For old classes, this annotation can remain. It won't be removed from the legacy library.
- * For new classes, please use io.flamingock.core.api.annotations
- * <p>
- * @see io.flamingock.core.api.annotations.NonLockGuarded
- */
-@Deprecated
 public enum NonLockGuardedType {
   /**
    * Indicates the returned object shouldn't be decorated for lock guard. So clean instance is returned.

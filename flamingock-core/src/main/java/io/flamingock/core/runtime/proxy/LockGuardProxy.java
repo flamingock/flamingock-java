@@ -16,16 +16,14 @@
 
 package io.flamingock.core.runtime.proxy;
 
-import io.changock.migration.api.annotations.NonLockGuarded;
-import io.changock.migration.api.annotations.NonLockGuardedType;
+import io.flamingock.core.api.annotations.NonLockGuardedType;
 import io.flamingock.core.engine.lock.Lock;
+import io.flamingock.core.utils.ExecutionUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -51,7 +49,6 @@ public class LockGuardProxy<T> implements InvocationHandler {
     }
 
     private boolean shouldMethodBeLockGuarded(Method method, List<NonLockGuardedType> noGuardedLockTypes) {
-        String temporalVariable = method.getName();
         return !nonGuardedMethods.contains(method.getName())
                 && !noGuardedLockTypes.contains(NonLockGuardedType.METHOD)
                 && !noGuardedLockTypes.contains(NonLockGuardedType.NONE);
@@ -59,8 +56,8 @@ public class LockGuardProxy<T> implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        NonLockGuarded nonLockGuarded = method.getAnnotation(NonLockGuarded.class);
-        List<NonLockGuardedType> noGuardedLockTypes = nonLockGuarded != null ? Arrays.asList(nonLockGuarded.value()) : Collections.emptyList();
+        List<NonLockGuardedType> noGuardedLockTypes = ExecutionUtils.getLockGuardedTypeFromMethod(method);
+
         if (shouldMethodBeLockGuarded(method, noGuardedLockTypes)) {
             lockEnsurer.ensure();
         }
@@ -69,6 +66,4 @@ public class LockGuardProxy<T> implements InvocationHandler {
                 ? proxyFactory.getRawProxy(method.invoke(implementation, args), method.getReturnType())
                 : method.invoke(implementation, args);
     }
-
-
 }

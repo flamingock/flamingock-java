@@ -115,24 +115,6 @@ public class PipelineRunner implements Runner {
                 //if it's a StageExecutionException, we can safely assume the stage started its
                 //execution, therefor the pipelinesSummary is initialised
                 requireNonNull(pipelineSummary).merge(e.getSummary());
-
-//                List<LoadedStage> pipelineStages = pipeline.getLoadedStages();
-//                StageSummary stageSummaryWithNotReachedTasks = getStageSummaryWithNotReachedTasks(pipelineStages, e.getSummary());
-//                stageSummaryMap.put(e.getSummary().getId(), stageSummaryWithNotReachedTasks);
-//                pipelineSummary.add(stageSummaryWithNotReachedTasks);
-
-//                Set<String> processedStages = pipelineSummary.getLines()
-//                        .stream()
-//                        .map(StageSummary::getId)
-//                        .collect(Collectors.toSet());
-//
-//                pipelineStages.stream()
-//                        .filter(stage -> !processedStages.contains(stage.getName()))
-//                        .forEach(stage -> {
-//                            pipelineSummary.add(getStageSummaryWithNotReachedTasks(pipelineStages, new StageSummary(stage.getName())));
-//                        });
-
-
                 throw new PipelineExecutionException(pipelineSummary);
             } catch (RuntimeException e) {
                 throw e;

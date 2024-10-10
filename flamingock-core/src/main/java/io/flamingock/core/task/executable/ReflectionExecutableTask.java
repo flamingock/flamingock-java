@@ -74,7 +74,8 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Reflect
     }
 
     protected void executeInternal(RuntimeManager runtimeManager, Method method ) {
-        runtimeManager.executeMethod(runtimeManager.getInstance(descriptor.getSourceClass()), method);
+        Object instance = runtimeManager.getInstance(descriptor.getConstructor());
+        runtimeManager.executeMethod(instance, method);
     }
 
 

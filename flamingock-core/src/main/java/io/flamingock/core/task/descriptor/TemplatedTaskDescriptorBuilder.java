@@ -78,13 +78,13 @@ public class TemplatedTaskDescriptorBuilder {
         return this;
     }
 
-    public TemplatedTaskDescriptor build() {
+    public TemplatedChangeUnitTaskDescriptor build() {
 
         TemplateSpec templateSpec = TemplateFactory.getTemplate(templateName)
                 .orElseThrow(() -> new FlamingockException("Template not found: " + templateName));
 
         boolean isTaskTransactional = isTaskTransactionalAccordingTemplate(templateSpec);
-        return new TemplatedTaskDescriptor(id, order, templateSpec.getTemplateClass(), isTaskTransactional, runAlways, templateConfiguration);
+        return new TemplatedChangeUnitTaskDescriptor(id, order, templateSpec.getTemplateClass(), isTaskTransactional, runAlways, templateConfiguration);
     }
 
     public TemplatedTaskDescriptorBuilder setFromDefinition(TemplatedTaskDefinition templatedTaskDefinition) {

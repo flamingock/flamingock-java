@@ -18,7 +18,7 @@ package io.flamingock.core.task.executable.template;
 
 import io.flamingock.core.runtime.RuntimeManager;
 import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.task.descriptor.TemplatedTaskDescriptor;
+import io.flamingock.core.task.descriptor.TemplatedChangeUnitTaskDescriptor;
 import io.flamingock.core.task.executable.ReflectionExecutableTask;
 import io.flamingock.commons.utils.FileUtil;
 import io.flamingock.commons.utils.ReflectionUtil;
@@ -26,14 +26,14 @@ import io.flamingock.commons.utils.ReflectionUtil;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public class TemplatedExecutableTask extends ReflectionExecutableTask<TemplatedTaskDescriptor> {
+public class TemplatedExecutableTask extends ReflectionExecutableTask<TemplatedChangeUnitTaskDescriptor> {
     private final Method configValidatorMethod;
 
     private final Method configSetterMethod;
 
 
     public TemplatedExecutableTask(String stageName,
-                                   TemplatedTaskDescriptor descriptor,
+                                   TemplatedChangeUnitTaskDescriptor descriptor,
                                    boolean requiredExecution,
                                    Method executionMethod,
                                    Method rollbackMethod,
@@ -46,7 +46,7 @@ public class TemplatedExecutableTask extends ReflectionExecutableTask<TemplatedT
 
     @Override
     protected void executeInternal(RuntimeManager runtimeManager, Method method ) {
-        Object instance = runtimeManager.getInstance(descriptor.getSourceClass());
+        Object instance = runtimeManager.getInstance(descriptor.getConstructor());
         setConfiguration(runtimeManager, instance);
         runtimeManager.executeMethod(instance, method);
     }

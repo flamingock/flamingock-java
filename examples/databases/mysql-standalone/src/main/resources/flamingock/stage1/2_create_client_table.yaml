@@ -5,7 +5,7 @@ templateName: sql-template
 templateConfiguration:
     executionSql: |
         CREATE TABLE Clients (
-            PersonID int,
+            PersonID in,
             LastName varchar(255),
             FirstName varchar(255),
             Address varchar(255),

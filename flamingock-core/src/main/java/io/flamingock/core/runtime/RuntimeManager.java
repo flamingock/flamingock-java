@@ -17,7 +17,7 @@
 package io.flamingock.core.runtime;
 
 import io.changock.migration.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.ChangeUnitConstructor;
+import io.mongock.api.annotations.ChangeUnitConstructor;
 import io.flamingock.core.api.annotations.FlamingockConstructor;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.engine.lock.Lock;
@@ -78,8 +78,7 @@ public final class RuntimeManager implements DependencyInjectable {
         dependencyContext.addDependency(dependency);
     }
 
-    public Object getInstance(Class<?> type) {
-        Constructor<?> constructor = getConstructor(type);
+    public Object getInstance(Constructor<?> constructor) {
         List<Object> signatureParameters = getSignatureParameters(constructor);
         logMethodWithArguments(constructor.getName(), signatureParameters);
         try {
@@ -89,8 +88,6 @@ public final class RuntimeManager implements DependencyInjectable {
         }
     }
 
-
-
     public Object executeMethod(Object instance, Method method) {
         List<Object> signatureParameters = getSignatureParameters(method);
         try {
@@ -98,78 +95,6 @@ public final class RuntimeManager implements DependencyInjectable {
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private Constructor<?> getConstructor(Class<?> type) {
-
-        List<Constructor<?>> annotatedConstructors = Arrays.stream(type.getConstructors())
-                .filter(RuntimeManager::isConstructorAnnotationPresent)
-                .collect(Collectors.toList());
-        if (annotatedConstructors.size() == 1) {
-            return annotatedConstructors.get(0);
-
-        } else if (annotatedConstructors.size() == 0) {
-            logger.debug("Not found constructor for class[{}] annotated with {}", type.getName(), FlamingockConstructor.class.getSimpleName());
-            Constructor<?>[] constructors = type.getConstructors();
-            if (constructors.length == 0) {
-                throw new FlamingockException("Cannot find a valid constructor for class[%s]", type.getName());
-            }
-            if (constructors.length > 1) {
-                throw new FlamingockException("Found multiple constructors without annotation %s  for class[%s].\n" +
-                        "When more than one constructor, exactly one of them must be annotated. And it will be taken as default "
-                        , FlamingockConstructor.class.getSimpleName()
-                        , type.getName()
-                );
-            }
-            return constructors[0];
-
-        } else {
-            //annotatedConstructors.size() > 1
-            throw new FlamingockException("Found multiple constructors for class[%s] annotated with %s." +
-                    " Annotate the one you want Mongock to use to instantiate your changeUnit",
-                    type.getName(),
-                    FlamingockConstructor.class.getSimpleName());
-        }
-    }
-
-    private <T> Constructor<T> getTypedConstructor(Class<T> type) {
-
-        List<Constructor<T>> annotatedConstructors = Arrays.stream(type.getConstructors())
-                .filter(RuntimeManager::isConstructorAnnotationPresent)
-                .map(constructor-> (Constructor<T>)constructor)
-                .collect(Collectors.toList());
-        if (annotatedConstructors.size() == 1) {
-            return annotatedConstructors.get(0);
-
-        } else if (annotatedConstructors.size() == 0) {
-            logger.debug("Not found constructor for class[{}] annotated with {}", type.getName(), FlamingockConstructor.class.getSimpleName());
-            List<Constructor<T>> constructors = Arrays.stream(type.getConstructors())
-                    .map(constructor-> (Constructor<T>)constructor)
-                    .collect(Collectors.toList());
-            if (constructors.size() == 0) {
-                throw new FlamingockException("Cannot find a valid constructor for class[%s]", type.getName());
-            }
-            if (constructors.size() > 1) {
-                throw new FlamingockException("Found multiple constructors without annotation %s  for class[%s].\n" +
-                        "When more than one constructor, exactly one of them must be annotated. And it will be taken as default "
-                        , FlamingockConstructor.class.getSimpleName()
-                        , type.getName()
-                );
-            }
-            return constructors.get(0);
-
-        } else {
-            //annotatedConstructors.size() > 1
-            throw new FlamingockException("Found multiple constructors for class[%s] annotated with %s." +
-                    " Annotate the one you want Mongock to use to instantiate your changeUnit",
-                    type.getName(),
-                    FlamingockConstructor.class.getSimpleName());
-        }
-    }
-
-
-    private static boolean isConstructorAnnotationPresent(Constructor<?> constructor) {
-        return constructor.isAnnotationPresent(FlamingockConstructor.class) || constructor.isAnnotationPresent(ChangeUnitConstructor.class);
     }
 
     private List<Object> getSignatureParameters(Executable executable) {

@@ -16,9 +16,12 @@
 
 package io.flamingock.core.task.descriptor;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.StringJoiner;
 
-public class ReflectionTaskDescriptor extends AbstractTaskDescriptor implements TaskDescriptor {
+public abstract class ReflectionTaskDescriptor extends AbstractTaskDescriptor implements TaskDescriptor {
 
     protected final Class<?> source;
 
@@ -40,9 +43,13 @@ public class ReflectionTaskDescriptor extends AbstractTaskDescriptor implements 
     public String pretty() {
         String fromParent = super.pretty();
         return fromParent + String.format("\n\t\t[class: %s]", getSourceName());
-
     }
 
+    public abstract Constructor<?> getConstructor();
+
+    public abstract Method getExecutionMethod();
+
+    public abstract Optional<Method> getRollbackMethod();
 
     @Override
     public String toString() {

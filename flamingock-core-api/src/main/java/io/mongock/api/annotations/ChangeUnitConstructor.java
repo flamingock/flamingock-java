@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.cloud.changes;
+package io.mongock.api.annotations;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.utils.TaskExecutionChecker;
+import io.flamingock.core.api.annotations.FlamingockConstructor;
 
-@ChangeUnit(id = "create-persons-table-from-template-2", order = "2")
-public class CloudChange2 {
-    public static final TaskExecutionChecker checker = new TaskExecutionChecker();
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    @Execution
-    public void execution() {
-        checker.markExecution();
-    }
-
-
+/**
+ * For old classes, this annotation can remain. It won't be removed from the legacy library.
+ * For new classes, use FlamingockConstructor
+ * <p>
+ * @see FlamingockConstructor
+ */
+@Deprecated
+@Target(ElementType.CONSTRUCTOR)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ChangeUnitConstructor {
 }

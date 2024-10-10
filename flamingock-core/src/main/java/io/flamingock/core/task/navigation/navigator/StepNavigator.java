@@ -61,7 +61,7 @@ public class StepNavigator {
 
     private TransactionWrapper transactionWrapper;
 
-    StepNavigator(AuditWriter auditWriter, TaskSummarizer summarizer, RuntimeManager runtimeManager, TransactionWrapper transactionWrapper) {
+    public StepNavigator(AuditWriter auditWriter, TaskSummarizer summarizer, RuntimeManager runtimeManager, TransactionWrapper transactionWrapper) {
         this.auditWriter = auditWriter;
         this.summarizer = summarizer;
         this.runtimeManager = runtimeManager;

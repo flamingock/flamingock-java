@@ -17,9 +17,10 @@
 package io.flamingock.core.runtime.proxy;
 
 import io.changock.migration.api.annotations.NonLockGuarded;
-import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.commons.utils.Constants;
 import io.flamingock.commons.utils.JdkUtil;
+import io.flamingock.core.engine.lock.Lock;
+import io.flamingock.core.utils.ExecutionUtils;
 import javassist.util.proxy.ProxyFactory;
 import org.objenesis.ObjenesisStd;
 
@@ -76,12 +77,11 @@ public class LockGuardProxyFactory implements GuardProxyFactory {
     }
 
     private boolean shouldBeLockGuardProxied(Object targetObject, Class<?> interfaceType) {
-
         return targetObject != null
                 && !Modifier.isFinal(interfaceType.getModifiers())
                 && isPackageProxiable(interfaceType.getPackage().getName())
-                && !interfaceType.isAnnotationPresent(NonLockGuarded.class)
-                && !targetObject.getClass().isAnnotationPresent(NonLockGuarded.class)
+                && ExecutionUtils.isNotLockGuardAnnotated(interfaceType)
+                && ExecutionUtils.isNotLockGuardAnnotated(targetObject.getClass())
                 && !JdkUtil.isInternalJdkClass(targetObject.getClass())
                 && !JdkUtil.isInternalJdkClass(interfaceType);
     }

@@ -21,7 +21,7 @@ import io.flamingock.core.task.descriptor.TaskDescriptor;
 
 import java.util.List;
 
-public interface ExecutableTaskFactory {
+public interface ExecutableTaskFactory<DESCRIPTOR extends TaskDescriptor> {
 
-    List<? extends ExecutableTask> extractTasks(String stageName, TaskDescriptor taskDescriptor, AuditEntry.Status initialState);
+    List<? extends ExecutableTask> extractTasks(String stageName, DESCRIPTOR taskDescriptor, AuditEntry.Status initialState);
 }
