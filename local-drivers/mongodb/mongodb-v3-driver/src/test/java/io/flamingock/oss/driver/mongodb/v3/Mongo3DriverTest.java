@@ -21,12 +21,15 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.pipeline.Stage;
 import io.flamingock.core.runner.PipelineExecutionException;
+import io.flamingock.core.runner.Runner;
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -304,5 +307,30 @@ class Mongo3DriverTest {
         assertEquals(2, clients.size());
         assertTrue(clients.contains("Federico"));
         assertTrue(clients.contains("Jorge"));
+    }
+
+    //TODO change this test when importer implemented
+    @Test
+    @DisplayName("When standalone runs the driver with mongock importer should run migration")
+    void shouldRunMongockImporter() {
+        //Given-When
+        Runner runner = FlamingockStandalone.local()
+                .setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration.withSource("mongockChangeLogs"))
+                .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
+                .addDependency(mongoClient.getDatabase(DB_NAME))
+                .setTrackIgnored(true)
+                .setTransactionEnabled(true)
+                .build();
+
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, runner::execute);
+        Assertions.assertTrue(runtimeException.getMessage().contains("Stage: mongodb-local-legacy-importer\n" +
+                "\t1) id: mongock-local-legacy-importer-mongodb-3 \n" +
+                "\t\t[class: io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockLocalLegacyImporterChangeUnit]\n" +
+                "\t\t[class: io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockLocalLegacyImporterChangeUnit]\n" +
+                "\t\tExecution\t\t❌ - FAILED\n" +
+                "\t\tAudit execution\t✅ - OK\n" +
+                "\t\tRolled back\t\t✅ - OK"));
+
     }
 }

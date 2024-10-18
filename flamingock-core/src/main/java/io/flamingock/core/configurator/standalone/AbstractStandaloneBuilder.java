@@ -20,6 +20,7 @@ import io.flamingock.core.api.SystemModule;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.core.CoreConfigurable;
+import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfigurator;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
 import io.flamingock.core.configurator.legacy.LegacyMigration;
@@ -261,6 +262,17 @@ abstract class AbstractStandaloneBuilder<
     @Override
     public SYSTEM_MODULE_MANAGER getSystemModuleManager() {
         return coreConfiguratorDelegate().getSystemModuleManager();
+    }
+
+
+    @Override
+    public HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
+        return coreConfiguratorDelegate().setMongockImporterConfiguration(mongockImporterConfiguration);
+    }
+
+    @Override
+    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
+        return coreConfiguratorDelegate().getMongockImporterConfiguration();
     }
     ///////////////////////////////////////////////////////////////////////////////////
     //  STANDALONE

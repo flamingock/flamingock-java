@@ -18,6 +18,7 @@ package io.flamingock.oss.driver.mongodb.v3.internal;
 
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.community.internal.LocalExecutionPlanner;
 import io.flamingock.core.engine.local.Auditor;
@@ -29,6 +30,8 @@ import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.oss.driver.common.mongodb.SessionManager;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
+import io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockImporterModule;
+import org.bson.Document;
 
 import java.util.Optional;
 
@@ -41,6 +44,7 @@ public class Mongo3Engine implements LocalConnectionEngine {
     private Mongo3Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
+    private MongockImporterModule mongockImporter = null;
     private final MongoDB3Configuration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
 
@@ -61,18 +65,30 @@ public class Mongo3Engine implements LocalConnectionEngine {
     public void initialize(RunnerId runnerId) {
         SessionManager<ClientSession> sessionManager = new SessionManager<>(mongoClient::startSession);
         transactionWrapper = coreConfiguration.getTransactionEnabled() ? new Mongo3TransactionWrapper(sessionManager) : null;
+        //Auditor
         auditor = new Mongo3Auditor(database,
                 driverConfiguration.getMigrationRepositoryName(),
                 driverConfiguration.getReadWriteConfiguration(),
                 sessionManager);
         auditor.initialize(driverConfiguration.isIndexCreation());
+        //Lock
         Mongo3LockService lockService = new Mongo3LockService(
                 database,
                 driverConfiguration.getLockRepositoryName(),
                 driverConfiguration.getReadWriteConfiguration(),
                 TimeService.getDefault());
         lockService.initialize(driverConfiguration.isIndexCreation());
+        //Execution planner
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
+        //Mongock importer
+        if(coreConfiguration.getMongockImporterConfiguration().isEnabled()) {
+            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getMongockImporterConfiguration().getSourceName())
+                    .withReadConcern(driverConfiguration.getReadWriteConfiguration().getReadConcern())
+                    .withReadPreference(driverConfiguration.getReadWriteConfiguration().getReadPreference())
+                    .withWriteConcern(driverConfiguration.getReadWriteConfiguration().getWriteConcern());
+            mongockImporter = new MongockImporterModule(collection, auditor);
+
+        }
     }
 
     @Override
@@ -85,9 +101,13 @@ public class Mongo3Engine implements LocalConnectionEngine {
         return executionPlanner;
     }
 
-
     @Override
     public Optional<TransactionWrapper> getTransactionWrapper() {
         return Optional.ofNullable(transactionWrapper);
+    }
+
+    @Override
+    public Optional<MongockImporterModule> getMongockLegacyImporterModule() {
+        return Optional.ofNullable(mongockImporter);
     }
 }

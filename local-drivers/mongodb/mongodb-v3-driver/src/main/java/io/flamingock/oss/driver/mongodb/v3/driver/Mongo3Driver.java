@@ -20,8 +20,8 @@ import com.mongodb.client.MongoClient;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.driver.ConnectionDriver;
 import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.engine.local.driver.ConnectionDriver;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
 import io.flamingock.oss.driver.mongodb.v3.internal.Mongo3Engine;
 import org.slf4j.Logger;
@@ -69,7 +69,7 @@ public class Mongo3Driver implements ConnectionDriver<MongoDB3Configuration> {
 
     @Override
     public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
-        Mongo3Engine engine =new Mongo3Engine(
+        Mongo3Engine engine = new Mongo3Engine(
                 mongoClient,
                 databaseName,
                 coreConfiguration,

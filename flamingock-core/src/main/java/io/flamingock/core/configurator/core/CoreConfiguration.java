@@ -33,7 +33,9 @@ import static io.flamingock.commons.utils.Constants.DEFAULT_TRY_FREQUENCY_MILLIS
 
 public class CoreConfiguration implements CoreConfigurable {
 
-    private final LockConfiguration lockConfiguration  = new LockConfiguration();
+    private final LockConfiguration lockConfiguration = new LockConfiguration();
+
+    private MongockImporterConfiguration mongockImporterConfiguration = MongockImporterConfiguration.getDisabled();
     /**
      * If true, will track ignored changeSets in history. Default false
      */
@@ -87,10 +89,10 @@ public class CoreConfiguration implements CoreConfigurable {
     private TransactionStrategy transactionStrategy = TransactionStrategy.CHANGE_UNIT;
 
 
-    private List<Stage> stages = new ArrayList<>();
+    private final List<Stage> stages = new ArrayList<>();
 
 
-    private List<SystemModule> systemModules = new ArrayList<>();
+    private final List<SystemModule> systemModules = new ArrayList<>();
 
 
     @Override
@@ -261,6 +263,16 @@ public class CoreConfiguration implements CoreConfigurable {
         return transactionStrategy;
     }
 
+    @Override
+    public void setMongockImporterConfiguration(MongockImporterConfiguration mongockImporterConfiguration) {
+        this.mongockImporterConfiguration = mongockImporterConfiguration;
+    }
+
+    @Override
+    public MongockImporterConfiguration getMongockImporterConfiguration() {
+        return mongockImporterConfiguration;
+    }
+
 
     public static class LockConfiguration {
 
@@ -337,6 +349,31 @@ public class CoreConfiguration implements CoreConfigurable {
 
         public boolean isEnableRefreshDaemon() {
             return enableRefreshDaemon;
+        }
+    }
+
+    public static class MongockImporterConfiguration {
+
+        private static MongockImporterConfiguration getDisabled() {
+            return new MongockImporterConfiguration(null);
+        }
+
+        public static MongockImporterConfiguration withSource(String sourceName) {
+            return new MongockImporterConfiguration(sourceName);
+        }
+
+        private final String sourceName;
+
+        private MongockImporterConfiguration(String collectionSourceName) {
+            this.sourceName = collectionSourceName;
+        }
+
+        public String getSourceName() {
+            return sourceName;
+        }
+
+        public boolean isEnabled() {
+            return sourceName != null;
         }
     }
 }

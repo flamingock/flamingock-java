@@ -287,6 +287,16 @@ public abstract class SpringbootBaseBuilder<
         return coreConfiguratorDelegate.getSystemModuleManager();
     }
 
+    @Override
+    public HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
+        return coreConfiguratorDelegate.setMongockImporterConfiguration(mongockImporterConfiguration);
+    }
+
+    @Override
+    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
+        return coreConfiguratorDelegate.getMongockImporterConfiguration();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////
     //  SPRINGBOOT
     ///////////////////////////////////////////////////////////////////////////////////

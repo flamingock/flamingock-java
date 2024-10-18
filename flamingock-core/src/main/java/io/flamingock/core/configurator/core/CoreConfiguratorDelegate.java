@@ -225,6 +225,17 @@ public class CoreConfiguratorDelegate<
     }
 
     @Override
+    public HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
+        configuration.setMongockImporterConfiguration(mongockImporterConfiguration);
+        return holderSupplier.get();
+    }
+
+    @Override
+    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
+        return configuration.getMongockImporterConfiguration();
+    }
+
+    @Override
     public HOLDER addSystemModule(SYSTEM_MODULE systemModule) {
         getSystemModuleManager().add(systemModule);
         return holderSupplier.get();

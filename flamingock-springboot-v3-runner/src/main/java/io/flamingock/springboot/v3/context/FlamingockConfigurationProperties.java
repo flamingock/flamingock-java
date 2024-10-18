@@ -233,6 +233,17 @@ public class FlamingockConfigurationProperties
     }
 
     @Override
+    public void setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
+        coreConfiguration.setMongockImporterConfiguration(mongockImporterConfiguration);
+    }
+
+    @Override
+    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
+        return coreConfiguration.getMongockImporterConfiguration();
+    }
+
+
+    @Override
     public SpringRunnerType getRunnerType() {
         return runnerType;
     }

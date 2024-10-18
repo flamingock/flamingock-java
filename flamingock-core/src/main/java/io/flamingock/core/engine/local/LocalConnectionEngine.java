@@ -17,11 +17,20 @@
 package io.flamingock.core.engine.local;
 
 import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.core.engine.ConnectionEngine;
+
+import java.util.Optional;
 
 public interface LocalConnectionEngine extends ConnectionEngine {
     void initialize(RunnerId runnerId);
 
     Auditor getAuditor();
+
+    default Optional<? extends LocalSystemModule> getMongockLegacyImporterModule() {
+        return Optional.empty();
+//        throw new RuntimeException("Mongock legacy importer requested, but it is not implemented for the specified driver. " +
+//                "Please reach out to the community for further assistance or feature requests.");
+    }
 
 }

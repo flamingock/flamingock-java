@@ -96,6 +96,11 @@ public interface CoreConfigurator<
 
 
     HOLDER addSystemModule(SYSTEM_MODULE systemModule);
+
     SYSTEM_MODULE_MANAGER getSystemModuleManager();
+
+    HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration);
+
+    CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration();
 
 }
