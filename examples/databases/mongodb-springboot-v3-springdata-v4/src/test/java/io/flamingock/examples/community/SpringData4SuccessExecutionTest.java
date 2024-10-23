@@ -16,9 +16,6 @@
 
 package io.flamingock.examples.community;
 
-import io.flamingock.examples.community.changes.ACreateCollection;
-import io.flamingock.examples.community.changes.BInsertDocument;
-import io.flamingock.examples.community.changes.CInsertAnotherDocument;
 import io.flamingock.examples.community.config.MongoInitializer;
 import io.flamingock.examples.community.events.FailureEventListener;
 import io.flamingock.examples.community.events.StartedEventListener;
@@ -38,7 +35,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static io.flamingock.examples.community.CommunitySpringbootMongodbSpringdataApp.CLIENTS_COLLECTION_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -81,7 +78,7 @@ class SpringData4SuccessExecutionTest {
     @Test
     @DisplayName("SHOULD insert the Flamingock change history")
     void flamingockLogsTest() {
-        ArrayList<Document> flamingockDocuments = mongoTemplate.getCollection(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME)
+        ArrayList<Document> flamingockDocuments = mongoTemplate.getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME)
                 .find()
                 .into(new ArrayList<>());
 

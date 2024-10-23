@@ -20,12 +20,12 @@ import io.flamingock.core.engine.local.driver.DriverConfigurable;
 
 public class MongoDBDriverConfiguration implements DriverConfigurable {
 
-    public final static String LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME = "mongockChangeLog";
-    public final static String LEGACY_DEFAULT_LOCK_REPOSITORY_NAME = "mongockLock";
+    public final static String DEFAULT_MIGRATION_REPOSITORY_NAME = "flamingockEntries";
+    public final static String DEFAULT_LOCK_REPOSITORY_NAME = "flamingockLock";
 
 
-    private String migrationRepositoryName = LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME;
-    private String lockRepositoryName = LEGACY_DEFAULT_LOCK_REPOSITORY_NAME;
+    private String migrationRepositoryName = DEFAULT_MIGRATION_REPOSITORY_NAME;
+    private String lockRepositoryName = DEFAULT_LOCK_REPOSITORY_NAME;
     private boolean indexCreation = true;
 
 

@@ -20,10 +20,6 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import io.flamingock.examples.community.changes.ACreateCollection;
-import io.flamingock.examples.community.changes.BInsertDocument;
-import io.flamingock.examples.community.changes.CInsertAnotherDocument;
-import io.flamingock.examples.community.changes.ProfileNotIncludedChange;
 import io.flamingock.examples.community.events.FailureEventListener;
 import io.flamingock.examples.community.events.StartedEventListener;
 import io.flamingock.examples.community.events.SuccessEventListener;
@@ -48,7 +44,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static io.flamingock.examples.community.CommunitySpringbootMongodbSyncApp.CLIENTS_COLLECTION_NAME;
 import static io.flamingock.examples.community.CommunitySpringbootMongodbSyncApp.DATABASE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -96,7 +92,7 @@ class MongoDBSyncSuccessExecutionTest {
     @DisplayName("SHOULD insert the Flamingock change history")
     void flamingockLogsTest() {
         ArrayList<Document> flamingockDocuments = mongoClient.getDatabase(DATABASE_NAME)
-                .getCollection(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME)
+                .getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME)
                 .find()
                 .into(new ArrayList<>());
 

@@ -186,7 +186,6 @@ public class AuditEntry {
         }
     }
 
-
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
         return RELEVANT_STATES.contains(newEntry.state) && newEntry.getCreatedAt().isAfter(this.getCreatedAt());
     }

@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static io.flamingock.examples.community.CommunityStandaloneMongodbSyncApp.DATABASE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -81,7 +81,7 @@ public class SuccessExecutionTest {
     @DisplayName("SHOULD insert the Flamingock change history")
     void flamingockLogsTest() {
         ArrayList<Document> flamingockDocuments = mongoClient.getDatabase(DATABASE_NAME)
-                .getCollection(LEGACY_DEFAULT_MIGRATION_REPOSITORY_NAME)
+                .getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME)
                 .find()
                 .into(new ArrayList<>());
 
