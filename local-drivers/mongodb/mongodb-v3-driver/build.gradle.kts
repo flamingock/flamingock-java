@@ -11,7 +11,7 @@ dependencies {
 
 //    Mongock
     testImplementation("io.mongock:mongock-standalone:5.5.0")
-    testImplementation("io.mongock:mongodb-sync-v4-driver:5.5.0")
+    testImplementation("io.mongock:mongodb-v3-driver:5.5.0")
 
 
 //    <!-- MONGOCK DRIVER -->

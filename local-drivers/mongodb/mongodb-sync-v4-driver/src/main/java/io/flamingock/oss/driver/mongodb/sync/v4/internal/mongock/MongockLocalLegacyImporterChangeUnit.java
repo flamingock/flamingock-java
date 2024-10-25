@@ -1,4 +1,4 @@
-package io.flamingock.oss.driver.mongodb.v3.internal.mongock;
+package io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock;
 
 
 import com.mongodb.client.MongoCollection;

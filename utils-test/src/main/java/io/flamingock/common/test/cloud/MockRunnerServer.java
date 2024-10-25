@@ -276,42 +276,45 @@ public final class MockRunnerServer {
 
 
     private void mockAuditWriteEndpoint() {
-        String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/audit".replace("{environmentId}", environmentId).replace("{serviceId}", serviceId).replace("{executionId}", executionExpectation.getExecutionId());
+        if(executionExpectation != null) {
+            String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/audit".replace("{environmentId}", environmentId).replace("{serviceId}", serviceId).replace("{executionId}", executionExpectation.getExecutionId());
 
-        List<AuditEntryExpectation> auditEntryExpectations = executionExpectation.getAuditEntryExpectations();
+            List<AuditEntryExpectation> auditEntryExpectations = executionExpectation.getAuditEntryExpectations();
 
-        if (auditEntryExpectations.size() == 1) {
+            if (auditEntryExpectations.size() == 1) {
 
-            AuditEntryExpectation request = auditEntryExpectations.get(0);
-            wireMockServer.stubFor(
-                    post(urlPathEqualTo(executionUrl))
-                            .withRequestBody(equalToJson(toJson(request), true, true))
-                            .willReturn(aResponse()
-                                    .withStatus(201)
-                                    .withHeader("Content-Type", "application/json")
-                            )
-            );
-
-        } else {
-            String scenarioName = "audit-logs";
-            for (int i = 0; i < auditEntryExpectations.size(); i++) {
-                String scenarioState = i == 0 ? Scenario.STARTED : "audit-log-state-" + i;
-                AuditEntryExpectation request = auditEntryExpectations.get(i);
-                String json = toJson(request);
+                AuditEntryExpectation request = auditEntryExpectations.get(0);
                 wireMockServer.stubFor(
                         post(urlPathEqualTo(executionUrl))
-                                .withName("audit-stub" + i)
-                                .inScenario(scenarioName)
-                                .whenScenarioStateIs(scenarioState)
-                                .willSetStateTo("audit-log-state-" + (i + 1))
-                                .withRequestBody(equalToJson(json, true, true))
+                                .withRequestBody(equalToJson(toJson(request), true, true))
                                 .willReturn(aResponse()
                                         .withStatus(201)
                                         .withHeader("Content-Type", "application/json")
                                 )
                 );
+
+            } else {
+                String scenarioName = "audit-logs";
+                for (int i = 0; i < auditEntryExpectations.size(); i++) {
+                    String scenarioState = i == 0 ? Scenario.STARTED : "audit-log-state-" + i;
+                    AuditEntryExpectation request = auditEntryExpectations.get(i);
+                    String json = toJson(request);
+                    wireMockServer.stubFor(
+                            post(urlPathEqualTo(executionUrl))
+                                    .withName("audit-stub" + i)
+                                    .inScenario(scenarioName)
+                                    .whenScenarioStateIs(scenarioState)
+                                    .willSetStateTo("audit-log-state-" + (i + 1))
+                                    .withRequestBody(equalToJson(json, true, true))
+                                    .willReturn(aResponse()
+                                            .withStatus(201)
+                                            .withHeader("Content-Type", "application/json")
+                                    )
+                    );
+                }
             }
         }
+
 
     }
 
@@ -319,7 +322,9 @@ public final class MockRunnerServer {
         ExecutionPlanResponse.Lock lockResponse = new ExecutionPlanResponse.Lock();
         lockResponse.setKey(serviceId);
         lockResponse.setOwner(runnerId);
-        lockResponse.setAcquiredForMillis(executionExpectation.getAcquiredForMillis());
+        if(executionExpectation != null) {
+            lockResponse.setAcquiredForMillis(executionExpectation.getAcquiredForMillis());
+        }
         lockResponse.setAcquisitionId(DEFAULT_LOCK_ACQUISITION_ID);
 
         String url = "/api/v1/{key}/lock".replace("{key}", serviceId);

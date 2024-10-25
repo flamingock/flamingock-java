@@ -18,6 +18,7 @@ package io.flamingock.oss.driver.mongodb.sync.v4.internal;
 
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
@@ -29,6 +30,8 @@ import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.oss.driver.common.mongodb.SessionManager;
 import io.flamingock.oss.driver.mongodb.sync.v4.MongoDBSync4Configuration;
+import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockImporterModule;
+import org.bson.Document;
 
 import java.util.Optional;
 
@@ -41,6 +44,7 @@ public class MongoSync4Engine implements LocalConnectionEngine {
     private MongoSync4Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
+    private MongockImporterModule mongockImporter = null;
     private final MongoDBSync4Configuration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
 
@@ -61,12 +65,14 @@ public class MongoSync4Engine implements LocalConnectionEngine {
     public void initialize(RunnerId runnerId) {
         SessionManager<ClientSession> sessionManager = new SessionManager<>(mongoClient::startSession);
         transactionWrapper = coreConfiguration.getTransactionEnabled() ? new MongoSync4TransactionWrapper(sessionManager) : null;
+        //Auditor
         auditor = new MongoSync4Auditor(
                 database,
                 driverConfiguration.getMigrationRepositoryName(),
                 driverConfiguration.getReadWriteConfiguration(),
                 sessionManager);
         auditor.initialize(driverConfiguration.isIndexCreation());
+        //Lock
         MongoSync4LockService lockService = new MongoSync4LockService(
                 database,
                 driverConfiguration.getLockRepositoryName(),
@@ -74,6 +80,15 @@ public class MongoSync4Engine implements LocalConnectionEngine {
                 TimeService.getDefault());
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
+        //Mongock importer
+        if(coreConfiguration.getMongockImporterConfiguration().isEnabled()) {
+            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getMongockImporterConfiguration().getSourceName())
+                    .withReadConcern(driverConfiguration.getReadWriteConfiguration().getReadConcern())
+                    .withReadPreference(driverConfiguration.getReadWriteConfiguration().getReadPreference())
+                    .withWriteConcern(driverConfiguration.getReadWriteConfiguration().getWriteConcern());
+            mongockImporter = new MongockImporterModule(collection, auditor);
+
+        }
     }
 
     @Override
@@ -90,5 +105,10 @@ public class MongoSync4Engine implements LocalConnectionEngine {
     @Override
     public Optional<TransactionWrapper> getTransactionWrapper() {
         return Optional.ofNullable(transactionWrapper);
+    }
+
+    @Override
+    public Optional<MongockImporterModule> getMongockLegacyImporterModule() {
+        return Optional.ofNullable(mongockImporter);
     }
 }

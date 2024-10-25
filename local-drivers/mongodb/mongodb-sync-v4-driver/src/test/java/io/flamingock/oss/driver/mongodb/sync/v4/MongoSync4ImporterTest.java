@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.oss.driver.mongodb.v3;
+package io.flamingock.oss.driver.mongodb.sync.v4;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -24,9 +24,8 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.pipeline.Stage;
-import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
-import io.flamingock.oss.driver.mongodb.v3.mongock.ClientInitializerChangeUnit;
-import io.mongock.driver.mongodb.v3.driver.MongoCore3Driver;
+import io.flamingock.oss.driver.mongodb.sync.v4.driver.MongoSync4Driver;
+import io.flamingock.oss.driver.mongodb.sync.v4.mongock.ClientInitializerChangeUnit;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
@@ -49,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @Testcontainers
-class Mongo3ImporterTest {
+class MongoSync4ImporterTest {
 
     private static final String DB_NAME = "test";
 
@@ -82,7 +81,8 @@ class Mongo3ImporterTest {
     @DisplayName("When standalone runs the driver with mongock importer should run migration")
     void shouldRunMongockImporter() {
         //Given
-        MongoCore3Driver mongoSync4Driver = MongoCore3Driver.withDefaultLock(mongoClient, DB_NAME);
+        io.mongock.driver.mongodb.sync.v4.driver.MongoSync4Driver mongoSync4Driver = io.mongock.driver.mongodb.sync.v4.driver.MongoSync4Driver
+                .withDefaultLock(mongoClient, DB_NAME);
         MongockStandalone.builder()
                 .setDriver(mongoSync4Driver)
                 .addMigrationClass(ClientInitializerChangeUnit.class)
@@ -104,8 +104,8 @@ class Mongo3ImporterTest {
         //When
         FlamingockStandalone.local()
                 .setMongockImporterConfiguration(MongockImporterConfiguration.withSource(mongoSync4Driver.getMigrationRepositoryName()))
-                .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
+                .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setTrackIgnored(true)
                 .setTransactionEnabled(true)
@@ -164,7 +164,7 @@ class Mongo3ImporterTest {
                 null,
                 "mongock-local-legacy-importer-mongodb-3",
                 AuditEntry.Status.EXECUTED,
-                "io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockLocalLegacyImporterChangeUnit",
+                "io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockLocalLegacyImporterChangeUnit",
                 "execution",
                 AuditEntry.ExecutionType.EXECUTION,
                 false);

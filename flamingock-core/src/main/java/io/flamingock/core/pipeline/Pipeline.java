@@ -16,6 +16,7 @@
 
 package io.flamingock.core.pipeline;
 
+import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.task.filter.TaskFilter;
 
 import java.util.Collection;
@@ -37,10 +38,24 @@ public class Pipeline {
     }
 
     public List<LoadedStage> getLoadedStages() {
-        return stages
+        List<LoadedStage> loadedStages = stages
                 .stream()
                 .map(Stage::load)
                 .collect(Collectors.toList());
+        validateStages(loadedStages);
+        return loadedStages;
+    }
+
+    private static void validateStages(List<LoadedStage> loadedStages) {
+        List<String> emptyLoadedStages= loadedStages
+                .stream()
+                .filter(stage-> stage.getTaskDescriptors().size() == 0)
+                .map(LoadedStage::getName)
+                .collect(Collectors.toList());
+        if(emptyLoadedStages.size() > 0) {
+            String emptyLoadedStagesString = String.join(",", emptyLoadedStages);
+            throw new FlamingockException("There are empty stages: " + emptyLoadedStagesString);
+        }
     }
 
     public static class PipelineBuilder {

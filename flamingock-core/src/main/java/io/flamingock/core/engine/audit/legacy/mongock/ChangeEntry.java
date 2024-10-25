@@ -1,4 +1,4 @@
-package io.flamingock.oss.driver.mongodb.v3.internal.mongock;
+package io.flamingock.core.engine.audit.legacy.mongock;
 
 import java.util.Date;
 
