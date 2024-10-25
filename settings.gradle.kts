@@ -75,6 +75,10 @@ include("local-drivers:couchbase:couchbase-springboot-v2-driver")
 project(":local-drivers:couchbase:couchbase-springboot-v2-driver").name = "couchbase-springboot-v2-driver"
 project(":local-drivers:couchbase:couchbase-springboot-v2-driver").projectDir = file("local-drivers/couchbase/couchbase-springboot-v2-driver")
 
+include("local-drivers:dynamodb:dynamodb-driver")
+project(":local-drivers:dynamodb:dynamodb-driver").name = "dynamodb-driver"
+project(":local-drivers:dynamodb:dynamodb-driver").projectDir = file("local-drivers/dynamodb/dynamodb-driver")
+
 //////////////////////////////////////
 // TEMPLATES
 //////////////////////////////////////
@@ -130,6 +134,10 @@ project(":examples:databases:mysql-standalone").projectDir = file("examples/data
 include("examples:databases:legacy-mongodb-importer")
 project(":examples:databases:legacy-mongodb-importer").name = "legacy-mongodb-importer"
 project(":examples:databases:legacy-mongodb-importer").projectDir = file("examples/databases/legacy-mongodb-importer")
+
+include("examples:databases:dynamodb-standalone")
+project(":examples:databases:dynamodb-standalone").name = "dynamodb-standalone"
+project(":examples:databases:dynamodb-standalone").projectDir = file("examples/databases/dynamodb-standalone")
 
 
 include("utils-test")

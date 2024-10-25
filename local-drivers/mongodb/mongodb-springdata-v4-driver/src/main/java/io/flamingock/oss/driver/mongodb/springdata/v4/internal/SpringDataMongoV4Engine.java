@@ -16,11 +16,13 @@
 
 package io.flamingock.oss.driver.mongodb.springdata.v4.internal;
 
+import com.mongodb.client.MongoCollection;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.mongodb.springdata.v4.config.SpringDataMongoV4Configuration;
+import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockImporterModule;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.ReadWriteConfiguration;
 import io.flamingock.core.engine.local.LocalConnectionEngine;
 import io.flamingock.core.engine.local.Auditor;
@@ -28,6 +30,7 @@ import io.flamingock.community.internal.LocalExecutionPlanner;
 
 import java.util.Optional;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.mongodb.ReadConcern;
@@ -40,6 +43,7 @@ public class SpringDataMongoV4Engine implements LocalConnectionEngine {
     private SpringDataMongoV4Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
+    private MongockImporterModule mongockImporter = null;
     private final SpringDataMongoV4Configuration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
 
@@ -71,6 +75,12 @@ public class SpringDataMongoV4Engine implements LocalConnectionEngine {
                 readWriteConfiguration);
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
+        //Mongock importer
+        if(coreConfiguration.getMongockImporterConfiguration().isEnabled()) {
+            MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getMongockImporterConfiguration().getSourceName());
+            mongockImporter = new MongockImporterModule(collection, auditor);
+
+        }
     }
 
     @Override
@@ -87,5 +97,11 @@ public class SpringDataMongoV4Engine implements LocalConnectionEngine {
     @Override
     public Optional<TransactionWrapper> getTransactionWrapper() {
         return Optional.ofNullable(transactionWrapper);
+    }
+
+
+    @Override
+    public Optional<MongockImporterModule> getMongockLegacyImporterModule() {
+        return Optional.ofNullable(mongockImporter);
     }
 }
