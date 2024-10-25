@@ -98,3 +98,5 @@ Vagrantfile
 
 #vscode
 .vscode/*
+
+dynamodb*
