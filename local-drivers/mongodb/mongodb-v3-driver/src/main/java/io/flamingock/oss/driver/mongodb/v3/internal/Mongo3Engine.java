@@ -82,10 +82,7 @@ public class Mongo3Engine implements LocalConnectionEngine {
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if(coreConfiguration.getMongockImporterConfiguration().isEnabled()) {
-            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getMongockImporterConfiguration().getSourceName())
-                    .withReadConcern(driverConfiguration.getReadWriteConfiguration().getReadConcern())
-                    .withReadPreference(driverConfiguration.getReadWriteConfiguration().getReadPreference())
-                    .withWriteConcern(driverConfiguration.getReadWriteConfiguration().getWriteConcern());
+            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getMongockImporterConfiguration().getSourceName());
             mongockImporter = new MongockImporterModule(collection, auditor);
 
         }
