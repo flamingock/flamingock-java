@@ -144,12 +144,13 @@ include("utils-test")
 project(":utils-test").name = "utils-test"
 project(":utils-test").projectDir = file("utils-test")
 
-
 include("utils")
 project(":utils").name = "utils"
 project(":utils").projectDir = file("utils")
 
-
+include("metadata-generator")
+project(":metadata-generator").name = "metadata-generator"
+project(":metadata-generator").projectDir = file("metadata-generator")
 
 
 //////////////////////////////////////
@@ -158,4 +159,3 @@ project(":utils").projectDir = file("utils")
 include("internal:legacy-importer-mongodb")
 project(":internal:legacy-importer-mongodb").name = "legacy-importer-mongodb"
 project(":internal:legacy-importer-mongodb").projectDir = file("internal/legacy-importer-mongodb")
-

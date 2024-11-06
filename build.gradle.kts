@@ -4,6 +4,12 @@ plugins {
     id("java")
 }
 
+allprojects {
+    group = "io.flamingock"
+    version = "1.0.0-SNAPSHOT"
+}
+
+
 subprojects {
 
     apply {
@@ -17,16 +23,7 @@ subprojects {
         mavenCentral()
         mavenLocal()
     }
-    publishing {
-        publications {
-            create<MavenPublication>("maven") {
-                groupId = getGroupId(project)
-                artifactId = project.name
-                version = "0.0.2-SNAPSHOT"
-                from(components["java"])
-            }
-        }
-    }
+
 
     val implementation by configurations
     val testImplementation by configurations

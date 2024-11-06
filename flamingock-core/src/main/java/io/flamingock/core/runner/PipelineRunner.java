@@ -18,6 +18,7 @@ package io.flamingock.core.runner;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.execution.ExecutionPlan;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.Lock;
@@ -30,22 +31,14 @@ import io.flamingock.core.event.model.impl.StageCompletedEvent;
 import io.flamingock.core.event.model.impl.StageFailedEvent;
 import io.flamingock.core.event.model.impl.StageStartedEvent;
 import io.flamingock.core.pipeline.ExecutableStage;
-import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.core.pipeline.execution.StageExecutionException;
 import io.flamingock.core.pipeline.execution.StageExecutor;
 import io.flamingock.core.pipeline.execution.StageSummary;
-import io.flamingock.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.core.task.navigation.summary.StepSummaryLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static io.flamingock.commons.utils.ObjectUtils.requireNonNull;
 
@@ -69,7 +62,17 @@ public class PipelineRunner implements Runner {
 
     private final Runnable finalizer;
 
-    public PipelineRunner(RunnerId runnerId, Pipeline pipeline, ExecutionPlanner executionPlanner, StageExecutor stageExecutor, OrphanExecutionContext orphanExecutionContext, EventPublisher eventPublisher, boolean throwExceptionIfCannotObtainLock, Runnable finalizer) {
+    private final FlamingockMetadata flamingockMetadata;
+
+    public PipelineRunner(RunnerId runnerId,
+                          Pipeline pipeline,
+                          FlamingockMetadata metadata,
+                          ExecutionPlanner executionPlanner,
+                          StageExecutor stageExecutor,
+                          OrphanExecutionContext orphanExecutionContext,
+                          EventPublisher eventPublisher,
+                          boolean throwExceptionIfCannotObtainLock,
+                          Runnable finalizer) {
         this.runnerId = runnerId;
         this.pipeline = pipeline;
         this.executionPlanner = executionPlanner;
@@ -78,6 +81,7 @@ public class PipelineRunner implements Runner {
         this.eventPublisher = eventPublisher;
         this.throwExceptionIfCannotObtainLock = throwExceptionIfCannotObtainLock;
         this.finalizer = finalizer;
+        this.flamingockMetadata = metadata;
     }
 
 
@@ -86,7 +90,7 @@ public class PipelineRunner implements Runner {
         eventPublisher.publish(new PipelineStartedEvent());
         PipelineSummary pipelineSummary = null;
         do {
-            try (ExecutionPlan execution = executionPlanner.getNextExecution(pipeline)) {
+            try (ExecutionPlan execution = executionPlanner.getNextExecution(pipeline, flamingockMetadata)) {
                 if (pipelineSummary == null) {
                     pipelineSummary = new PipelineSummary(execution.getPipeline());
                 }
@@ -146,7 +150,7 @@ public class PipelineRunner implements Runner {
         logger.debug("Applied state to process:\n{}", executableStage);
 
         ExecutionContext executionContext = new ExecutionContext(executionId, orphanExecutionContext.getHostname(), orphanExecutionContext.getAuthor(), orphanExecutionContext.getMetadata());
-        StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock);
+        StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock, flamingockMetadata);
         eventPublisher.publish(new StageCompletedEvent(executionOutput));
         return executionOutput.getSummary();
     }

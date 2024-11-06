@@ -1,3 +1,21 @@
+plugins {
+    `maven-publish`
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
 val jacksonVersion = "2.16.0"
 dependencies {
     api(project(":flamingock-core-api"))
@@ -10,9 +28,9 @@ dependencies {
     api("org.yaml:snakeyaml:2.2")
 
     api("org.apache.httpcomponents:httpclient:4.5.14")
-    api("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+    
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+//    api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
 
     testImplementation(project(":utils-test"))
 }

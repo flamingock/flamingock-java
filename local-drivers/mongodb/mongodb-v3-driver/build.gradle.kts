@@ -1,3 +1,20 @@
+plugins {
+    `maven-publish`
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
 
 dependencies {
     api(project(":local-drivers:mongodb:mongodb-facade"))
@@ -13,24 +30,4 @@ dependencies {
     testImplementation("io.mongock:mongock-standalone:5.5.0")
     testImplementation("io.mongock:mongodb-v3-driver:5.5.0")
 
-
-//    <!-- MONGOCK DRIVER -->
-//
-//
-//    <!-- MONGODB DRIVER -->
-//    <dependency>
-//    <groupId>org.mongodb</groupId>
-//    <artifactId>mongodb-driver-sync</artifactId>
-//    <version>4.3.3</version>
-//    </dependency>
-//    <dependency>
-//    <groupId>org.mongodb</groupId>
-//    <artifactId>bson</artifactId>
-//    <version>4.3.3</version>
-//    </dependency>
-//    <dependency>
-//    <groupId>org.mongodb</groupId>
-//    <artifactId>mongodb-driver-core</artifactId>
-//    <version>4.3.3</version>
-//    </dependency>
 }

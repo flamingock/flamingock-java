@@ -16,6 +16,7 @@
 
 package io.flamingock.core.pipeline.execution;
 
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.ExecutableStage;
@@ -47,7 +48,8 @@ public class StageExecutor {
 
     public Output executeStage(ExecutableStage executableStage,
                                ExecutionContext executionContext,
-                               Lock lock) throws StageExecutionException {
+                               Lock lock,
+                               FlamingockMetadata flamingockMetadata) throws StageExecutionException {
 
         StageSummary summary = new StageSummary(executableStage.getName());
 
@@ -63,6 +65,7 @@ public class StageExecutor {
                             .setStaticContext(dependencyContext)
                             .setLock(lock)
                             .setTransactionWrapper(transactionWrapper)
+                            .setFlamingockMetadata(flamingockMetadata)
                             .setSummarizer(new TaskSummarizer(task.getDescriptor().getId()))
                             .build()
                             .executeTask(task, executionContext)

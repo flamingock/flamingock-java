@@ -17,6 +17,7 @@
 package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.core.api.SystemModule;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.core.CoreConfigurable;
@@ -273,6 +274,16 @@ abstract class AbstractStandaloneBuilder<
     @Override
     public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
         return coreConfiguratorDelegate().getMongockImporterConfiguration();
+    }
+
+    @Override
+    public HOLDER setFlamingockMetadata(FlamingockMetadata metadata) {
+        return coreConfiguratorDelegate().setFlamingockMetadata(metadata);
+    }
+
+    @Override
+    public FlamingockMetadata getFlamingockMetadata() {
+        return coreConfiguratorDelegate().getFlamingockMetadata();
     }
     ///////////////////////////////////////////////////////////////////////////////////
     //  STANDALONE

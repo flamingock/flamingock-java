@@ -20,9 +20,9 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.6")
 
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
-    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+    
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    
 
     implementation("commons-logging:commons-logging:1.2")
 

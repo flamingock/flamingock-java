@@ -18,6 +18,7 @@ package io.flamingock.core.configurator.core;
 
 
 import io.flamingock.core.api.SystemModule;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.legacy.LegacyMigration;
@@ -37,6 +38,7 @@ public class CoreConfiguratorDelegate<
     private final Supplier<HOLDER> holderSupplier;
     private final CoreConfiguration configuration;
     private final SYSTEM_MODULE_MANAGER systemModuleManager;
+    private FlamingockMetadata flamingockMetadata = FlamingockMetadata.getInstance().orElse(null);
 
     public CoreConfiguratorDelegate(CoreConfiguration configuration,
                                     Supplier<HOLDER> holderSupplier,
@@ -233,6 +235,17 @@ public class CoreConfiguratorDelegate<
     @Override
     public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
         return configuration.getMongockImporterConfiguration();
+    }
+
+    @Override
+    public HOLDER setFlamingockMetadata(FlamingockMetadata metadata) {
+        this.flamingockMetadata = metadata;
+        return holderSupplier.get();
+    }
+
+    @Override
+    public FlamingockMetadata getFlamingockMetadata() {
+        return flamingockMetadata;
     }
 
     @Override

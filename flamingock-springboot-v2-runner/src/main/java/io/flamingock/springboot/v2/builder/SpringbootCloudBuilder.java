@@ -103,6 +103,7 @@ public class SpringbootCloudBuilder extends SpringbootBaseBuilder<SpringbootClou
         return PipelineRunnerCreator.create(
                 runnerId,
                 pipeline,
+                getFlamingockMetadata(),
                 engine,
                 getCoreConfiguration(),
                 createEventPublisher(),

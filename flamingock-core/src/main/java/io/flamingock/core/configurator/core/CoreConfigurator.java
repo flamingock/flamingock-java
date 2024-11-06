@@ -18,6 +18,7 @@ package io.flamingock.core.configurator.core;
 
 
 import io.flamingock.core.api.SystemModule;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.legacy.LegacyMigration;
@@ -102,5 +103,9 @@ public interface CoreConfigurator<
     HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration);
 
     CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration();
+
+    HOLDER setFlamingockMetadata(FlamingockMetadata metadata);
+
+    FlamingockMetadata getFlamingockMetadata();
 
 }

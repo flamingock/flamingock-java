@@ -168,7 +168,7 @@ public class StepNavigator {
             FailedExecutionStep failed = (FailedExecutionStep) executed;
             logger.info("change[ {} ] FAILED in {}ms \u274C", taskId, executed.getDuration());
             String msg = String.format("error execution task[%s] after %d ms", failed.getTask().getDescriptor().getId(), failed.getDuration());
-            //logger.warn(msg, failed.getError());
+            logger.error(msg, failed.getError());
 
         } else {
             logger.info("change[ {} ] APPLIED in {}ms \u2705", taskId, executed.getDuration());

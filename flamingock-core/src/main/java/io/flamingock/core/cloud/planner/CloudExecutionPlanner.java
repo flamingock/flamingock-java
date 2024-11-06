@@ -21,6 +21,7 @@ import io.flamingock.commons.utils.StopWatch;
 import io.flamingock.commons.utils.ThreadSleeper;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.transaction.OngoingStatus;
@@ -75,9 +76,9 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    public ExecutionPlan getNextExecution(Pipeline pipeline) throws LockException {
+    public ExecutionPlan getNextExecution(Pipeline pipeline, FlamingockMetadata metadata) throws LockException {
 
-        List<LoadedStage> loadedStages = pipeline.getLoadedStages();
+        List<LoadedStage> loadedStages = pipeline.getLoadedStages(metadata);
 
         //In every execution, as it start a stopwatch
         ThreadSleeper lockThreadSleeper = new ThreadSleeper(

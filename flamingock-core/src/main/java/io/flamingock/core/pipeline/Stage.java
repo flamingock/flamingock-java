@@ -18,6 +18,7 @@ package io.flamingock.core.pipeline;
 
 import io.flamingock.core.api.annotations.SystemChange;
 import io.flamingock.commons.utils.FileUtil;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.task.descriptor.ReflectionTaskDescriptorBuilder;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.descriptor.TemplatedTaskDescriptorBuilder;
@@ -64,10 +65,20 @@ public class Stage {
     }
 
     public Stage(Stage prototype) {
-        this(prototype.getName(), prototype.getCodePackages(), prototype.getFileDirectories(), prototype.getClasses(), prototype.getFilters(), prototype.isParallel());
+        this(prototype.getName(),
+                prototype.getCodePackages(),
+                prototype.getFileDirectories(),
+                prototype.getClasses(),
+                prototype.getFilters(),
+                prototype.isParallel());
     }
 
-    public Stage(String name, Collection<String> codePackages, Collection<String> fileDirectories, Collection<Class<?>> classes, Collection<TaskFilter> filters, boolean parallel) {
+    public Stage(String name,
+                 Collection<String> codePackages,
+                 Collection<String> fileDirectories,
+                 Collection<Class<?>> classes,
+                 Collection<TaskFilter> filters,
+                 boolean parallel) {
         this.name = name;
         this.codePackages = codePackages != null ? new LinkedHashSet<>(codePackages) : null;
         this.fileDirectories = fileDirectories != null ? new LinkedHashSet<>(fileDirectories) : null;
@@ -174,10 +185,10 @@ public class Stage {
      *
      * @return the LoadedStage with contain the task Definition
      */
-    public LoadedStage load() {
+    public LoadedStage load(FlamingockMetadata metadata) {
         Predicate<Class<?>> filterOperator = getFilterOperator(getFilters());
 
-        Collection<TaskDescriptor> descriptors = new ArrayList<>(getFilteredDescriptorsFromCodePackages(codePackages, filterOperator));
+        Collection<TaskDescriptor> descriptors = new ArrayList<>(getFilteredDescriptorsFromCodePackages(codePackages, filterOperator, metadata));
 
         descriptors.addAll(getFilteredDescriptorsFromClasses(classes, filterOperator));
 
@@ -197,16 +208,35 @@ public class Stage {
         }
     }
 
-    private static Collection<TaskDescriptor> getFilteredDescriptorsFromCodePackages(Collection<String> codePackages, Predicate<Class<?>> filterOperator) {
+    private static Collection<TaskDescriptor> getFilteredDescriptorsFromCodePackages(Collection<String> codePackages,
+                                                                                     Predicate<Class<?>> filterOperator,
+                                                                                     FlamingockMetadata metadata) {
         if (codePackages == null) {
             return Collections.emptyList();
         }
 
-        Collection<Class<?>> classes = codePackages.
-                stream()
-                .map(ExecutionUtils::loadExecutionClassesFromPackage)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+        Collection<Class<?>> classes;
+        if(metadata != null) {
+            classes = codePackages
+                    .stream()
+                    .map(metadata::getChangeUnitsByPackage)
+                    .flatMap(Collection::stream)
+                    .map(changeUnitMedata -> {
+                        try {
+                            return Stage.class.getClassLoader().loadClass(changeUnitMedata.getClassName());
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .collect(Collectors.toList());
+        } else {
+            classes = codePackages.
+                    stream()
+                    .map(ExecutionUtils::loadExecutionClassesFromPackage)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+        }
+
 
         return getFilteredDescriptorsFromClasses(classes, filterOperator);
     }

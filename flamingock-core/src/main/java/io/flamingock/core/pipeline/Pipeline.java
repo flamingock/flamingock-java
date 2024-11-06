@@ -17,6 +17,7 @@
 package io.flamingock.core.pipeline;
 
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.task.filter.TaskFilter;
 
 import java.util.Collection;
@@ -27,20 +28,21 @@ import java.util.stream.Collectors;
 
 public class Pipeline {
 
+
+    private final List<Stage> stages;
+
     public static PipelineBuilder builder() {
         return new PipelineBuilder();
     }
-
-    private final List<Stage> stages;
 
     private Pipeline(List<Stage> stages) {
         this.stages = stages;
     }
 
-    public List<LoadedStage> getLoadedStages() {
+    public List<LoadedStage> getLoadedStages(FlamingockMetadata metadata) {
         List<LoadedStage> loadedStages = stages
                 .stream()
-                .map(Stage::load)
+                .map(stage-> stage.load(metadata))
                 .collect(Collectors.toList());
         validateStages(loadedStages);
         return loadedStages;

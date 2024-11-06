@@ -18,6 +18,7 @@ package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
@@ -105,6 +106,7 @@ public class StandaloneLocalBuilder
         return PipelineRunnerCreator.create(
                 runnerId,
                 pipeline,
+                coreConfiguratorDelegate.getFlamingockMetadata(),
                 engine,
                 coreConfiguration,
                 buildEventPublisher(),
