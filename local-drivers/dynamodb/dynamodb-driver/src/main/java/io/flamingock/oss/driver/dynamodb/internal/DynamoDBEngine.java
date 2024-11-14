@@ -24,7 +24,12 @@ import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.LocalConnectionEngine;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
+import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
+import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
+import io.flamingock.oss.driver.dynamodb.internal.mongock.MongockImporterModule;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
 import java.util.Optional;
 
@@ -37,6 +42,7 @@ public class DynamoDBEngine implements LocalConnectionEngine {
     private DynamoDBAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
+    private MongockImporterModule mongockImporter = null;
 
 
     public DynamoDBEngine(DynamoClients client,
@@ -57,6 +63,12 @@ public class DynamoDBEngine implements LocalConnectionEngine {
         DynamoDBLockService lockService = new DynamoDBLockService(client, TimeService.getDefault());
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
+        //Mongock importer
+        if(coreConfiguration.getMongockImporterConfiguration().isEnabled()) {
+            DynamoDbTable<ChangeEntryDynamoDB> sourceTable = client.getEnhancedClient()
+                    .table(coreConfiguration.getMongockImporterConfiguration().getSourceName(), TableSchema.fromBean(ChangeEntryDynamoDB.class));
+            mongockImporter = new MongockImporterModule(sourceTable, auditor);
+        }
     }
 
     @Override
@@ -73,5 +85,10 @@ public class DynamoDBEngine implements LocalConnectionEngine {
     @Override
     public Optional<TransactionWrapper> getTransactionWrapper() {
         return Optional.ofNullable(transactionWrapper);
+    }
+
+    @Override
+    public Optional<MongockImporterModule> getMongockLegacyImporterModule() {
+        return Optional.ofNullable(mongockImporter);
     }
 }

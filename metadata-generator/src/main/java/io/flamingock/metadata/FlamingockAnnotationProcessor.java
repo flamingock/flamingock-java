@@ -9,7 +9,6 @@ import io.flamingock.core.api.metadata.FlamingockMetadata;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
@@ -17,14 +16,17 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,11 +34,15 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
-@SupportedAnnotationTypes("io.flamingock.core.api.annotations.BuildTimeProcessable")
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private final String logPrefix = "Flamingock annotation processor: ";
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Collections.singleton(BuildTimeProcessable.class.getCanonicalName());
+    }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -48,11 +54,13 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, logPrefix + "starting");
 
         try {
-            List<ChangeUnitMedata> classes = extractClasses(roundEnv.getElementsAnnotatedWith(BuildTimeProcessable.class))
+
+            List<ChangeUnitMedata> changeUnitMetadataList = roundEnv.getElementsAnnotatedWith(BuildTimeProcessable.class)
                     .stream()
-                    .map(ChangeUnitMedata::new)
+                    .map(this::mapToMetadata)
                     .collect(Collectors.toList());
-            FlamingockMetadata metadata = new FlamingockMetadata(true, classes);
+
+            FlamingockMetadata metadata = new FlamingockMetadata(true, changeUnitMetadataList);
             buildFlamingockMetadataFile(metadata);
             buildRegistrationClasses(metadata);
 
@@ -89,18 +97,18 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         });
     }
 
-    private List<String> extractClasses(Set<? extends Element> annotatedElements) {
-        List<String> classes = new LinkedList<>();
-        for (Element element : annotatedElements) {
-            if (element.getKind() == ElementKind.CLASS) {
-                String className = ((TypeElement) element).getQualifiedName().toString();
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, logPrefix + "Processing class: " + className);
-                extractAnnotations(element);
-                classes.add(className);
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, logPrefix + "Processed class: " + className);
-            }
+    private ChangeUnitMedata mapToMetadata(Element element) {
+        if (element.getKind() == ElementKind.CLASS) {
+            TypeElement typeElement = (TypeElement) element;
+            String className = typeElement.getQualifiedName().toString();
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, logPrefix + "Processed class: " + className);
+            PackageElement packageElement = processingEnv.getElementUtils().getPackageOf(typeElement);
+            String packageName = packageElement.getQualifiedName().toString();
+//            extractAnnotations(element);
+            return new ChangeUnitMedata(className, packageName);
+        } else {
+            return null;
         }
-        return classes;
     }
 
     private void writeToFile(String filePath, Consumer<Writer> writerConsumer) {
@@ -129,19 +137,16 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             TypeMirror annotationType = annotationMirror.getAnnotationType();
             String annotationName = annotationType.toString();
 
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
-                    logPrefix + "Found annotation[ " + annotationName + "] on element: " + element.getSimpleName());
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, logPrefix + "Found annotation[ " + annotationName + "] on element: " + element.getSimpleName());
 
             // Extract annotation values if needed
             if (annotationName.equals("io.mongock.api.annotations.ChangeUnit")) {
-                Map<? extends ExecutableElement, ? extends AnnotationValue> elementValues =
-                        annotationMirror.getElementValues();
+                Map<? extends ExecutableElement, ? extends AnnotationValue> elementValues = annotationMirror.getElementValues();
 
                 for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : elementValues.entrySet()) {
                     String key = entry.getKey().getSimpleName().toString();
                     String value = entry.getValue().getValue().toString();
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
-                            "Annotation value: " + key + " = " + value);
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Annotation value: " + key + " = " + value);
                 }
             }
         }

@@ -99,4 +99,4 @@ Vagrantfile
 #vscode
 .vscode/*
 
-dynamodb*
+dynamodb-local-metadata*

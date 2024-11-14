@@ -2,13 +2,15 @@ package io.flamingock.core.api.metadata;
 
 public class ChangeUnitMedata {
 
+    private String packageName;
     private String className;
 
     public ChangeUnitMedata() {
     }
 
-    public ChangeUnitMedata(String className) {
+    public ChangeUnitMedata(String className, String packageName) {
         this.className = className;
+        this.packageName = packageName;
     }
 
     public String getClassName() {
@@ -19,12 +21,13 @@ public class ChangeUnitMedata {
         this.className = className;
     }
 
-    //TODO change this to inject package directly(this doens't work with inner classes)
-    public String getPackage() {
-        int lastIndex = className.lastIndexOf(".");
-        return lastIndex > 0 ? className.substring(0, lastIndex) : "";
+    public String getPackageName() {
+        return packageName;
     }
 
+    public void setPackageName(String packageName) {
+        this.packageName = packageName;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -33,16 +36,21 @@ public class ChangeUnitMedata {
 
         ChangeUnitMedata that = (ChangeUnitMedata) o;
 
+        if (!packageName.equals(that.packageName)) return false;
         return className.equals(that.className);
     }
 
     @Override
     public int hashCode() {
-        return className.hashCode();
+        int result = packageName.hashCode();
+        result = 31 * result + className.hashCode();
+        return result;
     }
 
     @Override
     public String toString() {
-        return "ChangeUnitMedata{" + "className='" + className + '\'' + '}';
+        return "ChangeUnitMedata{" + "packageName='" + packageName + '\'' +
+                ", className='" + className + '\'' +
+                '}';
     }
 }

@@ -18,12 +18,14 @@ package io.flamingock.oss.driver.dynamodb;
 
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
+import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,16 +40,28 @@ public class DynamoDBTestHelper {
         return client.getDynamoDbClient().listTables().tableNames().contains(tableName);
     }
 
-    public List<AuditEntry> getAuditEntriesSorted() {
-        return client.getEnhancedClient().table(DynamoDBConstants.AUDIT_LOG_TABLE_NAME, TableSchema.fromBean(AuditEntryEntity.class))
+    public List<AuditEntry> getAuditEntriesSorted(String auditLogTable) {
+        return client.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(AuditEntryEntity.class))
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)
                         .build()
                 )
                 .items()
                 .stream()
-                .sorted((o1, o2) -> o1.getCreatedAt().compareTo(o2.getCreatedAt()))
+                .sorted(Comparator.comparing(AuditEntryEntity::getCreatedAt))
                 .map(AuditEntryEntity::toAuditEntry)
+                .collect(Collectors.toList());
+    }
+
+    public List<ChangeEntryDynamoDB> getChangeEntriesSorted(String auditLogTable) {
+        return client.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(ChangeEntryDynamoDB.class))
+                .scan(ScanEnhancedRequest.builder()
+                        .consistentRead(true)
+                        .build()
+                )
+                .items()
+                .stream()
+                .sorted(Comparator.comparing(ChangeEntryDynamoDB::getTimestamp))
                 .collect(Collectors.toList());
     }
 }
