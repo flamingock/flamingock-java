@@ -22,7 +22,7 @@ import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.oss.driver.common.mongodb.SessionManager;
+import io.flamingock.community.internal.TransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +31,9 @@ import java.util.function.Supplier;
 public class MongoSync4TransactionWrapper implements TransactionWrapper {
     private static final Logger logger = LoggerFactory.getLogger(MongoSync4TransactionWrapper.class);
 
-    private final SessionManager<ClientSession> sessionManager;
+    private final TransactionManager<ClientSession> sessionManager;
 
-    MongoSync4TransactionWrapper(SessionManager<ClientSession> sessionManager) {
+    MongoSync4TransactionWrapper(TransactionManager<ClientSession> sessionManager) {
         this.sessionManager = sessionManager;
     }
 

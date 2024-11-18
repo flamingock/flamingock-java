@@ -19,6 +19,7 @@ package io.flamingock.oss.driver.dynamodb.internal;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.community.internal.LocalExecutionPlanner;
+import io.flamingock.community.internal.TransactionManager;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.LocalConnectionEngine;
@@ -30,8 +31,10 @@ import io.flamingock.oss.driver.dynamodb.internal.mongock.MongockImporterModule;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class DynamoDBEngine implements LocalConnectionEngine {
 
@@ -57,8 +60,9 @@ public class DynamoDBEngine implements LocalConnectionEngine {
 
     @Override
     public void initialize(RunnerId runnerId) {
-        transactionWrapper = coreConfiguration.getTransactionEnabled() ? new DynamoDBTransactionWrapper(client) : null;
-        auditor = new DynamoDBAuditor(client, (DynamoDBTransactionWrapper) transactionWrapper);
+        TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
+        transactionWrapper = coreConfiguration.getTransactionEnabled() ? new DynamoDBTransactionWrapper(client, transactionManager) : null;
+        auditor = new DynamoDBAuditor(client, transactionManager);
         auditor.initialize(driverConfiguration.isIndexCreation());
         DynamoDBLockService lockService = new DynamoDBLockService(client, TimeService.getDefault());
         lockService.initialize(driverConfiguration.isIndexCreation());

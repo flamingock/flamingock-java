@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package io.flamingock.oss.driver.common.mongodb;
+package io.flamingock.community.internal;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class SessionManager<CLIENT_SESSION> {
+public class TransactionManager<CLIENT_SESSION> {
 
     private final Map<String, CLIENT_SESSION> sessionMap;
     private final Supplier<CLIENT_SESSION> clientSessionSupplier;
 
-    public SessionManager(Supplier<CLIENT_SESSION> clientSessionSupplier) {
+    public TransactionManager(Supplier<CLIENT_SESSION> clientSessionSupplier) {
         this.clientSessionSupplier = clientSessionSupplier;
         sessionMap = new HashMap<>();
     }

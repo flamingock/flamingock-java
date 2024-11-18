@@ -28,7 +28,7 @@ import io.flamingock.core.engine.local.Auditor;
 import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.oss.driver.common.mongodb.SessionManager;
+import io.flamingock.community.internal.TransactionManager;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.Mongo3CollectionWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.Mongo3DocumentWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
@@ -51,12 +51,12 @@ public class Mongo3Auditor implements Auditor {
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<Mongo3DocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new Mongo3DocumentWrapper(new Document()));
-    private final SessionManager<ClientSession> sessionManager;
+    private final TransactionManager<ClientSession> sessionManager;
 
     Mongo3Auditor(MongoDatabase database,
                   String collectionName,
                   ReadWriteConfiguration readWriteConfiguration,
-                  SessionManager<ClientSession> sessionManager) {
+                  TransactionManager<ClientSession> sessionManager) {
         this.collection = database.getCollection(collectionName)
                 .withReadConcern(readWriteConfiguration.getReadConcern())
                 .withReadPreference(readWriteConfiguration.getReadPreference())

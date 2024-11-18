@@ -28,7 +28,7 @@ import io.flamingock.core.engine.local.Auditor;
 import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.oss.driver.common.mongodb.SessionManager;
+import io.flamingock.community.internal.TransactionManager;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.MongoSync4CollectionWrapper;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.MongoSync4DocumentWrapper;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.ReadWriteConfiguration;
@@ -50,12 +50,12 @@ public class MongoSync4Auditor implements Auditor {
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<MongoSync4DocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new MongoSync4DocumentWrapper(new Document()));
-    private final SessionManager<ClientSession> sessionManager;
+    private final TransactionManager<ClientSession> sessionManager;
 
     MongoSync4Auditor(MongoDatabase database,
                       String collectionName,
                       ReadWriteConfiguration readWriteConfiguration,
-                      SessionManager<ClientSession> sessionManager) {
+                      TransactionManager<ClientSession> sessionManager) {
         this.collection = database.getCollection(collectionName)
                 .withReadConcern(readWriteConfiguration.getReadConcern())
                 .withReadPreference(readWriteConfiguration.getReadPreference())

@@ -16,6 +16,7 @@
 
 package io.flamingock.oss.driver.dynamodb.internal;
 
+import io.flamingock.community.internal.TransactionManager;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.navigation.step.FailedStep;
@@ -32,28 +33,35 @@ public class DynamoDBTransactionWrapper implements TransactionWrapper {
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBTransactionWrapper.class);
 
     private final DynamoClients client;
-    private final TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = TransactWriteItemsEnhancedRequest.builder();
+    protected final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager;
 
-    DynamoDBTransactionWrapper(DynamoClients client) {
+
+    DynamoDBTransactionWrapper(DynamoClients client,
+                               TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager) {
         this.client = client;
-    }
-
-    public TransactWriteItemsEnhancedRequest.Builder getWriteRequestBuilder() {
-        return writeRequestBuilder;
+        this.transactionManager = transactionManager;
     }
 
     @Override
     public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        dependencyInjectable.addDependency(writeRequestBuilder);
-        T result = operation.get();
-        if (!(result instanceof FailedStep)) {
-            try {
-                client.getEnhancedClient().transactWriteItems(writeRequestBuilder.build());
-            } catch (TransactionCanceledException ex) {
-                ex.cancellationReasons().forEach(cancellationReason -> logger.info(cancellationReason.toString()));
+        String sessionId = taskDescriptor.getId();
+        try {
+            TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
+            dependencyInjectable.addDependency(writeRequestBuilder);
+            T result = operation.get();
+            if (!(result instanceof FailedStep)) {
+                try {
+                    client.getEnhancedClient().transactWriteItems(writeRequestBuilder.build());
+                } catch (TransactionCanceledException ex) {
+                    ex.cancellationReasons().forEach(cancellationReason -> logger.info(cancellationReason.toString()));
+                }
             }
+
+            return result;
+        } finally {
+            transactionManager.closeSession(sessionId);
         }
-        return result;
+
     }
 
 }

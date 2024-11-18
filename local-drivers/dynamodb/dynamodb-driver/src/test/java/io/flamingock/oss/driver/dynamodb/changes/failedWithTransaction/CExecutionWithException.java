@@ -43,5 +43,6 @@ public class CExecutionWithException {
     @RollbackExecution
     public void rollbackExecution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Do nothing
+        System.out.println("THIS SHOULD NOT BE CALLED");
     }
 }

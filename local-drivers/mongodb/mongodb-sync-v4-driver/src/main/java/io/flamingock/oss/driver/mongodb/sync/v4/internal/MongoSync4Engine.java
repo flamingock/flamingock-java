@@ -28,7 +28,7 @@ import io.flamingock.community.internal.LocalExecutionPlanner;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.commons.utils.TimeService;
-import io.flamingock.oss.driver.common.mongodb.SessionManager;
+import io.flamingock.community.internal.TransactionManager;
 import io.flamingock.oss.driver.mongodb.sync.v4.MongoDBSync4Configuration;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockImporterModule;
 import org.bson.Document;
@@ -63,7 +63,7 @@ public class MongoSync4Engine implements LocalConnectionEngine {
 
     @Override
     public void initialize(RunnerId runnerId) {
-        SessionManager<ClientSession> sessionManager = new SessionManager<>(mongoClient::startSession);
+        TransactionManager<ClientSession> sessionManager = new TransactionManager<>(mongoClient::startSession);
         transactionWrapper = coreConfiguration.getTransactionEnabled() ? new MongoSync4TransactionWrapper(sessionManager) : null;
         //Auditor
         auditor = new MongoSync4Auditor(
