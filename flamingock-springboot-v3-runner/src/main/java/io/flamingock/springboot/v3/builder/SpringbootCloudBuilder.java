@@ -87,7 +87,7 @@ public class SpringbootCloudBuilder extends SpringbootBaseBuilder<SpringbootClou
 
         CloudConnectionEngine engine = engineFactory.initializeAndGet();
 
-        getSystemModuleManager().initialize(engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt());
+        getSystemModuleManager().initialize(engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt(), cloudConfiguratorDelegate.getCloudConfiguration().getHost());
 
         getSystemModuleManager()
                 .getDependencies()

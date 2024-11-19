@@ -94,7 +94,7 @@ public class StandaloneCloudBuilder
         CloudConnectionEngine engine = engineFactory.initializeAndGet();
 
         coreConfiguratorDelegate.getSystemModuleManager()
-                .initialize(engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt());
+                .initialize(engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt(), cloudConfiguratorDelegate.getCloudConfiguration().getHost());
 
         coreConfiguratorDelegate.getSystemModuleManager()
                 .getDependencies()

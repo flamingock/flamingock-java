@@ -9,14 +9,17 @@ public class MongoDBLegacyImportConfiguration {
     private final EnvironmentId environmentId;
     private final String jwt;
     private final ServiceId serviceId;
+    private final String serverHost;
 
     public MongoDBLegacyImportConfiguration(EnvironmentId environmentId,
                                             ServiceId serviceId,
                                             String jwt,
+                                            String serverHost,
                                             String changeUnitsCollection) {
         this.environmentId = environmentId;
         this.serviceId = serviceId;
         this.jwt = jwt;
+        this.serverHost = serverHost;
         this.changeUnitsCollection = changeUnitsCollection;
     }
 
@@ -34,5 +37,8 @@ public class MongoDBLegacyImportConfiguration {
 
     public String getJwt() {
         return jwt;
+    }
+    public String getServerHost() {
+        return serverHost;
     }
 }

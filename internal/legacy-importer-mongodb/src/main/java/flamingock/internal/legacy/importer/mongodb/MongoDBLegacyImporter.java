@@ -23,9 +23,9 @@ public class MongoDBLegacyImporter implements CloudSystemModule {
     }
 
     @Override
-    public void initialise(EnvironmentId environmentId, ServiceId serviceId, String jwt) {
+    public void initialise(EnvironmentId environmentId, ServiceId serviceId, String jwt, String serverHost) {
         MongoDBLegacyImportConfiguration configuration = new MongoDBLegacyImportConfiguration(
-                environmentId, serviceId, jwt, changeUnitsCollection
+                environmentId, serviceId, jwt, serverHost, changeUnitsCollection
         );
         dependencies = Collections.singletonList(
                 new Dependency(MongoDBLegacyImportConfiguration.class, configuration)

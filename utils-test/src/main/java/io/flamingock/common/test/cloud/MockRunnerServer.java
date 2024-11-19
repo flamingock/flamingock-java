@@ -27,18 +27,10 @@ import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.planner.StageRequest;
 import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.delete;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.flamingock.common.test.cloud.JsonMapper.toJson;
 import static io.flamingock.core.cloud.api.planner.ExecutionPlanResponse.TaskState.PENDING_EXECUTION;
 
@@ -47,6 +39,10 @@ public final class MockRunnerServer {
     public static final String DEFAULT_LOCK_ACQUISITION_ID = UUID.randomUUID().toString();
 
     private final List<ExecutionPlanRequestResponse> executionRequestResponses = new LinkedList<>();
+
+    private boolean importerCall = false;
+
+    private List<MongockLegacyAuditEntry> importerExecutionRequest = new LinkedList<>();
 
     private ExecutionExpectation executionExpectation = null;
 
@@ -197,6 +193,32 @@ public final class MockRunnerServer {
         return this;
     }
 
+    public MockRunnerServer addSuccessfulImporterCall(List<MongockLegacyAuditEntry> legacyAuditEntries) {
+        importerCall = true;
+        importerExecutionRequest = legacyAuditEntries;
+
+        return this;
+    }
+
+    public MockRunnerServer addFailureImporterCall(List<MongockLegacyAuditEntry> legacyAuditEntries) {
+        importerCall = true;
+        importerExecutionRequest = legacyAuditEntries;
+
+        return this;
+    }
+
+    private void importerCall() {
+        String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/import"//?elapsedMillis={elapsedMillis}"
+                .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId);
+
+        wireMockServer.stubFor(post(urlPathEqualTo(executionUrl))
+                .withRequestBody(equalToJson(toJson(importerExecutionRequest)))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json").withBody(toJson(""))));
+
+    }
+
 
     public MockRunnerServer setJwt(String jwt) {
         this.jwt = jwt;
@@ -212,6 +234,10 @@ public final class MockRunnerServer {
         mockExecutionEndpoint();
         mockAuditWriteEndpoint();
         mockReleaseLockEndpoint();
+
+        if (importerCall) {
+            this.importerCall();
+        }
     }
 
     public void stop() {
