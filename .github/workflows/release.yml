@@ -1,4 +1,4 @@
-name: Release
+name: Release(manual)
 on:
   workflow_dispatch:
     branches:
@@ -40,8 +40,8 @@ jobs:
         env:
           GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
 
-#      - name: Build, unit and Integration tests
-#        run: ./gradlew clean build
+      - name: Build, unit and Integration tests
+        run: ./gradlew clean build
 
       - name: Perform publish
         run: ./gradlew publish
