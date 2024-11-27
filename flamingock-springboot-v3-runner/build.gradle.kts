@@ -1,21 +1,3 @@
-plugins {
-    `maven-publish`
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
-
 dependencies {
     api(project(":flamingock-core"))
     compileOnly("org.springframework.boot:spring-boot:3.1.3")
@@ -32,3 +14,5 @@ dependencies {
         }
     }
 }
+
+description = "${project.name}'s description"

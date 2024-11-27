@@ -171,17 +171,17 @@ public class Stage {
     /*
      * Depending on the tasks inside the package or some field in the yaml, it returns a SingleLoadedStage
      * or ParallelSingleLoadedProcess.
-     * <br />
+     *
      *
      * @return a sorted SingleLoadedStage, non-sorted SingleLoadedStage or a ParallelSingleLoadedProcess(non sorted),
      * depending on the task in the scanPackage,or some field in the yaml.
 
      * It loads the definition from the source(scanPackage, yaml definition, etc.) and returns the LoadedStage
      * with contain the task Definition.
-     * <br />
+     *
      * This method can decide up to some level, which type of process is loaded. For example in the case of 'SingleStageDefinition',
      * depending on the tasks inside the package or some field in the yaml, it returns a SingleLoadedStage or ParallelSingleLoadedProcess.
-     * <br />
+     *
      *
      * @return the LoadedStage with contain the task Definition
      */

@@ -3,29 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `java-gradle-plugin`
     `kotlin-dsl`
-    `maven-publish`
     id("java")
 }
 
-
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
+description = "${project.name}'s description"
 
 val jacksonVersion = "2.15.2"
 dependencies {

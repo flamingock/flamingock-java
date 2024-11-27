@@ -1,21 +1,3 @@
-plugins {
-    `maven-publish`
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
-
 dependencies {
     api(project(":local-drivers:driver-common"))
     api(project(":local-drivers:couchbase:couchbase-driver"))
@@ -27,3 +9,5 @@ dependencies {
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:2.7.12")
 }
+
+description = "${project.name}'s description"

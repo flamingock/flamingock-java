@@ -76,7 +76,7 @@ public class Lock {
     /**
      * Ensures the lock is safely acquired(safely here means it's acquired with enough margin to operate),
      * or throws an exception otherwise.
-     * <br />
+     *
      * In case the lock is about to expire, it will try to refresh it. In this scenario, the lock won't be considered
      * ensured until it's successfully extended. However, this scenario shouldn't happen, when a well configured daemon
      * is set up.

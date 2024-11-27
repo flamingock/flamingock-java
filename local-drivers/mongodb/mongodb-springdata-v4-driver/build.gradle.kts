@@ -1,21 +1,3 @@
-plugins {
-    `maven-publish`
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
-
 dependencies {
     api(project(":local-drivers:mongodb:mongodb-facade"))
     api(project(":local-drivers:mongodb:mongodb-sync-v4-driver"))
@@ -41,3 +23,5 @@ dependencies {
         }
     }
 }
+
+description = "${project.name}'s description"

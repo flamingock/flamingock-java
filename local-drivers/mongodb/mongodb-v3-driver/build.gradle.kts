@@ -1,21 +1,3 @@
-plugins {
-    `maven-publish`
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
-
 dependencies {
     api(project(":local-drivers:mongodb:mongodb-facade"))
 
@@ -31,3 +13,5 @@ dependencies {
     testImplementation("io.mongock:mongodb-v3-driver:5.5.0")
 
 }
+
+description = "${project.name}'s description"

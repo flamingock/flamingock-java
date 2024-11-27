@@ -1,21 +1,3 @@
-plugins {
-    `maven-publish`
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
-
 dependencies {
     api(project(":local-drivers:driver-common"))
     
@@ -24,3 +6,5 @@ dependencies {
     testImplementation("org.testcontainers:couchbase:1.18.3")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")
 }
+
+description = "${project.name}'s description"

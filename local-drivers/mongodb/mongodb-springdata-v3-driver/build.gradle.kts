@@ -1,21 +1,3 @@
-plugins {
-    `maven-publish`
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
-
 dependencies {
     api(project(":local-drivers:mongodb:mongodb-facade"))
     api(project(":local-drivers:mongodb:mongodb-sync-v4-driver"))
@@ -35,3 +17,5 @@ dependencies {
     testImplementation("io.mongock:mongock-standalone:5.5.0")
     testImplementation("io.mongock:mongodb-sync-v4-driver:5.5.0")
 }
+
+description = "${project.name}'s description"
