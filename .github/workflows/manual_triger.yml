@@ -1,0 +1,23 @@
+name: Manual Trigger with Inputs
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose deployment environment'
+        required: true
+        default: 'staging'
+        type: string
+      version:
+        description: 'Specify version'
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display Inputs
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Version: ${{ github.event.inputs.version }}"
