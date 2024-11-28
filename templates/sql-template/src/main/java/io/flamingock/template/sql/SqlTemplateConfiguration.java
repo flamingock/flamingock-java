@@ -16,8 +16,9 @@
 
 package io.flamingock.template.sql;
 
-import io.changock.migration.api.annotations.NonLockGuarded;
-import io.changock.migration.api.annotations.NonLockGuardedType;
+
+import io.flamingock.core.api.annotations.NonLockGuarded;
+import io.flamingock.core.api.annotations.NonLockGuardedType;
 
 @NonLockGuarded(NonLockGuardedType.NONE)
 public class SqlTemplateConfiguration {

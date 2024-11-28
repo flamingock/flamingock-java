@@ -12,7 +12,7 @@ dependencies {
     implementation("com.mysql:mysql-connector-j:8.2.0")
     implementation(project(":templates:sql-template"))
 
-    implementation(project(":internal:legacy-importer-mongodb"))
+    implementation(project(":cloud-importers:mongodb-sync4-cloud-importer"))
 
     implementation(project(":local-drivers:mongodb:mongodb-sync-v4-driver"))
     implementation("org.mongodb:mongodb-driver-sync:$mongodbVersion")

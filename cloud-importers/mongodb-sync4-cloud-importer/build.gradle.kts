@@ -1,7 +1,7 @@
 val jacksonVersion = "2.16.0"
 dependencies {
-    api(project(":utils"))
-    api(project(":flamingock-core-api"))
+    implementation(project(":utils"))
+    implementation(project(":flamingock-core-api"))
 
     implementation("org.mongodb:mongodb-driver-sync:4.3.3")
     implementation(project(":flamingock-core"))

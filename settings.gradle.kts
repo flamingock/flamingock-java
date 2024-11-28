@@ -5,9 +5,9 @@ rootProject.name = "flamingock-project"
 //////////////////////////////////////
 // CORE
 //////////////////////////////////////
-include("flamingock-template")
-project(":flamingock-template").projectDir = file("flamingock-template")
-project(":flamingock-template").name = "flamingock-template"
+include("flamingock-core-template")
+project(":flamingock-core-template").projectDir = file("flamingock-core-template")
+project(":flamingock-core-template").name = "flamingock-core-template"
 
 
 include("cloud-transactioners:sql-cloud-transactioner")
@@ -18,10 +18,6 @@ project(":cloud-transactioners:sql-cloud-transactioner").name = "sql-cloud-trans
 include("flamingock-core-api")
 project(":flamingock-core-api").name = "flamingock-core-api"
 project(":flamingock-core-api").projectDir = file("flamingock-core-api")
-
-include("flamingock-core-cloud-api")
-project(":flamingock-core-cloud-api").projectDir = file("flamingock-core-cloud-api")
-project(":flamingock-core-cloud-api").name = "flamingock-core-cloud-api"
 
 include("flamingock-core")
 project(":flamingock-core").projectDir = file("flamingock-core")
@@ -156,6 +152,6 @@ project(":metadata-generator").projectDir = file("metadata-generator")
 //////////////////////////////////////
 // INTERNAL
 //////////////////////////////////////
-include("internal:legacy-importer-mongodb")
-project(":internal:legacy-importer-mongodb").name = "legacy-importer-mongodb"
-project(":internal:legacy-importer-mongodb").projectDir = file("internal/legacy-importer-mongodb")
+include("cloud-importers:mongodb-sync4-cloud-importer")
+project(":cloud-importers:mongodb-sync4-cloud-importer").name = "mongodb-sync4-cloud-importer"
+project(":cloud-importers:mongodb-sync4-cloud-importer").projectDir = file("cloud-importers/mongodb-sync4-cloud-importer")

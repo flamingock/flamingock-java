@@ -16,30 +16,26 @@
 
 package io.flamingock.core.runtime;
 
-import io.changock.migration.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.mongock.api.annotations.ChangeUnitConstructor;
-import io.flamingock.core.api.annotations.FlamingockConstructor;
+import io.flamingock.commons.utils.Constants;
+import io.flamingock.commons.utils.StringUtil;
+import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.exception.DependencyInjectionException;
 import io.flamingock.core.runtime.proxy.LockGuardProxyFactory;
-import io.flamingock.commons.utils.Constants;
-import io.flamingock.commons.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -50,26 +46,41 @@ import java.util.stream.Collectors;
 public final class RuntimeManager implements DependencyInjectable {
 
     private static final Logger logger = LoggerFactory.getLogger(RuntimeManager.class);
+    private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
+            ? parameter.getAnnotation(Named.class).value()
+            : null;
     private final FlamingockMetadata flamingockMetadata;
-
+    private final Set<Class<?>> nonProxyableTypes = Collections.emptySet();
+    private final DependencyInjectableContext dependencyContext;
+    private final LockGuardProxyFactory proxyFactory;
+    private RuntimeManager(LockGuardProxyFactory proxyFactory,
+                           DependencyInjectableContext dependencyContext,
+                           FlamingockMetadata flamingockMetadata) {
+        this.dependencyContext = dependencyContext;
+        this.proxyFactory = proxyFactory;
+        this.flamingockMetadata = flamingockMetadata;
+    }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
-            ? parameter.getAnnotation(Named.class).value()
-            : null;
-    private final Set<Class<?>> nonProxyableTypes = Collections.emptySet();
-    private final DependencyInjectableContext dependencyContext;
-    private final LockGuardProxyFactory proxyFactory;
+    public static void logMethodWithArguments(String methodName, List<Object> changelogInvocationParameters) {
+        String arguments = changelogInvocationParameters.stream()
+                .map(RuntimeManager::getParameterType)
+                .collect(Collectors.joining(", "));
+        logger.debug("method[{}] with arguments: [{}]", methodName, arguments);
 
-    private RuntimeManager(LockGuardProxyFactory proxyFactory,
-                          DependencyInjectableContext dependencyContext,
-                           FlamingockMetadata flamingockMetadata) {
-        this.dependencyContext = dependencyContext;
-        this.proxyFactory = proxyFactory;
-        this.flamingockMetadata = flamingockMetadata;
+    }
+
+    private static String getParameterType(Object obj) {
+        String className = obj != null ? obj.getClass().getName() : "{null argument}";
+        int mongockProxyPrefixIndex = className.indexOf(Constants.PROXY_MONGOCK_PREFIX);
+        if (mongockProxyPrefixIndex > 0) {
+            return className.substring(0, mongockProxyPrefixIndex);
+        } else {
+            return className;
+        }
     }
 
     @Override
@@ -121,6 +132,8 @@ public final class RuntimeManager implements DependencyInjectable {
 
         boolean lockGuarded = !type.isAnnotationPresent(NonLockGuarded.class)
                 && !parameter.isAnnotationPresent(NonLockGuarded.class)
+                && !type.isAnnotationPresent(io.changock.migration.api.annotations.NonLockGuarded.class)
+                && !parameter.isAnnotationPresent(io.changock.migration.api.annotations.NonLockGuarded.class)
                 && !nonProxyableTypes.contains(type)
                 && (flamingockMetadata == null || !flamingockMetadata.isSuppressedProxies());
 
@@ -132,25 +145,6 @@ public final class RuntimeManager implements DependencyInjectable {
 
     private String getParameterName(Parameter parameter) {
         return parameterNameProvider.apply(parameter);
-    }
-
-
-    public static void logMethodWithArguments(String methodName, List<Object> changelogInvocationParameters) {
-        String arguments = changelogInvocationParameters.stream()
-                .map(RuntimeManager::getParameterType)
-                .collect(Collectors.joining(", "));
-        logger.debug("method[{}] with arguments: [{}]", methodName, arguments);
-
-    }
-
-    private static String getParameterType(Object obj) {
-        String className = obj != null ? obj.getClass().getName() : "{null argument}";
-        int mongockProxyPrefixIndex = className.indexOf(Constants.PROXY_MONGOCK_PREFIX);
-        if (mongockProxyPrefixIndex > 0) {
-            return className.substring(0, mongockProxyPrefixIndex);
-        } else {
-            return className;
-        }
     }
 
     public static final class Builder {

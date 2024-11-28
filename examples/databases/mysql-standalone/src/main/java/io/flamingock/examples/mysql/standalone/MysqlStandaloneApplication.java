@@ -16,7 +16,6 @@
 
 package io.flamingock.examples.mysql.standalone;
 
-import flamingock.internal.legacy.importer.mongodb.MongoDBLegacyImporter;
 import io.flamingock.cloud.transaction.sql.SqlCloudTransactioner;
 import io.flamingock.cloud.transaction.sql.SqlDialect;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;

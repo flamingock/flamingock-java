@@ -16,9 +16,10 @@
 
 package io.flamingock.cloud.transaction.sql.changes.happypath;
 
-import io.changock.migration.api.annotations.NonLockGuarded;
+
 import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
+import io.flamingock.core.api.annotations.NonLockGuarded;
 
 import java.sql.Connection;
 import java.sql.SQLException;

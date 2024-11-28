@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package flamingock.internal.legacy.importer.mongodb;
+package io.flamingock.importer.cloud.mongodb;
 
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.changock.migration.api.annotations.NonLockGuarded;
 import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.http.Http;
 import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
+import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.annotations.SystemChange;
 import org.apache.http.impl.client.HttpClients;
 import org.bson.Document;

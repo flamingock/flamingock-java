@@ -1,4 +1,4 @@
-package flamingock.internal.legacy.importer.mongodb;
+package io.flamingock.importer.cloud.mongodb;
 
 import io.flamingock.commons.utils.http.Http;
 

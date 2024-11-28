@@ -20,7 +20,7 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import flamingock.internal.legacy.importer.mongodb.MongoDBLegacyImporter;
+import io.flamingock.importer.cloud.mongodb.MongoDBLegacyImporter;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -51,9 +51,6 @@ public class LegacyImporterMongoDBApplication {
                     .setEnvironment(ENVIRONMENT)
                     .setService(SERVICE_NAME)
                     .addSystemModule(new MongoDBLegacyImporter(MONGODB_CHANGELOG_COLLECTION))
-                    .setLockAcquiredForMillis(6 * 1000L)//this is just to show how is set. Default value is still 60 * 1000L
-                    .setLockQuitTryingAfterMillis(10 * 1000L)//this is just to show how is set. Default value is still 3 * 60 * 1000L
-                    .setLockTryFrequencyMillis(3000L)//this is just to show how is set. Default value is still 1000L
                     .addDependency(mongoClient.getDatabase(databaseName))
                     .build()
                     .run();

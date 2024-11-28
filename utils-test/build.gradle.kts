@@ -2,7 +2,7 @@ val jacksonVersion = "2.16.0"
 dependencies {
 
     api(project(":utils"))
-    api(project(":flamingock-core-cloud-api"))
+    api(project(":flamingock-core-api"))
 
     api("javax.inject:javax.inject:1")
     api("org.reflections:reflections:0.10.1")
