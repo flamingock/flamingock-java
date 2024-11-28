@@ -230,7 +230,7 @@ subprojects {
                                     applyMavenCentralRules.set(true)
                                     url.set("https://central.sonatype.com/api/v1/publisher")
                                     stagingRepository("build/staging-deploy")
-                                    verifyUrl.set(verifyPublicationUrl)
+//                                    verifyUrl.set(verifyPublicationUrl)
                                 }
 
 
