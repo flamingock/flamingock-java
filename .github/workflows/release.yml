@@ -53,7 +53,7 @@ jobs:
 
       - name: Release core projects to Maven Central portal
         run: |
-          ./portalCentralDeploy.sh core 3 20
+          ./infra/portalCentralDeploy.sh core 5 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -64,7 +64,7 @@ jobs:
 
       - name: Release driver projects to Maven Central portal
         run: |
-          ./portalCentralDeploy.sh driver 3 20
+          ./infra/portalCentralDeploy.sh driver 5 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -75,7 +75,7 @@ jobs:
 
       - name: Release template projects to Maven Central portal
         run: |
-          ./portalCentralDeploy.sh template 3 20
+          ./infra/portalCentralDeploy.sh template 5 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -86,7 +86,7 @@ jobs:
 
       - name: Release transactioner projects to Maven Central portal
         run: |
-          ./portalCentralDeploy.sh transactioner 3 20
+          ./infra/portalCentralDeploy.sh transactioner 5 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
