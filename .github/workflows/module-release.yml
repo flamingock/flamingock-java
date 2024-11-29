@@ -1,4 +1,4 @@
-name: Release module
+name: Module release
 
 on:
   workflow_call:
