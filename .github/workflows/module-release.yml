@@ -56,8 +56,7 @@ jobs:
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
 
       - name: Releasing  ${{ inputs.module }} to Maven Central portal
-        run: |
-          ./infra/portalCentralDeploy.sh ${{ inputs.module }} 5 20
+        run: ./infra/module-release-with-retry.sh ${{ inputs.module }} 5 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
