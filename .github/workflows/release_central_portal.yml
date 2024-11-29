@@ -6,33 +6,33 @@ on:
 jobs:
   flamingock-core:
     name: Release flamingock-core module to Central Portal
-    uses: ./release-module.ymll@master
+    uses: ./.github/workflows/release-module.yml
     with:
       module: flamingock-core
 
   flamingock-core-api:
     name: Release flamingock-core-api module to Central Portal
-    uses: ./release-module.yml@master
+    uses: ./.github/workflows/release-module.yml
     with:
       module: flamingock-core-api
 
   flamingock-core-template:
-    uses: ./release-module.ymll@master
+    uses: ./.github/workflows/release-module.yml
     with:
       module: flamingock-core-template
 
-  github-release:
-    name: Publish Release to Github
-    needs: [flamingock-core, flamingock-core-api, flamingock-core-template]
-    run: |
-      ./gradlew jreleaserRelease
-    env:
-      JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
-      JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
-      JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
-      JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY }}
-      JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
-      JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
+#  github-release:
+#    name: Publish Release to Github
+#    needs: [flamingock-core, flamingock-core-api, flamingock-core-template]
+#    run: |
+#      ./gradlew jreleaserRelease
+#    env:
+#      JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
+#      JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
+#      JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
+#      JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY }}
+#      JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
+#      JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
       #  "flamingock-core-template",
       #  "flamingock-springboot-v2-runner",
