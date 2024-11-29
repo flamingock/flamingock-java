@@ -9,7 +9,7 @@ on:
         type: string
 
 jobs:
-  release flamingock-core:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
