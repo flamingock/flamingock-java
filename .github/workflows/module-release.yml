@@ -8,6 +8,18 @@ on:
         required: true
         type: string
 
+    secrets:
+      FLAMINGOCK_JRELEASER_GITHUB_TOKEN:
+        required: true
+      FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME:
+        required: true
+      FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD:
+        required: true
+      FLAMINGOCK_JRELEASER_GPG_SECRET_KEY:
+        required: true
+      FLAMINGOCK_JRELEASER_GPG_PASSPHRASE:
+        required: true
+
 jobs:
   release:
     runs-on: ubuntu-latest
