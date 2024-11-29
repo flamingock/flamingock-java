@@ -15,6 +15,8 @@ on:
         required: true
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD:
         required: true
+      FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY:
+        required: true
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY:
         required: true
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE:
