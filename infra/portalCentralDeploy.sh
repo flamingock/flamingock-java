@@ -1,13 +1,12 @@
 #!/bin/bash
 
-VALID_BUNDLES="all, core, driver, transactioner, template"
 validate_bundle() {
   case "$1" in
     all|core|driver|transactioner|template)
       return 0
       ;;
     *)
-      echo "Error: Invalid bundle name [$1]. Myst be one of the following values[$VALID_BUNDLES]"
+      echo "Error: Invalid bundle name [$1]. Myst be one of the following values[all, core, driver, transactioner, template]"
       exit 1
       ;;
   esac
