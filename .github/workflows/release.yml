@@ -53,18 +53,7 @@ jobs:
 
       - name: Release core projects to Maven Central portal
         run: |
-          for i in {1..3}; do
-            if ./gradlew jreleaserDeploy -PreleaseBundle=core --no-daemon --stacktrace; then
-              exit 0
-            fi
-            if [ $i -eq 3 ]; then
-              echo "Failed release after 3 attempts"
-              exit 1
-            fi
-            echo
-            echo "********************************************************************************** RELEASE ATTEMPT($((i + 1))) **********************************************************************************"
-            sleep 5
-          done
+          ./portalCentralDeploy.sh core 3 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -75,18 +64,7 @@ jobs:
 
       - name: Release driver projects to Maven Central portal
         run: |
-          for i in {1..3}; do
-            if ./gradlew jreleaserDeploy -PreleaseBundle=driver --no-daemon --stacktrace; then
-              exit 0
-            fi
-            if [ $i -eq 3 ]; then
-              echo "Failed release after 3 attempts"
-              exit 1
-            fi
-            echo
-            echo "********************************************************************************** RELEASE ATTEMPT($((i + 1))) **********************************************************************************"
-            sleep 5
-          done
+          ./portalCentralDeploy.sh driver 3 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -97,18 +75,7 @@ jobs:
 
       - name: Release template projects to Maven Central portal
         run: |
-          for i in {1..3}; do
-            if ./gradlew jreleaserDeploy -PreleaseBundle=template --no-daemon --stacktrace; then
-              exit 0
-            fi
-            if [ $i -eq 3 ]; then
-              echo "Failed release after 3 attempts"
-              exit 1
-            fi
-            echo
-            echo "********************************************************************************** RELEASE ATTEMPT($((i + 1))) **********************************************************************************"
-            sleep 5
-          done
+          ./portalCentralDeploy.sh template 3 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -119,18 +86,7 @@ jobs:
 
       - name: Release transactioner projects to Maven Central portal
         run: |
-          for i in {1..3}; do
-            if ./gradlew jreleaserDeploy -PreleaseBundle=transactioner --no-daemon --stacktrace; then
-              exit 0
-            fi
-            if [ $i -eq 3 ]; then
-              echo "Failed release after 3 attempts"
-              exit 1
-            fi
-            echo
-            echo "********************************************************************************** RELEASE ATTEMPT($((i + 1))) **********************************************************************************"
-            sleep 5
-          done
+          ./portalCentralDeploy.sh transactioner 3 20
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}

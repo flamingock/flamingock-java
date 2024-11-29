@@ -259,6 +259,8 @@ subprojects {
                                     url.set("https://central.sonatype.com/api/v1/publisher")
                                     stagingRepository("build/staging-deploy")
 //                                    verifyUrl.set(verifyPublicationUrl)
+                                    connectTimeout.set(60)
+                                    readTimeout.set(120)
                                 }
 
 
