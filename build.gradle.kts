@@ -105,10 +105,38 @@ jreleaser {
 
             changelog {
                 enabled.set(true)
+                sort.set(org.jreleaser.model.Changelog.Sort.DESC)
                 formatted.set(Active.ALWAYS)
                 links.set(true)
                 sort.set(org.jreleaser.model.Changelog.Sort.DESC)
+
+                releaseName.set("Release {{tagName}}")
+
+                content.set("""
+                ## Changelog
+                {{changelogChanges}}
+                {{changelogContributors}}
+                """)
+
+                categoryTitleFormat.set("### {{categoryTitle}}")
                 preset.set("conventional-commits")
+                format.set("""
+                    |- {{commitShortHash}} 
+                        |{{#commitIsConventional}}
+                            |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
+                            |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
+                            |{{conventionalCommitDescription}}
+                            |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
+                        |{{/commitIsConventional}}
+                        |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
+                        |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}} 
+                        |({{commitAuthor}})
+                    |""".trimMargin().replace("\n", "").replace("\r", ""))
+
+                contributors {
+                    enabled.set(true)
+                    format.set("- {{contributorName}} ({{contributorUsernameAsLink}})")
+                }
             }
         }
     }
@@ -333,7 +361,7 @@ fun Project.getTabsPrefix(): String {
 }
 
 fun Project.getIsReleasing() =
-    gradle.startParameter.taskNames.contains("jreleaserFullRelease") || gradle.startParameter.taskNames.contains("publish")
+    gradle.startParameter.taskNames.contains("jreleaserDeploy") || gradle.startParameter.taskNames.contains("publish")
 
 private val Project.verifyPublicationUrl: String
     get() {
