@@ -1,0 +1,48 @@
+name: Release module
+
+on:
+  workflow_call:
+
+jobs:
+  release flamingock-core:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          server-id: central
+          server-username: JRELEASER_MAVENCENTRAL_USERNAME
+          server-password: JRELEASER_MAVENCENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
+          gpg-passphrase: JRELEASER_GPG_PASSPHRASE
+
+      - name: Set up GPG
+        run: |
+          echo "$GPG_SECRET_KEY" > private.asc
+          gpg --import --batch private.asc
+        env:
+          GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
+
+      - name: Prepare maven publish for module ${{ inputs.module }}
+        run: ./gradlew publish -Pmodule=${{ inputs.module }}
+        env:
+          JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
+          JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
+
+      - name: Release project to Maven Central portal
+        run: |
+          ./infra/portalCentralDeploy.sh ${{ inputs.module }} 5 20
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
+          JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
+          JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
+          JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY }}
+          JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
+          JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}

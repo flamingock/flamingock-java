@@ -1,4 +1,4 @@
-name: Release flamingock-core
+name: Github release
 
 on:
   workflow_call:
@@ -36,9 +36,8 @@ jobs:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
 
-      - name: Release core projects to Maven Central portal
-        run: |
-          ./infra/portalCentralDeploy.sh ${{ inputs.module }} 5 20
+      - name: Publish Release to Github
+        run: ./gradlew jreleaserRelease
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
