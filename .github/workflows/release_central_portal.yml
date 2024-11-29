@@ -3,40 +3,21 @@ on:
   workflow_dispatch:
     branches:
       - master
-
-#  "flamingock-core-template",
-#  "flamingock-springboot-v2-runner",
-#  "flamingock-springboot-v3-runner",
-#  "utils"
-#  "driver-common",
-#  "couchbase-driver",
-#  "couchbase-springboot-v2-driver",
-#  "dynamodb-driver",
-#  "mongodb-facade",
-#  "mongodb-springdata-v2-driver",
-#  "mongodb-springdata-v3-driver",
-#  "mongodb-springdata-v4-driver",
-#  "mongodb-sync-v4-driver",
-#  "mongodb-v3-driver"
-#  "sql-template",
-#  "sql-springboot-template"
-#  "sql-cloud-transactioner"
-
 jobs:
   flamingock-core:
     name: Release flamingock-core module to Central Portal
-    uses: ./.github/workflows/release-module.yml
+    uses: ./release-module.ymll@master
     with:
       module: flamingock-core
 
   flamingock-core-api:
     name: Release flamingock-core-api module to Central Portal
-    uses: ./.github/workflows/release-module.yml
+    uses: ./release-module.yml@master
     with:
       module: flamingock-core-api
 
   flamingock-core-template:
-    uses: ./.github/workflows/release-module.yml
+    uses: ./release-module.ymll@master
     with:
       module: flamingock-core-template
 
@@ -53,15 +34,35 @@ jobs:
       JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  release-output:
-    name: JReleaser release output
-    if: always()
-    uses: actions/upload-artifact@v4
-    with:
-      name: jreleaser-release
-      path: |
-        build/jreleaser/output.properties
-        build/jreleaser/trace.log
+      #  "flamingock-core-template",
+      #  "flamingock-springboot-v2-runner",
+      #  "flamingock-springboot-v3-runner",
+      #  "utils"
+      #  "driver-common",
+      #  "couchbase-driver",
+      #  "couchbase-springboot-v2-driver",
+      #  "dynamodb-driver",
+      #  "mongodb-facade",
+      #  "mongodb-springdata-v2-driver",
+      #  "mongodb-springdata-v3-driver",
+      #  "mongodb-springdata-v4-driver",
+      #  "mongodb-sync-v4-driver",
+      #  "mongodb-v3-driver"
+      #  "sql-template",
+      #  "sql-springboot-template"
+      #  "sql-cloud-transactioner"
+
+
+
+#  release-output:
+#    name: JReleaser release output
+#    if: always()
+#    uses: actions/upload-artifact@v4
+#    with:
+#      name: jreleaser-release
+#      path: |
+#        build/jreleaser/output.properties
+#        build/jreleaser/trace.log
 
 #      - name: Synchronizing develop branch
 #        run: |

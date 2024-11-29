@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.14-beta"
+    version = "0.0.15-beta"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
@@ -79,15 +79,29 @@ val mavenUsername: String? = System.getenv("JRELEASER_MAVENCENTRAL_USERNAME")
 val mavenPassword: String? = System.getenv("JRELEASER_MAVENCENTRAL_PASSWORD")
 val encodedCredentials: String? = if (mavenUsername != null && mavenPassword != null) Base64.getEncoder()
     .encodeToString("$mavenUsername:$mavenPassword".toByteArray()) else null
+
+
+
+val module: String? = project.findProperty("module") as String?
 val releaseBundle: String? = project.findProperty("releaseBundle") as String?
-val projectsToRelease = when(releaseBundle) {
-    "core" -> coreProjects
-    "driver" -> localDriverProjects
-    "template" -> templateProjects
-    "transactioner" -> transactionerProjects
-    "all" -> allProjects
-    else -> setOf()
+
+val projectsToRelease = if(module != null) {
+    if(allProjects.contains(module)) {
+        setOf(module)
+    } else {
+        throw RuntimeException("$module is not withing the releseable modules $allProjects")
+    }
+} else {
+    when(releaseBundle) {
+        "core" -> coreProjects
+        "driver" -> localDriverProjects
+        "template" -> templateProjects
+        "transactioner" -> transactionerProjects
+        "all" -> allProjects
+        else -> setOf()
+    }
 }
+
 
 jreleaser {
     gitRootSearch.set(true)
@@ -272,7 +286,12 @@ subprojects {
                 logger.lifecycle("${project.name}${tabsPrefix}✅  ALREADY PUBLISHED")
             }
         } else {
-            logger.debug("${project.name}${tabsPrefix}\uD83D\uDCA4 NOT RELEASABLE")
+            if(allProjects.contains(project.name)) {
+                logger.lifecycle("${project.name}${tabsPrefix}\uD83D\uDCA4 NOT RELEASING")
+            } else {
+                logger.lifecycle("${project.name}${tabsPrefix}\uD83D\uDEAB NOT RELEASABLE")
+            }
+
         }
     }
 
@@ -328,6 +347,7 @@ subprojects {
 
 fun Project.isReleasable(): Boolean = projectsToRelease.contains(name)
 
+
 fun Project.getIfAlreadyReleasedFromCentralPortal(): Boolean {
     val url = "https://central.sonatype.com/api/v1/publisher/published?namespace=${group}&name=$name&version=$version"
     val request = HttpRequest.newBuilder().uri(URI.create(url)).header("accept", "application/json")
@@ -353,9 +373,6 @@ fun Project.getIfAlreadyReleasedFromCentralPortal(): Boolean {
 }
 
 
-val String.isPalindrome: Boolean
-    get() = this == this.reversed()
-
 fun Project.getTabsPrefix(): String {
     val currentPosition = name.length
     val tabsNeeded = ((statusPosition - currentPosition + tabWidth - 1) / tabWidth) + 1
@@ -363,7 +380,9 @@ fun Project.getTabsPrefix(): String {
 }
 
 fun Project.getIsReleasing() =
-    gradle.startParameter.taskNames.contains("jreleaserDeploy") || gradle.startParameter.taskNames.contains("publish")
+    gradle.startParameter.taskNames.contains("jreleaserFullRelease")
+            || gradle.startParameter.taskNames.contains("jreleaserDeploy")
+            || gradle.startParameter.taskNames.contains("publish")
 
 private val Project.verifyPublicationUrl: String
     get() {

@@ -20,7 +20,7 @@ validate_bundle "$1"
 
 echo "Releasing bundle[$1] to Central Portal with max attempts[$maxAttempts] and $waitingSeconds seconds delay"
 for (( i=1; i<=maxAttempts; i++ )); do
-  if ./gradlew jreleaserFullRelease -PreleaseBundle="$1" --no-daemon --stacktrace; then
+  if ./gradlew jreleaserFullRelease -Pmodule="$1" --no-daemon --stacktrace; then
     exit 0
   fi
   if [ "$i" -eq "$maxAttempts" ]; then
