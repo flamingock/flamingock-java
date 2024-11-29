@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  release flamingock-core:
+  github-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
