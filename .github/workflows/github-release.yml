@@ -31,7 +31,7 @@ jobs:
           GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
 
       - name: Perform publish
-        run: ./gradlew publish -Pmodule=${{ inputs.module }}
+        run: ./gradlew publish -PreleaseBundle=all
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}

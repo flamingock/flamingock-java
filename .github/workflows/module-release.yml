@@ -2,6 +2,11 @@ name: Release module
 
 on:
   workflow_call:
+    inputs:
+      module:
+        description: "The module to be released"
+        required: true
+        type: string
 
 jobs:
   release flamingock-core:
@@ -36,7 +41,7 @@ jobs:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
 
-      - name: Release project to Maven Central portal
+      - name: Releasing  ${{ inputs.module }} to Maven Central portal
         run: |
           ./infra/portalCentralDeploy.sh ${{ inputs.module }} 5 20
         env:
