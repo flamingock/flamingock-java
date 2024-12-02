@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.16-beta"
+    version = "0.0.17-beta"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
@@ -104,6 +104,11 @@ val projectsToRelease = if(module != null) {
 
 
 jreleaser {
+    project {
+        description.set("Description should be here")
+        inceptionYear.set("2024")
+        authors.set(setOf("dieppa"))
+    }
     gitRootSearch.set(true)
     release {
         github {
