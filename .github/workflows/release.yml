@@ -55,7 +55,7 @@ jobs:
   flamingock-springboot-v3-runner:
     uses: ./.github/workflows/module-release.yml
     with:
-      module: flamingock-core-template
+      module: flamingock-springboot-v3-runner
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
