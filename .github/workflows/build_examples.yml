@@ -13,6 +13,11 @@ jobs:
         with:
           repository: mongock/flamingock-examples  # Checkout flamingock-examples repo
           ref: master  # Use the master branch of flamingock-examples
+      - name: Setup java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Run Gradle build on flamingock-examples
         run: ./gradlew clean build
