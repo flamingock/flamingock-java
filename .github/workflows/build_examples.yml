@@ -4,11 +4,14 @@ on:
     branches:
       - master
 jobs:
-
   run-examples-test:
-#    needs: [ flamingock-core,flamingock-core-api,flamingock-core-template,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-springboot-template,sql-cloud-transactioner ]
-    uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
-    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call reusable workflow in flamingock-examples
+        uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
+        with:
+          example_input: "Triggered from flamingock-project"
+        continue-on-error: true
 
 
 #      - name: Synchronizing develop branch
