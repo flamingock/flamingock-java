@@ -5,7 +5,17 @@ on:
       - master
 jobs:
   run-examples-test:
-    uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout flamingock-examples repository
+        uses: actions/checkout@v3
+        with:
+          repository: mongock/flamingock-examples  # Checkout flamingock-examples repo
+          ref: master  # Use the master branch of flamingock-examples
+
+      - name: Run Gradle build on flamingock-examples
+        run: ./gradlew clean build
 
 
 #      - name: Synchronizing develop branch
