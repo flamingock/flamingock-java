@@ -244,6 +244,14 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
+#  test-examples:
+#    needs: [ flamingock-core,flamingock-core-api,flamingock-core-template,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-springboot-template,sql-cloud-transactioner ]
+#    run: |
+#        curl -X POST \
+#             -H "Accept: application/vnd.github+json" \
+#             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+#             https://api.github.com/repos/mongock/flamingock-examples/dispatches \
+
 #      - name: Synchronizing develop branch
 #        run: |
 #          git pull origin

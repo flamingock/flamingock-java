@@ -1,0 +1,19 @@
+name: Release
+on:
+  workflow_dispatch:
+    branches:
+      - master
+jobs:
+  test-examples:
+    run: |
+        curl -X POST \
+             -H "Accept: application/vnd.github+json" \
+             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+             https://api.github.com/repos/mongock/flamingock-examples/dispatches \
+
+#      - name: Synchronizing develop branch
+#        run: |
+#          git pull origin
+#          git checkout develop
+#          git merge -X theirs master --allow-unrelated-histories
+#          git push origin develop
