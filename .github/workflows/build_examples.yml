@@ -5,7 +5,6 @@ on:
       - master
 jobs:
   run-examples-test:
-    runs-on: ubuntu-latest
     uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
 
 
