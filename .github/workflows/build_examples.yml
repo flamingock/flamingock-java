@@ -5,13 +5,9 @@ on:
       - master
 jobs:
   run-examples-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Call reusable workflow in flamingock-examples
-        uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
-        with:
-          example_input: "Triggered from flamingock-project"
-        continue-on-error: true
+    - name: Call reusable workflow in flamingock-examples
+      uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
+      continue-on-error: true
 
 
 #      - name: Synchronizing develop branch
