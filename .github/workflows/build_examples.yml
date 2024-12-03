@@ -5,8 +5,9 @@ on:
       - master
 jobs:
   run-examples-test:
-    uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
+    runs-on: ubuntu-latest
     continue-on-error: true
+    uses: mongock/flamingock-examples/.github/workflows/build_dispatched.yml@master
 
 
 #      - name: Synchronizing develop branch
