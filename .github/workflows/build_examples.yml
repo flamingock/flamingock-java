@@ -4,7 +4,13 @@ on:
     branches:
       - master
 jobs:
+  print-message:
+    steps:
+      - name: Print message
+        run: echo "Hello world"
+
   run-examples-test:
+    needs: [ print-message ]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
