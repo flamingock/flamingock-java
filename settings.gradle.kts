@@ -101,10 +101,6 @@ include("utils")
 project(":utils").name = "utils"
 project(":utils").projectDir = file("utils")
 
-include("metadata-generator")
-project(":metadata-generator").name = "metadata-generator"
-project(":metadata-generator").projectDir = file("metadata-generator")
-
 
 //////////////////////////////////////
 // INTERNAL
