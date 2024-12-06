@@ -27,10 +27,6 @@ public interface LocalConnectionEngine extends ConnectionEngine {
 
     Auditor getAuditor();
 
-    default Optional<? extends LocalSystemModule> getMongockLegacyImporterModule() {
-        return Optional.empty();
-//        throw new RuntimeException("Mongock legacy importer requested, but it is not implemented for the specified driver. " +
-//                "Please reach out to the community for further assistance or feature requests.");
-    }
+    Optional<? extends LocalSystemModule> getMongockLegacyImporterModule();
 
 }

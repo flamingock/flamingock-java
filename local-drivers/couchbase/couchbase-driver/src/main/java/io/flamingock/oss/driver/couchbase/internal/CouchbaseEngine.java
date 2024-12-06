@@ -19,6 +19,8 @@ package io.flamingock.oss.driver.couchbase.internal;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import io.flamingock.community.internal.LocalExecutionPlanner;
+import io.flamingock.core.api.LocalSystemModule;
+import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.LocalConnectionEngine;
@@ -65,6 +67,11 @@ public class CouchbaseEngine implements LocalConnectionEngine {
     @Override
     public CouchbaseAuditor getAuditor() {
         return auditor;
+    }
+
+    @Override
+    public Optional<? extends LocalSystemModule> getMongockLegacyImporterModule() {
+        throw new FlamingockException("Mongock legacy importer not implemented for Couchbase");
     }
 
     @Override
