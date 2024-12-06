@@ -35,7 +35,7 @@ public class CoreConfiguration implements CoreConfigurable {
 
     private final LockConfiguration lockConfiguration = new LockConfiguration();
 
-    private MongockImporterConfiguration mongockImporterConfiguration = MongockImporterConfiguration.getDisabled();
+    private final MongockImporterConfiguration mongockImporterConfiguration = MongockImporterConfiguration.getDisabled();
     /**
      * If true, will track ignored changeSets in history. Default false
      */
@@ -93,6 +93,14 @@ public class CoreConfiguration implements CoreConfigurable {
 
 
     private final List<SystemModule> systemModules = new ArrayList<>();
+
+    public LockConfiguration getLockConfiguration() {
+        return lockConfiguration;
+    }
+
+    public MongockImporterConfiguration getMongockImporterConfiguration() {
+        return mongockImporterConfiguration;
+    }
 
 
     @Override
@@ -264,14 +272,24 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public void setMongockImporterConfiguration(MongockImporterConfiguration mongockImporterConfiguration) {
-        this.mongockImporterConfiguration = mongockImporterConfiguration;
+    public void setMongockImporterSource(String mongockImporterSource) {
+        mongockImporterConfiguration.setSourceName(mongockImporterSource);
     }
 
     @Override
-    public MongockImporterConfiguration getMongockImporterConfiguration() {
-        return mongockImporterConfiguration;
+    public String getMongockImporterSource() {
+        return mongockImporterConfiguration.getSourceName();
     }
+
+//    @Override
+//    public void setMongockImporterConfiguration(MongockImporterConfiguration mongockImporterConfiguration) {
+//        this.mongockImporterConfiguration = mongockImporterConfiguration;
+//    }
+//
+//    @Override
+//    public MongockImporterConfiguration getMongockImporterConfiguration() {
+//        return mongockImporterConfiguration;
+//    }
 
 
     public static class LockConfiguration {
@@ -362,7 +380,7 @@ public class CoreConfiguration implements CoreConfigurable {
             return new MongockImporterConfiguration(sourceName);
         }
 
-        private final String sourceName;
+        private String sourceName;
 
         private MongockImporterConfiguration(String collectionSourceName) {
             this.sourceName = collectionSourceName;
@@ -370,6 +388,10 @@ public class CoreConfiguration implements CoreConfigurable {
 
         public String getSourceName() {
             return sourceName;
+        }
+
+        public void setSourceName(String sourceName) {
+            this.sourceName = sourceName;
         }
 
         public boolean isEnabled() {

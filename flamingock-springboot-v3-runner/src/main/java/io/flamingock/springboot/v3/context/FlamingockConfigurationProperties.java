@@ -233,14 +233,24 @@ public class FlamingockConfigurationProperties
     }
 
     @Override
-    public void setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
-        coreConfiguration.setMongockImporterConfiguration(mongockImporterConfiguration);
+    public void setMongockImporterSource(String mongockImporterSource) {
+        coreConfiguration.setMongockImporterSource(mongockImporterSource);
     }
 
     @Override
-    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
-        return coreConfiguration.getMongockImporterConfiguration();
+    public String getMongockImporterSource() {
+        return coreConfiguration.getMongockImporterSource();
     }
+
+//    @Override
+//    public void setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
+//        coreConfiguration.setMongockImporterConfiguration(mongockImporterConfiguration);
+//    }
+//
+//    @Override
+//    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
+//        return coreConfiguration.getMongockImporterConfiguration();
+//    }
 
 
     @Override

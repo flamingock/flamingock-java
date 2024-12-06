@@ -81,8 +81,8 @@ public class MongoSync4Engine implements LocalConnectionEngine {
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
-        if(coreConfiguration.getMongockImporterConfiguration().isEnabled()) {
-            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getMongockImporterConfiguration().getSourceName());
+        if(coreConfiguration.isMongockImporterEnabled()) {
+            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getMongockImporterSource());
             mongockImporter = new MongockImporterModule(collection, auditor);
 
         }

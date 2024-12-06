@@ -92,8 +92,12 @@ public interface CoreConfigurable {
 
     TransactionStrategy getTransactionStrategy();
 
-    void setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration);
+    void setMongockImporterSource(String mongockImporterSource);
 
-    CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration();
+    String getMongockImporterSource();
+
+    default boolean isMongockImporterEnabled() {
+        return getMongockImporterSource() != null;
+    }
 
 }

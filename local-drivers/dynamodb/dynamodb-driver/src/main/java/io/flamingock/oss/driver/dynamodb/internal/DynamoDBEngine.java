@@ -68,9 +68,9 @@ public class DynamoDBEngine implements LocalConnectionEngine {
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
-        if(coreConfiguration.getMongockImporterConfiguration().isEnabled()) {
+        if(coreConfiguration.isMongockImporterEnabled()) {
             DynamoDbTable<ChangeEntryDynamoDB> sourceTable = client.getEnhancedClient()
-                    .table(coreConfiguration.getMongockImporterConfiguration().getSourceName(), TableSchema.fromBean(ChangeEntryDynamoDB.class));
+                    .table(coreConfiguration.getMongockImporterSource(), TableSchema.fromBean(ChangeEntryDynamoDB.class));
             mongockImporter = new MongockImporterModule(sourceTable, auditor);
         }
     }
