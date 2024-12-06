@@ -19,7 +19,7 @@ package io.flamingock.core.runner;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.flamingock.core.engine.CloudConnectionEngine;
+import io.flamingock.core.cloud.CloudConnectionEngine;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
