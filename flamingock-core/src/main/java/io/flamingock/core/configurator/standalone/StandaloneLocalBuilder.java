@@ -87,7 +87,7 @@ public class StandaloneLocalBuilder
         //adds Mongock legacy importer, if the user has required it
         engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
 
-        coreConfiguratorDelegate.getSystemModuleManager().initialize();
+        getSystemModuleManager().initialize();
 
         coreConfiguratorDelegate.getSystemModuleManager()
                 .getDependencies()

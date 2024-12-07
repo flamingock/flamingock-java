@@ -75,6 +75,9 @@ public class SpringbootLocalBuilder extends SpringbootBaseBuilder<SpringbootLoca
         );
 
 
+        //adds Mongock legacy importer, if the user has required it
+        engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
+
         getSystemModuleManager().initialize();
 
         getSystemModuleManager()

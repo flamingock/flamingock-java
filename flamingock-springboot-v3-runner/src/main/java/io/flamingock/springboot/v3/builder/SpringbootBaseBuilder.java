@@ -71,9 +71,9 @@ public abstract class SpringbootBaseBuilder<
         SpringRunnerBuilder {
 
 
-    private final CoreConfiguratorDelegate<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER> coreConfiguratorDelegate;
+    protected final CoreConfiguratorDelegate<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER> coreConfiguratorDelegate;
 
-    private final SpringbootConfiguratorDelegate<HOLDER> springbootConfiguratorDelegate;
+    protected final SpringbootConfiguratorDelegate<HOLDER> springbootConfiguratorDelegate;
 
     protected SpringbootBaseBuilder(CoreConfiguration coreConfiguration,
                                     SpringbootConfiguration springbootConfiguration,

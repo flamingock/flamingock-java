@@ -46,9 +46,7 @@ public class SpringbootLocalBuilder extends SpringbootBaseBuilder<SpringbootLoca
 
     private static final Logger logger = LoggerFactory.getLogger(SpringbootLocalBuilder.class);
 
-
     private final LocalConfiguratorDelegate<SpringbootLocalBuilder> localConfiguratorDelegate;
-
 
     SpringbootLocalBuilder(CoreConfiguration coreConfiguration,
                            SpringbootConfiguration springbootConfiguration,
@@ -73,6 +71,9 @@ public class SpringbootLocalBuilder extends SpringbootBaseBuilder<SpringbootLoca
                 coreConfiguration,
                 localConfiguratorDelegate.getLocalConfiguration()
         );
+
+        //adds Mongock legacy importer, if the user has required it
+        engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
 
 
         getSystemModuleManager().initialize();
