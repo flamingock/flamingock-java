@@ -25,8 +25,7 @@ import io.flamingock.core.engine.audit.legacy.mongock.ChangeEntry;
 import io.flamingock.core.engine.audit.legacy.mongock.ChangeState;
 import io.flamingock.core.engine.audit.legacy.mongock.ChangeType;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.legacy.LegacyIdGenerator;
-import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
+import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
@@ -70,7 +69,7 @@ public class MongockLocalLegacyImporterChangeUnit {
 
     private static ChangeEntry toChangeEntry(ChangeEntryDynamoDB changeEntryDynamoDB) {
         Date timestamp = Date.from(Instant.ofEpochMilli(changeEntryDynamoDB.getTimestamp()));
-        String id = LegacyIdGenerator.getNewId(changeEntryDynamoDB.getChangeId(), changeEntryDynamoDB.getAuthor());
+        String id = MongockLegacyIdGenerator.getNewId(changeEntryDynamoDB.getChangeId(), changeEntryDynamoDB.getAuthor());
 
         return new ChangeEntry(
                 changeEntryDynamoDB.getExecutionId(),

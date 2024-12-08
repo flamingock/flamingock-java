@@ -25,6 +25,7 @@ import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.pipeline.Stage;
 import io.flamingock.oss.driver.dynamodb.driver.DynamoDBDriver;
 import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
@@ -145,7 +146,7 @@ class DynamoDBImporterTest {
                 auditLog.get(0),
                 mongockDbState.get(0).getExecutionId(),
                 null,
-                mongockDbState.get(0).getAuthor() + "_" + mongockDbState.get(0).getChangeId(),
+                MongockLegacyIdGenerator.getNewId( mongockDbState.get(0).getChangeId(), mongockDbState.get(0).getAuthor()),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(0).getChangeLogClass(),
                 mongockDbState.get(0).getChangeSetMethod(),
@@ -155,7 +156,7 @@ class DynamoDBImporterTest {
                 auditLog.get(1),
                 mongockDbState.get(1).getExecutionId(),
                 null,
-                mongockDbState.get(1).getAuthor() + "_" + mongockDbState.get(1).getChangeId(),
+                MongockLegacyIdGenerator.getNewId( mongockDbState.get(1).getChangeId(), mongockDbState.get(1).getAuthor()),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(1).getChangeLogClass(),
                 mongockDbState.get(1).getChangeSetMethod(),
@@ -166,7 +167,7 @@ class DynamoDBImporterTest {
                 auditLog.get(2),
                 mongockDbState.get(2).getExecutionId(),
                 null,
-                mongockDbState.get(2).getAuthor() + "_" + mongockDbState.get(2).getChangeId(),
+                MongockLegacyIdGenerator.getNewId( mongockDbState.get(2).getChangeId(), mongockDbState.get(2).getAuthor()),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(2).getChangeLogClass(),
                 mongockDbState.get(2).getChangeSetMethod(),
@@ -177,7 +178,7 @@ class DynamoDBImporterTest {
                 auditLog.get(3),
                 mongockDbState.get(3).getExecutionId(),
                 null,
-                mongockDbState.get(3).getAuthor() + "_" + mongockDbState.get(3).getChangeId(),
+                MongockLegacyIdGenerator.getNewId( mongockDbState.get(3).getChangeId(), mongockDbState.get(3).getAuthor()),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(3).getChangeLogClass(),
                 mongockDbState.get(3).getChangeSetMethod(),

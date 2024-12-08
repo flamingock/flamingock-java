@@ -23,6 +23,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.pipeline.Stage;
 import io.flamingock.oss.driver.mongodb.springdata.v2.driver.SpringDataMongoV2Driver;
 import io.flamingock.oss.driver.mongodb.springdata.v2.mongock.ClientInitializerChangeUnit;
@@ -119,7 +120,7 @@ class MongoSpringDataV2ImporterTest {
                 auditLog.get(0),
                 mongockDbState.get(0).getString("executionId"),
                 null,
-                mongockDbState.get(0).getString("author") + "_" + mongockDbState.get(0).getString("changeId"),
+                MongockLegacyIdGenerator.getNewId(mongockDbState.get(0).getString("changeId"), mongockDbState.get(0).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(0).getString("changeLogClass"),
                 mongockDbState.get(0).getString("changeSetMethod"),
@@ -129,7 +130,7 @@ class MongoSpringDataV2ImporterTest {
                 auditLog.get(1),
                 mongockDbState.get(1).getString("executionId"),
                 null,
-                mongockDbState.get(1).getString("author") + "_" + mongockDbState.get(1).getString("changeId"),
+                MongockLegacyIdGenerator.getNewId(mongockDbState.get(1).getString("changeId"), mongockDbState.get(1).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(1).getString("changeLogClass"),
                 mongockDbState.get(1).getString("changeSetMethod"),
@@ -140,7 +141,7 @@ class MongoSpringDataV2ImporterTest {
                 auditLog.get(2),
                 mongockDbState.get(2).getString("executionId"),
                 null,
-                mongockDbState.get(2).getString("author") + "_" + mongockDbState.get(2).getString("changeId"),
+                MongockLegacyIdGenerator.getNewId(mongockDbState.get(2).getString("changeId"), mongockDbState.get(2).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(2).getString("changeLogClass"),
                 mongockDbState.get(2).getString("changeSetMethod"),
@@ -151,7 +152,7 @@ class MongoSpringDataV2ImporterTest {
                 auditLog.get(3),
                 mongockDbState.get(3).getString("executionId"),
                 null,
-                mongockDbState.get(3).getString("author") + "_" + mongockDbState.get(3).getString("changeId"),
+                MongockLegacyIdGenerator.getNewId(mongockDbState.get(3).getString("changeId"), mongockDbState.get(3).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(3).getString("changeLogClass"),
                 mongockDbState.get(3).getString("changeSetMethod"),
