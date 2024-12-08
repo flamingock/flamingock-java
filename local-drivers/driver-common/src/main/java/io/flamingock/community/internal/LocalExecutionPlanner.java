@@ -35,7 +35,9 @@ import io.flamingock.commons.utils.TimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -75,13 +77,18 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
                 .map(loadedStage -> loadedStage.applyState(currentAuditStageStatus))
                 .collect(Collectors.toList());
 
-        if (executableStages.stream().anyMatch(ExecutableStage::isExecutionRequired)) {
+        Optional<ExecutableStage> nextStageOpt = executableStages.stream()
+                .filter(ExecutableStage::isExecutionRequired)
+                .findFirst();
+
+
+        if (nextStageOpt.isPresent()) {
             Lock lock = acquireLock();
             if (configuration.isEnableRefreshDaemon()) {
                 new LockRefreshDaemon(lock, TimeService.getDefault()).start();
             }
             String executionId = UUID.randomUUID().toString();
-            return ExecutionPlan.newExecution(executionId, lock, executableStages);
+            return ExecutionPlan.newExecution(executionId, lock, Collections.singletonList(nextStageOpt.get()));
 
         } else {
             return ExecutionPlan.CONTINUE(executableStages);
