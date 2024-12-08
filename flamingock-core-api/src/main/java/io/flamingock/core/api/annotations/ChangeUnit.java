@@ -47,7 +47,7 @@ public @interface ChangeUnit {
      *
      * @return ChangeSet's author
      */
-    String author() default "";
+    String author() default "default_author";
 
     /**
      * Equivalent to field `failFast` in ChangeSet annotation

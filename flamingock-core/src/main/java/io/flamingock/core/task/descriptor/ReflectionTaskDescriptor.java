@@ -39,12 +39,6 @@ public abstract class ReflectionTaskDescriptor extends AbstractTaskDescriptor im
         return source.getName();
     }
 
-    @Override
-    public String pretty() {
-        String fromParent = super.pretty();
-        return fromParent + String.format("\n\t\t[class: %s]", getSourceName());
-    }
-
     public abstract Constructor<?> getConstructor();
 
     public abstract Method getExecutionMethod();

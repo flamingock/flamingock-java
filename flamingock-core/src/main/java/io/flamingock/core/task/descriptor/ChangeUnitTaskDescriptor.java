@@ -20,6 +20,7 @@ import io.flamingock.commons.utils.ReflectionUtil;
 import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
+import io.flamingock.core.legacy.LegacyIdGenerator;
 import io.flamingock.core.utils.ExecutionUtils;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
@@ -50,7 +51,7 @@ public class ChangeUnitTaskDescriptor extends AbstractChangeUnitTaskDescriptor {
                     "io.flamingock.core.api.annotations");
             io.mongock.api.annotations.ChangeUnit changeUnitAnnotation = source.getAnnotation(io.mongock.api.annotations.ChangeUnit.class);
             return new ChangeUnitTaskDescriptor(
-                    changeUnitAnnotation.id(),
+                    LegacyIdGenerator.getNewId(changeUnitAnnotation.id(), changeUnitAnnotation.author()),
                     changeUnitAnnotation.order(),
                     source,
                     changeUnitAnnotation.runAlways(),

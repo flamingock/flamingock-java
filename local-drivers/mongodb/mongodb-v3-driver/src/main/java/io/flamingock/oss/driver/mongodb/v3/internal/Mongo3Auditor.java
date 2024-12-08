@@ -40,9 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.community.internal.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.community.internal.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.community.internal.AuditEntryField.KEY_EXECUTION_ID;
+import static io.flamingock.community.internal.AuditEntryField.*;
 
 public class Mongo3Auditor implements Auditor {
 
@@ -68,7 +66,7 @@ public class Mongo3Auditor implements Auditor {
         CollectionInitializator<Mongo3DocumentWrapper> initializer = new CollectionInitializator<>(
                 new Mongo3CollectionWrapper(collection),
                 () -> new Mongo3DocumentWrapper(new Document()),
-                new String[]{KEY_EXECUTION_ID, KEY_AUTHOR, KEY_CHANGE_ID}
+                new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
         );
         if (indexCreation) {
             initializer.initialize();

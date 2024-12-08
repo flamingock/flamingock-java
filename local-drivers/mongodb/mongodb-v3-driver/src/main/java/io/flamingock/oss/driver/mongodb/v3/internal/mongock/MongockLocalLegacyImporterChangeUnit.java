@@ -10,6 +10,7 @@ import io.flamingock.core.engine.audit.legacy.mongock.ChangeEntry;
 import io.flamingock.core.engine.audit.legacy.mongock.ChangeState;
 import io.flamingock.core.engine.audit.legacy.mongock.ChangeType;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.legacy.LegacyIdGenerator;
 import org.bson.Document;
 
 import java.time.Instant;
@@ -49,9 +50,10 @@ public class MongockLocalLegacyImporterChangeUnit {
 
     private static ChangeEntry toChangeEntry(Document document) {
         Date timestamp = document.getDate("timestamp");
+        String id = LegacyIdGenerator.getNewId(document.getString("changeId"), document.getString("author"));
         return new ChangeEntry(
                 document.getString("executionId"),
-                document.getString("changeId"),
+                id,
                 document.getString("author"),
                 timestamp,
                 ChangeState.valueOf(document.getString("state")),
