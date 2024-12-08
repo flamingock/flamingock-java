@@ -4,7 +4,22 @@ on:
     branches:
       - master
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v2
+      - name: Setup java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Unit and Integration tests
+        run: ./gradlew clean build
+
   flamingock-core:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: flamingock-core
@@ -17,6 +32,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   flamingock-core-api:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: flamingock-core-api
@@ -29,6 +45,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   flamingock-core-template:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: flamingock-core-template
@@ -41,6 +58,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   flamingock-springboot-v2-runner:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: flamingock-springboot-v2-runner
@@ -53,6 +71,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   flamingock-springboot-v3-runner:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: flamingock-springboot-v3-runner
@@ -65,6 +84,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   utils:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: utils
@@ -77,6 +97,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   driver-common:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: driver-common
@@ -89,6 +110,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   couchbase-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: couchbase-driver
@@ -101,6 +123,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   couchbase-springboot-v2-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: couchbase-springboot-v2-driver
@@ -113,6 +136,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   dynamodb-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: dynamodb-driver
@@ -125,6 +149,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   mongodb-facade:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: mongodb-facade
@@ -137,6 +162,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   mongodb-springdata-v2-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: mongodb-springdata-v2-driver
@@ -149,6 +175,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   mongodb-springdata-v3-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: mongodb-springdata-v3-driver
@@ -161,6 +188,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   mongodb-springdata-v4-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: mongodb-springdata-v4-driver
@@ -173,6 +201,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   mongodb-sync-v4-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: mongodb-sync-v4-driver
@@ -185,6 +214,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   mongodb-v3-driver:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: mongodb-v3-driver
@@ -197,6 +227,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   sql-template:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: sql-template
@@ -209,6 +240,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   sql-springboot-template:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: sql-springboot-template
@@ -221,6 +253,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
   sql-cloud-transactioner:
+    needs: [ build ]
     uses: ./.github/workflows/module-release.yml
     with:
       module: sql-cloud-transactioner
