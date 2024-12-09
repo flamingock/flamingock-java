@@ -25,7 +25,6 @@ import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.engine.local.LocalConnectionEngine;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
-import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.MongockImporterModule;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
@@ -34,7 +33,6 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 public class DynamoDBEngine implements LocalConnectionEngine {
 
@@ -70,7 +68,7 @@ public class DynamoDBEngine implements LocalConnectionEngine {
         //Mongock importer
         if(coreConfiguration.isMongockImporterEnabled()) {
             DynamoDbTable<ChangeEntryDynamoDB> sourceTable = client.getEnhancedClient()
-                    .table(coreConfiguration.getMongockImporterSource(), TableSchema.fromBean(ChangeEntryDynamoDB.class));
+                    .table(coreConfiguration.getLegacyMongockChangelogSource(), TableSchema.fromBean(ChangeEntryDynamoDB.class));
             mongockImporter = new MongockImporterModule(sourceTable, auditor);
         }
     }

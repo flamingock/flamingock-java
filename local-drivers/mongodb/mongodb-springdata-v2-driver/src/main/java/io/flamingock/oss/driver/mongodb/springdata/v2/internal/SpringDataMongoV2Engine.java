@@ -17,7 +17,6 @@
 package io.flamingock.oss.driver.mongodb.springdata.v2.internal;
 
 import com.mongodb.ReadConcern;
-import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoCollection;
 import io.flamingock.community.internal.LocalExecutionPlanner;
 import io.flamingock.core.engine.local.Auditor;
@@ -77,7 +76,7 @@ public class SpringDataMongoV2Engine implements LocalConnectionEngine {
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if(coreConfiguration.isMongockImporterEnabled()) {
-            MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getMongockImporterSource());
+            MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
             mongockImporter = new MongockImporterModule(collection, auditor);
 
         }

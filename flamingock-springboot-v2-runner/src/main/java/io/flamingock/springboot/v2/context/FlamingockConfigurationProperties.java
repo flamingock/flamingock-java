@@ -16,7 +16,6 @@
 
 package io.flamingock.springboot.v2.context;
 
-import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.cloud.CloudConfigurable;
 import io.flamingock.core.configurator.cloud.CloudConfiguration;
@@ -234,13 +233,13 @@ public class FlamingockConfigurationProperties
     }
 
     @Override
-    public void setMongockImporterSource(String mongockImporterSource) {
-        coreConfiguration.setMongockImporterSource(mongockImporterSource);
+    public void setLegacyMongockChangelogSource(String legacyMongockChangelogSource) {
+        coreConfiguration.setLegacyMongockChangelogSource(legacyMongockChangelogSource);
     }
 
     @Override
-    public String getMongockImporterSource() {
-        return coreConfiguration.getMongockImporterSource();
+    public String getLegacyMongockChangelogSource() {
+        return coreConfiguration.getLegacyMongockChangelogSource();
     }
 
     @Override

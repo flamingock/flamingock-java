@@ -272,25 +272,14 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public void setMongockImporterSource(String mongockImporterSource) {
-        mongockImporterConfiguration.setSourceName(mongockImporterSource);
+    public void setLegacyMongockChangelogSource(String legacySourceName) {
+        mongockImporterConfiguration.setLegacySourceName(legacySourceName);
     }
 
     @Override
-    public String getMongockImporterSource() {
-        return mongockImporterConfiguration.getSourceName();
+    public String getLegacyMongockChangelogSource() {
+        return mongockImporterConfiguration.getLegacySourceName();
     }
-
-//    @Override
-//    public void setMongockImporterConfiguration(MongockImporterConfiguration mongockImporterConfiguration) {
-//        this.mongockImporterConfiguration = mongockImporterConfiguration;
-//    }
-//
-//    @Override
-//    public MongockImporterConfiguration getMongockImporterConfiguration() {
-//        return mongockImporterConfiguration;
-//    }
-
 
     public static class LockConfiguration {
 
@@ -386,11 +375,11 @@ public class CoreConfiguration implements CoreConfigurable {
             this.sourceName = collectionSourceName;
         }
 
-        public String getSourceName() {
+        public String getLegacySourceName() {
             return sourceName;
         }
 
-        public void setSourceName(String sourceName) {
+        public void setLegacySourceName(String sourceName) {
             this.sourceName = sourceName;
         }
 

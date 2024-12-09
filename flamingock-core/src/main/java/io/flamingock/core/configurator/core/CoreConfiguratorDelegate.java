@@ -228,7 +228,7 @@ public class CoreConfiguratorDelegate<
 
     @Override
     public HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
-        configuration.setMongockImporterSource(mongockImporterConfiguration.getSourceName());
+        configuration.setLegacyMongockChangelogSource(mongockImporterConfiguration.getLegacySourceName());
         return holderSupplier.get();
     }
 

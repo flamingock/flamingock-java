@@ -77,7 +77,7 @@ public class SpringDataMongoV4Engine implements LocalConnectionEngine {
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if(coreConfiguration.isMongockImporterEnabled()) {
-            MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getMongockImporterSource());
+            MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
             mongockImporter = new MongockImporterModule(collection, auditor);
 
         }

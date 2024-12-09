@@ -92,12 +92,12 @@ public interface CoreConfigurable {
 
     TransactionStrategy getTransactionStrategy();
 
-    void setMongockImporterSource(String mongockImporterSource);
+    void setLegacyMongockChangelogSource(String legacyMongockChangelogSource);
 
-    String getMongockImporterSource();
+    String getLegacyMongockChangelogSource();
 
     default boolean isMongockImporterEnabled() {
-        return getMongockImporterSource() != null;
+        return getLegacyMongockChangelogSource() != null;
     }
 
 }

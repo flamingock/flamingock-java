@@ -82,7 +82,7 @@ public class MongoSync4Engine implements LocalConnectionEngine {
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if(coreConfiguration.isMongockImporterEnabled()) {
-            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getMongockImporterSource());
+            MongoCollection<Document> collection = database.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
             mongockImporter = new MongockImporterModule(collection, auditor);
 
         }
