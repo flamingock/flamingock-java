@@ -1,18 +1,30 @@
-# Flamingock
+![Header Image](misc/logo-with-text.png)
 
-Flamingock is the evolution of Mongock, designed as a cloud-native solution for managing changes in any system that evolves alongside your application. While Mongock focused on versioning NoSQL databases, Flamingock extends this concept to all systems. It ensures the seamless deployment of your application and its associated systems, with built-in auditing and rollback capabilities. Flamingock introduces a YAML-based approach for defining change units via templates, enabling more flexible and customizable migrations.
+**Flamingock** is the evolution of Mongock, designed as a cloud-native solution for managing versioning, and auditing changes in systems that evolve alongside your application.
+
+Whilst Mongock focused on versioning NoSQL databases, Flamingock extends this concept to all technologies, systems, and configurations, with built-in auditing and rollback capabilities.
+It ensures the application and its dependent components evolve together by managing configuration changes during startup to maintain version compatibility, streamline integration, and reduce conflicts at deployment time.
+
+Flamingock also introduces new mechanisms for defining changes in an extensible and customizable manner, beyond traditional code-based methods.
+
+> Additionally, Flamingock offers multiple infrastructure setups for providing flexibility to users, as it introduces a Cloud offering whilst still retaining existing supported databases such as MongoDB, DynamoDB, or Couchbase.
 
 ---
 
 ## 🔑 Key Features
+- 🔄 **Auditing & Rollback**: Comprehensive auditing capabilities with support for rollback of changes to ensure consistency and control.
 
 - ☁️ **Cloud-Native**: Optimized for cloud environments, providing scalability, flexibility, and high availability.
-- 👥 **Multi-Tenant Support**: Designed to handle multiple tenants within the same infrastructure.
-- ⚡ **GraalVM Support**: Enables the compilation of Java applications into native executables for improved performance.
-- 🧩 **Flexible Migration Templates**: Define migrations using YAML templates, providing a code-free option for managing changes.
-- 🔄 **Auditing & Rollback**: Comprehensive auditing capabilities with support for rollback of changes to ensure consistency and control.
-- 🔗 **Extended System Support**: Expands on Mongock's support for NoSQL databases to include SQL databases, queues, configurations, and more.
+
+- 🔗 **Extended System Support**: Expands on Mongock's support to all systems, technologies and configurations.
+
 - 🚀 **Seamless Deployment**: Deploy your application and systems together, ensuring version compatibility and reducing deployment friction.
+
+- 🧩 **Flexible Migration Templates**: Define migrations using YAML templates, providing a code-free option for managing changes.
+
+- ⚡ **GraalVM Support**: Enables the compilation of Java applications into native executables for improved performance.
+
+- 👥 **Multi-Tenant Support**: Designed to handle multiple tenants within the same infrastructure.
 
 ___
 
