@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.24-beta"
+    version = "0.0.25-beta"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
@@ -120,6 +120,11 @@ jreleaser {
                     UpdateSection.BODY,
                     UpdateSection.ASSETS
                 ))
+            }
+
+            prerelease {
+                enabled.set(true)
+                pattern.set(".*-(beta|snapshot|alpha)\$")
             }
 
             changelog {
