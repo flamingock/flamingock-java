@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.26-beta"
+    version = "0.0.27-beta"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
@@ -176,6 +176,53 @@ if(isReleasing) {
 subprojects {
     apply(plugin = "java-library")
 
+    apply(plugin = "maven-publish")
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                groupId = project.group.toString()
+                artifactId = project.name
+                version = project.version.toString()
+
+                from(components["java"])
+
+                pom {
+                    name.set(project.name)
+                    description.set("Description should be here")
+                    url.set("https://github.com/mongock/flamingock-project")
+                    inceptionYear.set("2024")
+
+                    licenses {
+                        license {
+                            name.set("Apache-2.0")
+                            url.set("https://spdx.org/licenses/Apache-2.0.html")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("dieppa")
+                            name.set("Antonio Perez Dieppa")
+                        }
+                    }
+                    scm {
+                        connection.set("scm:git:https://github.com:mongock/flamingock-project.git")
+                        developerConnection.set("scm:git:ssh://github.com:mongock/flamingock-project.git")
+                        url.set("https://github.com/mongock/flamingock-project")
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
+            }
+            mavenLocal()
+        }
+    }
+
+
     val tabsPrefix = getTabsPrefix()
     if (isReleasing) {
         if (project.isReleasable()) {
@@ -204,51 +251,7 @@ subprojects {
                     finalizedBy("createStagingDeployFolder")
                 }
 
-                apply(plugin = "maven-publish")
                 apply(plugin = "org.jreleaser")
-
-                publishing {
-                    publications {
-                        create<MavenPublication>("maven") {
-                            groupId = project.group.toString()
-                            artifactId = project.name
-                            version = project.version.toString()
-
-                            from(components["java"])
-
-                            pom {
-                                name.set(project.name)
-                                description.set("Description should be here")
-                                url.set("https://github.com/mongock/flamingock-project")
-                                inceptionYear.set("2024")
-
-                                licenses {
-                                    license {
-                                        name.set("Apache-2.0")
-                                        url.set("https://spdx.org/licenses/Apache-2.0.html")
-                                    }
-                                }
-                                developers {
-                                    developer {
-                                        id.set("dieppa")
-                                        name.set("Antonio Perez Dieppa")
-                                    }
-                                }
-                                scm {
-                                    connection.set("scm:git:https://github.com:mongock/flamingock-project.git")
-                                    developerConnection.set("scm:git:ssh://github.com:mongock/flamingock-project.git")
-                                    url.set("https://github.com/mongock/flamingock-project")
-                                }
-                            }
-                        }
-                    }
-
-                    repositories {
-                        maven {
-                            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
-                        }
-                    }
-                }
 
                 jreleaser {
                     project {
