@@ -1,4 +1,4 @@
-name: Module release
+name: Module release(graalVM)
 
 on:
   workflow_call:

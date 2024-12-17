@@ -1,4 +1,4 @@
-name: Module release
+name: Module release(JVM 17)
 
 on:
   workflow_call:
