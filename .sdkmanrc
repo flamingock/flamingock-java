@@ -1,4 +1,5 @@
 # Enable auto-env through the sdkman_auto_env config
 # Add key=value pairs of SDKs to use below
-java=17.0.3-tem
+#java=17.0.3-tem
 #java=8.0.382-amzn
+java=17.0.8-graal

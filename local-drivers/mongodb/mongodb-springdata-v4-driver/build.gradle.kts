@@ -17,11 +17,13 @@ dependencies {
     testImplementation("io.mongock:mongock-standalone:5.5.0")
     testImplementation("io.mongock:mongodb-sync-v4-driver:5.5.0")
 
-    java {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(17))
-        }
-    }
+
 }
 
 description = "${project.name}'s description"
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}

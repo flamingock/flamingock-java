@@ -13,3 +13,9 @@ dependencies {
 
     testImplementation(project(":utils-test"))
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
+}

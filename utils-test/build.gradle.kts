@@ -17,3 +17,9 @@ dependencies {
     api("com.github.tomakehurst:wiremock-jre8:2.35.2")
 
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
+}

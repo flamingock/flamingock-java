@@ -9,18 +9,20 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v2
-      - name: Setup java
-        uses: actions/setup-java@v3
+
+      - name: Set up Java
+        uses: graalvm/setup-graalvm@v1
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
 
       - name: Unit and Integration tests
         run: ./gradlew clean build
 
   flamingock-core:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: flamingock-core
     secrets:
@@ -33,7 +35,7 @@ jobs:
 
   flamingock-core-api:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: flamingock-core-api
     secrets:
@@ -46,7 +48,7 @@ jobs:
 
   flamingock-core-template:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: flamingock-core-template
     secrets:
@@ -59,7 +61,7 @@ jobs:
 
   flamingock-springboot-v2-runner:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: flamingock-springboot-v2-runner
     secrets:
@@ -72,7 +74,7 @@ jobs:
 
   flamingock-springboot-v3-runner:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm17.yml
     with:
       module: flamingock-springboot-v3-runner
     secrets:
@@ -85,7 +87,7 @@ jobs:
 
   utils:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: utils
     secrets:
@@ -98,7 +100,7 @@ jobs:
 
   driver-common:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: driver-common
     secrets:
@@ -111,7 +113,7 @@ jobs:
 
   couchbase-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: couchbase-driver
     secrets:
@@ -124,7 +126,7 @@ jobs:
 
   couchbase-springboot-v2-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: couchbase-springboot-v2-driver
     secrets:
@@ -137,7 +139,7 @@ jobs:
 
   dynamodb-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: dynamodb-driver
     secrets:
@@ -150,7 +152,7 @@ jobs:
 
   mongodb-facade:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: mongodb-facade
     secrets:
@@ -163,7 +165,7 @@ jobs:
 
   mongodb-springdata-v2-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: mongodb-springdata-v2-driver
     secrets:
@@ -176,7 +178,7 @@ jobs:
 
   mongodb-springdata-v3-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: mongodb-springdata-v3-driver
     secrets:
@@ -189,7 +191,7 @@ jobs:
 
   mongodb-springdata-v4-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm17.yml
     with:
       module: mongodb-springdata-v4-driver
     secrets:
@@ -202,7 +204,7 @@ jobs:
 
   mongodb-sync-v4-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: mongodb-sync-v4-driver
     secrets:
@@ -215,7 +217,7 @@ jobs:
 
   mongodb-v3-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: mongodb-v3-driver
     secrets:
@@ -228,7 +230,7 @@ jobs:
 
   sql-template:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: sql-template
     secrets:
@@ -241,7 +243,7 @@ jobs:
 
   sql-springboot-template:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: sql-springboot-template
     secrets:
@@ -254,7 +256,7 @@ jobs:
 
   sql-cloud-transactioner:
     needs: [ build ]
-    uses: ./.github/workflows/module-release.yml
+    uses: ./.github/workflows/module-release-jvm8.yml
     with:
       module: sql-cloud-transactioner
     secrets:
@@ -265,8 +267,22 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
+  flamingock-graalvm:
+    needs: [ build ]
+    uses: ./.github/workflows/module-release-graalvm.yml
+    with:
+      module: flamingock-graalvm
+    secrets:
+      FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
+      FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
+      FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
+      FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY }}
+      FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
+      FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
+
+
   run-examples-with-released-version:
-    needs: [flamingock-core,flamingock-core-api,flamingock-core-template,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-springboot-template,sql-cloud-transactioner]
+    needs: [flamingock-core,flamingock-core-api,flamingock-core-template,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-springboot-template,sql-cloud-transactioner, flamingock-graalvm]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:

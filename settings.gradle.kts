@@ -31,8 +31,12 @@ include("flamingock-springboot-v3-runner")
 project(":flamingock-springboot-v3-runner").projectDir = file("flamingock-springboot-v3-runner")
 project(":flamingock-springboot-v3-runner").name = "flamingock-springboot-v3-runner"
 
+include("flamingock-graalvm")
+project(":flamingock-graalvm").projectDir = file("flamingock-graalvm")
+project(":flamingock-graalvm").name = "flamingock-graalvm"
+
 //////////////////////////////////////
-// COMMUNITY
+// DRIVERS
 //////////////////////////////////////
 include("local-drivers:driver-common")
 project(":local-drivers:driver-common").name = "driver-common"
@@ -108,3 +112,4 @@ project(":utils").projectDir = file("utils")
 include("cloud-importers:mongodb-sync4-cloud-importer")
 project(":cloud-importers:mongodb-sync4-cloud-importer").name = "mongodb-sync4-cloud-importer"
 project(":cloud-importers:mongodb-sync4-cloud-importer").projectDir = file("cloud-importers/mongodb-sync4-cloud-importer")
+

@@ -8,11 +8,12 @@ dependencies {
 
     testImplementation("org.springframework:spring-context:6.+")
 
-    java {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(17))
-        }
-    }
 }
 
 description = "${project.name}'s description"
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
