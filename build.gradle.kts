@@ -41,6 +41,7 @@ val coreProjects = setOf(
     "flamingock-core-template",
     "flamingock-springboot-v2-runner",
     "flamingock-springboot-v3-runner",
+    "flamingock-graalvm",
     "utils"
 )
 

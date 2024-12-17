@@ -22,7 +22,7 @@ jobs:
 
   flamingock-core:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: flamingock-core
     secrets:
@@ -35,7 +35,7 @@ jobs:
 
   flamingock-core-api:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: flamingock-core-api
     secrets:
@@ -48,7 +48,7 @@ jobs:
 
   flamingock-core-template:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: flamingock-core-template
     secrets:
@@ -61,7 +61,7 @@ jobs:
 
   flamingock-springboot-v2-runner:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: flamingock-springboot-v2-runner
     secrets:
@@ -74,7 +74,7 @@ jobs:
 
   flamingock-springboot-v3-runner:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm17.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: flamingock-springboot-v3-runner
     secrets:
@@ -87,7 +87,7 @@ jobs:
 
   utils:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: utils
     secrets:
@@ -100,7 +100,7 @@ jobs:
 
   driver-common:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: driver-common
     secrets:
@@ -113,7 +113,7 @@ jobs:
 
   couchbase-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: couchbase-driver
     secrets:
@@ -126,7 +126,7 @@ jobs:
 
   couchbase-springboot-v2-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: couchbase-springboot-v2-driver
     secrets:
@@ -139,7 +139,7 @@ jobs:
 
   dynamodb-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: dynamodb-driver
     secrets:
@@ -152,7 +152,7 @@ jobs:
 
   mongodb-facade:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: mongodb-facade
     secrets:
@@ -165,7 +165,7 @@ jobs:
 
   mongodb-springdata-v2-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: mongodb-springdata-v2-driver
     secrets:
@@ -178,7 +178,7 @@ jobs:
 
   mongodb-springdata-v3-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: mongodb-springdata-v3-driver
     secrets:
@@ -191,7 +191,7 @@ jobs:
 
   mongodb-springdata-v4-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm17.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: mongodb-springdata-v4-driver
     secrets:
@@ -204,7 +204,7 @@ jobs:
 
   mongodb-sync-v4-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: mongodb-sync-v4-driver
     secrets:
@@ -217,7 +217,7 @@ jobs:
 
   mongodb-v3-driver:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: mongodb-v3-driver
     secrets:
@@ -230,7 +230,7 @@ jobs:
 
   sql-template:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: sql-template
     secrets:
@@ -243,7 +243,7 @@ jobs:
 
   sql-springboot-template:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: sql-springboot-template
     secrets:
@@ -256,7 +256,7 @@ jobs:
 
   sql-cloud-transactioner:
     needs: [ build ]
-    uses: ./.github/workflows/module-release-jvm8.yml
+    uses: ./.github/workflows/module-release-graalvm.yml
     with:
       module: sql-cloud-transactioner
     secrets:

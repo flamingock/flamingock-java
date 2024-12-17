@@ -31,9 +31,9 @@ include("flamingock-springboot-v3-runner")
 project(":flamingock-springboot-v3-runner").projectDir = file("flamingock-springboot-v3-runner")
 project(":flamingock-springboot-v3-runner").name = "flamingock-springboot-v3-runner"
 
-//include("flamingock-graalvm")
-//project(":flamingock-graalvm").projectDir = file("flamingock-graalvm")
-//project(":flamingock-graalvm").name = "flamingock-graalvm"
+include("flamingock-graalvm")
+project(":flamingock-graalvm").projectDir = file("flamingock-graalvm")
+project(":flamingock-graalvm").name = "flamingock-graalvm"
 
 //////////////////////////////////////
 // DRIVERS
