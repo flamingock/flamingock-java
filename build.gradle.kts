@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.29-beta"
+    version = "0.0.30-beta"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 

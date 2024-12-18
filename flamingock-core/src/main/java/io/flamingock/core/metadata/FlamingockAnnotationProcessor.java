@@ -107,7 +107,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         FileObject file;
         try {
-            file = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "", filePath);
+            file = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", filePath);
         } catch (IOException e) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, logPrefix + "Failed to creating flamingock metadata file: " + e.getMessage());
             throw new RuntimeException(e);
