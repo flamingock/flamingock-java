@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.mongodb.springdata.v2.config;
 
-import io.flamingock.core.engine.local.driver.ConnectionDriver;
+import io.flamingock.core.engine.local.driver.LocalDriver;
 import io.flamingock.oss.driver.mongodb.springdata.v2.driver.SpringDataMongoV2Driver;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -30,7 +30,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class SpringDataMongoV2Context {
 
   @Bean
-  public ConnectionDriver<SpringDataMongoV2Configuration> connectionDriver(MongoTemplate mongoTemplate, SpringDataMongoV2Configuration driverConfiguration) {
+  public LocalDriver<SpringDataMongoV2Configuration> connectionDriver(MongoTemplate mongoTemplate, SpringDataMongoV2Configuration driverConfiguration) {
       return new SpringDataMongoV2Driver(mongoTemplate).setDriverConfiguration(driverConfiguration);
   }
 }

@@ -18,12 +18,13 @@ package io.flamingock.oss.driver.couchbase.internal;
 
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
-import io.flamingock.community.internal.LocalExecutionPlanner;
+import io.flamingock.core.driver.LocalExecutionPlanner;
 import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.engine.local.AbstractLocalEngine;
+import io.flamingock.core.engine.local.LocalEngine;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.commons.utils.TimeService;
@@ -31,11 +32,10 @@ import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 
 import java.util.Optional;
 
-public class CouchbaseEngine implements LocalConnectionEngine {
+public class CouchbaseEngine extends AbstractLocalEngine {
 
     private final Collection collection;
     private final Cluster cluster;
-    private final LocalConfigurable LocalConfiguration;
 
     private CouchbaseAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
@@ -46,17 +46,17 @@ public class CouchbaseEngine implements LocalConnectionEngine {
     public CouchbaseEngine(Cluster cluster,
                            Collection collection,
                            CoreConfigurable coreConfiguration,
-                           LocalConfigurable LocalConfiguration,
+                           LocalConfigurable localConfiguration,
                            CouchbaseConfiguration driverConfiguration) {
+        super(localConfiguration);
         this.cluster = cluster;
         this.collection = collection;
         this.driverConfiguration = driverConfiguration;
         this.coreConfiguration = coreConfiguration;
-        this.LocalConfiguration = LocalConfiguration;
     }
 
     @Override
-    public void initialize(RunnerId runnerId) {
+    protected void doInitialize(RunnerId runnerId) {
         auditor = new CouchbaseAuditor(cluster, collection);
         auditor.initialize(driverConfiguration.isIndexCreation());
         CouchbaseLockService lockService = new CouchbaseLockService(cluster, collection, TimeService.getDefault());

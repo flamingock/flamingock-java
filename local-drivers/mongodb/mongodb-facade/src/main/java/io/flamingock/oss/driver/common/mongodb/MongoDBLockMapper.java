@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.common.mongodb;
 
 import io.flamingock.core.engine.lock.LockAcquisition;
-import io.flamingock.community.internal.lock.LockEntry;
+import io.flamingock.core.driver.lock.LockEntry;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeUtil;
 
@@ -25,10 +25,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.function.Supplier;
 
-import static io.flamingock.community.internal.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.community.internal.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.community.internal.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.community.internal.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.EXPIRES_AT_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.KEY_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.OWNER_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.STATUS_FIELD;
 
 public class MongoDBLockMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
 

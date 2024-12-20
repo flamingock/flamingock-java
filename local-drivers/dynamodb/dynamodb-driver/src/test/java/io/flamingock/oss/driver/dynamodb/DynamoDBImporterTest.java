@@ -135,7 +135,6 @@ class DynamoDBImporterTest {
                         .addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                 .addDependency(client)
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
                 .build()
                 .run();
 

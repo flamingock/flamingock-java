@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.dynamodb.internal.entities;
 
-import io.flamingock.community.internal.AuditEntryField;
+import io.flamingock.core.driver.AuditEntryField;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;

@@ -28,7 +28,7 @@ import io.flamingock.core.engine.local.Auditor;
 import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.community.internal.TransactionManager;
+import io.flamingock.core.driver.TransactionManager;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.Mongo3CollectionWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.Mongo3DocumentWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.community.internal.AuditEntryField.*;
+import static io.flamingock.core.driver.AuditEntryField.*;
 
 public class Mongo3Auditor implements Auditor {
 

@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.dynamodb.internal;
 
-import io.flamingock.community.internal.TransactionManager;
+import io.flamingock.core.driver.TransactionManager;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.navigation.step.FailedStep;

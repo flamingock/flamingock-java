@@ -20,33 +20,31 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.community.internal.LocalExecutionPlanner;
-import io.flamingock.core.engine.local.Auditor;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.driver.LocalExecutionPlanner;
+import io.flamingock.core.driver.TransactionManager;
+import io.flamingock.core.engine.local.AbstractLocalEngine;
+import io.flamingock.core.engine.local.Auditor;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.commons.utils.TimeService;
-import io.flamingock.community.internal.TransactionManager;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockImporterModule;
 import org.bson.Document;
 
 import java.util.Optional;
 
-public class Mongo3Engine implements LocalConnectionEngine {
+public class Mongo3Engine extends AbstractLocalEngine {
 
     private final MongoDatabase database;
     private final MongoClient mongoClient;
-    private final LocalConfigurable localConfiguration;
-
+    private final MongoDB3Configuration driverConfiguration;
+    private final CoreConfigurable coreConfiguration;
     private Mongo3Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
     private MongockImporterModule mongockImporter = null;
-    private final MongoDB3Configuration driverConfiguration;
-    private final CoreConfigurable coreConfiguration;
 
 
     public Mongo3Engine(MongoClient mongoClient,
@@ -54,17 +52,19 @@ public class Mongo3Engine implements LocalConnectionEngine {
                         CoreConfigurable coreConfiguration,
                         LocalConfigurable localConfiguration,
                         MongoDB3Configuration driverConfiguration) {
+        super(localConfiguration);
         this.mongoClient = mongoClient;
         this.database = mongoClient.getDatabase(databaseName);
         this.driverConfiguration = driverConfiguration;
         this.coreConfiguration = coreConfiguration;
-        this.localConfiguration = localConfiguration;
     }
 
     @Override
-    public void initialize(RunnerId runnerId) {
+    protected void doInitialize(RunnerId runnerId) {
         TransactionManager<ClientSession> sessionManager = new TransactionManager<>(mongoClient::startSession);
-        transactionWrapper = coreConfiguration.getTransactionEnabled() ? new Mongo3TransactionWrapper(sessionManager) : null;
+        transactionWrapper = localConfiguration.isTransactionDisabled()
+                ? null
+                : new Mongo3TransactionWrapper(sessionManager);
         //Auditor
         auditor = new Mongo3Auditor(database,
                 driverConfiguration.getMigrationRepositoryName(),
@@ -81,7 +81,7 @@ public class Mongo3Engine implements LocalConnectionEngine {
         //Execution planner
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
-        if(coreConfiguration.isMongockImporterEnabled()) {
+        if (coreConfiguration.isMongockImporterEnabled()) {
             MongoCollection<Document> collection = database.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
             mongockImporter = new MongockImporterModule(collection, auditor);
 

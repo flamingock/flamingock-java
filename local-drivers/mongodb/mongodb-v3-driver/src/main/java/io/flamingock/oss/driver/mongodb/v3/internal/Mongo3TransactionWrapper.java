@@ -22,7 +22,7 @@ import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.community.internal.TransactionManager;
+import io.flamingock.core.driver.TransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

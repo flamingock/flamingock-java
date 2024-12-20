@@ -17,6 +17,7 @@
 package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.core.api.SystemModule;
+import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
@@ -39,6 +40,7 @@ import io.flamingock.core.pipeline.Stage;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runner.RunnerBuilder;
 import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.template.TemplateModule;
 import org.jetbrains.annotations.NotNull;
 
@@ -166,11 +168,6 @@ abstract class AbstractStandaloneBuilder<
     }
 
     @Override
-    public HOLDER setTransactionEnabled(Boolean transactionEnabled) {
-        return coreConfiguratorDelegate().setTransactionEnabled(transactionEnabled);
-    }
-
-    @Override
     public HOLDER setDefaultAuthor(String publicMigrationAuthor) {
         return coreConfiguratorDelegate().setDefaultAuthor(publicMigrationAuthor);
     }
@@ -240,10 +237,6 @@ abstract class AbstractStandaloneBuilder<
         return coreConfiguratorDelegate().getLegacyMigration();
     }
 
-    @Override
-    public Boolean getTransactionEnabled() {
-        return coreConfiguratorDelegate().getTransactionEnabled();
-    }
 
     @Override
     public String getDefaultAuthor() {

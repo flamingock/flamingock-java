@@ -93,7 +93,6 @@ class DynamoDBDriverTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                 .addDependency(client)
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
                 .build()
                 .run();
 
@@ -111,7 +110,6 @@ class DynamoDBDriverTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                 .addDependency(client)
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
                 .build()
                 .run();
 
@@ -147,7 +145,7 @@ class DynamoDBDriverTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithoutTransaction"))
                 .addDependency(client)
                 .setTrackIgnored(true)
-                .setTransactionEnabled(false)
+                .disableTransaction()
                 .build()
                 .run();
 
@@ -184,7 +182,6 @@ class DynamoDBDriverTest {
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithTransaction"))
                     .addDependency(client)
                     .setTrackIgnored(true)
-                    .setTransactionEnabled(true)
                     .build()
                     .run();
         });
@@ -221,8 +218,7 @@ class DynamoDBDriverTest {
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithRollback"))
                     .addDependency(client)
                     .setTrackIgnored(true)
-                    .setTransactionEnabled(false)
-                    .build()
+                    .disableTransaction()                    .build()
                     .run();
         });
 
@@ -260,7 +256,7 @@ class DynamoDBDriverTest {
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithoutRollback"))
                     .addDependency(client)
                     .setTrackIgnored(true)
-                    .setTransactionEnabled(false)
+                    .disableTransaction()
                     .build()
                     .run();
         });

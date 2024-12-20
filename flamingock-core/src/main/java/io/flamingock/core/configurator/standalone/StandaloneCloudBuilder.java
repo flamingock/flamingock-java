@@ -28,7 +28,7 @@ import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
-import io.flamingock.core.cloud.CloudConnectionEngine;
+import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
@@ -82,7 +82,7 @@ public class StandaloneCloudBuilder
         logger.info("Generated runner id:  {}", runnerId);
 
 
-        CloudConnectionEngine.Factory engineFactory = CloudConnectionEngine.newFactory(
+        CloudEngine.Factory engineFactory = CloudEngine.newFactory(
                 runnerId,
                 coreConfiguratorDelegate.getCoreConfiguration(),
                 cloudConfiguratorDelegate.getCloudConfiguration(),
@@ -90,7 +90,7 @@ public class StandaloneCloudBuilder
                 Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE)
         );
 
-        CloudConnectionEngine engine = engineFactory.initializeAndGet();
+        CloudEngine engine = engineFactory.initializeAndGet();
 
         coreConfiguratorDelegate.getSystemModuleManager()
                 .initialize(engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt(), cloudConfiguratorDelegate.getCloudConfiguration().getHost());

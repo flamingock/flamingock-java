@@ -100,7 +100,7 @@ class Mongo3DriverTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
+                
                 .build()
                 .run();
 
@@ -124,7 +124,7 @@ class Mongo3DriverTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
+                
                 .build()
                 .run();
 
@@ -144,7 +144,7 @@ class Mongo3DriverTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
+                
                 .build()
                 .run();
 
@@ -178,7 +178,7 @@ class Mongo3DriverTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithoutTransaction"))
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setTrackIgnored(true)
-                .setTransactionEnabled(false)
+                .disableTransaction()
                 .build()
                 .run();
 
@@ -213,7 +213,7 @@ class Mongo3DriverTest {
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.failedWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .setTrackIgnored(true)
-                    .setTransactionEnabled(true)
+                    
                     .build()
                     .run();
         });
@@ -246,7 +246,7 @@ class Mongo3DriverTest {
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.failedWithoutTransactionWithRollback"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .setTrackIgnored(true)
-                    .setTransactionEnabled(false)
+                    .disableTransaction()
                     .build()
                     .run();
         });
@@ -281,7 +281,7 @@ class Mongo3DriverTest {
                     .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.failedWithoutTransactionWithoutRollback"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .setTrackIgnored(true)
-                    .setTransactionEnabled(false)
+                    .disableTransaction()
                     .build()
                     .run();
         });

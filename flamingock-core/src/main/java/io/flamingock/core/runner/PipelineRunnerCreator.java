@@ -19,11 +19,11 @@ package io.flamingock.core.runner;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.flamingock.core.cloud.CloudConnectionEngine;
+import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.engine.local.LocalEngine;
 import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
@@ -39,7 +39,7 @@ public final class PipelineRunnerCreator {
     public static Runner create(RunnerId runnerId,
                                 Pipeline pipeline,
                                 FlamingockMetadata metadata,
-                                LocalConnectionEngine connectionEngine,
+                                LocalEngine connectionEngine,
                                 CoreConfigurable coreConfiguration,
                                 EventPublisher eventPublisher,
                                 DependencyContext dependencyContext,
@@ -54,16 +54,16 @@ public final class PipelineRunnerCreator {
                 eventPublisher,
                 dependencyContext,
                 isThrowExceptionIfCannotObtainLock,
-                () -> {}
+                () -> {
+                }
         );
     }
-
 
 
     public static Runner create(RunnerId runnerId,
                                 Pipeline pipeline,
                                 FlamingockMetadata metadata,
-                                CloudConnectionEngine engine,
+                                CloudEngine engine,
                                 CoreConfigurable coreConfiguration,
                                 EventPublisher eventPublisher,
                                 DependencyContext dependencyContext,
@@ -85,15 +85,15 @@ public final class PipelineRunnerCreator {
 
     private static Runner create(RunnerId runnerId,
                                  Pipeline pipeline,
-                                FlamingockMetadata metadata,
-                                AuditWriter auditWriter,
-                                TransactionWrapper transactionWrapper,
-                                ExecutionPlanner executionPlanner,
-                                CoreConfigurable coreConfiguration,
-                                EventPublisher eventPublisher,
-                                DependencyContext dependencyContext,
-                                boolean isThrowExceptionIfCannotObtainLock,
-                                Runnable finalizer) {
+                                 FlamingockMetadata metadata,
+                                 AuditWriter auditWriter,
+                                 TransactionWrapper transactionWrapper,
+                                 ExecutionPlanner executionPlanner,
+                                 CoreConfigurable coreConfiguration,
+                                 EventPublisher eventPublisher,
+                                 DependencyContext dependencyContext,
+                                 boolean isThrowExceptionIfCannotObtainLock,
+                                 Runnable finalizer) {
         //Instantiated here, so we don't wait until Runner.run() and fail fast
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, auditWriter, transactionWrapper);
         return new PipelineRunner(

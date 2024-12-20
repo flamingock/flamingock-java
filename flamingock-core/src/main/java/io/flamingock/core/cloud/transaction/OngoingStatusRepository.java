@@ -30,7 +30,7 @@ public interface OngoingStatusRepository {
     Set<OngoingStatus> getOngoingStatuses();
 
     /**
-     * Removes from the local database any ongoing status for the given taskId
+     * Idempotently removes any ongoing status for the given taskId from the local database.
      * If the operation cannot be performed, throws a RuntimeException
      *
      * @param taskId taskId for which the statuses need to be removed

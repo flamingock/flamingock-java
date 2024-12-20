@@ -26,7 +26,7 @@ import io.flamingock.core.configurator.cloud.CloudConfigurator;
 import io.flamingock.core.configurator.cloud.CloudConfiguratorDelegate;
 import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
 import io.flamingock.core.configurator.core.CoreConfiguration;
-import io.flamingock.core.cloud.CloudConnectionEngine;
+import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Optional;
 
-public class SpringbootCloudBuilder extends SpringbootBaseBuilder<SpringbootCloudBuilder, CloudSystemModule, CloudSystemModuleManager>
+public class SpringbootCloudBuilder extends AbstractSpringbootBuilder<SpringbootCloudBuilder, CloudSystemModule, CloudSystemModuleManager>
         implements
         CloudConfigurator<SpringbootCloudBuilder>,
         SpringRunnerBuilder {
@@ -77,7 +77,7 @@ public class SpringbootCloudBuilder extends SpringbootBaseBuilder<SpringbootClou
         Http.RequestBuilderFactory requestBuilderFactory = Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
         CloudTransactioner transactioner = getCloudTransactioner().orElse(null);
 
-        CloudConnectionEngine.Factory engineFactory = CloudConnectionEngine.newFactory(
+        CloudEngine.Factory engineFactory = CloudEngine.newFactory(
                 runnerId,
                 getCoreConfiguration(),
                 cloudConfiguratorDelegate.getCloudConfiguration(),
@@ -85,7 +85,7 @@ public class SpringbootCloudBuilder extends SpringbootBaseBuilder<SpringbootClou
                 requestBuilderFactory
         );
 
-        CloudConnectionEngine engine = engineFactory.initializeAndGet();
+        CloudEngine engine = engineFactory.initializeAndGet();
 
         getSystemModuleManager().initialize(engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt(), cloudConfiguratorDelegate.getCloudConfiguration().getHost());
 

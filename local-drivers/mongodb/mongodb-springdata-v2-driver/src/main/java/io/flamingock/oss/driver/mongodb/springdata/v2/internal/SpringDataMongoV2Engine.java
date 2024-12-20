@@ -18,11 +18,12 @@ package io.flamingock.oss.driver.mongodb.springdata.v2.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
-import io.flamingock.community.internal.LocalExecutionPlanner;
+import io.flamingock.core.driver.LocalExecutionPlanner;
+import io.flamingock.core.engine.local.AbstractLocalEngine;
 import io.flamingock.core.engine.local.Auditor;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.engine.local.LocalEngine;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
@@ -33,10 +34,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.Optional;
 
-public class SpringDataMongoV2Engine implements LocalConnectionEngine {
+public class SpringDataMongoV2Engine extends AbstractLocalEngine {
 
     private final MongoTemplate mongoTemplate;
-    private final LocalConfigurable localConfiguration;
 
     private SpringDataMongoV2Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
@@ -50,18 +50,21 @@ public class SpringDataMongoV2Engine implements LocalConnectionEngine {
                                    CoreConfigurable coreConfiguration,
                                    LocalConfigurable localConfiguration,
                                    SpringDataMongoV2Configuration driverConfiguration) {
+        super(localConfiguration);
         this.mongoTemplate = mongoTemplate;
         this.driverConfiguration = driverConfiguration;
         this.coreConfiguration = coreConfiguration;
-        this.localConfiguration = localConfiguration;
     }
 
     @Override
-    public void initialize(RunnerId runnerId) {
+    protected void doInitialize(RunnerId runnerId) {
         ReadWriteConfiguration readWriteConfiguration = new ReadWriteConfiguration(driverConfiguration.getBuiltMongoDBWriteConcern(),
                 new ReadConcern(driverConfiguration.getReadConcern()),
                 driverConfiguration.getReadPreference().getValue());
-        transactionWrapper = coreConfiguration.getTransactionEnabled() ? new SpringDataMongoV2TransactionWrapper(mongoTemplate, readWriteConfiguration) : null;
+        transactionWrapper = localConfiguration.isTransactionDisabled()
+                ? null
+                : new SpringDataMongoV2TransactionWrapper(mongoTemplate, readWriteConfiguration);
+
         auditor = new SpringDataMongoV2Auditor(
                 mongoTemplate,
                 driverConfiguration.getMigrationRepositoryName(),

@@ -21,13 +21,13 @@ import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.oss.driver.mongodb.springdata.v4.config.SpringDataMongoV4Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v4.internal.SpringDataMongoV4Engine;
-import io.flamingock.core.engine.local.driver.ConnectionDriver;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.engine.local.driver.LocalDriver;
+import io.flamingock.core.engine.local.LocalEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-public class SpringDataMongoV4Driver implements ConnectionDriver<SpringDataMongoV4Configuration> {
+public class SpringDataMongoV4Driver implements LocalDriver<SpringDataMongoV4Configuration> {
     private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoV4Driver.class);
 
 
@@ -64,11 +64,11 @@ public class SpringDataMongoV4Driver implements ConnectionDriver<SpringDataMongo
     }
 
     @Override
-    public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
+    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable localConfiguration) {
         SpringDataMongoV4Engine engine = new SpringDataMongoV4Engine(
                 mongoTemplate,
                 coreConfiguration,
-                communityConfiguration,
+                localConfiguration,
                 driverConfiguration != null ? driverConfiguration : SpringDataMongoV4Configuration.getDefault());
         engine.initialize(runnerId);
         return engine;

@@ -18,50 +18,51 @@ package io.flamingock.oss.driver.mongodb.springdata.v3.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
-import io.flamingock.community.internal.LocalExecutionPlanner;
-import io.flamingock.core.engine.local.Auditor;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.driver.LocalExecutionPlanner;
+import io.flamingock.core.engine.local.AbstractLocalEngine;
+import io.flamingock.core.engine.local.Auditor;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.mongodb.springdata.v3.config.SpringDataMongoV3Configuration;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockImporterModule;
-import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.ReadWriteConfiguration;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.Optional;
 
-public class SpringDataMongoV3Engine implements LocalConnectionEngine {
+public class SpringDataMongoV3Engine extends AbstractLocalEngine {
 
     private final MongoTemplate mongoTemplate;
-    private final LocalConfigurable localConfiguration;
-
+    private final SpringDataMongoV3Configuration driverConfiguration;
+    private final CoreConfigurable coreConfiguration;
     private SpringDataMongoV3Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
     private MongockImporterModule mongockImporter = null;
-    private final SpringDataMongoV3Configuration driverConfiguration;
-    private final CoreConfigurable coreConfiguration;
 
 
     public SpringDataMongoV3Engine(MongoTemplate mongoTemplate,
                                    CoreConfigurable coreConfiguration,
                                    LocalConfigurable localConfiguration,
                                    SpringDataMongoV3Configuration driverConfiguration) {
+        super(localConfiguration);
         this.mongoTemplate = mongoTemplate;
         this.driverConfiguration = driverConfiguration;
         this.coreConfiguration = coreConfiguration;
-        this.localConfiguration = localConfiguration;
     }
 
     @Override
-    public void initialize(RunnerId runnerId) {
+    protected void doInitialize(RunnerId runnerId) {
         ReadWriteConfiguration readWriteConfiguration = new ReadWriteConfiguration(driverConfiguration.getBuiltMongoDBWriteConcern(),
                 new ReadConcern(driverConfiguration.getReadConcern()),
                 driverConfiguration.getReadPreference().getValue());
-        transactionWrapper = coreConfiguration.getTransactionEnabled() ? new SpringDataMongoV3TransactionWrapper(mongoTemplate, readWriteConfiguration) : null;
+        transactionWrapper = localConfiguration.isTransactionDisabled()
+                ? null
+                : new SpringDataMongoV3TransactionWrapper(mongoTemplate, readWriteConfiguration);
+
         auditor = new SpringDataMongoV3Auditor(
                 mongoTemplate,
                 driverConfiguration.getMigrationRepositoryName(),
@@ -74,7 +75,7 @@ public class SpringDataMongoV3Engine implements LocalConnectionEngine {
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
-        if(coreConfiguration.isMongockImporterEnabled()) {
+        if (coreConfiguration.isMongockImporterEnabled()) {
             MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
             mongockImporter = new MongockImporterModule(collection, auditor);
 

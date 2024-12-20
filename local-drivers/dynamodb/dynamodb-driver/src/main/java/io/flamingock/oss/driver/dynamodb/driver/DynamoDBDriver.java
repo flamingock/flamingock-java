@@ -19,8 +19,8 @@ package io.flamingock.oss.driver.dynamodb.driver;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
-import io.flamingock.core.engine.local.driver.ConnectionDriver;
+import io.flamingock.core.engine.local.LocalEngine;
+import io.flamingock.core.engine.local.driver.LocalDriver;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
 import io.flamingock.oss.driver.dynamodb.internal.DynamoDBEngine;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDBDriver implements ConnectionDriver<DynamoDBConfiguration> {
+public class DynamoDBDriver implements LocalDriver<DynamoDBConfiguration> {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBDriver.class);
 
@@ -69,11 +69,11 @@ public class DynamoDBDriver implements ConnectionDriver<DynamoDBConfiguration> {
     }
 
     @Override
-    public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
+    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable localConfiguration) {
         DynamoDBEngine dynamodbEngine = new DynamoDBEngine(
                 client,
                 coreConfiguration,
-                communityConfiguration,
+                localConfiguration,
                 driverConfiguration != null ? driverConfiguration : DynamoDBConfiguration.getDefault());
         dynamodbEngine.initialize(runnerId);
         return dynamodbEngine;

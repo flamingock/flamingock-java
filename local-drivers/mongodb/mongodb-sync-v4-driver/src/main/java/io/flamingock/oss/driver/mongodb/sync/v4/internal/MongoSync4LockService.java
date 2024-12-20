@@ -24,27 +24,27 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.community.internal.lock.LocalLockService;
+import io.flamingock.core.driver.lock.LocalLockService;
 import io.flamingock.core.engine.lock.LockAcquisition;
-import io.flamingock.community.internal.lock.LockEntry;
+import io.flamingock.core.driver.lock.LockEntry;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.LockServiceException;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBLockMapper;
-import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.MongoSync4CollectionWrapper;
-import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.MongoSync4DocumentWrapper;
-import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.ReadWriteConfiguration;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4CollectionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4DocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.util.Date;
 
-import static io.flamingock.community.internal.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.community.internal.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.community.internal.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.community.internal.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.EXPIRES_AT_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.KEY_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.OWNER_FIELD;
+import static io.flamingock.core.driver.lock.LockEntryField.STATUS_FIELD;
 import static io.flamingock.core.engine.lock.LockStatus.LOCK_HELD;
 
 public class MongoSync4LockService implements LocalLockService {

@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.couchbase.springboot.v2.config;
 
-import io.flamingock.core.engine.local.driver.ConnectionDriver;
+import io.flamingock.core.engine.local.driver.LocalDriver;
 import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 import io.flamingock.oss.driver.couchbase.driver.CouchbaseDriver;
 
@@ -40,8 +40,8 @@ import com.couchbase.client.java.Collection;
 public class CouchbaseSpringbootContext {
 
   @Bean
-  public ConnectionDriver<CouchbaseConfiguration> connectionDriver(CouchbaseClientFactory couchbaseClientFactory,
-                                           CouchbaseSpringbootConfiguration couchbaseConfiguration) {
+  public LocalDriver<CouchbaseConfiguration> connectionDriver(CouchbaseClientFactory couchbaseClientFactory,
+                                                              CouchbaseSpringbootConfiguration couchbaseConfiguration) {
     Collection collection = isCustomCollection(couchbaseConfiguration) ? 
         couchbaseClientFactory.withScope(couchbaseConfiguration.getScope()).getCollection(couchbaseConfiguration.getCollection()) : 
         couchbaseClientFactory.getDefaultCollection();  

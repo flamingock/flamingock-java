@@ -126,12 +126,6 @@ public class CoreConfiguratorDelegate<
     }
 
     @Override
-    public HOLDER setTransactionEnabled(Boolean transactionEnabled) {
-        configuration.setTransactionEnabled(transactionEnabled);
-        return holderSupplier.get();
-    }
-
-    @Override
     public HOLDER setDefaultAuthor(String publicMigrationAuthor) {
         configuration.setDefaultAuthor(publicMigrationAuthor);
         return holderSupplier.get();
@@ -203,11 +197,6 @@ public class CoreConfiguratorDelegate<
     @Override
     public LegacyMigration getLegacyMigration() {
         return configuration.getLegacyMigration();
-    }
-
-    @Override
-    public Boolean getTransactionEnabled() {
-        return configuration.getTransactionEnabled();
     }
 
     @Override

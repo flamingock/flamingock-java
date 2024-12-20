@@ -65,11 +65,7 @@ public class CoreConfiguration implements CoreConfigurable {
      * Legacy migration object to instruct Mongock how to import legacy migrations from other tools
      */
     private LegacyMigration legacyMigration = null;
-    /**
-     * To enable/disable transactions. It works together with the driver, so enabling transactions with a non-transactional
-     * driver or a transactional driver with transaction mode off, will throw a MongockException
-     */
-    private boolean transactionEnabled = true;
+
     /**
      * From version 5, author is not a mandatory field, but still needed for backward compatibility. This is why Mongock
      * has provided this field, so you can set the author once and forget about it.
@@ -187,11 +183,6 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public void setTransactionEnabled(Boolean transactionEnabled) {
-        this.transactionEnabled = transactionEnabled;
-    }
-
-    @Override
     public void setDefaultAuthor(String defaultAuthor) {
         this.defaultAuthor = defaultAuthor;
     }
@@ -254,11 +245,6 @@ public class CoreConfiguration implements CoreConfigurable {
     @Override
     public LegacyMigration getLegacyMigration() {
         return legacyMigration;
-    }
-
-    @Override
-    public Boolean getTransactionEnabled() {
-        return transactionEnabled;
     }
 
     @Override

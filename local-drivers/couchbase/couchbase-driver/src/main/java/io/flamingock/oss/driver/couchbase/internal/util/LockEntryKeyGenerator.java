@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.couchbase.internal.util;
 
-import io.flamingock.community.internal.lock.LockEntry;
+import io.flamingock.core.driver.lock.LockEntry;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseConstants;
 
 public class LockEntryKeyGenerator {

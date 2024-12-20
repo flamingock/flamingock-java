@@ -18,7 +18,7 @@ package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.api.metadata.FlamingockMetadata;
+import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
@@ -27,12 +27,13 @@ import io.flamingock.core.configurator.local.LocalConfiguration;
 import io.flamingock.core.configurator.local.LocalConfigurator;
 import io.flamingock.core.configurator.local.LocalConfiguratorDelegate;
 import io.flamingock.core.configurator.local.LocalSystemModuleManager;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
-import io.flamingock.core.engine.local.driver.ConnectionDriver;
+import io.flamingock.core.engine.local.LocalEngine;
+import io.flamingock.core.engine.local.driver.LocalDriver;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
+import io.flamingock.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,11 +79,12 @@ public class StandaloneLocalBuilder
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);
 
-        LocalConnectionEngine engine = localConfiguratorDelegate.getDriver().initializeAndGetEngine(
+        LocalEngine engine = localConfiguratorDelegate.getDriver().initializeAndGetEngine(
                 runnerId,
                 coreConfiguratorDelegate.getCoreConfiguration(),
                 localConfiguratorDelegate.getLocalConfiguration()
         );
+
 
         //adds Mongock legacy importer, if the user has required it
         engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
@@ -116,23 +118,35 @@ public class StandaloneLocalBuilder
     }
 
 
+
+
     ///////////////////////////////////////////////////////////////////////////////////
     //  LOCAL
     ///////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public StandaloneLocalBuilder setDriver(ConnectionDriver<?> connectionDriver) {
+    public StandaloneLocalBuilder setDriver(LocalDriver<?> connectionDriver) {
         return localConfiguratorDelegate.setDriver(connectionDriver);
     }
 
     @Override
-    public ConnectionDriver<?> getDriver() {
+    public LocalDriver<?> getDriver() {
         return localConfiguratorDelegate.getDriver();
     }
 
     @Override
     public LocalConfigurable getLocalConfiguration() {
         return localConfiguratorDelegate.getLocalConfiguration();
+    }
+
+    @Override
+    public StandaloneLocalBuilder disableTransaction() {
+        return localConfiguratorDelegate.disableTransaction();
+    }
+
+    @Override
+    public boolean isTransactionDisabled() {
+        return localConfiguratorDelegate.isTransactionDisabled();
     }
 
 }

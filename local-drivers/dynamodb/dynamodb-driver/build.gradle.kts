@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":local-drivers:driver-common"))
+    api(project(":flamingock-core"))
 
     implementation("software.amazon.awssdk:dynamodb-enhanced:2.25.28")
 

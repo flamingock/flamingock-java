@@ -58,8 +58,6 @@ public interface CoreConfigurable {
 
     void setLegacyMigration(LegacyMigration legacyMigration);
 
-    void setTransactionEnabled(Boolean transactionEnabled);
-
     void setDefaultAuthor(String defaultAuthor);
 
     void setTransactionStrategy(TransactionStrategy transactionStrategy);
@@ -85,8 +83,6 @@ public interface CoreConfigurable {
     Map<String, Object> getMetadata();
 
     LegacyMigration getLegacyMigration();
-
-    Boolean getTransactionEnabled();
 
     String getDefaultAuthor();
 

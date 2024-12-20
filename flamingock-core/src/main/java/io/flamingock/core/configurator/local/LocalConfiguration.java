@@ -18,4 +18,15 @@ package io.flamingock.core.configurator.local;
 
 public class LocalConfiguration implements LocalConfigurable {
 
+    private boolean transactionDisabled = false;
+
+    @Override
+    public void setTransactionDisabled(boolean transactionDisabled) {
+        this.transactionDisabled = transactionDisabled;
+    }
+
+    @Override
+    public boolean isTransactionDisabled() {
+        return transactionDisabled;
+    }
 }

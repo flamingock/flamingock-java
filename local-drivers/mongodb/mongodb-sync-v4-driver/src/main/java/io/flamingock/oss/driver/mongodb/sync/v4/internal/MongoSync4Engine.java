@@ -20,33 +20,32 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4TransactionWrapper;
+import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.driver.LocalExecutionPlanner;
+import io.flamingock.core.driver.TransactionManager;
+import io.flamingock.core.engine.local.AbstractLocalEngine;
 import io.flamingock.core.engine.local.Auditor;
-import io.flamingock.community.internal.LocalExecutionPlanner;
-import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.commons.utils.TimeService;
-import io.flamingock.community.internal.TransactionManager;
-import io.flamingock.oss.driver.mongodb.sync.v4.MongoDBSync4Configuration;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockImporterModule;
 import org.bson.Document;
 
 import java.util.Optional;
 
-public class MongoSync4Engine implements LocalConnectionEngine {
+public class MongoSync4Engine extends AbstractLocalEngine {
 
     private final MongoDatabase database;
     private final MongoClient mongoClient;
-    private final LocalConfigurable localConfiguration;
-
+    private final MongoDBSync4Configuration driverConfiguration;
+    private final CoreConfigurable coreConfiguration;
     private MongoSync4Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
     private MongockImporterModule mongockImporter = null;
-    private final MongoDBSync4Configuration driverConfiguration;
-    private final CoreConfigurable coreConfiguration;
 
 
     public MongoSync4Engine(MongoClient mongoClient,
@@ -54,17 +53,19 @@ public class MongoSync4Engine implements LocalConnectionEngine {
                             CoreConfigurable coreConfiguration,
                             LocalConfigurable localConfiguration,
                             MongoDBSync4Configuration driverConfiguration) {
+        super(localConfiguration);
         this.mongoClient = mongoClient;
         this.database = mongoClient.getDatabase(databaseName);
         this.driverConfiguration = driverConfiguration;
         this.coreConfiguration = coreConfiguration;
-        this.localConfiguration = localConfiguration;
     }
 
     @Override
-    public void initialize(RunnerId runnerId) {
+    protected void doInitialize(RunnerId runnerId) {
         TransactionManager<ClientSession> sessionManager = new TransactionManager<>(mongoClient::startSession);
-        transactionWrapper = coreConfiguration.getTransactionEnabled() ? new MongoSync4TransactionWrapper(sessionManager) : null;
+        transactionWrapper = localConfiguration.isTransactionDisabled()
+                ? null
+                : new MongoSync4TransactionWrapper(sessionManager);
         //Auditor
         auditor = new MongoSync4Auditor(
                 database,
@@ -81,7 +82,7 @@ public class MongoSync4Engine implements LocalConnectionEngine {
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
-        if(coreConfiguration.isMongockImporterEnabled()) {
+        if (coreConfiguration.isMongockImporterEnabled()) {
             MongoCollection<Document> collection = database.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
             mongockImporter = new MongockImporterModule(collection, auditor);
 

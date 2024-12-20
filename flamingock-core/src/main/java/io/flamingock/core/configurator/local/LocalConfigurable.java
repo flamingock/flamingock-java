@@ -23,4 +23,8 @@ package io.flamingock.core.configurator.local;
  */
 public interface LocalConfigurable {
 
+    void setTransactionDisabled(boolean transactionDisabled);
+
+    boolean isTransactionDisabled();
+
 }

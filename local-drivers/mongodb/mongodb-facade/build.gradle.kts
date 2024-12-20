@@ -1,6 +1,5 @@
 dependencies {
-    api(project(":local-drivers:driver-common"))
-
+    api(project(":flamingock-core"))
 }
 
 java {

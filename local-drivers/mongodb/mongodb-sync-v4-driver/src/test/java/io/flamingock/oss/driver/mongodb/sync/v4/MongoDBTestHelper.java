@@ -20,7 +20,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.MongoSync4DocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4DocumentWrapper;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -29,8 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.community.internal.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.community.internal.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.core.driver.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.core.driver.AuditEntryField.KEY_TIMESTAMP;
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;

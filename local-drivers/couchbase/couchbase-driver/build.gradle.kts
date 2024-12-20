@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":local-drivers:driver-common"))
+    api(project(":flamingock-core"))
     
     implementation("com.couchbase.client:java-client:3.4.4")
 

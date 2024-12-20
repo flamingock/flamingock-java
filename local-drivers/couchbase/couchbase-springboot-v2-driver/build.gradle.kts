@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":local-drivers:driver-common"))
+    api(project(":flamingock-core"))
     api(project(":local-drivers:couchbase:couchbase-driver"))
 
     implementation("org.springframework.data:spring-data-couchbase:4.4.8")

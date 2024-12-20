@@ -109,7 +109,7 @@ class Mongo3ImporterTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
+                
                 .build()
                 .run();
 

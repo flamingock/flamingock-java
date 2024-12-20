@@ -14,6 +14,10 @@ include("cloud-transactioners:sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").projectDir = file("cloud-transactioners/sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").name = "sql-cloud-transactioner"
 
+include("cloud-transactioners:mongodb-sync-v4-cloud-transactioner")
+project(":cloud-transactioners:mongodb-sync-v4-cloud-transactioner").projectDir = file("cloud-transactioners/mongodb-sync-v4-cloud-transactioner")
+project(":cloud-transactioners:mongodb-sync-v4-cloud-transactioner").name = "mongodb-sync-v4-cloud-transactioner"
+
 
 include("flamingock-core-api")
 project(":flamingock-core-api").name = "flamingock-core-api"

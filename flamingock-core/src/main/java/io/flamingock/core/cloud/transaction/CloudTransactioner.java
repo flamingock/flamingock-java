@@ -20,6 +20,9 @@ import io.flamingock.core.transaction.TransactionWrapper;
 
 public interface CloudTransactioner extends OngoingStatusRepository, TransactionWrapper, AutoCloseable {
 
+    /**
+     * Initializes the transactioner's storage in the local infrastructure
+     */
     void initialize();
 
     @Override

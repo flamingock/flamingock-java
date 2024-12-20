@@ -21,14 +21,14 @@ import com.couchbase.client.java.Collection;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.driver.ConnectionDriver;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.engine.local.driver.LocalDriver;
+import io.flamingock.core.engine.local.LocalEngine;
 import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CouchbaseDriver implements ConnectionDriver<CouchbaseConfiguration> {
+public class CouchbaseDriver implements LocalDriver<CouchbaseConfiguration> {
     
     private static final Logger logger = LoggerFactory.getLogger(CouchbaseDriver.class);
 
@@ -68,12 +68,14 @@ public class CouchbaseDriver implements ConnectionDriver<CouchbaseConfiguration>
     }
 
     @Override
-    public LocalConnectionEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable communityConfiguration) {
+    public LocalEngine initializeAndGetEngine(RunnerId runnerId, 
+                                              CoreConfigurable coreConfiguration, 
+                                              LocalConfigurable localConfiguration) {
         CouchbaseEngine couchbaseEngine = new CouchbaseEngine(
                 cluster,
                 collection,
                 coreConfiguration,
-                communityConfiguration,
+                localConfiguration,
                 driverConfiguration != null ? driverConfiguration : CouchbaseConfiguration.getDefault());
         couchbaseEngine.initialize(runnerId);
         return couchbaseEngine;

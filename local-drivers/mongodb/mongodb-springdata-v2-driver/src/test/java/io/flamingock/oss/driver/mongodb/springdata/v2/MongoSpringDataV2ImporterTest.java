@@ -109,7 +109,7 @@ class MongoSpringDataV2ImporterTest {
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithTransaction"))
                 .addDependency(mongoTemplate)
                 .setTrackIgnored(true)
-                .setTransactionEnabled(true)
+                .disableTransaction()
                 .build()
                 .run();
 

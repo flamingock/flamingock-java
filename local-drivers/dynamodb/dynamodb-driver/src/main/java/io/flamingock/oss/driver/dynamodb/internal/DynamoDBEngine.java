@@ -18,11 +18,12 @@ package io.flamingock.oss.driver.dynamodb.internal;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
-import io.flamingock.community.internal.LocalExecutionPlanner;
-import io.flamingock.community.internal.TransactionManager;
+import io.flamingock.core.driver.LocalExecutionPlanner;
+import io.flamingock.core.driver.TransactionManager;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalConnectionEngine;
+import io.flamingock.core.engine.local.AbstractLocalEngine;
+import io.flamingock.core.engine.local.LocalEngine;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
@@ -34,10 +35,9 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 
 import java.util.Optional;
 
-public class DynamoDBEngine implements LocalConnectionEngine {
+public class DynamoDBEngine extends AbstractLocalEngine {
 
     private final DynamoClients client;
-    private final LocalConfigurable localConfiguration;
     private final DynamoDBConfiguration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
     private DynamoDBAuditor auditor;
@@ -50,16 +50,16 @@ public class DynamoDBEngine implements LocalConnectionEngine {
                           CoreConfigurable coreConfiguration,
                           LocalConfigurable localConfiguration,
                           DynamoDBConfiguration driverConfiguration) {
+        super(localConfiguration);
         this.client = client;
         this.driverConfiguration = driverConfiguration;
         this.coreConfiguration = coreConfiguration;
-        this.localConfiguration = localConfiguration;
     }
 
     @Override
-    public void initialize(RunnerId runnerId) {
+    protected void doInitialize(RunnerId runnerId) {
         TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
-        transactionWrapper = coreConfiguration.getTransactionEnabled() ? new DynamoDBTransactionWrapper(client, transactionManager) : null;
+        transactionWrapper = localConfiguration.isTransactionDisabled() ? null : new DynamoDBTransactionWrapper(client, transactionManager);
         auditor = new DynamoDBAuditor(client, transactionManager);
         auditor.initialize(driverConfiguration.isIndexCreation());
         DynamoDBLockService lockService = new DynamoDBLockService(client, TimeService.getDefault());

@@ -19,7 +19,7 @@ package io.flamingock.oss.driver.mongodb.springdata.v4.internal;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.MongoSync4LockService;
-import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongodb.ReadWriteConfiguration;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
 
 public class SpringDataMongoV4LockService extends MongoSync4LockService {
 

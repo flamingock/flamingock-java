@@ -148,11 +148,6 @@ public class FlamingockConfigurationProperties
     }
 
     @Override
-    public void setTransactionEnabled(Boolean transactionEnabled) {
-        coreConfiguration.setTransactionEnabled(transactionEnabled);
-    }
-
-    @Override
     public void setDefaultAuthor(String defaultAuthor) {
         coreConfiguration.setDefaultAuthor(defaultAuthor);
     }
@@ -215,11 +210,6 @@ public class FlamingockConfigurationProperties
     @Override
     public LegacyMigration getLegacyMigration() {
         return coreConfiguration.getLegacyMigration();
-    }
-
-    @Override
-    public Boolean getTransactionEnabled() {
-        return coreConfiguration.getTransactionEnabled();
     }
 
     @Override
@@ -296,5 +286,15 @@ public class FlamingockConfigurationProperties
 
     public boolean isCloudConfigurationEmpty() {
         return cloudConfiguration.getApiToken() == null;
+    }
+
+    @Override
+    public void setTransactionDisabled(boolean transactionDisabled) {
+        localConfiguration.setTransactionDisabled(transactionDisabled);
+    }
+
+    @Override
+    public boolean isTransactionDisabled() {
+        return localConfiguration.isTransactionDisabled();
     }
 }

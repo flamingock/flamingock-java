@@ -80,7 +80,7 @@ class CouchbaseDriverTest {
 //                .addDependency(cluster)
 //                .addDependency(collection)
 //                .setTrackIgnored(true)
-//                .setTransactionEnabled(false)
+//                .disableTransaction()
 //                .build()
 //                .run();
 //
@@ -120,7 +120,7 @@ class CouchbaseDriverTest {
 //                    .addDependency(cluster)
 //                    .addDependency(collection)
 //                    .setTrackIgnored(true)
-//                    .setTransactionEnabled(false)
+//                    .disableTransaction()
 //                    .build()
 //                    .run();
 //        });
@@ -158,7 +158,7 @@ class CouchbaseDriverTest {
 //                    .addDependency(cluster)
 //                    .addDependency(collection)
 //                    .setTrackIgnored(true)
-//                    .setTransactionEnabled(false)
+//                    .disableTransaction()
 //                    .build();
 //            build
 //                    .run();

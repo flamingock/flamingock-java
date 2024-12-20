@@ -17,8 +17,8 @@
 package io.flamingock.oss.driver.dynamodb.internal.entities;
 
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.community.internal.lock.LockEntry;
-import io.flamingock.community.internal.lock.LockEntryField;
+import io.flamingock.core.driver.lock.LockEntry;
+import io.flamingock.core.driver.lock.LockEntryField;
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockStatus;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
