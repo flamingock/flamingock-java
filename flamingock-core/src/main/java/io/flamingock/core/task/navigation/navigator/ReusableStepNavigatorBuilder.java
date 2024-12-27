@@ -16,13 +16,15 @@
 
 package io.flamingock.core.task.navigation.navigator;
 
+import io.flamingock.core.cloud.transaction.CloudTransactioner;
+import io.flamingock.core.cloud.transaction.OngoingStatusRepository;
 import io.flamingock.core.runtime.RuntimeManager;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.PriorityDependencyInjectableContext;
 
 public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractStepNavigator {
 
-    private final StepNavigator instance = new StepNavigator(null, null, null, null);
+    private final StepNavigator instance = new StepNavigator(null, null, null, null, null);
 
 
     public ReusableStepNavigatorBuilder() {
@@ -50,5 +52,8 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
                 .build();
         instance.setRuntimeManager(runtimeManager);
         instance.setTransactionWrapper(transactionWrapper);
+        OngoingStatusRepository ongoingTasksRepository = transactionWrapper != null && CloudTransactioner.class.isAssignableFrom(transactionWrapper.getClass())
+                ? (OngoingStatusRepository) transactionWrapper : null;
+        instance.setOngoingTasksRepository(ongoingTasksRepository);
     }
 }

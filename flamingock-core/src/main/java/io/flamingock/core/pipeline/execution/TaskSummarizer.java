@@ -16,6 +16,7 @@
 
 package io.flamingock.core.pipeline.execution;
 
+import io.flamingock.core.task.navigation.step.ExecutableStep;
 import io.flamingock.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.core.task.navigation.step.complete.CompletedAlreadyAppliedStep;
 import io.flamingock.core.task.navigation.step.complete.failed.CompletedFailedManualRollback;
@@ -51,6 +52,11 @@ public class TaskSummarizer implements StepSummarizer<TaskSummarizer> {
     public TaskSummarizer add(StepSummaryLine line) {
         lines.add(line);
         return this;
+    }
+
+    @Override
+    public TaskSummarizer add(ExecutableStep step) {
+        return addStep(step.getTask().getDescriptor(), new AbstractTaskStepSummaryLine.StartedTaskSummaryLine(step));
     }
 
     @Override

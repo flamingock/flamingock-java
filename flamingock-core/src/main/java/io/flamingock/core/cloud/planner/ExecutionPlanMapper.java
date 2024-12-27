@@ -21,6 +21,7 @@ import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
 import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.planner.StageRequest;
+import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.cloud.lock.CloudLockService;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.domain.AuditItem;
@@ -45,7 +46,7 @@ public final class ExecutionPlanMapper {
 
     public static ExecutionPlanRequest toRequest(List<LoadedStage> loadedStages,
                                                  long lockAcquiredForMillis,
-                                                 Map<String, AuditItem.Operation> ongoingStatusesMap) {
+                                                 Map<String, OngoingStatus.Operation> ongoingStatusesMap) {
 
         List<StageRequest> requestStages = new ArrayList<>(loadedStages.size());
         for (int i = 0; i < loadedStages.size(); i++) {
@@ -62,15 +63,15 @@ public final class ExecutionPlanMapper {
     }
 
     private static StageRequest.Task mapToTaskRequest(TaskDescriptor descriptor,
-                                                      Map<String, AuditItem.Operation> ongoingStatusesMap) {
+                                                      Map<String, OngoingStatus.Operation> ongoingStatusesMap) {
         if (ongoingStatusesMap.containsKey(descriptor.getId())) {
-            if (ongoingStatusesMap.get(descriptor.getId()) == AuditItem.Operation.ROLLBACK) {
-                return StageRequest.Task.ongoingRollback(descriptor.getId());
+            if (ongoingStatusesMap.get(descriptor.getId()) == OngoingStatus.Operation.ROLLBACK) {
+                return StageRequest.Task.ongoingRollback(descriptor.getId(), descriptor.isTransactional());
             } else {
-                return StageRequest.Task.ongoingExecution(descriptor.getId());
+                return StageRequest.Task.ongoingExecution(descriptor.getId(), descriptor.isTransactional());
             }
         } else {
-            return StageRequest.Task.task(descriptor.getId());
+            return StageRequest.Task.task(descriptor.getId(), descriptor.isTransactional());
         }
     }
 

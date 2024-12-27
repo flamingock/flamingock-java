@@ -178,11 +178,11 @@ public final class MockRunnerServer {
                 .map(taskId -> {
                     OngoingStatus.Operation operation = ongoingOperationByTask.get(taskId);
                     if (operation == null) {
-                        return StageRequest.Task.task(taskId);
+                        return StageRequest.Task.task(taskId, true);
                     } else if (operation == OngoingStatus.Operation.ROLLBACK) {
-                        return StageRequest.Task.ongoingRollback(taskId);
+                        return StageRequest.Task.ongoingRollback(taskId, true);
                     } else {
-                        return StageRequest.Task.ongoingExecution(taskId);
+                        return StageRequest.Task.ongoingExecution(taskId, true);
                     }
                 })
                 .collect(Collectors.toList());

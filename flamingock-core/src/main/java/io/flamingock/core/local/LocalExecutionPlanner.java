@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.driver;
+package io.flamingock.core.local;
 
 
-import io.flamingock.core.driver.lock.LocalLock;
-import io.flamingock.core.driver.lock.LocalLockService;
+import io.flamingock.core.local.lock.LocalLock;
+import io.flamingock.core.local.lock.LocalLockService;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.AuditReader;

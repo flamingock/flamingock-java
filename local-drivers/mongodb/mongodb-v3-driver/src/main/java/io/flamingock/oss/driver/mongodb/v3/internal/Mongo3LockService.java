@@ -24,9 +24,9 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.core.driver.lock.LocalLockService;
+import io.flamingock.core.local.lock.LocalLockService;
 import io.flamingock.core.engine.lock.LockAcquisition;
-import io.flamingock.core.driver.lock.LockEntry;
+import io.flamingock.core.local.lock.LockEntry;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.LockServiceException;
 import io.flamingock.commons.utils.RunnerId;
@@ -41,10 +41,10 @@ import org.bson.conversions.Bson;
 
 import java.util.Date;
 
-import static io.flamingock.core.driver.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.core.driver.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.core.driver.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.core.driver.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.core.local.lock.LockEntryField.EXPIRES_AT_FIELD;
+import static io.flamingock.core.local.lock.LockEntryField.KEY_FIELD;
+import static io.flamingock.core.local.lock.LockEntryField.OWNER_FIELD;
+import static io.flamingock.core.local.lock.LockEntryField.STATUS_FIELD;
 import static io.flamingock.core.engine.lock.LockStatus.LOCK_HELD;
 
 public class Mongo3LockService implements LocalLockService {

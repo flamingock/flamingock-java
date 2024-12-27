@@ -18,7 +18,7 @@ package io.flamingock.springboot.v3.context;
 
 import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
 import io.flamingock.core.configurator.local.LocalSystemModuleManager;
-import io.flamingock.core.engine.local.driver.LocalDriver;
+import io.flamingock.core.local.driver.LocalDriver;
 import io.flamingock.springboot.v3.SpringRunnerBuilder;
 import io.flamingock.springboot.v3.builder.FlamingockSpringboot;
 import io.flamingock.springboot.v3.builder.AbstractSpringbootBuilder;

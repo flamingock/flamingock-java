@@ -42,9 +42,6 @@ project(":flamingock-graalvm").name = "flamingock-graalvm"
 //////////////////////////////////////
 // DRIVERS
 //////////////////////////////////////
-include("local-drivers:driver-common")
-project(":local-drivers:driver-common").name = "driver-common"
-project(":local-drivers:driver-common").projectDir = file("local-drivers/driver-common")
 
 
 include("local-drivers:mongodb:mongodb-facade")

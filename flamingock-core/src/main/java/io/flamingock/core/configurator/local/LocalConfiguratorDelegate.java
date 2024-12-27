@@ -16,7 +16,7 @@
 
 package io.flamingock.core.configurator.local;
 
-import io.flamingock.core.engine.local.driver.LocalDriver;
+import io.flamingock.core.local.driver.LocalDriver;
 
 import java.util.function.Supplier;
 

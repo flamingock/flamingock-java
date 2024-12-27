@@ -17,10 +17,10 @@
 package io.flamingock.oss.driver.dynamodb.internal;
 
 import io.flamingock.commons.utils.Result;
-import io.flamingock.core.driver.TransactionManager;
+import io.flamingock.core.local.TransactionManager;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
-import io.flamingock.core.engine.local.Auditor;
+import io.flamingock.core.local.LocalAuditor;
 import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBAuditor implements Auditor {
+public class DynamoDBAuditor implements LocalAuditor {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBAuditor.class);
 

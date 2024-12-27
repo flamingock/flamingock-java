@@ -135,9 +135,9 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private ExecutionPlanResponse createExecution(List<LoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
 
-        Map<String, AuditItem.Operation> ongoingStatusesMap = getOngoingStatuses()
+        Map<String, OngoingStatus.Operation> ongoingStatusesMap = getOngoingStatuses()
                 .stream()
-                .collect(Collectors.toMap(OngoingStatus::getTaskId, onGoingStatus -> AuditItem.Operation.valueOf(onGoingStatus.getOperation().name())));
+                .collect(Collectors.toMap(OngoingStatus::getTaskId, OngoingStatus::getOperation));
 
         ExecutionPlanRequest requestBody = ExecutionPlanMapper.toRequest(
                 loadedStages,

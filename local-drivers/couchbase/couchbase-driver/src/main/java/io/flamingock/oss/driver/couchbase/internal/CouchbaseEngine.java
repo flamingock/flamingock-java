@@ -18,13 +18,12 @@ package io.flamingock.oss.driver.couchbase.internal;
 
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
-import io.flamingock.core.driver.LocalExecutionPlanner;
+import io.flamingock.core.local.LocalExecutionPlanner;
 import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.AbstractLocalEngine;
-import io.flamingock.core.engine.local.LocalEngine;
+import io.flamingock.core.local.AbstractLocalEngine;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.commons.utils.TimeService;

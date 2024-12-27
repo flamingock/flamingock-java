@@ -54,21 +54,24 @@ public class StageRequest {
 
         private final TaskOngoingStatus ongoingStatus;
 
-        public static Task task(String id) {
-            return new Task(id, TaskOngoingStatus.NONE);
+        private final boolean transactional;
+
+        public static Task task(String id, boolean transactional) {
+            return new Task(id, TaskOngoingStatus.NONE, transactional);
         }
 
-        public static Task ongoingExecution(String id) {
-            return new Task(id, TaskOngoingStatus.EXECUTION);
+        public static Task ongoingExecution(String id, boolean transactional) {
+            return new Task(id, TaskOngoingStatus.EXECUTION, transactional);
         }
 
-        public static Task ongoingRollback(String id) {
-            return new Task(id, TaskOngoingStatus.ROLLBACK);
+        public static Task ongoingRollback(String id, boolean transactional) {
+            return new Task(id, TaskOngoingStatus.ROLLBACK, transactional);
         }
 
-        private Task(String id, TaskOngoingStatus ongoingStatus) {
+        private Task(String id, TaskOngoingStatus ongoingStatus, boolean transactional) {
             this.id = id;
             this.ongoingStatus = ongoingStatus;
+            this.transactional = transactional;
         }
 
         public String getId() {
@@ -77,6 +80,10 @@ public class StageRequest {
 
         public TaskOngoingStatus getOngoingStatus() {
             return ongoingStatus;
+        }
+
+        public boolean isTransactional() {
+            return transactional;
         }
     }
 }

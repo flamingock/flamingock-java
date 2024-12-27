@@ -24,11 +24,11 @@ import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
-import io.flamingock.core.engine.local.Auditor;
+import io.flamingock.core.local.LocalAuditor;
 import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.core.driver.TransactionManager;
+import io.flamingock.core.local.TransactionManager;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.Mongo3CollectionWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.Mongo3DocumentWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
@@ -40,9 +40,9 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.driver.AuditEntryField.*;
+import static io.flamingock.core.local.AuditEntryField.*;
 
-public class Mongo3Auditor implements Auditor {
+public class Mongo3Auditor implements LocalAuditor {
 
     private static final Logger logger = LoggerFactory.getLogger(Mongo3Auditor.class);
 

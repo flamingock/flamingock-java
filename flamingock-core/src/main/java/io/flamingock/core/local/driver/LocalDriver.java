@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.engine.local;
+package io.flamingock.core.local.driver;
 
+public interface LocalDriver<DRIVER_CONFIGURATION extends DriverConfigurable> extends LocalEngineFactory {
 
-import io.flamingock.core.engine.audit.AuditReader;
-import io.flamingock.core.engine.audit.AuditWriter;
-
-public interface Auditor extends AuditWriter, AuditReader {
-
+    LocalDriver<DRIVER_CONFIGURATION> setDriverConfiguration(DRIVER_CONFIGURATION configuration);
 }

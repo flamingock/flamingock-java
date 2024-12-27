@@ -40,7 +40,7 @@ public class AuditEntry {
 
 
     public enum Status {
-        EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
+        STARTED, EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
 
         public static boolean isRequiredExecution(Status entryStatus) {
             return entryStatus == null || entryStatus == EXECUTION_FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;

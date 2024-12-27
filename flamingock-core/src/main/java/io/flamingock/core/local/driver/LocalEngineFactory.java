@@ -1,9 +1,9 @@
-package io.flamingock.core.engine.local.driver;
+package io.flamingock.core.local.driver;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.engine.local.LocalEngine;
+import io.flamingock.core.local.LocalEngine;
 
 public interface LocalEngineFactory {
 

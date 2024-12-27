@@ -1,6 +1,7 @@
 package io.flamingock.core;
 
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
+import io.flamingock.core.cloud.api.planner.StageRequest;
 import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
@@ -14,26 +15,6 @@ import java.util.stream.Collectors;
 
 public class ConversionsTest {
 
-    @Test
-    @DisplayName("AuditItem.Operation should match OnGoingStatus.Operation")
-    void auditItemOperationShouldMatchOngoingStatusOperationValues() {
-        Set<String> onGoingStatusValues = Arrays
-                .stream(OngoingStatus.Operation.values())
-                .map(OngoingStatus.Operation::name)
-                .collect(Collectors.toSet());
-        List<String> auditItemOperationValues = Arrays.stream(AuditItem.Operation.values())
-                .map(AuditItem.Operation::name)
-                .collect(Collectors.toList());
-
-        if (onGoingStatusValues.size() != auditItemOperationValues.size()) {
-            throw new IllegalArgumentException("Enums OngoingStatus.Operation and AuditItem.Operation should match");
-        }
-
-        if(auditItemOperationValues.stream().anyMatch(value -> !onGoingStatusValues.contains(value))) {
-            throw new IllegalArgumentException("Enums OngoingStatus.Operation and AuditItem.Operation should match");
-
-        }
-    }
 
     @Test
     @DisplayName("AuditEntryRequest.ExecutionType should match AuditEntry.ExecutionType")

@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.engine.local.driver;
+package io.flamingock.core.local.driver;
 
-public interface LocalDriver<DRIVER_CONFIGURATION extends DriverConfigurable> extends LocalEngineFactory {
-
-    LocalDriver<DRIVER_CONFIGURATION> setDriverConfiguration(DRIVER_CONFIGURATION configuration);
+//Marker interface for Driver configuration
+public interface DriverConfigurable {
 }

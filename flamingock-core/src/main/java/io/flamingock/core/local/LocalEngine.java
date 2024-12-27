@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.engine.local;
+package io.flamingock.core.local;
 
 import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.core.engine.ConnectionEngine;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 public interface LocalEngine extends ConnectionEngine {
 
-    Auditor getAuditor();
+    LocalAuditor getAuditor();
 
     Optional<? extends LocalSystemModule> getMongockLegacyImporterModule();
 

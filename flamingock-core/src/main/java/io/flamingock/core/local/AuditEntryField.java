@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.driver;
+package io.flamingock.core.local;
 
 public final class AuditEntryField {
     public static final String KEY_EXECUTION_ID = "executionId";

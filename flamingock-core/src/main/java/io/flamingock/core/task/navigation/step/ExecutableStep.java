@@ -25,8 +25,8 @@ import io.flamingock.commons.utils.StopWatch;
 
 public class ExecutableStep extends AbstractTaskStep {
 
-    public ExecutableStep(ExecutableTask task) {
-        super(task);
+    public ExecutableStep(StartStep step) {
+        super(step.getTask());
     }
 
     public ExecutionStep execute(RuntimeManager runtimeHelper) {

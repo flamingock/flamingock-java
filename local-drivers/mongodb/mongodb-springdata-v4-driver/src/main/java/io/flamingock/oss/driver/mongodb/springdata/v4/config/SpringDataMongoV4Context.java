@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.mongodb.springdata.v4.config;
 
-import io.flamingock.core.engine.local.driver.LocalDriver;
+import io.flamingock.core.local.driver.LocalDriver;
 import io.flamingock.oss.driver.mongodb.springdata.v4.driver.SpringDataMongoV4Driver;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

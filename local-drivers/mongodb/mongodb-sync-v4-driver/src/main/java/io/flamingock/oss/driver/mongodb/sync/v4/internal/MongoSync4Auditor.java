@@ -24,11 +24,11 @@ import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
-import io.flamingock.core.engine.local.Auditor;
+import io.flamingock.core.local.LocalAuditor;
 import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.core.driver.TransactionManager;
+import io.flamingock.core.local.TransactionManager;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4CollectionWrapper;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4DocumentWrapper;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
@@ -40,9 +40,9 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.driver.AuditEntryField.*;
+import static io.flamingock.core.local.AuditEntryField.*;
 
-public class MongoSync4Auditor implements Auditor {
+public class MongoSync4Auditor implements LocalAuditor {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoSync4Auditor.class);
 

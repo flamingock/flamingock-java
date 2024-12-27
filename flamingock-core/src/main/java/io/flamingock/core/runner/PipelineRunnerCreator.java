@@ -23,7 +23,7 @@ import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
-import io.flamingock.core.engine.local.LocalEngine;
+import io.flamingock.core.local.LocalEngine;
 import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;

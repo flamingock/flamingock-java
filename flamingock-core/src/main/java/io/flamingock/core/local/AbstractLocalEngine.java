@@ -1,4 +1,4 @@
-package io.flamingock.core.engine.local;
+package io.flamingock.core.local;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;

@@ -27,7 +27,7 @@ import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.oss.driver.mongodb.springdata.v4.internal.mongodb.SpringDataMongoV4CollectionWrapper;
 import io.flamingock.oss.driver.mongodb.springdata.v4.internal.mongodb.SpringDataMongoV4DocumentWrapper;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
-import io.flamingock.core.engine.local.Auditor;
+import io.flamingock.core.local.LocalAuditor;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -38,9 +38,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.driver.AuditEntryField.*;
+import static io.flamingock.core.local.AuditEntryField.*;
 
-public class SpringDataMongoV4Auditor implements Auditor {
+public class SpringDataMongoV4Auditor implements LocalAuditor {
     
     private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoV4Auditor.class);
 

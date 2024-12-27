@@ -18,7 +18,6 @@ package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
@@ -27,13 +26,12 @@ import io.flamingock.core.configurator.local.LocalConfiguration;
 import io.flamingock.core.configurator.local.LocalConfigurator;
 import io.flamingock.core.configurator.local.LocalConfiguratorDelegate;
 import io.flamingock.core.configurator.local.LocalSystemModuleManager;
-import io.flamingock.core.engine.local.LocalEngine;
-import io.flamingock.core.engine.local.driver.LocalDriver;
+import io.flamingock.core.local.LocalEngine;
+import io.flamingock.core.local.driver.LocalDriver;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import io.flamingock.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

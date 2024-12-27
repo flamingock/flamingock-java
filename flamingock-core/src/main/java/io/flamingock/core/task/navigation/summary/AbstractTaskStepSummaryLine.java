@@ -17,6 +17,7 @@
 package io.flamingock.core.task.navigation.summary;
 
 import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.navigation.step.ExecutableStep;
 import io.flamingock.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.core.task.navigation.step.complete.CompletedAlreadyAppliedStep;
 import io.flamingock.core.task.navigation.step.complete.failed.CompletedFailedManualRollback;
@@ -83,6 +84,20 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
     }
 
+    public static class StartedTaskSummaryLine extends AbstractTaskStepSummaryLine {
+
+        public StartedTaskSummaryLine(ExecutableStep step) {
+            super(step.getTask().getDescriptor().getId(), SummaryResult.OK);
+        }
+
+
+        @Override
+        public String getPretty() {
+            return String.format("\tStarted\t\t\t\t%s", getPrettyResult());
+        }
+
+    }
+
     public static class ExecutedTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
         public ExecutedTaskSummaryLine(ExecutionStep step) {
@@ -92,7 +107,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tExecution\t\t%s", getPrettyResult());
+            return String.format("\tExecuted\t\t\t%s", getPrettyResult());
         }
 
     }
@@ -106,7 +121,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tAudit execution\t%s", getPrettyResult());
+            return String.format("\tAudited[execution]\t%s", getPrettyResult());
         }
 
     }
@@ -119,7 +134,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tRolled back\t\t%s", getPrettyResult());
+            return String.format("\tRolled back\t\t\t%s", getPrettyResult());
         }
 
     }
@@ -132,7 +147,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tAudit rollback\t%s", getPrettyResult());
+            return String.format("\tAudited[rollback]\t%s", getPrettyResult());
         }
 
     }
@@ -145,7 +160,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tExecution\t\t%s", getPrettyResult());
+            return String.format("\tExecuted\t\t\t%s", getPrettyResult());
         }
 
     }
@@ -158,7 +173,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tExecution\t\t%s", getPrettyResult());
+            return String.format("\tExecuted\t\t\t%s", getPrettyResult());
         }
 
     }

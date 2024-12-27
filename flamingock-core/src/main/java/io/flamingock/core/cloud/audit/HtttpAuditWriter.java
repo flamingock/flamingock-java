@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-public class HtttpAuditWriter implements AuditWriter {
+public class HtttpAuditWriter implements CloudAuditWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(HtttpAuditWriter.class);
 

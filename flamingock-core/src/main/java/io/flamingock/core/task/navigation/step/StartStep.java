@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.driver.lock;
+package io.flamingock.core.task.navigation.step;
 
-public class LockEntryField {
-    public static final String KEY_FIELD = "key";
-    public static final String STATUS_FIELD = "status";
-    public static final String OWNER_FIELD = "owner";
-    public static final String EXPIRES_AT_FIELD = "expiresAt";
+import io.flamingock.core.task.executable.ExecutableTask;
+
+public class StartStep extends AbstractTaskStep {
+
+    public StartStep(ExecutableTask task) {
+        super(task);
+    }
+
+    public ExecutableStep start() {
+        return new ExecutableStep(this);
+    }
+
 }

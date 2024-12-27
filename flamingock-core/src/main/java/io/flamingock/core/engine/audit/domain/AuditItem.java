@@ -20,15 +20,19 @@ import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 
-public class AuditItem {
+public abstract class AuditItem {
 
 
     public enum Operation {
 
-        EXECUTION, ROLLBACK;
+        START_EXECUTION, EXECUTION, ROLLBACK;
 
         public OngoingStatus.Operation toOngoingStatusOperation() {
             return OngoingStatus.Operation.valueOf(this.name());
+        }
+
+        public static AuditItem.Operation fromOngoingStatusOperation(OngoingStatus.Operation ongoingOperation) {
+            return AuditItem.Operation.valueOf(ongoingOperation.name());
         }
 
     }

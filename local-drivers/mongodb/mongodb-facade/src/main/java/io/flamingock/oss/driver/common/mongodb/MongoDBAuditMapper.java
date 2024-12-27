@@ -21,19 +21,19 @@ import io.flamingock.commons.utils.TimeUtil;
 
 import java.util.function.Supplier;
 
-import static io.flamingock.core.driver.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.core.driver.AuditEntryField.KEY_CHANGELOG_CLASS;
-import static io.flamingock.core.driver.AuditEntryField.KEY_CHANGESET_METHOD;
-import static io.flamingock.core.driver.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.core.driver.AuditEntryField.KEY_ERROR_TRACE;
-import static io.flamingock.core.driver.AuditEntryField.KEY_EXECUTION_HOSTNAME;
-import static io.flamingock.core.driver.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.core.driver.AuditEntryField.KEY_EXECUTION_MILLIS;
-import static io.flamingock.core.driver.AuditEntryField.KEY_METADATA;
-import static io.flamingock.core.driver.AuditEntryField.KEY_STATE;
-import static io.flamingock.core.driver.AuditEntryField.KEY_SYSTEM_CHANGE;
-import static io.flamingock.core.driver.AuditEntryField.KEY_TIMESTAMP;
-import static io.flamingock.core.driver.AuditEntryField.KEY_TYPE;
+import static io.flamingock.core.local.AuditEntryField.KEY_AUTHOR;
+import static io.flamingock.core.local.AuditEntryField.KEY_CHANGELOG_CLASS;
+import static io.flamingock.core.local.AuditEntryField.KEY_CHANGESET_METHOD;
+import static io.flamingock.core.local.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.core.local.AuditEntryField.KEY_ERROR_TRACE;
+import static io.flamingock.core.local.AuditEntryField.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.core.local.AuditEntryField.KEY_EXECUTION_ID;
+import static io.flamingock.core.local.AuditEntryField.KEY_EXECUTION_MILLIS;
+import static io.flamingock.core.local.AuditEntryField.KEY_METADATA;
+import static io.flamingock.core.local.AuditEntryField.KEY_STATE;
+import static io.flamingock.core.local.AuditEntryField.KEY_SYSTEM_CHANGE;
+import static io.flamingock.core.local.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.core.local.AuditEntryField.KEY_TYPE;
 
 public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
 

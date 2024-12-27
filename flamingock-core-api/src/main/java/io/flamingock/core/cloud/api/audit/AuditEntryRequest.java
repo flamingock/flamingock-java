@@ -5,7 +5,7 @@ public class AuditEntryRequest {
     public enum ExecutionType {EXECUTION, BEFORE_EXECUTION}
 
     public enum Status {
-        EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
+        STARTED, EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
     }
 
     private final String stageId;

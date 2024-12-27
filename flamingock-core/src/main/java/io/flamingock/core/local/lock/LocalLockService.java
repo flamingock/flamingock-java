@@ -1,4 +1,4 @@
-package io.flamingock.core.driver.lock;
+package io.flamingock.core.local.lock;
 
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockKey;
