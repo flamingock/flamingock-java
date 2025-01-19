@@ -18,6 +18,10 @@ include("cloud-transactioners:mongodb-sync-v4-cloud-transactioner")
 project(":cloud-transactioners:mongodb-sync-v4-cloud-transactioner").projectDir = file("cloud-transactioners/mongodb-sync-v4-cloud-transactioner")
 project(":cloud-transactioners:mongodb-sync-v4-cloud-transactioner").name = "mongodb-sync-v4-cloud-transactioner"
 
+include("cloud-transactioners:dynamodb-cloud-transactioner")
+project(":cloud-transactioners:dynamodb-cloud-transactioner").projectDir = file("cloud-transactioners/dynamodb-cloud-transactioner")
+project(":cloud-transactioners:dynamodb-cloud-transactioner").name = "dynamodb-cloud-transactioner"
+
 
 include("flamingock-core-api")
 project(":flamingock-core-api").name = "flamingock-core-api"

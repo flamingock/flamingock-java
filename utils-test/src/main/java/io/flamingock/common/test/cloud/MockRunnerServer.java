@@ -171,18 +171,18 @@ public final class MockRunnerServer {
         Map<String, OngoingStatus.Operation> ongoingOperationByTask = ongoingStatuses.stream()
                 .collect(Collectors.toMap(OngoingStatus::getTaskId, OngoingStatus::getOperation));
 
+        Set<String> alreadyAddedTasks = new HashSet<>();
         List<StageRequest.Task> tasks = auditEntries.stream()
-                .map(AuditEntryExpectation::getTaskId)
-                .collect(Collectors.toSet())
-                .stream()
-                .map(taskId -> {
-                    OngoingStatus.Operation operation = ongoingOperationByTask.get(taskId);
+                .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
+                .map(auditEntryExpectation -> {
+                    alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
+                    OngoingStatus.Operation operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
                     if (operation == null) {
-                        return StageRequest.Task.task(taskId, true);
+                        return StageRequest.Task.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
                     } else if (operation == OngoingStatus.Operation.ROLLBACK) {
-                        return StageRequest.Task.ongoingRollback(taskId, true);
+                        return StageRequest.Task.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
                     } else {
-                        return StageRequest.Task.ongoingExecution(taskId, true);
+                        return StageRequest.Task.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
                     }
                 })
                 .collect(Collectors.toList());

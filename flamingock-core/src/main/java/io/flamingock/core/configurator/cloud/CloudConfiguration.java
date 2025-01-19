@@ -20,7 +20,7 @@ public class CloudConfiguration implements CloudConfigurable {
 
     private String apiToken;
 
-    private String host;
+    private String host = "https://runner.flamingick.io";
 
     private String service;
 
