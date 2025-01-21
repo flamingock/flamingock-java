@@ -20,6 +20,7 @@ import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.core.cloud.api.transaction.OngoingStatus;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.local.TransactionManager;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.navigation.step.FailedStep;
@@ -109,9 +110,10 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
     @Override
     public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
         String sessionId = taskDescriptor.getId();
+        TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
+        Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
         try {
-            TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
-            dependencyInjectable.addDependency(writeRequestBuilder);
+            dependencyInjectable.addDependency(writeRequestBuilderDependency);
             T result = operation.get();
             if (!(result instanceof FailedStep)) {
                 try {
@@ -124,6 +126,7 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
             return result;
         } finally {
             transactionManager.closeSession(sessionId);
+            dependencyInjectable.removeDependencyByRef(writeRequestBuilderDependency);
         }
 
     }

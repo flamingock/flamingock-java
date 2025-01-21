@@ -17,8 +17,10 @@
 package io.flamingock.core.runtime.dependency;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SimpleDependencyInjectableContext extends AbstractDependencyContext implements DependencyInjectableContext {
 
@@ -40,6 +42,22 @@ public class SimpleDependencyInjectableContext extends AbstractDependencyContext
             dependencyStore.remove(dependency);
             dependencyStore.add(dependency);
         }
+    }
+
+    @Override
+    public void removeDependencyByRef(Dependency dependency) {
+        if(dependencyStore.contains(dependency)) {
+            boolean isSafeToRemove = dependencyStore.stream()
+                    .filter(dependency::equals)//it only can return one at max
+                    .map(Dependency::getInstance)
+                    .anyMatch(storedRef -> storedRef == dependency.instance);//if it's also the same reference
+
+            if(isSafeToRemove) {
+                dependencyStore.remove(dependency);
+            }
+
+        }
+
     }
 
 

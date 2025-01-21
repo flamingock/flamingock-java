@@ -29,4 +29,10 @@ public interface DependencyInjectable {
     }
 
     void addDependency(Dependency dependency);
+
+    /**
+     * Idempotent removal by reference
+     * @param dependency the dependency to me removed
+     */
+    void removeDependencyByRef(Dependency dependency);
 }

@@ -144,8 +144,9 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     public <T> T wrapInTransaction(TaskDescriptor taskDescriptor,
                                    DependencyInjectable dependencyInjectable,
                                    Supplier<T> operation) {
+        Dependency dependency = new Dependency(Connection.class, connection);
         try {
-            dependencyInjectable.addDependency(new Dependency(Connection.class, connection));
+            dependencyInjectable.addDependency(dependency);
             T result = operation.get();
             if (result instanceof FailedStep) {
                 connection.rollback();
@@ -155,6 +156,8 @@ public class SqlCloudTransactioner implements CloudTransactioner {
             return result;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            dependencyInjectable.removeDependencyByRef(dependency);
         }
     }
 

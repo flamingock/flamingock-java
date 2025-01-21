@@ -18,6 +18,7 @@ package io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper;
 
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
@@ -40,9 +41,11 @@ public class MongoSync4TransactionWrapper implements TransactionWrapper {
     @Override
     public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
         String sessionId = taskDescriptor.getId();
+        Dependency clienteSessionDependency = null;
         try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
+            clienteSessionDependency = new Dependency(clientSession);
             clientSession.startTransaction(TransactionOptions.builder().build());
-            dependencyInjectable.addDependency(clientSession);
+            dependencyInjectable.addDependency(clienteSessionDependency);
             T result = operation.get();
             if (result instanceof FailedStep) {
                 clientSession.abortTransaction();
@@ -53,6 +56,9 @@ public class MongoSync4TransactionWrapper implements TransactionWrapper {
         } finally {
             //Although the ClientSession itself has been closed, it needs to be removed from the map
             sessionManager.closeSession(sessionId);
+            if(clienteSessionDependency != null) {
+                dependencyInjectable.removeDependencyByRef(clienteSessionDependency);
+            }
         }
     }
 

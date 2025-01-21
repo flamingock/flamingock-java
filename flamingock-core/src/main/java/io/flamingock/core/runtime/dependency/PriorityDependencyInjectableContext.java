@@ -52,4 +52,13 @@ public class PriorityDependencyInjectableContext implements DependencyInjectable
     public void addDependency(Dependency dependency) {
         priorityInjectableContext.addDependency(dependency);
     }
+
+    /**
+     * it only removes it from the priority storage
+     * @param dependency the dependency to be removed
+     */
+    @Override
+    public void removeDependencyByRef(Dependency dependency) {
+        priorityInjectableContext.removeDependencyByRef(dependency);
+    }
 }
