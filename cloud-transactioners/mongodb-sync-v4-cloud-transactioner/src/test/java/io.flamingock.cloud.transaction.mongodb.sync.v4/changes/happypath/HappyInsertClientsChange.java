@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package io.flamingock.cloud.transaction.sql.changes.happypath;
+package io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath;
 
-import io.flamingock.core.api.annotations.NonLockGuarded;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import io.flamingock.core.api.annotations.NonLockGuarded;
+import org.bson.Document;
 
 @ChangeUnit(id = "insert-clients", order = "2")
 public class HappyInsertClientsChange {
 
     @Execution
-    public void execution(Connection connection) throws SQLException {
-        try(PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO CLIENTS(id, name) values(?, ?)")) {
-            preparedStatement.setInt(1, 1);
-            preparedStatement.setString(2, "Robert Mccoy");
-            int rows = preparedStatement.executeUpdate();
-        }
+    public void execution(@NonLockGuarded MongoDatabase mongoDatabase, ClientSession clientSession) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
+        collection.insertOne(clientSession, new Document().append("Name", "Federico"));
     }
 }

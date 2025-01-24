@@ -143,7 +143,7 @@ public final class RuntimeManager implements DependencyInjectable {
                 && (flamingockMetadata == null || !flamingockMetadata.isSuppressedProxies());
 
         return dependency.isProxeable() && lockGuarded
-                ? proxyFactory.getRawProxy(dependency.getInstance(), dependency.getType())
+                ? proxyFactory.getRawProxy(dependency.getInstance(), type)
                 : dependency.getInstance();
 
     }

@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package io.flamingock.cloud.transaction.dynamodb;
+package io.flamingock.cloud.transaction.mongodb.sync.v4;
 
-import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
-import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import io.flamingock.cloud.transaction.dynamodb.changes.common.UserEntity;
-import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyCreateTableClientsChange;
-import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyCreateTableClientsChange;
-import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyInsertionClientsChange;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath.HappyCreateClientsCollectionChange;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath.HappyInsertClientsChange;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath.UnhappyCreateClientsCollectionChange;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath.UnhappyInsertClientsChange;
 import io.flamingock.common.test.cloud.AuditEntryExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.core.cloud.api.transaction.OngoingStatus;
@@ -35,15 +37,11 @@ import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,22 +49,24 @@ import java.util.UUID;
 
 import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.*;
 
+@Testcontainers
 @Disabled
-public class DynamoDBCloudTransactionerTest {
+public class MongoSync4CloudTransactionerTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBCloudTransactionerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoSync4CloudTransactionerTest.class);
 
-    private static DynamoDBProxyServer dynamoDBLocal;
-    private static DynamoDbClient client;
-    private static DynamoDBTestHelper dynamoDBTestHelper;
+    private static final String DB_NAME = "test";
+    private static final String CLIENTS_COLLECTION = "clientCollection";
+
+    private static MongoClient mongoClient;
+    private static MongoDatabase testDatabase;
+    private static MongoDBTestHelper mongoDBTestHelper;
 
     private final String apiToken = "FAKE_API_TOKEN";
     private final String organisationId = UUID.randomUUID().toString();
     private final String organisationName = "MyOrganisation";
-
     private final String projectId = UUID.randomUUID().toString();
     private final String projectName = "MyOrganisation";
-
     private final String serviceName = "clients-service";
     private final String environmentName = "development";
     private final String serviceId = "clients-service-id";
@@ -78,24 +78,21 @@ public class DynamoDBCloudTransactionerTest {
     private MockRunnerServer mockRunnerServer;
     private StandaloneCloudBuilder flamingockBuilder;
 
+    @Container
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+
+    @BeforeAll
+    static void beforeAll() {
+        mongoClient = MongoClients.create(MongoClientSettings
+                .builder()
+                .applyConnectionString(new ConnectionString(mongoDBContainer.getConnectionString()))
+                .build());
+        testDatabase = mongoClient.getDatabase(DB_NAME);
+        mongoDBTestHelper = new MongoDBTestHelper(testDatabase);
+    }
+
     @BeforeEach
     void beforeEach() throws Exception {
-        logger.info("Starting DynamoDB Local...");
-        dynamoDBLocal = ServerRunner.createServerFromCommandLineArgs(
-                new String[]{
-                        "-inMemory",
-                        "-port",
-                        "8000"
-                }
-        );
-        dynamoDBLocal.start();
-
-        client = getDynamoDbClient();
-
-        //We use different client, as the transactioner will close it
-        dynamoDBTestHelper = new DynamoDBTestHelper(getDynamoDbClient());
-
-        logger.info("Starting Mock Server...");
         mockRunnerServer = new MockRunnerServer()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
@@ -120,13 +117,9 @@ public class DynamoDBCloudTransactionerTest {
     @AfterEach
     void afterEach() throws Exception {
         //tear down
-        logger.info("Stopping Mock Server...");
         mockRunnerServer.stop();
 
-        logger.info("Stopping DynamoDB Local...");
-        if(dynamoDBLocal != null) {
-            dynamoDBLocal.stop();
-        }
+        testDatabase.getCollection(CLIENTS_COLLECTION).drop();
     }
 
     @Test
@@ -135,9 +128,9 @@ public class DynamoDBCloudTransactionerTest {
         List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
                 AuditEntryExpectation(
-                "create-table-clients",
+                "create-clients-collection",
                 EXECUTED,
-                HappyCreateTableClientsChange.class.getName(),
+                HappyCreateClientsCollectionChange.class.getName(),
                 "execution",
                 false
         ));
@@ -151,7 +144,7 @@ public class DynamoDBCloudTransactionerTest {
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner()
+                MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME)
         ) {
             String executionId = "execution-1";
             String stageName = "stage-1";
@@ -161,27 +154,21 @@ public class DynamoDBCloudTransactionerTest {
                     .addExecutionContinueRequestResponse()
                     .start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner.setDynamoDbClient(client));
+            MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             flamingockBuilder
-                    .setCloudTransactioner(dynamoDBCloudTransactioner)
+                    .setCloudTransactioner(mongoSync4CloudTransactioner)
                     .addStage(new Stage(stageName)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.happypath")))
-                    .addDependency(client)
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath")))
+                    .addDependency(testDatabase)
                     .build()
                     .execute();
 
             // check clients changes
-            client.close();
-            dynamoDBTestHelper.checkCount(
-                    DynamoDbEnhancedClient.builder()
-                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDbClient())
-                            .build()
-                            .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
-                    1);
+            mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 1);
             // check ongoing status
-            dynamoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
+            mongoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
         }
     }
 
@@ -191,32 +178,32 @@ public class DynamoDBCloudTransactionerTest {
         List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
                 AuditEntryExpectation(
-                "unhappy-create-table-clients",
+                "create-clients-collection",
                 EXECUTED,
-                UnhappyCreateTableClientsChange.class.getName(),
+                UnhappyCreateClientsCollectionChange.class.getName(),
                 "execution",
                 false
         ));
 
         auditEntryExpectations.add(new
                 AuditEntryExpectation(
-                "unhappy-insert-clients",
+                "insert-clients",
                 EXECUTION_FAILED,
-                UnhappyInsertionClientsChange.class.getName(),
+                UnhappyInsertClientsChange.class.getName(),
                 "execution"
         ));
 
         auditEntryExpectations.add(new
                 AuditEntryExpectation(
-                "unhappy-insert-clients",
+                "insert-clients",
                 ROLLED_BACK,
-                UnhappyInsertionClientsChange.class.getName(),
+                UnhappyInsertClientsChange.class.getName(),
                 "native_db_engine"
         ));
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner()
+                MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME)
         ) {
             String executionId = "execution-1";
             String stageName = "stage-1";
@@ -226,26 +213,21 @@ public class DynamoDBCloudTransactionerTest {
                     .addExecutionContinueRequestResponse()
                     .start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner.setDynamoDbClient(client));
+            MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             Runner runner = flamingockBuilder
-                    .setCloudTransactioner(dynamoDBCloudTransactioner)
+                    .setCloudTransactioner(mongoSync4CloudTransactioner)
                     .addStage(new Stage(stageName)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.unhappypath")))
-                    .addDependency(client)
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath")))
+                    .addDependency(testDatabase)
                     .build();
             PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
 
             // check clients changes
-            dynamoDBTestHelper.checkCount(
-                    DynamoDbEnhancedClient.builder()
-                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDbClient())
-                            .build()
-                            .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
-                    0);
+            mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 0);
             // check ongoing status
-            dynamoDBTestHelper.checkAtLeastOneOngoingTask();
+            mongoDBTestHelper.checkAtLeastOneOngoingTask();
         }
     }
 
@@ -257,26 +239,26 @@ public class DynamoDBCloudTransactionerTest {
         List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
                 AuditEntryExpectation(
-                "unhappy-create-table-clients",
+                "create-clients-collection",
                 EXECUTED,
-                UnhappyCreateTableClientsChange.class.getName(),
+                UnhappyCreateClientsCollectionChange.class.getName(),
                 "execution",
                 false
         ));
 
         auditEntryExpectations.add(new
                 AuditEntryExpectation(
-                "unhappy-insert-clients",
+                "insert-clients",
                 EXECUTION_FAILED,
-                UnhappyInsertionClientsChange.class.getName(),
+                UnhappyInsertClientsChange.class.getName(),
                 "execution"
         ));
 
         auditEntryExpectations.add(new
                 AuditEntryExpectation(
-                "unhappy-insert-clients",
+                "insert-clients",
                 ROLLED_BACK,
-                UnhappyInsertionClientsChange.class.getName(),
+                UnhappyInsertClientsChange.class.getName(),
                 "native_db_engine"
         ));
         String executionId = "execution-1";
@@ -284,9 +266,9 @@ public class DynamoDBCloudTransactionerTest {
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner()
+                MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME)
         ) {
-            dynamoDBTestHelper.insertOngoingExecution("failed-insert-clients");
+            mongoDBTestHelper.insertOngoingExecution("failed-insert-clients");
             List<OngoingStatus> ongoingStatuses = Collections.singletonList(new OngoingStatus("failed-insert-clients", OngoingStatus.Operation.EXECUTION));
             mockRunnerServer
                     .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations, ongoingStatuses)
@@ -294,34 +276,18 @@ public class DynamoDBCloudTransactionerTest {
                     .addExecutionContinueRequestResponse()
                     .start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner.setDynamoDbClient(client));
+            MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             Runner runner = flamingockBuilder
-                    .setCloudTransactioner(dynamoDBCloudTransactioner)
+                    .setCloudTransactioner(mongoSync4CloudTransactioner)
                     .addStage(new Stage(stageName)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.unhappypath")))
-                    .addDependency(client)
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath")))
+                    .addDependency(testDatabase)
                     .build();
 
             //then
             PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
-        }
-    }
-
-    private static DynamoDbClient getDynamoDbClient() {
-        try {
-            return DynamoDbClient.builder()
-                    .region(Region.EU_WEST_1)
-                    .endpointOverride(new URI("http://localhost:8000"))
-                    .credentialsProvider(
-                            StaticCredentialsProvider.create(
-                                    AwsBasicCredentials.create("dummye", "dummye")
-                            )
-                    )
-                    .build();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
         }
     }
 }

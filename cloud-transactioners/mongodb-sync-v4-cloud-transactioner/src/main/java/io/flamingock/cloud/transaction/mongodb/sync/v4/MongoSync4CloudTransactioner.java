@@ -76,7 +76,7 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
     @Override
     public Set<OngoingStatus> getOngoingStatuses() {
         return onGoingTasksCollection.find()
-                .map(this::mapToOnGoingStatus)
+                .map(MongoSync4CloudTransactioner::mapToOnGoingStatus)
                 .into(new HashSet<>());
     }
 
@@ -87,11 +87,11 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
 
     @Override
     public void saveOngoingStatus(OngoingStatus status) {
-        Document filter = new Document("taskId", status.getTaskId());
+        Document filter = new Document(TASK_ID, status.getTaskId());
 
         // Define the new document to replace or insert
-        Document newDocument = new Document("taskId", status.getTaskId())
-                .append("operation", status.getOperation().name());
+        Document newDocument = new Document(TASK_ID, status.getTaskId())
+                .append(OPERATION, status.getOperation().name());
 
         onGoingTasksCollection.updateOne(
                 filter,
@@ -104,7 +104,7 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
         return transactionWrapper.wrapInTransaction(taskDescriptor, dependencyInjectable, operation);
     }
 
-    private OngoingStatus mapToOnGoingStatus(Document document) {
+    public static OngoingStatus mapToOnGoingStatus(Document document) {
         OngoingStatus.Operation operation = OngoingStatus.Operation.valueOf(document.getString(OPERATION));
         return new OngoingStatus(document.getString(TASK_ID), operation);
     }
