@@ -33,6 +33,9 @@ allprojects {
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
+    repositories {
+        mavenCentral()
+    }
 }
 
 val coreProjects = setOf(
@@ -65,7 +68,9 @@ val templateProjects = setOf(
 
 
 val transactionerProjects = setOf(
-    "sql-cloud-transactioner"
+    "sql-cloud-transactioner",
+    "mongodb-sync-v4-cloud-transactioner",
+    "dynamodb-cloud-transactioner"
 )
 
 val allProjects = coreProjects + localDriverProjects + templateProjects + transactionerProjects
@@ -313,10 +318,7 @@ subprojects {
         }
     }
 
-
-
     repositories {
-        mavenCentral()
         mavenLocal()
     }
 
