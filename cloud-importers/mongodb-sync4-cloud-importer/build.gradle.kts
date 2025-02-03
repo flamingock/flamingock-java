@@ -1,17 +1,19 @@
-val jacksonVersion = "2.16.0"
 dependencies {
     implementation(project(":utils"))
+    testImplementation(project(":utils-test"))
+
     implementation(project(":flamingock-core-api"))
+    implementation(project(":cloud-importers:importer-common"))
 
     implementation("org.mongodb:mongodb-driver-sync:4.3.3")
-    implementation(project(":flamingock-core"))
 
-    api("org.apache.httpcomponents:httpclient:4.5.14")
-    
-    api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    
+    testImplementation(project(":flamingock-core"))
 
-    testImplementation(project(":utils-test"))
+    testImplementation("org.testcontainers:mongodb:1.18.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+
+    testImplementation("io.mongock:mongock-standalone:5.5.0")
+    testImplementation("io.mongock:mongodb-sync-v4-driver:5.5.0")
 }
 
 java {

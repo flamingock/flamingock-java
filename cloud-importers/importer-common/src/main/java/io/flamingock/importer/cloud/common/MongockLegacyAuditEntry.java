@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.flamingock.common.test.cloud;
+package io.flamingock.importer.cloud.common;
 
 public class MongockLegacyAuditEntry {
-    private final Object _id;
+
     private final String executionId;
     private final String changeId;
     private final String state;
     private final String type;
     private final String author;
-    private final Object timestamp;
+    private final Long timestamp;
     private final String changeLogClass;
     private final String changeSetMethod;
     private final Object metadata;
@@ -32,8 +32,20 @@ public class MongockLegacyAuditEntry {
     private final String errorTrace;
     private final boolean systemChange;
 
-    public MongockLegacyAuditEntry(Object id, String executionId, String changeId, String state, String type, String author, Object timestamp, String changeLogClass, String changeSetMethod, Object metadata, Long executionMillis, String executionHostname, String errorTrace, boolean systemChange) {
-        this._id = id;
+    public MongockLegacyAuditEntry(
+            String executionId,
+            String changeId,
+            String state,
+            String type,
+            String author,
+            Long timestamp,
+            String changeLogClass,
+            String changeSetMethod,
+            Object metadata,
+            Long executionMillis,
+            String executionHostname,
+            String errorTrace,
+            boolean systemChange) {
         this.executionId = executionId;
         this.changeId = changeId;
         this.state = state;
@@ -70,7 +82,7 @@ public class MongockLegacyAuditEntry {
         return author;
     }
 
-    public Object getTimestamp() {
+    public Long getTimestamp() {
         return timestamp;
     }
 
@@ -102,7 +114,4 @@ public class MongockLegacyAuditEntry {
         return systemChange;
     }
 
-    public Object get_id() {
-        return _id;
-    }
 }

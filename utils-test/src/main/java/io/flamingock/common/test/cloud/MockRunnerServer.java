@@ -16,6 +16,7 @@
 
 package io.flamingock.common.test.cloud;
 
+import io.flamingock.importer.cloud.common.MongockLegacyAuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -187,7 +188,43 @@ public final class MockRunnerServer {
                 })
                 .collect(Collectors.toList());
 
-        StageRequest stageRequest = new StageRequest(stageName, 0, tasks);
+        List<StageRequest> stageRequest = Collections.singletonList(new StageRequest(stageName, 0, tasks));
+
+        executionExpectation = new ExecutionExpectation(executionId, stageRequest, auditEntries, 60000, 0);
+        return this;
+    }
+
+    public MockRunnerServer addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryExpectation> auditEntries) {
+        return addMultipleStageExecutionPlan(executionId, stageNames, auditEntries, Collections.emptyList());
+    }
+
+    public MockRunnerServer addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryExpectation> auditEntries, List<OngoingStatus> ongoingStatuses) {
+
+        Map<String, OngoingStatus.Operation> ongoingOperationByTask = ongoingStatuses.stream()
+                .collect(Collectors.toMap(OngoingStatus::getTaskId, OngoingStatus::getOperation));
+
+        Set<String> alreadyAddedTasks = new HashSet<>();
+        List<StageRequest.Task> tasks = auditEntries.stream()
+                .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
+                .map(auditEntryExpectation -> {
+                    alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
+                    OngoingStatus.Operation operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
+                    if (operation == null) {
+                        return StageRequest.Task.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
+                    } else if (operation == OngoingStatus.Operation.ROLLBACK) {
+                        return StageRequest.Task.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
+                    } else {
+                        return StageRequest.Task.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
+                    }
+                })
+                .collect(Collectors.toList());
+
+        List<StageRequest> stageRequest = new ArrayList<>();
+        int i = 0;
+        for (String stageName : stageNames) {
+            stageRequest.add(new StageRequest(stageName, i, Collections.singletonList(tasks.get(i))));
+            i++;
+        }
 
         executionExpectation = new ExecutionExpectation(executionId, stageRequest, auditEntries, 60000, 0);
         return this;
@@ -359,7 +396,7 @@ public final class MockRunnerServer {
 
     private ExecutionPlanRequest getExecutionPlanRequest(int index) {
         ExecutionPlanRequestResponse executionPlanRequestResponse = executionRequestResponses.get(index);
-        List<StageRequest> stages = executionExpectation != null ? Collections.singletonList(executionExpectation.getStageRequest()) : Collections.emptyList();
+        List<StageRequest> stages = executionExpectation != null ? executionExpectation.getStageRequest() : Collections.emptyList();
         return new ExecutionPlanRequest(executionPlanRequestResponse.getAcquiredForMillis(), stages);
     }
 
@@ -378,7 +415,7 @@ public final class MockRunnerServer {
 
             executionPlanResponse.setLock(lockMock);
 
-            executionPlanResponse.setStages(Collections.singletonList(toStageResponse(executionExpectation.getStageRequest())));
+            executionPlanResponse.setStages(executionExpectation.getStageRequest().stream().map(MockRunnerServer::toStageResponse).collect(Collectors.toList()));
             return executionPlanResponse;
         } else if (executionRequestResponses.get(index) instanceof AwaitPlanRequestResponse) {
 
@@ -478,12 +515,12 @@ public final class MockRunnerServer {
 
     private static class ExecutionExpectation {
         private final String executionId;
-        private final StageRequest stageRequest;
+        private final List<StageRequest> stageRequest;
         private final List<AuditEntryExpectation> auditEntryExpectations;
         private final long elapsedMillis;
         private final long acquiredForMillis;
 
-        public ExecutionExpectation(String executionId, StageRequest stageRequest, List<AuditEntryExpectation> auditEntryExpectations, long acquiredForMillis, long elapsedMillis) {
+        public ExecutionExpectation(String executionId, List<StageRequest> stageRequest, List<AuditEntryExpectation> auditEntryExpectations, long acquiredForMillis, long elapsedMillis) {
             this.executionId = executionId;
             this.stageRequest = stageRequest;
             this.auditEntryExpectations = auditEntryExpectations;
@@ -499,7 +536,7 @@ public final class MockRunnerServer {
             return auditEntryExpectations;
         }
 
-        public StageRequest getStageRequest() {
+        public List<StageRequest> getStageRequest() {
             return stageRequest;
         }
 

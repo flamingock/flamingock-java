@@ -3,6 +3,7 @@ dependencies {
 
     api(project(":utils"))
     api(project(":flamingock-core-api"))
+    api(project(":cloud-importers:importer-common"))
 
     api("javax.inject:javax.inject:1")
     api("org.reflections:reflections:0.10.1")

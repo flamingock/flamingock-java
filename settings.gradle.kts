@@ -114,6 +114,10 @@ project(":utils").projectDir = file("utils")
 //////////////////////////////////////
 // INTERNAL
 //////////////////////////////////////
+include("cloud-importers:importer-common")
+project(":cloud-importers:importer-common").name = "importer-common"
+project(":cloud-importers:importer-common").projectDir = file("cloud-importers/importer-common")
+
 include("cloud-importers:mongodb-sync4-cloud-importer")
 project(":cloud-importers:mongodb-sync4-cloud-importer").name = "mongodb-sync4-cloud-importer"
 project(":cloud-importers:mongodb-sync4-cloud-importer").projectDir = file("cloud-importers/mongodb-sync4-cloud-importer")
