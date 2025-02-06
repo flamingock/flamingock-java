@@ -25,37 +25,21 @@ import java.util.List;
 
 public class ImporterService {
 
-    private final Http.RequestBuilderFactory requestBuilderFactory = Http.DEFAULT_INSTANCE;
-
-    private final String environmentId;
-    private final String serviceId;
-    private final String jwt;
-    private final Http.RequestBuilder requestBuilder;
+    private final Http.RequestWithBody request;
 
     public ImporterService(String serverHost, String environmentId, String serviceId, String jwt) {
-        this.environmentId = environmentId;
-        this.serviceId = serviceId;
-        this.jwt = jwt;
-        //Instance HttpClient
-        Http.RequestBuilderFactory requestBuilderFactory = Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
-        this.requestBuilder = requestBuilderFactory.getRequestBuilder(serverHost);
+        this.request = Http
+                .builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE)
+                .getRequestBuilder(serverHost)
+                .POST(String.format(
+                        "/api/v1/environment/%s/service/%s/execution/import",
+                        environmentId,
+                        serviceId))
+                .withRunnerId(RunnerId.generate())
+                .withBearerToken(jwt);
     }
 
     public void send(List<MongockLegacyAuditEntry> data) {
-
-        String pathTemplate = String.format(
-                "/api/v1/environment/%s/service/%s/execution/import",
-                environmentId,
-                serviceId
-        );
-
-        RunnerId runnerId = RunnerId.generate();
-
-        requestBuilder
-                .POST(pathTemplate)
-                .withRunnerId(runnerId)
-                .withBearerToken(jwt)
-                .setBody(data)
-                .execute();
+        request.setBody(data).execute();
     }
 }

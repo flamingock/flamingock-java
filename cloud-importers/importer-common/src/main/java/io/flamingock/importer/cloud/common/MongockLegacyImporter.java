@@ -16,10 +16,7 @@
 
 package io.flamingock.importer.cloud.common;
 
-import io.flamingock.commons.utils.id.EnvironmentId;
-import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.api.CloudSystemModule;
-import io.flamingock.core.runtime.dependency.Dependency;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,28 +29,22 @@ public interface MongockLegacyImporter extends CloudSystemModule {
     );
 
     @Override
-    public void initialise(EnvironmentId environmentId, ServiceId serviceId, String jwt, String serverHost);
-
-    @Override
-    public default int getOrder() {
+    default int getOrder() {
         return 0;
     }
 
     @Override
-    public default String getName() {
+    default String getName() {
         return "mongodb-legacy-importer";
     }
 
     @Override
-    public default Collection<Class<?>> getTaskClasses() {
+    default Collection<Class<?>> getTaskClasses() {
         return TASK_CLASSES;
     }
 
     @Override
-    public List<Dependency> getDependencies();
-
-    @Override
-    public default boolean isBeforeUserStages() {
+    default boolean isBeforeUserStages() {
         return true;
     }
 }

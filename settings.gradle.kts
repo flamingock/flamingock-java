@@ -122,3 +122,6 @@ include("cloud-importers:mongodb-sync4-cloud-importer")
 project(":cloud-importers:mongodb-sync4-cloud-importer").name = "mongodb-sync4-cloud-importer"
 project(":cloud-importers:mongodb-sync4-cloud-importer").projectDir = file("cloud-importers/mongodb-sync4-cloud-importer")
 
+include("cloud-importers:dynamodb-cloud-importer")
+project(":cloud-importers:dynamodb-cloud-importer").name = "dynamodb-cloud-importer"
+project(":cloud-importers:dynamodb-cloud-importer").projectDir = file("cloud-importers/dynamodb-cloud-importer")
