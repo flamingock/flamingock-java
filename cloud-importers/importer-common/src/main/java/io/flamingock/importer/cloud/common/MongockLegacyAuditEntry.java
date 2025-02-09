@@ -16,6 +16,11 @@
 
 package io.flamingock.importer.cloud.common;
 
+import io.flamingock.core.engine.audit.writer.AuditEntry;
+
+import java.time.Instant;
+import java.time.ZoneId;
+
 public class MongockLegacyAuditEntry {
 
     private final String executionId;
@@ -112,6 +117,25 @@ public class MongockLegacyAuditEntry {
 
     public boolean isSystemChange() {
         return systemChange;
+    }
+
+    public AuditEntry toAuditEntry() {
+        return new AuditEntry(
+                executionId,
+                null,
+                changeId,
+                author,
+                Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime(),
+                AuditEntry.Status.valueOf(state),
+                AuditEntry.ExecutionType.valueOf(type),
+                changeLogClass,
+                changeSetMethod,
+                executionMillis,
+                executionHostname,
+                metadata,
+                systemChange,
+                errorTrace
+        );
     }
 
 }

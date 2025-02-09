@@ -118,10 +118,14 @@ include("cloud-importers:importer-common")
 project(":cloud-importers:importer-common").name = "importer-common"
 project(":cloud-importers:importer-common").projectDir = file("cloud-importers/importer-common")
 
-include("cloud-importers:mongodb-sync4-cloud-importer")
-project(":cloud-importers:mongodb-sync4-cloud-importer").name = "mongodb-sync4-cloud-importer"
-project(":cloud-importers:mongodb-sync4-cloud-importer").projectDir = file("cloud-importers/mongodb-sync4-cloud-importer")
+include("cloud-importers:mongodb:mongodb-sync4-cloud-importer-legacy")
+project(":cloud-importers:mongodb:mongodb-sync4-cloud-importer-legacy").name = "mongodb-sync4-cloud-importer-legacy"
+project(":cloud-importers:mongodb:mongodb-sync4-cloud-importer-legacy").projectDir = file("cloud-importers/mongodb/mongodb-sync4-cloud-importer-legacy")
 
-include("cloud-importers:dynamodb-cloud-importer")
-project(":cloud-importers:dynamodb-cloud-importer").name = "dynamodb-cloud-importer"
-project(":cloud-importers:dynamodb-cloud-importer").projectDir = file("cloud-importers/dynamodb-cloud-importer")
+include("cloud-importers:mongodb:mongodb-sync4-cloud-importer-local")
+project(":cloud-importers:mongodb:mongodb-sync4-cloud-importer-local").name = "mongodb-sync4-cloud-importer-local"
+project(":cloud-importers:mongodb:mongodb-sync4-cloud-importer-local").projectDir = file("cloud-importers/mongodb/mongodb-sync4-cloud-importer-local")
+
+include("cloud-importers:dynamodb:dynamodb-cloud-importer-legacy")
+project(":cloud-importers:dynamodb:dynamodb-cloud-importer-legacy").name = "dynamodb-cloud-importer-legacy"
+project(":cloud-importers:dynamodb:dynamodb-cloud-importer-legacy").projectDir = file("cloud-importers/dynamodb/dynamodb-cloud-importer-legacy")

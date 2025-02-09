@@ -16,7 +16,7 @@
 
 package io.flamingock.common.test.cloud;
 
-import io.flamingock.importer.cloud.common.MongockLegacyAuditEntry;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -43,7 +43,7 @@ public final class MockRunnerServer {
 
     private boolean importerCall = false;
 
-    private List<MongockLegacyAuditEntry> importerExecutionRequest = new LinkedList<>();
+    private List<AuditEntry> importerExecutionRequest = new LinkedList<>();
 
     private ExecutionExpectation executionExpectation = null;
 
@@ -230,14 +230,14 @@ public final class MockRunnerServer {
         return this;
     }
 
-    public MockRunnerServer addSuccessfulImporterCall(List<MongockLegacyAuditEntry> legacyAuditEntries) {
+    public MockRunnerServer addSuccessfulImporterCall(List<AuditEntry> legacyAuditEntries) {
         importerCall = true;
         importerExecutionRequest = legacyAuditEntries;
 
         return this;
     }
 
-    public MockRunnerServer addFailureImporterCall(List<MongockLegacyAuditEntry> legacyAuditEntries) {
+    public MockRunnerServer addFailureImporterCall(List<AuditEntry> legacyAuditEntries) {
         importerCall = true;
         importerExecutionRequest = legacyAuditEntries;
 

@@ -19,6 +19,7 @@ package io.flamingock.importer.cloud.common;
 import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.http.Http;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
 import org.apache.http.impl.client.HttpClients;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public class ImporterService {
                 .withBearerToken(jwt);
     }
 
-    public void send(List<MongockLegacyAuditEntry> data) {
+    public void send(List<AuditEntry> data) {
         request.setBody(data).execute();
     }
 }
