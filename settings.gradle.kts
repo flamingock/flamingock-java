@@ -129,3 +129,7 @@ project(":cloud-importers:mongodb:mongodb-sync4-cloud-importer-local").projectDi
 include("cloud-importers:dynamodb:dynamodb-cloud-importer-legacy")
 project(":cloud-importers:dynamodb:dynamodb-cloud-importer-legacy").name = "dynamodb-cloud-importer-legacy"
 project(":cloud-importers:dynamodb:dynamodb-cloud-importer-legacy").projectDir = file("cloud-importers/dynamodb/dynamodb-cloud-importer-legacy")
+
+include("cloud-importers:dynamodb:dynamodb-cloud-importer-local")
+project(":cloud-importers:dynamodb:dynamodb-cloud-importer-local").name = "dynamodb-cloud-importer-local"
+project(":cloud-importers:dynamodb:dynamodb-cloud-importer-local").projectDir = file("cloud-importers/dynamodb/dynamodb-cloud-importer-local")
