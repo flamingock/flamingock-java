@@ -24,11 +24,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@ChangeUnit(id = "unhappy-create-table-clients", order = "1")
+@ChangeUnit(id = "unhappy-create-table-clients", order = "1", transactional = false)
 public class UnhappyCreateTableClientsChange {
 
     @Execution
-    public void execution(@NonLockGuarded Connection connection) throws SQLException {
+    public void execution(Connection connection) throws SQLException {
 
         try(Statement statement = connection.createStatement()) {
             statement.executeUpdate("CREATE TABLE CLIENTS_2 (" +

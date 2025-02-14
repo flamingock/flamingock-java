@@ -18,7 +18,7 @@ package io.flamingock.cloud.transaction.sql;
 
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
@@ -100,15 +100,15 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public Set<OngoingStatus> getOngoingStatuses() {
+    public Set<TaskWithOngoingStatus> getOngoingStatuses() {
         try (PreparedStatement preparedStatement = connection.prepareStatement(dialect.getSelectIdOngoingTask())) {
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            Set<OngoingStatus> ongoingStatuses = new HashSet<>();
+            Set<TaskWithOngoingStatus> ongoingStatuses = new HashSet<>();
             while (resultSet.next()) {
                 String taskId = resultSet.getString("task_id");
                 AuditItem.Operation operation = AuditItem.Operation.valueOf(resultSet.getString("operation"));
-                ongoingStatuses.add(new OngoingStatus(taskId, operation.toOngoingStatusOperation()));
+                ongoingStatuses.add(new TaskWithOngoingStatus(taskId, operation.toOngoingStatusOperation()));
             }
             return ongoingStatuses;
         } catch (SQLException e) {
@@ -128,7 +128,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public void saveOngoingStatus(OngoingStatus status) {
+    public void saveOngoingStatus(TaskWithOngoingStatus status) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(dialect.getUpsertOngoingTask())) {
             preparedStatement.setString(1, status.getTaskId());
             preparedStatement.setString(2, status.getOperation().toString());

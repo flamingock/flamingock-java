@@ -23,9 +23,10 @@ import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyCreateTab
 import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyInsertClientsChange;
 import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyCreateTableClientsChange;
 import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyInsertionClientsChange;
-import io.flamingock.common.test.cloud.AuditEntryExpectation;
-import io.flamingock.common.test.cloud.MockRunnerServer;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.pipeline.Stage;
@@ -75,7 +76,7 @@ public class DynamoDBCloudTransactionerTest {
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 
-    private MockRunnerServer mockRunnerServer;
+    private MockRunnerServerOld mockRunnerServer;
     private StandaloneCloudBuilder flamingockBuilder;
 
     @BeforeEach
@@ -96,7 +97,7 @@ public class DynamoDBCloudTransactionerTest {
         dynamoDBTestHelper = new DynamoDBTestHelper(getDynamoDbClient());
 
         logger.info("Starting Mock Server...");
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -132,9 +133,9 @@ public class DynamoDBCloudTransactionerTest {
     @Test
     @DisplayName("Should follow the transactioner lifecycle")
     void happyPath() {
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-table-clients",
                 EXECUTED,
                 HappyCreateTableClientsChange.class.getName(),
@@ -142,7 +143,7 @@ public class DynamoDBCloudTransactionerTest {
                 false
         ));
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "insert-clients",
                 EXECUTED,
                 HappyInsertClientsChange.class.getName(),
@@ -188,9 +189,9 @@ public class DynamoDBCloudTransactionerTest {
     @Test
     @DisplayName("Should rollback the ongoing deletion when a task fails")
     void failedTasks() {
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "unhappy-create-table-clients",
                 EXECUTED,
                 UnhappyCreateTableClientsChange.class.getName(),
@@ -199,7 +200,7 @@ public class DynamoDBCloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "unhappy-insert-clients",
                 EXECUTION_FAILED,
                 UnhappyInsertionClientsChange.class.getName(),
@@ -207,7 +208,7 @@ public class DynamoDBCloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "unhappy-insert-clients",
                 ROLLED_BACK,
                 UnhappyInsertionClientsChange.class.getName(),
@@ -254,9 +255,9 @@ public class DynamoDBCloudTransactionerTest {
     @Test
     @DisplayName("Should send ongoing task in execution when is present in local database")
     void shouldSendOngoingTaskInExecutionPlan() {
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "unhappy-create-table-clients",
                 EXECUTED,
                 UnhappyCreateTableClientsChange.class.getName(),
@@ -265,7 +266,7 @@ public class DynamoDBCloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "unhappy-insert-clients",
                 EXECUTION_FAILED,
                 UnhappyInsertionClientsChange.class.getName(),
@@ -273,7 +274,7 @@ public class DynamoDBCloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "unhappy-insert-clients",
                 ROLLED_BACK,
                 UnhappyInsertionClientsChange.class.getName(),
@@ -287,7 +288,7 @@ public class DynamoDBCloudTransactionerTest {
                 DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner()
         ) {
             dynamoDBTestHelper.insertOngoingExecution("failed-insert-clients");
-            List<OngoingStatus> ongoingStatuses = Collections.singletonList(new OngoingStatus("failed-insert-clients", OngoingStatus.Operation.EXECUTION));
+            List<TaskWithOngoingStatus> ongoingStatuses = Collections.singletonList(new TaskWithOngoingStatus("failed-insert-clients", OngoingStatus.EXECUTION));
             mockRunnerServer
                     .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations, ongoingStatuses)
                     .addExecutionWithAllTasksRequestResponse(executionId)

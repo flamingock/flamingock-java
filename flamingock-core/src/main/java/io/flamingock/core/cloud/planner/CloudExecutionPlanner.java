@@ -22,14 +22,14 @@ import io.flamingock.commons.utils.ThreadSleeper;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
-import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
+import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.lock.CloudLockService;
 import io.flamingock.core.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.core.cloud.transaction.OngoingStatusRepository;
 import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.execution.ExecutionPlan;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.LockException;
@@ -135,9 +135,9 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private ExecutionPlanResponse createExecution(List<LoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
 
-        Map<String, OngoingStatus.Operation> ongoingStatusesMap = getOngoingStatuses()
+        Map<String, OngoingStatus> ongoingStatusesMap = getOngoingStatuses()
                 .stream()
-                .collect(Collectors.toMap(OngoingStatus::getTaskId, OngoingStatus::getOperation));
+                .collect(Collectors.toMap(TaskWithOngoingStatus::getTaskId, TaskWithOngoingStatus::getOperation));
 
         ExecutionPlanRequest requestBody = ExecutionPlanMapper.toRequest(
                 loadedStages,
@@ -149,7 +149,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return responsePlan;
     }
 
-    private Collection<OngoingStatus> getOngoingStatuses() {
+    private Collection<TaskWithOngoingStatus> getOngoingStatuses() {
         return ongoingStatusRepository != null ? ongoingStatusRepository.getOngoingStatuses() : Collections.emptySet();
     }
 

@@ -25,9 +25,10 @@ import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath.HappyCr
 import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath.HappyInsertClientsChange;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath.UnhappyCreateClientsCollectionChange;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath.UnhappyInsertClientsChange;
-import io.flamingock.common.test.cloud.AuditEntryExpectation;
-import io.flamingock.common.test.cloud.MockRunnerServer;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.pipeline.Stage;
@@ -75,7 +76,7 @@ public class MongoSync4CloudTransactionerTest {
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 
-    private MockRunnerServer mockRunnerServer;
+    private MockRunnerServerOld mockRunnerServer;
     private StandaloneCloudBuilder flamingockBuilder;
 
     @Container
@@ -93,7 +94,7 @@ public class MongoSync4CloudTransactionerTest {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -125,9 +126,9 @@ public class MongoSync4CloudTransactionerTest {
     @Test
     @DisplayName("Should follow the transactioner lifecycle")
     void happyPath() {
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-clients-collection",
                 EXECUTED,
                 HappyCreateClientsCollectionChange.class.getName(),
@@ -135,7 +136,7 @@ public class MongoSync4CloudTransactionerTest {
                 false
         ));
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "insert-clients",
                 EXECUTED,
                 HappyInsertClientsChange.class.getName(),
@@ -175,9 +176,9 @@ public class MongoSync4CloudTransactionerTest {
     @Test
     @DisplayName("Should rollback the ongoing deletion when a task fails")
     void failedTasks() {
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-clients-collection",
                 EXECUTED,
                 UnhappyCreateClientsCollectionChange.class.getName(),
@@ -186,7 +187,7 @@ public class MongoSync4CloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "insert-clients",
                 EXECUTION_FAILED,
                 UnhappyInsertClientsChange.class.getName(),
@@ -194,7 +195,7 @@ public class MongoSync4CloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "insert-clients",
                 ROLLED_BACK,
                 UnhappyInsertClientsChange.class.getName(),
@@ -236,9 +237,9 @@ public class MongoSync4CloudTransactionerTest {
     @Test
     @DisplayName("Should send ongoing task in execution when is present in local database")
     void shouldSendOngoingTaskInExecutionPlan() {
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-clients-collection",
                 EXECUTED,
                 UnhappyCreateClientsCollectionChange.class.getName(),
@@ -247,7 +248,7 @@ public class MongoSync4CloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "insert-clients",
                 EXECUTION_FAILED,
                 UnhappyInsertClientsChange.class.getName(),
@@ -255,7 +256,7 @@ public class MongoSync4CloudTransactionerTest {
         ));
 
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "insert-clients",
                 ROLLED_BACK,
                 UnhappyInsertClientsChange.class.getName(),
@@ -269,7 +270,7 @@ public class MongoSync4CloudTransactionerTest {
                 MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME)
         ) {
             mongoDBTestHelper.insertOngoingExecution("failed-insert-clients");
-            List<OngoingStatus> ongoingStatuses = Collections.singletonList(new OngoingStatus("failed-insert-clients", OngoingStatus.Operation.EXECUTION));
+            List<TaskWithOngoingStatus> ongoingStatuses = Collections.singletonList(new TaskWithOngoingStatus("failed-insert-clients", OngoingStatus.EXECUTION));
             mockRunnerServer
                     .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations, ongoingStatuses)
                     .addExecutionWithAllTasksRequestResponse(executionId)

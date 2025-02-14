@@ -18,13 +18,16 @@ package io.flamingock.core.cloud.planner;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
-import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
-import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
-import io.flamingock.core.cloud.api.planner.StageRequest;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
+import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
+import io.flamingock.core.cloud.api.planner.request.StageRequest;
+import io.flamingock.core.cloud.api.planner.request.TaskRequest;
+import io.flamingock.core.cloud.api.planner.response.StageResponse;
+import io.flamingock.core.cloud.api.planner.response.TaskResponse;
+import io.flamingock.core.cloud.api.planner.response.RequiredActionTask;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.core.cloud.lock.CloudLockService;
 import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockKey;
@@ -46,12 +49,12 @@ public final class ExecutionPlanMapper {
 
     public static ExecutionPlanRequest toRequest(List<LoadedStage> loadedStages,
                                                  long lockAcquiredForMillis,
-                                                 Map<String, OngoingStatus.Operation> ongoingStatusesMap) {
+                                                 Map<String, OngoingStatus> ongoingStatusesMap) {
 
         List<StageRequest> requestStages = new ArrayList<>(loadedStages.size());
         for (int i = 0; i < loadedStages.size(); i++) {
             LoadedStage currentStage = loadedStages.get(i);
-            List<StageRequest.Task> stageTasks = currentStage
+            List<TaskRequest> stageTasks = currentStage
                     .getTaskDescriptors()
                     .stream()
                     .map(descriptor -> ExecutionPlanMapper.mapToTaskRequest(descriptor, ongoingStatusesMap))
@@ -62,28 +65,28 @@ public final class ExecutionPlanMapper {
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestStages);
     }
 
-    private static StageRequest.Task mapToTaskRequest(TaskDescriptor descriptor,
-                                                      Map<String, OngoingStatus.Operation> ongoingStatusesMap) {
+    private static TaskRequest mapToTaskRequest(TaskDescriptor descriptor,
+                                                Map<String, OngoingStatus> ongoingStatusesMap) {
         if (ongoingStatusesMap.containsKey(descriptor.getId())) {
-            if (ongoingStatusesMap.get(descriptor.getId()) == OngoingStatus.Operation.ROLLBACK) {
-                return StageRequest.Task.ongoingRollback(descriptor.getId(), descriptor.isTransactional());
+            if (ongoingStatusesMap.get(descriptor.getId()) == OngoingStatus.ROLLBACK) {
+                return TaskRequest.ongoingRollback(descriptor.getId(), descriptor.isTransactional());
             } else {
-                return StageRequest.Task.ongoingExecution(descriptor.getId(), descriptor.isTransactional());
+                return TaskRequest.ongoingExecution(descriptor.getId(), descriptor.isTransactional());
             }
         } else {
-            return StageRequest.Task.task(descriptor.getId(), descriptor.isTransactional());
+            return TaskRequest.task(descriptor.getId(), descriptor.isTransactional());
         }
     }
 
     static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<LoadedStage> loadedStages) {
         //Create a set for the filter in the loop
-        List<ExecutionPlanResponse.Stage> stages = response.getStages() != null ? response.getStages() : Collections.emptyList();
-        Set<String> stageNameSet = stages.stream().map(ExecutionPlanResponse.Stage::getName).collect(Collectors.toSet());
+        List<StageResponse> stages = response.getStages() != null ? response.getStages() : Collections.emptyList();
+        Set<String> stageNameSet = stages.stream().map(StageResponse::getName).collect(Collectors.toSet());
 
         //Create a map to allow indexed access when looping
-        Map<String, ExecutionPlanResponse.Stage> responseStagesMap = stages
+        Map<String, StageResponse> responseStagesMap = stages
                 .stream()
-                .collect(Collectors.toMap(ExecutionPlanResponse.Stage::getName, Function.identity()));
+                .collect(Collectors.toMap(StageResponse::getName, Function.identity()));
 
         return loadedStages.stream()
                 .filter(loadedStage -> stageNameSet.contains(loadedStage.getName()))
@@ -92,11 +95,11 @@ public final class ExecutionPlanMapper {
 
     }
 
-    private static ExecutableStage mapToExecutable(LoadedStage loadedStage, ExecutionPlanResponse.Stage stageResponse) {
+    private static ExecutableStage mapToExecutable(LoadedStage loadedStage, StageResponse stageResponse) {
 
-        Map<String, ExecutionPlanResponse.TaskState> taskStateMap = stageResponse.getTasks()
+        Map<String, RequiredActionTask> taskStateMap = stageResponse.getTasks()
                 .stream()
-                .collect(Collectors.toMap(ExecutionPlanResponse.Task::getId, ExecutionPlanResponse.Task::getState));
+                .collect(Collectors.toMap(TaskResponse::getId, TaskResponse::getState));
 
         AuditStageStatus.StatusBuilder builder = AuditStageStatus.statusBuilder();
 
@@ -105,7 +108,7 @@ public final class ExecutionPlanMapper {
                 .getTaskDescriptors()
                 .stream()
                 .map(TaskDescriptor::getId)
-                .filter(taskId -> taskStateMap.get(taskId) != ExecutionPlanResponse.TaskState.PENDING_EXECUTION)
+                .filter(taskId -> taskStateMap.get(taskId) != RequiredActionTask.PENDING_EXECUTION)
                 .forEach(taskId -> builder.addState(taskId, EXECUTED));
 
         return loadedStage.applyState(builder.build());

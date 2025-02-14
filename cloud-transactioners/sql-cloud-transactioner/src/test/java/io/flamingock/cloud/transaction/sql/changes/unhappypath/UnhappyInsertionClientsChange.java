@@ -28,7 +28,7 @@ import java.sql.SQLException;
 public class UnhappyInsertionClientsChange {
 
     @Execution
-    public void execution(@NonLockGuarded Connection connection) throws SQLException {
+    public void execution(Connection connection) throws SQLException {
         try(PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO CLIENTS_2(id, name) values(?, ?)")) {
             preparedStatement.setInt(1, 1);
             preparedStatement.setString(2, "Should_have_been_rolled_back");

@@ -21,8 +21,8 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.common.test.cloud.AuditEntryExpectation;
-import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
@@ -76,7 +76,7 @@ class MongoSync4LegacyCloudImporterTest {
     private static MongoClient mongoClient;
     private static MongoDatabase testDatabase;
 
-    private static MockRunnerServer mockRunnerServer;
+    private static MockRunnerServerOld mockRunnerServer;
     private static StandaloneCloudBuilder flamingockBuilder;
 
     private final Logger logger = LoggerFactory.getLogger(MongoSync4LegacyCloudImporterTest.class);
@@ -93,7 +93,7 @@ class MongoSync4LegacyCloudImporterTest {
     @BeforeEach
     void beforeEach() {
 
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -158,16 +158,16 @@ class MongoSync4LegacyCloudImporterTest {
                 .map(MongockLegacyAuditEntry::toAuditEntry)
                 .collect(Collectors.toList());
 
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "importer-v1",
                 EXECUTED,
                 ImporterChangeUnit.class.getName(),
                 "execution"
         ));
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-collection",
                 EXECUTED,
                 ACreateCollection.class.getName(),

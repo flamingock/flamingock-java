@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.cloud.api.planner;
+package io.flamingock.core.cloud.api.planner.request;
 
 import java.util.List;
 
@@ -35,19 +35,6 @@ public class ExecutionPlanRequest {
 
     public ClientSubmission getClientSubmission() {
         return clientSubmission;
-    }
-
-
-    public static class ClientSubmission {
-        private final List<StageRequest> stages;
-
-        public ClientSubmission(List<StageRequest> stages) {
-            this.stages = stages;
-        }
-
-        public List<StageRequest> getStages() {
-            return stages;
-        }
     }
 }
 

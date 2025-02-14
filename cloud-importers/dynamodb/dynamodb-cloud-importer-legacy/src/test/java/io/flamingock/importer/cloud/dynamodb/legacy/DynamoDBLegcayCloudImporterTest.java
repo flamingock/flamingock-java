@@ -23,8 +23,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import io.flamingock.common.test.cloud.AuditEntryExpectation;
-import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
@@ -74,7 +74,7 @@ class DynamoDBLegcayCloudImporterTest {
     private static AmazonDynamoDBClient amazonClient;
     private static DynamoDBUtil dynamoDBUtil;
 
-    private static MockRunnerServer mockRunnerServer;
+    private static MockRunnerServerOld mockRunnerServer;
     private static StandaloneCloudBuilder flamingockBuilder;
 
     private final Logger logger = LoggerFactory.getLogger(DynamoDBLegcayCloudImporterTest.class);
@@ -129,7 +129,7 @@ class DynamoDBLegcayCloudImporterTest {
 
         amazonClient = getAmazonDynamoDBClient();
 
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -198,16 +198,16 @@ class DynamoDBLegcayCloudImporterTest {
                 .map(MongockLegacyAuditEntry::toAuditEntry)
                 .collect(Collectors.toList());
 
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "importer-v1",
                 EXECUTED,
                 ImporterChangeUnit.class.getName(),
                 "execution"
         ));
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-table",
                 EXECUTED,
                 ACreateCollection.class.getName(),

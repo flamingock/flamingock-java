@@ -1,9 +1,6 @@
 package io.flamingock.core;
 
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
-import io.flamingock.core.cloud.api.planner.StageRequest;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
-import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

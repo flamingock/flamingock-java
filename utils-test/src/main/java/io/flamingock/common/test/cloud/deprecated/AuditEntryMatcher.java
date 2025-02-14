@@ -1,23 +1,23 @@
-package io.flamingock.common.test.cloud;
+package io.flamingock.common.test.cloud.deprecated;
 
 
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
 
 import java.beans.Transient;
 
-public class AuditEntryExpectation {
+@Deprecated
+public class AuditEntryMatcher {
     private final String taskId;
     private final AuditEntryRequest.Status state;
     private final String className;
     private final String methodName;
-
     private final boolean transactional;
 
-    public AuditEntryExpectation(String taskId, AuditEntryRequest.Status state, String className, String methodName) {
+    public AuditEntryMatcher(String taskId, AuditEntryRequest.Status state, String className, String methodName) {
         this(taskId, state, className, methodName, true);
     }
 
-    public AuditEntryExpectation(String taskId, AuditEntryRequest.Status state, String className, String methodName, boolean transactional) {
+    public AuditEntryMatcher(String taskId, AuditEntryRequest.Status state, String className, String methodName, boolean transactional) {
         this.taskId = taskId;
         this.state = state;
         this.className = className;
@@ -37,6 +37,8 @@ public class AuditEntryExpectation {
         return className;
     }
 
+    //TODO TO BE DELETED
+    @Transient
     public String getMethodName() {
         return methodName;
     }

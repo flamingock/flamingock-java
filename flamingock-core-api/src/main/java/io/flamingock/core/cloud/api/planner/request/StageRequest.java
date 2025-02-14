@@ -14,13 +14,34 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.cloud.planner.client;
+package io.flamingock.core.cloud.api.planner.request;
 
-import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
-import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
+import java.util.List;
 
-public interface ExecutionPlannerClient {
+public class StageRequest {
+    private final String name;
+
+    private final int order;
+
+    private final List<TaskRequest> tasks;
+
+    public StageRequest(String name, int order, List<TaskRequest> tasks) {
+        this.name = name;
+        this.order = order;
+        this.tasks = tasks;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getOrder() {
+        return order;
+    }
+
+    public List<TaskRequest> getTasks() {
+        return tasks;
+    }
 
 
-    ExecutionPlanResponse createExecution(ExecutionPlanRequest request, String lastAcquisitionId, long elapsedMillis);
 }

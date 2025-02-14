@@ -16,12 +16,13 @@
 
 package io.flamingock.core.cloud;
 
-import io.flamingock.common.test.cloud.AuditEntryExpectation;
-import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.core.cloud.changes.CloudChange1;
 import io.flamingock.core.cloud.changes.CloudChange2;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.utils.TestCloudTransactioner;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
@@ -59,16 +60,16 @@ public class CloudEngineTransactionTest {
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 
-    private MockRunnerServer mockRunnerServer;
+    private MockRunnerServerOld mockRunnerServer;
     private StandaloneCloudBuilder flamingockBuilder;
 
-    private static final List<AuditEntryExpectation> auditEntries = new LinkedList<>();
+    private static final List<AuditEntryMatcher> auditEntries = new LinkedList<>();
 
     @BeforeAll
     static void beforeAll() {
         auditEntries.add(new
 
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-persons-table-from-template",
                 AuditEntryRequest.Status.EXECUTED,
                 CloudChange1.class.getName(),
@@ -76,7 +77,7 @@ public class CloudEngineTransactionTest {
         ));
         auditEntries.add(new
 
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-persons-table-from-template-2",
                 AuditEntryRequest.Status.EXECUTED,
                 CloudChange2.class.getName(),
@@ -86,7 +87,7 @@ public class CloudEngineTransactionTest {
 
     @BeforeEach
     void beforeEach() {
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -139,10 +140,10 @@ public class CloudEngineTransactionTest {
 
         //THEN
         verify(cloudTransactioner, new Times(2)).getOngoingStatuses();
-        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new OngoingStatus("create-persons-table-from-template", OngoingStatus.Operation.EXECUTION));
+        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new TaskWithOngoingStatus("create-persons-table-from-template", OngoingStatus.EXECUTION));
         verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template");
 
-        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new OngoingStatus("create-persons-table-from-template-2", OngoingStatus.Operation.EXECUTION));
+        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new TaskWithOngoingStatus("create-persons-table-from-template-2", OngoingStatus.EXECUTION));
         verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template-2");
 
 //        //2 execution plans: First to execute and second to continue

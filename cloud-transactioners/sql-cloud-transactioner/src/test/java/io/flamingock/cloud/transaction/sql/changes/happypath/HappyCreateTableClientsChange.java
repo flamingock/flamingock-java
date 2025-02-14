@@ -25,7 +25,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@ChangeUnit(id = "create-table-clients", order = "1")
+@ChangeUnit(id = "create-table-clients", order = "1", transactional = false)
 public class HappyCreateTableClientsChange {
 
     @Execution

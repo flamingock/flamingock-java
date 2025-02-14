@@ -16,7 +16,8 @@
 
 package io.flamingock.cloud.transaction.dynamodb;
 
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -57,8 +58,8 @@ public class OngoingTaskEntity {
         this.operation = operation;
     }
 
-    public OngoingStatus toOngoingStatus() {
-        return new OngoingStatus(this.taskId, OngoingStatus.Operation.valueOf(this.operation));
+    public TaskWithOngoingStatus toOngoingStatus() {
+        return new TaskWithOngoingStatus(this.taskId, OngoingStatus.valueOf(this.operation));
     }
 
 }

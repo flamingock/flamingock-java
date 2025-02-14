@@ -16,7 +16,8 @@
 
 package io.flamingock.core.engine.audit.domain;
 
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
 
@@ -27,11 +28,11 @@ public abstract class AuditItem {
 
         START_EXECUTION, EXECUTION, ROLLBACK;
 
-        public OngoingStatus.Operation toOngoingStatusOperation() {
-            return OngoingStatus.Operation.valueOf(this.name());
+        public OngoingStatus toOngoingStatusOperation() {
+            return OngoingStatus.valueOf(this.name());
         }
 
-        public static AuditItem.Operation fromOngoingStatusOperation(OngoingStatus.Operation ongoingOperation) {
+        public static AuditItem.Operation fromOngoingStatusOperation(OngoingStatus ongoingOperation) {
             return AuditItem.Operation.valueOf(ongoingOperation.name());
         }
 

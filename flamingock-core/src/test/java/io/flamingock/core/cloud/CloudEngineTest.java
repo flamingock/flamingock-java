@@ -21,8 +21,8 @@ import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
 import io.flamingock.core.cloud.changes.CloudChange1;
 import io.flamingock.core.cloud.changes.CloudChange2;
-import io.flamingock.common.test.cloud.AuditEntryExpectation;
-import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.engine.lock.LockException;
@@ -66,16 +66,16 @@ public class CloudEngineTest {
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 
-    private MockRunnerServer mockRunnerServer;
+    private MockRunnerServerOld mockRunnerServer;
     private StandaloneCloudBuilder flamingockBuilder;
 
-    private static final List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+    private static final List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
 
     @BeforeAll
     static void beforeAll() {
         auditEntryExpectations.add(new
 
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-persons-table-from-template",
                 AuditEntryRequest.Status.EXECUTED,
                 CloudChange1.class.getName(),
@@ -83,7 +83,7 @@ public class CloudEngineTest {
         ));
         auditEntryExpectations.add(new
 
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "create-persons-table-from-template-2",
                 AuditEntryRequest.Status.EXECUTED,
                 CloudChange2.class.getName(),
@@ -93,7 +93,7 @@ public class CloudEngineTest {
 
     @BeforeEach
     void beforeEach() {
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)

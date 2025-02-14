@@ -17,7 +17,7 @@
 package io.flamingock.cloud.transaction.dynamodb;
 
 import io.flamingock.commons.utils.DynamoDBUtil;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.local.TransactionManager;
 import io.flamingock.core.runtime.dependency.Dependency;
@@ -70,7 +70,7 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public Set<OngoingStatus> getOngoingStatuses() {
+    public Set<TaskWithOngoingStatus> getOngoingStatuses() {
 
         return table
                 .scan(ScanEnhancedRequest.builder()
@@ -96,7 +96,7 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public void saveOngoingStatus(OngoingStatus status) {
+    public void saveOngoingStatus(TaskWithOngoingStatus status) {
 
         table.putItem(
                 PutItemEnhancedRequest.builder(OngoingTaskEntity.class)

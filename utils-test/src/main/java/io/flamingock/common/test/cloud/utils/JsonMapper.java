@@ -1,4 +1,4 @@
-package io.flamingock.common.test.cloud;
+package io.flamingock.common.test.cloud.utils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;

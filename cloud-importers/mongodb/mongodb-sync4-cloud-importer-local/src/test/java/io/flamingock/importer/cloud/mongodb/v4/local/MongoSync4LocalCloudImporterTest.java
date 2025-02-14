@@ -22,8 +22,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.MongoDBSync4Configuration;
-import io.flamingock.common.test.cloud.AuditEntryExpectation;
-import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
@@ -74,7 +74,7 @@ class MongoSync4LocalCloudImporterTest {
     private static MongoClient mongoClient;
     private static MongoDatabase testDatabase;
 
-    private static MockRunnerServer mockRunnerServer;
+    private static MockRunnerServerOld mockRunnerServer;
     private static StandaloneCloudBuilder flamingockBuilder;
 
     private final Logger logger = LoggerFactory.getLogger(MongoSync4LocalCloudImporterTest.class);
@@ -91,7 +91,7 @@ class MongoSync4LocalCloudImporterTest {
     @BeforeEach
     void beforeEach() {
 
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -150,16 +150,16 @@ class MongoSync4LocalCloudImporterTest {
                 .map(MongoDBLocalImportConfiguration::toAuditEntry)
                 .collect(Collectors.toList());
 
-        List<AuditEntryExpectation> auditEntryExpectations = new LinkedList<>();
+        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "importer-v1",
                 EXECUTED,
                 ImporterChangeUnit.class.getName(),
                 "execution"
         ));
         auditEntryExpectations.add(new
-                AuditEntryExpectation(
+                AuditEntryMatcher(
                 "insert-document",
                 EXECUTED,
                 InsertClient.class.getName(),

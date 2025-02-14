@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.cloud.api.transaction;
+package io.flamingock.core.cloud.transaction;
 
-public class OngoingStatus {
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
 
-    public enum Operation {EXECUTION, ROLLBACK}
+public class TaskWithOngoingStatus {
+
 
     private final String taskId;
 
-    private final Operation operation;
+    private final OngoingStatus operation;
 
-    public OngoingStatus(String taskId, Operation operation) {
+    public TaskWithOngoingStatus(String taskId, OngoingStatus operation) {
         this.taskId = taskId;
         this.operation = operation;
     }
@@ -33,7 +34,7 @@ public class OngoingStatus {
         return taskId;
     }
 
-    public Operation getOperation() {
+    public OngoingStatus getOperation() {
         return operation;
     }
 
@@ -42,7 +43,7 @@ public class OngoingStatus {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OngoingStatus that = (OngoingStatus) o;
+        TaskWithOngoingStatus that = (TaskWithOngoingStatus) o;
 
         return taskId.equals(that.taskId);
     }

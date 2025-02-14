@@ -16,7 +16,7 @@
 
 package io.flamingock.core.cloud;
 
-import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.pipeline.Stage;
@@ -32,11 +32,11 @@ import java.util.UUID;
 
 
 public class CoreBuilderTest {
-    private static MockRunnerServer mockRunnerServer;
+    private static MockRunnerServerOld mockRunnerServer;
 
     @BeforeAll
     public static void beforeAll() {
-        mockRunnerServer = new MockRunnerServer()
+        mockRunnerServer = new MockRunnerServerOld()
                 .setServerPort(8888)
                 .setOrganisationId(UUID.randomUUID().toString())
                 .setOrganisationName("MyOrganisation")

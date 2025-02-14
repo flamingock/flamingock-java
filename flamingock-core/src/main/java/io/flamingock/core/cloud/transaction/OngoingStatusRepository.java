@@ -16,7 +16,7 @@
 
 package io.flamingock.core.cloud.transaction;
 
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.core.task.executable.ExecutableTask;
 import java.util.Set;
 
@@ -27,7 +27,7 @@ public interface OngoingStatusRepository {
      *
      * @return non-null set of ongoing statuses
      */
-    Set<OngoingStatus> getOngoingStatuses();
+    Set<TaskWithOngoingStatus> getOngoingStatuses();
 
     /**
      * Idempotently removes any ongoing status for the given taskId from the local database.
@@ -42,13 +42,13 @@ public interface OngoingStatusRepository {
      *
      * @param status the status to be written
      */
-    void saveOngoingStatus(OngoingStatus status);
+    void saveOngoingStatus(TaskWithOngoingStatus status);
 
     default void setOngoingExecution(ExecutableTask ongoingTask) {
-        saveOngoingStatus(new OngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.Operation.EXECUTION));
+        saveOngoingStatus(new TaskWithOngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.EXECUTION));
     }
 
     default void setOngoingRollback(ExecutableTask ongoingTask) {
-        saveOngoingStatus(new OngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.Operation.ROLLBACK));
+        saveOngoingStatus(new TaskWithOngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.ROLLBACK));
     }
 }

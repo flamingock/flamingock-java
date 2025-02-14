@@ -16,61 +16,72 @@
 
 package io.flamingock.common.test.cloud;
 
-import io.flamingock.core.engine.audit.writer.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMock;
+import io.flamingock.common.test.cloud.mock.MockExecutionPlanBuilder;
+import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
+import io.flamingock.common.test.cloud.prototype.PrototypeStage;
+import io.flamingock.common.test.cloud.prototype.PrototypeTask;
 import io.flamingock.core.cloud.api.auth.AuthRequest;
 import io.flamingock.core.cloud.api.auth.AuthResponse;
-import io.flamingock.core.cloud.api.planner.ExecutionPlanRequest;
-import io.flamingock.core.cloud.api.planner.ExecutionPlanResponse;
-import io.flamingock.core.cloud.api.planner.StageRequest;
-import io.flamingock.core.cloud.api.transaction.OngoingStatus;
+import io.flamingock.core.cloud.api.planner.request.StageRequest;
+import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
+import io.flamingock.core.cloud.api.planner.response.StageResponse;
+import io.flamingock.core.cloud.api.planner.response.TaskResponse;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static io.flamingock.common.test.cloud.JsonMapper.toJson;
-import static io.flamingock.core.cloud.api.planner.ExecutionPlanResponse.TaskState.PENDING_EXECUTION;
+import static io.flamingock.common.test.cloud.utils.JsonMapper.toJson;
+import static io.flamingock.core.cloud.api.planner.response.RequiredActionTask.PENDING_EXECUTION;
 
 public final class MockRunnerServer {
 
     public static final String DEFAULT_LOCK_ACQUISITION_ID = UUID.randomUUID().toString();
+    public static final long DEFAULT_ACQUIRED_FOR_MILLIS = 60000L;
 
-    private final List<ExecutionPlanRequestResponse> executionRequestResponses = new LinkedList<>();
+    private final List<ExecutionBaseRequestResponseMock> requestResponseList = new ArrayList<>();
+    private final List<AuditRequestExpectation> auditEntryWriteExpectations = new ArrayList<>();
+//    private final List<RequestPatternBuilder> verificableRequests = new ArrayList<>();
 
-    private boolean importerCall = false;
-
+    private PrototypeClientSubmission clientSubmission;
     private List<AuditEntry> importerExecutionRequest = new LinkedList<>();
 
-    private ExecutionExpectation executionExpectation = null;
-
-    private static final long DEFAULT_ACQUIRED_FOR_MILLIS = 60000L;
     private WireMockServer wireMockServer;
-
     private int serverPort = 8888;
-
     private String organisationId = "default-organisation-id";
     private String organisationName = "default-organisation-name";
-
     private String projectId = "default-project-id";
     private String projectName = "default-project-name";
-
     private String serviceId = "default-service-id";
     private String serviceName = "default-service-name";
-
     private String environmentId = "default-environment-name";
     private String environmentName = "default-environment-name";
-
     private String runnerId = "default-runner-name";
-
     private String jwt = "default-jwt";
-
     private String apiToken = "default-api-token";
-
     private String credentialId = "default-credential-id";
+    private boolean importerCall = false;
+
+    private static StageResponse toStageResponse(StageRequest stageRequest) {
+        StageResponse stage = new StageResponse();
+        stage.setName(stageRequest.getName());
+        stage.setTasks(stageRequest.getTasks().stream()
+                .map(onGoingTask -> new TaskResponse(onGoingTask.getId(), PENDING_EXECUTION))
+                .collect(Collectors.toList()));
+        return stage;
+    }
+
+    public MockRunnerServer setJwt(String jwt) {
+        this.jwt = jwt;
+        return this;
+    }
 
     public MockRunnerServer setServerPort(int serverPort) {
         this.serverPort = serverPort;
@@ -132,134 +143,39 @@ public final class MockRunnerServer {
         return this;
     }
 
-    public MockRunnerServer addExecutionContinueRequestResponse() {
-        return addExecutionContinueRequestResponse(DEFAULT_ACQUIRED_FOR_MILLIS);
-    }
-
-    public MockRunnerServer addExecutionContinueRequestResponse(long acquiredForMillis) {
-        executionRequestResponses.add(new ContinuePlanRequestResponse(acquiredForMillis));
+    public MockRunnerServer withClientSubmissionBase(PrototypeClientSubmission clientSubmission) {
+        this.clientSubmission = clientSubmission;
         return this;
     }
 
-
-    public MockRunnerServer addExecutionAwaitRequestResponse(String executionId) {
-        return addExecutionAwaitRequestResponse(executionId, DEFAULT_ACQUIRED_FOR_MILLIS, DEFAULT_LOCK_ACQUISITION_ID);
-    }
-
-    public MockRunnerServer addExecutionAwaitRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
-        executionRequestResponses.add(new AwaitPlanRequestResponse(executionId, acquiredForMillis, acquisitionId));
+    public MockRunnerServer withExecutionPlanRequestsExpectation(ExecutionBaseRequestResponseMock firstResponse,
+                                                                 ExecutionBaseRequestResponseMock... otherResponses) {
+        this.requestResponseList.add(firstResponse);
+        this.requestResponseList.addAll(Arrays.asList(otherResponses));
         return this;
     }
 
-
-    public MockRunnerServer addExecutionWithAllTasksRequestResponse(String executionId) {
-        executionRequestResponses.add(new ExecutePlanRequestResponse(executionId, DEFAULT_ACQUIRED_FOR_MILLIS, DEFAULT_LOCK_ACQUISITION_ID));
-        return this;
-    }
-
-
-    public MockRunnerServer addExecutionWithAllTasksRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
-        executionRequestResponses.add(new ExecutePlanRequestResponse(executionId, acquiredForMillis, acquisitionId));
-        return this;
-    }
-
-    public MockRunnerServer addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryExpectation> auditEntries) {
-        return addSimpleStageExecutionPlan(executionId, stageName, auditEntries, Collections.emptyList());
-    }
-
-    public MockRunnerServer addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryExpectation> auditEntries, List<OngoingStatus> ongoingStatuses) {
-
-        Map<String, OngoingStatus.Operation> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(OngoingStatus::getTaskId, OngoingStatus::getOperation));
-
-        Set<String> alreadyAddedTasks = new HashSet<>();
-        List<StageRequest.Task> tasks = auditEntries.stream()
-                .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
-                .map(auditEntryExpectation -> {
-                    alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
-                    OngoingStatus.Operation operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
-                    if (operation == null) {
-                        return StageRequest.Task.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else if (operation == OngoingStatus.Operation.ROLLBACK) {
-                        return StageRequest.Task.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else {
-                        return StageRequest.Task.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    }
-                })
-                .collect(Collectors.toList());
-
-        List<StageRequest> stageRequest = Collections.singletonList(new StageRequest(stageName, 0, tasks));
-
-        executionExpectation = new ExecutionExpectation(executionId, stageRequest, auditEntries, 60000, 0);
-        return this;
-    }
-
-    public MockRunnerServer addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryExpectation> auditEntries) {
-        return addMultipleStageExecutionPlan(executionId, stageNames, auditEntries, Collections.emptyList());
-    }
-
-    public MockRunnerServer addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryExpectation> auditEntries, List<OngoingStatus> ongoingStatuses) {
-
-        Map<String, OngoingStatus.Operation> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(OngoingStatus::getTaskId, OngoingStatus::getOperation));
-
-        Set<String> alreadyAddedTasks = new HashSet<>();
-        List<StageRequest.Task> tasks = auditEntries.stream()
-                .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
-                .map(auditEntryExpectation -> {
-                    alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
-                    OngoingStatus.Operation operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
-                    if (operation == null) {
-                        return StageRequest.Task.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else if (operation == OngoingStatus.Operation.ROLLBACK) {
-                        return StageRequest.Task.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else {
-                        return StageRequest.Task.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    }
-                })
-                .collect(Collectors.toList());
-
-        List<StageRequest> stageRequest = new ArrayList<>();
-        int i = 0;
-        for (String stageName : stageNames) {
-            stageRequest.add(new StageRequest(stageName, i, Collections.singletonList(tasks.get(i))));
-            i++;
-        }
-
-        executionExpectation = new ExecutionExpectation(executionId, stageRequest, auditEntries, 60000, 0);
+    public MockRunnerServer withAuditRequestsExpectation(AuditRequestExpectation first, AuditRequestExpectation... others) {
+        auditEntryWriteExpectations.add(first);
+        auditEntryWriteExpectations.addAll(Arrays.asList(others));
         return this;
     }
 
     public MockRunnerServer addSuccessfulImporterCall(List<AuditEntry> legacyAuditEntries) {
         importerCall = true;
         importerExecutionRequest = legacyAuditEntries;
-
         return this;
     }
 
     public MockRunnerServer addFailureImporterCall(List<AuditEntry> legacyAuditEntries) {
         importerCall = true;
         importerExecutionRequest = legacyAuditEntries;
-
         return this;
     }
 
-    private void importerCall() {
-        String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/import"//?elapsedMillis={elapsedMillis}"
-                .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId);
 
-        wireMockServer.stubFor(post(urlPathEqualTo(executionUrl))
-                .withRequestBody(equalToJson(toJson(importerExecutionRequest)))
-                .willReturn(aResponse()
-                        .withStatus(201)
-                        .withHeader("Content-Type", "application/json").withBody(toJson(""))));
-
-    }
-
-
-    public MockRunnerServer setJwt(String jwt) {
-        this.jwt = jwt;
-        return this;
+    public void verifyAllCalls() {
+        //TODO implement verification
     }
 
 
@@ -304,249 +220,144 @@ public final class MockRunnerServer {
 
     }
 
-
     private void mockExecutionEndpoint() {
         String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution"//?elapsedMillis={elapsedMillis}"
                 .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId)
 //                .replace("{elapsedMillis}", String.valueOf(executionExpectation.getElapsedMillis()))
                 ;
 
-        if (executionRequestResponses.size() == 1) {
+        MockExecutionPlanBuilder executionPlanBuilder = new MockExecutionPlanBuilder(
+                runnerId,
+                serviceId,
+                clientSubmission);
+        if (requestResponseList.size() == 1) {
 
-            ExecutionPlanResponse response = getExecutionPlanResponse(0);
-            ExecutionPlanRequest request = getExecutionPlanRequest(0);
-            wireMockServer.stubFor(post(urlPathEqualTo(executionUrl)).withRequestBody(equalToJson(toJson(request))).willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
+            ExecutionBaseRequestResponseMock requestResponse = requestResponseList.get(0);
+            ExecutionPlanResponse response = executionPlanBuilder.getResponse(requestResponse);
+            String requestJson = toJson(executionPlanBuilder.getRequest(requestResponse));
+
+
+            wireMockServer.stubFor(post(urlPathEqualTo(executionUrl)).withRequestBody(equalToJson(requestJson))
+                    .willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
+
+//            verificableRequests.add(postRequestedFor(urlEqualTo(executionUrl))
+//                    .withHeader("Content-Type", equalTo("application/json"))
+//                    .withRequestBody(equalToJson(toJson(requestJson))));
+
 
         } else {
             String scenarioName = "Execution-plan-request";
-            for (int i = 0; i < executionRequestResponses.size(); i++) {
+            for (int i = 0; i < requestResponseList.size(); i++) {
 
                 String scenarioState = i == 0 ? Scenario.STARTED : "execution-state-" + i;
 
-                ExecutionPlanRequest request = getExecutionPlanRequest(i);
-                ExecutionPlanResponse response = getExecutionPlanResponse(i);
 
                 ScenarioMappingBuilder scenarioMappingBuilder = post(urlPathEqualTo(executionUrl)).inScenario(scenarioName).whenScenarioStateIs(scenarioState);
-                if (i < executionRequestResponses.size() - 1) {
+                if (i < requestResponseList.size() - 1) {
                     scenarioMappingBuilder.willSetStateTo("execution-state-" + (i + 1));
                 }
-                String json = toJson(request);
-                wireMockServer.stubFor(scenarioMappingBuilder.withRequestBody(equalToJson(json)).willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
+                ExecutionBaseRequestResponseMock requestResponse = requestResponseList.get(i);
+                String requestJson = toJson(executionPlanBuilder.getRequest(requestResponse));
+                ResponseDefinitionBuilder responseDefBuilder = aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(toJson(executionPlanBuilder.getResponse(requestResponse)));
+
+                wireMockServer.stubFor(scenarioMappingBuilder.withRequestBody(equalToJson(requestJson)).willReturn(responseDefBuilder));
+
+//                verificableRequests.add(postRequestedFor(urlEqualTo(executionUrl))
+//                        .withHeader("Content-Type", equalTo("application/json"))
+//                        .withRequestBody(equalToJson(requestJson)));
             }
         }
 
     }
 
-
     private void mockAuditWriteEndpoint() {
-        if(executionExpectation != null) {
-            String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/audit".replace("{environmentId}", environmentId).replace("{serviceId}", serviceId).replace("{executionId}", executionExpectation.getExecutionId());
 
-            List<AuditEntryExpectation> auditEntryExpectations = executionExpectation.getAuditEntryExpectations();
+        for (int i = 0; i < auditEntryWriteExpectations.size(); i++) {
+            AuditRequestExpectation auditWrite = auditEntryWriteExpectations.get(i);
+            //TODO we need to change the audit's endpoint in the server to have the auditId in the path
+            //TODO should we add the stage to the url too
 
-            if (auditEntryExpectations.size() == 1) {
+            String auditUrlTemplate = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/audit"///{auditId}"
+                    .replace("{environmentId}", environmentId)
+                    .replace("{serviceId}", serviceId)
+                    .replace("{executionId}", auditWrite.getExecutionId());
 
-                AuditEntryExpectation request = auditEntryExpectations.get(0);
+            PrototypeTask taskPrototype = getTaskPrototype(auditWrite.getTaskId());
+            String auditUrl = auditUrlTemplate.replace("{auditId}", taskPrototype.getTaskId());
+            String requestJson = toJson(taskPrototype.toAuditExpectation(auditWrite.getState()));
+            if (auditEntryWriteExpectations.size() == 1) {
                 wireMockServer.stubFor(
-                        post(urlPathEqualTo(executionUrl))
-                                .withRequestBody(equalToJson(toJson(request), true, true))
+                        post(urlPathEqualTo(auditUrl))
+                                .withRequestBody(equalToJson(requestJson, true, true))
                                 .willReturn(aResponse()
                                         .withStatus(201)
                                         .withHeader("Content-Type", "application/json")
                                 )
                 );
 
+//                verificableRequests.add(postRequestedFor(urlEqualTo(auditUrl))
+//                        .withHeader("Content-Type", equalTo("application/json"))
+//                        .withRequestBody(equalToJson(requestJson, true, true)));
+
             } else {
                 String scenarioName = "audit-logs";
-                for (int i = 0; i < auditEntryExpectations.size(); i++) {
-                    String scenarioState = i == 0 ? Scenario.STARTED : "audit-log-state-" + i;
-                    AuditEntryExpectation request = auditEntryExpectations.get(i);
-                    String json = toJson(request);
-                    wireMockServer.stubFor(
-                            post(urlPathEqualTo(executionUrl))
-                                    .withName("audit-stub" + i)
-                                    .inScenario(scenarioName)
-                                    .whenScenarioStateIs(scenarioState)
-                                    .willSetStateTo("audit-log-state-" + (i + 1))
-                                    .withRequestBody(equalToJson(json, true, true))
-                                    .willReturn(aResponse()
-                                            .withStatus(201)
-                                            .withHeader("Content-Type", "application/json")
-                                    )
-                    );
-                }
+                String scenarioState = i == 0 ? Scenario.STARTED : "audit-log-state-" + i;
+                wireMockServer.stubFor(
+                        post(urlPathEqualTo(auditUrl))
+                                .withName("audit-stub" + i)
+                                .inScenario(scenarioName)
+                                .whenScenarioStateIs(scenarioState)
+                                .willSetStateTo("audit-log-state-" + (i + 1))
+                                .withRequestBody(equalToJson(requestJson, true, true))
+                                .willReturn(aResponse()
+                                        .withStatus(201)
+                                        .withHeader("Content-Type", "application/json")
+                                )
+                );
+
+//                verificableRequests.add(postRequestedFor(urlEqualTo(auditUrl))
+//                        .withHeader("Content-Type", equalTo("application/json"))
+//                        .withRequestBody(equalToJson(requestJson, true, true)));
             }
+
         }
 
+    }
+
+    private void importerCall() {
+        String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/import"//?elapsedMillis={elapsedMillis}"
+                .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId);
+
+        wireMockServer.stubFor(post(urlPathEqualTo(executionUrl))
+                .withRequestBody(equalToJson(toJson(importerExecutionRequest)))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json").withBody(toJson(""))));
 
     }
 
     private void mockReleaseLockEndpoint() {
-        ExecutionPlanResponse.Lock lockResponse = new ExecutionPlanResponse.Lock();
-        lockResponse.setKey(serviceId);
-        lockResponse.setOwner(runnerId);
-        if(executionExpectation != null) {
-            lockResponse.setAcquiredForMillis(executionExpectation.getAcquiredForMillis());
-        }
-        lockResponse.setAcquisitionId(DEFAULT_LOCK_ACQUISITION_ID);
-
-        String url = "/api/v1/{key}/lock".replace("{key}", serviceId);
-        wireMockServer.stubFor(delete(urlPathEqualTo(url)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(toJson(lockResponse))));
+        ResponseDefinitionBuilder responseDefBuilder = aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json");
+        wireMockServer
+                .stubFor(delete(urlPathEqualTo("/api/v1/{key}/lock".replace("{key}", serviceId)))
+                        .willReturn(responseDefBuilder));
     }
 
-    private ExecutionPlanRequest getExecutionPlanRequest(int index) {
-        ExecutionPlanRequestResponse executionPlanRequestResponse = executionRequestResponses.get(index);
-        List<StageRequest> stages = executionExpectation != null ? executionExpectation.getStageRequest() : Collections.emptyList();
-        return new ExecutionPlanRequest(executionPlanRequestResponse.getAcquiredForMillis(), stages);
+    private PrototypeTask getTaskPrototype(String taskId) {
+        return clientSubmission
+                .getStages()
+                .stream()
+                .map(PrototypeStage::getTasks)
+                .flatMap(List::stream)
+                .filter(task -> taskId.equals(task.getTaskId()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Task not found with id " + taskId));
     }
 
-    private ExecutionPlanResponse getExecutionPlanResponse(int index) {
-        if (executionRequestResponses.get(index) instanceof ExecutePlanRequestResponse) {
-            ExecutePlanRequestResponse requestResponse = (ExecutePlanRequestResponse) executionRequestResponses.get(index);
-            ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
-            executionPlanResponse.setExecutionId(requestResponse.executionId);
-            executionPlanResponse.setAction(ExecutionPlanResponse.Action.EXECUTE);
-
-            ExecutionPlanResponse.Lock lockMock = new ExecutionPlanResponse.Lock();
-            lockMock.setKey(serviceId);
-            lockMock.setOwner(runnerId);
-            lockMock.setAcquiredForMillis(requestResponse.getAcquiredForMillis());
-            lockMock.setAcquisitionId(requestResponse.getAcquisitionId());
-
-            executionPlanResponse.setLock(lockMock);
-
-            executionPlanResponse.setStages(executionExpectation.getStageRequest().stream().map(MockRunnerServer::toStageResponse).collect(Collectors.toList()));
-            return executionPlanResponse;
-        } else if (executionRequestResponses.get(index) instanceof AwaitPlanRequestResponse) {
-
-            AwaitPlanRequestResponse requestResponse = (AwaitPlanRequestResponse) executionRequestResponses.get(index);
-
-            ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
-            executionPlanResponse.setExecutionId(requestResponse.executionId);
-            executionPlanResponse.setAction(ExecutionPlanResponse.Action.AWAIT);
-
-            ExecutionPlanResponse.Lock lock = new ExecutionPlanResponse.Lock();
-            lock.setAcquisitionId(requestResponse.getAcquisitionId());
-            lock.setKey(serviceName);
-            lock.setOwner(runnerId);
-            lock.setAcquiredForMillis(requestResponse.getAcquiredForMillis());
-            executionPlanResponse.setLock(lock);
-            return executionPlanResponse;
-        } else {
-            //IT'S CONTINUE
-            ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
-            executionPlanResponse.setAction(ExecutionPlanResponse.Action.CONTINUE);
-            return executionPlanResponse;
-        }
-
-    }
-
-    private static ExecutionPlanResponse.Stage toStageResponse(StageRequest stageRequest) {
-        ExecutionPlanResponse.Stage stage = new ExecutionPlanResponse.Stage();
-        stage.setName(stageRequest.getName());
-        stage.setTasks(stageRequest.getTasks().stream()
-                .map(onGoingTask -> new ExecutionPlanResponse.Task(onGoingTask.getId(), PENDING_EXECUTION))
-                .collect(Collectors.toList()));
-        return stage;
-    }
-
-
-    public static abstract class ExecutionPlanRequestResponse {
-
-        private final long acquiredForMillis;
-
-        ExecutionPlanRequestResponse(long acquiredForMillis) {
-            this.acquiredForMillis = acquiredForMillis;
-        }
-
-        long getAcquiredForMillis() {
-            return acquiredForMillis;
-        }
-
-    }
-
-    private static class AwaitPlanRequestResponse extends ExecutionPlanRequestResponse {
-
-        private final String executionId;
-        private final String acquisitionId;
-
-        AwaitPlanRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
-            super(acquiredForMillis);
-            this.acquisitionId = acquisitionId;
-            this.executionId = executionId;
-        }
-
-        public String getAcquisitionId() {
-            return acquisitionId;
-        }
-
-        public String getExecutionId() {
-            return executionId;
-        }
-    }
-
-
-    private static class ExecutePlanRequestResponse extends ExecutionPlanRequestResponse {
-
-        private final String executionId;
-        private final String acquisitionId;
-
-        ExecutePlanRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
-            super(acquiredForMillis);
-            this.acquisitionId = acquisitionId;
-            this.executionId = executionId;
-        }
-
-        public String getAcquisitionId() {
-            return acquisitionId;
-        }
-
-        public String getExecutionId() {
-            return executionId;
-        }
-    }
-
-    private static class ContinuePlanRequestResponse extends ExecutionPlanRequestResponse {
-
-        ContinuePlanRequestResponse(long acquiredForMillis) {
-            super(acquiredForMillis);
-        }
-    }
-
-    private static class ExecutionExpectation {
-        private final String executionId;
-        private final List<StageRequest> stageRequest;
-        private final List<AuditEntryExpectation> auditEntryExpectations;
-        private final long elapsedMillis;
-        private final long acquiredForMillis;
-
-        public ExecutionExpectation(String executionId, List<StageRequest> stageRequest, List<AuditEntryExpectation> auditEntryExpectations, long acquiredForMillis, long elapsedMillis) {
-            this.executionId = executionId;
-            this.stageRequest = stageRequest;
-            this.auditEntryExpectations = auditEntryExpectations;
-            this.acquiredForMillis = acquiredForMillis;
-            this.elapsedMillis = elapsedMillis;
-        }
-
-        public String getExecutionId() {
-            return executionId;
-        }
-
-        public List<AuditEntryExpectation> getAuditEntryExpectations() {
-            return auditEntryExpectations;
-        }
-
-        public List<StageRequest> getStageRequest() {
-            return stageRequest;
-        }
-
-        public long getElapsedMillis() {
-            return elapsedMillis;
-        }
-
-        public long getAcquiredForMillis() {
-            return acquiredForMillis;
-        }
-    }
 
 }
