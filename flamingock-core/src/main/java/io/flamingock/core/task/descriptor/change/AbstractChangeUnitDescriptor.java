@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.task.descriptor;
+package io.flamingock.core.task.descriptor.change;
 
 import io.flamingock.commons.utils.ReflectionUtil;
 import io.flamingock.core.api.annotations.FlamingockConstructor;
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.task.descriptor.ReflectionTaskDescriptor;
 import io.mongock.api.annotations.ChangeUnitConstructor;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.util.List;
 
-public abstract class AbstractChangeUnitTaskDescriptor extends ReflectionTaskDescriptor {
+public abstract class AbstractChangeUnitDescriptor extends ReflectionTaskDescriptor {
 
     private final boolean isNewChangeUnit;
 
-    public AbstractChangeUnitTaskDescriptor(String id,
-                                            String order,
-                                            Class<?> source,
-                                            boolean runAlways,
-                                            boolean transactional,
-                                            boolean isNewChangeUnit) {
+    public AbstractChangeUnitDescriptor(String id,
+                                        String order,
+                                        Class<?> source,
+                                        boolean runAlways,
+                                        boolean transactional,
+                                        boolean isNewChangeUnit) {
         super(id, order, source, runAlways, transactional);
         this.isNewChangeUnit = isNewChangeUnit;
     }

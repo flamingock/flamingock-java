@@ -347,7 +347,10 @@ public final class MockRunnerServerOld {
     private void mockAuditWriteEndpoint() {
 
         if(executionExpectation != null) {
-            String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/audit".replace("{environmentId}", environmentId).replace("{serviceId}", serviceId).replace("{executionId}", executionExpectation.getExecutionId());
+            String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/task/{taskId}/audit"
+                    .replace("{environmentId}", environmentId)
+                    .replace("{serviceId}", serviceId)
+                    .replace("{executionId}", executionExpectation.getExecutionId());
 
             List<AuditEntryMatcher> auditEntryExpectations = executionExpectation.getAuditEntryExpectations();
 
@@ -355,7 +358,7 @@ public final class MockRunnerServerOld {
 
                 AuditEntryMatcher request = auditEntryExpectations.get(0);
                 wireMockServer.stubFor(
-                        post(urlPathEqualTo(executionUrl))
+                        post(urlPathEqualTo(executionUrl.replace("{taskId}", request.getTaskId())))
                                 .withRequestBody(equalToJson(toJson(request), true, true))
                                 .willReturn(aResponse()
                                         .withStatus(201)
@@ -370,7 +373,7 @@ public final class MockRunnerServerOld {
                     AuditEntryMatcher request = auditEntryExpectations.get(i);
                     String json = toJson(request);
                     wireMockServer.stubFor(
-                            post(urlPathEqualTo(executionUrl))
+                            post(urlPathEqualTo(executionUrl.replace("{taskId}", request.getTaskId())))
                                     .withName("audit-stub" + i)
                                     .inScenario(scenarioName)
                                     .whenScenarioStateIs(scenarioState)

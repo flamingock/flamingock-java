@@ -17,9 +17,9 @@
 package io.flamingock.core.task.executable;
 
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.task.descriptor.ChangeUnitTaskDescriptor;
+import io.flamingock.core.task.descriptor.change.ChangeUnitDescriptor;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
-import io.flamingock.core.task.descriptor.TemplatedChangeUnitTaskDescriptor;
+import io.flamingock.core.task.descriptor.change.TemplatedChangeUnitDescriptor;
 import io.flamingock.core.task.executable.template.TemplatedExecutableTaskFactory;
 
 import java.util.List;
@@ -41,10 +41,10 @@ public class ParentExecutableTaskFactory implements ExecutableTaskFactory<TaskDe
 
     @Override
     public List<? extends ExecutableTask> extractTasks(String stageName, TaskDescriptor taskDescriptor, AuditEntry.Status initialState) {
-        if(ChangeUnitTaskDescriptor.class.isAssignableFrom(taskDescriptor.getClass())) {
-            return executableChangeUnitFactory.extractTasks(stageName, (ChangeUnitTaskDescriptor)taskDescriptor, initialState);
-        } else if(TemplatedChangeUnitTaskDescriptor.class.isAssignableFrom(taskDescriptor.getClass())) {
-            return executableTemplatedFactory.extractTasks(stageName, (TemplatedChangeUnitTaskDescriptor)taskDescriptor, initialState);
+        if(ChangeUnitDescriptor.class.isAssignableFrom(taskDescriptor.getClass())) {
+            return executableChangeUnitFactory.extractTasks(stageName, (ChangeUnitDescriptor)taskDescriptor, initialState);
+        } else if(TemplatedChangeUnitDescriptor.class.isAssignableFrom(taskDescriptor.getClass())) {
+            return executableTemplatedFactory.extractTasks(stageName, (TemplatedChangeUnitDescriptor)taskDescriptor, initialState);
         } else {
             throw new IllegalArgumentException(String.format("ExecutableTask type not recognised[%s]", taskDescriptor.getClass().getName()));
         }

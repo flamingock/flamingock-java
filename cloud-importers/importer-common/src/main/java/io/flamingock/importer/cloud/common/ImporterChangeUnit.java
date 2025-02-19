@@ -33,9 +33,9 @@ public class ImporterChangeUnit {
     private static final Logger logger = LoggerFactory.getLogger(ImporterChangeUnit.class);
 
     @Execution
-    public void execution(@NonLockGuarded ImporterConfiguration configuration) {
+    public void execution(@NonLockGuarded ImporterConfiguration configuration, @NonLockGuarded AuditReader auditReader) {
 
-        List<AuditEntry> data = configuration.readAuditEntries();
+        List<AuditEntry> data = auditReader.readAuditEntries();
 
         ImporterService importerService = new ImporterService(
                 configuration.getServerHost(),

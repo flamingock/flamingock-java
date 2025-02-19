@@ -16,37 +16,12 @@
 
 package io.flamingock.importer.cloud.common;
 
-import io.flamingock.core.api.CloudSystemModule;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
+public interface AuditReader {
 
-public interface Importer extends CloudSystemModule {
-    List<Class<?>> TASK_CLASSES = Collections.singletonList(
-            ImporterChangeUnit.class
-    );
+    List<AuditEntry> readAuditEntries();
 
-    public final static String DEFAULT_MONGOCK_REPOSITORY_NAME = "mongockChangeLog";
-
-    @Override
-    default int getOrder() {
-        return 0;
-    }
-
-    @Override
-    default String getName() {
-        return "importer";
-    }
-
-    @Override
-    default Collection<Class<?>> getTaskClasses() {
-        return TASK_CLASSES;
-    }
-
-    @Override
-    default boolean isBeforeUserStages() {
-        return true;
-    }
 }

@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package io.flamingock.importer.cloud.dynamodb.legacy;
+package io.flamingock.importer.cloud.dynamodb.legacy.entities;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 @DynamoDbBean
-public class ChangeEntry {
+public class ChangeEntryEntity {
+
+    public static final String AUDIT_LOG_TABLE_NAME = "";
 
     private String changeId;
     private String rangeKey;
@@ -38,7 +40,7 @@ public class ChangeEntry {
     private String errorTrace;
     private Boolean systemChange;
 
-    public ChangeEntry() {
+    public ChangeEntryEntity() {
     }
 
     @DynamoDbPartitionKey

@@ -17,7 +17,7 @@
 package io.flamingock.core.task.executable.template;
 
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.task.descriptor.TemplatedChangeUnitTaskDescriptor;
+import io.flamingock.core.task.descriptor.change.TemplatedChangeUnitDescriptor;
 import io.flamingock.core.task.executable.ExecutableTaskFactory;
 
 import java.util.Collections;
@@ -27,15 +27,15 @@ import java.util.List;
 /**
  * Factory for ChangeUnit classes
  */
-public class TemplatedExecutableTaskFactory implements ExecutableTaskFactory<TemplatedChangeUnitTaskDescriptor> {
+public class TemplatedExecutableTaskFactory implements ExecutableTaskFactory<TemplatedChangeUnitDescriptor> {
 
     @Override
-    public List<TemplatedExecutableTask> extractTasks(String stageName, TemplatedChangeUnitTaskDescriptor descriptor, AuditEntry.Status initialState) {
+    public List<TemplatedExecutableTask> extractTasks(String stageName, TemplatedChangeUnitDescriptor descriptor, AuditEntry.Status initialState) {
         return Collections.singletonList(getTasksFromReflection(stageName, descriptor, initialState));
     }
 
     private TemplatedExecutableTask getTasksFromReflection(String stageName,
-                                                           TemplatedChangeUnitTaskDescriptor taskDescriptor,
+                                                           TemplatedChangeUnitDescriptor taskDescriptor,
                                                            AuditEntry.Status initialState) {
         return new TemplatedExecutableTask(
                 stageName,

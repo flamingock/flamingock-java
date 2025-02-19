@@ -22,8 +22,12 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.MongoDBSync4Configuration;
-import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
-import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
+import io.flamingock.common.test.cloud.AuditRequestExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
+import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
+import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
+import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
@@ -74,7 +78,7 @@ class MongoSync4LocalCloudImporterTest {
     private static MongoClient mongoClient;
     private static MongoDatabase testDatabase;
 
-    private static MockRunnerServerOld mockRunnerServer;
+    private MockRunnerServer mockRunnerServer;
     private static StandaloneCloudBuilder flamingockBuilder;
 
     private final Logger logger = LoggerFactory.getLogger(MongoSync4LocalCloudImporterTest.class);
@@ -91,7 +95,7 @@ class MongoSync4LocalCloudImporterTest {
     @BeforeEach
     void beforeEach() {
 
-        mockRunnerServer = new MockRunnerServerOld()
+        mockRunnerServer = new MockRunnerServer()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -147,37 +151,31 @@ class MongoSync4LocalCloudImporterTest {
         //Prepare expectations for Mocked Server
         List<AuditEntry> importExpectations = flamingockDbState
                 .stream()
-                .map(MongoDBLocalImportConfiguration::toAuditEntry)
+                .map(MongoDBLocalAuditReader::toAuditEntry)
                 .collect(Collectors.toList());
 
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "importer-v1",
-                EXECUTED,
-                ImporterChangeUnit.class.getName(),
-                "execution"
-        ));
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-document",
-                EXECUTED,
-                InsertClient.class.getName(),
-                "execution"
-        ));
-        MongoDBLocalImporter mongoDBLegacyImporter = new MongoDBLocalImporter(testDatabase.getCollection(MongoDBSync4Configuration.DEFAULT_MIGRATION_REPOSITORY_NAME));
+        MongoDBLocalImporter mongoDBLegacyImporter = new MongoDBLocalImporter(mongoClient, DB_NAME);
 
         //Run Mocked Server
         String executionId = "execution-1";
         String stageName = "stage-1";
-        List<String> stageNames = new ArrayList<>();
-        stageNames.add(mongoDBLegacyImporter.getName());
-        stageNames.add(stageName);
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage("importer", 0)
+                        .addTask("importer-v1", ImporterChangeUnit.class.getName(), "execution", true),
+                new PrototypeStage(stageName, 1)
+                        .addTask("insert-document", InsertClient.class.getName(), "execution", true)
+        );
+
         mockRunnerServer
-                .addSuccessfulImporterCall(importExpectations)
-                .addMultipleStageExecutionPlan(executionId, stageNames, auditEntryExpectations)
-                .addExecutionWithAllTasksRequestResponse(executionId)
-                .addExecutionContinueRequestResponse()
+                .withClientSubmissionBase(prototypeClientSubmission)
+                .withExecutionPlanRequestsExpectation(
+                        new ExecutionPlanRequestResponseMock(executionId),
+                        new ExecutionContinueRequestResponseMock()
+                ).withAuditRequestsExpectation(
+                        new AuditRequestExpectation(executionId, "importer-v1", EXECUTED),
+                        new AuditRequestExpectation(executionId, "insert-document", EXECUTED)
+                ).addSuccessfulImporterCall(importExpectations)
                 .start();
 
         //Finally run Flamingock changes with Cloud Importer

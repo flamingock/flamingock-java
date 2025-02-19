@@ -18,7 +18,7 @@ package io.flamingock.core.task.executable;
 
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.task.descriptor.ChangeUnitTaskDescriptor;
+import io.flamingock.core.task.descriptor.change.ChangeUnitDescriptor;
 import io.flamingock.core.task.descriptor.ReflectionTaskDescriptor;
 
 import java.lang.reflect.Method;
@@ -30,15 +30,15 @@ import java.util.Optional;
 /**
  * Factory for ChangeUnit classes
  */
-public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<ChangeUnitTaskDescriptor> {
+public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<ChangeUnitDescriptor> {
 
     @Override
-    public List<ReflectionExecutableTask<ReflectionTaskDescriptor>> extractTasks(String stageName, ChangeUnitTaskDescriptor descriptor, AuditEntry.Status initialState) {
+    public List<ReflectionExecutableTask<ReflectionTaskDescriptor>> extractTasks(String stageName, ChangeUnitDescriptor descriptor, AuditEntry.Status initialState) {
         return getTasksFromReflection(stageName, descriptor, initialState);
     }
 
     private List<ReflectionExecutableTask<ReflectionTaskDescriptor>> getTasksFromReflection(String stageName,
-                                                                                            ChangeUnitTaskDescriptor taskDescriptor,
+                                                                                            ChangeUnitDescriptor taskDescriptor,
                                                                                             AuditEntry.Status initialState) {
 
         Method executionMethod = taskDescriptor.getExecutionMethod();
@@ -70,7 +70,7 @@ public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<Change
                                                                                                     ReflectionExecutableTask<ReflectionTaskDescriptor> baseTask,
                                                                                                     AuditEntry.Status initialState) {
         //Creates a new TaskDescriptor, based on the main one, but with the "beforeExecution id, also based on the main one"
-        ChangeUnitTaskDescriptor taskDescriptor = new ChangeUnitTaskDescriptor(
+        ChangeUnitDescriptor taskDescriptor = new ChangeUnitDescriptor(
                 StringUtil.getBeforeExecutionId(baseTask.getDescriptor().getId()),
                 baseTask.getDescriptor().getOrder().orElse(null),
                 baseTask.getDescriptor().getSourceClass(),

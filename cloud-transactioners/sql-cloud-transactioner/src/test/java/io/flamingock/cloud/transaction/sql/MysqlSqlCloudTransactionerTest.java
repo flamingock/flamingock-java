@@ -82,7 +82,6 @@ public class MysqlSqlCloudTransactionerTest {
                     .addTask("unhappy-insert-clients", UnhappyCreateTableClientsChange.class.getName(), "execution", true)
     );
 
-    private MockRunnerServerOld mockRunnerServerOld;
     private MockRunnerServer mockRunnerServer;
 
     private StandaloneCloudBuilder flamingockBuilder;
@@ -95,19 +94,6 @@ public class MysqlSqlCloudTransactionerTest {
 
     @BeforeEach
     void beforeEach() {
-        mockRunnerServerOld = new MockRunnerServerOld()
-                .setServerPort(runnerServerPort)
-                .setOrganisationId(organisationId)
-                .setOrganisationName(organisationName)
-                .setProjectId(projectId)
-                .setProjectName(projectName)
-                .setServiceId(serviceId)
-                .setServiceName(serviceName)
-                .setEnvironmentId(environmentId)
-                .setEnvironmentName(environmentName)
-                .setCredentialId(credentialId)
-                .setApiToken(apiToken)
-                .setJwt(jwt);
 
         mockRunnerServer = new MockRunnerServer()
                 .setServerPort(runnerServerPort)
@@ -133,7 +119,6 @@ public class MysqlSqlCloudTransactionerTest {
     @AfterEach
     void afterEach() throws SQLException {
         //tear down
-        mockRunnerServerOld.stop();
         mockRunnerServer.stop();
         SqlTestUtil.cleanTable(mysql, "ONGOING_TASKS");
         SqlTestUtil.dropTableSafe(mysql, "CLIENTS");

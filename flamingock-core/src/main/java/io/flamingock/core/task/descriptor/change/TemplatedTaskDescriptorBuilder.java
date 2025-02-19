@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.task.descriptor;
+package io.flamingock.core.task.descriptor.change;
 
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.template.TemplateSpec;
@@ -78,13 +78,13 @@ public class TemplatedTaskDescriptorBuilder {
         return this;
     }
 
-    public TemplatedChangeUnitTaskDescriptor build() {
+    public TemplatedChangeUnitDescriptor build() {
 
         TemplateSpec templateSpec = TemplateFactory.getTemplate(templateName)
                 .orElseThrow(() -> new FlamingockException("Template not found: " + templateName));
 
         boolean isTaskTransactional = isTaskTransactionalAccordingTemplate(templateSpec);
-        return new TemplatedChangeUnitTaskDescriptor(id, order, templateSpec.getTemplateClass(), isTaskTransactional, runAlways, templateConfiguration);
+        return new TemplatedChangeUnitDescriptor(id, order, templateSpec.getTemplateClass(), isTaskTransactional, runAlways, templateConfiguration);
     }
 
     public TemplatedTaskDescriptorBuilder setFromDefinition(TemplatedTaskDefinition templatedTaskDefinition) {

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.task.descriptor;
+package io.flamingock.core.task.descriptor.change;
 
+import io.flamingock.core.task.descriptor.ReflectionTaskDescriptor;
 import io.flamingock.core.utils.ExecutionUtils;
 
 public class ReflectionTaskDescriptorBuilder {
@@ -37,7 +38,7 @@ public class ReflectionTaskDescriptorBuilder {
 
     public ReflectionTaskDescriptor build() {
         if (ExecutionUtils.isChangeUnit(source)) {
-            return ChangeUnitTaskDescriptor.fromClass(source);
+            return ChangeUnitDescriptor.fromClass(source);
         } else {
             throw new IllegalArgumentException(String.format("Task type not recognised in class[%s]", source.getName()));
         }

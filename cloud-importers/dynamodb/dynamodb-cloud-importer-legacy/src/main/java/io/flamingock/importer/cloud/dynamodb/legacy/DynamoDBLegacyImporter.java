@@ -20,28 +20,43 @@ import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.importer.cloud.common.Importer;
+import io.flamingock.importer.cloud.dynamodb.legacy.entities.ChangeEntryEntity;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class DynamoDBLegacyImporter implements Importer {
-    private final DynamoDbTable<ChangeEntry> sourceTable;
+
+    private final DynamoDbTable<ChangeEntryEntity> sourceTable;
     private List<Dependency> dependencies;
 
-    public DynamoDBLegacyImporter(DynamoDbTable<ChangeEntry> sourceTable) {
-        this.sourceTable = sourceTable;
+    public DynamoDBLegacyImporter(DynamoDbEnhancedClient client) {
+        this.sourceTable = client.table(DEFAULT_MONGOCK_REPOSITORY_NAME, TableSchema.fromBean(ChangeEntryEntity.class));
+    }
+
+    public DynamoDBLegacyImporter(DynamoDbEnhancedClient client, String overridenChangelogTable) {
+        this.sourceTable = client.table(overridenChangelogTable, TableSchema.fromBean(ChangeEntryEntity.class));
     }
 
     @Override
     public void initialise(EnvironmentId environmentId, ServiceId serviceId, String jwt, String serverHost) {
-        dependencies = Collections.singletonList(
+        dependencies = new ArrayList<>();
+        dependencies.add(
                 new Dependency(
                         DynamoDBLegacyImportConfiguration.class,
                         new DynamoDBLegacyImportConfiguration(
-                                environmentId, serviceId, jwt, serverHost, sourceTable
+                                environmentId, serviceId, jwt, serverHost
                         )
+                )
+        );
+        dependencies.add(
+                new Dependency(
+                        DynamoDBLegacyAuditReader.class,
+                        new DynamoDBLegacyAuditReader(sourceTable)
                 )
         );
     }

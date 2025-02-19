@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.task.descriptor;
+package io.flamingock.core.task.descriptor.change;
 
 import io.flamingock.commons.utils.ReflectionUtil;
 import io.flamingock.template.annotations.TemplateConfigSetter;
@@ -28,17 +28,17 @@ import java.util.Map;
 import java.util.Optional;
 
 
-public class TemplatedChangeUnitTaskDescriptor extends AbstractChangeUnitTaskDescriptor {
+public class TemplatedChangeUnitDescriptor extends AbstractChangeUnitDescriptor {
 
 
     private final Map<String, Object> templateConfiguration;
 
-    public TemplatedChangeUnitTaskDescriptor(String id,
-                                             String order,
-                                             Class<?> templateClass,
-                                             boolean transactional,
-                                             boolean runAlways,
-                                             Map<String, Object> templateConfiguration) {
+    public TemplatedChangeUnitDescriptor(String id,
+                                         String order,
+                                         Class<?> templateClass,
+                                         boolean transactional,
+                                         boolean runAlways,
+                                         Map<String, Object> templateConfiguration) {
         super(id, order, templateClass, runAlways, transactional, true);
         this.templateConfiguration = templateConfiguration;
     }

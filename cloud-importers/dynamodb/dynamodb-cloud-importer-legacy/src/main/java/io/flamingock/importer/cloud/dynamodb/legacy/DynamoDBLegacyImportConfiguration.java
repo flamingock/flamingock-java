@@ -18,21 +18,10 @@ package io.flamingock.importer.cloud.dynamodb.legacy;
 
 import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.importer.cloud.common.ImporterConfiguration;
-import io.flamingock.importer.cloud.common.MongockLegacyAuditEntry;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
-
-import java.time.Instant;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class DynamoDBLegacyImportConfiguration implements ImporterConfiguration {
 
-    private final DynamoDbTable<ChangeEntry> changeUnitsStorage;
     private final EnvironmentId environmentId;
     private final String jwt;
     private final ServiceId serviceId;
@@ -41,31 +30,11 @@ public class DynamoDBLegacyImportConfiguration implements ImporterConfiguration 
     public DynamoDBLegacyImportConfiguration(EnvironmentId environmentId,
                                              ServiceId serviceId,
                                              String jwt,
-                                             String serverHost,
-                                             DynamoDbTable<ChangeEntry> changeUnitsStorage) {
+                                             String serverHost) {
         this.environmentId = environmentId;
         this.serviceId = serviceId;
         this.jwt = jwt;
         this.serverHost = serverHost;
-        this.changeUnitsStorage = changeUnitsStorage;
-    }
-
-    static MongockLegacyAuditEntry toMongockLegacyAuditEntry(ChangeEntry changeEntryDynamoDB) {
-        return new MongockLegacyAuditEntry(
-                changeEntryDynamoDB.getExecutionId(),
-                changeEntryDynamoDB.getChangeId(),
-                changeEntryDynamoDB.getState(),
-                changeEntryDynamoDB.getType(),
-                changeEntryDynamoDB.getAuthor(),
-                Date.from(Instant.ofEpochMilli(changeEntryDynamoDB.getTimestamp())).getTime(),
-                changeEntryDynamoDB.getChangeLogClass(),
-                changeEntryDynamoDB.getChangeSetMethod(),
-                changeEntryDynamoDB.getMetadata(),
-                changeEntryDynamoDB.getExecutionMillis(),
-                changeEntryDynamoDB.getExecutionHostname(),
-                changeEntryDynamoDB.getErrorTrace(),
-                changeEntryDynamoDB.getSystemChange()
-        );
     }
 
     @Override
@@ -86,20 +55,5 @@ public class DynamoDBLegacyImportConfiguration implements ImporterConfiguration 
     @Override
     public String getServerHost() {
         return serverHost;
-    }
-
-    @Override
-    public List<AuditEntry> readAuditEntries() {
-        return changeUnitsStorage
-                .scan(ScanEnhancedRequest.builder()
-                        .consistentRead(true)
-                        .build()
-                )
-                .items()
-                .stream()
-                .map(DynamoDBLegacyImportConfiguration::toMongockLegacyAuditEntry)
-                .map(MongockLegacyAuditEntry::toAuditEntry)
-                .sorted(Comparator.comparing(AuditEntry::getCreatedAt))
-                .collect(Collectors.toList());
     }
 }

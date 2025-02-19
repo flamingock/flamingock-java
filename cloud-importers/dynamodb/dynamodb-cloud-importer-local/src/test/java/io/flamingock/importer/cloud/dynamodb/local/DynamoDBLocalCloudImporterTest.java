@@ -16,15 +16,14 @@
 
 package io.flamingock.importer.cloud.dynamodb.local;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
-import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
+import io.flamingock.common.test.cloud.AuditRequestExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
+import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
+import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
+import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
@@ -71,10 +70,9 @@ class DynamoDBLocalCloudImporterTest {
 
     private static DynamoDBProxyServer dynamoDBLocal;
     private static DynamoDbClient client;
-    private static AmazonDynamoDBClient amazonClient;
     private static DynamoDBUtil dynamoDBUtil;
 
-    private static MockRunnerServerOld mockRunnerServer;
+    private static MockRunnerServer mockRunnerServer;
     private static StandaloneCloudBuilder flamingockBuilder;
 
     private final Logger logger = LoggerFactory.getLogger(DynamoDBLocalCloudImporterTest.class);
@@ -95,22 +93,6 @@ class DynamoDBLocalCloudImporterTest {
         }
     }
 
-    private static AmazonDynamoDBClient getAmazonDynamoDBClient() {
-        return (AmazonDynamoDBClient) AmazonDynamoDBClientBuilder
-                .standard()
-                .withEndpointConfiguration(
-                        new AwsClientBuilder.EndpointConfiguration(
-                                "http://localhost:8000", Region.EU_WEST_1.toString()
-                        )
-                )
-                .withCredentials(
-                        new AWSStaticCredentialsProvider(
-                                new BasicAWSCredentials("dummye", "dummye")
-                        )
-                )
-                .build();
-    }
-
     @BeforeEach
     void beforeEach() throws Exception {
         logger.info("Starting DynamoDB Local...");
@@ -127,9 +109,7 @@ class DynamoDBLocalCloudImporterTest {
 
         dynamoDBUtil = new DynamoDBUtil(client);
 
-        amazonClient = getAmazonDynamoDBClient();
-
-        mockRunnerServer = new MockRunnerServerOld()
+        mockRunnerServer = new MockRunnerServer()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -193,34 +173,28 @@ class DynamoDBLocalCloudImporterTest {
                 .map(AuditEntryEntity::toAuditEntry)
                 .collect(Collectors.toList());
 
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "importer-v1",
-                EXECUTED,
-                ImporterChangeUnit.class.getName(),
-                "execution"
-        ));
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-row",
-                EXECUTED,
-                InsertClient.class.getName(),
-                "execution"
-        ));
-        DynamoDBLocalImporter dynamoDBLegacyImporter = new DynamoDBLocalImporter(dynamoDBUtil.getEnhancedClient().table(DynamoDBConstants.AUDIT_LOG_TABLE_NAME, TableSchema.fromBean(AuditEntryEntity.class)));
+        DynamoDBLocalImporter dynamoDBLegacyImporter = new DynamoDBLocalImporter(dynamoDBUtil.getEnhancedClient());
 
         //Run Mocked Server
         String executionId = "execution-1";
         String stageName = "stage-1";
-        List<String> stageNames = new ArrayList<>();
-        stageNames.add(dynamoDBLegacyImporter.getName());
-        stageNames.add(stageName);
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage("importer", 0)
+                        .addTask("importer-v1", ImporterChangeUnit.class.getName(), "execution", true),
+                new PrototypeStage(stageName, 1)
+                        .addTask("insert-row", InsertClient.class.getName(), "execution", true)
+        );
+
         mockRunnerServer
-                .addSuccessfulImporterCall(importExpectations)
-                .addMultipleStageExecutionPlan(executionId, stageNames, auditEntryExpectations)
-                .addExecutionWithAllTasksRequestResponse(executionId)
-                .addExecutionContinueRequestResponse()
+                .withClientSubmissionBase(prototypeClientSubmission)
+                .withExecutionPlanRequestsExpectation(
+                        new ExecutionPlanRequestResponseMock(executionId),
+                        new ExecutionContinueRequestResponseMock()
+                ).withAuditRequestsExpectation(
+                        new AuditRequestExpectation(executionId, "importer-v1", EXECUTED),
+                        new AuditRequestExpectation(executionId, "insert-row", EXECUTED)
+                ).addSuccessfulImporterCall(importExpectations)
                 .start();
 
         //Finally run Flamingock changes with Cloud Importer

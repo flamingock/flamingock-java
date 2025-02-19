@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-public abstract class ReflectionTaskDescriptor extends AbstractTaskDescriptor implements TaskDescriptor {
+public abstract class ReflectionTaskDescriptor extends AbstractTaskDescriptor {
 
     protected final Class<?> source;
 

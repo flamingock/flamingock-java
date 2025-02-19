@@ -280,7 +280,7 @@ public final class MockRunnerServer {
             //TODO we need to change the audit's endpoint in the server to have the auditId in the path
             //TODO should we add the stage to the url too
 
-            String auditUrlTemplate = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/audit"///{auditId}"
+            String auditUrlTemplate = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/task/{taskId}/audit"///{auditId}"
                     .replace("{environmentId}", environmentId)
                     .replace("{serviceId}", serviceId)
                     .replace("{executionId}", auditWrite.getExecutionId());
@@ -290,7 +290,7 @@ public final class MockRunnerServer {
             String requestJson = toJson(taskPrototype.toAuditExpectation(auditWrite.getState()));
             if (auditEntryWriteExpectations.size() == 1) {
                 wireMockServer.stubFor(
-                        post(urlPathEqualTo(auditUrl))
+                        post(urlPathEqualTo(auditUrl.replace("{taskId}", auditWrite.getTaskId())))
                                 .withRequestBody(equalToJson(requestJson, true, true))
                                 .willReturn(aResponse()
                                         .withStatus(201)
@@ -306,7 +306,7 @@ public final class MockRunnerServer {
                 String scenarioName = "audit-logs";
                 String scenarioState = i == 0 ? Scenario.STARTED : "audit-log-state-" + i;
                 wireMockServer.stubFor(
-                        post(urlPathEqualTo(auditUrl))
+                        post(urlPathEqualTo(auditUrl.replace("{taskId}", auditWrite.getTaskId())))
                                 .withName("audit-stub" + i)
                                 .inScenario(scenarioName)
                                 .whenScenarioStateIs(scenarioState)

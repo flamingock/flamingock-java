@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.task.descriptor;
+package io.flamingock.core.task.descriptor.change;
 
 import io.flamingock.commons.utils.ReflectionUtil;
 import io.flamingock.core.api.annotations.ChangeUnit;
@@ -24,49 +24,23 @@ import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.utils.ExecutionUtils;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-public class ChangeUnitTaskDescriptor extends AbstractChangeUnitTaskDescriptor {
-    private static final Logger logger = LoggerFactory.getLogger(ChangeUnitTaskDescriptor.class);
+public class ChangeUnitDescriptor extends AbstractChangeUnitDescriptor {
+    private static final Logger logger = LoggerFactory.getLogger(ChangeUnitDescriptor.class);
 
-    public static ChangeUnitTaskDescriptor fromClass(Class<?> source) {
-        if (ExecutionUtils.isNewChangeUnit(source)) {
-            ChangeUnit changeUnitAnnotation = source.getAnnotation(ChangeUnit.class);
-            return new ChangeUnitTaskDescriptor(
-                    changeUnitAnnotation.id(),
-                    changeUnitAnnotation.order(),
-                    source,
-                    changeUnitAnnotation.runAlways(),
-                    changeUnitAnnotation.transactional(),
-                    true);
-        } else if (ExecutionUtils.isLegacyChangeUnit(source)) {
-            logger.warn("Detected legacy changeUnit[{}]. If it's an old changeUnit created for Mongock, it's fine. " +
-                            "Otherwise, it's highly recommended us the new API[in package {}]",
-                    source.getName(),
-                    "io.flamingock.core.api.annotations");
-            io.mongock.api.annotations.ChangeUnit changeUnitAnnotation = source.getAnnotation(io.mongock.api.annotations.ChangeUnit.class);
-            return new ChangeUnitTaskDescriptor(
-                    MongockLegacyIdGenerator.getNewId(changeUnitAnnotation.id(), changeUnitAnnotation.author()),
-                    changeUnitAnnotation.order(),
-                    source,
-                    changeUnitAnnotation.runAlways(),
-                    changeUnitAnnotation.transactional(),
-                    false);
-        } else {
-            throw new IllegalArgumentException(String.format(
-                    "Task class[%s] should be annotate with %s",
-                    source.getName(),
-                    ChangeUnit.class.getName()
-            ));
-        }
+    public static ChangeUnitDescriptor fromClass(Class<?> source) {
+        return ChangeUnitUtil.getChangeUnitDescriptor(source);
     }
 
-    public ChangeUnitTaskDescriptor(String id, String order, Class<?> source, boolean runAlways, boolean transactional, boolean isNewChangeUnit) {
+    public ChangeUnitDescriptor(String id, String order, Class<?> source, boolean runAlways, boolean transactional, boolean isNewChangeUnit) {
         super(id, order, source, runAlways, transactional, isNewChangeUnit);
     }
 
@@ -132,19 +106,18 @@ public class ChangeUnitTaskDescriptor extends AbstractChangeUnitTaskDescriptor {
     }
 
     public Optional<Method> getBeforeExecutionMethod() {
-        Optional<Method> beforeExecutionMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), BeforeExecution.class);
-        if (isNewChangeUnit() && beforeExecutionMethod.isPresent()) {
-            throw new IllegalArgumentException(String.format("You are using legacy annotation [%s] with new API. You should create an independent ChangeUnit for it",
-                    BeforeExecution.class.getName()));
-        }
-        return isNewChangeUnit() ? Optional.empty() : beforeExecutionMethod;
+        return getMethodFromDeprecatedAnnotation(BeforeExecution.class);
     }
 
     public Optional<Method> getRollbackBeforeExecutionMethod() {
-        Optional<Method> rollbackBeforeExecution = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackBeforeExecution.class);
+        return getMethodFromDeprecatedAnnotation(RollbackBeforeExecution.class);
+    }
+
+    private Optional<Method> getMethodFromDeprecatedAnnotation(Class<? extends Annotation> annotation) {
+        Optional<Method> rollbackBeforeExecution = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), annotation);
         if (isNewChangeUnit() && rollbackBeforeExecution.isPresent()) {
             throw new IllegalArgumentException(String.format("You are using legacy annotation [%s] with new API. You should create an independent ChangeUnit for it",
-                    RollbackBeforeExecution.class.getName()));
+                    annotation.getName()));
         }
         return isNewChangeUnit() ? Optional.empty() : rollbackBeforeExecution;
     }
@@ -159,7 +132,7 @@ public class ChangeUnitTaskDescriptor extends AbstractChangeUnitTaskDescriptor {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", ChangeUnitTaskDescriptor.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", ChangeUnitDescriptor.class.getSimpleName() + "[", "]")
                 .add("source=" + source)
                 .add("sourceClass=" + getSourceClass())
                 .add("sourceName='" + getSourceName() + "'")

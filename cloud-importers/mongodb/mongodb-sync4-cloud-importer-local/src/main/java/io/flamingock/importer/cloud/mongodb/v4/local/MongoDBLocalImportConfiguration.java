@@ -16,24 +16,12 @@
 
 package io.flamingock.importer.cloud.mongodb.v4.local;
 
-import com.mongodb.client.MongoCollection;
-import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.importer.cloud.common.ImporterConfiguration;
-import org.bson.Document;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static io.flamingock.core.local.AuditEntryField.*;
 
 public class MongoDBLocalImportConfiguration implements ImporterConfiguration {
 
-    private final MongoCollection<Document> changeUnitsStorage;
     private final EnvironmentId environmentId;
     private final String jwt;
     private final ServiceId serviceId;
@@ -42,33 +30,11 @@ public class MongoDBLocalImportConfiguration implements ImporterConfiguration {
     public MongoDBLocalImportConfiguration(EnvironmentId environmentId,
                                            ServiceId serviceId,
                                            String jwt,
-                                           String serverHost,
-                                           MongoCollection<Document> changeUnitsStorage) {
+                                           String serverHost) {
         this.environmentId = environmentId;
         this.serviceId = serviceId;
         this.jwt = jwt;
         this.serverHost = serverHost;
-        this.changeUnitsStorage = changeUnitsStorage;
-    }
-
-    static AuditEntry toAuditEntry(Document document) {
-        return new AuditEntry(
-                document.getString(KEY_EXECUTION_ID),
-                null,//TODO: add stage name
-                document.getString(KEY_CHANGE_ID),
-                document.getString(KEY_AUTHOR),
-                TimeUtil.toLocalDateTime(document.get(KEY_TIMESTAMP)),
-                document.containsKey(KEY_STATE) ? AuditEntry.Status.valueOf(document.getString(KEY_STATE)) : null,
-                document.containsKey(KEY_TYPE) ? AuditEntry.ExecutionType.valueOf(document.getString(KEY_TYPE)) : null,
-                document.getString(KEY_CHANGELOG_CLASS),
-                document.getString(KEY_CHANGESET_METHOD),
-                document.containsKey(KEY_EXECUTION_MILLIS) && document.get(KEY_EXECUTION_MILLIS) != null
-                        ? ((Number) document.get(KEY_EXECUTION_MILLIS)).longValue() : -1L,
-                document.getString(KEY_EXECUTION_HOSTNAME),
-                document.get(KEY_METADATA),
-                document.getBoolean(KEY_SYSTEM_CHANGE) != null && document.getBoolean(KEY_SYSTEM_CHANGE),
-                document.getString(KEY_ERROR_TRACE)
-        );
     }
 
     @Override
@@ -89,16 +55,5 @@ public class MongoDBLocalImportConfiguration implements ImporterConfiguration {
     @Override
     public String getServerHost() {
         return serverHost;
-    }
-
-    @Override
-    public List<AuditEntry> readAuditEntries() {
-        return changeUnitsStorage
-                .find()
-                .into(new ArrayList<>())
-                .stream()
-                .map(MongoDBLocalImportConfiguration::toAuditEntry)
-                .sorted(Comparator.comparing(AuditEntry::getCreatedAt))
-                .collect(Collectors.toList());
     }
 }

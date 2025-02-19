@@ -16,6 +16,7 @@
 
 package io.flamingock.importer.cloud.mongodb.v4.local;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
@@ -23,26 +24,40 @@ import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.importer.cloud.common.Importer;
 import org.bson.Document;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class MongoDBLocalImporter implements Importer {
+
+    public final static String DEFAULT_FLAMINGOCK_REPOSITORY_NAME = "flamingockEntries";
+
     private final MongoCollection<Document> changeUnitsCollection;
     private List<Dependency> dependencies;
 
-    public MongoDBLocalImporter(MongoCollection<Document> changeUnitsCollection) {
-        this.changeUnitsCollection = changeUnitsCollection;
+    public MongoDBLocalImporter(MongoClient mongoClient, String dbName) {
+        this.changeUnitsCollection = mongoClient.getDatabase(dbName).getCollection(DEFAULT_FLAMINGOCK_REPOSITORY_NAME);
+    }
+
+    public MongoDBLocalImporter(MongoClient mongoClient, String dbName, String overridenChangelogCollection) {
+        this.changeUnitsCollection = mongoClient.getDatabase(dbName).getCollection(overridenChangelogCollection);
     }
 
     @Override
     public void initialise(EnvironmentId environmentId, ServiceId serviceId, String jwt, String serverHost) {
-        dependencies = Collections.singletonList(
+        dependencies = new ArrayList<>();
+        dependencies.add(
                 new Dependency(
                         MongoDBLocalImportConfiguration.class,
                         new MongoDBLocalImportConfiguration(
-                                environmentId, serviceId, jwt, serverHost, changeUnitsCollection
+                                environmentId, serviceId, jwt, serverHost
                         )
+                )
+        );
+        dependencies.add(
+                new Dependency(
+                        MongoDBLocalAuditReader.class,
+                        new MongoDBLocalAuditReader(changeUnitsCollection)
                 )
         );
     }

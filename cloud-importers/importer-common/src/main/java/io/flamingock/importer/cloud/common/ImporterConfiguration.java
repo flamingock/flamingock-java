@@ -18,9 +18,6 @@ package io.flamingock.importer.cloud.common;
 
 import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
-
-import java.util.List;
 
 public interface ImporterConfiguration {
 
@@ -31,7 +28,5 @@ public interface ImporterConfiguration {
     String getJwt();
 
     String getServerHost();
-
-    List<AuditEntry> readAuditEntries();
 
 }

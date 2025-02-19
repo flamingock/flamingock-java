@@ -20,29 +20,45 @@ import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.importer.cloud.common.Importer;
-import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
+import io.flamingock.importer.cloud.dynamodb.local.entities.AuditEntryEntity;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class DynamoDBLocalImporter implements Importer {
+
+    public final static String DEFAULT_FLAMINGOCK_REPOSITORY_NAME = AuditEntryEntity.AUDIT_LOG_TABLE_NAME;
+
     private final DynamoDbTable<AuditEntryEntity> sourceTable;
     private List<Dependency> dependencies;
 
-    public DynamoDBLocalImporter(DynamoDbTable<AuditEntryEntity> sourceTable) {
-        this.sourceTable = sourceTable;
+    public DynamoDBLocalImporter(DynamoDbEnhancedClient client) {
+        this.sourceTable = client.table(DEFAULT_FLAMINGOCK_REPOSITORY_NAME, TableSchema.fromBean(AuditEntryEntity.class));
+    }
+
+    public DynamoDBLocalImporter(DynamoDbEnhancedClient client, String overridenChangelogTable) {
+        this.sourceTable = client.table(overridenChangelogTable, TableSchema.fromBean(AuditEntryEntity.class));
     }
 
     @Override
     public void initialise(EnvironmentId environmentId, ServiceId serviceId, String jwt, String serverHost) {
-        dependencies = Collections.singletonList(
+        dependencies = new ArrayList<>();
+        dependencies.add(
                 new Dependency(
                         DynamoDBLocalImportConfiguration.class,
                         new DynamoDBLocalImportConfiguration(
-                                environmentId, serviceId, jwt, serverHost, sourceTable
+                                environmentId, serviceId, jwt, serverHost
                         )
+                )
+        );
+        dependencies.add(
+                new Dependency(
+                        DynamoDBLocalAuditReader.class,
+                        new DynamoDBLocalAuditReader(sourceTable)
                 )
         );
     }

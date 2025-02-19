@@ -35,7 +35,6 @@ public class HtttpAuditWriter implements CloudAuditWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(HtttpAuditWriter.class);
 
-    private final String EXECUTION_ID_PARAM = "executionId";
 
     private final Http.RequestBuilder requestBuilder;
 
@@ -56,11 +55,10 @@ public class HtttpAuditWriter implements CloudAuditWriter {
         this.runnerId = runnerId;
 
         this.pathTemplate = String.format(
-                "/api/%s/environment/%s/service/%s/execution/{%s}/audit",
+                "/api/%s/environment/%s/service/%s/execution/{executionId}/task/{taskId}/audit",
                 apiVersion,
                 environmentId.toString(),
-                serviceId.toString(),
-                EXECUTION_ID_PARAM);
+                serviceId.toString());
         this.requestBuilder = requestBuilderFactory.getRequestBuilder(host);
         this.authManager = authManager;
     }
@@ -74,7 +72,8 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                     .POST(pathTemplate)
                     .withRunnerId(runnerId)
                     .withBearerToken(authManager.getJwtToken())
-                    .addPathParameter(EXECUTION_ID_PARAM, auditEntry.getExecutionId())
+                    .addPathParameter("executionId", auditEntry.getExecutionId())
+                    .addPathParameter("taskId", auditEntry.getTaskId())
                     .setBody(auditEntryRequest)
                     .execute();
             return Result.OK();

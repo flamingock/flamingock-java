@@ -122,7 +122,7 @@ public class MongockLegacyAuditEntry {
     public AuditEntry toAuditEntry() {
         return new AuditEntry(
                 executionId,
-                null,
+                "legacy-imported",
                 changeId,
                 author,
                 Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime(),
