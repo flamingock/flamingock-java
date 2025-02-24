@@ -23,7 +23,6 @@ import io.flamingock.core.api.annotations.Execution;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -31,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class UnhappyInsertionClientsChange {
 
     @Execution
-    public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
+    public void execution(@NonLockGuarded DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         DynamoDbTable<UserEntity> table = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
                 .build()

@@ -20,8 +20,8 @@ import io.flamingock.cloud.transaction.sql.changes.happypath.HappyCreateTableCli
 import io.flamingock.cloud.transaction.sql.changes.happypath.HappyInsertClientsChange;
 import io.flamingock.cloud.transaction.sql.changes.unhappypath.UnhappyCreateTableClientsChange;
 import io.flamingock.cloud.transaction.sql.utils.SqlTestUtil;
-import io.flamingock.common.test.cloud.*;
-import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
+import io.flamingock.common.test.cloud.AuditRequestExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
 import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;

@@ -23,10 +23,14 @@ import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyCreateTab
 import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyInsertClientsChange;
 import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyCreateTableClientsChange;
 import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyInsertionClientsChange;
-import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
-import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
+import io.flamingock.common.test.cloud.AuditRequestExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
+import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
+import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
+import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
+import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.pipeline.Stage;
@@ -46,13 +50,10 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 
 import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.*;
 
-@Disabled
 public class DynamoDBCloudTransactionerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBCloudTransactionerTest.class);
@@ -64,10 +65,8 @@ public class DynamoDBCloudTransactionerTest {
     private final String apiToken = "FAKE_API_TOKEN";
     private final String organisationId = UUID.randomUUID().toString();
     private final String organisationName = "MyOrganisation";
-
     private final String projectId = UUID.randomUUID().toString();
     private final String projectName = "MyOrganisation";
-
     private final String serviceName = "clients-service";
     private final String environmentName = "development";
     private final String serviceId = "clients-service-id";
@@ -76,7 +75,7 @@ public class DynamoDBCloudTransactionerTest {
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 
-    private MockRunnerServerOld mockRunnerServer;
+    private MockRunnerServer mockRunnerServer;
     private StandaloneCloudBuilder flamingockBuilder;
 
     @BeforeEach
@@ -97,7 +96,7 @@ public class DynamoDBCloudTransactionerTest {
         dynamoDBTestHelper = new DynamoDBTestHelper(getDynamoDbClient());
 
         logger.info("Starting Mock Server...");
-        mockRunnerServer = new MockRunnerServerOld()
+        mockRunnerServer = new MockRunnerServer()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -133,36 +132,30 @@ public class DynamoDBCloudTransactionerTest {
     @Test
     @DisplayName("Should follow the transactioner lifecycle")
     void happyPath() {
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "create-table-clients",
-                EXECUTED,
-                HappyCreateTableClientsChange.class.getName(),
-                "execution",
-                false
-        ));
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-clients",
-                EXECUTED,
-                HappyInsertClientsChange.class.getName(),
-                "execution"
-        ));
+        String executionId = "execution-1";
+        String stageName = "stage-1";
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addTask("create-table-clients", HappyCreateTableClientsChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+        );
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner()
+                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner(client)
         ) {
-            String executionId = "execution-1";
-            String stageName = "stage-1";
             mockRunnerServer
-                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations)
-                    .addExecutionWithAllTasksRequestResponse(executionId)
-                    .addExecutionContinueRequestResponse()
-                    .start();
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-table-clients", EXECUTED),
+                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                    ).start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner.setDynamoDbClient(client));
+            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             flamingockBuilder
@@ -172,6 +165,9 @@ public class DynamoDBCloudTransactionerTest {
                     .addDependency(client)
                     .build()
                     .execute();
+
+            //THEN
+            mockRunnerServer.verifyAllCalls();
 
             // check clients changes
             client.close();
@@ -189,45 +185,31 @@ public class DynamoDBCloudTransactionerTest {
     @Test
     @DisplayName("Should rollback the ongoing deletion when a task fails")
     void failedTasks() {
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "unhappy-create-table-clients",
-                EXECUTED,
-                UnhappyCreateTableClientsChange.class.getName(),
-                "execution",
-                false
-        ));
+        String executionId = "execution-1";
+        String stageName = "stage-1";
 
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "unhappy-insert-clients",
-                EXECUTION_FAILED,
-                UnhappyInsertionClientsChange.class.getName(),
-                "execution"
-        ));
-
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "unhappy-insert-clients",
-                ROLLED_BACK,
-                UnhappyInsertionClientsChange.class.getName(),
-                "native_db_engine"
-        ));
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addTask("unhappy-create-table-clients", UnhappyCreateTableClientsChange.class.getName(), "execution", false)
+                        .addTask("unhappy-insert-clients", UnhappyInsertionClientsChange.class.getName(), "execution", true)
+        );
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner()
+                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner(client)
         ) {
-            String executionId = "execution-1";
-            String stageName = "stage-1";
             mockRunnerServer
-                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations)
-                    .addExecutionWithAllTasksRequestResponse(executionId)
-                    .addExecutionContinueRequestResponse()
-                    .start();
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "unhappy-create-table-clients", EXECUTED),
+                            new AuditRequestExpectation(executionId, "unhappy-insert-clients", EXECUTION_FAILED),
+                            new AuditRequestExpectation(executionId, "unhappy-insert-clients", ROLLED_BACK)
+                    ).start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner.setDynamoDbClient(client));
+            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             Runner runner = flamingockBuilder
@@ -236,6 +218,10 @@ public class DynamoDBCloudTransactionerTest {
                             .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.unhappypath")))
                     .addDependency(client)
                     .build();
+
+            //THEN
+            mockRunnerServer.verifyAllCalls();
+
             PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
 
             // check clients changes
@@ -255,58 +241,54 @@ public class DynamoDBCloudTransactionerTest {
     @Test
     @DisplayName("Should send ongoing task in execution when is present in local database")
     void shouldSendOngoingTaskInExecutionPlan() {
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "unhappy-create-table-clients",
-                EXECUTED,
-                UnhappyCreateTableClientsChange.class.getName(),
-                "execution",
-                false
-        ));
-
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "unhappy-insert-clients",
-                EXECUTION_FAILED,
-                UnhappyInsertionClientsChange.class.getName(),
-                "execution"
-        ));
-
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "unhappy-insert-clients",
-                ROLLED_BACK,
-                UnhappyInsertionClientsChange.class.getName(),
-                "native_db_engine"
-        ));
         String executionId = "execution-1";
         String stageName = "stage-1";
 
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addTask("create-table-clients", HappyCreateTableClientsChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+        );
+
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner()
+                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner(client)
         ) {
-            dynamoDBTestHelper.insertOngoingExecution("failed-insert-clients");
-            List<TaskWithOngoingStatus> ongoingStatuses = Collections.singletonList(new TaskWithOngoingStatus("failed-insert-clients", OngoingStatus.EXECUTION));
+            dynamoDBTestHelper.insertOngoingExecution("insert-clients");
             mockRunnerServer
-                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations, ongoingStatuses)
-                    .addExecutionWithAllTasksRequestResponse(executionId)
-                    .addExecutionContinueRequestResponse()
-                    .start();
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", OngoingStatus.EXECUTION)),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-table-clients", EXECUTED),
+                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                    ).start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner.setDynamoDbClient(client));
+            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
-            Runner runner = flamingockBuilder
+            flamingockBuilder
                     .setCloudTransactioner(dynamoDBCloudTransactioner)
                     .addStage(new Stage(stageName)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.unhappypath")))
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.happypath")))
                     .addDependency(client)
-                    .build();
+                    .build()
+                    .execute();
 
-            //then
-            PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
+            //THEN
+            mockRunnerServer.verifyAllCalls();
+
+            // check clients changes
+            client.close();
+            dynamoDBTestHelper.checkCount(
+                    DynamoDbEnhancedClient.builder()
+                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDbClient())
+                            .build()
+                            .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
+                    1);
+            // check ongoing status
+            dynamoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
         }
     }
 

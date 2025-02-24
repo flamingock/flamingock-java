@@ -16,14 +16,14 @@
 
 package io.flamingock.cloud.transaction.dynamodb;
 
+import io.flamingock.cloud.transaction.dynamodb.wrapper.DynamoDBTransactionWrapper;
 import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.local.TransactionManager;
-import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.descriptor.TaskDescriptor;
-import io.flamingock.core.task.navigation.step.FailedStep;
+import io.flamingock.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -33,7 +33,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
 import java.util.Set;
 import java.util.function.Supplier;
@@ -41,19 +40,22 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
+
 public class DynamoDBCloudTransactioner implements CloudTransactioner {
     protected static final Logger logger = LoggerFactory.getLogger(DynamoDBCloudTransactioner.class);
     protected static DynamoDBUtil dynamoDBUtil;
-    protected static TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
     protected DynamoDbTable<OngoingTaskEntity> table;
 
-    public DynamoDBCloudTransactioner setDynamoDbClient(DynamoDbClient dynamoDbClient) {
+    private TransactionWrapper transactionWrapper;
+
+    public DynamoDBCloudTransactioner(DynamoDbClient dynamoDbClient) {
         dynamoDBUtil = new DynamoDBUtil(dynamoDbClient);
-        return this;
     }
 
     @Override
     public void initialize() {
+        TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
+        transactionWrapper = new DynamoDBTransactionWrapper(dynamoDBUtil.getEnhancedClient(), transactionManager);
 
         dynamoDBUtil.createTable(
                 dynamoDBUtil.getAttributeDefinitions("taskId", null),
@@ -66,7 +68,7 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
 
         this.table = dynamoDBUtil.getEnhancedClient().table(OngoingTaskEntity.tableName, TableSchema.fromBean(OngoingTaskEntity.class));
 
-        logger.info("table {} created successfully", OngoingTaskEntity.tableName);
+        logger.info("table {} created successfully", table.tableName());
     }
 
     @Override
@@ -109,26 +111,7 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
 
     @Override
     public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        String sessionId = taskDescriptor.getId();
-        TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
-        Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
-        try {
-            dependencyInjectable.addDependency(writeRequestBuilderDependency);
-            T result = operation.get();
-            if (!(result instanceof FailedStep)) {
-                try {
-                    dynamoDBUtil.getEnhancedClient().transactWriteItems(writeRequestBuilder.build());
-                } catch (TransactionCanceledException ex) {
-                    ex.cancellationReasons().forEach(cancellationReason -> logger.info(cancellationReason.toString()));
-                }
-            }
-
-            return result;
-        } finally {
-            transactionManager.closeSession(sessionId);
-            dependencyInjectable.removeDependencyByRef(writeRequestBuilderDependency);
-        }
-
+        return transactionWrapper.wrapInTransaction(taskDescriptor, dependencyInjectable, operation);
     }
 
     @Override

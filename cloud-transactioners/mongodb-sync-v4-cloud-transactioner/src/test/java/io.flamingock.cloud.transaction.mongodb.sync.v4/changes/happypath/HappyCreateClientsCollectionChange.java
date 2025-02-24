@@ -25,7 +25,7 @@ import io.flamingock.core.api.annotations.NonLockGuarded;
 public class HappyCreateClientsCollectionChange {
 
     @Execution
-    public void execution(MongoDatabase mongoDatabase) {
+    public void execution(@NonLockGuarded MongoDatabase mongoDatabase) {
         mongoDatabase.createCollection("clientCollection");
     }
 }

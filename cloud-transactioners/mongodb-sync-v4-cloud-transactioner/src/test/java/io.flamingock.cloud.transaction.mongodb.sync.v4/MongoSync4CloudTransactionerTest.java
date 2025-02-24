@@ -25,10 +25,14 @@ import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath.HappyCr
 import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath.HappyInsertClientsChange;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath.UnhappyCreateClientsCollectionChange;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath.UnhappyInsertClientsChange;
-import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
-import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
+import io.flamingock.common.test.cloud.AuditRequestExpectation;
+import io.flamingock.common.test.cloud.MockRunnerServer;
+import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
+import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
+import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
+import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
+import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.pipeline.Stage;
@@ -44,14 +48,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 
 import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.*;
 
 @Testcontainers
-@Disabled
 public class MongoSync4CloudTransactionerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoSync4CloudTransactionerTest.class);
@@ -76,7 +77,7 @@ public class MongoSync4CloudTransactionerTest {
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 
-    private MockRunnerServerOld mockRunnerServer;
+    private MockRunnerServer mockRunnerServer;
     private StandaloneCloudBuilder flamingockBuilder;
 
     @Container
@@ -94,7 +95,7 @@ public class MongoSync4CloudTransactionerTest {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        mockRunnerServer = new MockRunnerServerOld()
+        mockRunnerServer = new MockRunnerServer()
                 .setServerPort(runnerServerPort)
                 .setOrganisationId(organisationId)
                 .setOrganisationName(organisationName)
@@ -126,34 +127,28 @@ public class MongoSync4CloudTransactionerTest {
     @Test
     @DisplayName("Should follow the transactioner lifecycle")
     void happyPath() {
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "create-clients-collection",
-                EXECUTED,
-                HappyCreateClientsCollectionChange.class.getName(),
-                "execution",
-                false
-        ));
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-clients",
-                EXECUTED,
-                HappyInsertClientsChange.class.getName(),
-                "execution"
-        ));
+        String executionId = "execution-1";
+        String stageName = "stage-1";
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addTask("create-clients-collection", HappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+        );
 
         //GIVEN
         try (
                 MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME)
         ) {
-            String executionId = "execution-1";
-            String stageName = "stage-1";
             mockRunnerServer
-                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations)
-                    .addExecutionWithAllTasksRequestResponse(executionId)
-                    .addExecutionContinueRequestResponse()
-                    .start();
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-clients-collection", EXECUTED),
+                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                    ).start();
 
             MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
 
@@ -166,6 +161,9 @@ public class MongoSync4CloudTransactionerTest {
                     .build()
                     .execute();
 
+            //THEN
+            mockRunnerServer.verifyAllCalls();
+
             // check clients changes
             mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 1);
             // check ongoing status
@@ -176,43 +174,29 @@ public class MongoSync4CloudTransactionerTest {
     @Test
     @DisplayName("Should rollback the ongoing deletion when a task fails")
     void failedTasks() {
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "create-clients-collection",
-                EXECUTED,
-                UnhappyCreateClientsCollectionChange.class.getName(),
-                "execution",
-                false
-        ));
+        String executionId = "execution-1";
+        String stageName = "stage-1";
 
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-clients",
-                EXECUTION_FAILED,
-                UnhappyInsertClientsChange.class.getName(),
-                "execution"
-        ));
-
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-clients",
-                ROLLED_BACK,
-                UnhappyInsertClientsChange.class.getName(),
-                "native_db_engine"
-        ));
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addTask("create-clients-collection", UnhappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", UnhappyInsertClientsChange.class.getName(), "execution", true)
+        );
 
         //GIVEN
         try (
                 MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME)
         ) {
-            String executionId = "execution-1";
-            String stageName = "stage-1";
             mockRunnerServer
-                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations)
-                    .addExecutionWithAllTasksRequestResponse(executionId)
-                    .addExecutionContinueRequestResponse()
-                    .start();
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-clients-collection", EXECUTED),
+                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTION_FAILED),
+                            new AuditRequestExpectation(executionId, "insert-clients", ROLLED_BACK)
+                    ).start();
 
             MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
 
@@ -223,6 +207,10 @@ public class MongoSync4CloudTransactionerTest {
                             .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath")))
                     .addDependency(testDatabase)
                     .build();
+
+            //THEN
+            mockRunnerServer.verifyAllCalls();
+
             PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
 
             // check clients changes
@@ -237,58 +225,48 @@ public class MongoSync4CloudTransactionerTest {
     @Test
     @DisplayName("Should send ongoing task in execution when is present in local database")
     void shouldSendOngoingTaskInExecutionPlan() {
-        List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "create-clients-collection",
-                EXECUTED,
-                UnhappyCreateClientsCollectionChange.class.getName(),
-                "execution",
-                false
-        ));
-
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-clients",
-                EXECUTION_FAILED,
-                UnhappyInsertClientsChange.class.getName(),
-                "execution"
-        ));
-
-        auditEntryExpectations.add(new
-                AuditEntryMatcher(
-                "insert-clients",
-                ROLLED_BACK,
-                UnhappyInsertClientsChange.class.getName(),
-                "native_db_engine"
-        ));
         String executionId = "execution-1";
         String stageName = "stage-1";
+
+        PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
+                new PrototypeStage(stageName, 0)
+                        .addTask("create-clients-collection", HappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+        );
 
         //GIVEN
         try (
                 MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME)
         ) {
-            mongoDBTestHelper.insertOngoingExecution("failed-insert-clients");
-            List<TaskWithOngoingStatus> ongoingStatuses = Collections.singletonList(new TaskWithOngoingStatus("failed-insert-clients", OngoingStatus.EXECUTION));
+            mongoDBTestHelper.insertOngoingExecution("insert-clients");
             mockRunnerServer
-                    .addSimpleStageExecutionPlan(executionId, stageName, auditEntryExpectations, ongoingStatuses)
-                    .addExecutionWithAllTasksRequestResponse(executionId)
-                    .addExecutionContinueRequestResponse()
-                    .start();
+                    .withClientSubmissionBase(prototypeClientSubmission)
+                    .withExecutionPlanRequestsExpectation(
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", OngoingStatus.EXECUTION)),
+                            new ExecutionContinueRequestResponseMock()
+                    ).withAuditRequestsExpectation(
+                            new AuditRequestExpectation(executionId, "create-clients-collection", EXECUTED),
+                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                    ).start();
 
             MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
-            Runner runner = flamingockBuilder
+            flamingockBuilder
                     .setCloudTransactioner(mongoSync4CloudTransactioner)
                     .addStage(new Stage(stageName)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath")))
+                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath")))
                     .addDependency(testDatabase)
-                    .build();
+                    .build()
+                    .execute();
 
-            //then
-            PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
+            //THEN
+            mockRunnerServer.verifyAllCalls();
+
+            // check clients changes
+            mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 1);
+            // check ongoing status
+            mongoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
         }
     }
 }

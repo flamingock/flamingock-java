@@ -30,7 +30,7 @@ import static java.util.Collections.emptyList;
 public class UnhappyCreateTableClientsChange {
 
     @Execution
-    public void execution(DynamoDbClient client) {
+    public void execution(@NonLockGuarded DynamoDbClient client) {
 
         DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);
 
