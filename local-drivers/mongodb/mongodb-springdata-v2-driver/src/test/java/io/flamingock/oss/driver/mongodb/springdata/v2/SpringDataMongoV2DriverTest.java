@@ -27,7 +27,6 @@ import io.flamingock.core.pipeline.Stage;
 import io.flamingock.core.runner.PipelineExecutionException;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v2.driver.SpringDataMongoV2Driver;
-import io.mongock.driver.mongodb.v3.driver.MongoCore3Driver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,7 +95,7 @@ class SpringDataMongoV2DriverTest {
     void happyPathWithDefaultRepositoryNames() {
         //Given-When
         FlamingockStandalone.local()
-                .setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration.withSource("mongockChangeLog"))
+                .withImporter(CoreConfiguration.ImporterConfiguration.withSource("mongockChangeLog"))
                 .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithTransaction"))
                 .addDependency(mongoTemplate)

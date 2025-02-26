@@ -19,7 +19,6 @@ package io.flamingock.oss.driver.dynamodb.internal.mongock;
 import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 import java.util.Collection;
@@ -28,7 +27,7 @@ import java.util.List;
 
 public class MongockImporterModule implements LocalSystemModule {
     public static final List<Class<?>> TASK_CLASSES = Collections.singletonList(
-            MongockLocalLegacyImporterChangeUnit.class
+            MongockImporterChangeUnit.class
     );
     private List<Dependency> dependencies;
     private final DynamoDbTable<ChangeEntryDynamoDB> sourceTable;

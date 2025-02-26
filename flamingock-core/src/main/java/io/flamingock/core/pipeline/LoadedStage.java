@@ -35,19 +35,20 @@ public class LoadedStage {
 
     private final String name;
 
-    private final Collection<? extends TaskDescriptor> taskDescriptors;
+    private final Collection<TaskDescriptor> taskDescriptors;
 
     private final boolean parallel;
 
     private final ParentExecutableTaskFactory factory;
 
     public LoadedStage(String name,
-                       Collection<? extends TaskDescriptor> taskDescriptors,
+                       Collection<TaskDescriptor> taskDescriptors,
                        boolean parallel) {
         this.name = name;
         this.taskDescriptors = taskDescriptors;
         this.parallel = parallel;
         this.factory = ParentExecutableTaskFactory.INSTANCE;
+
     }
 
     public ExecutableStage applyState(AuditStageStatus state) {
@@ -67,7 +68,8 @@ public class LoadedStage {
         return name;
     }
 
-    public Collection<? extends TaskDescriptor> getTaskDescriptors() {
+
+    public Collection<TaskDescriptor> getTaskDescriptors() {
         return taskDescriptors;
     }
 

@@ -20,14 +20,13 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.pipeline.Stage;
 import io.flamingock.oss.driver.mongodb.springdata.v2.driver.SpringDataMongoV2Driver;
 import io.flamingock.oss.driver.mongodb.springdata.v2.mongock.ClientInitializerChangeUnit;
-import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
+import io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockImporterChangeUnit;
 import io.mongock.driver.mongodb.v3.driver.MongoCore3Driver;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.bson.Document;
@@ -45,7 +44,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.flamingock.core.configurator.core.CoreConfiguration.MongockImporterConfiguration;
+import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -104,7 +103,7 @@ class MongoSpringDataV2ImporterTest {
 
         //When
         FlamingockStandalone.local()
-                .setMongockImporterConfiguration(MongockImporterConfiguration.withSource(mongo3Driver.getMigrationRepositoryName()))
+                .withImporter(ImporterConfiguration.withSource(mongo3Driver.getMigrationRepositoryName()))
                 .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                 .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithTransaction"))
                 .addDependency(mongoTemplate)
@@ -163,9 +162,9 @@ class MongoSpringDataV2ImporterTest {
                 auditLog.get(4),
                 auditLog.get(4).getExecutionId(),
                 null,
-                "mongock-local-legacy-importer-mongodb-3",
+                "mongock-importer",
                 AuditEntry.Status.EXECUTED,
-                "io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockLocalLegacyImporterChangeUnit",
+                MongockImporterChangeUnit.class.getName(),
                 "execution",
                 AuditEntry.ExecutionType.EXECUTION,
                 false);

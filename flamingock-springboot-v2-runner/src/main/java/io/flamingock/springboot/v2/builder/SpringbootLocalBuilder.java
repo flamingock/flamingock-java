@@ -24,11 +24,14 @@ import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurator;
 import io.flamingock.core.configurator.local.LocalConfiguratorDelegate;
 import io.flamingock.core.configurator.local.LocalSystemModuleManager;
+import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.local.LocalEngine;
 import io.flamingock.core.local.driver.LocalDriver;
 import io.flamingock.core.pipeline.Pipeline;
+import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.springboot.v2.SpringDependencyContext;
 import io.flamingock.springboot.v2.SpringRunnerBuilder;
 import io.flamingock.springboot.v2.SpringUtil;
@@ -86,9 +89,15 @@ public class SpringbootLocalBuilder extends AbstractSpringbootBuilder<Springboot
         Pipeline pipeline = buildPipeline(activeProfiles,
                 getSystemModuleManager().getSortedSystemStagesBefore(),
                 coreConfiguration.getStages(),
-                getSystemModuleManager().getSortedSystemStagesAfter());
+                getSystemModuleManager().getSortedSystemStagesAfter(),
+                getFlamingockMetadata());
 
-        return PipelineRunnerCreator.create(
+        //injecting the pipeline descriptor to the dependencies
+        addDependency(new Dependency(PipelineDescriptor.class, pipeline));
+        //Injecting auditWriter
+        addDependency(new Dependency(AuditWriter.class, engine.getAuditor()));
+
+        return PipelineRunnerCreator.createLocal(
                 runnerId,
                 pipeline,
                 getFlamingockMetadata(),

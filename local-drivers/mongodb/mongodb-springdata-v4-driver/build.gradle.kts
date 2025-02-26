@@ -1,5 +1,8 @@
 dependencies {
-    api(project(":local-drivers:mongodb:mongodb-facade"))
+    implementation(project(":commons:mongodb-facade"))
+    implementation(project(":importers:mongodb-importer"))
+
+    implementation(project(":flamingock-core"))
     api(project(":local-drivers:mongodb:mongodb-sync-v4-driver"))
 
     implementation("org.springframework.data:spring-data-mongodb:4.1.3")

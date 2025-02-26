@@ -37,56 +37,21 @@ public class AuditEntry {
             ROLLED_BACK,
             EXECUTION_FAILED,
             ROLLBACK_FAILED)));
-
-
-    public enum Status {
-        STARTED, EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
-
-        public static boolean isRequiredExecution(Status entryStatus) {
-            return entryStatus == null || entryStatus == EXECUTION_FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;
-        }
-        public AuditEntryRequest.Status toRequestStatus() {
-            return AuditEntryRequest.Status.valueOf(name());
-        }
-
-    }
-
-    public enum ExecutionType {
-        EXECUTION, BEFORE_EXECUTION;
-
-        public AuditEntryRequest.ExecutionType toRequestExecutionType() {
-            return AuditEntryRequest.ExecutionType.valueOf(name());
-        }
-    }
-
+    protected final Boolean systemChange;
     private final String executionId;
-
     private final String stageId;
-
     //TODO move to changeId
     private final String taskId;
-
     private final String author;
-
     private final LocalDateTime createdAt;
-
     private final Status state;
-
     private final String className;
-
     private final String methodName;
-
     private final Object metadata;
-
     private final long executionMillis;
-
     private final String executionHostname;
-
     private final String errorTrace;
-
     private final ExecutionType type;
-
-    protected Boolean systemChange;
 
     public AuditEntry(String executionId,
                       String stageId,
@@ -119,6 +84,15 @@ public class AuditEntry {
         this.systemChange = systemChange;
     }
 
+    public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
+        if (newEntry == null) {
+            return currentEntry;
+        } else if (currentEntry == null) {
+            return newEntry;
+        } else {
+            return currentEntry.shouldBeReplacedBy(newEntry) ? newEntry : currentEntry;
+        }
+    }
 
     public String getExecutionId() {
         return executionId;
@@ -177,18 +151,49 @@ public class AuditEntry {
         return type;
     }
 
-    public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
-        if (newEntry == null) {
-            return currentEntry;
-        } else if (currentEntry == null) {
-            return newEntry;
-        } else {
-            return currentEntry.shouldBeReplacedBy(newEntry) ? newEntry : currentEntry;
-        }
-    }
-
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
         return RELEVANT_STATES.contains(newEntry.state) && newEntry.getCreatedAt().isAfter(this.getCreatedAt());
     }
+
+    public AuditEntry copyWithNewIdAndStageId(String id, String stageId) {
+        return new AuditEntry(
+                getExecutionId(),
+                stageId,
+                id,
+                getAuthor(),
+                getCreatedAt(),
+                getState(),
+                getType(),
+                getClassName(),
+                getMethodName(),
+                getExecutionMillis(),
+                getExecutionHostname(),
+                getMetadata(),
+                getSystemChange(),
+                getErrorTrace()
+        );
+    }
+
+    public enum Status {
+        STARTED, EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
+
+        public static boolean isRequiredExecution(Status entryStatus) {
+            return entryStatus == null || entryStatus == EXECUTION_FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;
+        }
+
+        public AuditEntryRequest.Status toRequestStatus() {
+            return AuditEntryRequest.Status.valueOf(name());
+        }
+
+    }
+
+    public enum ExecutionType {
+        EXECUTION, BEFORE_EXECUTION;
+
+        public AuditEntryRequest.ExecutionType toRequestExecutionType() {
+            return AuditEntryRequest.ExecutionType.valueOf(name());
+        }
+    }
+
 
 }

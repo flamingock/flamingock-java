@@ -1,6 +1,6 @@
 dependencies {
-    api(project(":local-drivers:mongodb:mongodb-facade"))
-
+    implementation(project(":commons:mongodb-facade"))
+    implementation(project(":flamingock-core"))
     implementation("org.mongodb:mongo-java-driver:3.12.8")
     implementation("org.mongodb:bson:3.12.8")
 

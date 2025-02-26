@@ -20,7 +20,10 @@ import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.ExecutableStage;
+import io.flamingock.core.pipeline.StageDescriptor;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.runtime.dependency.PriorityDependencyInjectableContext;
 import io.flamingock.core.task.executable.ExecutableTask;
 import io.flamingock.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
 import io.flamingock.core.task.navigation.navigator.StepNavigatorBuilder;
@@ -32,7 +35,7 @@ public class StageExecutor {
     protected final AuditWriter auditWriter;
 
     protected final TransactionWrapper transactionWrapper;
-    private final DependencyContext dependencyContext;
+    private final DependencyContext baseDependencyContext;
 
     private StageExecutor(DependencyContext dependencyContext, AuditWriter auditWriter) {
         this(dependencyContext, auditWriter, null);
@@ -41,7 +44,7 @@ public class StageExecutor {
     public StageExecutor(DependencyContext dependencyContext,
                          AuditWriter auditWriter,
                          TransactionWrapper transactionWrapper) {
-        this.dependencyContext = dependencyContext;
+        this.baseDependencyContext = dependencyContext;
         this.auditWriter = auditWriter;
         this.transactionWrapper = transactionWrapper;
     }
@@ -58,11 +61,14 @@ public class StageExecutor {
         //TODO think that we can build the StepNavigator sequentially and then execute it in Parallel
         // this would save memory footprint
 
+        PriorityDependencyInjectableContext dependencyContext = new PriorityDependencyInjectableContext(baseDependencyContext);
+        dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
+
         try {
             getTasksStream(executableStage)
                     .map(task -> stepNavigatorBuilder
                             .setAuditWriter(auditWriter)
-                            .setStaticContext(dependencyContext)
+                            .setDependencyContext(dependencyContext)
                             .setLock(lock)
                             .setTransactionWrapper(transactionWrapper)
                             .setFlamingockMetadata(flamingockMetadata)

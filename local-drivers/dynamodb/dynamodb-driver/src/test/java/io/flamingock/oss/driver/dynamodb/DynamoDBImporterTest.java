@@ -28,8 +28,8 @@ import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.pipeline.Stage;
 import io.flamingock.oss.driver.dynamodb.driver.DynamoDBDriver;
-import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
+import io.flamingock.oss.driver.dynamodb.internal.mongock.MongockImporterChangeUnit;
 import io.flamingock.oss.driver.dynamodb.mongock.ClientInitializerChangeUnit;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.junit.jupiter.api.*;
@@ -37,16 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static io.flamingock.core.configurator.core.CoreConfiguration.MongockImporterConfiguration;
+import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration;
 import static io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -129,7 +126,7 @@ class DynamoDBImporterTest {
 
         //When
         FlamingockStandalone.local()
-                .setMongockImporterConfiguration(MongockImporterConfiguration.withSource(mongockDriver.getMigrationRepositoryName()))
+                .withImporter(ImporterConfiguration.withSource(mongockDriver.getMigrationRepositoryName()))
                 .setDriver(new DynamoDBDriver(client))
                 .addStage(new Stage("stage-name")
                         .addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
@@ -190,7 +187,7 @@ class DynamoDBImporterTest {
                 "dynamodb-local-legacy-importer",
                 "mongock-local-legacy-importer-dynamodb",
                 AuditEntry.Status.EXECUTED,
-                "io.flamingock.oss.driver.dynamodb.internal.mongock.MongockLocalLegacyImporterChangeUnit",
+                MongockImporterChangeUnit.class.getName(),
                 "execution",
                 AuditEntry.ExecutionType.EXECUTION,
                 false);

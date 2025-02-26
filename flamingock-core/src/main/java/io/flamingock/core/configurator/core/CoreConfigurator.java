@@ -96,9 +96,9 @@ public interface CoreConfigurator<
 
     SYSTEM_MODULE_MANAGER getSystemModuleManager();
 
-    HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration);
+    HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration);
 
-    CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration();
+    CoreConfiguration.ImporterConfiguration getMongockImporterConfiguration();
 
     HOLDER setFlamingockMetadata(FlamingockMetadata metadata);
 

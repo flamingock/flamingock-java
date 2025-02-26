@@ -14,11 +14,6 @@ dependencies {
     
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 
-    api("software.amazon.awssdk:dynamodb-enhanced:2.25.28")
-    
-
-//
-//    testImplementation(project(":commons:test-utils"))
 }
 
 java {

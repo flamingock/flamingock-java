@@ -31,6 +31,7 @@ import io.flamingock.core.event.model.impl.StageCompletedEvent;
 import io.flamingock.core.event.model.impl.StageFailedEvent;
 import io.flamingock.core.event.model.impl.StageStartedEvent;
 import io.flamingock.core.pipeline.ExecutableStage;
+import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
@@ -39,6 +40,8 @@ import io.flamingock.core.pipeline.execution.StageExecutor;
 import io.flamingock.core.pipeline.execution.StageSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import static io.flamingock.commons.utils.ObjectUtils.requireNonNull;
 
@@ -90,7 +93,8 @@ public class PipelineRunner implements Runner {
         eventPublisher.publish(new PipelineStartedEvent());
         PipelineSummary pipelineSummary = null;
         do {
-            try (ExecutionPlan execution = executionPlanner.getNextExecution(pipeline, flamingockMetadata)) {
+            List<LoadedStage> loadedStages = pipeline.validateAndGetLoadedStages();
+            try (ExecutionPlan execution = executionPlanner.getNextExecution(loadedStages)) {
                 if (pipelineSummary == null) {
                     pipelineSummary = new PipelineSummary(execution.getPipeline());
                 }

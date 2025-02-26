@@ -16,15 +16,18 @@
 
 package io.flamingock.core.pipeline;
 
+import io.flamingock.core.task.descriptor.TaskDescriptor;
 import io.flamingock.core.task.executable.ExecutableTask;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class ExecutableStage {
+public class ExecutableStage implements StageDescriptor{
 
-    private final String name;
     protected final List<? extends ExecutableTask> tasks;
+    private final String name;
     private final boolean parallel;
 
     public ExecutableStage(String name, List<? extends ExecutableTask> tasks, boolean parallel) {
@@ -36,6 +39,12 @@ public class ExecutableStage {
     public String getName() {
         return name;
     }
+
+    @Override
+    public Collection<TaskDescriptor> getTaskDescriptors() {
+        return tasks.stream().map(ExecutableTask::getDescriptor).collect(Collectors.toList());
+    }
+
 
     public boolean isParallel() {
         return parallel;
@@ -51,4 +60,6 @@ public class ExecutableStage {
                 .filter(Objects::nonNull)
                 .anyMatch(executableTask -> !executableTask.isAlreadyExecuted());
     }
+
+
 }

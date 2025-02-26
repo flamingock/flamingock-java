@@ -29,9 +29,12 @@ import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
 import io.flamingock.core.cloud.CloudEngine;
+import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.pipeline.Pipeline;
+import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
@@ -106,10 +109,16 @@ public class StandaloneCloudBuilder
         Pipeline pipeline = buildPipeline(
                 coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesBefore(),
                 coreConfiguration.getStages(),
-                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter()
+                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter(),
+                coreConfiguratorDelegate.getFlamingockMetadata()
         );
 
-        return PipelineRunnerCreator.create(
+        //injecting the pipeline descriptor to the dependencies
+        addDependency(PipelineDescriptor.class, pipeline);
+        //Injecting auditWriter
+        addDependency(AuditWriter.class, engine.getAuditWriter());
+
+        return PipelineRunnerCreator.createCloud(
                 runnerId,
                 pipeline,
                 coreConfiguratorDelegate.getFlamingockMetadata(),

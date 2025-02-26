@@ -26,11 +26,14 @@ import io.flamingock.core.configurator.local.LocalConfiguration;
 import io.flamingock.core.configurator.local.LocalConfigurator;
 import io.flamingock.core.configurator.local.LocalConfiguratorDelegate;
 import io.flamingock.core.configurator.local.LocalSystemModuleManager;
+import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.local.LocalEngine;
 import io.flamingock.core.local.driver.LocalDriver;
 import io.flamingock.core.pipeline.Pipeline;
+import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +86,6 @@ public class StandaloneLocalBuilder
                 localConfiguratorDelegate.getLocalConfiguration()
         );
 
-
         //adds Mongock legacy importer, if the user has required it
         engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
 
@@ -100,10 +102,16 @@ public class StandaloneLocalBuilder
         Pipeline pipeline = buildPipeline(
                 coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesBefore(),
                 coreConfiguration.getStages(),
-                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter()
+                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter(),
+                coreConfiguratorDelegate.getFlamingockMetadata()
         );
 
-        return PipelineRunnerCreator.create(
+        //injecting the pipeline descriptor to the dependencies
+        addDependency(PipelineDescriptor.class, pipeline);
+        //Injecting auditWriter
+        addDependency(AuditWriter.class, engine.getAuditor());
+
+        return PipelineRunnerCreator.createLocal(
                 runnerId,
                 pipeline,
                 coreConfiguratorDelegate.getFlamingockMetadata(),

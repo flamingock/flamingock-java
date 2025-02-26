@@ -6,6 +6,7 @@ dependencies {
     implementation("software.amazon.awssdk:dynamodb-enhanced:2.25.28")
 
     testImplementation(project(":utils-test"))
+    testImplementation(project(":dynamodb-utils"))
     testImplementation("io.mongock:mongock-standalone:5.5.0")
     testImplementation("io.mongock:dynamodb-driver:5.5.0")
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")

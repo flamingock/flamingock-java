@@ -36,14 +36,14 @@ public final class PipelineRunnerCreator {
     private PipelineRunnerCreator() {
     }
 
-    public static Runner create(RunnerId runnerId,
-                                Pipeline pipeline,
-                                FlamingockMetadata metadata,
-                                LocalEngine connectionEngine,
-                                CoreConfigurable coreConfiguration,
-                                EventPublisher eventPublisher,
-                                DependencyContext dependencyContext,
-                                boolean isThrowExceptionIfCannotObtainLock) {
+    public static Runner createLocal(RunnerId runnerId,
+                                     Pipeline pipeline,
+                                     FlamingockMetadata metadata,
+                                     LocalEngine connectionEngine,
+                                     CoreConfigurable coreConfiguration,
+                                     EventPublisher eventPublisher,
+                                     DependencyContext dependencyContext,
+                                     boolean isThrowExceptionIfCannotObtainLock) {
         return create(runnerId,
                 pipeline,
                 metadata,
@@ -60,15 +60,15 @@ public final class PipelineRunnerCreator {
     }
 
 
-    public static Runner create(RunnerId runnerId,
-                                Pipeline pipeline,
-                                FlamingockMetadata metadata,
-                                CloudEngine engine,
-                                CoreConfigurable coreConfiguration,
-                                EventPublisher eventPublisher,
-                                DependencyContext dependencyContext,
-                                boolean isThrowExceptionIfCannotObtainLock,
-                                Runnable finalizer) {
+    public static Runner createCloud(RunnerId runnerId,
+                                     Pipeline pipeline,
+                                     FlamingockMetadata metadata,
+                                     CloudEngine engine,
+                                     CoreConfigurable coreConfiguration,
+                                     EventPublisher eventPublisher,
+                                     DependencyContext dependencyContext,
+                                     boolean isThrowExceptionIfCannotObtainLock,
+                                     Runnable finalizer) {
         return create(
                 runnerId,
                 pipeline,

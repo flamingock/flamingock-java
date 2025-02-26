@@ -76,9 +76,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    public ExecutionPlan getNextExecution(Pipeline pipeline, FlamingockMetadata metadata) throws LockException {
+    public ExecutionPlan getNextExecution(List<LoadedStage> loadedStages) throws LockException {
 
-        List<LoadedStage> loadedStages = pipeline.getLoadedStages(metadata);
 
         //In every execution, as it start a stopwatch
         ThreadSleeper lockThreadSleeper = new ThreadSleeper(

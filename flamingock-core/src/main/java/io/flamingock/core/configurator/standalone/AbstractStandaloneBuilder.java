@@ -17,7 +17,6 @@
 package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.core.api.SystemModule;
-import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
@@ -40,7 +39,6 @@ import io.flamingock.core.pipeline.Stage;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runner.RunnerBuilder;
 import io.flamingock.core.runtime.dependency.DependencyContext;
-import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.template.TemplateModule;
 import org.jetbrains.annotations.NotNull;
 
@@ -90,11 +88,13 @@ abstract class AbstractStandaloneBuilder<
 
     protected Pipeline buildPipeline(Iterable<Stage> beforeUserStages,
                                      Iterable<Stage> userStages,
-                                     Iterable<Stage> afterUserStages) {
+                                     Iterable<Stage> afterUserStages,
+                                     FlamingockMetadata flamingockMetadata) {
         return Pipeline.builder()
                 .addBeforeUserStages(beforeUserStages)
                 .addUserStages(userStages)
                 .addAfterUserStages(afterUserStages)
+                .setFlamingockMetadata(flamingockMetadata)
                 .build();
     }
 
@@ -260,12 +260,12 @@ abstract class AbstractStandaloneBuilder<
 
 
     @Override
-    public HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
-        return coreConfiguratorDelegate().setMongockImporterConfiguration(mongockImporterConfiguration);
+    public HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration) {
+        return coreConfiguratorDelegate().withImporter(mongockImporterConfiguration);
     }
 
     @Override
-    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
+    public CoreConfiguration.ImporterConfiguration getMongockImporterConfiguration() {
         return coreConfiguratorDelegate().getMongockImporterConfiguration();
     }
 

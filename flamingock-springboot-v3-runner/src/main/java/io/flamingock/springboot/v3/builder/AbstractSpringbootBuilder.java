@@ -110,12 +110,14 @@ public abstract class AbstractSpringbootBuilder<
     protected Pipeline buildPipeline(String[] activeProfiles,
                                      Iterable<Stage> beforeUserStages,
                                      Iterable<Stage> userStages,
-                                     Iterable<Stage> afterUserStages) {
+                                     Iterable<Stage> afterUserStages,
+                                     FlamingockMetadata flamingockMetadata) {
         return Pipeline.builder()
                 .addFilters(Collections.singletonList(new SpringProfileFilter(activeProfiles)))
                 .addBeforeUserStages(beforeUserStages)
                 .addUserStages(userStages)
                 .addAfterUserStages(afterUserStages)
+                .setFlamingockMetadata(flamingockMetadata)
                 .build();
     }
 
@@ -279,12 +281,12 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
-    public HOLDER setMongockImporterConfiguration(CoreConfiguration.MongockImporterConfiguration mongockImporterConfiguration) {
-        return coreConfiguratorDelegate.setMongockImporterConfiguration(mongockImporterConfiguration);
+    public HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration) {
+        return coreConfiguratorDelegate.withImporter(mongockImporterConfiguration);
     }
 
     @Override
-    public CoreConfiguration.MongockImporterConfiguration getMongockImporterConfiguration() {
+    public CoreConfiguration.ImporterConfiguration getMongockImporterConfiguration() {
         return coreConfiguratorDelegate.getMongockImporterConfiguration();
     }
 

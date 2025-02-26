@@ -12,7 +12,7 @@ import java.util.List;
 
 public class MongockImporterModule implements LocalSystemModule {
     public static final List<Class<?>> TASK_CLASSES = Collections.singletonList(
-            MongockLocalLegacyImporterChangeUnit.class
+            MongockImporterChangeUnit.class
     );
     private List<Dependency> dependencies;
     private final MongoCollection<Document> sourceCollection;

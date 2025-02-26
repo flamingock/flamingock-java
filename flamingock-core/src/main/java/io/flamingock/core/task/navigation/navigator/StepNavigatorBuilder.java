@@ -20,7 +20,6 @@ import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.core.runtime.RuntimeManager;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.core.transaction.TransactionWrapper;
 
@@ -33,7 +32,7 @@ public interface StepNavigatorBuilder {
 
     StepNavigatorBuilder setLock(Lock lock);
 
-    StepNavigatorBuilder setStaticContext(DependencyContext staticContext);
+    StepNavigatorBuilder setDependencyContext(DependencyContext staticContext);
 
     StepNavigatorBuilder setTransactionWrapper(TransactionWrapper transactionWrapper);
 
@@ -72,7 +71,7 @@ public interface StepNavigatorBuilder {
         }
 
         @Override
-        public StepNavigatorBuilder setStaticContext(DependencyContext staticContext) {
+        public StepNavigatorBuilder setDependencyContext(DependencyContext staticContext) {
             this.staticContext = staticContext;
             return this;
         }

@@ -21,6 +21,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.pipeline.Stage;
@@ -43,7 +44,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.flamingock.core.configurator.core.CoreConfiguration.MongockImporterConfiguration;
+import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,9 +103,9 @@ class MongoSpringDataV3ImporterTest {
 
         //When
         FlamingockStandalone.local()
-                .setMongockImporterConfiguration(MongockImporterConfiguration.withSource(mongo3Driver.getMigrationRepositoryName()))
+                .withImporter(ImporterConfiguration.withSource(mongo3Driver.getMigrationRepositoryName()))
                 .setDriver(new SpringDataMongoV3Driver(mongoTemplate))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithTransaction"))
+                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.withImporter"))
                 .addDependency(mongoTemplate)
                 .setTrackIgnored(true)
                 .build()
@@ -160,9 +161,9 @@ class MongoSpringDataV3ImporterTest {
                 auditLog.get(4),
                 auditLog.get(4).getExecutionId(),
                 null,
-                "mongock-local-legacy-importer-mongodb-3",
+                MongockImporterChangeUnit.IMPORTER_FROM_MONGOCK,
                 AuditEntry.Status.EXECUTED,
-                "io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockLocalLegacyImporterChangeUnit",
+                MongockImporterChangeUnit.class.getName(),
                 "execution",
                 AuditEntry.ExecutionType.EXECUTION,
                 false);

@@ -20,14 +20,16 @@ import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
 import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.api.LocalSystemModule;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.local.LocalExecutionPlanner;
 import io.flamingock.core.local.AbstractLocalEngine;
 import io.flamingock.core.local.LocalAuditor;
+import io.flamingock.core.local.LocalExecutionPlanner;
 import io.flamingock.core.transaction.TransactionWrapper;
+import io.flamingock.core.engine.audit.importer.ImporterModule;
+import io.flamingock.importer.mongodb.MongoImporterReader;
 import io.flamingock.oss.driver.mongodb.springdata.v3.config.SpringDataMongoV3Configuration;
-import io.flamingock.oss.driver.mongodb.sync.v4.internal.mongock.MongockImporterModule;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -41,7 +43,7 @@ public class SpringDataMongoV3Engine extends AbstractLocalEngine {
     private SpringDataMongoV3Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
-    private MongockImporterModule mongockImporter = null;
+    private LocalSystemModule mongockImporter = null;
 
 
     public SpringDataMongoV3Engine(MongoTemplate mongoTemplate,
@@ -76,9 +78,11 @@ public class SpringDataMongoV3Engine extends AbstractLocalEngine {
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if (coreConfiguration.isMongockImporterEnabled()) {
-            MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
-            mongockImporter = new MongockImporterModule(collection, auditor);
-
+            MongoCollection<Document> legacyCollectionToImportFrom = mongoTemplate
+                    .getDb()
+                    .getCollection(coreConfiguration.getLegacyMongockChangelogSource());
+            MongoImporterReader importerReader = new MongoImporterReader(legacyCollectionToImportFrom);
+            mongockImporter = new ImporterModule(importerReader);
         }
     }
 
@@ -99,7 +103,7 @@ public class SpringDataMongoV3Engine extends AbstractLocalEngine {
     }
 
     @Override
-    public Optional<MongockImporterModule> getMongockLegacyImporterModule() {
+    public Optional<LocalSystemModule> getMongockLegacyImporterModule() {
         return Optional.ofNullable(mongockImporter);
     }
 }

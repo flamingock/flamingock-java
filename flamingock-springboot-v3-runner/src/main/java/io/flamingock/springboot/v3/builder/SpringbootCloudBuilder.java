@@ -27,9 +27,12 @@ import io.flamingock.core.configurator.cloud.CloudConfiguratorDelegate;
 import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.cloud.CloudEngine;
+import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.pipeline.Pipeline;
+import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.springboot.v3.SpringDependencyContext;
 import io.flamingock.springboot.v3.SpringRunnerBuilder;
 import io.flamingock.springboot.v3.SpringUtil;
@@ -98,9 +101,15 @@ public class SpringbootCloudBuilder extends AbstractSpringbootBuilder<Springboot
         Pipeline pipeline = buildPipeline(activeProfiles,
                 getSystemModuleManager().getSortedSystemStagesBefore(),
                 getCoreConfiguration().getStages(),
-                getSystemModuleManager().getSortedSystemStagesAfter());
+                getSystemModuleManager().getSortedSystemStagesAfter(),
+                getFlamingockMetadata());
 
-        return PipelineRunnerCreator.create(
+        //injecting the pipeline descriptor to the dependencies
+        addDependency(new Dependency(PipelineDescriptor.class, pipeline));
+        //Injecting auditWriter
+        addDependency(new Dependency(AuditWriter.class, engine.getAuditWriter()));
+
+        return PipelineRunnerCreator.createCloud(
                 runnerId,
                 pipeline,
                 getFlamingockMetadata(),

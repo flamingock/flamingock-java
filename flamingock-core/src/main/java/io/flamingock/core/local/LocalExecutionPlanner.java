@@ -29,6 +29,7 @@ import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.engine.lock.LockRefreshDaemon;
 import io.flamingock.core.pipeline.ExecutableStage;
+import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
@@ -67,12 +68,10 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    public ExecutionPlan getNextExecution(Pipeline pipeline, FlamingockMetadata metadata) throws LockException {
+    public ExecutionPlan getNextExecution(List<LoadedStage> loadedStages) throws LockException {
         AuditStageStatus currentAuditStageStatus = auditReader.getAuditStageStatus();
         logger.debug("Pulled remote state:\n{}", currentAuditStageStatus);
-
-        List<ExecutableStage> executableStages = pipeline
-                .getLoadedStages(metadata)
+        List<ExecutableStage> executableStages = loadedStages
                 .stream()
                 .map(loadedStage -> loadedStage.applyState(currentAuditStageStatus))
                 .collect(Collectors.toList());

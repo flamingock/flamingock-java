@@ -39,5 +39,9 @@ public interface AuditWriter {
 
     Result writeEntry(AuditEntry auditEntry);
 
+    default boolean isCloud() {
+        return false;
+    }
+
 
 }

@@ -16,16 +16,14 @@
 
 package io.flamingock.core.engine.execution;
 
-import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockException;
-import io.flamingock.core.pipeline.ExecutableStage;
-import io.flamingock.core.pipeline.Pipeline;
-import io.flamingock.commons.utils.TriConsumer;
+import io.flamingock.core.pipeline.LoadedStage;
+
+import java.util.List;
 
 public abstract class ExecutionPlanner {
 
-    abstract public ExecutionPlan getNextExecution(Pipeline pipeline, FlamingockMetadata metadata) throws LockException;
+    abstract public ExecutionPlan getNextExecution(List<LoadedStage> loadedStages) throws LockException;
 
 
 }
