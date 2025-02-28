@@ -21,7 +21,7 @@ import com.mongodb.client.ClientSession;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.core.local.TransactionManager;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class MongoSync4TransactionWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
         String sessionId = taskDescriptor.getId();
         Dependency clienteSessionDependency = null;
         try (ClientSession clientSession = sessionManager.startSession(sessionId)) {

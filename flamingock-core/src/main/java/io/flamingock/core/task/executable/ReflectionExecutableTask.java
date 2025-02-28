@@ -17,7 +17,7 @@
 package io.flamingock.core.task.executable;
 
 import io.flamingock.core.runtime.RuntimeManager;
-import io.flamingock.core.task.descriptor.ReflectionTaskDescriptor;
+import io.flamingock.core.task.descriptor.ReflectionLoadedTask;
 
 import java.lang.reflect.Method;
 import java.util.LinkedList;
@@ -36,7 +36,7 @@ import java.util.List;
  * However, the methods are extracted in advance, so we can spot wrong configuration before starting the process and
  * fail fast.
  */
-public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends ReflectionTaskDescriptor> extends AbstractExecutableTask<REFLECTION_TASK_DESCRIPTOR> implements ExecutableTask {
+public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends ReflectionLoadedTask> extends AbstractExecutableTask<REFLECTION_TASK_DESCRIPTOR> implements ExecutableTask {
 
     protected final Method executionMethod;
 

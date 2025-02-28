@@ -16,7 +16,7 @@
 
 package io.flamingock.core.task.navigation.summary;
 
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.task.navigation.step.ExecutableStep;
 import io.flamingock.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.core.task.navigation.step.complete.CompletedAlreadyAppliedStep;
@@ -44,7 +44,7 @@ public interface StepSummarizer<SELF extends StepSummarizer<SELF>> extends Summa
 
     SELF add(CompletedAlreadyAppliedStep ignoredStep);
 
-    SELF addNotReachedTask(TaskDescriptor taskDescriptor);
+    SELF addNotReachedTask(LoadedTask taskDescriptor);
 
 
 

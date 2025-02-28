@@ -20,7 +20,7 @@ import com.mongodb.TransactionOptions;
 
 import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
 
@@ -47,7 +47,7 @@ public class SpringDataMongoV2TransactionWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
         TransactionStatus txStatus = getTxStatus(txManager);
         T result = operation.get();
         if (result instanceof FailedStep) {

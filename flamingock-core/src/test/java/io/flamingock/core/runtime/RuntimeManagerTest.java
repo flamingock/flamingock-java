@@ -3,11 +3,11 @@ package io.flamingock.core.runtime;
 
 import io.flamingock.core.runtime.dependency.SimpleDependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.exception.DependencyInjectionException;
+import jakarta.annotation.Nullable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

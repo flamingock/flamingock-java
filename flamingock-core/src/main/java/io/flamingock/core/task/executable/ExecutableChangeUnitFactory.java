@@ -18,8 +18,8 @@ package io.flamingock.core.task.executable;
 
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.task.descriptor.change.ChangeUnitDescriptor;
-import io.flamingock.core.task.descriptor.ReflectionTaskDescriptor;
+import io.flamingock.core.task.descriptor.change.LoadedChangeUnit;
+import io.flamingock.core.task.descriptor.ReflectionLoadedTask;
 
 import java.lang.reflect.Method;
 import java.util.LinkedList;
@@ -30,21 +30,21 @@ import java.util.Optional;
 /**
  * Factory for ChangeUnit classes
  */
-public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<ChangeUnitDescriptor> {
+public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<LoadedChangeUnit> {
 
     @Override
-    public List<ReflectionExecutableTask<ReflectionTaskDescriptor>> extractTasks(String stageName, ChangeUnitDescriptor descriptor, AuditEntry.Status initialState) {
+    public List<ReflectionExecutableTask<ReflectionLoadedTask>> extractTasks(String stageName, LoadedChangeUnit descriptor, AuditEntry.Status initialState) {
         return getTasksFromReflection(stageName, descriptor, initialState);
     }
 
-    private List<ReflectionExecutableTask<ReflectionTaskDescriptor>> getTasksFromReflection(String stageName,
-                                                                                            ChangeUnitDescriptor taskDescriptor,
-                                                                                            AuditEntry.Status initialState) {
+    private List<ReflectionExecutableTask<ReflectionLoadedTask>> getTasksFromReflection(String stageName,
+                                                                                        LoadedChangeUnit taskDescriptor,
+                                                                                        AuditEntry.Status initialState) {
 
         Method executionMethod = taskDescriptor.getExecutionMethod();
 
         Optional<Method> rollbackMethodOpt = taskDescriptor.getRollbackMethod();
-        ReflectionExecutableTask<ReflectionTaskDescriptor> task = new ReflectionExecutableTask<>(
+        ReflectionExecutableTask<ReflectionLoadedTask> task = new ReflectionExecutableTask<>(
                 stageName,
                 taskDescriptor,
                 AuditEntry.Status.isRequiredExecution(initialState),
@@ -57,7 +57,7 @@ public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<Change
             before the main task and, if it also provides @BeforeExecutionRollback, it's also added to the main task's rollbackChain,
             so they  are rolled back in case the main task fails.
              */
-        List<ReflectionExecutableTask<ReflectionTaskDescriptor>> tasks = new LinkedList<>();
+        List<ReflectionExecutableTask<ReflectionLoadedTask>> tasks = new LinkedList<>();
         getBeforeExecutionOptional(stageName, task, initialState).ifPresent(beforeExecutionTask -> {
             tasks.add(beforeExecutionTask);
             beforeExecutionTask.getRollbackChain().forEach(task::addRollback);
@@ -66,11 +66,11 @@ public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<Change
         return tasks;
     }
 
-    private Optional<ReflectionExecutableTask<ReflectionTaskDescriptor>> getBeforeExecutionOptional(String stageName,
-                                                                                                    ReflectionExecutableTask<ReflectionTaskDescriptor> baseTask,
-                                                                                                    AuditEntry.Status initialState) {
+    private Optional<ReflectionExecutableTask<ReflectionLoadedTask>> getBeforeExecutionOptional(String stageName,
+                                                                                                ReflectionExecutableTask<ReflectionLoadedTask> baseTask,
+                                                                                                AuditEntry.Status initialState) {
         //Creates a new TaskDescriptor, based on the main one, but with the "beforeExecution id, also based on the main one"
-        ChangeUnitDescriptor taskDescriptor = new ChangeUnitDescriptor(
+        LoadedChangeUnit taskDescriptor = new LoadedChangeUnit(
                 StringUtil.getBeforeExecutionId(baseTask.getDescriptor().getId()),
                 baseTask.getDescriptor().getOrder().orElse(null),
                 baseTask.getDescriptor().getSourceClass(),

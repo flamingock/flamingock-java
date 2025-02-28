@@ -16,11 +16,11 @@
 
 package io.flamingock.core.task.executable;
 
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 
 import java.util.Objects;
 
-public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> implements ExecutableTask {
+public abstract class AbstractExecutableTask<DESCRIPTOR extends LoadedTask> implements ExecutableTask {
 
     private final String stageName;
 

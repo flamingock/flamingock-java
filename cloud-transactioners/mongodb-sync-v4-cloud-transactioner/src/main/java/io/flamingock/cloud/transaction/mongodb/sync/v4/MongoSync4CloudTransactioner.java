@@ -30,7 +30,7 @@ import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.local.TransactionManager;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import org.bson.Document;
@@ -117,7 +117,7 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
         return transactionWrapper.wrapInTransaction(taskDescriptor, dependencyInjectable, operation);
     }
 

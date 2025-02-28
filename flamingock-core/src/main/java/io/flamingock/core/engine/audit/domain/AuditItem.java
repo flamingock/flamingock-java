@@ -17,9 +17,8 @@
 package io.flamingock.core.engine.audit.domain;
 
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 
 public abstract class AuditItem {
 
@@ -39,12 +38,12 @@ public abstract class AuditItem {
     }
 
     private final Operation operation;
-    private final TaskDescriptor taskDescriptor;
+    private final LoadedTask taskDescriptor;
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
 
     public AuditItem(Operation operation,
-                     TaskDescriptor taskDescriptor,
+                     LoadedTask taskDescriptor,
                      ExecutionContext executionContext,
                      RuntimeContext runtimeContext) {
         this.operation = operation;
@@ -57,7 +56,7 @@ public abstract class AuditItem {
         return operation;
     }
 
-    public TaskDescriptor getTaskDescriptor() {
+    public LoadedTask getTaskDescriptor() {
         return taskDescriptor;
     }
 

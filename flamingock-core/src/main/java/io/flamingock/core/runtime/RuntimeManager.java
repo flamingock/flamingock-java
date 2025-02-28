@@ -27,10 +27,10 @@ import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.exception.DependencyInjectionException;
 import io.flamingock.core.runtime.proxy.LockGuardProxyFactory;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;

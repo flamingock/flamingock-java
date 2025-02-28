@@ -98,6 +98,10 @@ include("templates:sql-springboot-template")
 project(":templates:sql-springboot-template").name = "sql-springboot-template"
 project(":templates:sql-springboot-template").projectDir = file("templates/sql-springboot-template")
 
+//MONGODB
+include("templates:mongodb-change-template")
+project(":templates:mongodb-change-template").name = "mongodb-change-template"
+project(":templates:mongodb-change-template").projectDir = file("templates/mongodb-change-template")
 
 //////////////////////////////////////
 // UTILS
@@ -131,9 +135,5 @@ project(":cloud-importers:dynamodb:dynamodb-cloud-importer-local").name = "dynam
 project(":cloud-importers:dynamodb:dynamodb-cloud-importer-local").projectDir = file("cloud-importers/dynamodb/dynamodb-cloud-importer-local")
 
 include("importers:mongodb-importer")
-findProject(":importers:mongodb-importer")?.name = "mongodb-importer"
-
-
 project(":importers:mongodb-importer").name = "mongodb-importer"
 project(":importers:mongodb-importer").projectDir = file("importers/mongodb-importer")
-

@@ -33,7 +33,7 @@ import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,7 +65,7 @@ public final class ExecutionPlanMapper {
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestStages);
     }
 
-    private static TaskRequest mapToTaskRequest(TaskDescriptor descriptor,
+    private static TaskRequest mapToTaskRequest(LoadedTask descriptor,
                                                 Map<String, OngoingStatus> ongoingStatusesMap) {
         if (ongoingStatusesMap.containsKey(descriptor.getId())) {
             if (ongoingStatusesMap.get(descriptor.getId()) == OngoingStatus.ROLLBACK) {
@@ -107,7 +107,7 @@ public final class ExecutionPlanMapper {
         loadedStage
                 .getTaskDescriptors()
                 .stream()
-                .map(TaskDescriptor::getId)
+                .map(LoadedTask::getId)
                 .filter(taskId -> taskStateMap.get(taskId) != RequiredActionTask.PENDING_EXECUTION)
                 .forEach(taskId -> builder.addState(taskId, EXECUTED));
 

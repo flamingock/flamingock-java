@@ -22,7 +22,7 @@ import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.local.TransactionManager;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,8 +110,8 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        return transactionWrapper.wrapInTransaction(taskDescriptor, dependencyInjectable, operation);
+    public <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+        return transactionWrapper.wrapInTransaction(loadedTask, dependencyInjectable, operation);
     }
 
     @Override

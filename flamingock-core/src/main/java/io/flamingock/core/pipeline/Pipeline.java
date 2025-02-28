@@ -18,7 +18,7 @@ package io.flamingock.core.pipeline;
 
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.task.filter.TaskFilter;
 
 import java.util.Collection;
@@ -59,7 +59,7 @@ public class Pipeline implements PipelineDescriptor {
     }
 
     @Override
-    public Optional<TaskDescriptor> getTaskDescriptor(String taskId) {
+    public Optional<LoadedTask> getTaskDescriptor(String taskId) {
         return loadedStages.stream()
                 .map(LoadedStage::getTaskDescriptors)
                 .flatMap(Collection::stream)
@@ -70,7 +70,7 @@ public class Pipeline implements PipelineDescriptor {
     @Override
     public Optional<String> getStageByTask(String taskId) {
         for(LoadedStage loadedStage: loadedStages) {
-            for(TaskDescriptor taskDescriptor: loadedStage.getTaskDescriptors()) {
+            for(LoadedTask taskDescriptor: loadedStage.getTaskDescriptors()) {
                 if(taskDescriptor.getId().equals(taskId)) {
                     return Optional.of(loadedStage.getName());
                 }

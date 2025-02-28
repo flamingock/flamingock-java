@@ -22,7 +22,7 @@ import io.flamingock.core.task.navigation.step.complete.CompletedAlreadyAppliedS
 import io.flamingock.core.task.navigation.step.complete.failed.CompletedFailedManualRollback;
 import io.flamingock.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.core.task.navigation.step.rolledback.RolledBackStep;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
+import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.task.navigation.summary.AbstractTaskStepSummaryLine;
 import io.flamingock.core.task.navigation.summary.StepSummarizer;
 import io.flamingock.core.task.navigation.summary.StepSummaryLine;
@@ -85,7 +85,7 @@ public class TaskSummarizer implements StepSummarizer<TaskSummarizer> {
     }
 
     @Override
-    public TaskSummarizer addNotReachedTask(TaskDescriptor taskDescriptor) {
+    public TaskSummarizer addNotReachedTask(LoadedTask taskDescriptor) {
         add(new AbstractTaskStepSummaryLine.InitialTaskSummaryLine(taskDescriptor));
         add(new AbstractTaskStepSummaryLine.NotReachedTaskSummaryLine(taskDescriptor));
         return this;
@@ -108,7 +108,7 @@ public class TaskSummarizer implements StepSummarizer<TaskSummarizer> {
         return taskSummary;
     }
 
-    private TaskSummarizer addStep(TaskDescriptor taskDescriptor, StepSummaryLine step) {
+    private TaskSummarizer addStep(LoadedTask taskDescriptor, StepSummaryLine step) {
         if (lines.isEmpty()) {
             add(new AbstractTaskStepSummaryLine.InitialTaskSummaryLine(taskDescriptor));
         }

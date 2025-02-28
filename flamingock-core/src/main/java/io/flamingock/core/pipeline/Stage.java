@@ -19,9 +19,9 @@ package io.flamingock.core.pipeline;
 import io.flamingock.core.api.annotations.SystemChange;
 import io.flamingock.commons.utils.FileUtil;
 import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.flamingock.core.task.descriptor.change.ReflectionTaskDescriptorBuilder;
-import io.flamingock.core.task.descriptor.TaskDescriptor;
-import io.flamingock.core.task.descriptor.change.TemplatedTaskDescriptorBuilder;
+import io.flamingock.core.task.descriptor.change.ReflectionLoadedTaskBuilder;
+import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.descriptor.change.TemplatedLoadedTaskBuilder;
 import io.flamingock.core.task.filter.TaskFilter;
 import io.flamingock.core.utils.ExecutionUtils;
 import io.flamingock.template.TemplatedTaskDefinition;
@@ -188,17 +188,17 @@ public class Stage {
     public LoadedStage load(FlamingockMetadata metadata) {
         Predicate<Class<?>> filterOperator = getFilterOperator(getFilters());
 
-        Collection<TaskDescriptor> descriptors = new ArrayList<>(getFilteredDescriptorsFromCodePackages(codePackages, filterOperator, metadata));
+        Collection<LoadedTask> descriptors = new ArrayList<>(getFilteredDescriptorsFromCodePackages(codePackages, filterOperator, metadata));
 
         descriptors.addAll(getFilteredDescriptorsFromClasses(classes, filterOperator));
 
         descriptors.addAll(getFilteredDescriptorsFromDirectory(fileDirectories, filterOperator));
 
-        if (descriptors.stream().allMatch(TaskDescriptor::isSortable)) {
+        if (descriptors.stream().allMatch(LoadedTask::isSortable)) {
             //if all descriptors are sorted, we return a sorted collection
             return new LoadedStage(name, descriptors.stream().sorted().collect(Collectors.toList()), parallel);
 
-        } else if (descriptors.parallelStream().anyMatch(TaskDescriptor::isSortable)) {
+        } else if (descriptors.parallelStream().anyMatch(LoadedTask::isSortable)) {
             //if at least one of them are sorted, but not all. An exception is thrown
             throw new IllegalArgumentException("Either all tasks are ordered or none is");
 
@@ -208,9 +208,9 @@ public class Stage {
         }
     }
 
-    private static Collection<TaskDescriptor> getFilteredDescriptorsFromCodePackages(Collection<String> codePackages,
-                                                                                     Predicate<Class<?>> filterOperator,
-                                                                                     FlamingockMetadata metadata) {
+    private static Collection<LoadedTask> getFilteredDescriptorsFromCodePackages(Collection<String> codePackages,
+                                                                                 Predicate<Class<?>> filterOperator,
+                                                                                 FlamingockMetadata metadata) {
         if (codePackages == null) {
             return Collections.emptyList();
         }
@@ -241,7 +241,7 @@ public class Stage {
         return getFilteredDescriptorsFromClasses(classes, filterOperator);
     }
 
-    private static Collection<TaskDescriptor> getFilteredDescriptorsFromClasses(Collection<Class<?>> classes, Predicate<Class<?>> filterOperator) {
+    private static Collection<LoadedTask> getFilteredDescriptorsFromClasses(Collection<Class<?>> classes, Predicate<Class<?>> filterOperator) {
         if (classes == null) {
             return Collections.emptyList();
         }
@@ -249,13 +249,13 @@ public class Stage {
                 stream()
                 .filter(ExecutionUtils::isExecutableClass)
                 .filter(filterOperator)
-                .map(ReflectionTaskDescriptorBuilder.recycledBuilder()::setSource)
-                .map(ReflectionTaskDescriptorBuilder::build)
+                .map(ReflectionLoadedTaskBuilder.recycledBuilder()::setSource)
+                .map(ReflectionLoadedTaskBuilder::build)
                 .collect(Collectors.toList());
     }
 
     //TODO add filter
-    private static Collection<TaskDescriptor> getFilteredDescriptorsFromDirectory(Collection<String> directories, Predicate<Class<?>> filterOperator) {
+    private static Collection<LoadedTask> getFilteredDescriptorsFromDirectory(Collection<String> directories, Predicate<Class<?>> filterOperator) {
 
         if (directories == null) {
             return Collections.emptyList();
@@ -265,8 +265,8 @@ public class Stage {
                 .flatMap(Collection::stream)
                 .map(file -> FileUtil.getFromYamlFile(file, TemplatedTaskDefinition.class))
 //                .filter(source -> filters.stream().allMatch(filter -> filter.filter(source)))
-                .map(TemplatedTaskDescriptorBuilder.recycledBuilder()::setFromDefinition)
-                .map(TemplatedTaskDescriptorBuilder::build)
+                .map(TemplatedLoadedTaskBuilder.recycledBuilder()::setFromDefinition)
+                .map(TemplatedLoadedTaskBuilder::build)
                 .collect(Collectors.toList());
     }
 
