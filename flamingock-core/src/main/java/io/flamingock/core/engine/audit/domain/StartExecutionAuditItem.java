@@ -5,7 +5,7 @@ import io.flamingock.core.task.descriptor.LoadedTask;
 
 public class StartExecutionAuditItem extends AuditItem{
 
-    public StartExecutionAuditItem(LoadedTask taskDescriptor, ExecutionContext executionContext, RuntimeContext runtimeContext) {
-        super(Operation.START_EXECUTION, taskDescriptor, executionContext, runtimeContext);
+    public StartExecutionAuditItem(LoadedTask loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext) {
+        super(Operation.START_EXECUTION, loadedTask, executionContext, runtimeContext);
     }
 }

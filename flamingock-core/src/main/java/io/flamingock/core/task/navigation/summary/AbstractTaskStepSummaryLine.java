@@ -67,9 +67,9 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         private final LoadedTask desc;
 
-        public InitialTaskSummaryLine(LoadedTask taskDescriptor) {
-            super(taskDescriptor.getId(), null);
-            this.desc = taskDescriptor;
+        public InitialTaskSummaryLine(LoadedTask loadedTask) {
+            super(loadedTask.getId(), null);
+            this.desc = loadedTask;
         }
 
         @Override
@@ -162,8 +162,8 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
     public static class NotReachedTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
-        public NotReachedTaskSummaryLine(LoadedTask taskDescriptor) {
-            super(taskDescriptor.getId(), SummaryResult.NOT_REACHED);
+        public NotReachedTaskSummaryLine(LoadedTask loadedTask) {
+            super(loadedTask.getId(), SummaryResult.NOT_REACHED);
         }
 
         @Override

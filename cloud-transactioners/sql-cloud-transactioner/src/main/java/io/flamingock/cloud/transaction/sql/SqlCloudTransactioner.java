@@ -141,7 +141,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public <T> T wrapInTransaction(LoadedTask taskDescriptor,
+    public <T> T wrapInTransaction(LoadedTask loadedTask,
                                    DependencyInjectable dependencyInjectable,
                                    Supplier<T> operation) {
         Dependency dependency = new Dependency(Connection.class, connection);

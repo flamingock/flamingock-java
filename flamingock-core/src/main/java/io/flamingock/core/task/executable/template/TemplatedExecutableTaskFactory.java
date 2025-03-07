@@ -35,16 +35,16 @@ public class TemplatedExecutableTaskFactory implements ExecutableTaskFactory<Tem
     }
 
     private TemplatedExecutableTask getTasksFromReflection(String stageName,
-                                                           TemplatedLoadedChangeUnit taskDescriptor,
+                                                           TemplatedLoadedChangeUnit loadedTask,
                                                            AuditEntry.Status initialState) {
         return new TemplatedExecutableTask(
                 stageName,
-                taskDescriptor,
+                loadedTask,
                 AuditEntry.Status.isRequiredExecution(initialState),
-                taskDescriptor.getExecutionMethod(),
-                taskDescriptor.getRollbackMethod().orElse(null),
-                taskDescriptor.getConfigSetter().orElse(null),
-                taskDescriptor.getConfigValidator().orElse(null)
+                loadedTask.getExecutionMethod(),
+                loadedTask.getRollbackMethod().orElse(null),
+                loadedTask.getConfigSetter().orElse(null),
+                loadedTask.getConfigValidator().orElse(null)
         );
 
     }

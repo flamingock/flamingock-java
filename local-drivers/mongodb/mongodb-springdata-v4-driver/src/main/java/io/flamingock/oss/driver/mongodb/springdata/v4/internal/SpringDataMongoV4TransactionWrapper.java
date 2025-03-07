@@ -47,7 +47,7 @@ public class SpringDataMongoV4TransactionWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
         TransactionStatus txStatus = getTxStatus(txManager);
         T result = operation.get();
         if (result instanceof FailedStep) {

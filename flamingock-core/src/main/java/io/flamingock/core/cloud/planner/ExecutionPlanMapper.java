@@ -55,7 +55,7 @@ public final class ExecutionPlanMapper {
         for (int i = 0; i < loadedStages.size(); i++) {
             LoadedStage currentStage = loadedStages.get(i);
             List<TaskRequest> stageTasks = currentStage
-                    .getTaskDescriptors()
+                    .getLoadedTasks()
                     .stream()
                     .map(descriptor -> ExecutionPlanMapper.mapToTaskRequest(descriptor, ongoingStatusesMap))
                     .collect(Collectors.toList());
@@ -105,7 +105,7 @@ public final class ExecutionPlanMapper {
 
         //We assume that if the taskId is not in the response is already successfully executed
         loadedStage
-                .getTaskDescriptors()
+                .getLoadedTasks()
                 .stream()
                 .map(LoadedTask::getId)
                 .filter(taskId -> taskStateMap.get(taskId) != RequiredActionTask.PENDING_EXECUTION)

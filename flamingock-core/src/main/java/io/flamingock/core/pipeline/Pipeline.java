@@ -49,7 +49,7 @@ public class Pipeline implements PipelineDescriptor {
     public void validateStages() {
         List<String> emptyLoadedStages= loadedStages
                 .stream()
-                .filter(stage-> stage.getTaskDescriptors().size() == 0)
+                .filter(stage-> stage.getLoadedTasks().size() == 0)
                 .map(LoadedStage::getName)
                 .collect(Collectors.toList());
         if(emptyLoadedStages.size() > 0) {
@@ -59,19 +59,19 @@ public class Pipeline implements PipelineDescriptor {
     }
 
     @Override
-    public Optional<LoadedTask> getTaskDescriptor(String taskId) {
+    public Optional<LoadedTask> getLoadedTask(String taskId) {
         return loadedStages.stream()
-                .map(LoadedStage::getTaskDescriptors)
+                .map(LoadedStage::getLoadedTasks)
                 .flatMap(Collection::stream)
-                .filter(taskDescriptor -> taskDescriptor.getId().equals(taskId))
+                .filter(loadedTask -> loadedTask.getId().equals(taskId))
                 .findFirst();
     }
 
     @Override
     public Optional<String> getStageByTask(String taskId) {
         for(LoadedStage loadedStage: loadedStages) {
-            for(LoadedTask taskDescriptor: loadedStage.getTaskDescriptors()) {
-                if(taskDescriptor.getId().equals(taskId)) {
+            for(LoadedTask loadedTask: loadedStage.getLoadedTasks()) {
+                if(loadedTask.getId().equals(taskId)) {
                     return Optional.of(loadedStage.getName());
                 }
             }

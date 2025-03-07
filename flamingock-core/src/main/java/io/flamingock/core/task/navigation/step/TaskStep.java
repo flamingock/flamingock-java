@@ -22,7 +22,7 @@ import io.flamingock.core.task.executable.ExecutableTask;
 public interface TaskStep {
     ExecutableTask getTask();
 
-    default LoadedTask getTaskDescriptor() {
+    default LoadedTask getLoadedTask() {
         return getTask().getDescriptor();
     }
 

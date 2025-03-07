@@ -44,7 +44,7 @@ public interface StepSummarizer<SELF extends StepSummarizer<SELF>> extends Summa
 
     SELF add(CompletedAlreadyAppliedStep ignoredStep);
 
-    SELF addNotReachedTask(LoadedTask taskDescriptor);
+    SELF addNotReachedTask(LoadedTask loadedTask);
 
 
 

@@ -38,15 +38,15 @@ public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<Loaded
     }
 
     private List<ReflectionExecutableTask<ReflectionLoadedTask>> getTasksFromReflection(String stageName,
-                                                                                        LoadedChangeUnit taskDescriptor,
+                                                                                        LoadedChangeUnit loadedTask,
                                                                                         AuditEntry.Status initialState) {
 
-        Method executionMethod = taskDescriptor.getExecutionMethod();
+        Method executionMethod = loadedTask.getExecutionMethod();
 
-        Optional<Method> rollbackMethodOpt = taskDescriptor.getRollbackMethod();
+        Optional<Method> rollbackMethodOpt = loadedTask.getRollbackMethod();
         ReflectionExecutableTask<ReflectionLoadedTask> task = new ReflectionExecutableTask<>(
                 stageName,
-                taskDescriptor,
+                loadedTask,
                 AuditEntry.Status.isRequiredExecution(initialState),
                 executionMethod,
                 rollbackMethodOpt.orElse(null));
@@ -69,8 +69,8 @@ public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<Loaded
     private Optional<ReflectionExecutableTask<ReflectionLoadedTask>> getBeforeExecutionOptional(String stageName,
                                                                                                 ReflectionExecutableTask<ReflectionLoadedTask> baseTask,
                                                                                                 AuditEntry.Status initialState) {
-        //Creates a new TaskDescriptor, based on the main one, but with the "beforeExecution id, also based on the main one"
-        LoadedChangeUnit taskDescriptor = new LoadedChangeUnit(
+        //Creates a new LoadedTask, based on the main one, but with the "beforeExecution id, also based on the main one"
+        LoadedChangeUnit loadedTask = new LoadedChangeUnit(
                 StringUtil.getBeforeExecutionId(baseTask.getDescriptor().getId()),
                 baseTask.getDescriptor().getOrder().orElse(null),
                 baseTask.getDescriptor().getSourceClass(),
@@ -79,16 +79,16 @@ public class ExecutableChangeUnitFactory implements ExecutableTaskFactory<Loaded
                 false//is not new
         );
 
-        Optional<Method> beforeExecutionMethodOptional = taskDescriptor.getBeforeExecutionMethod();
+        Optional<Method> beforeExecutionMethodOptional = loadedTask.getBeforeExecutionMethod();
         if (!beforeExecutionMethodOptional.isPresent()) {
             return Optional.empty();
         }
         Method beforeExecutionMethod = beforeExecutionMethodOptional.get();
-        Optional<Method> rollbackBeforeExecution = taskDescriptor.getRollbackBeforeExecutionMethod();
+        Optional<Method> rollbackBeforeExecution = loadedTask.getRollbackBeforeExecutionMethod();
 
         return Optional.of(new ReflectionExecutableTask<>(
                 stageName,
-                taskDescriptor,
+                loadedTask,
                 AuditEntry.Status.isRequiredExecution(initialState),
                 beforeExecutionMethod,
                 rollbackBeforeExecution.orElse(null)));

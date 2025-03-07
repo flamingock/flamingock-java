@@ -117,8 +117,8 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        return transactionWrapper.wrapInTransaction(taskDescriptor, dependencyInjectable, operation);
+    public <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+        return transactionWrapper.wrapInTransaction(loadedTask, dependencyInjectable, operation);
     }
 
     public static TaskWithOngoingStatus mapToOnGoingStatus(Document document) {

@@ -8,5 +8,5 @@ public interface StageDescriptor {
 
     String getName();
 
-    Collection<LoadedTask> getTaskDescriptors();
+    Collection<LoadedTask> getLoadedTasks();
 }

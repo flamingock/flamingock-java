@@ -39,8 +39,8 @@ public class Mongo3TransactionWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        String sessionId = taskDescriptor.getId();
+    public <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+        String sessionId = loadedTask.getId();
         Dependency clienteSessionDependency = null;
         try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
             clienteSessionDependency = new Dependency(clientSession);

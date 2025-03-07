@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public interface PipelineDescriptor {
 
-    Optional<LoadedTask> getTaskDescriptor(String taskId);
+    Optional<LoadedTask> getLoadedTask(String taskId);
 
     Optional<String> getStageByTask(String taskId);
 }

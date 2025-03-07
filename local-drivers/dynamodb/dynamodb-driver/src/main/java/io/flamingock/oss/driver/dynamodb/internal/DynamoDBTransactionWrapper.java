@@ -44,8 +44,8 @@ public class DynamoDBTransactionWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        String sessionId = taskDescriptor.getId();
+    public <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+        String sessionId = loadedTask.getId();
         TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
         Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
         try {

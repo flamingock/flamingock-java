@@ -85,9 +85,9 @@ public class TaskSummarizer implements StepSummarizer<TaskSummarizer> {
     }
 
     @Override
-    public TaskSummarizer addNotReachedTask(LoadedTask taskDescriptor) {
-        add(new AbstractTaskStepSummaryLine.InitialTaskSummaryLine(taskDescriptor));
-        add(new AbstractTaskStepSummaryLine.NotReachedTaskSummaryLine(taskDescriptor));
+    public TaskSummarizer addNotReachedTask(LoadedTask loadedTask) {
+        add(new AbstractTaskStepSummaryLine.InitialTaskSummaryLine(loadedTask));
+        add(new AbstractTaskStepSummaryLine.NotReachedTaskSummaryLine(loadedTask));
         return this;
     }
 
@@ -108,9 +108,9 @@ public class TaskSummarizer implements StepSummarizer<TaskSummarizer> {
         return taskSummary;
     }
 
-    private TaskSummarizer addStep(LoadedTask taskDescriptor, StepSummaryLine step) {
+    private TaskSummarizer addStep(LoadedTask loadedTask, StepSummaryLine step) {
         if (lines.isEmpty()) {
-            add(new AbstractTaskStepSummaryLine.InitialTaskSummaryLine(taskDescriptor));
+            add(new AbstractTaskStepSummaryLine.InitialTaskSummaryLine(loadedTask));
         }
         return add(step);
     }

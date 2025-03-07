@@ -28,18 +28,18 @@ public final class AuditEntryMapper {
     }
 
     public static AuditEntry map(AuditItem auditItem) {
-        LoadedTask taskDescriptor = auditItem.getTaskDescriptor();
+        LoadedTask loadedTask = auditItem.getLoadedTask();
         ExecutionContext stageExecutionContext = auditItem.getExecutionContext();
         RuntimeContext runtimeContext = auditItem.getRuntimeContext();
         return new AuditEntry(
                 stageExecutionContext.getExecutionId(),
                 runtimeContext.getStageName(),
-                taskDescriptor.getId(),
+                loadedTask.getId(),
                 stageExecutionContext.getAuthor(),
                 runtimeContext.getExecutedAt(),
                 getAuditStatus(auditItem),
                 getExecutionType(auditItem),
-                taskDescriptor.getSourceName(),
+                loadedTask.getSourceName(),
                 runtimeContext.getMethodExecutor(),
                 runtimeContext.getDuration(),
                 stageExecutionContext.getHostname(),

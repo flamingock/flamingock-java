@@ -67,9 +67,9 @@ public class TestRunner {
                 .build();
 
         //AND
-        LoadedTask taskDescriptor = LoadedChangeUnit.fromClass(changeUnitClass);
+        LoadedTask loadedTask = LoadedChangeUnit.fromClass(changeUnitClass);
         List<? extends ExecutableTask> executableTasks = ParentExecutableTaskFactory.INSTANCE
-                .extractTasks("stage_name", taskDescriptor, null);
+                .extractTasks("stage_name", loadedTask, null);
 
         ExecutionContext stageExecutionContext = new ExecutionContext(
                 "executionId", "hostname", "author", new HashMap<>()

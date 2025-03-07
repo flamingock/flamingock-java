@@ -40,13 +40,13 @@ public class ParentExecutableTaskFactory implements ExecutableTaskFactory<Loaded
     }
 
     @Override
-    public List<? extends ExecutableTask> extractTasks(String stageName, LoadedTask taskDescriptor, AuditEntry.Status initialState) {
-        if(LoadedChangeUnit.class.isAssignableFrom(taskDescriptor.getClass())) {
-            return executableChangeUnitFactory.extractTasks(stageName, (LoadedChangeUnit)taskDescriptor, initialState);
-        } else if(TemplatedLoadedChangeUnit.class.isAssignableFrom(taskDescriptor.getClass())) {
-            return executableTemplatedFactory.extractTasks(stageName, (TemplatedLoadedChangeUnit)taskDescriptor, initialState);
+    public List<? extends ExecutableTask> extractTasks(String stageName, LoadedTask loadedTask, AuditEntry.Status initialState) {
+        if(LoadedChangeUnit.class.isAssignableFrom(loadedTask.getClass())) {
+            return executableChangeUnitFactory.extractTasks(stageName, (LoadedChangeUnit)loadedTask, initialState);
+        } else if(TemplatedLoadedChangeUnit.class.isAssignableFrom(loadedTask.getClass())) {
+            return executableTemplatedFactory.extractTasks(stageName, (TemplatedLoadedChangeUnit)loadedTask, initialState);
         } else {
-            throw new IllegalArgumentException(String.format("ExecutableTask type not recognised[%s]", taskDescriptor.getClass().getName()));
+            throw new IllegalArgumentException(String.format("ExecutableTask type not recognised[%s]", loadedTask.getClass().getName()));
         }
     }
 

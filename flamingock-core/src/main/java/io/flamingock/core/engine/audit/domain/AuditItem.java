@@ -38,16 +38,16 @@ public abstract class AuditItem {
     }
 
     private final Operation operation;
-    private final LoadedTask taskDescriptor;
+    private final LoadedTask loadedTask;
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
 
     public AuditItem(Operation operation,
-                     LoadedTask taskDescriptor,
+                     LoadedTask loadedTask,
                      ExecutionContext executionContext,
                      RuntimeContext runtimeContext) {
         this.operation = operation;
-        this.taskDescriptor = taskDescriptor;
+        this.loadedTask = loadedTask;
         this.executionContext = executionContext;
         this.runtimeContext = runtimeContext;
     }
@@ -56,8 +56,8 @@ public abstract class AuditItem {
         return operation;
     }
 
-    public LoadedTask getTaskDescriptor() {
-        return taskDescriptor;
+    public LoadedTask getLoadedTask() {
+        return loadedTask;
     }
 
     public ExecutionContext getExecutionContext() {

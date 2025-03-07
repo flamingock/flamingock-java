@@ -23,6 +23,6 @@ import java.util.function.Supplier;
 
 public interface TransactionWrapper {
 
-    <T> T wrapInTransaction(LoadedTask taskDescriptor, DependencyInjectable dependencyInjectable, Supplier<T> operation);
+    <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation);
 
 }

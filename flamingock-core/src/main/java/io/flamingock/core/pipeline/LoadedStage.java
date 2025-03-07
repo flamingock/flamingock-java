@@ -35,17 +35,17 @@ public class LoadedStage {
 
     private final String name;
 
-    private final Collection<LoadedTask> taskDescriptors;
+    private final Collection<LoadedTask> loadedTasks;
 
     private final boolean parallel;
 
     private final ParentExecutableTaskFactory factory;
 
     public LoadedStage(String name,
-                       Collection<LoadedTask> taskDescriptors,
+                       Collection<LoadedTask> loadedTasks,
                        boolean parallel) {
         this.name = name;
-        this.taskDescriptors = taskDescriptors;
+        this.loadedTasks = loadedTasks;
         this.parallel = parallel;
         this.factory = ParentExecutableTaskFactory.INSTANCE;
 
@@ -55,9 +55,9 @@ public class LoadedStage {
 
         Map<String, AuditEntry.Status> statesMap = state.getEntryStatesMap();
 
-        List<ExecutableTask> tasks = taskDescriptors
+        List<ExecutableTask> tasks = loadedTasks
                 .stream()
-                .map(taskDescriptor -> factory.extractTasks(name, taskDescriptor, statesMap.get(taskDescriptor.getId())))
+                .map(loadedTask -> factory.extractTasks(name, loadedTask, statesMap.get(loadedTask.getId())))
                 .flatMap(List::stream)
                 .collect(Collectors.toCollection(LinkedList::new));
 
@@ -69,8 +69,8 @@ public class LoadedStage {
     }
 
 
-    public Collection<LoadedTask> getTaskDescriptors() {
-        return taskDescriptors;
+    public Collection<LoadedTask> getLoadedTasks() {
+        return loadedTasks;
     }
 
     public boolean isParallel() {
