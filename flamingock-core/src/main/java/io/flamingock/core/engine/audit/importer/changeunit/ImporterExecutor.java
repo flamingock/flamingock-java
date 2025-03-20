@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 /**
  * This changeUnit imports the Mongock data in the database to Flamingock(local or cloud).
  * Although we could have just one ChangeUnit for importing
- * - Mongock            -> Flamingock local
- * - Mongock            -> Flamingock CLoud
- * - Flamingock local   -> Flamingock cloud
- * We need to differentiate it, as we can have two steps(Mongock -> Flamingock local -> Flamingock Cloud)
+ * - Mongock            to Flamingock local
+ * - Mongock            to Flamingock CLoud
+ * - Flamingock local   to Flamingock cloud
+ * We need to differentiate it, as we can have two steps(Mongock to Flamingock local to Flamingock Cloud)
  */
 public final class ImporterExecutor {
     private static final String errorTemplate = "importing changeUnit with id[%s] from database. It must be imported  to a flamingock stage";
@@ -27,9 +27,9 @@ public final class ImporterExecutor {
     /**
      * Reads from a database (either Mongock or Flamingock local) and writes to Flamingock (either local or cloud).
      * The supported migration paths are:
-     * - Mongock            -> Flamingock local
-     * - Mongock            -> Flamingock Cloud
-     * - Flamingock local   -> Flamingock Cloud
+     * - Mongock            to Flamingock local
+     * - Mongock            to Flamingock Cloud
+     * - Flamingock local   to Flamingock Cloud
      * <p>
      * ### **Key Considerations**
      * One crucial aspect to consider is the identifier structure for change units:

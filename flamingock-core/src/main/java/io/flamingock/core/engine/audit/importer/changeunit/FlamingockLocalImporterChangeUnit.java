@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
 /**
  * This changeUnit imports the Mongock data in the database to Flamingock(local or cloud).
  * Although we could have just one ChangeUnit for importing
- * - Mongock            -> Flamingock local
- * - Mongock            -> Flamingock CLoud
- * - Flamingock local   -> Flamingock cloud
- * We need to differentiate it, as we can have two steps(Mongock -> Flamingock local -> Flamingock Cloud)
+ * - Mongock            to Flamingock local
+ * - Mongock            to Flamingock CLoud
+ * - Flamingock local   to Flamingock cloud
+ * We need to differentiate it, as we can have two steps(Mongock to Flamingock local to Flamingock Cloud)
  */
 @SystemChange
 @ChangeUnit(id = FlamingockLocalImporterChangeUnit.IMPORTER_FROM_FLAMINGOCK_LOCAL, order = "2")

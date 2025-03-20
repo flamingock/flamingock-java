@@ -70,7 +70,7 @@ public class CouchbaseEngine extends AbstractLocalEngine {
 
     @Override
     public Optional<? extends LocalSystemModule> getMongockLegacyImporterModule() {
-        throw new FlamingockException("Mongock legacy importer not implemented for Couchbase");
+        return Optional.empty(); // TODO Implement
     }
 
     @Override

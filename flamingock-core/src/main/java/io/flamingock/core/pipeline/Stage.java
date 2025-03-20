@@ -264,7 +264,7 @@ public class Stage {
                 .map(directoryPath -> FileUtil.loadFilesFromDirectory(directoryPath, Stage.class.getClassLoader()))
                 .flatMap(Collection::stream)
                 .map(file -> FileUtil.getFromYamlFile(file, TemplatedTaskDefinition.class))
-//                .filter(source -> filters.stream().allMatch(filter -> filter.filter(source)))
+//                .filter(source to filters.stream().allMatch(filter to filter.filter(source)))
                 .map(TemplatedLoadedTaskBuilder.recycledBuilder()::setFromDefinition)
                 .map(TemplatedLoadedTaskBuilder::build)
                 .collect(Collectors.toList());
