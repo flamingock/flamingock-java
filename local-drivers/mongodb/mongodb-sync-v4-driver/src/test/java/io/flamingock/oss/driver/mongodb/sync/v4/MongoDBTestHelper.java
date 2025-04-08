@@ -62,4 +62,5 @@ public class MongoDBTestHelper {
                 .map(mapper::fromDocument)
                 .collect(Collectors.toList());
     }
+
 }

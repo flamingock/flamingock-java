@@ -1,27 +1,68 @@
 package io.flamingock.core.engine.audit.importer;
 
-import io.flamingock.core.api.LocalSystemModule;
+import io.flamingock.core.engine.audit.AuditWriter;
+import io.flamingock.core.engine.audit.importer.changeunit.FlamingockLocalImporterChangeUnit;
 import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
+import io.flamingock.core.pipeline.PipelineDescriptor;
+import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.runtime.dependency.Dependency;
+import io.flamingock.core.system.LocalSystemModule;
+import io.flamingock.core.preview.CodePreviewChangeUnit;
+import io.flamingock.core.preview.PreviewMethod;
+import io.flamingock.core.preview.builder.PreviewTaskBuilder;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class ImporterModule implements LocalSystemModule {
-    public static final List<Class<?>> MONGOCK_CHANGE_UNITS = Collections.singletonList(
-            MongockImporterChangeUnit.class
-    );
 
-    public static final List<Class<?>> FROM_FLAMINGOCK_CHANGE_UNITS = Collections.singletonList(
-            MongockImporterChangeUnit.class
-    );
     public static final String FROM_MONGOCK_NAME = "from-mongock-importer";
-    public static final String FROM_FLAMINGOCK_LOCAL_NAME = "from-flamingock-local-importer";
+    public static final String FROM_FLAMINGOCK_LITE_NAME = "from-flamingock-local-importer";
 
-    private final ImporterReader importReader;
-    private final boolean fromMongock;
+
+
+    private final List<CodePreviewChangeUnit> fromMongockChangeUnits = Collections.singletonList(
+            PreviewTaskBuilder.getCodeBuilder()
+                    .setId(MongockImporterChangeUnit.IMPORTER_FROM_MONGOCK)
+                    .setOrder("1")
+                    .setSourceClassPath(MongockImporterChangeUnit.class.getName())
+                    .setExecutionMethod(new PreviewMethod("execution", Arrays.asList(
+                            ImporterReader.class.getName(),
+                            AuditWriter.class.getName(),
+                            PipelineDescriptor.class.getName())))
+                    .setRunAlways(false)
+                    .setTransactional(true)
+                    .setNewChangeUnit(true)
+                    .setSystem(true)
+                    .build()
+    );
+
+
+    private final List<CodePreviewChangeUnit> fromFlamingockChangeUnits = Collections.singletonList(
+            PreviewTaskBuilder.getCodeBuilder()
+                    .setId(FlamingockLocalImporterChangeUnit.IMPORTER_FROM_FLAMINGOCK_LOCAL)
+                    .setOrder("2")
+                    .setSourceClassPath(MongockImporterChangeUnit.class.getName())
+                    .setExecutionMethod(new PreviewMethod("execution", Arrays.asList(
+                            ImporterReader.class.getName(),
+                            AuditWriter.class.getName(),
+                            PipelineDescriptor.class.getName())))
+                    .setRunAlways(false)
+                    .setTransactional(true)
+                    .setNewChangeUnit(true)
+                    .setSystem(true)
+                    .build()
+    );
+    private static final String FROM_MONGOCK_DESC = "Importer from Mongock";
+    private static final String FROM_FLAMINGOCK_LITE_DESC = "Importer from Flamingock lite";
+
+    private ImporterReader importReader;
+    private boolean fromMongock;
     private List<Dependency> dependencies;
+
+    public ImporterModule() {
+    }
 
     public ImporterModule(ImporterReader importerReader) {
         this.fromMongock = importerReader.isFromMongock();
@@ -36,13 +77,12 @@ public class ImporterModule implements LocalSystemModule {
     }
 
     @Override
-    public String getName() {
-        return fromMongock ? FROM_MONGOCK_NAME : FROM_FLAMINGOCK_LOCAL_NAME;
-    }
-
-    @Override
-    public Collection<Class<?>> getTaskClasses() {
-        return fromMongock ? MONGOCK_CHANGE_UNITS : FROM_FLAMINGOCK_CHANGE_UNITS;
+    public PreviewStage getStage() {
+        return PreviewStage.builder()
+                .setName(fromMongock ? FROM_MONGOCK_NAME : FROM_FLAMINGOCK_LITE_NAME)
+                .setDescription(fromMongock ? FROM_MONGOCK_DESC : FROM_FLAMINGOCK_LITE_DESC)
+                .setChanges(fromMongock ? fromMongockChangeUnits : fromFlamingockChangeUnits)
+                .build();
     }
 
     @Override

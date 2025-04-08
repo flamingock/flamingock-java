@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
  * <p>
  * @see io.flamingock.core.api.annotations.Execution
  */
-@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Execution {

@@ -16,7 +16,7 @@
 
 package io.flamingock.core.configurator.standalone;
 
-import io.flamingock.core.api.CloudSystemModule;
+import io.flamingock.core.system.CloudSystemModule;
 import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.http.Http;
@@ -34,7 +34,6 @@ import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
@@ -95,10 +94,11 @@ public class StandaloneCloudBuilder
 
         CloudEngine engine = engineFactory.initializeAndGet();
 
-        coreConfiguratorDelegate.getSystemModuleManager()
+        CloudSystemModuleManager systemModuleManager = coreConfiguratorDelegate.getSystemModuleManager();
+        systemModuleManager
                 .initialize(engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt(), cloudConfiguratorDelegate.getCloudConfiguration().getHost());
 
-        coreConfiguratorDelegate.getSystemModuleManager()
+        systemModuleManager
                 .getDependencies()
                 .forEach(d -> addDependency(d.getName(), d.getType(), d.getInstance()));
 
@@ -107,10 +107,9 @@ public class StandaloneCloudBuilder
         CoreConfigurable coreConfiguration = coreConfiguratorDelegate().getCoreConfiguration();
 
         Pipeline pipeline = buildPipeline(
-                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesBefore(),
-                coreConfiguration.getStages(),
-                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter(),
-                coreConfiguratorDelegate.getFlamingockMetadata()
+                systemModuleManager.getSortedSystemStagesBefore(),
+                coreConfiguration.getPreviewPipeline(),
+                systemModuleManager.getSortedSystemStagesAfter()
         );
 
         //injecting the pipeline descriptor to the dependencies
@@ -121,7 +120,6 @@ public class StandaloneCloudBuilder
         return PipelineRunnerCreator.createCloud(
                 runnerId,
                 pipeline,
-                coreConfiguratorDelegate.getFlamingockMetadata(),
                 engine,
                 coreConfiguration,
                 buildEventPublisher(),

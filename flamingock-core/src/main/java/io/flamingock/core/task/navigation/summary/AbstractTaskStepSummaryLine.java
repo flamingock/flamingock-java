@@ -16,7 +16,7 @@
 
 package io.flamingock.core.task.navigation.summary;
 
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.task.navigation.step.ExecutableStep;
 import io.flamingock.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.core.task.navigation.step.complete.CompletedAlreadyAppliedStep;
@@ -65,9 +65,9 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
     public static class InitialTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
-        private final LoadedTask desc;
+        private final TaskDescriptor desc;
 
-        public InitialTaskSummaryLine(LoadedTask loadedTask) {
+        public InitialTaskSummaryLine(TaskDescriptor loadedTask) {
             super(loadedTask.getId(), null);
             this.desc = loadedTask;
         }
@@ -82,7 +82,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
     public static class StartedTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
         public StartedTaskSummaryLine(ExecutableStep step) {
-            super(step.getTask().getDescriptor().getId(), SummaryResult.OK);
+            super(step.getTask().getId(), SummaryResult.OK);
         }
 
 
@@ -96,7 +96,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
     public static class ExecutedTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
         public ExecutedTaskSummaryLine(ExecutionStep step) {
-            super(step.getTask().getDescriptor().getId(), getResultFromSuccess(step.isSuccessStep()));
+            super(step.getTask().getId(), getResultFromSuccess(step.isSuccessStep()));
         }
 
 
@@ -111,7 +111,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
 
         public AfterExecutionTaskAuditSummaryLine(AfterExecutionAuditStep step) {
-            super(step.getTask().getDescriptor().getId(), getResultFromSuccess(step.isSuccessStep()));
+            super(step.getTask().getId(), getResultFromSuccess(step.isSuccessStep()));
         }
 
         @Override
@@ -124,7 +124,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
     public static class RolledBackTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
         public RolledBackTaskSummaryLine(RolledBackStep step) {
-            super(step.getTask().getDescriptor().getId(), getResultFromSuccess(step.isSuccessStep()));
+            super(step.getTask().getId(), getResultFromSuccess(step.isSuccessStep()));
         }
 
         @Override
@@ -137,7 +137,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
     public static class FailedCompletedManualRollbackTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
         public FailedCompletedManualRollbackTaskSummaryLine(CompletedFailedManualRollback step) {
-            super(step.getTask().getDescriptor().getId(), getResultFromSuccess(step.isSuccessStep()));
+            super(step.getTask().getId(), getResultFromSuccess(step.isSuccessStep()));
         }
 
         @Override
@@ -150,7 +150,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
     public static class AlreadyAppliedTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
         public AlreadyAppliedTaskSummaryLine(CompletedAlreadyAppliedStep step) {
-            super(step.getTask().getDescriptor().getId(), SummaryResult.ALREADY_APPLIED);
+            super(step.getTask().getId(), SummaryResult.ALREADY_APPLIED);
         }
 
         @Override
@@ -162,7 +162,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
     public static class NotReachedTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
-        public NotReachedTaskSummaryLine(LoadedTask loadedTask) {
+        public NotReachedTaskSummaryLine(TaskDescriptor loadedTask) {
             super(loadedTask.getId(), SummaryResult.NOT_REACHED);
         }
 

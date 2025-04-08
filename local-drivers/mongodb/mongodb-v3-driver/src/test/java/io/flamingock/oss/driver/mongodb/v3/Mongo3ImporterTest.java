@@ -21,13 +21,17 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
-import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.oss.driver.mongodb.v3.changes._0_mongock_create_authors_collection;
+import io.flamingock.oss.driver.mongodb.v3.changes._1_create_client_collection_happy;
+import io.flamingock.oss.driver.mongodb.v3.changes._2_insert_federico_happy_non_transactional;
+import io.flamingock.oss.driver.mongodb.v3.changes._3_insert_jorge_happy_non_transactional;
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
-import io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockImporterChangeUnit;
-import io.flamingock.oss.driver.mongodb.v3.mongock.ClientInitializerChangeUnit;
 import io.mongock.driver.mongodb.v3.driver.MongoCore3Driver;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.bson.Document;
@@ -36,15 +40,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration;
+import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -84,43 +91,51 @@ class Mongo3ImporterTest {
     @DisplayName("When standalone runs the driver with mongock importer should run migration")
     void shouldRunMongockImporter() {
         //Given
-        MongoCore3Driver mongoSync4Driver = MongoCore3Driver.withDefaultLock(mongoClient, DB_NAME);
+        MongoCore3Driver mongock3Driver = MongoCore3Driver
+                .withDefaultLock(mongoClient, DB_NAME);
+
         MongockStandalone.builder()
-                .setDriver(mongoSync4Driver)
-                .addMigrationClass(ClientInitializerChangeUnit.class)
-                .setTrackIgnored(true)
+                .setDriver(mongock3Driver)
+                .addMigrationClass(_0_mongock_create_authors_collection.class)
+                
                 .setTransactional(false)
                 .buildRunner()
                 .execute();
 
-        ArrayList<Document> mongockDbState = mongoClient.getDatabase(DB_NAME).getCollection(mongoSync4Driver.getMigrationRepositoryName())
+        ArrayList<Document> mongockDbState = mongoClient.getDatabase(DB_NAME).getCollection(mongock3Driver.getMigrationRepositoryName())
                 .find()
                 .into(new ArrayList<>());
 
         Assertions.assertEquals(4, mongockDbState.size());
         assertEquals("system-change-00001_before", mongockDbState.get(0).get("changeId"));
         assertEquals("system-change-00001", mongockDbState.get(1).get("changeId"));
-        assertEquals("client-initializer_before", mongockDbState.get(2).get("changeId"));
-        assertEquals("client-initializer", mongockDbState.get(3).get("changeId"));
+        assertEquals("create-author-collection_before", mongockDbState.get(2).get("changeId"));
+        assertEquals("create-author-collection", mongockDbState.get(3).get("changeId"));
 
-        //When
-        FlamingockStandalone.local()
-                .withImporter(ImporterConfiguration.withSource(mongoSync4Driver.getMigrationRepositoryName()))
-                .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
-                .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setTrackIgnored(true)
-                
-                .build()
-                .run();
 
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_0_mongock_create_authors_collection.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
+            );
+
+            FlamingockStandalone.local()
+                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                    .withImporter(withSource("mongockChangeLog"))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.withImporter"))
+                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .disableTransaction()
+                    .build()
+                    .run();
+        }
 
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(8, auditLog.size());
         checkAuditEntry(
                 auditLog.get(0),
                 mongockDbState.get(0).getString("executionId"),
-                null,
                 MongockLegacyIdGenerator.getNewId(mongockDbState.get(0).getString("changeId"), mongockDbState.get(0).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(0).getString("changeLogClass"),
@@ -130,7 +145,6 @@ class Mongo3ImporterTest {
         checkAuditEntry(
                 auditLog.get(1),
                 mongockDbState.get(1).getString("executionId"),
-                null,
                 MongockLegacyIdGenerator.getNewId(mongockDbState.get(1).getString("changeId"), mongockDbState.get(1).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(1).getString("changeLogClass"),
@@ -141,7 +155,6 @@ class Mongo3ImporterTest {
         checkAuditEntry(
                 auditLog.get(2),
                 mongockDbState.get(2).getString("executionId"),
-                null,
                 MongockLegacyIdGenerator.getNewId(mongockDbState.get(2).getString("changeId"), mongockDbState.get(2).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(2).getString("changeLogClass"),
@@ -152,7 +165,6 @@ class Mongo3ImporterTest {
         checkAuditEntry(
                 auditLog.get(3),
                 mongockDbState.get(3).getString("executionId"),
-                null,
                 MongockLegacyIdGenerator.getNewId(mongockDbState.get(3).getString("changeId"), mongockDbState.get(3).getString("author") ),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(3).getString("changeLogClass"),
@@ -163,8 +175,7 @@ class Mongo3ImporterTest {
         checkAuditEntry(
                 auditLog.get(4),
                 auditLog.get(4).getExecutionId(),
-                null,
-                "mongock-importer",
+                MongockImporterChangeUnit.IMPORTER_FROM_MONGOCK,
                 AuditEntry.Status.EXECUTED,
                 MongockImporterChangeUnit.class.getName(),
                 "execution",
@@ -176,7 +187,6 @@ class Mongo3ImporterTest {
 
     private void checkAuditEntry(AuditEntry actualAuditEntry,
                                  String expectedExecutionId,
-                                 String expectedStageId,
                                  String expectedTaskId,
                                  AuditEntry.Status expectedStatus,
                                  String expectedClassName,
@@ -184,7 +194,6 @@ class Mongo3ImporterTest {
                                  AuditEntry.ExecutionType expectedExecutionType,
                                  boolean expectedSystemChange) {
         assertEquals(expectedExecutionId, actualAuditEntry.getExecutionId());
-        assertEquals(expectedStageId, actualAuditEntry.getStageId());
         assertEquals(expectedTaskId, actualAuditEntry.getTaskId());
         assertEquals(expectedStatus, actualAuditEntry.getState());
         assertEquals(expectedClassName, actualAuditEntry.getClassName());

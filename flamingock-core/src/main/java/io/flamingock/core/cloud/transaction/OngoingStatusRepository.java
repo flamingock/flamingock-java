@@ -45,10 +45,10 @@ public interface OngoingStatusRepository {
     void saveOngoingStatus(TaskWithOngoingStatus status);
 
     default void setOngoingExecution(ExecutableTask ongoingTask) {
-        saveOngoingStatus(new TaskWithOngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.EXECUTION));
+        saveOngoingStatus(new TaskWithOngoingStatus(ongoingTask.getId(), OngoingStatus.EXECUTION));
     }
 
     default void setOngoingRollback(ExecutableTask ongoingTask) {
-        saveOngoingStatus(new TaskWithOngoingStatus(ongoingTask.getDescriptor().getId(), OngoingStatus.ROLLBACK));
+        saveOngoingStatus(new TaskWithOngoingStatus(ongoingTask.getId(), OngoingStatus.ROLLBACK));
     }
 }

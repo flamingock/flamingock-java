@@ -16,7 +16,7 @@
 
 package io.flamingock.springboot.v2.builder;
 
-import io.flamingock.core.api.LocalSystemModule;
+import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
@@ -88,9 +88,8 @@ public class SpringbootLocalBuilder extends AbstractSpringbootBuilder<Springboot
         logger.info("Creating runner with spring profiles[{}]", Arrays.toString(activeProfiles));
         Pipeline pipeline = buildPipeline(activeProfiles,
                 getSystemModuleManager().getSortedSystemStagesBefore(),
-                coreConfiguration.getStages(),
-                getSystemModuleManager().getSortedSystemStagesAfter(),
-                getFlamingockMetadata());
+                coreConfiguration.getPreviewPipeline(),
+                getSystemModuleManager().getSortedSystemStagesAfter());
 
         //injecting the pipeline descriptor to the dependencies
         addDependency(new Dependency(PipelineDescriptor.class, pipeline));
@@ -100,7 +99,6 @@ public class SpringbootLocalBuilder extends AbstractSpringbootBuilder<Springboot
         return PipelineRunnerCreator.createLocal(
                 runnerId,
                 pipeline,
-                getFlamingockMetadata(),
                 engine,
                 coreConfiguration,
                 createEventPublisher(),

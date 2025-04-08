@@ -22,7 +22,7 @@ import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.task.navigation.step.FailedStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,7 +141,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public <T> T wrapInTransaction(LoadedTask loadedTask,
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask,
                                    DependencyInjectable dependencyInjectable,
                                    Supplier<T> operation) {
         Dependency dependency = new Dependency(Connection.class, connection);

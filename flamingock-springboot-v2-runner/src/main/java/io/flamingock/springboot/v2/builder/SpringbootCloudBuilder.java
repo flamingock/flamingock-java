@@ -19,7 +19,7 @@ package io.flamingock.springboot.v2.builder;
 import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.http.Http;
-import io.flamingock.core.api.CloudSystemModule;
+import io.flamingock.core.system.CloudSystemModule;
 import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.configurator.cloud.CloudConfiguration;
@@ -101,10 +101,11 @@ public class SpringbootCloudBuilder extends AbstractSpringbootBuilder<Springboot
         Pipeline pipeline = buildPipeline(
                 activeProfiles,
                 getSystemModuleManager().getSortedSystemStagesBefore(),
-                getCoreConfiguration().getStages(),
-                getSystemModuleManager().getSortedSystemStagesAfter(),
-                getFlamingockMetadata()
+                getCoreConfiguration().getPreviewPipeline(),
+                getSystemModuleManager().getSortedSystemStagesAfter()
         );
+
+
 
         //injecting the pipeline descriptor to the dependencies
         addDependency(new Dependency(PipelineDescriptor.class, pipeline));
@@ -114,7 +115,6 @@ public class SpringbootCloudBuilder extends AbstractSpringbootBuilder<Springboot
         return PipelineRunnerCreator.createCloud(
                 runnerId,
                 pipeline,
-                getFlamingockMetadata(),
                 engine,
                 getCoreConfiguration(),
                 createEventPublisher(),

@@ -16,6 +16,7 @@
 package io.mongock.api.annotations;
 
 import com.github.cloudyrock.mongock.ChangeSet;
+import io.flamingock.core.api.annotations.Change;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -26,9 +27,8 @@ import java.lang.annotation.Target;
  * For old classes, this annotation can remain. It won't be removed from the legacy library.
  * For new classes, use io.flamingock.core.api.annotations.ChangeUnits
  * <p>
- * @see io.flamingock.core.api.annotations.ChangeUnit
+ * @see Change
  */
-@Deprecated
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ChangeUnit {

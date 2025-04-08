@@ -17,12 +17,12 @@
 package io.flamingock.core.transaction;
 
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 
 import java.util.function.Supplier;
 
 public interface TransactionWrapper {
 
-    <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation);
+    <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation);
 
 }

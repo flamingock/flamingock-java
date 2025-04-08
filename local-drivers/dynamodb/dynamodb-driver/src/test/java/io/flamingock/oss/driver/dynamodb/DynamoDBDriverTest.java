@@ -18,10 +18,19 @@ package io.flamingock.oss.driver.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
+import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
+import io.flamingock.oss.driver.dynamodb.changes._1_create_client_collection_happy;
+import io.flamingock.oss.driver.dynamodb.changes._2_insert_federico_happy_non_transactional;
+import io.flamingock.oss.driver.dynamodb.changes._2_insert_federico_happy_transactional;
+import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_failed_non_transactional_non_rollback;
+import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_failed_non_transactional_rollback;
+import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_failed_transactional_non_rollback;
+import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_happy_non_transactional;
+import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_happy_transactional;
 import io.flamingock.oss.driver.dynamodb.changes.common.UserEntity;
 import io.flamingock.oss.driver.dynamodb.driver.DynamoDBDriver;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
@@ -29,15 +38,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -88,13 +102,22 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver related tables should exists")
     void testTablesExistence() {
         //Given-When
-        FlamingockStandalone.local()
-                .setDriver(new DynamoDBDriver(client))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
-                .addDependency(client)
-                .setTrackIgnored(true)
-                .build()
-                .run();
+        try(MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                    new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+            );
+
+
+            FlamingockStandalone.local()
+                    .setDriver(new DynamoDBDriver(client))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
+                    .addDependency(client)
+                    .build()
+                    .run();
+        }
+
 
         //Then
         assertTrue(dynamoDBTestHelper.tableExists(DynamoDBConstants.AUDIT_LOG_TABLE_NAME));
@@ -105,13 +128,22 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with transactions enabled should persist the audit logs and the user's table updated")
     void happyPathWithTransaction() {
         //Given-When
-        FlamingockStandalone.local()
-                .setDriver(new DynamoDBDriver(client))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
-                .addDependency(client)
-                .setTrackIgnored(true)
-                .build()
-                .run();
+
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                    new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+            );
+
+            FlamingockStandalone.local()
+                    .setDriver(new DynamoDBDriver(client))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
+                    .addDependency(client)
+                    .build()
+                    .run();
+        }
 
         //Then
         //Checking auditLog
@@ -140,14 +172,21 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled should persist the audit logs and the user's table updated")
     void happyPathWithoutTransaction() {
         //Given-When
-        FlamingockStandalone.local()
-                .setDriver(new DynamoDBDriver(client))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithoutTransaction"))
-                .addDependency(client)
-                .setTrackIgnored(true)
-                .disableTransaction()
-                .build()
-                .run();
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)))
+            );
+            FlamingockStandalone.local()
+                    .setDriver(new DynamoDBDriver(client))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithoutTransaction"))
+                    .addDependency(client)
+                    .disableTransaction()
+                    .build()
+                    .run();
+        }
+
 
         //Then
         //Checking auditLog
@@ -176,15 +215,24 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with transactions enabled and execution fails should persist only the executed audit logs")
     void failedWithTransaction() {
         //Given-When
-        assertThrows(PipelineExecutionException.class, () -> {
-            FlamingockStandalone.local()
-                    .setDriver(new DynamoDBDriver(client))
-                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithTransaction"))
-                    .addDependency(client)
-                    .setTrackIgnored(true)
-                    .build()
-                    .run();
-        });
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_3_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+            );
+
+            assertThrows(PipelineExecutionException.class, () -> {
+                FlamingockStandalone.local()
+                        .setDriver(new DynamoDBDriver(client))
+                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithTransaction"))
+                        .addDependency(client)
+                        .build()
+                        .run();
+            });
+        }
+
 
         //Then
         //Checking auditLog
@@ -212,15 +260,22 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
     void failedWithoutTransactionWithRollback() {
         //Given-When
-        assertThrows(PipelineExecutionException.class, () -> {
-            FlamingockStandalone.local()
-                    .setDriver(new DynamoDBDriver(client))
-                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithRollback"))
-                    .addDependency(client)
-                    .setTrackIgnored(true)
-                    .disableTransaction()                    .build()
-                    .run();
-        });
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_3_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
+            );
+            assertThrows(PipelineExecutionException.class, () -> {
+                FlamingockStandalone.local()
+                        .setDriver(new DynamoDBDriver(client))
+                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithRollback"))
+                        .addDependency(client)
+                        .disableTransaction()
+                        .build()
+                        .run();
+            });
+        }
 
         //Then
         //Checking auditLog
@@ -250,16 +305,24 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
     void failedWithoutTransactionWithoutRollback() {
         //Given-When
-        assertThrows(PipelineExecutionException.class, () -> {
-            FlamingockStandalone.local()
-                    .setDriver(new DynamoDBDriver(client))
-                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithoutRollback"))
-                    .addDependency(client)
-                    .setTrackIgnored(true)
-                    .disableTransaction()
-                    .build()
-                    .run();
-        });
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_3_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
+            );
+
+            assertThrows(PipelineExecutionException.class, () -> {
+                FlamingockStandalone.local()
+                        .setDriver(new DynamoDBDriver(client))
+                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithoutRollback"))
+                        .addDependency(client)
+                        .disableTransaction()
+                        .build()
+                        .run();
+            });
+        }
+
 
         //Then
         //Checking auditLog

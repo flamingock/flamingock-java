@@ -1,6 +1,6 @@
 package io.flamingock.core.configurator.local;
 
-import io.flamingock.core.api.LocalSystemModule;
+import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.core.configurator.SystemModuleManager;
 
 import java.util.LinkedHashSet;

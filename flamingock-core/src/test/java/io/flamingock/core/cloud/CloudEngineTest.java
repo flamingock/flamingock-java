@@ -26,7 +26,6 @@ import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
 import io.flamingock.core.engine.lock.LockException;
-import io.flamingock.core.pipeline.Stage;
 import io.flamingock.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -112,8 +111,9 @@ public class CloudEngineTest {
                 .setHost("http://localhost:" + runnerServerPort)
                 .setService(serviceName)
                 .setEnvironment(environmentName)
-                .addStage(new Stage("stage-1")
-                        .setCodePackages(Collections.singletonList("io.flamingock.core.cloud.changes")));
+                //.addStage(new Stage("stage-1")
+//                        .setCodePackages(Collections.singletonList("io.flamingock.core.cloud.changes")))
+        ;
     }
 
     @AfterEach

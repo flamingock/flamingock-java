@@ -16,29 +16,6 @@
 
 package io.flamingock.oss.driver.couchbase;
 
-import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.Collection;
-import com.couchbase.client.java.json.JsonObject;
-import com.couchbase.client.java.manager.query.DropQueryIndexOptions;
-import com.couchbase.client.java.query.QueryOptions;
-import com.couchbase.client.java.query.QueryScanConsistency;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.configurator.standalone.FlamingockStandalone;
-import io.flamingock.core.pipeline.Stage;
-import io.flamingock.core.pipeline.execution.StageExecutionException;
-import io.flamingock.core.runner.Runner;
-import io.flamingock.oss.driver.couchbase.driver.CouchbaseDriver;
-import org.junit.Ignore;
-import org.junit.jupiter.api.*;
-import org.testcontainers.couchbase.BucketDefinition;
-import org.testcontainers.couchbase.CouchbaseContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 //@Testcontainers
 class CouchbaseDriverTest {
 //
@@ -79,7 +56,7 @@ class CouchbaseDriverTest {
 //                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.couchbase.changes.happyPath"))
 //                .addDependency(cluster)
 //                .addDependency(collection)
-//                .setTrackIgnored(true)
+//                
 //                .disableTransaction()
 //                .build()
 //                .run();
@@ -119,7 +96,7 @@ class CouchbaseDriverTest {
 //                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.couchbase.changes.failedWithRollback"))
 //                    .addDependency(cluster)
 //                    .addDependency(collection)
-//                    .setTrackIgnored(true)
+//                    
 //                    .disableTransaction()
 //                    .build()
 //                    .run();
@@ -157,7 +134,7 @@ class CouchbaseDriverTest {
 //                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.couchbase.changes.failedWithoutRollback"))
 //                    .addDependency(cluster)
 //                    .addDependency(collection)
-//                    .setTrackIgnored(true)
+//                    
 //                    .disableTransaction()
 //                    .build();
 //            build

@@ -16,9 +16,11 @@
 
 package io.flamingock.core.configurator.core;
 
-import io.flamingock.core.api.SystemModule;
+import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.configurator.TransactionStrategy;
-import io.flamingock.core.configurator.legacy.LegacyMigration;
+
+import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.pipeline.Stage;
 
 import java.util.ArrayList;
@@ -36,10 +38,7 @@ public class CoreConfiguration implements CoreConfigurable {
     private final LockConfiguration lockConfiguration = new LockConfiguration();
 
     private final ImporterConfiguration mongockImporterConfiguration = ImporterConfiguration.getDisabled();
-    /**
-     * If true, will track ignored changeSets in history. Default false
-     */
-    private boolean trackIgnored = false;
+
     /**
      * If false, will disable Mongock. Default true
      */
@@ -61,10 +60,6 @@ public class CoreConfiguration implements CoreConfigurable {
      * Map for custom data you want to attach to your migration
      */
     private Map<String, Object> metadata = new HashMap<>();
-    /**
-     * Legacy migration object to instruct Mongock how to import legacy migrations from other tools
-     */
-    private LegacyMigration legacyMigration = null;
 
     /**
      * From version 5, author is not a mandatory field, but still needed for backward compatibility. This is why Mongock
@@ -98,20 +93,9 @@ public class CoreConfiguration implements CoreConfigurable {
         return mongockImporterConfiguration;
     }
 
-
     @Override
-    public void setStages(List<Stage> stages) {
-        this.stages.addAll(stages);
-    }
-
-    @Override
-    public void addStage(Stage stage) {
-        stages.add(stage);
-    }
-
-    @Override
-    public Iterable<Stage> getStages() {
-        return stages;
+    public PreviewPipeline getPreviewPipeline() {
+        return Deserializer.readPreviewPipelineFromFile();
     }
 
 
@@ -147,11 +131,6 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public void setTrackIgnored(boolean trackIgnored) {
-        this.trackIgnored = trackIgnored;
-    }
-
-    @Override
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
@@ -175,11 +154,6 @@ public class CoreConfiguration implements CoreConfigurable {
     @Override
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
-    }
-
-    @Override
-    public void setLegacyMigration(LegacyMigration legacyMigration) {
-        this.legacyMigration = legacyMigration;
     }
 
     @Override
@@ -213,11 +187,6 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public boolean isTrackIgnored() {
-        return trackIgnored;
-    }
-
-    @Override
     public boolean isEnabled() {
         return enabled;
     }
@@ -241,12 +210,7 @@ public class CoreConfiguration implements CoreConfigurable {
     public Map<String, Object> getMetadata() {
         return metadata;
     }
-
-    @Override
-    public LegacyMigration getLegacyMigration() {
-        return legacyMigration;
-    }
-
+    
     @Override
     public String getDefaultAuthor() {
         return defaultAuthor;

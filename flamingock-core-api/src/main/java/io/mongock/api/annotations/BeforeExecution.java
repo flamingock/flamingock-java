@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
  * For new classes, another ChangeUnit should be created to cover this logic
  * <p>
  */
-@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BeforeExecution {

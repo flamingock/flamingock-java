@@ -17,44 +17,45 @@
 package io.flamingock.template.mongodb;
 
 import com.mongodb.client.ClientSession;
-import io.flamingock.template.annotations.TemplateConfigSetter;
-import io.flamingock.template.annotations.TemplateConfigValidator;
-import io.flamingock.template.annotations.TemplateExecution;
-import io.flamingock.template.annotations.TemplateRollbackExecution;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.core.api.template.ChangeTemplate;
+import io.flamingock.core.api.template.annotations.Config;
+import io.flamingock.core.api.template.annotations.ChangeTemplateConfigValidator;
+import io.flamingock.core.api.template.annotations.ChangeTemplateExecution;
+import io.flamingock.core.api.template.annotations.ChangeTemplateRollbackExecution;
 import io.flamingock.template.mongodb.model.MongoOperation;
 import jakarta.annotation.Nullable;
-import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collection;
 
-public class MongoChangeTemplate {
-    protected static final Logger logger = LoggerFactory.getLogger(MongoChangeTemplate.class);
+public class MongoChangeTemplate implements ChangeTemplate {
+    //avoids static loading at building time to keep GraalVM happy
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private MongoChangeTemplateConfig config;
 
-    @TemplateConfigSetter
+    @Config
     public void setConfiguration(MongoChangeTemplateConfig config) {
         logger.trace("setting MongoChangeTemplate config: " + config);
         this.config = config;
     }
 
-    @TemplateConfigValidator
+    @ChangeTemplateConfigValidator
     public void validate() {
         logger.trace("validating MongoChangeTemplate");
         config.validate();
     }
 
-    @TemplateExecution
+    @ChangeTemplateExecution
     public void execute(MongoDatabase db, @Nullable ClientSession clientSession) {
         logger.debug("MongoChangeTemplate changes with clientSession[{}]", clientSession != null);
         config.getChanges().forEach(executionOperation -> executeOp(db, executionOperation, clientSession));
     }
 
-    @TemplateRollbackExecution
+    @ChangeTemplateRollbackExecution
     public void rollback(MongoDatabase db, @Nullable ClientSession clientSession) {
         logger.debug("MongoChangeTemplate rollbacks with clientSession[{}]", clientSession != null);
         config.getRollbacks().forEach(executionOperation -> executeOp(db, executionOperation, clientSession));
@@ -64,4 +65,11 @@ public class MongoChangeTemplate {
         op.getOperator(db).apply(clientSession);
     }
 
+    @Override
+    public Collection<Class<?>> getReflectiveClasses() {
+        return Arrays.asList(
+                MongoChangeTemplateConfig.class,
+                MongoOperation.class
+        );
+    }
 }

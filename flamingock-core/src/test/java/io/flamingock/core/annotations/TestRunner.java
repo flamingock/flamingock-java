@@ -7,6 +7,9 @@ import io.flamingock.core.engine.audit.domain.ExecutionAuditItem;
 import io.flamingock.core.engine.audit.domain.RollbackAuditItem;
 import io.flamingock.core.engine.audit.domain.StartExecutionAuditItem;
 import io.flamingock.core.engine.lock.Lock;
+import io.flamingock.core.task.executable.builder.ExecutableTaskBuilder;
+import io.flamingock.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.core.task.loaded.LoadedTaskBuilder;
 import io.flamingock.core.utils.EmptyTransactionWrapper;
 import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
@@ -14,10 +17,7 @@ import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.core.runtime.RuntimeManager;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import io.flamingock.core.task.descriptor.change.LoadedChangeUnit;
-import io.flamingock.core.task.descriptor.LoadedTask;
 import io.flamingock.core.task.executable.ExecutableTask;
-import io.flamingock.core.task.executable.ParentExecutableTaskFactory;
 import io.flamingock.core.task.navigation.navigator.StepNavigator;
 import org.junit.jupiter.api.Assertions;
 
@@ -67,9 +67,12 @@ public class TestRunner {
                 .build();
 
         //AND
-        LoadedTask loadedTask = LoadedChangeUnit.fromClass(changeUnitClass);
-        List<? extends ExecutableTask> executableTasks = ParentExecutableTaskFactory.INSTANCE
-                .extractTasks("stage_name", loadedTask, null);
+        AbstractLoadedTask loadedTask = LoadedTaskBuilder.getCodeBuilderInstance(changeUnitClass).build();
+        List<? extends ExecutableTask> executableTasks = ExecutableTaskBuilder
+                .getInstance(loadedTask)
+                .setStageName("stage_name")
+                .setInitialState(null)
+                .build();
 
         ExecutionContext stageExecutionContext = new ExecutionContext(
                 "executionId", "hostname", "author", new HashMap<>()

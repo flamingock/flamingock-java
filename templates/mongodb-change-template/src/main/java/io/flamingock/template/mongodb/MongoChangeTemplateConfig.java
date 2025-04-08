@@ -28,6 +28,15 @@ public class MongoChangeTemplateConfig  {
     private List<MongoOperation> changes;
     private List<MongoOperation> rollbacks;
 
+    public MongoChangeTemplateConfig(List<MongoOperation> changes, List<MongoOperation> rollbacks) {
+        this.changes = changes;
+        this.rollbacks = rollbacks;
+    }
+
+    public MongoChangeTemplateConfig() {
+        this(null, null);
+    }
+
     public List<MongoOperation> getChanges() { return changes; }
 
     public void setChanges(List<MongoOperation> changes) { this.changes = changes; }

@@ -1,6 +1,7 @@
 package io.flamingock.core.engine.audit.importer.changeunit;
 
 
+import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.audit.importer.ImporterReader;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
@@ -35,7 +36,7 @@ public final class ImporterExecutor {
      * One crucial aspect to consider is the identifier structure for change units:
      * - Change units annotated with the legacy annotation ({@link io.mongock.api.annotations.ChangeUnit}) use an identifier
      * that consists of **changeId/taskId + author**.
-     * - Change units annotated with the new annotation ({@link io.flamingock.core.api.annotations.ChangeUnit})
+     * - Change units annotated with the new annotation ({@link Change})
      * use only the **id** as the identifier.
      * <p>
      * Although Flamingock is backward compatible with Mongock and technically supports the legacy annotation

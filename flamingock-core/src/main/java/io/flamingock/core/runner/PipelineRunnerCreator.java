@@ -18,7 +18,6 @@ package io.flamingock.core.runner;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.StringUtil;
-import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.AuditWriter;
@@ -38,7 +37,6 @@ public final class PipelineRunnerCreator {
 
     public static Runner createLocal(RunnerId runnerId,
                                      Pipeline pipeline,
-                                     FlamingockMetadata metadata,
                                      LocalEngine connectionEngine,
                                      CoreConfigurable coreConfiguration,
                                      EventPublisher eventPublisher,
@@ -46,7 +44,6 @@ public final class PipelineRunnerCreator {
                                      boolean isThrowExceptionIfCannotObtainLock) {
         return create(runnerId,
                 pipeline,
-                metadata,
                 connectionEngine.getAuditor(),
                 connectionEngine.getTransactionWrapper().orElse(null),
                 connectionEngine.getExecutionPlanner(),
@@ -62,7 +59,6 @@ public final class PipelineRunnerCreator {
 
     public static Runner createCloud(RunnerId runnerId,
                                      Pipeline pipeline,
-                                     FlamingockMetadata metadata,
                                      CloudEngine engine,
                                      CoreConfigurable coreConfiguration,
                                      EventPublisher eventPublisher,
@@ -72,7 +68,6 @@ public final class PipelineRunnerCreator {
         return create(
                 runnerId,
                 pipeline,
-                metadata,
                 engine.getAuditWriter(),
                 engine.getTransactionWrapper().orElse(null),
                 engine.getExecutionPlanner(),
@@ -85,7 +80,6 @@ public final class PipelineRunnerCreator {
 
     private static Runner create(RunnerId runnerId,
                                  Pipeline pipeline,
-                                 FlamingockMetadata metadata,
                                  AuditWriter auditWriter,
                                  TransactionWrapper transactionWrapper,
                                  ExecutionPlanner executionPlanner,
@@ -99,7 +93,6 @@ public final class PipelineRunnerCreator {
         return new PipelineRunner(
                 runnerId,
                 pipeline,
-                metadata,
                 executionPlanner,
                 stageExecutor,
                 buildExecutionContext(coreConfiguration),

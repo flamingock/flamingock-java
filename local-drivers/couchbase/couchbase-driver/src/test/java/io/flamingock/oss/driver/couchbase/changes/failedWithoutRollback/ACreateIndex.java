@@ -17,12 +17,12 @@
 package io.flamingock.oss.driver.couchbase.changes.failedWithoutRollback;
 
 import com.couchbase.client.java.Cluster;
-import io.flamingock.core.api.annotations.ChangeUnit;
+import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 
 import java.util.Arrays;
 
-@ChangeUnit(id = "create-index", order = "1")
+@Change(id = "create-index", order = "1")
 public class ACreateIndex {
 
 	@Execution

@@ -16,7 +16,7 @@
 
 package io.flamingock.core.local;
 
-import io.flamingock.core.api.LocalSystemModule;
+import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.core.engine.ConnectionEngine;
 
 import java.util.Optional;

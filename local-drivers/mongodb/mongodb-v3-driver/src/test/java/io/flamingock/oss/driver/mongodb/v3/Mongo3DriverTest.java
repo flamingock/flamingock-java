@@ -18,24 +18,39 @@ package io.flamingock.oss.driver.mongodb.v3;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
+
+import io.flamingock.oss.driver.mongodb.v3.changes._1_create_client_collection_happy;
+import io.flamingock.oss.driver.mongodb.v3.changes._2_insert_federico_happy_non_transactional;
+import io.flamingock.oss.driver.mongodb.v3.changes._2_insert_federico_happy_transactional;
+import io.flamingock.oss.driver.mongodb.v3.changes._3_insert_jorge_failed_non_transactional_non_rollback;
+import io.flamingock.oss.driver.mongodb.v3.changes._3_insert_jorge_failed_non_transactional_rollback;
+import io.flamingock.oss.driver.mongodb.v3.changes._3_insert_jorge_failed_transactional_non_rollback;
+import io.flamingock.oss.driver.mongodb.v3.changes._3_insert_jorge_happy_non_transactional;
+import io.flamingock.oss.driver.mongodb.v3.changes._3_insert_jorge_happy_transactional;
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,7 +61,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 
 @Testcontainers
 class Mongo3DriverTest {
@@ -95,14 +109,20 @@ class Mongo3DriverTest {
     @DisplayName("When standalone runs the driver with DEFAULT repository names related collections should exists")
     void happyPathWithDefaultRepositoryNames() {
         //Given-When
-        FlamingockStandalone.local()
-                .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
-                .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setTrackIgnored(true)
-                
-                .build()
-                .run();
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+            );
+
+            FlamingockStandalone.local()
+                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
+                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .build()
+                    .run();
+        }
 
         assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_MIGRATION_REPOSITORY_NAME));
         assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
@@ -119,14 +139,20 @@ class Mongo3DriverTest {
         driverConfiguration.setMigrationRepositoryName(CUSTOM_MIGRATION_REPOSITORY_NAME);
         driverConfiguration.setLockRepositoryName(CUSTOM_LOCK_REPOSITORY_NAME);
 
-        FlamingockStandalone.local()
-                .setDriver(new Mongo3Driver(mongoClient, DB_NAME).setDriverConfiguration(driverConfiguration))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
-                .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setTrackIgnored(true)
-                
-                .build()
-                .run();
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                    new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+            );
+
+            FlamingockStandalone.local()
+                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME).setDriverConfiguration(driverConfiguration))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
+                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .build()
+                    .run();
+        }
 
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_MIGRATION_REPOSITORY_NAME));
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
@@ -138,25 +164,32 @@ class Mongo3DriverTest {
     @Test
     @DisplayName("When standalone runs the driver with transactions enabled should persist the audit logs and the user's collection updated")
     void happyPathWithTransaction() {
-        //Given-When
-        FlamingockStandalone.local()
-                .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithTransaction"))
-                .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setTrackIgnored(true)
-                
-                .build()
-                .run();
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                    new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+            );
+
+            FlamingockStandalone.local()
+                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
+                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .build()
+                    .run();
+        }
+
 
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
-        assertEquals("create-collection", auditLog.get(0).getTaskId());
+        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-document", auditLog.get(1).getTaskId());
+        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("insert-another-document", auditLog.get(2).getTaskId());
+        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
 
         //Checking clients collection
@@ -173,24 +206,33 @@ class Mongo3DriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled should persist the audit logs and the user's collection updated")
     void happyPathWithoutTransaction() {
         //Given-When
-        FlamingockStandalone.local()
-                .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.happyPathWithoutTransaction"))
-                .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setTrackIgnored(true)
-                .disableTransaction()
-                .build()
-                .run();
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)))
+            );
+
+            FlamingockStandalone.local()
+                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithoutTransaction"))
+                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .disableTransaction()
+                    .build()
+                    .run();
+        }
+
+
 
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
-        assertEquals("create-collection", auditLog.get(0).getTaskId());
+        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-document", auditLog.get(1).getTaskId());
+        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("insert-another-document", auditLog.get(2).getTaskId());
+        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
 
         //Checking clients collection
@@ -207,24 +249,31 @@ class Mongo3DriverTest {
     @DisplayName("When standalone runs the driver with transactions enabled and execution fails should persist only the executed audit logs")
     void failedWithTransaction() {
         //Given-When
-        assertThrows(PipelineExecutionException.class, () -> {
-            FlamingockStandalone.local()
-                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.failedWithTransaction"))
-                    .addDependency(mongoClient.getDatabase(DB_NAME))
-                    .setTrackIgnored(true)
-                    
-                    .build()
-                    .run();
-        });
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_3_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+            );
+
+            assertThrows(PipelineExecutionException.class, () -> {
+                FlamingockStandalone.local()
+                        .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithTransaction"))
+                        .addDependency(mongoClient.getDatabase(DB_NAME))
+
+                        .build()
+                        .run();
+            });
+        }
 
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
-        assertEquals("create-collection", auditLog.get(0).getTaskId());
+        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-document", auditLog.get(1).getTaskId());
+        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
 
         //Checking clients collection
@@ -240,26 +289,36 @@ class Mongo3DriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
     void failedWithoutTransactionWithRollback() {
         //Given-When
-        assertThrows(PipelineExecutionException.class, () -> {
-            FlamingockStandalone.local()
-                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.failedWithoutTransactionWithRollback"))
-                    .addDependency(mongoClient.getDatabase(DB_NAME))
-                    .setTrackIgnored(true)
-                    .disableTransaction()
-                    .build()
-                    .run();
-        });
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_3_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
+            );
+
+            assertThrows(PipelineExecutionException.class, () -> {
+                FlamingockStandalone.local()
+                        .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithRollback"))
+                        .addDependency(mongoClient.getDatabase(DB_NAME))
+                        .disableTransaction()
+                        .build()
+                        .run();
+            });
+        }
+
+
 
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
-        assertEquals("create-collection", auditLog.get(0).getTaskId());
+        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-document", auditLog.get(1).getTaskId());
+        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
+        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
         assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(2).getState());
 
         //Checking clients collection
@@ -275,26 +334,34 @@ class Mongo3DriverTest {
     @DisplayName("When standalone runs the driver with transactions disabled and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
     void failedWithoutTransactionWithoutRollback() {
         //Given-When
-        assertThrows(PipelineExecutionException.class, () -> {
-            FlamingockStandalone.local()
-                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
-                    .addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.v3.changes.failedWithoutTransactionWithoutRollback"))
-                    .addDependency(mongoClient.getDatabase(DB_NAME))
-                    .setTrackIgnored(true)
-                    .disableTransaction()
-                    .build()
-                    .run();
-        });
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_3_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
+            );
+
+            assertThrows(PipelineExecutionException.class, () -> {
+                FlamingockStandalone.local()
+                        .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithoutRollback"))
+                        .addDependency(mongoClient.getDatabase(DB_NAME))
+                        .disableTransaction()
+                        .build()
+                        .run();
+            });
+        }
+
 
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
-        assertEquals("create-collection", auditLog.get(0).getTaskId());
+        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-document", auditLog.get(1).getTaskId());
+        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
+        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditLog.get(2).getState());
 
         //Checking clients collection
@@ -306,5 +373,6 @@ class Mongo3DriverTest {
         assertTrue(clients.contains("Federico"));
         assertTrue(clients.contains("Jorge"));
     }
+
 
 }

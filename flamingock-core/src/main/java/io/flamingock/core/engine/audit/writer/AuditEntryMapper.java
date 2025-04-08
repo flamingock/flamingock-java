@@ -20,7 +20,7 @@ import io.flamingock.commons.utils.ThrowableUtil;
 import io.flamingock.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.engine.audit.domain.RuntimeContext;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 
 public final class AuditEntryMapper {
 
@@ -28,7 +28,7 @@ public final class AuditEntryMapper {
     }
 
     public static AuditEntry map(AuditItem auditItem) {
-        LoadedTask loadedTask = auditItem.getLoadedTask();
+        TaskDescriptor loadedTask = auditItem.getLoadedTask();
         ExecutionContext stageExecutionContext = auditItem.getExecutionContext();
         RuntimeContext runtimeContext = auditItem.getRuntimeContext();
         return new AuditEntry(
@@ -39,7 +39,7 @@ public final class AuditEntryMapper {
                 runtimeContext.getExecutedAt(),
                 getAuditStatus(auditItem),
                 getExecutionType(auditItem),
-                loadedTask.getSourceName(),
+                loadedTask.getSource(),
                 runtimeContext.getMethodExecutor(),
                 runtimeContext.getDuration(),
                 stageExecutionContext.getHostname(),

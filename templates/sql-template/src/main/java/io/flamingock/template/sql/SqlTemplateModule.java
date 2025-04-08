@@ -17,9 +17,8 @@
 package io.flamingock.template.sql;
 
 
-import io.flamingock.template.TemplateModule;
-import io.flamingock.template.TemplateSpec;
-import io.flamingock.template.TransactionalTemplateSpec;
+import io.flamingock.core.api.template.TemplateModule;
+import io.flamingock.core.api.template.TransactionalTemplateSpec;
 
 import java.util.Collections;
 import java.util.HashSet;

@@ -2,7 +2,12 @@ package io.flamingock.core.api.metadata;
 
 public final class Constants {
 
-    public static final String GRAALVM_REFLECT_CLASSES_PATH = "META-INF/flamingock/reflect-classes.txt";
+    public static final String TEMPLATED_PIPELINE_FILE_PATH = "META-INF/flamingock/templated-pipeline.json";
+    public static final String FULL_PIPELINE_FILE_PATH = "META-INF/flamingock/full-pipeline.json";
+
+    public static final String TEMPLATED_GRAALVM_REFLECT_CLASSES_PATH = "META-INF/flamingock/templated-reflect-classes.txt";
+    public static final String FULL_GRAALVM_REFLECT_CLASSES_PATH = "META-INF/flamingock/full-reflect-classes.txt";
+
 
     private Constants() {}
 

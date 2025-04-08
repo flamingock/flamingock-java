@@ -20,7 +20,6 @@ import io.flamingock.commons.utils.Constants;
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.exception.FlamingockException;
-import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
@@ -51,17 +50,17 @@ public final class RuntimeManager implements DependencyInjectable {
     private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
             ? parameter.getAnnotation(Named.class).value()
             : null;
-    private final FlamingockMetadata flamingockMetadata;
     private final Set<Class<?>> nonProxyableTypes = Collections.emptySet();
     private final DependencyInjectableContext dependencyContext;
     private final LockGuardProxyFactory proxyFactory;
+    private final boolean isNativeImage;
 
     private RuntimeManager(LockGuardProxyFactory proxyFactory,
                            DependencyInjectableContext dependencyContext,
-                           FlamingockMetadata flamingockMetadata) {
+                           boolean isNativeImage) {
         this.dependencyContext = dependencyContext;
         this.proxyFactory = proxyFactory;
-        this.flamingockMetadata = flamingockMetadata;
+        this.isNativeImage = isNativeImage;
     }
 
     public static Builder builder() {
@@ -139,10 +138,10 @@ public final class RuntimeManager implements DependencyInjectable {
         );
 
         final Dependency dependency;
-        if(dependencyOptional.isPresent()) {
+        if (dependencyOptional.isPresent()) {
             dependency = dependencyOptional.get();
         } else {
-            if(parameter.isAnnotationPresent(Nullable.class)) {
+            if (parameter.isAnnotationPresent(Nullable.class)) {
                 return null;
             } else {
                 throw new DependencyInjectionException(type, name);
@@ -154,7 +153,8 @@ public final class RuntimeManager implements DependencyInjectable {
                 && !type.isAnnotationPresent(io.changock.migration.api.annotations.NonLockGuarded.class)
                 && !parameter.isAnnotationPresent(io.changock.migration.api.annotations.NonLockGuarded.class)
                 && !nonProxyableTypes.contains(type)
-                && (flamingockMetadata == null || !flamingockMetadata.isSuppressedProxies());
+                && !isNativeImage
+                ;
 
         return dependency.isProxeable() && lockGuarded
                 ? proxyFactory.getRawProxy(dependency.getInstance(), type)
@@ -168,14 +168,18 @@ public final class RuntimeManager implements DependencyInjectable {
 
     public static final class Builder {
 
+
         private DependencyInjectableContext dependencyContext;
         private Lock lock;
-
-        private FlamingockMetadata flamingockMetadata;
+        private Boolean forceNativeImage = null;
 
         public Builder setLock(Lock lock) {
             this.lock = lock;
             return this;
+        }
+
+        public void setForceNativeImage(Boolean forceNativeImage) {
+            this.forceNativeImage = forceNativeImage;
         }
 
         public Builder setDependencyContext(DependencyInjectableContext dependencyContext) {
@@ -183,14 +187,26 @@ public final class RuntimeManager implements DependencyInjectable {
             return this;
         }
 
-        public Builder setFlamingockMetadata(FlamingockMetadata flamingockMetadata) {
-            this.flamingockMetadata = flamingockMetadata;
-            return this;
-        }
 
         public RuntimeManager build() {
             LockGuardProxyFactory proxyFactory = new LockGuardProxyFactory(lock);
-            return new RuntimeManager(proxyFactory, dependencyContext, flamingockMetadata);
+            boolean isNativeImage;
+            if(forceNativeImage != null) {
+                isNativeImage = forceNativeImage;
+            } else {
+                isNativeImage = isRunningInNativeImage();
+            }
+            logger.info("Running on native image: {}", isNativeImage);
+            return new RuntimeManager(proxyFactory, dependencyContext, isNativeImage);
         }
+
+        private static  boolean isRunningInNativeImage() {
+            try {
+                return "runtime".equals(System.getProperty("org.graalvm.nativeimage.imagecode"));
+            } catch (SecurityException exception) {
+                return false;
+            }
+        }
+
     }
 }

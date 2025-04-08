@@ -28,7 +28,6 @@ import java.lang.annotation.Target;
  * <p>
  * @see FlamingockCliConfiguration
  */
-@Deprecated
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MongockCliConfiguration {

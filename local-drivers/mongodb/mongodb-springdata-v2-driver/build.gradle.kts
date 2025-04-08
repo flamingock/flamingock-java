@@ -1,10 +1,13 @@
 dependencies {
     implementation(project(":commons:mongodb-facade"))
+    implementation(project(":importers:mongodb-importer-v3"))
+
+
     implementation(project(":flamingock-core"))
     api(project(":local-drivers:mongodb:mongodb-v3-driver"))
 
     implementation("org.springframework.data:spring-data-mongodb:2.2.13.RELEASE")
-    implementation("org.mongodb:mongodb-driver-sync:3.11.3")
+    implementation("org.mongodb:mongo-java-driver:3.12.8")
 
     compileOnly("org.springframework.boot:spring-boot-autoconfigure:2.7.12")
 

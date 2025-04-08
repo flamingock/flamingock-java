@@ -16,7 +16,7 @@
 
 package io.flamingock.core.pipeline;
 
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.task.executable.ExecutableTask;
 
 import java.util.Collection;
@@ -41,7 +41,7 @@ public class ExecutableStage implements StageDescriptor{
     }
 
     @Override
-    public Collection<LoadedTask> getLoadedTasks() {
+    public Collection<TaskDescriptor> getLoadedTasks() {
         return tasks.stream().map(ExecutableTask::getDescriptor).collect(Collectors.toList());
     }
 

@@ -104,7 +104,7 @@ public class StepNavigator {
 
     public final TaskSummary executeTask(ExecutableTask task, ExecutionContext executionContext) {
         if (!task.isAlreadyExecuted()) {
-            logger.info("Starting {}", task.getDescriptor().getId());
+            logger.info("Starting {}", task.getId());
             // Main execution
             TaskStep executedStep;
             StartStep startStep = new StartStep(task);
@@ -113,10 +113,10 @@ public class StepNavigator {
             ExecutableStep executableStep = auditStartExecution(startStep, executionContext, LocalDateTime.now());
 
             if (transactionWrapper != null && task.getDescriptor().isTransactional()) {
-                logger.debug("Executing(transactional, cloud={}) task[{}]", ongoingTasksRepository != null, task.getDescriptor().getId());
+                logger.debug("Executing(transactional, cloud={}) task[{}]", ongoingTasksRepository != null, task.getId());
                 executedStep = executeWithinTransaction(executableStep, executionContext, runtimeManager);
             } else {
-                logger.debug("Executing(non-transactional) task[{}]", task.getDescriptor().getId());
+                logger.debug("Executing(non-transactional) task[{}]", task.getId());
                 ExecutionStep executionStep = executeTask(executableStep);
                 executedStep = auditExecution(executionStep, executionContext, LocalDateTime.now());
             }
@@ -166,11 +166,11 @@ public class StepNavigator {
     private ExecutionStep executeTask(ExecutableStep executableStep) {
         ExecutionStep executed = executableStep.execute(runtimeManager);
         summarizer.add(executed);
-        String taskId = executed.getTask().getDescriptor().getId();
+        String taskId = executed.getTask().getId();
         if (executed instanceof FailedExecutionStep) {
             FailedExecutionStep failed = (FailedExecutionStep) executed;
             logger.info("change[ {} ] FAILED[{}] in {}ms \u274C", taskId, EXECUTION_DESC, executed.getDuration());
-            String msg = String.format("error execution task[%s] after %d ms", failed.getTask().getDescriptor().getId(), failed.getDuration());
+            String msg = String.format("error execution task[%s] after %d ms", failed.getTask().getId(), failed.getDuration());
             logger.error(msg, failed.getError());
 
         } else {
@@ -214,7 +214,7 @@ public class StepNavigator {
 
     private TaskSummary rollback(RollableFailedStep rollableFailedStep, ExecutionContext executionContext) {
         if (rollableFailedStep instanceof CompleteAutoRolledBackStep) {
-            logger.info("change[ {} ] APPLIED[{}] \u2705", rollableFailedStep.getTask().getDescriptor().getId(), AUTO_ROLLBACK_DESC);
+            logger.info("change[ {} ] APPLIED[{}] \u2705", rollableFailedStep.getTask().getId(), AUTO_ROLLBACK_DESC);
             //It's autoRollable(handled by the database engine or similar)
             auditAutoRollback((CompleteAutoRolledBackStep) rollableFailedStep, executionContext, LocalDateTime.now());
 
@@ -230,12 +230,12 @@ public class StepNavigator {
     private ManualRolledBackStep manualRollback(RollableStep rollable) {
         ManualRolledBackStep rolledBack = rollable.rollback(runtimeManager);
         if (rolledBack instanceof FailedManualRolledBackStep) {
-            logger.info("change[ {} ] FAILED[{}] in {} ms - \u274C", rolledBack.getTask().getDescriptor().getId(), MANUAL_ROLLBACK_DESC, rolledBack.getDuration());
-            String msg = String.format("error rollback task[%s] in %d ms", rolledBack.getTask().getDescriptor().getId(), rolledBack.getDuration());
+            logger.info("change[ {} ] FAILED[{}] in {} ms - \u274C", rolledBack.getTask().getId(), MANUAL_ROLLBACK_DESC, rolledBack.getDuration());
+            String msg = String.format("error rollback task[%s] in %d ms", rolledBack.getTask().getId(), rolledBack.getDuration());
             logger.error(msg, ((FailedManualRolledBackStep) rolledBack).getError());
 
         } else {
-            logger.info("change[ {} ] APPLIED[{}] in {} ms \u2705", rolledBack.getTask().getDescriptor().getId(), MANUAL_ROLLBACK_DESC, rolledBack.getDuration());
+            logger.info("change[ {} ] APPLIED[{}] in {} ms \u2705", rolledBack.getTask().getId(), MANUAL_ROLLBACK_DESC, rolledBack.getDuration());
         }
 
         summarizer.add(rolledBack);

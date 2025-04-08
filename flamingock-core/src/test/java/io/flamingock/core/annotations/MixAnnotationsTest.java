@@ -16,17 +16,14 @@
 
 package io.flamingock.core.annotations;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
+import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
-import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
 
 class MixAnnotationsTest {
 
@@ -104,7 +101,7 @@ class MixAnnotationsTest {
 
 
 
-    @ChangeUnit(id = "taskId", order = "1")
+    @Change(id = "taskId", order = "1")
     public static class NewChangeUnitWithOldExecution {
 
         @io.mongock.api.annotations.Execution
@@ -119,7 +116,7 @@ class MixAnnotationsTest {
         }
     }
 
-    @ChangeUnit(id = "taskId", order = "1")
+    @Change(id = "taskId", order = "1")
     public static class NewChangeUnitWithOldRollback {
 
         @Execution

@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
  * <p>
  * @see io.flamingock.core.api.annotations.RollbackExecution
  */
-@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RollbackExecution {

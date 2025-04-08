@@ -21,6 +21,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
@@ -35,6 +36,26 @@ public final class FileUtil {
 
 
     private FileUtil() {
+    }
+
+
+    public static List<File> getAllYamlFiles(File directory) {
+        FilenameFilter fileNameFilter = (dir, name) -> name.endsWith(".yaml");
+        return getAllFiles(directory, fileNameFilter);
+    }
+
+    public static List<File> getAllFiles(File directory, FilenameFilter filenameFilter) {
+        File[] files = directory.listFiles(filenameFilter);
+        return Arrays.asList(Objects.requireNonNull(files));
+    }
+
+
+    public static File getFile(String parentDir, String childDir, boolean check) {
+        File file = new File(parentDir, childDir);
+        if(check && !file.exists()) {
+            throw new RuntimeException("File not found: "  + file.getAbsolutePath());
+        }
+        return file;
     }
 
     public static List<File> loadFilesFromDirectory(String directory, ClassLoader classLoader) {
@@ -63,5 +84,9 @@ public final class FileUtil {
         yamlWriter.dump(source, writer);
         return new Yaml(new Constructor(type, new LoaderOptions()))
                 .load(writer.toString());
+    }
+
+    public static boolean isExistingDir(File directory) {
+        return directory.exists() && directory.isDirectory();
     }
 }

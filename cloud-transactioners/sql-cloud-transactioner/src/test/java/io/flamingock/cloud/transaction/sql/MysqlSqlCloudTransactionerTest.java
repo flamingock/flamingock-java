@@ -16,10 +16,12 @@
 
 package io.flamingock.cloud.transaction.sql;
 
-import io.flamingock.cloud.transaction.sql.changes.happypath.HappyCreateTableClientsChange;
-import io.flamingock.cloud.transaction.sql.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.cloud.transaction.sql.changes.unhappypath.UnhappyCreateTableClientsChange;
+import io.flamingock.cloud.transaction.sql.changes.happypath._1_create_clients_table_happy;
+import io.flamingock.cloud.transaction.sql.changes.happypath._2_insert_client_happy;
+import io.flamingock.cloud.transaction.sql.changes.unhappypath._1_create_clients2_table_happy;
+import io.flamingock.cloud.transaction.sql.changes.unhappypath._1_insert_client_unhappy;
 import io.flamingock.cloud.transaction.sql.utils.SqlTestUtil;
+import io.flamingock.cloud.transaction.sql.utils.PipelineTestHelper;
 import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
@@ -27,13 +29,20 @@ import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMoc
 import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
+import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
-import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
 import io.flamingock.core.runner.Runner;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.testcontainers.containers.MySQLContainer;
 
@@ -44,16 +53,16 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.UUID;
 
-import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.*;
+import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.EXECUTED;
+import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.EXECUTION_FAILED;
+import static io.flamingock.core.cloud.api.audit.AuditEntryRequest.Status.ROLLED_BACK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MysqlSqlCloudTransactionerTest {
 
+    public static final String EXECUTION_ID_1 = "execution-1";
     private static final MySQLContainer<?> mysql = SqlTestUtil.getMysqlContainer();
     private static final String STAGE_NAME_1 = "stage-1";
-    public static final String EXECUTION_ID_1 = "execution-1";
-
-
     private final String apiToken = "FAKE_API_TOKEN";
     private final String organisationId = UUID.randomUUID().toString();
     private final String organisationName = "MyOrganisation";
@@ -72,14 +81,14 @@ public class MysqlSqlCloudTransactionerTest {
 
     private final PrototypeClientSubmission HAPPY_PROTOTYPE_CLIENT_SUBMISSION = new PrototypeClientSubmission(
             new PrototypeStage(STAGE_NAME_1, 0)
-                    .addTask("create-table-clients", HappyCreateTableClientsChange.class.getName(), "execution", false)
-                    .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                    .addTask("create-table-clients", _1_create_clients_table_happy.class.getName(), "execution", false)
+                    .addTask("insert-clients", _2_insert_client_happy.class.getName(), "execution", true)
     );
 
     private final PrototypeClientSubmission UNHAPPY_PROTOTYPE_CLIENT_SUBMISSION = new PrototypeClientSubmission(
             new PrototypeStage(STAGE_NAME_1, 0)
-                    .addTask("unhappy-create-table-clients", UnhappyCreateTableClientsChange.class.getName(), "execution", false)
-                    .addTask("unhappy-insert-clients", UnhappyCreateTableClientsChange.class.getName(), "execution", true)
+                    .addTask("unhappy-create-table-clients", _1_create_clients2_table_happy.class.getName(), "execution", false)
+                    .addTask("unhappy-insert-clients", _1_create_clients2_table_happy.class.getName(), "execution", true)
     );
 
     private MockRunnerServer mockRunnerServer;
@@ -131,7 +140,8 @@ public class MysqlSqlCloudTransactionerTest {
         //GIVEN
         try (
                 Connection connection = SqlTestUtil.getConnection(mysql);
-                SqlCloudTransactioner transactioner = new SqlCloudTransactioner()
+                SqlCloudTransactioner transactioner = new SqlCloudTransactioner();
+                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
             mockRunnerServer
                     .withClientSubmissionBase(HAPPY_PROTOTYPE_CLIENT_SUBMISSION)
@@ -150,14 +160,20 @@ public class MysqlSqlCloudTransactionerTest {
                     .setDialect(SqlDialect.MYSQL)
             );
 
-            //WHEN
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    "stage-1",
+                    new Trio<>(_1_create_clients_table_happy.class, Collections.singletonList(Connection.class)),
+                    new Trio<>(_2_insert_client_happy.class, Collections.singletonList(Connection.class))
+            ));
+
             flamingockBuilder
                     .setCloudTransactioner(sqlCloudTransactioner)
                     .addDependency(connection)
-                    .addStage(new Stage(STAGE_NAME_1)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.happypath")))
+                    //.addStage(new Stage(STAGE_NAME_1)
+//                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.happypath")))
                     .build()
                     .execute();
+
 
             // check clients changes
             try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, name FROM CLIENTS")) {
@@ -188,7 +204,8 @@ public class MysqlSqlCloudTransactionerTest {
         //GIVEN
         try (
                 Connection connection = SqlTestUtil.getConnection(mysql);
-                SqlCloudTransactioner transactioner = new SqlCloudTransactioner()
+                SqlCloudTransactioner transactioner = new SqlCloudTransactioner();
+                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
             mockRunnerServer
                     .withClientSubmissionBase(UNHAPPY_PROTOTYPE_CLIENT_SUBMISSION)
@@ -198,7 +215,7 @@ public class MysqlSqlCloudTransactionerTest {
                     ).withAuditRequestsExpectation(
                             new AuditRequestExpectation(EXECUTION_ID_1, "unhappy-create-table-clients", EXECUTED),
                             new AuditRequestExpectation(EXECUTION_ID_1, "unhappy-insert-clients", EXECUTION_FAILED),
-                    new AuditRequestExpectation(EXECUTION_ID_1, "unhappy-insert-clients", ROLLED_BACK))
+                            new AuditRequestExpectation(EXECUTION_ID_1, "unhappy-insert-clients", ROLLED_BACK))
                     .start();
 
             SqlCloudTransactioner sqlCloudTransactioner = Mockito.spy(transactioner
@@ -209,11 +226,16 @@ public class MysqlSqlCloudTransactionerTest {
             );
 
             //WHEN
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    "stage-1",
+                    new Trio<>(_1_create_clients2_table_happy.class, Collections.singletonList(Connection.class)),
+                    new Trio<>(_1_insert_client_unhappy.class, Collections.singletonList(Connection.class))
+            ));
             Runner runner = flamingockBuilder
                     .setCloudTransactioner(sqlCloudTransactioner)
                     .addDependency(connection)
-                    .addStage(new Stage(STAGE_NAME_1)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.unhappypath")))
+                    //.addStage(new Stage(STAGE_NAME_1)
+                    //.setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.unhappypath")))
                     .build();
             PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
 
@@ -233,7 +255,8 @@ public class MysqlSqlCloudTransactionerTest {
         //GIVEN
         try (
                 Connection connection = SqlTestUtil.getConnection(mysql);
-                SqlCloudTransactioner transactioner = new SqlCloudTransactioner()
+                SqlCloudTransactioner transactioner = new SqlCloudTransactioner();
+                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
             SqlTestUtil.insertOngoingExecution(connection, "insert-clients");
             mockRunnerServer
@@ -254,11 +277,16 @@ public class MysqlSqlCloudTransactionerTest {
             );
 
             //WHEN
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    "stage-1",
+                    new Trio<>(_1_create_clients_table_happy.class, Collections.singletonList(Connection.class)),
+                    new Trio<>(_2_insert_client_happy.class, Collections.singletonList(Connection.class))
+            ));
             flamingockBuilder
                     .setCloudTransactioner(sqlCloudTransactioner)
                     .addDependency(connection)
-                    .addStage(new Stage(STAGE_NAME_1)
-                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.happypath")))
+                    //.addStage(new Stage(STAGE_NAME_1)
+//                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.sql.changes.happypath")))
                     .build()
                     .run();
 

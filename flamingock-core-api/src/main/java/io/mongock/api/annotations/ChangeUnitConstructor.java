@@ -29,7 +29,6 @@ import java.lang.annotation.Target;
  * <p>
  * @see FlamingockConstructor
  */
-@Deprecated
 @Target(ElementType.CONSTRUCTOR)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ChangeUnitConstructor {

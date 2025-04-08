@@ -16,34 +16,37 @@
 
 package io.flamingock.template.sql;
 
-import io.flamingock.template.annotations.TemplateConfigSetter;
-import io.flamingock.template.annotations.TemplateConfigValidator;
-import io.flamingock.template.annotations.TemplateExecution;
-import io.flamingock.template.annotations.TemplateRollbackExecution;
+import io.flamingock.core.api.template.ChangeTemplate;
+import io.flamingock.core.api.template.annotations.Config;
+import io.flamingock.core.api.template.annotations.ChangeTemplateConfigValidator;
+import io.flamingock.core.api.template.annotations.ChangeTemplateExecution;
+import io.flamingock.core.api.template.annotations.ChangeTemplateRollbackExecution;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Collections;
 
-public class SqlTemplate {
+public class SqlTemplate implements ChangeTemplate {
 
     private SqlTemplateConfiguration configuration;
 
-    @TemplateConfigSetter
+    @Config
     public void setConfiguration(SqlTemplateConfiguration configuration) {
         this.configuration = configuration;
     }
 
-    @TemplateConfigValidator
+    @ChangeTemplateConfigValidator
     public boolean validateConfiguration() {
         return configuration.getExecutionSql() != null;
     }
 
-    @TemplateExecution
+    @ChangeTemplateExecution
     public void execution(Connection connection) {
         execute(connection, configuration.getExecutionSql());
     }
 
-    @TemplateRollbackExecution(conditionalOnAllConfigurationPropertiesNotNull = {"rollbackSql"})
+    @ChangeTemplateRollbackExecution(conditionalOnAllConfigurationPropertiesNotNull = {"rollbackSql"})
     public void rollback(Connection connection) {
         execute(connection, configuration.getRollbackSql());
     }
@@ -57,4 +60,8 @@ public class SqlTemplate {
     }
 
 
+    @Override
+    public Collection<Class<?>> getReflectiveClasses() {
+        return Collections.singletonList(SqlTemplateConfiguration.class);
+    }
 }

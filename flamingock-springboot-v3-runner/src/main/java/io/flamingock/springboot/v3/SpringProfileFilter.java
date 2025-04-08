@@ -17,6 +17,8 @@
 package io.flamingock.springboot.v3;
 
 import io.flamingock.core.task.filter.TaskFilter;
+import io.flamingock.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.core.task.loaded.AbstractReflectionLoadedTask;
 import org.springframework.context.annotation.Profile;
 
 import java.util.Arrays;
@@ -31,9 +33,22 @@ public class SpringProfileFilter implements TaskFilter {
         this.activeProfiles = activeProfiles.length > 0 ? Arrays.asList(activeProfiles) : Collections.emptyList();
     }
 
+    private static boolean isNegativeProfile(String profile) {
+        return profile.charAt(0) == '!';
+    }
 
     @Override
-    public boolean filter(Class<?> taskClass) {
+    public boolean filter(AbstractLoadedTask descriptor) {
+        if (AbstractReflectionLoadedTask.class.isAssignableFrom(descriptor.getClass())) {
+            return filter((AbstractReflectionLoadedTask) descriptor);
+        } else {
+            throw new RuntimeException("Filter cannot be applied to descriptor: " + descriptor.getClass().getSimpleName());
+        }
+
+    }
+
+    private boolean filter(AbstractReflectionLoadedTask reflectionDescriptor) {
+        Class<?> taskClass = reflectionDescriptor.getSourceClass();
         if (!taskClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches
         }
@@ -56,11 +71,6 @@ public class SpringProfileFilter implements TaskFilter {
         }
         return !taskHasAtLeastOneProfileApplied;
     }
-
-    private static boolean isNegativeProfile(String profile) {
-        return profile.charAt(0) == '!';
-    }
-
 
     private boolean containsNegativeProfile(List<String> activeProfiles, String profile) {
         return isNegativeProfile(profile) && activeProfiles.contains(profile.substring(1));

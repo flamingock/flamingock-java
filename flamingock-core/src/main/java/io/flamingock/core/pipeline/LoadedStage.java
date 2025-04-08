@@ -18,9 +18,11 @@ package io.flamingock.core.pipeline;
 
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.task.executable.ExecutableTask;
-import io.flamingock.core.task.executable.ParentExecutableTaskFactory;
+import io.flamingock.core.task.executable.builder.ExecutableTaskBuilder;
+import io.flamingock.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.core.task.loaded.LoadedTaskBuilder;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -33,21 +35,23 @@ import java.util.stream.Collectors;
  */
 public class LoadedStage {
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private final String name;
 
-    private final Collection<LoadedTask> loadedTasks;
+    private final Collection<AbstractLoadedTask> loadedTasks;
 
     private final boolean parallel;
 
-    private final ParentExecutableTaskFactory factory;
 
     public LoadedStage(String name,
-                       Collection<LoadedTask> loadedTasks,
+                       Collection<AbstractLoadedTask> loadedTasks,
                        boolean parallel) {
         this.name = name;
         this.loadedTasks = loadedTasks;
         this.parallel = parallel;
-        this.factory = ParentExecutableTaskFactory.INSTANCE;
 
     }
 
@@ -57,7 +61,7 @@ public class LoadedStage {
 
         List<ExecutableTask> tasks = loadedTasks
                 .stream()
-                .map(loadedTask -> factory.extractTasks(name, loadedTask, statesMap.get(loadedTask.getId())))
+                .map(loadedTask -> ExecutableTaskBuilder.build(loadedTask, name, statesMap.get(loadedTask.getId())))
                 .flatMap(List::stream)
                 .collect(Collectors.toCollection(LinkedList::new));
 
@@ -69,11 +73,40 @@ public class LoadedStage {
     }
 
 
-    public Collection<LoadedTask> getLoadedTasks() {
+    public Collection<AbstractLoadedTask> getLoadedTasks() {
         return loadedTasks;
     }
 
     public boolean isParallel() {
         return parallel;
+    }
+
+    @Override
+    public String toString() {
+        return "LoadedStage{" + "name='" + name + '\'' +
+                ", loadedTasks=" + loadedTasks +
+                ", parallel=" + parallel +
+                '}';
+    }
+
+    public static class Builder {
+
+        private PreviewStage previewStage;
+
+        private Builder() {
+        }
+
+        public Builder setPreviewStage(PreviewStage previewStage) {
+            this.previewStage = previewStage;
+            return this;
+        }
+
+        public LoadedStage build() {
+            List<AbstractLoadedTask> loadedTasks = previewStage.getTasks()
+                    .stream()
+                    .map(LoadedTaskBuilder::build)
+                    .collect(Collectors.toList());
+            return new LoadedStage(previewStage.getName(), loadedTasks, previewStage.isParallel());
+        }
     }
 }

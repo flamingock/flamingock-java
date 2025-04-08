@@ -17,9 +17,8 @@
 package io.flamingock.oss.driver.dynamodb.internal.mongock;
 
 
-import io.flamingock.core.api.annotations.ChangeUnit;
+import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.SystemChange;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.audit.importer.model.ChangeEntry;
 import io.flamingock.core.engine.audit.importer.model.ChangeState;
@@ -36,35 +35,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@SystemChange
-@ChangeUnit(id = "mongock-local-legacy-importer-dynamodb", order = "1")
+@Change(id = "mongock-local-legacy-importer-dynamodb", order = "1")
 public class MongockImporterChangeUnit {
-
-
-    @Execution
-    public void execution(InternalMongockImporterConfiguration configuration) {
-        DynamoDbTable<ChangeEntryDynamoDB> sourceTable = configuration.getSourceTable();
-        if (sourceTable == null) {
-            throw new RuntimeException("SourceTable not injected");
-        }
-        AuditWriter auditWriter = configuration.getAuditWriter();
-        if (auditWriter == null) {
-            throw new RuntimeException("AuditWriter not injected");
-        }
-
-        List<AuditEntry> collect = sourceTable
-                .scan(ScanEnhancedRequest.builder()
-                        .consistentRead(true)
-                        .build()
-                )
-                .items()
-                .stream()
-                .map(MongockImporterChangeUnit::toChangeEntry)
-                .map(MongockImporterChangeUnit::toAuditEntry)
-                .collect(Collectors.toList());
-        collect.forEach(auditWriter::writeEntry);
-
-    }
 
 
     private static ChangeEntry toChangeEntry(ChangeEntryDynamoDB changeEntryDynamoDB) {
@@ -113,5 +85,30 @@ public class MongockImporterChangeUnit {
                 changeEntry.getSystemChange(),
                 changeEntry.getErrorTrace()
         );
+    }
+
+    @Execution
+    public void execution(InternalMongockImporterConfiguration configuration) {
+        DynamoDbTable<ChangeEntryDynamoDB> sourceTable = configuration.getSourceTable();
+        if (sourceTable == null) {
+            throw new RuntimeException("SourceTable not injected");
+        }
+        AuditWriter auditWriter = configuration.getAuditWriter();
+        if (auditWriter == null) {
+            throw new RuntimeException("AuditWriter not injected");
+        }
+
+        List<AuditEntry> collect = sourceTable
+                .scan(ScanEnhancedRequest.builder()
+                        .consistentRead(true)
+                        .build()
+                )
+                .items()
+                .stream()
+                .map(MongockImporterChangeUnit::toChangeEntry)
+                .map(MongockImporterChangeUnit::toAuditEntry)
+                .collect(Collectors.toList());
+        collect.forEach(auditWriter::writeEntry);
+
     }
 }

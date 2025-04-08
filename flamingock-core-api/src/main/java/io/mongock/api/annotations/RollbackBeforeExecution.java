@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
  * For new classes, use io.flamingock.core.api.annotations.RollbackBeforeExecution
  * <p>
  */
-@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RollbackBeforeExecution {

@@ -16,7 +16,7 @@
 
 package io.flamingock.core.configurator.standalone;
 
-import io.flamingock.core.api.LocalSystemModule;
+import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
@@ -33,7 +33,6 @@ import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
-import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,9 +100,8 @@ public class StandaloneLocalBuilder
 
         Pipeline pipeline = buildPipeline(
                 coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesBefore(),
-                coreConfiguration.getStages(),
-                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter(),
-                coreConfiguratorDelegate.getFlamingockMetadata()
+                coreConfiguration.getPreviewPipeline(),
+                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter()
         );
 
         //injecting the pipeline descriptor to the dependencies
@@ -114,7 +112,6 @@ public class StandaloneLocalBuilder
         return PipelineRunnerCreator.createLocal(
                 runnerId,
                 pipeline,
-                coreConfiguratorDelegate.getFlamingockMetadata(),
                 engine,
                 coreConfiguration,
                 buildEventPublisher(),

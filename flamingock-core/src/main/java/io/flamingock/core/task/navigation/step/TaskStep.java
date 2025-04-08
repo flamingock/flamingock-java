@@ -16,13 +16,13 @@
 
 package io.flamingock.core.task.navigation.step;
 
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.task.executable.ExecutableTask;
 
 public interface TaskStep {
     ExecutableTask getTask();
 
-    default LoadedTask getLoadedTask() {
+    default TaskDescriptor getLoadedTask() {
         return getTask().getDescriptor();
     }
 

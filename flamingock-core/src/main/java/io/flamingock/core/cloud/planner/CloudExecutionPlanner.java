@@ -21,7 +21,6 @@ import io.flamingock.commons.utils.StopWatch;
 import io.flamingock.commons.utils.ThreadSleeper;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.api.exception.FlamingockException;
-import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
 import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
@@ -35,7 +34,6 @@ import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
-import io.flamingock.core.pipeline.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

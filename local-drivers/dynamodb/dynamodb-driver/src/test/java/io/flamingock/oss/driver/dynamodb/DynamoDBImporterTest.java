@@ -23,16 +23,22 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
+import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
-import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.oss.driver.dynamodb.changes._0_mongock_create_authors_collection;
+import io.flamingock.oss.driver.dynamodb.changes._1_create_client_collection_happy;
+import io.flamingock.oss.driver.dynamodb.changes._2_insert_federico_happy_non_transactional;
+import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_happy_non_transactional;
 import io.flamingock.oss.driver.dynamodb.driver.DynamoDBDriver;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.MongockImporterChangeUnit;
-import io.flamingock.oss.driver.dynamodb.mongock.ClientInitializerChangeUnit;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.junit.jupiter.api.*;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -41,9 +47,11 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 
 import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration;
+import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -109,9 +117,8 @@ class DynamoDBImporterTest {
         io.mongock.driver.dynamodb.driver.DynamoDBDriver mongockDriver = io.mongock.driver.dynamodb.driver.DynamoDBDriver.withDefaultLock(amazonClient);
         MongockStandalone.builder()
                 .setDriver(mongockDriver)
-                .addMigrationClass(ClientInitializerChangeUnit.class)
+                .addMigrationClass(_0_mongock_create_authors_collection.class)
                 .addDependency(client)
-                .setTrackIgnored(true)
                 .setTransactional(false)
                 .buildRunner()
                 .execute();
@@ -125,15 +132,25 @@ class DynamoDBImporterTest {
         assertEquals("client-initializer", mongockDbState.get(3).getChangeId());
 
         //When
-        FlamingockStandalone.local()
-                .withImporter(ImporterConfiguration.withSource(mongockDriver.getMigrationRepositoryName()))
-                .setDriver(new DynamoDBDriver(client))
-                .addStage(new Stage("stage-name")
-                        .addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
-                .addDependency(client)
-                .setTrackIgnored(true)
-                .build()
-                .run();
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                    new Trio<>(_0_mongock_create_authors_collection.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
+            );
+
+            FlamingockStandalone.local()
+                    .withImporter(ImporterConfiguration.withSource(mongockDriver.getMigrationRepositoryName()))
+                    .setDriver(new DynamoDBDriver(client))
+                    //.addStage(new Stage("stage-name")
+//                        .addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
+                    .addDependency(client)
+                    .build()
+                    .run();
+        }
+
 
 
         List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(AUDIT_LOG_TABLE_NAME);

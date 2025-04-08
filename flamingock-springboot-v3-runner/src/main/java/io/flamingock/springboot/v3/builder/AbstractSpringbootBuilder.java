@@ -16,16 +16,15 @@
 
 package io.flamingock.springboot.v3.builder;
 
-import io.flamingock.core.api.metadata.FlamingockMetadata;
-import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.api.SystemModule;
+import io.flamingock.core.preview.PreviewStage;
+import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfigurator;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
-import io.flamingock.core.configurator.legacy.LegacyMigration;
+
 import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.core.event.model.IPipelineFailedEvent;
@@ -36,7 +35,8 @@ import io.flamingock.core.event.model.IStageFailedEvent;
 import io.flamingock.core.event.model.IStageIgnoredEvent;
 import io.flamingock.core.event.model.IStageStartedEvent;
 import io.flamingock.core.pipeline.Pipeline;
-import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.preview.PreviewPipeline;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.springboot.v3.SpringProfileFilter;
 import io.flamingock.springboot.v3.SpringRunnerBuilder;
 import io.flamingock.springboot.v3.configurator.SpringRunnerType;
@@ -51,12 +51,13 @@ import io.flamingock.springboot.v3.event.SpringStageCompletedEvent;
 import io.flamingock.springboot.v3.event.SpringStageFailedEvent;
 import io.flamingock.springboot.v3.event.SpringStageIgnoredEvent;
 import io.flamingock.springboot.v3.event.SpringStageStartedEvent;
-import io.flamingock.template.TemplateModule;
+import io.flamingock.core.api.template.TemplateModule;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -108,16 +109,14 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     protected Pipeline buildPipeline(String[] activeProfiles,
-                                     Iterable<Stage> beforeUserStages,
-                                     Iterable<Stage> userStages,
-                                     Iterable<Stage> afterUserStages,
-                                     FlamingockMetadata flamingockMetadata) {
+                                     Collection<PreviewStage> beforeUserStages,
+                                     PreviewPipeline previewPipeline,
+                                     Collection<PreviewStage> afterUserStage) {
         return Pipeline.builder()
                 .addFilters(Collections.singletonList(new SpringProfileFilter(activeProfiles)))
                 .addBeforeUserStages(beforeUserStages)
-                .addUserStages(userStages)
-                .addAfterUserStages(afterUserStages)
-                .setFlamingockMetadata(flamingockMetadata)
+                .addPreviewPipeline(previewPipeline)
+                .addAfterUserStages(afterUserStage)
                 .build();
     }
 
@@ -130,8 +129,13 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
-    public HOLDER addStage(Stage stage) {
-        return coreConfiguratorDelegate.addStage(stage);
+    public HOLDER addTemplateModule(TemplateModule templateModule) {
+        return coreConfiguratorDelegate.addTemplateModule(templateModule);
+    }
+
+    @Override
+    public long getLockAcquiredForMillis() {
+        return coreConfiguratorDelegate.getLockAcquiredForMillis();
     }
 
     @Override
@@ -140,79 +144,13 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
-    public HOLDER setLockQuitTryingAfterMillis(Long lockQuitTryingAfterMillis) {
-        return coreConfiguratorDelegate.setLockQuitTryingAfterMillis(lockQuitTryingAfterMillis);
-    }
-
-    @Override
-    public HOLDER setLockTryFrequencyMillis(long lockTryFrequencyMillis) {
-        return coreConfiguratorDelegate.setLockTryFrequencyMillis(lockTryFrequencyMillis);
-    }
-
-    @Override
-    public HOLDER setThrowExceptionIfCannotObtainLock(boolean throwExceptionIfCannotObtainLock) {
-        return coreConfiguratorDelegate.setThrowExceptionIfCannotObtainLock(throwExceptionIfCannotObtainLock);
-    }
-
-    @Override
-    public HOLDER setTrackIgnored(boolean trackIgnored) {
-        return coreConfiguratorDelegate.setTrackIgnored(trackIgnored);
-    }
-
-    @Override
-    public HOLDER setEnabled(boolean enabled) {
-        return coreConfiguratorDelegate.setEnabled(enabled);
-    }
-
-    @Override
-    public HOLDER setStartSystemVersion(String startSystemVersion) {
-        return coreConfiguratorDelegate.setStartSystemVersion(startSystemVersion);
-    }
-
-    @Override
-    public HOLDER setEndSystemVersion(String endSystemVersion) {
-        return coreConfiguratorDelegate.setEndSystemVersion(endSystemVersion);
-    }
-
-    @Override
-    public HOLDER setServiceIdentifier(String serviceIdentifier) {
-        return coreConfiguratorDelegate.setServiceIdentifier(serviceIdentifier);
-    }
-
-    @Override
-    public HOLDER setMetadata(Map<String, Object> metadata) {
-        return coreConfiguratorDelegate.setMetadata(metadata);
-    }
-
-    @Override
-    public HOLDER setLegacyMigration(LegacyMigration legacyMigration) {
-        return coreConfiguratorDelegate.setLegacyMigration(legacyMigration);
-    }
-
-    @Override
-    public HOLDER setDefaultAuthor(String publicMigrationAuthor) {
-        return coreConfiguratorDelegate.setDefaultAuthor(publicMigrationAuthor);
-    }
-
-    @Override
-    public HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy) {
-        return coreConfiguratorDelegate.setTransactionStrategy(transactionStrategy);
-    }
-
-    @Override
-    public HOLDER addTemplateModule(TemplateModule templateModule) {
-        return coreConfiguratorDelegate.addTemplateModule(templateModule);
-    }
-
-
-    @Override
-    public long getLockAcquiredForMillis() {
-        return coreConfiguratorDelegate.getLockAcquiredForMillis();
-    }
-
-    @Override
     public Long getLockQuitTryingAfterMillis() {
         return coreConfiguratorDelegate.getLockQuitTryingAfterMillis();
+    }
+
+    @Override
+    public HOLDER setLockQuitTryingAfterMillis(Long lockQuitTryingAfterMillis) {
+        return coreConfiguratorDelegate.setLockQuitTryingAfterMillis(lockQuitTryingAfterMillis);
     }
 
     @Override
@@ -221,13 +159,18 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
+    public HOLDER setLockTryFrequencyMillis(long lockTryFrequencyMillis) {
+        return coreConfiguratorDelegate.setLockTryFrequencyMillis(lockTryFrequencyMillis);
+    }
+
+    @Override
     public boolean isThrowExceptionIfCannotObtainLock() {
         return coreConfiguratorDelegate.isThrowExceptionIfCannotObtainLock();
     }
 
     @Override
-    public boolean isTrackIgnored() {
-        return coreConfiguratorDelegate.isTrackIgnored();
+    public HOLDER setThrowExceptionIfCannotObtainLock(boolean throwExceptionIfCannotObtainLock) {
+        return coreConfiguratorDelegate.setThrowExceptionIfCannotObtainLock(throwExceptionIfCannotObtainLock);
     }
 
     @Override
@@ -236,8 +179,18 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
+    public HOLDER setEnabled(boolean enabled) {
+        return coreConfiguratorDelegate.setEnabled(enabled);
+    }
+
+    @Override
     public String getStartSystemVersion() {
         return coreConfiguratorDelegate.getStartSystemVersion();
+    }
+
+    @Override
+    public HOLDER setStartSystemVersion(String startSystemVersion) {
+        return coreConfiguratorDelegate.setStartSystemVersion(startSystemVersion);
     }
 
     @Override
@@ -246,8 +199,18 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
+    public HOLDER setEndSystemVersion(String endSystemVersion) {
+        return coreConfiguratorDelegate.setEndSystemVersion(endSystemVersion);
+    }
+
+    @Override
     public String getServiceIdentifier() {
         return coreConfiguratorDelegate.getServiceIdentifier();
+    }
+
+    @Override
+    public HOLDER setServiceIdentifier(String serviceIdentifier) {
+        return coreConfiguratorDelegate.setServiceIdentifier(serviceIdentifier);
     }
 
     @Override
@@ -256,8 +219,8 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
-    public LegacyMigration getLegacyMigration() {
-        return coreConfiguratorDelegate.getLegacyMigration();
+    public HOLDER setMetadata(Map<String, Object> metadata) {
+        return coreConfiguratorDelegate.setMetadata(metadata);
     }
 
     @Override
@@ -266,8 +229,18 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
+    public HOLDER setDefaultAuthor(String publicMigrationAuthor) {
+        return coreConfiguratorDelegate.setDefaultAuthor(publicMigrationAuthor);
+    }
+
+    @Override
     public TransactionStrategy getTransactionStrategy() {
         return coreConfiguratorDelegate.getTransactionStrategy();
+    }
+
+    @Override
+    public HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy) {
+        return coreConfiguratorDelegate.setTransactionStrategy(transactionStrategy);
     }
 
     @Override
@@ -291,13 +264,8 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
-    public HOLDER setFlamingockMetadata(FlamingockMetadata metadata) {
-        return coreConfiguratorDelegate.setFlamingockMetadata(metadata);
-    }
-
-    @Override
-    public FlamingockMetadata getFlamingockMetadata() {
-        return coreConfiguratorDelegate.getFlamingockMetadata();
+    public ApplicationContext getSpringContext() {
+        return springbootConfiguratorDelegate.getSpringContext();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -309,8 +277,8 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
-    public ApplicationContext getSpringContext() {
-        return springbootConfiguratorDelegate.getSpringContext();
+    public ApplicationEventPublisher getEventPublisher() {
+        return springbootConfiguratorDelegate.getEventPublisher();
     }
 
     @Override
@@ -319,17 +287,12 @@ public abstract class AbstractSpringbootBuilder<
     }
 
     @Override
-    public ApplicationEventPublisher getEventPublisher() {
-        return springbootConfiguratorDelegate.getEventPublisher();
+    public SpringRunnerType getRunnerType() {
+        return springbootConfiguratorDelegate.getRunnerType();
     }
 
     @Override
     public HOLDER setRunnerType(SpringRunnerType runnerType) {
         return springbootConfiguratorDelegate.setRunnerType(runnerType);
-    }
-
-    @Override
-    public SpringRunnerType getRunnerType() {
-        return springbootConfiguratorDelegate.getRunnerType();
     }
 }

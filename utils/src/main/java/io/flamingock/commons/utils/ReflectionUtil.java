@@ -34,8 +34,6 @@ public final class ReflectionUtil {
     private ReflectionUtil() {}
 
 
-
-
     @SuppressWarnings("unchecked")
     public static Optional<Method> findFirstAnnotatedMethod(Class<?> source, Class<? extends Annotation> annotation) {
         return Arrays.stream(source.getMethods())

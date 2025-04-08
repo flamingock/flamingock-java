@@ -23,11 +23,11 @@ public class PipelineSummary implements StepSummary {
 
             for (ExecutableTask executableTask : executableStage.getTasks()) {
                 if(executableTask.isAlreadyExecuted()) {
-                    stageSummary.addSummary(new TaskSummarizer(executableTask.getDescriptor().getId())
+                    stageSummary.addSummary(new TaskSummarizer(executableTask.getId())
                             .add(new CompletedAlreadyAppliedStep(executableTask))
                             .getSummary());
                 } else {
-                    stageSummary.addSummary(new TaskSummarizer(executableTask.getDescriptor().getId())
+                    stageSummary.addSummary(new TaskSummarizer(executableTask.getId())
                             .addNotReachedTask(executableTask.getDescriptor())
                             .getSummary());
                 }

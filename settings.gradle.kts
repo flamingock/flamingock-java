@@ -5,11 +5,6 @@ rootProject.name = "flamingock-project"
 //////////////////////////////////////
 // CORE
 //////////////////////////////////////
-include("flamingock-core-template")
-project(":flamingock-core-template").projectDir = file("flamingock-core-template")
-project(":flamingock-core-template").name = "flamingock-core-template"
-
-
 include("cloud-transactioners:sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").projectDir = file("cloud-transactioners/sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").name = "sql-cloud-transactioner"
@@ -30,6 +25,10 @@ project(":flamingock-core-api").projectDir = file("flamingock-core-api")
 include("flamingock-core")
 project(":flamingock-core").projectDir = file("flamingock-core")
 project(":flamingock-core").name = "flamingock-core"
+
+include("flamingock-processor")
+project(":flamingock-processor").projectDir = file("flamingock-processor")
+project(":flamingock-processor").name = "flamingock-processor"
 
 include("flamingock-springboot-v2-runner")
 project(":flamingock-springboot-v2-runner").projectDir = file("flamingock-springboot-v2-runner")
@@ -122,18 +121,11 @@ project(":dynamodb-utils").projectDir = file("dynamodb-utils")
 //////////////////////////////////////
 // INTERNAL
 //////////////////////////////////////
-include("cloud-importers:importer-common")
-project(":cloud-importers:importer-common").name = "importer-common"
-project(":cloud-importers:importer-common").projectDir = file("cloud-importers/importer-common")
+include("importers:mongodb-importer-sync-v4")
+project(":importers:mongodb-importer-sync-v4").name = "mongodb-importer-sync-v4"
+project(":importers:mongodb-importer-sync-v4").projectDir = file("importers/mongodb-importer-sync-v4")
 
-include("cloud-importers:dynamodb:dynamodb-cloud-importer-legacy")
-project(":cloud-importers:dynamodb:dynamodb-cloud-importer-legacy").name = "dynamodb-cloud-importer-legacy"
-project(":cloud-importers:dynamodb:dynamodb-cloud-importer-legacy").projectDir = file("cloud-importers/dynamodb/dynamodb-cloud-importer-legacy")
 
-include("cloud-importers:dynamodb:dynamodb-cloud-importer-local")
-project(":cloud-importers:dynamodb:dynamodb-cloud-importer-local").name = "dynamodb-cloud-importer-local"
-project(":cloud-importers:dynamodb:dynamodb-cloud-importer-local").projectDir = file("cloud-importers/dynamodb/dynamodb-cloud-importer-local")
-
-include("importers:mongodb-importer")
-project(":importers:mongodb-importer").name = "mongodb-importer"
-project(":importers:mongodb-importer").projectDir = file("importers/mongodb-importer")
+include("importers:mongodb-importer-v3")
+project(":importers:mongodb-importer-v3").name = "mongodb-importer-v3"
+project(":importers:mongodb-importer-v3").projectDir = file("importers/mongodb-importer-v3")

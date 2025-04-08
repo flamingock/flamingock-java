@@ -19,7 +19,7 @@ package io.flamingock.cloud.transaction.dynamodb.wrapper;
 import io.flamingock.core.local.TransactionManager;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class DynamoDBTransactionWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(LoadedTask loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
         String sessionId = loadedTask.getId();
         TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
         Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);

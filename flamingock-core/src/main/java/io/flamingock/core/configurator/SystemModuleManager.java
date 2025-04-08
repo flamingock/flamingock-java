@@ -1,8 +1,8 @@
 package io.flamingock.core.configurator;
 
+import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.api.SystemModule;
-import io.flamingock.core.pipeline.Stage;
+import io.flamingock.core.system.SystemModule;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,11 +27,11 @@ public interface SystemModuleManager<T extends SystemModule> {
         return new LinkedList<>(dependencies);
     }
 
-    default List<Stage> getSortedSystemStagesBefore() {
+    default List<PreviewStage> getSortedSystemStagesBefore() {
         return Helper.getSortedSystemStages(getModules(), true);
     }
 
-    default List<Stage> getSortedSystemStagesAfter() {
+    default List<PreviewStage> getSortedSystemStagesAfter() {
         return Helper.getSortedSystemStages(getModules(), false);
     }
 
@@ -40,7 +40,7 @@ public interface SystemModuleManager<T extends SystemModule> {
         private Helper() {
         }
 
-        private static <T extends SystemModule>List<Stage> getSortedSystemStages(Iterable<T> modulesIterable, boolean isBefore) {
+        private static <T extends SystemModule> List<PreviewStage> getSortedSystemStages(Iterable<T> modulesIterable, boolean isBefore) {
 
             Collection<T> modules = Collection.class.isAssignableFrom(modulesIterable.getClass())
                     ? (Collection<T>) modulesIterable
@@ -50,7 +50,8 @@ public interface SystemModuleManager<T extends SystemModule> {
             Collections.sort(sortedModules);
             Stream<SystemModule> stream = sortedModules.stream();
             stream = isBefore ? stream.filter(SystemModule::isBeforeUserStages) : stream.filter(m -> !m.isBeforeUserStages());
-            return stream.map(m -> new Stage(m.getName()).setClasses(m.getTaskClasses())).collect(Collectors.toList());
+
+            return stream.map(SystemModule::getStage).collect(Collectors.toList());
         }
 
         private static <T extends SystemModule> ArrayList<T> fromIterableToCollection(Iterable<T> modulesIterable) {

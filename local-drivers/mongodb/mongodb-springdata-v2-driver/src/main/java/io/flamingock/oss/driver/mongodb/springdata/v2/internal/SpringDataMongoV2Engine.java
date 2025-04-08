@@ -18,15 +18,17 @@ package io.flamingock.oss.driver.mongodb.springdata.v2.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
+import io.flamingock.core.engine.audit.importer.ImporterModule;
 import io.flamingock.core.local.LocalExecutionPlanner;
 import io.flamingock.core.local.AbstractLocalEngine;
 import io.flamingock.core.local.LocalAuditor;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.core.transaction.TransactionWrapper;
+import io.flamingock.importer.mongodb.v3.MongoImporterReader;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
-import io.flamingock.oss.driver.mongodb.v3.internal.mongock.MongockImporterModule;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -40,7 +42,7 @@ public class SpringDataMongoV2Engine extends AbstractLocalEngine {
     private SpringDataMongoV2Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
-    private MongockImporterModule mongockImporter = null;
+    private LocalSystemModule mongockImporter = null;
     private final SpringDataMongoV2Configuration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
 
@@ -72,15 +74,16 @@ public class SpringDataMongoV2Engine extends AbstractLocalEngine {
         SpringDataMongoV2LockService lockService = new SpringDataMongoV2LockService(
                 mongoTemplate.getDb(),
                 driverConfiguration.getLockRepositoryName(),
-                readWriteConfiguration
-        );
+                readWriteConfiguration);
         lockService.initialize(driverConfiguration.isIndexCreation());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
-        if(coreConfiguration.isMongockImporterEnabled()) {
-            MongoCollection<Document> collection = mongoTemplate.getCollection(coreConfiguration.getLegacyMongockChangelogSource());
-            mongockImporter = new MongockImporterModule(collection, auditor);
-
+        if (coreConfiguration.isMongockImporterEnabled()) {
+            MongoCollection<Document> legacyCollectionToImportFrom = mongoTemplate
+                    .getDb()
+                    .getCollection(coreConfiguration.getLegacyMongockChangelogSource());
+            MongoImporterReader importerReader = new MongoImporterReader(legacyCollectionToImportFrom);
+            mongockImporter = new ImporterModule(importerReader);
         }
     }
 
@@ -101,7 +104,7 @@ public class SpringDataMongoV2Engine extends AbstractLocalEngine {
     }
 
     @Override
-    public Optional<MongockImporterModule> getMongockLegacyImporterModule() {
+    public Optional<LocalSystemModule> getMongockLegacyImporterModule() {
         return Optional.ofNullable(mongockImporter);
     }
 }

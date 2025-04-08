@@ -19,14 +19,14 @@ package io.flamingock.cloud.transaction.dynamodb.changes.unhappypath;
 import io.flamingock.cloud.transaction.dynamodb.changes.common.UserEntity;
 import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.ChangeUnit;
+import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 
 import static java.util.Collections.emptyList;
 
-@ChangeUnit(id = "unhappy-create-table-clients", order = "1", transactional = false)
+@Change(id = "unhappy-create-table-clients", order = "1", transactional = false)
 public class UnhappyCreateTableClientsChange {
 
     @Execution

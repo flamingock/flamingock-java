@@ -19,7 +19,6 @@ package io.flamingock.core.local;
 
 import io.flamingock.core.local.lock.LocalLock;
 import io.flamingock.core.local.lock.LocalLockService;
-import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.AuditReader;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
@@ -30,7 +29,6 @@ import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.engine.lock.LockRefreshDaemon;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
-import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import org.slf4j.Logger;

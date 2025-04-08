@@ -1,22 +1,33 @@
 val jacksonVersion = "2.16.0"
 dependencies {
     api(project(":flamingock-core-api"))
-    api(project(":flamingock-core-template"))
+    api(project(":flamingock-processor"))
     api(project(":utils"))
     api("javax.inject:javax.inject:1")
-    api("org.reflections:reflections:0.10.1")
+    api("org.reflections:reflections:0.10.1")//TODO remove
     api("org.objenesis:objenesis:3.2")
     api("org.yaml:snakeyaml:2.2")
 
     api("org.apache.httpcomponents:httpclient:4.5.14")
     
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-//    api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
 
+
+    testAnnotationProcessor(project(":flamingock-processor"))
     testImplementation(project(":utils-test"))
 }
 
 description = "${project.name}'s description"
+
+
+tasks.withType<JavaCompile>().configureEach {
+    if (name.contains("Test", ignoreCase = true)) {
+        options.compilerArgs.addAll(listOf(
+            "-Asources=${projectDir}/src/test/java",
+            "-Aresources=${projectDir}/src/test/resources"
+        ))
+    }
+}
 
 java {
     toolchain {

@@ -1,6 +1,6 @@
 package io.flamingock.core.configurator.cloud;
 
-import io.flamingock.core.api.CloudSystemModule;
+import io.flamingock.core.system.CloudSystemModule;
 import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.configurator.SystemModuleManager;

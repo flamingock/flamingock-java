@@ -1,6 +1,7 @@
 val jacksonVersion = "2.15.2"
 dependencies {
-    implementation(project(":flamingock-core-api"))
+    //this way the user doesn't need to import the core
+    api(project(":flamingock-core"))
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 

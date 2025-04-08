@@ -17,8 +17,8 @@
 package io.flamingock.template.mongodb;
 
 
-import io.flamingock.template.TemplateModule;
-import io.flamingock.template.TransactionalTemplateSpec;
+import io.flamingock.core.api.template.TemplateModule;
+import io.flamingock.core.api.template.TransactionalTemplateSpec;
 
 import java.util.Collections;
 import java.util.HashSet;

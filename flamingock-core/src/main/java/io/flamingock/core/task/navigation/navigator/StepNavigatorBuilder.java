@@ -16,7 +16,6 @@
 
 package io.flamingock.core.task.navigation.navigator;
 
-import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.execution.TaskSummarizer;
@@ -36,8 +35,6 @@ public interface StepNavigatorBuilder {
 
     StepNavigatorBuilder setTransactionWrapper(TransactionWrapper transactionWrapper);
 
-    StepNavigatorBuilder setFlamingockMetadata(FlamingockMetadata metadata);
-
     StepNavigator build();
 
 
@@ -46,8 +43,6 @@ public interface StepNavigatorBuilder {
 
         protected TaskSummarizer summarizer = null;
         protected AuditWriter auditWriter = null;
-
-        protected FlamingockMetadata flamingockMetadata;
 
         protected Lock lock = null;
 
@@ -85,12 +80,6 @@ public interface StepNavigatorBuilder {
         @Override
         public StepNavigatorBuilder setTransactionWrapper(TransactionWrapper transactionWrapper) {
             this.transactionWrapper = transactionWrapper;
-            return this;
-        }
-
-        @Override
-        public StepNavigatorBuilder setFlamingockMetadata(FlamingockMetadata flamingockMetadata) {
-            this.flamingockMetadata = flamingockMetadata;
             return this;
         }
 

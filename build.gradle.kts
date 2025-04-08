@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.32-beta"
+    version = "0.0.34-beta"
 
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
@@ -41,7 +41,6 @@ allprojects {
 val coreProjects = setOf(
     "flamingock-core",
     "flamingock-core-api",
-    "flamingock-core-template",
     "flamingock-springboot-v2-runner",
     "flamingock-springboot-v3-runner",
     "flamingock-graalvm",

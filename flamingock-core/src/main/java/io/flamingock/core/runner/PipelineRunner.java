@@ -18,7 +18,6 @@ package io.flamingock.core.runner;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
-import io.flamingock.core.api.metadata.FlamingockMetadata;
 import io.flamingock.core.engine.execution.ExecutionPlan;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.Lock;
@@ -65,11 +64,8 @@ public class PipelineRunner implements Runner {
 
     private final Runnable finalizer;
 
-    private final FlamingockMetadata flamingockMetadata;
-
     public PipelineRunner(RunnerId runnerId,
                           Pipeline pipeline,
-                          FlamingockMetadata metadata,
                           ExecutionPlanner executionPlanner,
                           StageExecutor stageExecutor,
                           OrphanExecutionContext orphanExecutionContext,
@@ -84,7 +80,6 @@ public class PipelineRunner implements Runner {
         this.eventPublisher = eventPublisher;
         this.throwExceptionIfCannotObtainLock = throwExceptionIfCannotObtainLock;
         this.finalizer = finalizer;
-        this.flamingockMetadata = metadata;
     }
 
 
@@ -154,7 +149,7 @@ public class PipelineRunner implements Runner {
         logger.debug("Applied state to process:\n{}", executableStage);
 
         ExecutionContext executionContext = new ExecutionContext(executionId, orphanExecutionContext.getHostname(), orphanExecutionContext.getAuthor(), orphanExecutionContext.getMetadata());
-        StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock, flamingockMetadata);
+        StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock);
         eventPublisher.publish(new StageCompletedEvent(executionOutput));
         return executionOutput.getSummary();
     }

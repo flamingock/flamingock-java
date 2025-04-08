@@ -16,11 +16,12 @@
 
 package io.flamingock.core.task.executable;
 
-import io.flamingock.core.task.descriptor.LoadedTask;
+import io.flamingock.core.task.TaskDescriptor;
 
 import java.util.Objects;
+import java.util.Optional;
 
-public abstract class AbstractExecutableTask<DESCRIPTOR extends LoadedTask> implements ExecutableTask {
+public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> implements ExecutableTask {
 
     private final String stageName;
 
@@ -37,6 +38,35 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends LoadedTask> impl
         this.stageName = stageName;
         this.descriptor = descriptor;
         this.alreadyExecuted = !executionRequired;
+    }
+    @Override
+    public String getId() {
+        return descriptor.getId();
+    }
+
+    @Override
+    public boolean isRunAlways() {
+        return descriptor.isRunAlways();
+    }
+
+    @Override
+    public boolean isTransactional() {
+        return descriptor.isTransactional();
+    }
+
+    @Override
+    public boolean isSystem() {
+        return descriptor.isSystem();
+    }
+
+    @Override
+    public String getSource() {
+        return descriptor.getSource();
+    }
+
+    @Override
+    public Optional<String> getOrder() {
+        return descriptor.getOrder();
     }
 
     @Override
@@ -74,4 +104,6 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends LoadedTask> impl
                 ", state=" + alreadyExecuted +
                 "} ";
     }
+
+
 }

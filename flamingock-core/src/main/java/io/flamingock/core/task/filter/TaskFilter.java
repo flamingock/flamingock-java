@@ -16,6 +16,8 @@
 
 package io.flamingock.core.task.filter;
 
+import io.flamingock.core.task.loaded.AbstractLoadedTask;
+
 public interface TaskFilter {
-    boolean filter(Class<?> filteredElement);
+    boolean filter(AbstractLoadedTask descriptor);
 }
