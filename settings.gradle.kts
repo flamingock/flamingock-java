@@ -93,10 +93,6 @@ project(":templates:sql-template").name = "sql-template"
 project(":templates:sql-template").projectDir = file("templates/sql-template")
 
 
-include("templates:sql-springboot-template")
-project(":templates:sql-springboot-template").name = "sql-springboot-template"
-project(":templates:sql-springboot-template").projectDir = file("templates/sql-springboot-template")
-
 //MONGODB
 include("templates:mongodb-change-template")
 project(":templates:mongodb-change-template").name = "mongodb-change-template"

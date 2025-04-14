@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 
 public class StepNavigator {
-    private static final Logger logger = LoggerFactory.getLogger(StepNavigator.class);
+    private static final Logger logger = LoggerFactory.getLogger("Flamingock-Navigator");
 
     private static final String START_DESC = "start";
     private static final String EXECUTION_DESC = "execution";

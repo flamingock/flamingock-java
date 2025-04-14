@@ -16,40 +16,18 @@
 
 package io.flamingock.template.sql;
 
+import io.flamingock.core.api.annotations.Execution;
+import io.flamingock.core.api.annotations.RollbackExecution;
 import io.flamingock.core.api.template.ChangeTemplate;
-import io.flamingock.core.api.template.annotations.Config;
-import io.flamingock.core.api.template.annotations.ChangeTemplateConfigValidator;
-import io.flamingock.core.api.template.annotations.ChangeTemplateExecution;
-import io.flamingock.core.api.template.annotations.ChangeTemplateRollbackExecution;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 
-public class SqlTemplate implements ChangeTemplate {
+public class SqlTemplate implements ChangeTemplate<SqlTemplateConfiguration> {
 
     private SqlTemplateConfiguration configuration;
-
-    @Config
-    public void setConfiguration(SqlTemplateConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
-    @ChangeTemplateConfigValidator
-    public boolean validateConfiguration() {
-        return configuration.getExecutionSql() != null;
-    }
-
-    @ChangeTemplateExecution
-    public void execution(Connection connection) {
-        execute(connection, configuration.getExecutionSql());
-    }
-
-    @ChangeTemplateRollbackExecution(conditionalOnAllConfigurationPropertiesNotNull = {"rollbackSql"})
-    public void rollback(Connection connection) {
-        execute(connection, configuration.getRollbackSql());
-    }
 
     private static void execute(Connection connection, String sql) {
         try {
@@ -59,6 +37,20 @@ public class SqlTemplate implements ChangeTemplate {
         }
     }
 
+    @Override
+    public void setConfiguration(SqlTemplateConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    @Execution
+    public void execution(Connection connection) {
+        execute(connection, configuration.getExecution());
+    }
+
+    @RollbackExecution
+    public void rollback(Connection connection) {
+        execute(connection, configuration.getRollback());
+    }
 
     @Override
     public Collection<Class<?>> getReflectiveClasses() {

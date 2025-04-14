@@ -51,7 +51,7 @@ import io.flamingock.springboot.v3.event.SpringStageCompletedEvent;
 import io.flamingock.springboot.v3.event.SpringStageFailedEvent;
 import io.flamingock.springboot.v3.event.SpringStageIgnoredEvent;
 import io.flamingock.springboot.v3.event.SpringStageStartedEvent;
-import io.flamingock.core.api.template.TemplateModule;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -127,12 +127,7 @@ public abstract class AbstractSpringbootBuilder<
     public CoreConfigurable getCoreConfiguration() {
         return coreConfiguratorDelegate.getCoreConfiguration();
     }
-
-    @Override
-    public HOLDER addTemplateModule(TemplateModule templateModule) {
-        return coreConfiguratorDelegate.addTemplateModule(templateModule);
-    }
-
+    
     @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguratorDelegate.getLockAcquiredForMillis();

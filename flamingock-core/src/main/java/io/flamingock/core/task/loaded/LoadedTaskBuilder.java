@@ -34,7 +34,7 @@ public interface LoadedTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
     LoadedTaskBuilder<LOADED_TASK> setOrder(String order);
 
-    LoadedTaskBuilder<LOADED_TASK> setSource(String source);
+    LoadedTaskBuilder<LOADED_TASK> setTemplateName(String templateName);
 
     LoadedTaskBuilder<LOADED_TASK> setRunAlways(boolean runAlways);
 

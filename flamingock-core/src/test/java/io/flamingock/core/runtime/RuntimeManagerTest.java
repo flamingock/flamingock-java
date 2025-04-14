@@ -24,9 +24,8 @@ class RuntimeManagerTest {
                 .build();
 
         Method methodWithNoNullable = RuntimeManagerTest.class.getMethod("methodWithNoNullable", ParameterClass.class);
-        RuntimeException ex = Assertions.assertThrows(RuntimeException.class, () -> runtimeManager.executeMethod(new RuntimeManagerTest(), methodWithNoNullable));
-        DependencyInjectionException cause = (DependencyInjectionException) ex.getCause();
-        assertEquals(ParameterClass.class, cause.getWrongParameter());
+        DependencyInjectionException ex = Assertions.assertThrows(DependencyInjectionException.class, () -> runtimeManager.executeMethodWithInjectedDependencies(new RuntimeManagerTest(), methodWithNoNullable));
+        assertEquals(ParameterClass.class, ex.getWrongParameter());
     }
 
     @Test
@@ -38,7 +37,7 @@ class RuntimeManagerTest {
                 .setLock(null)
                 .build();
 
-        runtimeManager.executeMethod
+        runtimeManager.executeMethodWithInjectedDependencies
                 (new RuntimeManagerTest(),
                         RuntimeManagerTest.class.getMethod("methodWithNullable", ParameterClass.class));
     }

@@ -1,8 +1,13 @@
 package io.flamingock.graalvm;
 
+import io.flamingock.core.api.template.AbstractChangeTemplate;
 import io.flamingock.core.api.template.ChangeTemplate;
+import io.flamingock.core.api.template.ChangeTemplateConfig;
+import io.flamingock.core.api.template.TemplateFactory;
 import io.flamingock.core.pipeline.LoadedStage;
 import io.flamingock.core.pipeline.Pipeline;
+import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
+import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.system.SystemModule;
@@ -13,7 +18,6 @@ import io.flamingock.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.core.task.loaded.AbstractReflectionLoadedTask;
 import io.flamingock.core.task.loaded.CodeLoadedChangeUnit;
 import io.flamingock.core.task.loaded.TemplateLoadedChangeUnit;
-import io.flamingock.core.preview.AbstractCodePreviewTask;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.TemplatePreviewChangeUnit;
 import org.graalvm.nativeimage.hosted.Feature;
@@ -48,6 +52,9 @@ public class RegistrationFeature implements Feature {
         registerClass(PreviewPipeline.class.getName());
         registerClass(PreviewStage.class.getName());
         registerClass(CodePreviewChangeUnit.class.getName());
+        registerClass(CodePreviewLegacyChangeUnit.class.getName());
+        registerClass(PreviewMethod.class);
+        registerClass(ChangeTemplateConfig.class);
         registerClass(TemplatePreviewChangeUnit.class.getName());
 
         //Loaded
@@ -83,7 +90,10 @@ public class RegistrationFeature implements Feature {
 
     private void registerTemplates() {
         logger.startRegistration("templates");
-        for (ChangeTemplate template : ServiceLoader.load(ChangeTemplate.class)) {
+        registerClass(TemplateFactory.class);
+        registerClass(ChangeTemplate.class);
+        registerClass(AbstractChangeTemplate.class);
+        for (ChangeTemplate<?> template : ServiceLoader.load(ChangeTemplate.class)) {
             registerClass(template.getClass());
             template.getReflectiveClasses().forEach(RegistrationFeature::registerClass);
         }
@@ -94,10 +104,13 @@ public class RegistrationFeature implements Feature {
         logger.startRegistration("system modules");
         for (SystemModule systemModule : ServiceLoader.load(SystemModule.class)) {
             PreviewStage previewStage = systemModule.getStage();
+            //Only registers code-base change units classes
+            //template-base change units not needed because Template classes
+            //already registered with registerTemplates()
             previewStage.getTasks()
                     .stream()
-                    .filter(task -> AbstractCodePreviewTask.class.isAssignableFrom(task.getClass()))
-                    .map(task -> (AbstractCodePreviewTask) task)
+                    .filter(task -> CodePreviewChangeUnit.class.isAssignableFrom(task.getClass()))
+                    .map(task -> (CodePreviewChangeUnit) task)
                     .map(AbstractTaskDescriptor::getSource)
                     .forEach(RegistrationFeature::registerClass);
             registerClass(systemModule.getClass());
@@ -109,6 +122,8 @@ public class RegistrationFeature implements Feature {
     private static void registerClass(Class<?> clazz) {
         logger.initClassRegistration(clazz);
         RuntimeReflection.register(clazz);
+        RuntimeReflection.register(clazz.getFields());
+        RuntimeReflection.register(clazz.getDeclaredFields());
         RuntimeReflection.register(clazz.getDeclaredConstructors());
         RuntimeReflection.register(clazz.getDeclaredMethods());
     }

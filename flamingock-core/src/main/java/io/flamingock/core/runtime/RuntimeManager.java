@@ -110,10 +110,13 @@ public final class RuntimeManager implements DependencyInjectable {
         }
     }
 
-    public Object executeMethod(Object instance, Method method) {
+    public Object executeMethodWithInjectedDependencies(Object instance, Method method) {
+        return executeMethodWithParameters(instance, method, getSignatureParameters(method).toArray());
+    }
+
+    public Object executeMethodWithParameters(Object instance, Method method, Object... parameters) {
         try {
-            List<Object> signatureParameters = getSignatureParameters(method);
-            return method.invoke(instance, signatureParameters.toArray());
+            return method.invoke(instance, parameters);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

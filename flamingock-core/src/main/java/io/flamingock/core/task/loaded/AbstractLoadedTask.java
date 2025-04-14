@@ -20,6 +20,7 @@ import io.flamingock.core.task.AbstractTaskDescriptor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Optional;
 
 public abstract class AbstractLoadedTask extends AbstractTaskDescriptor {

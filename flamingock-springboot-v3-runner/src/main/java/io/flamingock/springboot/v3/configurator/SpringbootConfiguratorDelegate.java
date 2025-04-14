@@ -16,12 +16,13 @@
 
 package io.flamingock.springboot.v3.configurator;
 
+import io.flamingock.core.configurator.ConfigurationDelegate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.function.Supplier;
 
-public class SpringbootConfiguratorDelegate<HOLDER> implements SpringbootConfigurator<HOLDER> {
+public class SpringbootConfiguratorDelegate<HOLDER> implements SpringbootConfigurator<HOLDER>, ConfigurationDelegate {
 
     private final Supplier<HOLDER> holderSupplier;
     private final SpringbootConfiguration springbootConfiguration;
@@ -66,4 +67,8 @@ public class SpringbootConfiguratorDelegate<HOLDER> implements SpringbootConfigu
         return springbootConfiguration.getRunnerType();
     }
 
+    @Override
+    public void initialize() {
+
+    }
 }

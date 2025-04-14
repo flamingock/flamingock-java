@@ -75,10 +75,8 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
 
     protected void executeInternal(RuntimeManager runtimeManager, Method method ) {
         Object instance = runtimeManager.getInstance(descriptor.getConstructor());
-        runtimeManager.executeMethod(instance, method);
+        runtimeManager.executeMethodWithInjectedDependencies(instance, method);
     }
-
-
 
     @Override
     public String getExecutionMethodName() {

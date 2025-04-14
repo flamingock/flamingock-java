@@ -21,6 +21,8 @@ import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -28,8 +30,6 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
-
-
     CodeLoadedChangeUnit(String id,
                          String order,
                          Class<?> source,
@@ -43,7 +43,8 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
     @Override
     public Method getExecutionMethod() {
         if (isNewChangeUnit()) {
-            return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), Execution.class)
+            Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), Execution.class);
+            return firstAnnotatedMethod
                     .orElseThrow(() -> new IllegalArgumentException(String.format(
                             "Executable changeUnit[%s] without %s method",
                             getSource(),

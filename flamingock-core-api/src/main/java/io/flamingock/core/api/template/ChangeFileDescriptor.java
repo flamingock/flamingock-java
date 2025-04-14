@@ -25,9 +25,28 @@ public class ChangeFileDescriptor {
 
     private String template;
 
+    private String profiles; //colon-separated list of profiles
+
     private Boolean transactional;
 
     private Map<String, Object> templateConfiguration;
+
+    public ChangeFileDescriptor() {
+    }
+
+    public ChangeFileDescriptor(String id,
+                                String order,
+                                String template,
+                                String profiles,
+                                Boolean transactional,
+                                Map<String, Object> templateConfiguration) {
+        this.id = id;
+        this.order = order;
+        this.template = template;
+        this.profiles = profiles;
+        this.transactional = transactional;
+        this.templateConfiguration = templateConfiguration;
+    }
 
     public String getId() {
         return id;
@@ -51,6 +70,14 @@ public class ChangeFileDescriptor {
 
     public void setTemplate(String template) {
         this.template = template;
+    }
+
+    public String getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(String profiles) {
+        this.profiles = profiles;
     }
 
     public Map<String, Object> getTemplateConfiguration() {

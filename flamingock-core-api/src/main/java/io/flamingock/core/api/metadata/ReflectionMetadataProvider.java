@@ -8,9 +8,6 @@ import java.util.Collection;
  * Implementations of this interface declare a collection of classes that should be registered
  * for reflection at build time—commonly used in native image generation processes such as GraalVM.
  * </p>
- * <p>
- * Optionally, the implementing class itself can also be marked for reflection if needed.
- * </p>
  */
 public interface ReflectionMetadataProvider {
 
@@ -26,14 +23,4 @@ public interface ReflectionMetadataProvider {
      */
     Collection<Class<?>> getReflectiveClasses();
 
-    /**
-     * Indicates whether the implementing class itself should also be registered for reflection.
-     * <p>
-     * This is useful when the provider is instantiated reflectively or used in a context
-     * (e.g., service loader) that requires reflective access to its constructor or methods.
-     * </p>
-     *
-     * @return {@code true} if the implementing class should also be registered for reflection; {@code false} otherwise
-     */
-    boolean shouldRegisterSelf();
 }

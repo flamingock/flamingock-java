@@ -34,7 +34,7 @@ public class CodePreviewLegacyChangeUnit extends CodePreviewChangeUnit {
                                        boolean runAlways,
                                        boolean transactional,
                                        boolean system) {
-        super(id, order, sourceClassPath, executionMethodName, rollbackMethodName, runAlways, transactional, false, system);
+        super(id, order, sourceClassPath, executionMethodName, rollbackMethodName, runAlways, transactional, system);
         this.beforeExecutionMethodName = beforeExecutionMethodName;
         this.rollbackBeforeExecutionMethodName = rollbackBeforeExecutionMethodName;
     }
@@ -58,7 +58,6 @@ public class CodePreviewLegacyChangeUnit extends CodePreviewChangeUnit {
     @Override
     public String toString() {
         return "CodePreviewLegacyChangeUnit{" + "rollbackBeforeExecutionMethodName='" + rollbackBeforeExecutionMethodName + '\'' +
-                ", isNewChangeUnit=" + isNewChangeUnit +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +
                 ", source='" + source + '\'' +

@@ -91,7 +91,6 @@ public class PipelineTestHelper {
                             rollback,
                             false,
                             changeInfo.getThird(),
-                            isNewChangeUnit,
                             false
                     ));
 
@@ -112,7 +111,6 @@ public class PipelineTestHelper {
                                 rollbackBeforeExecution,
                                 false,
                                 changeInfo.getThird(),
-                                false,
                                 false
                         ));
                     }

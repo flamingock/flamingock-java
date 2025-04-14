@@ -19,28 +19,8 @@ package io.flamingock.template.sql;
 
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.annotations.NonLockGuardedType;
+import io.flamingock.core.api.template.ChangeTemplateConfig;
 
 @NonLockGuarded(NonLockGuardedType.NONE)
-public class SqlTemplateConfiguration {
-
-    private String executionSql;
-    private String rollbackSql;
-
-
-
-    public String getExecutionSql() {
-        return executionSql;
-    }
-
-    public void setExecutionSql(String executionSql) {
-        this.executionSql = executionSql;
-    }
-
-    public String getRollbackSql() {
-        return rollbackSql;
-    }
-
-    public void setRollbackSql(String rollbackSql) {
-        this.rollbackSql = rollbackSql;
-    }
+public class SqlTemplateConfiguration extends ChangeTemplateConfig<String, String> {
 }

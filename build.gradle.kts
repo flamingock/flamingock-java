@@ -63,7 +63,6 @@ val localDriverProjects = setOf(
 
 val templateProjects = setOf(
     "sql-template",
-    "sql-springboot-template",
     "mongodb-change-template"
 )
 

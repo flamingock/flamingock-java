@@ -16,10 +16,14 @@
 
 package io.flamingock.core.preview;
 
-public class CodePreviewChangeUnit extends AbstractCodePreviewTask {
 
-    protected boolean isNewChangeUnit;
+import java.beans.Transient;
 
+public class CodePreviewChangeUnit extends AbstractPreviewTask {
+    private PreviewMethod executionMethodName;
+    private PreviewMethod rollbackMethodName;
+
+    private String sourcePackage;
 
     public CodePreviewChangeUnit() {
         super();
@@ -32,21 +36,33 @@ public class CodePreviewChangeUnit extends AbstractCodePreviewTask {
                                  PreviewMethod rollbackMethodPreview,
                                  boolean runAlways,
                                  boolean transactional,
-                                 boolean isNewChangeUnit,
                                  boolean system) {
-        super(id, order, sourceClassPath, executionMethodPreview, rollbackMethodPreview, runAlways, transactional, system);
-        this.isNewChangeUnit = isNewChangeUnit;
+        super(id, order, sourceClassPath, runAlways, transactional, system);
+        this.executionMethodName = executionMethodPreview;
+        this.rollbackMethodName = rollbackMethodPreview;
+        this.sourcePackage = sourceClassPath.substring(0, sourceClassPath.lastIndexOf("."));    }
+
+
+    public PreviewMethod getExecutionMethodName() {
+        return executionMethodName;
     }
 
-
-    public boolean isNewChangeUnit() {
-        return isNewChangeUnit;
+    public void setExecutionMethodName(PreviewMethod executionMethodName) {
+        this.executionMethodName = executionMethodName;
     }
 
-    public void setNewChangeUnit(boolean newChangeUnit) {
-        isNewChangeUnit = newChangeUnit;
+    public PreviewMethod getRollbackMethodName() {
+        return rollbackMethodName;
     }
 
+    public void setRollbackMethodName(PreviewMethod rollbackMethodName) {
+        this.rollbackMethodName = rollbackMethodName;
+    }
+
+    @Transient
+    public String getSourcePackage() {
+        return sourcePackage;
+    }
 
     @Override
     public String pretty() {
@@ -56,7 +72,7 @@ public class CodePreviewChangeUnit extends AbstractCodePreviewTask {
 
     @Override
     public String toString() {
-        return "PreviewChangeUnit{" + "isNewChangeUnit=" + isNewChangeUnit +
+        return "PreviewChangeUnit{" +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +
                 ", source='" + source + '\'' +

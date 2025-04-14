@@ -20,6 +20,7 @@ import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.preview.AbstractPreviewTask;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
+import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.core.utils.ExecutionUtils;
 import io.mongock.api.annotations.ChangeUnit;
 import org.slf4j.Logger;
@@ -66,21 +67,25 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private CodeLoadedTaskBuilder setPreview(CodePreviewChangeUnit preview) {
         setId(preview.getId());
         setOrder(preview.getOrder().orElse(null));
-        setSource(preview.getSource());
+        setTemplateName(preview.getSource());
         setRunAlways(preview.isRunAlways());
         setTransactional(preview.isTransactional());
-        setNewChangeUnit(preview.isNewChangeUnit());
+        setLegacyChangeUnit(preview instanceof CodePreviewLegacyChangeUnit);
         setSystem(preview.isSystem());
         return this;
     }
 
+    private void setLegacyChangeUnit(boolean legacyChangeUnit) {
+        setNewChangeUnit(!legacyChangeUnit);
+    }
+
     private CodeLoadedTaskBuilder setSourceClass(Class<?> sourceClass) {
         if (sourceClass.isAnnotationPresent(Change.class)) {
-            setFromChangeAnnotation(sourceClass, sourceClass.getAnnotation(Change.class));
+            setFromFlamingockChangeAnnotation(sourceClass, sourceClass.getAnnotation(Change.class));
             return this;
 
         } else if (ExecutionUtils.isLegacyChangeUnit(sourceClass)) {
-            setFromChangeUnitAnnotation(sourceClass, sourceClass.getAnnotation(ChangeUnit.class));
+            setFromLegacyChangeUnitAnnotation(sourceClass, sourceClass.getAnnotation(ChangeUnit.class));
             return this;
 
         } else {
@@ -102,8 +107,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setSource(String source) {
-        this.source = source;
+    public CodeLoadedTaskBuilder setTemplateName(String templateName) {
+        this.source = templateName;
         return this;
     }
 
@@ -150,24 +155,24 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         }
     }
 
-    private void setFromChangeUnitAnnotation(Class<?> sourceClass, ChangeUnit annotation) {
+    private void setFromLegacyChangeUnitAnnotation(Class<?> sourceClass, ChangeUnit annotation) {
         logger.warn("Detected legacy changeUnit[{}]. If it's an old changeUnit created for Mongock, it's fine. " +
                         "Otherwise, it's highly recommended us the new API[in package {}]",
                 sourceClass.getName(),
                 "io.flamingock.core.api.annotations");
         setId(annotation.id());
         setOrder(annotation.order());
-        setSource(sourceClass.getName());
+        setTemplateName(sourceClass.getName());
         setRunAlways(annotation.runAlways());
         setTransactional(annotation.transactional());
         setNewChangeUnit(false);
         setSystem(false);
     }
 
-    private void setFromChangeAnnotation(Class<?> sourceClass, Change annotation) {
+    private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, Change annotation) {
         setId(annotation.id());
         setOrder(annotation.order());
-        setSource(sourceClass.getName());
+        setTemplateName(sourceClass.getName());
         setRunAlways(annotation.runAlways());
         setTransactional(annotation.transactional());
         setNewChangeUnit(true);

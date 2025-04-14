@@ -3,6 +3,8 @@ package io.flamingock.core.processor.util;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.core.api.metadata.Constants;
+import io.flamingock.core.preview.AbstractPreviewTask;
+import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.task.TaskDescriptor;
@@ -50,13 +52,14 @@ public class Serializer {
             for (PreviewStage stage : pipeline.getStages()) {
                 for (TaskDescriptor task : stage.getTasks()) {
 
-                    try {
-                        writer.write(task.getSource());
-                        writer.write(System.lineSeparator());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    if(CodePreviewChangeUnit.class.isAssignableFrom(task.getClass())) {
+                        try {
+                            writer.write(task.getSource());
+                            writer.write(System.lineSeparator());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-
                 }
             }
         });

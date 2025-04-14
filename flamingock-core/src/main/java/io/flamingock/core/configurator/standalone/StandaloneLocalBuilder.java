@@ -76,6 +76,12 @@ public class StandaloneLocalBuilder
 
     @Override
     public Runner build() {
+
+
+        coreConfiguratorDelegate.initialize();
+        localConfiguratorDelegate.initialize();
+        standaloneConfiguratorDelegate.initialize();
+
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);
 

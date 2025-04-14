@@ -66,6 +66,10 @@ public class SpringbootLocalBuilder extends AbstractSpringbootBuilder<Springboot
 
     @Override
     public Runner build() {
+        coreConfiguratorDelegate.initialize();
+        localConfiguratorDelegate.initialize();
+        springbootConfiguratorDelegate.initialize();
+
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);
 

@@ -228,19 +228,6 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  sql-springboot-template:
-    needs: [ build ]
-    uses: ./.github/workflows/module-release-graalvm.yml
-    with:
-      module: sql-springboot-template
-    secrets:
-      FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
-      FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
-      FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
-      FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PUBLIC_KEY }}
-      FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
-      FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
-
   sql-cloud-transactioner:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
@@ -308,7 +295,7 @@ jobs:
 
 
   run-examples-with-released-version:
-    needs: [flamingock-core,flamingock-core-api,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-springboot-template,sql-cloud-transactioner, mongodb-sync-v4-cloud-transactioner, dynamodb-cloud-transactioner, mongodb-importer, flamingock-graalvm]
+    needs: [flamingock-core,flamingock-core-api,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-cloud-transactioner, mongodb-sync-v4-cloud-transactioner, dynamodb-cloud-transactioner, mongodb-importer, flamingock-graalvm]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -336,7 +323,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 #  test-examples:
-#    needs: [ flamingock-core,flamingock-core-api,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-springboot-template,sql-cloud-transactioner ]
+#    needs: [ flamingock-core,flamingock-core-api,flamingock-springboot-v2-runner,flamingock-springboot-v3-runner,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,dynamodb-driver,mongodb-facade,mongodb-springdata-v2-driver,mongodb-springdata-v3-driver,mongodb-springdata-v4-driver,mongodb-sync-v4-driver,mongodb-v3-driver,sql-template,sql-cloud-transactioner ]
 #    run: |
 #        curl -X POST \
 #             -H "Accept: application/vnd.github+json" \

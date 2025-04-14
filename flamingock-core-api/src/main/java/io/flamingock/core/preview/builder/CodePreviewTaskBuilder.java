@@ -178,7 +178,6 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
                 rollbackMethod,
                 runAlways,
                 transactional,
-                isNewChangeUnit,
                 system);
     }
 

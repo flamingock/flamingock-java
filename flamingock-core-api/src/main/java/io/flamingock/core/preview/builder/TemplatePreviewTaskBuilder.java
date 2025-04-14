@@ -16,10 +16,15 @@
 
 package io.flamingock.core.preview.builder;
 
-import io.flamingock.core.preview.TemplatePreviewChangeUnit;
 import io.flamingock.core.api.template.ChangeFileDescriptor;
+import io.flamingock.core.preview.TemplatePreviewChangeUnit;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 //TODO how to set transactional and runAlways
@@ -28,6 +33,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private String id;
     private String order;
     private String templateClassPath;
+    private String profilesString;
     private boolean runAlways;
     private Boolean transactional;
     private Map<String, Object> templateConfiguration;
@@ -58,6 +64,9 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         this.templateClassPath = templateClassPath;
     }
 
+    public void setProfilesString(String profilesString) {
+        this.profilesString = profilesString;
+    }
 
     public TemplatePreviewTaskBuilder setRunAlways(boolean runAlways) {
         this.runAlways = runAlways;
@@ -76,14 +85,28 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
 
     @Override
     public TemplatePreviewChangeUnit build() {
+
+        List<String> profiles = getProfiles();
         return new TemplatePreviewChangeUnit(
                 id,
                 order,
                 templateClassPath,
+                profiles,
                 transactional,
                 runAlways,
                 false,
                 templateConfiguration);
+    }
+
+    @NotNull
+    private List<String> getProfiles() {
+        if(profilesString == null) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(profilesString.trim().split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
     }
 
 
@@ -91,6 +114,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         setId(templateTaskDefinition.getId());
         setOrder(templateTaskDefinition.getOrder());
         setTemplate(templateTaskDefinition.getTemplate());
+        setProfilesString(templateTaskDefinition.getProfiles());
         setTemplateConfiguration(templateTaskDefinition.getTemplateConfiguration());
         setTransactional(templateTaskDefinition.getTransactional());
         setRunAlways(false);

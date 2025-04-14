@@ -20,6 +20,7 @@ import io.flamingock.commons.utils.Pair;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
+import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
@@ -81,40 +82,41 @@ public class PipelineTestHelper {
                         rollback = new PreviewMethod("rollbackExecution", getParameterTypes(trio.getThird()));
                     }
 
-
                     List<CodePreviewChangeUnit> changes = new ArrayList<>();
-                    changes.add(new CodePreviewChangeUnit(
-                            changeInfo.getFirst(),
-                            changeInfo.getSecond(),
-                            trio.getFirst().getName(),
-                            new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
-                            rollback,
-                            false,
-                            changeInfo.getThird(),
-                            isNewChangeUnit,
-                            false
-                    ));
 
-                    //we are assuming, for testing purpose, that if it's legacy, it provides beforeExecution,
-                    // with same parameterTypes and, if 'rollbackBeforeExecution' provided too, it is with the same
-                    //parameters
-                    if (!isNewChangeUnit) {
+                    if(isNewChangeUnit) {
+                        changes.add(new CodePreviewChangeUnit(
+                                changeInfo.getFirst(),
+                                changeInfo.getSecond(),
+                                trio.getFirst().getName(),
+                                new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
+                                rollback,
+                                false,
+                                changeInfo.getThird(),
+                                false
+                        ));
+                    } else {
+
+                        //we are assuming, for testing purpose, that if it's legacy, it provides beforeExecution,
+                        // with same parameterTypes and, if 'rollbackBeforeExecution' provided too, it is with the same
+                        //parameters
                         PreviewMethod rollbackBeforeExecution = null;
                         if (trio.getThird() != null) {
                             rollbackBeforeExecution = new PreviewMethod("rollbackBeforeExecution", getParameterTypes(trio.getThird()));
                         }
-
-                        changes.add(new CodePreviewChangeUnit(
-                                changeInfo.getFirst() + "_before",
+                        changes.add(new CodePreviewLegacyChangeUnit(
+                                changeInfo.getFirst(),
                                 changeInfo.getSecond(),
                                 trio.getFirst().getName(),
+                                new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
+                                rollback,
                                 new PreviewMethod("beforeExecution", getParameterTypes(trio.getSecond())),
                                 rollbackBeforeExecution,
                                 false,
                                 changeInfo.getThird(),
-                                false,
                                 false
                         ));
+
                     }
                     return changes;
                 })

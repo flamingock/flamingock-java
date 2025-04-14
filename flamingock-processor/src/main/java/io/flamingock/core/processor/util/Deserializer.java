@@ -6,8 +6,11 @@ import io.flamingock.core.preview.PreviewPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public final class Deserializer {
@@ -40,7 +43,6 @@ public final class Deserializer {
      * @return An Optional containing the deserialized PreviewPipeline if successful, otherwise empty
      */
     private static Optional<PreviewPipeline> readFileIfExists(String filePath) {
-        logger.debug("Attempting to retrieve Flamingock pipeline from file: '{}'", filePath);
         try (InputStream inputStream = CLASS_LOADER.getResourceAsStream(filePath)) {
             if (inputStream == null) {
                 logger.debug("Flamingock pipeline file not found at the specified path: '{}'", filePath);
@@ -54,4 +56,5 @@ public final class Deserializer {
             throw new RuntimeException("Error reading file: " + filePath, e);
         }
     }
+
 }

@@ -19,32 +19,32 @@ package io.flamingock.template.mongodb;
 
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.annotations.NonLockGuardedType;
+import io.flamingock.core.api.template.ChangeTemplateConfig;
 import io.flamingock.template.mongodb.model.MongoOperation;
 
 import java.util.List;
 
 @NonLockGuarded(NonLockGuardedType.NONE)
-public class MongoChangeTemplateConfig  {
-    private List<MongoOperation> changes;
-    private List<MongoOperation> rollbacks;
+public class MongoChangeTemplateConfig  extends ChangeTemplateConfig<MongoOperation, MongoOperation> {
+    private MongoOperation execution;
+    private MongoOperation rollback;
 
-    public MongoChangeTemplateConfig(List<MongoOperation> changes, List<MongoOperation> rollbacks) {
-        this.changes = changes;
-        this.rollbacks = rollbacks;
+    public MongoChangeTemplateConfig(MongoOperation execution, MongoOperation rollback) {
+        super(execution, rollback);
     }
 
     public MongoChangeTemplateConfig() {
-        this(null, null);
+        super();
     }
 
-    public List<MongoOperation> getChanges() { return changes; }
+    public MongoOperation getExecution() { return execution; }
 
-    public void setChanges(List<MongoOperation> changes) { this.changes = changes; }
+    public void setExecution(MongoOperation execution) { this.execution = execution; }
 
-    public List<MongoOperation> getRollbacks() { return rollbacks; }
+    public MongoOperation getRollback() { return rollback; }
 
-    public void setRollbacks(List<MongoOperation> rollbacks) {
-        this.rollbacks = rollbacks;
+    public void setRollback(MongoOperation rollback) {
+        this.rollback = rollback;
     }
 
     public void validate() {
@@ -56,8 +56,8 @@ public class MongoChangeTemplateConfig  {
 
     @Override
     public String toString() {
-        return "MongoChangeTemplateConfig{" + "changes=" + changes +
-                ", rollbacks=" + rollbacks +
+        return "MongoChangeTemplateConfig{" + "changes=" + execution +
+                ", rollbacks=" + rollback +
                 '}';
     }
 }

@@ -39,7 +39,7 @@ import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runner.RunnerBuilder;
 import io.flamingock.core.runtime.dependency.DependencyContext;
-import io.flamingock.core.api.template.TemplateModule;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -159,11 +159,6 @@ abstract class AbstractStandaloneBuilder<
     @Override
     public HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy) {
         return coreConfiguratorDelegate().setTransactionStrategy(transactionStrategy);
-    }
-
-    @Override
-    public HOLDER addTemplateModule(TemplateModule templateModule) {
-        return coreConfiguratorDelegate().addTemplateModule(templateModule);
     }
 
     @Override

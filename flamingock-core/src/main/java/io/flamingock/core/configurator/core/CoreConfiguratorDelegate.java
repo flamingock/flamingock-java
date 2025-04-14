@@ -17,12 +17,11 @@
 package io.flamingock.core.configurator.core;
 
 
-import io.flamingock.core.system.SystemModule;
+import io.flamingock.core.api.template.TemplateFactory;
+import io.flamingock.core.configurator.ConfigurationDelegate;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
-
-import io.flamingock.core.api.template.TemplateFactory;
-import io.flamingock.core.api.template.TemplateModule;
+import io.flamingock.core.system.SystemModule;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -31,7 +30,8 @@ public class CoreConfiguratorDelegate<
         HOLDER,
         SYSTEM_MODULE extends SystemModule,
         SYSTEM_MODULE_MANAGER extends SystemModuleManager<SYSTEM_MODULE>>
-        implements CoreConfigurator<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER> {
+        implements CoreConfigurator<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER>,
+        ConfigurationDelegate {
 
     private final Supplier<HOLDER> holderSupplier;
     private final CoreConfiguration configuration;
@@ -43,6 +43,10 @@ public class CoreConfiguratorDelegate<
         this.configuration = configuration;
         this.holderSupplier = holderSupplier;
         this.systemModuleManager = systemModuleManager;
+    }
+
+    public void initialize() {
+        TemplateFactory.loadTemplates();
     }
 
     @Override
@@ -115,13 +119,6 @@ public class CoreConfiguratorDelegate<
         configuration.setTransactionStrategy(transactionStrategy);
         return holderSupplier.get();
     }
-
-    @Override
-    public HOLDER addTemplateModule(TemplateModule templateModule) {
-        TemplateFactory.registerModule(templateModule);
-        return holderSupplier.get();
-    }
-
 
     @Override
     public long getLockAcquiredForMillis() {

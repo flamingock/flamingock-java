@@ -21,7 +21,6 @@ import io.flamingock.core.configurator.TransactionStrategy;
 
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.preview.PreviewPipeline;
-import io.flamingock.core.pipeline.Stage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,9 +77,6 @@ public class CoreConfiguration implements CoreConfigurable {
      * - EXECUTION: The entire migration's execution is wrapped in a transaction.
      */
     private TransactionStrategy transactionStrategy = TransactionStrategy.CHANGE_UNIT;
-
-
-    private final List<Stage> stages = new ArrayList<>();
 
 
     private final List<SystemModule> systemModules = new ArrayList<>();

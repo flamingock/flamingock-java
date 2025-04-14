@@ -80,6 +80,11 @@ public class StandaloneCloudBuilder
 
     @Override
     public Runner build() {
+
+        coreConfiguratorDelegate.initialize();
+        cloudConfiguratorDelegate.initialize();
+        standaloneConfiguratorDelegate.initialize();
+
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);
 

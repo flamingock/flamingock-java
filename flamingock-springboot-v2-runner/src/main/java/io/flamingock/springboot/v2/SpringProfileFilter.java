@@ -19,6 +19,8 @@ package io.flamingock.springboot.v2;
 import io.flamingock.core.task.filter.TaskFilter;
 import io.flamingock.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.core.task.loaded.AbstractReflectionLoadedTask;
+import io.flamingock.core.task.loaded.CodeLoadedChangeUnit;
+import io.flamingock.core.task.loaded.TemplateLoadedChangeUnit;
 import org.springframework.context.annotation.Profile;
 
 import java.util.Arrays;
@@ -48,12 +50,38 @@ public class SpringProfileFilter implements TaskFilter {
     }
 
     private boolean filter(AbstractReflectionLoadedTask reflectionDescriptor) {
+        if (TemplateLoadedChangeUnit.class.isAssignableFrom(reflectionDescriptor.getClass())) {
+            return filterTemplateChangeUnit((TemplateLoadedChangeUnit) reflectionDescriptor);
+
+        } else if (CodeLoadedChangeUnit.class.isAssignableFrom(reflectionDescriptor.getClass())) {
+            return filterCodeChangeUnit((CodeLoadedChangeUnit) reflectionDescriptor);
+
+        } else {
+            String message = String.format(
+                    "Non-Filterable task[%s]: %s",
+                    reflectionDescriptor.getSourceClass(),
+                    reflectionDescriptor.getClass());
+            throw new RuntimeException(message);
+        }
+
+    }
+
+    private boolean filterTemplateChangeUnit(TemplateLoadedChangeUnit reflectionDescriptor) {
+        return filterProfiles(reflectionDescriptor.getProfiles());
+    }
+
+
+    private boolean filterCodeChangeUnit(CodeLoadedChangeUnit reflectionDescriptor) {
         Class<?> sourceClass = reflectionDescriptor.getSourceClass();
         if (!sourceClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches
         }
+        List<String> taskProfile = Arrays.asList(sourceClass.getAnnotation(Profile.class).value());
+        return filterProfiles(taskProfile);
+    }
+
+    private boolean filterProfiles(List<String> taskProfile) {
         boolean taskHasAtLeastOneProfileApplied = false;
-        String[] taskProfile = sourceClass.getAnnotation(Profile.class).value();
         for (String profile : taskProfile) {
             if ((profile == null || "".equals(profile))) {
                 continue;

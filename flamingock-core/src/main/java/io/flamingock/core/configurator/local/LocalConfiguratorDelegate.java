@@ -16,11 +16,12 @@
 
 package io.flamingock.core.configurator.local;
 
+import io.flamingock.core.configurator.ConfigurationDelegate;
 import io.flamingock.core.local.driver.LocalDriver;
 
 import java.util.function.Supplier;
 
-public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLDER> {
+public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLDER>, ConfigurationDelegate {
 
     private final LocalConfigurable LocalConfiguration;
 
@@ -65,4 +66,8 @@ public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLD
     }
 
 
+    @Override
+    public void initialize() {
+
+    }
 }

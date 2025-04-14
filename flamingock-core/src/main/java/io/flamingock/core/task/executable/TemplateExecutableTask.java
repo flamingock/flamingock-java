@@ -16,60 +16,55 @@
 
 package io.flamingock.core.task.executable;
 
+import io.flamingock.core.api.template.ChangeTemplate;
 import io.flamingock.core.runtime.RuntimeManager;
-import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.task.loaded.TemplateLoadedChangeUnit;
 import io.flamingock.commons.utils.FileUtil;
 import io.flamingock.commons.utils.ReflectionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoadedChangeUnit> {
-    private final Method configValidatorMethod;
-
-    private final Method configSetterMethod;
-
 
     public TemplateExecutableTask(String stageName,
                                   TemplateLoadedChangeUnit descriptor,
                                   boolean requiredExecution,
                                   Method executionMethod,
-                                  Method rollbackMethod,
-                                  Method configSetterMethod,
-                                  Method configValidatorMethod) {
+                                  Method rollbackMethod) {
         super(stageName, descriptor, requiredExecution, executionMethod, rollbackMethod);
-        this.configSetterMethod = configSetterMethod;
-        this.configValidatorMethod = configValidatorMethod;
     }
 
     @Override
     protected void executeInternal(RuntimeManager runtimeManager, Method method ) {
         Object instance = runtimeManager.getInstance(descriptor.getConstructor());
-        setConfiguration(runtimeManager, instance);
-        runtimeManager.executeMethod(instance, method);
+        setConfiguration(runtimeManager, (ChangeTemplate<?>) instance);
+        runtimeManager.executeMethodWithInjectedDependencies(instance, method);
     }
 
-    private void setConfiguration(RuntimeManager runtimeManager, Object instance) {
-        if(configSetterMethod != null ) {
-            List<Class<?>> parameters = ReflectionUtil.getParameters(configSetterMethod);
-            if(!parameters.isEmpty()) {
-                Dependency dependency = new Dependency(
-                        parameters.get(0),
-                        FileUtil.getFromMap(parameters.get(0), descriptor.getTemplateConfiguration()));
-                runtimeManager.addDependency(dependency);
-            }
-            runtimeManager.executeMethod(instance, configSetterMethod);
-        }
-
-        validateConfiguration(runtimeManager, instance);
+    private void setConfiguration(RuntimeManager runtimeManager, ChangeTemplate<?> instance) {
+        Class<?> configClass = instance.getConfigClass();
+        Method setConfigurationMethod = getConfigMethod(instance.getClass());
+        runtimeManager.executeMethodWithParameters(
+                instance,
+                setConfigurationMethod,
+                FileUtil.getFromMap(configClass, descriptor.getTemplateConfiguration()));
     }
 
-    private void validateConfiguration(RuntimeManager runtimeManager, Object instance) {
-        if(configValidatorMethod != null) {
-            runtimeManager.executeMethod(instance, configValidatorMethod);
-        }
+    private Method getConfigMethod(Class<?> changeTemplateClass) {
+
+        return Arrays.stream(changeTemplateClass.getMethods())
+                .filter(m-> "setConfiguration".equals(m.getName()))
+                .findFirst()
+                .orElseThrow(()-> new RuntimeException("Not found config setter for template: " + changeTemplateClass.getSimpleName()));
+
     }
+
+
 
 
 }

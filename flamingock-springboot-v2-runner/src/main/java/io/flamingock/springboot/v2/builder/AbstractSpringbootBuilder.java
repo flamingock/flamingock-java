@@ -51,7 +51,7 @@ import io.flamingock.springboot.v2.event.SpringStageCompletedEvent;
 import io.flamingock.springboot.v2.event.SpringStageFailedEvent;
 import io.flamingock.springboot.v2.event.SpringStageIgnoredEvent;
 import io.flamingock.springboot.v2.event.SpringStageStartedEvent;
-import io.flamingock.core.api.template.TemplateModule;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -181,12 +181,6 @@ public abstract class AbstractSpringbootBuilder<
     public HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy) {
         return coreConfiguratorDelegate.setTransactionStrategy(transactionStrategy);
     }
-
-    @Override
-    public HOLDER addTemplateModule(TemplateModule templateModule) {
-        return coreConfiguratorDelegate.addTemplateModule(templateModule);
-    }
-
 
     @Override
     public long getLockAcquiredForMillis() {

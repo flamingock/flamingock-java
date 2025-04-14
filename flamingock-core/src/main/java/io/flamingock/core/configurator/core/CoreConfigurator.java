@@ -21,7 +21,7 @@ import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 
-import io.flamingock.core.api.template.TemplateModule;
+
 
 import java.util.Map;
 
@@ -53,9 +53,6 @@ public interface CoreConfigurator<
     HOLDER setDefaultAuthor(String defaultMigrationAuthor);
 
     HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy);
-
-    HOLDER addTemplateModule(TemplateModule templateModule);
-
 
     long getLockAcquiredForMillis();
 

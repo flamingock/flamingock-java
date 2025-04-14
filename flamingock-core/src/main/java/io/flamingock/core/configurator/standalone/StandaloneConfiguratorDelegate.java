@@ -16,6 +16,7 @@
 
 package io.flamingock.core.configurator.standalone;
 
+import io.flamingock.core.configurator.ConfigurationDelegate;
 import io.flamingock.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.core.event.model.IPipelineFailedEvent;
 import io.flamingock.core.event.model.IPipelineIgnoredEvent;
@@ -31,7 +32,7 @@ import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class StandaloneConfiguratorDelegate<HOLDER> implements StandaloneConfigurator<HOLDER> {
+public class StandaloneConfiguratorDelegate<HOLDER> implements StandaloneConfigurator<HOLDER>, ConfigurationDelegate {
 
     private final DependencyInjectableContext dependencyManager;
     private final Supplier<HOLDER> holderSupplier;
@@ -163,4 +164,8 @@ public class StandaloneConfiguratorDelegate<HOLDER> implements StandaloneConfigu
         return stageFailedListener;
     }
 
+    @Override
+    public void initialize() {
+
+    }
 }
