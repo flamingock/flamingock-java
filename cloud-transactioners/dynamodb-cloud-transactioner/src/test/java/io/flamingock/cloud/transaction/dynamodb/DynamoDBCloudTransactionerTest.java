@@ -32,8 +32,8 @@ import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.configurator.standalone.FlamingockStandalone;
-import io.flamingock.core.configurator.standalone.StandaloneCloudBuilder;
+import io.flamingock.core.configurator.standalone.Flamingock;
+import io.flamingock.core.configurator.standalone.FlamingockCloudBuilder;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
 import io.flamingock.core.runner.Runner;
@@ -78,7 +78,7 @@ public class DynamoDBCloudTransactionerTest {
     private final String jwt = "fake_jwt";
 
     private MockRunnerServer mockRunnerServer;
-    private StandaloneCloudBuilder flamingockBuilder;
+    private FlamingockCloudBuilder flamingockBuilder;
 
     @BeforeEach
     void beforeEach() throws Exception {
@@ -112,7 +112,7 @@ public class DynamoDBCloudTransactionerTest {
                 .setApiToken(apiToken)
                 .setJwt(jwt);
 
-        flamingockBuilder = FlamingockStandalone.cloud()
+        flamingockBuilder = Flamingock.cloud()
                 .setApiToken(apiToken)
                 .setHost("http://localhost:" + runnerServerPort)
                 .setService(serviceName)

@@ -22,7 +22,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.configurator.core.CoreConfiguration;
-import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.configurator.standalone.Flamingock;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
@@ -108,7 +108,7 @@ class SpringDataMongoV4DriverTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .withImporter(CoreConfiguration.ImporterConfiguration.withSource("mongockChangeLog"))
                     .setDriver(new SpringDataMongoV4Driver(mongoTemplate))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
@@ -139,7 +139,7 @@ class SpringDataMongoV4DriverTest {
                     new Trio<>(_2_insert_federico_happy_transactional.class, Collections.singletonList(MongoTemplate.class)),
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new SpringDataMongoV4Driver(mongoTemplate).setDriverConfiguration(driverConfiguration))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
@@ -165,7 +165,7 @@ class SpringDataMongoV4DriverTest {
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new SpringDataMongoV4Driver(mongoTemplate))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
@@ -204,7 +204,7 @@ class SpringDataMongoV4DriverTest {
                     new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new SpringDataMongoV4Driver(mongoTemplate))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithoutTransaction"))
                     .addDependency(mongoTemplate)
@@ -246,7 +246,7 @@ class SpringDataMongoV4DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockStandalone.local()
+                Flamingock.local()
                         .setDriver(new SpringDataMongoV4Driver(mongoTemplate))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.failedWithTransaction"))
                         .addDependency(mongoTemplate)
@@ -286,7 +286,7 @@ class SpringDataMongoV4DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockStandalone.local()
+                Flamingock.local()
                         .setDriver(new SpringDataMongoV4Driver(mongoTemplate))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.failedWithoutTransactionWithRollback"))
                         .addDependency(mongoTemplate)
@@ -328,7 +328,7 @@ class SpringDataMongoV4DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockStandalone.local()
+                Flamingock.local()
                         .setDriver(new SpringDataMongoV4Driver(mongoTemplate))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.failedWithoutTransactionWithoutRollback"))
                         .addDependency(mongoTemplate)

@@ -18,20 +18,15 @@ package io.flamingock.core.pipeline;
 
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.core.api.exception.FlamingockException;
-import io.flamingock.core.configurator.standalone.FlamingockStandalone;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
-import io.flamingock.core.runner.Runner;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.UUID;
 
 
 public class PipelineTest {

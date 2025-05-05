@@ -24,7 +24,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.configurator.standalone.Flamingock;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.processor.util.Deserializer;
@@ -51,7 +51,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration;
-import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -141,7 +140,7 @@ class DynamoDBImporterTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .withImporter(ImporterConfiguration.withSource(mongockDriver.getMigrationRepositoryName()))
                     .setDriver(new DynamoDBDriver(client))
                     //.addStage(new Stage("stage-name")

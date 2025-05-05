@@ -16,13 +16,7 @@
 
 package io.flamingock.core.runtime.dependency;
 
-import io.flamingock.core.runtime.dependency.exception.ForbiddenParameterException;
-
-import java.util.Optional;
-
-public class PriorityDependencyInjectableContext implements DependencyInjectableContext {
-
-    private final DependencyContext baseContext;
+public class PriorityDependencyInjectableContext extends PriorityDependencyContext implements DependencyInjectableContext {
 
     private final DependencyInjectableContext priorityInjectableContext;
 
@@ -31,22 +25,10 @@ public class PriorityDependencyInjectableContext implements DependencyInjectable
     }
 
     public PriorityDependencyInjectableContext(DependencyInjectableContext priorityInjectableContext, DependencyContext baseContext) {
+        super(priorityInjectableContext, baseContext);
         this.priorityInjectableContext = priorityInjectableContext;
-        this.baseContext = baseContext;
     }
 
-    @Override
-    public Optional<Dependency> getDependency(Class<?> type) throws ForbiddenParameterException {
-        Optional<Dependency> priorityDependency = priorityInjectableContext.getDependency(type);
-        return priorityDependency.isPresent() ? priorityDependency : baseContext.getDependency(type);
-
-    }
-
-    @Override
-    public Optional<Dependency> getDependency(String name) throws ForbiddenParameterException {
-        Optional<Dependency> priorityDependency = priorityInjectableContext.getDependency(name);
-        return priorityDependency.isPresent() ? priorityDependency : baseContext.getDependency(name);
-    }
 
     @Override
     public void addDependency(Dependency dependency) {
@@ -55,6 +37,7 @@ public class PriorityDependencyInjectableContext implements DependencyInjectable
 
     /**
      * it only removes it from the priority storage
+     *
      * @param dependency the dependency to be removed
      */
     @Override

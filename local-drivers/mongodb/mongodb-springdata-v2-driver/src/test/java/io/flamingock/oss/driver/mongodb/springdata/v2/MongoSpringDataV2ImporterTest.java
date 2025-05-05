@@ -21,7 +21,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.configurator.standalone.Flamingock;
 import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
@@ -116,7 +116,7 @@ class MongoSpringDataV2ImporterTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class), Collections.singletonList(MongoTemplate.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                     .withImporter(withSource(mongo3Driver.getMigrationRepositoryName()))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithTransaction"))

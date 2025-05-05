@@ -16,11 +16,12 @@
 
 package io.flamingock.core.configurator.standalone;
 
-import io.flamingock.core.system.CloudSystemModule;
 import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.http.Http;
+import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
+import io.flamingock.core.configurator.FrameworkPlugin;
 import io.flamingock.core.configurator.cloud.CloudConfiguration;
 import io.flamingock.core.configurator.cloud.CloudConfigurator;
 import io.flamingock.core.configurator.cloud.CloudConfiguratorDelegate;
@@ -28,18 +29,26 @@ import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
 import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
-import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.engine.audit.AuditWriter;
+import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
+import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
+import io.flamingock.core.runtime.dependency.PriorityDependencyContext;
+import io.flamingock.core.system.CloudSystemModule;
+import io.flamingock.core.task.filter.TaskFilter;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.ServiceLoader;
 
 public class StandaloneCloudBuilder
         extends AbstractStandaloneBuilder<StandaloneCloudBuilder, CloudSystemModule, CloudSystemModuleManager>
@@ -53,7 +62,7 @@ public class StandaloneCloudBuilder
     private final CloudConfiguratorDelegate<StandaloneCloudBuilder> cloudConfiguratorDelegate;
 
 
-    StandaloneCloudBuilder(CoreConfiguration coreConfiguration,
+    protected StandaloneCloudBuilder(CoreConfiguration coreConfiguration,
                            CloudConfiguration cloudConfiguration,
                            DependencyInjectableContext dependencyInjectableContext,
                            CloudSystemModuleManager systemModuleManager) {
@@ -66,7 +75,7 @@ public class StandaloneCloudBuilder
 
     ///////////////////////////////////////////////////////////////////////////////////
     //  BUILD
-    ///////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected CoreConfiguratorDelegate<StandaloneCloudBuilder, CloudSystemModule, CloudSystemModuleManager> coreConfiguratorDelegate() {
@@ -111,7 +120,38 @@ public class StandaloneCloudBuilder
 
         CoreConfigurable coreConfiguration = coreConfiguratorDelegate().getCoreConfiguration();
 
+        //Injecting auditWriter
+        addDependency(AuditWriter.class, engine.getAuditWriter());
+
+
+        List<TaskFilter> taskFilters = new LinkedList<>();
+        List<EventPublisher> eventPublishersFromPlugins = new LinkedList<>();
+        DependencyContext dependencyContextFromBuilder = getDependencyContext();
+
+        List<DependencyContext> dependencyContextsFromPlugins = new LinkedList<>();
+        for (FrameworkPlugin plugin : ServiceLoader.load(FrameworkPlugin.class)) {
+            plugin.initialize(dependencyContextFromBuilder);
+
+            if (plugin.getEventPublisher().isPresent()) {
+                eventPublishersFromPlugins.add(plugin.getEventPublisher().get());
+            }
+
+            if (plugin.getDependencyContext().isPresent()) {
+                dependencyContextsFromPlugins.add(plugin.getDependencyContext().get());
+            }
+            taskFilters.addAll(plugin.getTaskFilters());
+        }
+
+        DependencyContext mergedContext = dependencyContextsFromPlugins
+                .stream()
+                .filter(Objects::nonNull)
+                .reduce((previous, current) -> new PriorityDependencyContext(current, previous))
+                .<DependencyContext>map(accumulated -> new PriorityDependencyContext(dependencyContextFromBuilder, accumulated))
+                .orElse(dependencyContextFromBuilder);
+
+
         Pipeline pipeline = buildPipeline(
+                taskFilters,
                 systemModuleManager.getSortedSystemStagesBefore(),
                 coreConfiguration.getPreviewPipeline(),
                 systemModuleManager.getSortedSystemStagesAfter()
@@ -119,16 +159,14 @@ public class StandaloneCloudBuilder
 
         //injecting the pipeline descriptor to the dependencies
         addDependency(PipelineDescriptor.class, pipeline);
-        //Injecting auditWriter
-        addDependency(AuditWriter.class, engine.getAuditWriter());
 
         return PipelineRunnerCreator.createCloud(
                 runnerId,
                 pipeline,
                 engine,
                 coreConfiguration,
-                buildEventPublisher(),
-                getDependencyContext(),
+                buildEventPublisher(eventPublishersFromPlugins),
+                mergedContext,
                 getCoreConfiguration().isThrowExceptionIfCannotObtainLock(),
                 engineFactory.getCloser()
         );

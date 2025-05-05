@@ -47,19 +47,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
 
-public class StandaloneLocalBuilder
-        extends AbstractStandaloneBuilder<StandaloneLocalBuilder, LocalSystemModule, LocalSystemModuleManager>
-        implements LocalConfigurator<StandaloneLocalBuilder> {
+public class FlamingockLocalBuilder
+        extends AbstractFlamingockBuilder<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager>
+        implements LocalConfigurator<FlamingockLocalBuilder> {
 
-    private static final Logger logger = LoggerFactory.getLogger(StandaloneLocalBuilder.class);
-    private final CoreConfiguratorDelegate<StandaloneLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate;
+    private static final Logger logger = LoggerFactory.getLogger(FlamingockLocalBuilder.class);
+    private final CoreConfiguratorDelegate<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate;
 
-    private final StandaloneConfiguratorDelegate<StandaloneLocalBuilder> standaloneConfiguratorDelegate;
+    private final StandaloneConfiguratorDelegate<FlamingockLocalBuilder> standaloneConfiguratorDelegate;
 
-    private final LocalConfiguratorDelegate<StandaloneLocalBuilder> localConfiguratorDelegate;
+    private final LocalConfiguratorDelegate<FlamingockLocalBuilder> localConfiguratorDelegate;
 
 
-    protected StandaloneLocalBuilder(CoreConfiguration coreConfiguration,
+    protected FlamingockLocalBuilder(CoreConfiguration coreConfiguration,
                                      LocalConfiguration communityConfiguration,
                                      DependencyInjectableContext dependencyInjectableContext,
                                      LocalSystemModuleManager systemModuleManager) {
@@ -76,12 +76,12 @@ public class StandaloneLocalBuilder
     /// ////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected CoreConfiguratorDelegate<StandaloneLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate() {
+    protected CoreConfiguratorDelegate<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate() {
         return coreConfiguratorDelegate;
     }
 
     @Override
-    protected StandaloneConfiguratorDelegate<StandaloneLocalBuilder> standaloneConfiguratorDelegate() {
+    protected StandaloneConfiguratorDelegate<FlamingockLocalBuilder> standaloneConfiguratorDelegate() {
         return standaloneConfiguratorDelegate;
     }
 
@@ -137,6 +137,9 @@ public class StandaloneLocalBuilder
             taskFilters.addAll(plugin.getTaskFilters());
         }
 
+
+        // Builds a hierarchical dependency context by chaining all plugin-provided contexts,
+        // placing Flamingock's core context at the top.
         DependencyContext mergedContext = dependencyContextsFromPlugins
                 .stream()
                 .filter(Objects::nonNull)
@@ -172,7 +175,7 @@ public class StandaloneLocalBuilder
     /// ////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public StandaloneLocalBuilder setDriver(LocalDriver<?> connectionDriver) {
+    public FlamingockLocalBuilder setDriver(LocalDriver<?> connectionDriver) {
         return localConfiguratorDelegate.setDriver(connectionDriver);
     }
 
@@ -187,7 +190,7 @@ public class StandaloneLocalBuilder
     }
 
     @Override
-    public StandaloneLocalBuilder disableTransaction() {
+    public FlamingockLocalBuilder disableTransaction() {
         return localConfiguratorDelegate.disableTransaction();
     }
 

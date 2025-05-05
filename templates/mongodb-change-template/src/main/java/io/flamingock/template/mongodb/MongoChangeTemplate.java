@@ -19,10 +19,9 @@ package io.flamingock.template.mongodb;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.RollbackExecution;
+import io.flamingock.core.api.annotations.Nullable;
 import io.flamingock.core.api.template.AbstractChangeTemplate;
 import io.flamingock.template.mongodb.model.MongoOperation;
-import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

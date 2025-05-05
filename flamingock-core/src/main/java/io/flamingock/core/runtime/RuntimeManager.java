@@ -19,6 +19,7 @@ package io.flamingock.core.runtime;
 import io.flamingock.commons.utils.Constants;
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.api.annotations.NonLockGuarded;
+import io.flamingock.core.api.annotations.Nullable;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.runtime.dependency.Dependency;
@@ -26,7 +27,6 @@ import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.exception.DependencyInjectionException;
 import io.flamingock.core.runtime.proxy.LockGuardProxyFactory;
-import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

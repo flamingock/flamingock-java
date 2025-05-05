@@ -17,29 +17,27 @@
 package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
-import io.flamingock.core.configurator.local.LocalConfigurable;
 import io.flamingock.core.configurator.local.LocalConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.cloud.CloudConfiguration;
 import io.flamingock.core.configurator.local.LocalSystemModuleManager;
-import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.SimpleDependencyInjectableContext;
 
-public final class FlamingockStandalone {
+public final class Flamingock {
 
-    private FlamingockStandalone() {
+    private Flamingock() {
     }
 
-    public static StandaloneCloudBuilder cloud() {
-        return new StandaloneCloudBuilder(
+    public static FlamingockCloudBuilder cloud() {
+        return new FlamingockCloudBuilder(
                 new CoreConfiguration(),
                 new CloudConfiguration(),
                 new SimpleDependencyInjectableContext(),
                 new CloudSystemModuleManager());
     }
 
-    public static StandaloneLocalBuilder local() {
-        return new StandaloneLocalBuilder(
+    public static FlamingockLocalBuilder local() {
+        return new FlamingockLocalBuilder(
                 new CoreConfiguration(),
                 new LocalConfiguration(),
                 new SimpleDependencyInjectableContext(),

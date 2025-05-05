@@ -23,6 +23,7 @@ import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.event.EventPublisher;
+import io.flamingock.core.event.SimpleEventPublisher;
 import io.flamingock.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.core.event.model.impl.PipelineFailedEvent;
 import io.flamingock.core.event.model.impl.PipelineStartedEvent;

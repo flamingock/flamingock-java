@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.api.template.annotations;
+package io.flamingock.springboot.v2;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Import;
+
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.METHOD)
+@Documented
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ChangeTemplateRollbackExecution {
-
-    String[] conditionalOnAllConfigurationPropertiesNotNull() default {};
+@EnableConfigurationProperties
+@Import({SpringbootV2Context.class, SpringbootV2Properties.class})
+public @interface EnableFlamingock {
 }

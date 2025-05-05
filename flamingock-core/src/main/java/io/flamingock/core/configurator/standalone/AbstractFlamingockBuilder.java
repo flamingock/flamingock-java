@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public abstract class AbstractStandaloneBuilder<
+public abstract class AbstractFlamingockBuilder<
         HOLDER,
         SYSTEM_MODULE extends SystemModule,
         SYSTEM_MODULE_MANAGER extends SystemModuleManager<SYSTEM_MODULE>>

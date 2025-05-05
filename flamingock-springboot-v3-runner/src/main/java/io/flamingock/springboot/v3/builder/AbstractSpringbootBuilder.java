@@ -16,6 +16,7 @@
 
 package io.flamingock.springboot.v3.builder;
 
+import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.configurator.SystemModuleManager;
@@ -25,7 +26,7 @@ import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfigurator;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
 
-import io.flamingock.core.event.EventPublisher;
+import io.flamingock.core.event.SimpleEventPublisher;
 import io.flamingock.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.core.event.model.IPipelineFailedEvent;
 import io.flamingock.core.event.model.IPipelineIgnoredEvent;
@@ -95,7 +96,7 @@ public abstract class AbstractSpringbootBuilder<
     @NotNull
     final protected EventPublisher createEventPublisher() {
 
-        return new EventPublisher()
+        return new SimpleEventPublisher()
                 //pipeline
                 .addListener(IPipelineStartedEvent.class, e -> getEventPublisher().publishEvent(new SpringPipelineStartedEvent(this, e)))
                 .addListener(IPipelineCompletedEvent.class, e -> getEventPublisher().publishEvent(new SpringPipelineCompletedEvent(this, e)))

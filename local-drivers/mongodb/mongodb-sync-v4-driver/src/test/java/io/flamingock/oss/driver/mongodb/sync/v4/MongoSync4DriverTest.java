@@ -24,7 +24,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.MongoDBSync4Configuration;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.FlamingockStandalone;
+import io.flamingock.core.configurator.standalone.Flamingock;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
@@ -116,7 +116,7 @@ class MongoSync4DriverTest {
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
@@ -146,7 +146,7 @@ class MongoSync4DriverTest {
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new MongoSync4Driver(mongoClient, DB_NAME).setDriverConfiguration(driverConfiguration))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
@@ -172,7 +172,7 @@ class MongoSync4DriverTest {
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
@@ -213,7 +213,7 @@ class MongoSync4DriverTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)))
             );
 
-            FlamingockStandalone.local()
+            Flamingock.local()
                     .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithoutTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
@@ -257,7 +257,7 @@ class MongoSync4DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockStandalone.local()
+                Flamingock.local()
                         .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithTransaction"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
@@ -298,7 +298,7 @@ class MongoSync4DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockStandalone.local()
+                Flamingock.local()
                         .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithRollback"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
@@ -342,7 +342,7 @@ class MongoSync4DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockStandalone.local()
+                Flamingock.local()
                         .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithoutRollback"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
