@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpringProfileFilterTemplateTaskTest {
 
 
+
     @BeforeAll
     static void beforeAll() {
         TemplateFactory.addTemplate(TemplateSimulate.class.getSimpleName(), TemplateSimulate.class);
@@ -46,61 +47,61 @@ class SpringProfileFilterTemplateTaskTest {
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[] and taskProfiles=[]")
     void trueIfActiveProfilesEmptyAndNotAnnotated() {
-        assertTrue(new SpringProfileFilter().filter(getTemplateLoadedChangeUnit()));
+        assertTrue(new SpringbootV3ProfileFilter().filter(getTemplateLoadedChangeUnit()));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1]")
     void trueIfActiveProfilesAndAnnotatedWhenMatched() {
-        assertTrue(new SpringProfileFilter("P1").filter(getTemplateLoadedChangeUnit("P1")));
+        assertTrue(new SpringbootV3ProfileFilter("P1").filter(getTemplateLoadedChangeUnit("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1,P2] and taskProfiles=[P1]")
     void trueIfActiveProfilesContainAnnotatedProfile() {
-        assertTrue(new SpringProfileFilter("P1", "P2").filter(getTemplateLoadedChangeUnit("P1")));
+        assertTrue(new SpringbootV3ProfileFilter("P1", "P2").filter(getTemplateLoadedChangeUnit("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1,P2]")
     void trueIfAnnotatedProfilesContainActiveProfile() {
-        assertTrue(new SpringProfileFilter("P1").filter(getTemplateLoadedChangeUnit("P1,P2")));
+        assertTrue(new SpringbootV3ProfileFilter("P1").filter(getTemplateLoadedChangeUnit("P1,P2")));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P2] and taskProfiles=[!P1]")
     void trueIfAnnotatedProfileIsNegativeP1AndActiveProfileIsP2() {
-        assertTrue(new SpringProfileFilter("P2").filter(getTemplateLoadedChangeUnit("!P1")));
+        assertTrue(new SpringbootV3ProfileFilter("P2").filter(getTemplateLoadedChangeUnit("!P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[!P1]")
     void trueIfActiveProfileEmptyAndTaskProfileNegativeP1() {
-        assertTrue(new SpringProfileFilter().filter(getTemplateLoadedChangeUnit("!P1")));
+        assertTrue(new SpringbootV3ProfileFilter().filter(getTemplateLoadedChangeUnit("!P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[P1]")
     void falseIfActiveProfileEmptyAndTaskProfileP1() {
-        assertFalse(new SpringProfileFilter().filter(getTemplateLoadedChangeUnit("P1")));
+        assertFalse(new SpringbootV3ProfileFilter().filter(getTemplateLoadedChangeUnit("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P2] and taskProfiles=[P1]")
     void falseIfActiveProfileAndTaskProfileDontMatch() {
-        assertFalse(new SpringProfileFilter("P2").filter(getTemplateLoadedChangeUnit("P1")));
+        assertFalse(new SpringbootV3ProfileFilter("P2").filter(getTemplateLoadedChangeUnit("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1AndTaskProfileNegativeP1() {
-        assertFalse(new SpringProfileFilter("P1").filter(getTemplateLoadedChangeUnit("!P1")));
+        assertFalse(new SpringbootV3ProfileFilter("P1").filter(getTemplateLoadedChangeUnit("!P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1,P2] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1P2AndTaskProfileNegativeP1() {
-        assertFalse(new SpringProfileFilter("P1", "P2").filter(getTemplateLoadedChangeUnit("!P1")));
+        assertFalse(new SpringbootV3ProfileFilter("P1", "P2").filter(getTemplateLoadedChangeUnit("!P1")));
     }
 
     private AbstractLoadedTask getTemplateLoadedChangeUnit() {
@@ -124,7 +125,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     }
 
-    public static abstract class TemplateSimulate implements ChangeTemplate<ChangeTemplateConfig<?,?>> {}
+    public static abstract class TemplateSimulate implements ChangeTemplate<ChangeTemplateConfig<Object, Object>> {}
 
     @Change(id = "not-annotated", order = "0")
     public static class NotAnnotated {

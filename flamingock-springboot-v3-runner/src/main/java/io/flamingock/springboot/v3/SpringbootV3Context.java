@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.springboot.v2;
+package io.flamingock.springboot.v3;
 
 import io.flamingock.commons.utils.Constants;
 import io.flamingock.core.configurator.cloud.CloudConfiguration;
@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Profile;
 import java.util.Optional;
 
 @ConditionalOnExpression("${flamingock.enabled:true}")
-public class SpringbootV2Context {
+public class SpringbootV3Context {
 
 
     @Bean("flamingock-runner")
@@ -60,7 +60,7 @@ public class SpringbootV2Context {
     @Bean("flamingock-builder")
     @Profile(Constants.NON_CLI_PROFILE)
     public RunnerBuilder flamingockBuilder(Optional<LocalDriver<?>> connectionDriverOptional,
-                                           SpringbootV2Properties configurationProperties,
+                                           SpringbootV3Properties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher) {
 

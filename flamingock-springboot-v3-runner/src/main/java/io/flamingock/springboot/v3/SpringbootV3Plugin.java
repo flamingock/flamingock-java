@@ -1,4 +1,4 @@
-package io.flamingock.springboot.v2;
+package io.flamingock.springboot.v3;
 
 import io.flamingock.core.configurator.FrameworkPlugin;
 import io.flamingock.core.event.EventPublisher;
@@ -13,13 +13,13 @@ import io.flamingock.core.event.model.IStageStartedEvent;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.core.runtime.dependency.DependencyContextWrapper;
 import io.flamingock.core.task.filter.TaskFilter;
-import io.flamingock.springboot.v2.event.SpringPipelineFailedEvent;
-import io.flamingock.springboot.v2.event.SpringPipelineIgnoredEvent;
-import io.flamingock.springboot.v2.event.SpringPipelineStartedEvent;
-import io.flamingock.springboot.v2.event.SpringStageCompletedEvent;
-import io.flamingock.springboot.v2.event.SpringStageFailedEvent;
-import io.flamingock.springboot.v2.event.SpringStageIgnoredEvent;
-import io.flamingock.springboot.v2.event.SpringStageStartedEvent;
+import io.flamingock.springboot.v3.event.SpringPipelineFailedEvent;
+import io.flamingock.springboot.v3.event.SpringPipelineIgnoredEvent;
+import io.flamingock.springboot.v3.event.SpringPipelineStartedEvent;
+import io.flamingock.springboot.v3.event.SpringStageCompletedEvent;
+import io.flamingock.springboot.v3.event.SpringStageFailedEvent;
+import io.flamingock.springboot.v3.event.SpringStageIgnoredEvent;
+import io.flamingock.springboot.v3.event.SpringStageStartedEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class SpringbootV2Plugin implements FrameworkPlugin {
+public class SpringbootV3Plugin implements FrameworkPlugin {
     
     private ApplicationContext applicationContext;
     private ApplicationEventPublisher eventPublisher;
@@ -85,7 +85,7 @@ public class SpringbootV2Plugin implements FrameworkPlugin {
     public List<TaskFilter> getTaskFilters() {
         if(applicationContext != null) {
             String[] activeProfiles = SpringbootUtil.getActiveProfiles(applicationContext);
-            return Collections.singletonList(new SpringbootV2ProfileFilter(activeProfiles));
+            return Collections.singletonList(new SpringbootV3ProfileFilter(activeProfiles));
         } else {
             return Collections.emptyList();
         }
