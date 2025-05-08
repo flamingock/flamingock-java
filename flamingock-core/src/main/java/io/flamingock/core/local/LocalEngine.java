@@ -23,8 +23,6 @@ import java.util.Optional;
 
 public interface LocalEngine extends ConnectionEngine {
 
-    LocalAuditor getAuditor();
-
     Optional<? extends LocalSystemModule> getMongockLegacyImporterModule();
 
 

@@ -17,8 +17,6 @@
 package io.flamingock.core.configurator.core;
 
 
-import io.flamingock.core.api.template.TemplateFactory;
-import io.flamingock.core.configurator.ConfigurationDelegate;
 import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
 import io.flamingock.core.system.SystemModule;
@@ -30,8 +28,7 @@ public class CoreConfiguratorDelegate<
         HOLDER,
         SYSTEM_MODULE extends SystemModule,
         SYSTEM_MODULE_MANAGER extends SystemModuleManager<SYSTEM_MODULE>>
-        implements CoreConfigurator<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER>,
-        ConfigurationDelegate {
+        implements CoreConfigurator<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER> {
 
     private final Supplier<HOLDER> holderSupplier;
     private final CoreConfiguration configuration;
@@ -45,9 +42,6 @@ public class CoreConfiguratorDelegate<
         this.systemModuleManager = systemModuleManager;
     }
 
-    public void initialize() {
-        TemplateFactory.loadTemplates();
-    }
 
     @Override
     public CoreConfigurable getCoreConfiguration() {
@@ -177,11 +171,6 @@ public class CoreConfiguratorDelegate<
 
 
     @Override
-    public SYSTEM_MODULE_MANAGER getSystemModuleManager() {
-        return systemModuleManager;
-    }
-
-    @Override
     public HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration) {
         configuration.setLegacyMongockChangelogSource(mongockImporterConfiguration.getLegacySourceName());
         return holderSupplier.get();
@@ -192,8 +181,16 @@ public class CoreConfiguratorDelegate<
         return configuration.getMongockImporterConfiguration();
     }
 
-
+    //TODO remove this: SystemModules will retrieved with SystemLoader
     @Override
+    @Deprecated
+    public SYSTEM_MODULE_MANAGER getSystemModuleManager() {
+        return systemModuleManager;
+    }
+
+    //TODO remove this: SystemModules will retrieved with SystemLoader
+    @Override
+    @Deprecated
     public HOLDER addSystemModule(SYSTEM_MODULE systemModule) {
         getSystemModuleManager().add(systemModule);
         return holderSupplier.get();

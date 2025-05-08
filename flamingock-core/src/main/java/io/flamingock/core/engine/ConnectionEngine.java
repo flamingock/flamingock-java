@@ -16,15 +16,22 @@
 
 package io.flamingock.core.engine;
 
+import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 import java.util.Optional;
 
 public interface ConnectionEngine {
+    AuditWriter getAuditWriter();
 
     ExecutionPlanner getExecutionPlanner();
 
     Optional<? extends TransactionWrapper> getTransactionWrapper();
+
+    default Runnable getCloser() {
+        return () -> {
+        };
+    }
 
 }

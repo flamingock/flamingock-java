@@ -39,6 +39,7 @@ import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,8 @@ public final class CloudEngine implements ConnectionEngine {
                         String jwt,
                         AuditWriter auditWriter,
                         ExecutionPlanner executionPlanner,
-                        CloudTransactioner cloudTransactioner) {
+                        CloudTransactioner cloudTransactioner,
+                        Runnable closer) {
         this.environmentId =environmentId;
         this.serviceId = serviceId;
         this.jwt = jwt;
@@ -94,6 +96,7 @@ public final class CloudEngine implements ConnectionEngine {
         return jwt;
     }
 
+    @Override
     public AuditWriter getAuditWriter() {
         return auditWriter;
     }
@@ -130,21 +133,16 @@ public final class CloudEngine implements ConnectionEngine {
         }
 
         public CloudEngine initializeAndGet() {
-            AuthClient authClient = new HttpAuthClient(
-                    cloudConfiguration.getHost(),
-                    cloudConfiguration.getApiVersion(),
-                    requestBuilderFactory);
 
             AuthManager authManager = new AuthManager(
                     cloudConfiguration.getApiToken(),
                     cloudConfiguration.getServiceName(),
                     cloudConfiguration.getEnvironmentName(),
-                    authClient);
+                    getAuthClient());
             AuthResponse authResponse = authManager.authenticate();
 
             EnvironmentId environmentId = EnvironmentId.fromString(authResponse.getEnvironmentId());
             ServiceId serviceId = ServiceId.fromString(authResponse.getServiceId());
-            String jwt = authResponse.getJwt();
 
             AuditWriter auditWriter = new HtttpAuditWriter(
                     cloudConfiguration.getHost(),
@@ -156,6 +154,31 @@ public final class CloudEngine implements ConnectionEngine {
                     authManager
             );
 
+            if (transactioner != null) {
+                transactioner.initialize();
+            }
+
+            return new CloudEngine(
+                    environmentId,
+                    serviceId,
+                    authResponse.getJwt(),
+                    auditWriter,
+                    getExecutionPlanner(authManager, environmentId, serviceId),
+                    transactioner,
+                    getCloser()
+            );
+        }
+
+        @NotNull
+        private HttpAuthClient getAuthClient() {
+            return new HttpAuthClient(
+                    cloudConfiguration.getHost(),
+                    cloudConfiguration.getApiVersion(),
+                    requestBuilderFactory);
+        }
+
+        @NotNull
+        private ExecutionPlanner getExecutionPlanner(AuthManager authManager, EnvironmentId environmentId, ServiceId serviceId) {
             LockServiceClient lockClient = new HttpLockServiceClient(
                     cloudConfiguration.getHost(),
                     cloudConfiguration.getApiVersion(),
@@ -173,7 +196,7 @@ public final class CloudEngine implements ConnectionEngine {
                     authManager
             );
 
-            ExecutionPlanner executionPlanner = new CloudExecutionPlanner(
+            return new CloudExecutionPlanner(
                     runnerId,
                     executionPlannerClient,
                     coreConfiguration,
@@ -181,23 +204,10 @@ public final class CloudEngine implements ConnectionEngine {
                     transactioner,
                     TimeService.getDefault()
             );
-            if (transactioner != null) {
-                transactioner.initialize();
-            }
-
-            return new CloudEngine(
-                    environmentId,
-                    serviceId,
-                    jwt,
-                    auditWriter,
-                    executionPlanner,
-                    transactioner
-            );
         }
 
-
-
-        public Runnable getCloser() {
+        @NotNull
+        private Runnable getCloser() {
             return () -> {
                 if (requestBuilderFactory != null) {
                     try {

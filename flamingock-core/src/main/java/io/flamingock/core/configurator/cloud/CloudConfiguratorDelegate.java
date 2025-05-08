@@ -17,12 +17,11 @@
 package io.flamingock.core.configurator.cloud;
 
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.core.configurator.ConfigurationDelegate;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class CloudConfiguratorDelegate<HOLDER> implements CloudConfigurator<HOLDER>, ConfigurationDelegate {
+public class CloudConfiguratorDelegate<HOLDER> implements CloudConfigurator<HOLDER> {
 
     private final Supplier<HOLDER> holderSupplier;
 
@@ -76,8 +75,4 @@ public class CloudConfiguratorDelegate<HOLDER> implements CloudConfigurator<HOLD
         return cloudConfiguration;
     }
 
-    @Override
-    public void initialize() {
-
-    }
 }

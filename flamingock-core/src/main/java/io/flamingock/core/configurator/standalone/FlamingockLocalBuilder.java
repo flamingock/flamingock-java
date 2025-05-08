@@ -17,8 +17,6 @@
 package io.flamingock.core.configurator.standalone;
 
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.configurator.FrameworkPlugin;
-import io.flamingock.core.configurator.core.CoreConfigurable;
 import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
 import io.flamingock.core.configurator.local.LocalConfigurable;
@@ -26,38 +24,23 @@ import io.flamingock.core.configurator.local.LocalConfiguration;
 import io.flamingock.core.configurator.local.LocalConfigurator;
 import io.flamingock.core.configurator.local.LocalConfiguratorDelegate;
 import io.flamingock.core.configurator.local.LocalSystemModuleManager;
-import io.flamingock.core.engine.audit.AuditWriter;
-import io.flamingock.core.event.EventPublisher;
+import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.local.LocalEngine;
 import io.flamingock.core.local.driver.LocalDriver;
-import io.flamingock.core.pipeline.Pipeline;
-import io.flamingock.core.pipeline.PipelineDescriptor;
-import io.flamingock.core.runner.PipelineRunnerCreator;
-import io.flamingock.core.runner.Runner;
-import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import io.flamingock.core.runtime.dependency.PriorityDependencyContext;
 import io.flamingock.core.system.LocalSystemModule;
-import io.flamingock.core.task.filter.TaskFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.ServiceLoader;
 
 public class FlamingockLocalBuilder
         extends AbstractFlamingockBuilder<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager>
         implements LocalConfigurator<FlamingockLocalBuilder> {
 
-    private static final Logger logger = LoggerFactory.getLogger(FlamingockLocalBuilder.class);
     private final CoreConfiguratorDelegate<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate;
 
     private final StandaloneConfiguratorDelegate<FlamingockLocalBuilder> standaloneConfiguratorDelegate;
 
     private final LocalConfiguratorDelegate<FlamingockLocalBuilder> localConfiguratorDelegate;
 
+    private LocalEngine engine;
 
     protected FlamingockLocalBuilder(CoreConfiguration coreConfiguration,
                                      LocalConfiguration communityConfiguration,
@@ -68,12 +51,6 @@ public class FlamingockLocalBuilder
         this.localConfiguratorDelegate = new LocalConfiguratorDelegate<>(communityConfiguration, () -> this);
 
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////
-    //  BUILD
-
-    /// ////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected CoreConfiguratorDelegate<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate() {
@@ -86,100 +63,30 @@ public class FlamingockLocalBuilder
     }
 
     @Override
-    public Runner build() {
-
-
-        coreConfiguratorDelegate.initialize();
-        localConfiguratorDelegate.initialize();
-        standaloneConfiguratorDelegate.initialize();
-
-        RunnerId runnerId = RunnerId.generate();
-        logger.info("Generated runner id:  {}", runnerId);
-
-        LocalEngine engine = localConfiguratorDelegate.getDriver().initializeAndGetEngine(
+    protected ConnectionEngine getConnectionEngine(RunnerId runnerId) {
+        //TODO get the driver from serviceLoader
+        engine = localConfiguratorDelegate.getDriver().initializeAndGetEngine(
                 runnerId,
                 coreConfiguratorDelegate.getCoreConfiguration(),
                 localConfiguratorDelegate.getLocalConfiguration()
         );
-
-        //adds Mongock legacy importer, if the user has required it
-        engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
-
-        getSystemModuleManager().initialize();
-
-        coreConfiguratorDelegate.getSystemModuleManager()
-                .getDependencies()
-                .forEach(d -> addDependency(d.getName(), d.getType(), d.getInstance()));
-
-        registerTemplates();
-
-        CoreConfigurable coreConfiguration = coreConfiguratorDelegate().getCoreConfiguration();
-
-        //Injecting auditWriter
-        addDependency(AuditWriter.class, engine.getAuditor());
-
-
-        List<TaskFilter> taskFilters = new LinkedList<>();
-        List<EventPublisher> eventPublishersFromPlugins = new LinkedList<>();
-        DependencyContext dependencyContextFromBuilder = getDependencyContext();
-
-        List<DependencyContext> dependencyContextsFromPlugins = new LinkedList<>();
-        for (FrameworkPlugin plugin : ServiceLoader.load(FrameworkPlugin.class)) {
-            plugin.initialize(dependencyContextFromBuilder);
-
-            if (plugin.getEventPublisher().isPresent()) {
-                eventPublishersFromPlugins.add(plugin.getEventPublisher().get());
-            }
-
-            if (plugin.getDependencyContext().isPresent()) {
-                dependencyContextsFromPlugins.add(plugin.getDependencyContext().get());
-            }
-            taskFilters.addAll(plugin.getTaskFilters());
-        }
-
-
-        // Builds a hierarchical dependency context by chaining all plugin-provided contexts,
-        // placing Flamingock's core context at the top.
-        DependencyContext mergedContext = dependencyContextsFromPlugins
-                .stream()
-                .filter(Objects::nonNull)
-                .reduce((previous, current) -> new PriorityDependencyContext(current, previous))
-                .<DependencyContext>map(accumulated -> new PriorityDependencyContext(dependencyContextFromBuilder, accumulated))
-                .orElse(dependencyContextFromBuilder);
-
-        Pipeline pipeline = buildPipeline(
-                taskFilters,
-                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesBefore(),
-                coreConfiguration.getPreviewPipeline(),
-                coreConfiguratorDelegate.getSystemModuleManager().getSortedSystemStagesAfter()
-        );
-
-        //injecting the pipeline descriptor to the dependencies
-        addDependency(PipelineDescriptor.class, pipeline);
-
-        return PipelineRunnerCreator.createLocal(
-                runnerId,
-                pipeline,
-                engine,
-                coreConfiguration,
-                buildEventPublisher(eventPublishersFromPlugins),
-                mergedContext,
-                getCoreConfiguration().isThrowExceptionIfCannotObtainLock()
-        );
+        return engine;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////
-    //  LOCAL
-
-    /// ////////////////////////////////////////////////////////////////////////////////
+    @Override
+    protected void configureSystemModules() {
+        engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
+        coreConfiguratorDelegate.getSystemModuleManager().initialize();
+    }
 
     @Override
+    @Deprecated
     public FlamingockLocalBuilder setDriver(LocalDriver<?> connectionDriver) {
         return localConfiguratorDelegate.setDriver(connectionDriver);
     }
 
     @Override
+    @Deprecated
     public LocalDriver<?> getDriver() {
         return localConfiguratorDelegate.getDriver();
     }

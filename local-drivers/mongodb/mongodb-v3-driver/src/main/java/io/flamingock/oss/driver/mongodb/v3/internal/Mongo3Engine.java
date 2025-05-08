@@ -92,7 +92,7 @@ public class Mongo3Engine extends AbstractLocalEngine {
     }
 
     @Override
-    public LocalAuditor getAuditor() {
+    public LocalAuditor getAuditWriter() {
         return auditor;
     }
 

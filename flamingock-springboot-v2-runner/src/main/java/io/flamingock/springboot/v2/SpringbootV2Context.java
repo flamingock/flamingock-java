@@ -90,8 +90,9 @@ public class SpringbootV2Context {
 
     }
 
-
-
+    /**
+     * This class is just to have access to the protected constructor
+     */
     private static class SpringbootV2LocalBuilder extends FlamingockLocalBuilder {
         protected SpringbootV2LocalBuilder(CoreConfiguration coreConfiguration,
                                            LocalConfiguration communityConfiguration,
@@ -101,6 +102,9 @@ public class SpringbootV2Context {
         }
     }
 
+    /**
+     * This class is just to have access to the protected constructor
+     */
     private static class SpringbootV2CloudBuilder extends FlamingockCloudBuilder {
 
         protected SpringbootV2CloudBuilder(CoreConfiguration coreConfiguration, CloudConfiguration cloudConfiguration, DependencyInjectableContext dependencyInjectableContext, CloudSystemModuleManager systemModuleManager) {

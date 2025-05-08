@@ -16,12 +16,11 @@
 
 package io.flamingock.core.configurator.local;
 
-import io.flamingock.core.configurator.ConfigurationDelegate;
 import io.flamingock.core.local.driver.LocalDriver;
 
 import java.util.function.Supplier;
 
-public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLDER>, ConfigurationDelegate {
+public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLDER> {
 
     private final LocalConfigurable LocalConfiguration;
 
@@ -65,9 +64,4 @@ public class LocalConfiguratorDelegate<HOLDER> implements LocalConfigurator<HOLD
         return getLocalConfiguration().isTransactionDisabled();
     }
 
-
-    @Override
-    public void initialize() {
-
-    }
 }

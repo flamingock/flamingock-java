@@ -73,7 +73,7 @@ public class DynamoDBEngine extends AbstractLocalEngine {
     }
 
     @Override
-    public DynamoDBAuditor getAuditor() {
+    public DynamoDBAuditor getAuditWriter() {
         return auditor;
     }
 

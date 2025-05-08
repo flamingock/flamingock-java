@@ -18,13 +18,11 @@ package io.flamingock.core.runner;
 
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.StringUtil;
-import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.configurator.core.CoreConfigurable;
+import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.event.EventPublisher;
-import io.flamingock.core.local.LocalEngine;
-import io.flamingock.core.event.SimpleEventPublisher;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.core.pipeline.execution.StageExecutor;
@@ -36,16 +34,16 @@ public final class PipelineRunnerCreator {
     private PipelineRunnerCreator() {
     }
 
-    public static Runner createLocal(RunnerId runnerId,
-                                     Pipeline pipeline,
-                                     LocalEngine connectionEngine,
-                                     CoreConfigurable coreConfiguration,
-                                     EventPublisher eventPublisher,
-                                     DependencyContext dependencyContext,
-                                     boolean isThrowExceptionIfCannotObtainLock) {
+    public static Runner create(RunnerId runnerId,
+                                Pipeline pipeline,
+                                ConnectionEngine connectionEngine,
+                                CoreConfigurable coreConfiguration,
+                                EventPublisher eventPublisher,
+                                DependencyContext dependencyContext,
+                                boolean isThrowExceptionIfCannotObtainLock) {
         return create(runnerId,
                 pipeline,
-                connectionEngine.getAuditor(),
+                connectionEngine.getAuditWriter(),
                 connectionEngine.getTransactionWrapper().orElse(null),
                 connectionEngine.getExecutionPlanner(),
                 coreConfiguration,
@@ -58,14 +56,14 @@ public final class PipelineRunnerCreator {
     }
 
 
-    public static Runner createCloud(RunnerId runnerId,
-                                     Pipeline pipeline,
-                                     CloudEngine engine,
-                                     CoreConfigurable coreConfiguration,
-                                     EventPublisher eventPublisher,
-                                     DependencyContext dependencyContext,
-                                     boolean isThrowExceptionIfCannotObtainLock,
-                                     Runnable finalizer) {
+    public static Runner createWithFinalizer(RunnerId runnerId,
+                                             Pipeline pipeline,
+                                             ConnectionEngine engine,
+                                             CoreConfigurable coreConfiguration,
+                                             EventPublisher eventPublisher,
+                                             DependencyContext dependencyContext,
+                                             boolean isThrowExceptionIfCannotObtainLock,
+                                             Runnable finalizer) {
         return create(
                 runnerId,
                 pipeline,

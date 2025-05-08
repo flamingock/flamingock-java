@@ -63,7 +63,7 @@ public class CouchbaseEngine extends AbstractLocalEngine {
     }
 
     @Override
-    public CouchbaseAuditor getAuditor() {
+    public CouchbaseAuditor getAuditWriter() {
         return auditor;
     }
 
