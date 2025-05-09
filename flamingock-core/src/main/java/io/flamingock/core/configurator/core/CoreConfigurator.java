@@ -17,18 +17,11 @@
 package io.flamingock.core.configurator.core;
 
 
-import io.flamingock.core.system.SystemModule;
-import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
-
-
 
 import java.util.Map;
 
-public interface CoreConfigurator<
-        HOLDER,
-        SYSTEM_MODULE extends SystemModule,
-        SYSTEM_MODULE_MANAGER extends SystemModuleManager<SYSTEM_MODULE>> {
+public interface CoreConfigurator<HOLDER> {
 
     CoreConfigurable getCoreConfiguration();
 
@@ -49,7 +42,7 @@ public interface CoreConfigurator<
     HOLDER setServiceIdentifier(String serviceIdentifier);
 
     HOLDER setMetadata(Map<String, Object> metadata);
-    
+
     HOLDER setDefaultAuthor(String defaultMigrationAuthor);
 
     HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy);
@@ -71,15 +64,10 @@ public interface CoreConfigurator<
     String getServiceIdentifier();
 
     Map<String, Object> getMetadata();
-    
+
     String getDefaultAuthor();
 
     TransactionStrategy getTransactionStrategy();
-
-
-    HOLDER addSystemModule(SYSTEM_MODULE systemModule);
-
-    SYSTEM_MODULE_MANAGER getSystemModuleManager();
 
     HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration);
 

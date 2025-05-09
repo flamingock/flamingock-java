@@ -17,29 +17,21 @@
 package io.flamingock.core.configurator.core;
 
 
-import io.flamingock.core.configurator.SystemModuleManager;
 import io.flamingock.core.configurator.TransactionStrategy;
-import io.flamingock.core.system.SystemModule;
 
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class CoreConfiguratorDelegate<
-        HOLDER,
-        SYSTEM_MODULE extends SystemModule,
-        SYSTEM_MODULE_MANAGER extends SystemModuleManager<SYSTEM_MODULE>>
-        implements CoreConfigurator<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER> {
+public class CoreConfiguratorDelegate<HOLDER>
+        implements CoreConfigurator<HOLDER> {
 
     private final Supplier<HOLDER> holderSupplier;
     private final CoreConfiguration configuration;
-    private final SYSTEM_MODULE_MANAGER systemModuleManager;
 
     public CoreConfiguratorDelegate(CoreConfiguration configuration,
-                                    Supplier<HOLDER> holderSupplier,
-                                    SYSTEM_MODULE_MANAGER systemModuleManager) {
+                                    Supplier<HOLDER> holderSupplier) {
         this.configuration = configuration;
         this.holderSupplier = holderSupplier;
-        this.systemModuleManager = systemModuleManager;
     }
 
 
@@ -179,21 +171,6 @@ public class CoreConfiguratorDelegate<
     @Override
     public CoreConfiguration.ImporterConfiguration getMongockImporterConfiguration() {
         return configuration.getMongockImporterConfiguration();
-    }
-
-    //TODO remove this: SystemModules will retrieved with SystemLoader
-    @Override
-    @Deprecated
-    public SYSTEM_MODULE_MANAGER getSystemModuleManager() {
-        return systemModuleManager;
-    }
-
-    //TODO remove this: SystemModules will retrieved with SystemLoader
-    @Override
-    @Deprecated
-    public HOLDER addSystemModule(SYSTEM_MODULE systemModule) {
-        getSystemModuleManager().add(systemModule);
-        return holderSupplier.get();
     }
 
 

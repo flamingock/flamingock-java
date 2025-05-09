@@ -16,6 +16,7 @@
 
 package io.flamingock.core.configurator.standalone;
 
+import io.flamingock.commons.utils.CollectionUtil;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.api.template.TemplateFactory;
 import io.flamingock.core.configurator.FrameworkPlugin;
@@ -40,38 +41,34 @@ import io.flamingock.core.event.model.IStageIgnoredEvent;
 import io.flamingock.core.event.model.IStageStartedEvent;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.PipelineDescriptor;
-import io.flamingock.core.preview.PreviewPipeline;
-import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runner.RunnerBuilder;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.core.runtime.dependency.PriorityDependencyContext;
-import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.task.filter.TaskFilter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-public abstract class AbstractFlamingockBuilder<
-        HOLDER,
-        SYSTEM_MODULE extends SystemModule,
-        SYSTEM_MODULE_MANAGER extends SystemModuleManager<SYSTEM_MODULE>>
+public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingockBuilder<HOLDER>>
         implements
-        CoreConfigurator<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER>,
+        CoreConfigurator<HOLDER>,
         StandaloneConfigurator<HOLDER>,
         RunnerBuilder {
     private static final Logger logger = LoggerFactory.getLogger(AbstractFlamingockBuilder.class);
 
-    abstract protected CoreConfiguratorDelegate<HOLDER, SYSTEM_MODULE, SYSTEM_MODULE_MANAGER> coreConfiguratorDelegate();
+    private final SystemModuleManager<?> systemModuleManager;
+
+    abstract protected CoreConfiguratorDelegate<HOLDER> coreConfiguratorDelegate();
 
     abstract protected StandaloneConfiguratorDelegate<HOLDER> standaloneConfiguratorDelegate();
 
@@ -81,6 +78,9 @@ public abstract class AbstractFlamingockBuilder<
 
     /// ////////////////////////////////////////////////////////////////////////////////
 
+    protected AbstractFlamingockBuilder(SystemModuleManager<?> systemModuleManager) {
+        this.systemModuleManager = systemModuleManager;
+    }
 
     protected abstract ConnectionEngine getConnectionEngine(RunnerId runnerId);
 
@@ -91,7 +91,6 @@ public abstract class AbstractFlamingockBuilder<
 
         TemplateFactory.loadTemplates();
 
-
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);
 
@@ -101,51 +100,28 @@ public abstract class AbstractFlamingockBuilder<
         /*
          * FINISHED SPECIFIC CONFIG BLOCK
          */
-        coreConfiguratorDelegate().getSystemModuleManager()
+        systemModuleManager
                 .getDependencies()
                 .forEach(d -> addDependency(d.getName(), d.getType(), d.getInstance()));
 
 
-        CoreConfigurable coreConfiguration = coreConfiguratorDelegate().getCoreConfiguration();
-
         //Injecting auditWriter
         addDependency(AuditWriter.class, engine.getAuditWriter());
 
+        List<FrameworkPlugin> frameworkPlugins = getPluginList();
+        initializeFrameworkPlugins(frameworkPlugins);
 
-        List<TaskFilter> taskFilters = new LinkedList<>();
-        List<EventPublisher> eventPublishersFromPlugins = new LinkedList<>();
-        DependencyContext dependencyContextFromBuilder = getDependencyContext();
-
-        List<DependencyContext> dependencyContextsFromPlugins = new LinkedList<>();
-        for (FrameworkPlugin plugin : ServiceLoader.load(FrameworkPlugin.class)) {
-            plugin.initialize(dependencyContextFromBuilder);
-
-            if (plugin.getEventPublisher().isPresent()) {
-                eventPublishersFromPlugins.add(plugin.getEventPublisher().get());
-            }
-
-            if (plugin.getDependencyContext().isPresent()) {
-                dependencyContextsFromPlugins.add(plugin.getDependencyContext().get());
-            }
-            taskFilters.addAll(plugin.getTaskFilters());
-        }
 
         // Builds a hierarchical dependency context by chaining all plugin-provided contexts,
         // placing Flamingock's core context at the top.
-        DependencyContext mergedContext = dependencyContextsFromPlugins
-                .stream()
-                .filter(Objects::nonNull)
-                .reduce((previous, current) -> new PriorityDependencyContext(current, previous))
-                .<DependencyContext>map(accumulated -> new PriorityDependencyContext(dependencyContextFromBuilder, accumulated))
-                .orElse(dependencyContextFromBuilder);
 
+        Pipeline pipeline = Pipeline.builder()
+                .addFilters(getTaskFiltersFromPlugins(frameworkPlugins))
+                .addPreviewPipeline(coreConfiguratorDelegate().getCoreConfiguration().getPreviewPipeline())
+                .addBeforeUserStages(systemModuleManager.getSortedSystemStagesBefore())
+                .addAfterUserStages(systemModuleManager.getSortedSystemStagesAfter())
+                .build();
 
-        Pipeline pipeline = buildPipeline(
-                taskFilters,
-                coreConfiguratorDelegate().getSystemModuleManager().getSortedSystemStagesBefore(),
-                coreConfiguration.getPreviewPipeline(),
-                coreConfiguratorDelegate().getSystemModuleManager().getSortedSystemStagesAfter()
-        );
 
         //injecting the pipeline descriptor to the dependencies
         addDependency(PipelineDescriptor.class, pipeline);
@@ -154,16 +130,51 @@ public abstract class AbstractFlamingockBuilder<
                 runnerId,
                 pipeline,
                 engine,
-                coreConfiguration,
-                buildEventPublisher(eventPublishersFromPlugins),
-                mergedContext,
+                coreConfiguratorDelegate().getCoreConfiguration(),
+                buildEventPublisher(frameworkPlugins),
+                getMergedDependencyContext(frameworkPlugins),
                 getCoreConfiguration().isThrowExceptionIfCannotObtainLock(),
                 engine.getCloser()
         );
     }
 
+    private DependencyContext getMergedDependencyContext(List<FrameworkPlugin> frameworkPlugins) {
+        List<DependencyContext> dependencyContextsFromPlugins = frameworkPlugins.stream()
+                .map(FrameworkPlugin::getDependencyContext)
+                .flatMap(CollectionUtil::optionalToStream)
+                .collect(Collectors.toList());
+        return dependencyContextsFromPlugins
+                .stream()
+                .filter(Objects::nonNull)
+                .reduce((previous, current) -> new PriorityDependencyContext(current, previous))
+                .<DependencyContext>map(accumulated -> new PriorityDependencyContext(standaloneConfiguratorDelegate().getDependencyContext(), accumulated))
+                .orElse(standaloneConfiguratorDelegate().getDependencyContext());
+    }
+
+    private void initializeFrameworkPlugins(List<FrameworkPlugin> frameworkPlugins) {
+        frameworkPlugins
+                .forEach(plugin -> plugin.initialize(standaloneConfiguratorDelegate().getDependencyContext()));
+
+    }
+
+    private List<TaskFilter> getTaskFiltersFromPlugins(List<FrameworkPlugin> frameworkPlugins) {
+        return frameworkPlugins.stream()
+                .map(FrameworkPlugin::getTaskFilters)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
     @NotNull
-    protected EventPublisher buildEventPublisher(List<EventPublisher> eventPublishers) {
+    private List<FrameworkPlugin> getPluginList() {
+        return StreamSupport
+                .stream(ServiceLoader.load(FrameworkPlugin.class).spliterator(), false)
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    protected EventPublisher buildEventPublisher(List<FrameworkPlugin> frameworkPlugins) {
+
+
         SimpleEventPublisher simpleEventPublisher = new SimpleEventPublisher()
                 //pipeline events
                 .addListener(IPipelineStartedEvent.class, getPipelineStartedListener())
@@ -176,22 +187,14 @@ public abstract class AbstractFlamingockBuilder<
                 .addListener(IStageIgnoredEvent.class, getStageIgnoredListener())
                 .addListener(IStageFailedEvent.class, getStageFailureListener());
         //TODO this addition is not good, but it will be refactored, once all the builders merged
-        eventPublishers.add(simpleEventPublisher);
-        return new CompositeEventPublisher(eventPublishers);
-    }
 
-    protected Pipeline buildPipeline(Collection<TaskFilter> taskFilters,
-                                     Collection<PreviewStage> beforeUserStages,
-                                     PreviewPipeline previewPipeline,
-                                     Collection<PreviewStage> afterUserStages) {
-        return Pipeline.builder()
-                .addFilters(taskFilters)
-                .addPreviewPipeline(previewPipeline)
-                .addBeforeUserStages(beforeUserStages)
-                .addAfterUserStages(afterUserStages)
-                .build();
+        List<EventPublisher> eventPublishersFromPlugins = frameworkPlugins.stream()
+                .map(FrameworkPlugin::getEventPublisher)
+                .flatMap(CollectionUtil::optionalToStream)
+                .collect(Collectors.toList());
+        eventPublishersFromPlugins.add(simpleEventPublisher);
+        return new CompositeEventPublisher(eventPublishersFromPlugins);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////
     //  CORE
@@ -311,17 +314,6 @@ public abstract class AbstractFlamingockBuilder<
     public TransactionStrategy getTransactionStrategy() {
         return coreConfiguratorDelegate().getTransactionStrategy();
     }
-
-    @Override
-    public HOLDER addSystemModule(SYSTEM_MODULE systemModule) {
-        return coreConfiguratorDelegate().addSystemModule(systemModule);
-    }
-
-    @Override
-    public SYSTEM_MODULE_MANAGER getSystemModuleManager() {
-        return coreConfiguratorDelegate().getSystemModuleManager();
-    }
-
 
     @Override
     public HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration) {

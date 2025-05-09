@@ -28,13 +28,14 @@ import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.local.LocalEngine;
 import io.flamingock.core.local.driver.LocalDriver;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import io.flamingock.core.system.LocalSystemModule;
 
 public class FlamingockLocalBuilder
-        extends AbstractFlamingockBuilder<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager>
+        extends AbstractFlamingockBuilder<FlamingockLocalBuilder>
         implements LocalConfigurator<FlamingockLocalBuilder> {
 
-    private final CoreConfiguratorDelegate<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate;
+    private final LocalSystemModuleManager systemModuleManager;
+
+    private final CoreConfiguratorDelegate<FlamingockLocalBuilder> coreConfiguratorDelegate;
 
     private final StandaloneConfiguratorDelegate<FlamingockLocalBuilder> standaloneConfiguratorDelegate;
 
@@ -46,14 +47,15 @@ public class FlamingockLocalBuilder
                                      LocalConfiguration communityConfiguration,
                                      DependencyInjectableContext dependencyInjectableContext,
                                      LocalSystemModuleManager systemModuleManager) {
-        this.coreConfiguratorDelegate = new CoreConfiguratorDelegate<>(coreConfiguration, () -> this, systemModuleManager);
+        super(systemModuleManager);
+        this.coreConfiguratorDelegate = new CoreConfiguratorDelegate<>(coreConfiguration, () -> this);
         this.standaloneConfiguratorDelegate = new StandaloneConfiguratorDelegate<>(dependencyInjectableContext, () -> this);
         this.localConfiguratorDelegate = new LocalConfiguratorDelegate<>(communityConfiguration, () -> this);
-
+        this.systemModuleManager = systemModuleManager;
     }
 
     @Override
-    protected CoreConfiguratorDelegate<FlamingockLocalBuilder, LocalSystemModule, LocalSystemModuleManager> coreConfiguratorDelegate() {
+    protected CoreConfiguratorDelegate<FlamingockLocalBuilder> coreConfiguratorDelegate() {
         return coreConfiguratorDelegate;
     }
 
@@ -75,8 +77,9 @@ public class FlamingockLocalBuilder
 
     @Override
     protected void configureSystemModules() {
-        engine.getMongockLegacyImporterModule().ifPresent(coreConfiguratorDelegate::addSystemModule);
-        coreConfiguratorDelegate.getSystemModuleManager().initialize();
+        //TODO change this
+        engine.getMongockLegacyImporterModule().ifPresent(systemModuleManager::add);
+        systemModuleManager.initialize();
     }
 
     @Override

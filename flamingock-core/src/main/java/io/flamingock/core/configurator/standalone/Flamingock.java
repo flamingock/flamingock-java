@@ -29,6 +29,14 @@ public final class Flamingock {
     private Flamingock() {
     }
 
+    public static AbstractFlamingockBuilder<?> builder() {
+        return new FlamingockCloudBuilder(
+                new CoreConfiguration(),
+                new CloudConfiguration(),
+                new SimpleDependencyInjectableContext(),
+                new CloudSystemModuleManager());
+    }
+
 
     public static FlamingockCloudBuilder cloud() {
         return new FlamingockCloudBuilder(

@@ -29,16 +29,18 @@ import io.flamingock.core.configurator.core.CoreConfiguration;
 import io.flamingock.core.configurator.core.CoreConfiguratorDelegate;
 import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import io.flamingock.core.system.CloudSystemModule;
 import org.apache.http.impl.client.HttpClients;
 
 import java.util.Optional;
 
 public class FlamingockCloudBuilder
-        extends AbstractFlamingockBuilder<FlamingockCloudBuilder, CloudSystemModule, CloudSystemModuleManager>
+        extends AbstractFlamingockBuilder<FlamingockCloudBuilder>
         implements CloudConfigurator<FlamingockCloudBuilder> {
 
-    private final CoreConfiguratorDelegate<FlamingockCloudBuilder, CloudSystemModule, CloudSystemModuleManager> coreConfiguratorDelegate;
+    private final CloudSystemModuleManager systemModuleManager;
+
+
+    private final CoreConfiguratorDelegate<FlamingockCloudBuilder> coreConfiguratorDelegate;
 
     private final StandaloneConfiguratorDelegate<FlamingockCloudBuilder> standaloneConfiguratorDelegate;
 
@@ -50,15 +52,17 @@ public class FlamingockCloudBuilder
                                      CloudConfiguration cloudConfiguration,
                                      DependencyInjectableContext dependencyInjectableContext,
                                      CloudSystemModuleManager systemModuleManager) {
-        this.coreConfiguratorDelegate = new CoreConfiguratorDelegate<>(coreConfiguration, () -> this, systemModuleManager);
+        super(systemModuleManager);
+        this.coreConfiguratorDelegate = new CoreConfiguratorDelegate<>(coreConfiguration, () -> this);
         this.standaloneConfiguratorDelegate = new StandaloneConfiguratorDelegate<>(dependencyInjectableContext, () -> this);
         this.cloudConfiguratorDelegate = new CloudConfiguratorDelegate<>(cloudConfiguration, () -> this);
+        this.systemModuleManager = systemModuleManager;
 
     }
 
 
     @Override
-    protected CoreConfiguratorDelegate<FlamingockCloudBuilder, CloudSystemModule, CloudSystemModuleManager> coreConfiguratorDelegate() {
+    protected CoreConfiguratorDelegate<FlamingockCloudBuilder> coreConfiguratorDelegate() {
         return coreConfiguratorDelegate;
     }
 
@@ -84,7 +88,8 @@ public class FlamingockCloudBuilder
 
     @Override
     protected void configureSystemModules() {
-        coreConfiguratorDelegate.getSystemModuleManager().initialize(
+        //todo change this
+        systemModuleManager.initialize(
                 engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt(), cloudConfiguratorDelegate.getCloudConfiguration().getHost());
     }
 
