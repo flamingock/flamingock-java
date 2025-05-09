@@ -28,7 +28,7 @@ import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.lock.CloudLockService;
 import io.flamingock.core.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.core.cloud.transaction.OngoingStatusRepository;
-import io.flamingock.core.configurator.core.CoreConfigurable;
+import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.engine.execution.ExecutionPlan;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.LockException;

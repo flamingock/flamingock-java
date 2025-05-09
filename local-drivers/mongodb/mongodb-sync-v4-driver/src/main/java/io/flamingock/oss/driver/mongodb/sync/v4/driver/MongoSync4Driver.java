@@ -18,11 +18,12 @@ package io.flamingock.oss.driver.mongodb.sync.v4.driver;
 
 import com.mongodb.client.MongoClient;
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.local.driver.LocalDriver;
-import io.flamingock.core.local.LocalEngine;
+import io.flamingock.core.builder.core.CoreConfigurable;
+import io.flamingock.core.builder.local.CommunityConfigurable;
+import io.flamingock.core.community.driver.LocalDriver;
+import io.flamingock.core.community.LocalEngine;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.MongoDBSync4Configuration;
+import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.MongoSync4Engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,11 @@ public class MongoSync4Driver implements LocalDriver<MongoDBSync4Configuration> 
     }
 
     @Override
+    public void initialize(DependencyContext dependencyContext) {
+        //TODO: Implement
+    }
+
+    @Override
     public MongoSync4Driver setDriverConfiguration(MongoDBSync4Configuration driverConfiguration) {
         this.driverConfiguration = driverConfiguration;
         return this;
@@ -69,7 +75,7 @@ public class MongoSync4Driver implements LocalDriver<MongoDBSync4Configuration> 
 
 
     @Override
-    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, LocalConfigurable localConfiguration) {
+    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
         MongoSync4Engine engine = new MongoSync4Engine(
                 mongoClient,
                 databaseName,

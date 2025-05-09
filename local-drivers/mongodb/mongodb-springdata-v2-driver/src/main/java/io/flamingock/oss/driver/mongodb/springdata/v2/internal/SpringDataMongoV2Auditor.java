@@ -22,7 +22,7 @@ import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
-import io.flamingock.core.local.LocalAuditor;
+import io.flamingock.core.community.LocalAuditor;
 import io.flamingock.commons.utils.Result;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
@@ -38,7 +38,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.local.AuditEntryField.*;
+import static io.flamingock.core.community.AuditEntryField.*;
 
 public class SpringDataMongoV2Auditor implements LocalAuditor {
 

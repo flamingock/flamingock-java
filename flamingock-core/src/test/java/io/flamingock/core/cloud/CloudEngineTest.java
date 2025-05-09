@@ -23,8 +23,8 @@ import io.flamingock.core.cloud.changes.CloudChange1;
 import io.flamingock.core.cloud.changes.CloudChange2;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
-import io.flamingock.core.configurator.standalone.Flamingock;
-import io.flamingock.core.configurator.standalone.FlamingockCloudBuilder;
+import io.flamingock.core.builder.Flamingock;
+import io.flamingock.core.builder.CloudFlamingockBuilder;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
@@ -65,7 +65,7 @@ public class CloudEngineTest {
     private final String jwt = "fake_jwt";
 
     private MockRunnerServerOld mockRunnerServer;
-    private FlamingockCloudBuilder flamingockBuilder;
+    private CloudFlamingockBuilder flamingockBuilder;
 
     private static final List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
 

@@ -28,7 +28,7 @@ import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4Transac
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.core.local.TransactionManager;
+import io.flamingock.core.community.TransactionManager;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.transaction.TransactionWrapper;

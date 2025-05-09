@@ -27,7 +27,7 @@ import io.flamingock.core.cloud.api.planner.response.TaskResponse;
 import io.flamingock.core.cloud.api.planner.response.RequiredActionTask;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.core.cloud.lock.CloudLockService;
-import io.flamingock.core.configurator.core.CoreConfigurable;
+import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockKey;

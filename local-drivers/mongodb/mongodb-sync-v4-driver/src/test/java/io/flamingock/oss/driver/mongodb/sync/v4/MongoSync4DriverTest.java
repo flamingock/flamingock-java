@@ -24,7 +24,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.MongoDBSync4Configuration;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.Flamingock;
+import io.flamingock.core.builder.Flamingock;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;

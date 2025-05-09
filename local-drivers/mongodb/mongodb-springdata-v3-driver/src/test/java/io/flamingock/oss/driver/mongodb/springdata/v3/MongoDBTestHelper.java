@@ -44,8 +44,8 @@ import io.mongock.api.annotations.ChangeUnit;
 import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 
-import static io.flamingock.core.local.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.core.local.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.core.community.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.core.community.AuditEntryField.KEY_TIMESTAMP;
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;

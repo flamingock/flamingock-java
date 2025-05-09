@@ -19,7 +19,7 @@ package io.flamingock.oss.driver.dynamodb;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.Flamingock;
+import io.flamingock.core.builder.Flamingock;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
@@ -32,7 +32,6 @@ import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_failed_transact
 import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_happy_non_transactional;
 import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_happy_transactional;
 import io.flamingock.oss.driver.dynamodb.changes.common.UserEntity;
-import io.flamingock.oss.driver.dynamodb.driver.DynamoDBDriver;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -111,7 +110,6 @@ class DynamoDBDriverTest {
 
 
             Flamingock.local()
-                    .setDriver(new DynamoDBDriver(client))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
                     .build()
@@ -138,7 +136,6 @@ class DynamoDBDriverTest {
             );
 
             Flamingock.local()
-                    .setDriver(new DynamoDBDriver(client))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
                     .build()
@@ -179,7 +176,6 @@ class DynamoDBDriverTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)))
             );
             Flamingock.local()
-                    .setDriver(new DynamoDBDriver(client))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithoutTransaction"))
                     .addDependency(client)
                     .disableTransaction()
@@ -225,7 +221,6 @@ class DynamoDBDriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new DynamoDBDriver(client))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithTransaction"))
                         .addDependency(client)
                         .build()
@@ -268,7 +263,6 @@ class DynamoDBDriverTest {
             );
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new DynamoDBDriver(client))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithRollback"))
                         .addDependency(client)
                         .disableTransaction()
@@ -314,7 +308,6 @@ class DynamoDBDriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new DynamoDBDriver(client))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithoutRollback"))
                         .addDependency(client)
                         .disableTransaction()

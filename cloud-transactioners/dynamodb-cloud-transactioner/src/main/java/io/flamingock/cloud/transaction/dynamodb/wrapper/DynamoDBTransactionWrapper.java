@@ -16,7 +16,7 @@
 
 package io.flamingock.cloud.transaction.dynamodb.wrapper;
 
-import io.flamingock.core.local.TransactionManager;
+import io.flamingock.core.community.TransactionManager;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;

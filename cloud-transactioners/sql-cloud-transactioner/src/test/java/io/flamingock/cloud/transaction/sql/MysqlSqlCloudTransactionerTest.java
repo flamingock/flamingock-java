@@ -31,8 +31,8 @@ import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.configurator.standalone.Flamingock;
-import io.flamingock.core.configurator.standalone.FlamingockCloudBuilder;
+import io.flamingock.core.builder.Flamingock;
+import io.flamingock.core.builder.CloudFlamingockBuilder;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;
 import io.flamingock.core.runner.Runner;
@@ -93,7 +93,7 @@ public class MysqlSqlCloudTransactionerTest {
 
     private MockRunnerServer mockRunnerServer;
 
-    private FlamingockCloudBuilder flamingockBuilder;
+    private CloudFlamingockBuilder flamingockBuilder;
 
     @BeforeAll
     static void beforeAll() {

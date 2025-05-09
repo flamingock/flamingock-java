@@ -16,13 +16,13 @@
 
 package io.flamingock.springboot.v3;
 
-import io.flamingock.core.configurator.TransactionStrategy;
-import io.flamingock.core.configurator.cloud.CloudConfigurable;
-import io.flamingock.core.configurator.cloud.CloudConfiguration;
-import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.configurator.core.CoreConfiguration;
-import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.configurator.local.LocalConfiguration;
+import io.flamingock.core.builder.TransactionStrategy;
+import io.flamingock.core.builder.cloud.CloudConfigurable;
+import io.flamingock.core.builder.cloud.CloudConfiguration;
+import io.flamingock.core.builder.core.CoreConfigurable;
+import io.flamingock.core.builder.core.CoreConfiguration;
+import io.flamingock.core.builder.local.CommunityConfigurable;
+import io.flamingock.core.builder.local.CommunityConfiguration;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.processor.util.Deserializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -33,7 +33,7 @@ import java.util.Map;
 public class SpringbootV3Properties
         implements
         CoreConfigurable,
-        LocalConfigurable,
+        CommunityConfigurable,
         CloudConfigurable {
     private SpringRunnerType runnerType = SpringRunnerType.ApplicationRunner;
 
@@ -41,14 +41,14 @@ public class SpringbootV3Properties
 
     private final CloudConfiguration cloudConfiguration = new CloudConfiguration();
 
-    private final LocalConfiguration localConfiguration = new LocalConfiguration();
+    private final CommunityConfiguration localConfiguration = new CommunityConfiguration();
 
     public CoreConfiguration getCoreConfiguration() {
         return coreConfiguration;
     }
 
 
-    public LocalConfiguration getLocalConfiguration() {
+    public CommunityConfiguration getLocalConfiguration() {
         return localConfiguration;
     }
 

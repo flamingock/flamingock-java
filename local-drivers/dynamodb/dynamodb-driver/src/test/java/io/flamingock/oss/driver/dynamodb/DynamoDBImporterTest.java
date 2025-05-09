@@ -24,7 +24,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.Flamingock;
+import io.flamingock.core.builder.Flamingock;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.processor.util.Deserializer;
@@ -32,7 +32,6 @@ import io.flamingock.oss.driver.dynamodb.changes._0_mongock_create_authors_colle
 import io.flamingock.oss.driver.dynamodb.changes._1_create_client_collection_happy;
 import io.flamingock.oss.driver.dynamodb.changes._2_insert_federico_happy_non_transactional;
 import io.flamingock.oss.driver.dynamodb.changes._3_insert_jorge_happy_non_transactional;
-import io.flamingock.oss.driver.dynamodb.driver.DynamoDBDriver;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.MongockImporterChangeUnit;
 import io.mongock.runner.standalone.MongockStandalone;
@@ -50,7 +49,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration;
+import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfiguration;
 import static io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -142,7 +141,6 @@ class DynamoDBImporterTest {
 
             Flamingock.local()
                     .withImporter(ImporterConfiguration.withSource(mongockDriver.getMigrationRepositoryName()))
-                    .setDriver(new DynamoDBDriver(client))
                     //.addStage(new Stage("stage-name")
 //                        .addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)

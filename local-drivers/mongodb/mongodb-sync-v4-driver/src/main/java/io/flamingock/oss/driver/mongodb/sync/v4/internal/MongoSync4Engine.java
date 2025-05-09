@@ -25,12 +25,12 @@ import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4Transac
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.system.LocalSystemModule;
-import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.local.AbstractLocalEngine;
-import io.flamingock.core.local.LocalAuditor;
-import io.flamingock.core.local.LocalExecutionPlanner;
-import io.flamingock.core.local.TransactionManager;
+import io.flamingock.core.builder.core.CoreConfigurable;
+import io.flamingock.core.builder.local.CommunityConfigurable;
+import io.flamingock.core.community.AbstractLocalEngine;
+import io.flamingock.core.community.LocalAuditor;
+import io.flamingock.core.community.LocalExecutionPlanner;
+import io.flamingock.core.community.TransactionManager;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.core.engine.audit.importer.ImporterModule;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
@@ -53,7 +53,7 @@ public class MongoSync4Engine extends AbstractLocalEngine {
     public MongoSync4Engine(MongoClient mongoClient,
                             String databaseName,
                             CoreConfigurable coreConfiguration,
-                            LocalConfigurable localConfiguration,
+                            CommunityConfigurable localConfiguration,
                             MongoDBSync4Configuration driverConfiguration) {
         super(localConfiguration);
         this.mongoClient = mongoClient;

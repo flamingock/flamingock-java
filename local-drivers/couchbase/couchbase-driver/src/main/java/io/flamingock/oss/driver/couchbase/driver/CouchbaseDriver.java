@@ -19,10 +19,11 @@ package io.flamingock.oss.driver.couchbase.driver;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.configurator.local.LocalConfigurable;
-import io.flamingock.core.local.driver.LocalDriver;
-import io.flamingock.core.local.LocalEngine;
+import io.flamingock.core.builder.core.CoreConfigurable;
+import io.flamingock.core.builder.local.CommunityConfigurable;
+import io.flamingock.core.community.driver.LocalDriver;
+import io.flamingock.core.community.LocalEngine;
+import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseEngine;
 import org.slf4j.Logger;
@@ -62,6 +63,11 @@ public class CouchbaseDriver implements LocalDriver<CouchbaseConfiguration> {
     }
 
     @Override
+    public void initialize(DependencyContext dependencyContext) {
+        //TODO: Implement
+    }
+
+    @Override
     public CouchbaseDriver setDriverConfiguration(CouchbaseConfiguration driverConfiguration) {
         this.driverConfiguration = driverConfiguration;
         return this;
@@ -70,7 +76,7 @@ public class CouchbaseDriver implements LocalDriver<CouchbaseConfiguration> {
     @Override
     public LocalEngine initializeAndGetEngine(RunnerId runnerId, 
                                               CoreConfigurable coreConfiguration, 
-                                              LocalConfigurable localConfiguration) {
+                                              CommunityConfigurable localConfiguration) {
         CouchbaseEngine couchbaseEngine = new CouchbaseEngine(
                 cluster,
                 collection,

@@ -1,6 +1,6 @@
 package io.flamingock.springboot.v3;
 
-import io.flamingock.core.configurator.FrameworkPlugin;
+import io.flamingock.core.builder.FrameworkPlugin;
 import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.event.SimpleEventPublisher;
 import io.flamingock.core.event.model.IPipelineFailedEvent;

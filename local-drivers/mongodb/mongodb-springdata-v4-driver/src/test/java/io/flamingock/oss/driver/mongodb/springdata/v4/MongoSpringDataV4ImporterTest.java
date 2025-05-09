@@ -23,7 +23,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.Flamingock;
+import io.flamingock.core.builder.Flamingock;
 import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.legacy.MongockLegacyIdGenerator;
@@ -53,7 +53,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.configurator.core.CoreConfiguration.ImporterConfiguration.withSource;
+import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;

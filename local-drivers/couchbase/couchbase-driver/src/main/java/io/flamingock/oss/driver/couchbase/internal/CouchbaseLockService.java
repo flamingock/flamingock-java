@@ -23,9 +23,9 @@ import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.kv.GetResult;
 import com.couchbase.client.java.kv.RemoveOptions;
 import com.couchbase.client.java.kv.ReplaceOptions;
-import io.flamingock.core.local.lock.LocalLockService;
+import io.flamingock.core.community.lock.LocalLockService;
 import io.flamingock.core.engine.lock.LockAcquisition;
-import io.flamingock.core.local.lock.LockEntry;
+import io.flamingock.core.community.lock.LockEntry;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.LockServiceException;
 import io.flamingock.core.engine.lock.LockStatus;
@@ -41,10 +41,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 
-import static io.flamingock.core.local.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.core.local.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.core.local.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.core.local.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.KEY_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.OWNER_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.STATUS_FIELD;
 import static io.flamingock.oss.driver.couchbase.internal.CouchbaseConstants.DOCUMENT_TYPE_KEY;
 import static io.flamingock.oss.driver.couchbase.internal.CouchbaseConstants.DOCUMENT_TYPE_LOCK_ENTRY;
 

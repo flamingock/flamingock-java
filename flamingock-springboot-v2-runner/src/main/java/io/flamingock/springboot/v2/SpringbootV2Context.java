@@ -17,14 +17,14 @@
 package io.flamingock.springboot.v2;
 
 import io.flamingock.commons.utils.Constants;
-import io.flamingock.core.configurator.cloud.CloudConfiguration;
-import io.flamingock.core.configurator.cloud.CloudSystemModuleManager;
-import io.flamingock.core.configurator.core.CoreConfiguration;
-import io.flamingock.core.configurator.local.LocalConfiguration;
-import io.flamingock.core.configurator.local.LocalSystemModuleManager;
-import io.flamingock.core.configurator.standalone.FlamingockCloudBuilder;
-import io.flamingock.core.configurator.standalone.FlamingockLocalBuilder;
-import io.flamingock.core.local.driver.LocalDriver;
+import io.flamingock.core.builder.cloud.CloudConfiguration;
+import io.flamingock.core.builder.cloud.CloudSystemModuleManager;
+import io.flamingock.core.builder.core.CoreConfiguration;
+import io.flamingock.core.builder.local.CommunityConfiguration;
+import io.flamingock.core.builder.local.LocalSystemModuleManager;
+import io.flamingock.core.builder.CloudFlamingockBuilder;
+import io.flamingock.core.builder.CommunityFlamingockBuilder;
+import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.runner.RunnerBuilder;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.SimpleDependencyInjectableContext;
@@ -93,9 +93,9 @@ public class SpringbootV2Context {
     /**
      * This class is just to have access to the protected constructor
      */
-    private static class SpringbootV2LocalBuilder extends FlamingockLocalBuilder {
+    private static class SpringbootV2LocalBuilder extends CommunityFlamingockBuilder {
         protected SpringbootV2LocalBuilder(CoreConfiguration coreConfiguration,
-                                           LocalConfiguration communityConfiguration,
+                                           CommunityConfiguration communityConfiguration,
                                            DependencyInjectableContext dependencyInjectableContext,
                                            LocalSystemModuleManager systemModuleManager) {
             super(coreConfiguration, communityConfiguration, dependencyInjectableContext, systemModuleManager);
@@ -105,7 +105,7 @@ public class SpringbootV2Context {
     /**
      * This class is just to have access to the protected constructor
      */
-    private static class SpringbootV2CloudBuilder extends FlamingockCloudBuilder {
+    private static class SpringbootV2CloudBuilder extends CloudFlamingockBuilder {
 
         protected SpringbootV2CloudBuilder(CoreConfiguration coreConfiguration, CloudConfiguration cloudConfiguration, DependencyInjectableContext dependencyInjectableContext, CloudSystemModuleManager systemModuleManager) {
             super(coreConfiguration, cloudConfiguration, dependencyInjectableContext, systemModuleManager);

@@ -23,7 +23,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.configurator.standalone.Flamingock;
+import io.flamingock.core.builder.Flamingock;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.runner.PipelineExecutionException;

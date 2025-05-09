@@ -18,7 +18,7 @@ package io.flamingock.oss.driver.couchbase.internal.util;
 
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.core.engine.lock.LockAcquisition;
-import io.flamingock.core.local.lock.LockEntry;
+import io.flamingock.core.community.lock.LockEntry;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.engine.lock.LockStatus;
 import io.flamingock.commons.utils.RunnerId;
@@ -27,23 +27,23 @@ import io.flamingock.commons.utils.TimeUtil;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import static io.flamingock.core.local.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.core.local.AuditEntryField.KEY_CHANGELOG_CLASS;
-import static io.flamingock.core.local.AuditEntryField.KEY_CHANGESET_METHOD;
-import static io.flamingock.core.local.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.core.local.AuditEntryField.KEY_ERROR_TRACE;
-import static io.flamingock.core.local.AuditEntryField.KEY_EXECUTION_HOSTNAME;
-import static io.flamingock.core.local.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.core.local.AuditEntryField.KEY_EXECUTION_MILLIS;
-import static io.flamingock.core.local.AuditEntryField.KEY_METADATA;
-import static io.flamingock.core.local.AuditEntryField.KEY_STATE;
-import static io.flamingock.core.local.AuditEntryField.KEY_SYSTEM_CHANGE;
-import static io.flamingock.core.local.AuditEntryField.KEY_TIMESTAMP;
-import static io.flamingock.core.local.AuditEntryField.KEY_TYPE;
-import static io.flamingock.core.local.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.core.local.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.core.local.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.core.local.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.core.community.AuditEntryField.KEY_AUTHOR;
+import static io.flamingock.core.community.AuditEntryField.KEY_CHANGELOG_CLASS;
+import static io.flamingock.core.community.AuditEntryField.KEY_CHANGESET_METHOD;
+import static io.flamingock.core.community.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.core.community.AuditEntryField.KEY_ERROR_TRACE;
+import static io.flamingock.core.community.AuditEntryField.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.core.community.AuditEntryField.KEY_EXECUTION_ID;
+import static io.flamingock.core.community.AuditEntryField.KEY_EXECUTION_MILLIS;
+import static io.flamingock.core.community.AuditEntryField.KEY_METADATA;
+import static io.flamingock.core.community.AuditEntryField.KEY_STATE;
+import static io.flamingock.core.community.AuditEntryField.KEY_SYSTEM_CHANGE;
+import static io.flamingock.core.community.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.core.community.AuditEntryField.KEY_TYPE;
+import static io.flamingock.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.KEY_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.OWNER_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.STATUS_FIELD;
 
 public final class CouchBaseUtil {
     private CouchBaseUtil() {

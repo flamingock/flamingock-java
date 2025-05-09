@@ -19,11 +19,11 @@ package io.flamingock.oss.driver.mongodb.springdata.v2.internal;
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
 import io.flamingock.core.engine.audit.importer.ImporterModule;
-import io.flamingock.core.local.LocalExecutionPlanner;
-import io.flamingock.core.local.AbstractLocalEngine;
-import io.flamingock.core.local.LocalAuditor;
-import io.flamingock.core.configurator.core.CoreConfigurable;
-import io.flamingock.core.configurator.local.LocalConfigurable;
+import io.flamingock.core.community.LocalExecutionPlanner;
+import io.flamingock.core.community.AbstractLocalEngine;
+import io.flamingock.core.community.LocalAuditor;
+import io.flamingock.core.builder.core.CoreConfigurable;
+import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.core.transaction.TransactionWrapper;
@@ -49,7 +49,7 @@ public class SpringDataMongoV2Engine extends AbstractLocalEngine {
 
     public SpringDataMongoV2Engine(MongoTemplate mongoTemplate,
                                    CoreConfigurable coreConfiguration,
-                                   LocalConfigurable localConfiguration,
+                                   CommunityConfigurable localConfiguration,
                                    SpringDataMongoV2Configuration driverConfiguration) {
         super(localConfiguration);
         this.mongoTemplate = mongoTemplate;
