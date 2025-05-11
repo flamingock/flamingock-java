@@ -17,8 +17,10 @@
 package io.flamingock.oss.driver.mongodb.springdata.v3.driver;
 
 import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
+import io.flamingock.core.community.driver.SpringdataDriver;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.springdata.v3.config.SpringDataMongoV3Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v3.internal.SpringDataMongoV3Engine;
@@ -28,11 +30,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-public class SpringDataMongoV3Driver implements LocalDriver<SpringDataMongoV3Configuration> {
+public class SpringDataMongoV3Driver implements SpringdataDriver<SpringDataMongoV3Configuration> {
     private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoV3Driver.class);
 
 
-    private final MongoTemplate mongoTemplate;
+    private MongoTemplate mongoTemplate;
 
     private SpringDataMongoV3Configuration driverConfiguration;
 
@@ -53,6 +55,7 @@ public class SpringDataMongoV3Driver implements LocalDriver<SpringDataMongoV3Con
         return new SpringDataMongoV3Driver(mongoTemplate);
     }
 
+    public SpringDataMongoV3Driver() {}
 
     public SpringDataMongoV3Driver(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
@@ -60,9 +63,16 @@ public class SpringDataMongoV3Driver implements LocalDriver<SpringDataMongoV3Con
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        //TODO: Implement
+        this.mongoTemplate = (MongoTemplate) dependencyContext
+                .getDependency(MongoTemplate.class)
+                .orElseThrow(() -> new FlamingockException("MongoTemplate is needed to be added as dependency"))
+                .getInstance();
+        dependencyContext.getDependency(SpringDataMongoV3Configuration.class).ifPresent(dependency -> {
+            this.driverConfiguration = (SpringDataMongoV3Configuration) dependency.getInstance();
+        });
     }
 
+    @Deprecated
     @Override
     public SpringDataMongoV3Driver setDriverConfiguration(SpringDataMongoV3Configuration driverConfiguration) {
         this.driverConfiguration = driverConfiguration;

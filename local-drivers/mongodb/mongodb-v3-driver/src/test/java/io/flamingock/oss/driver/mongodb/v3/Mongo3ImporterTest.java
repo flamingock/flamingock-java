@@ -31,7 +31,6 @@ import io.flamingock.oss.driver.mongodb.v3.changes._0_mongock_create_authors_col
 import io.flamingock.oss.driver.mongodb.v3.changes._1_create_client_collection_happy;
 import io.flamingock.oss.driver.mongodb.v3.changes._2_insert_federico_happy_non_transactional;
 import io.flamingock.oss.driver.mongodb.v3.changes._3_insert_jorge_happy_non_transactional;
-import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
 import io.mongock.driver.mongodb.v3.driver.MongoCore3Driver;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.bson.Document;
@@ -122,7 +121,8 @@ class Mongo3ImporterTest {
             );
 
             Flamingock.local()
-                    .setDriver(new Mongo3Driver(mongoClient, DB_NAME))
+                    .addDependency(mongoClient)
+                    .addDependency("databaseName", DB_NAME)
                     .withImporter(withSource("mongockChangeLog"))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.withImporter"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
