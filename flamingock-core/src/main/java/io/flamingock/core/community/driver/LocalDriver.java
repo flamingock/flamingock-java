@@ -16,6 +16,16 @@
 
 package io.flamingock.core.community.driver;
 
+import io.flamingock.commons.utils.Pair;
+import io.flamingock.core.api.exception.FlamingockException;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.Set;
+
 import io.flamingock.core.runtime.dependency.DependencyContext;
 
 public interface LocalDriver<DRIVER_CONFIGURATION extends DriverConfigurable> extends LocalEngineFactory {
@@ -24,4 +34,29 @@ public interface LocalDriver<DRIVER_CONFIGURATION extends DriverConfigurable> ex
 
     @Deprecated
     LocalDriver<DRIVER_CONFIGURATION> setDriverConfiguration(DRIVER_CONFIGURATION configuration);
+
+    static Optional<LocalDriver<?>> getDriver() {
+
+        Pair<LocalDriver<?>, Set<Class<?>>> current = null;//contains driver and the list of precedent classes
+        for(LocalDriver<?> driver : ServiceLoader.load(LocalDriver.class)) {
+
+            Set<Class<?>> precedentClasses;
+            OverridesDrivers annotation = driver.getClass().getAnnotation(OverridesDrivers.class);
+
+            if(annotation != null && annotation.value() != null) {
+                precedentClasses = new HashSet<>(Arrays.asList(annotation.value()));
+            } else {
+                precedentClasses = Collections.emptySet();
+            }
+
+            if (current == null || precedentClasses.contains(current.getFirst().getClass())) {
+                current = new Pair<>(driver, precedentClasses);
+            } else if (!current.getSecond().contains(driver.getClass())) {
+                throw new FlamingockException("More than one driver is injected, without a clear hierarchy");
+            }
+
+        }
+
+        return Optional.ofNullable(current != null ? current.getFirst() : null);
+    }
 }

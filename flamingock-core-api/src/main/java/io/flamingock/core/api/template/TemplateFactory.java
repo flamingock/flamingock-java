@@ -1,5 +1,6 @@
 package io.flamingock.core.api.template;
 
+import org.jetbrains.annotations.TestOnly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,8 @@ public final class TemplateFactory {
             logger.debug("registered template: {}", templateClass.getSimpleName());
         }
     }
-
+    
+    @TestOnly
     public static void addTemplate(String templateName, Class<? extends ChangeTemplate<?>> templateClass) {
         templates.put(templateName, templateClass);
     }

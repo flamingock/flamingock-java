@@ -35,7 +35,6 @@ import io.flamingock.oss.driver.mongodb.springdata.v2.changes._3_insert_jorge_fa
 import io.flamingock.oss.driver.mongodb.springdata.v2.changes._3_insert_jorge_happy_non_transactional;
 import io.flamingock.oss.driver.mongodb.springdata.v2.changes._3_insert_jorge_happy_transactional;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
-import io.flamingock.oss.driver.mongodb.springdata.v2.driver.SpringDataMongoV2Driver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,7 +109,6 @@ class SpringDataMongoV2DriverTest {
 
             Flamingock.local()
                     .withImporter(CoreConfiguration.ImporterConfiguration.withSource("mongockChangeLog"))
-                    .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .build()
@@ -140,7 +138,7 @@ class SpringDataMongoV2DriverTest {
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
             Flamingock.local()
-                    .setDriver(new SpringDataMongoV2Driver(mongoTemplate).setDriverConfiguration(driverConfiguration))
+                    .addDependency(driverConfiguration)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .build()
@@ -166,7 +164,6 @@ class SpringDataMongoV2DriverTest {
             );
 
             Flamingock.local()
-                    .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .build()
@@ -205,7 +202,6 @@ class SpringDataMongoV2DriverTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
             Flamingock.local()
-                    .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.happyPathWithoutTransaction"))
                     .addDependency(mongoTemplate)
                     .build()
@@ -247,7 +243,6 @@ class SpringDataMongoV2DriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.failedWithTransaction"))
                         .addDependency(mongoTemplate)
                         .build()
@@ -287,7 +282,6 @@ class SpringDataMongoV2DriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.failedWithoutTransactionWithRollback"))
                         .addDependency(mongoTemplate)
                         .build()
@@ -329,7 +323,6 @@ class SpringDataMongoV2DriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new SpringDataMongoV2Driver(mongoTemplate))
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v2.changes.failedWithoutTransactionWithoutRollback"))
                         .addDependency(mongoTemplate)
                         .disableTransaction()

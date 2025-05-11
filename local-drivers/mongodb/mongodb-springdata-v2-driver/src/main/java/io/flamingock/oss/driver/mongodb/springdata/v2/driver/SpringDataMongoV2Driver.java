@@ -17,31 +17,35 @@
 package io.flamingock.oss.driver.mongodb.springdata.v2.driver;
 
 import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
+import io.flamingock.core.community.LocalEngine;
+import io.flamingock.core.community.driver.LocalDriver;
+import io.flamingock.core.community.driver.OverridesDrivers;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v2.internal.SpringDataMongoV2Engine;
-import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.community.LocalEngine;
+import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+@OverridesDrivers({Mongo3Driver.class})
 public class SpringDataMongoV2Driver implements LocalDriver<SpringDataMongoV2Configuration> {
     private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoV2Driver.class);
 
 
-    private final MongoTemplate mongoTemplate;
+    private MongoTemplate mongoTemplate;
 
     private SpringDataMongoV2Configuration driverConfiguration;
 
 
     @Deprecated
     public static SpringDataMongoV2Driver withLockStrategy(MongoTemplate mongoTemplate,
-                                                    @Deprecated long lockAcquiredForMillis,
-                                                    @Deprecated long lockQuitTryingAfterMillis,
-                                                    @Deprecated long lockTryFrequencyMillis) {
+                                                           @Deprecated long lockAcquiredForMillis,
+                                                           @Deprecated long lockQuitTryingAfterMillis,
+                                                           @Deprecated long lockTryFrequencyMillis) {
         logWarningFieldIgnored("lockAcquiredForMillis", lockAcquiredForMillis);
         logWarningFieldIgnored("lockQuitTryingAfterMillis", lockQuitTryingAfterMillis);
         logWarningFieldIgnored("lockTryFrequencyMillis", lockTryFrequencyMillis);
@@ -53,6 +57,8 @@ public class SpringDataMongoV2Driver implements LocalDriver<SpringDataMongoV2Con
         return new SpringDataMongoV2Driver(mongoTemplate);
     }
 
+    public SpringDataMongoV2Driver() {
+    }
 
     public SpringDataMongoV2Driver(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
@@ -60,9 +66,16 @@ public class SpringDataMongoV2Driver implements LocalDriver<SpringDataMongoV2Con
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        //TODO: Implement
+        this.mongoTemplate = (MongoTemplate) dependencyContext
+                .getDependency(MongoTemplate.class)
+                .orElseThrow(() -> new FlamingockException("MongoTemplate is needed to be added as dependency"))
+                .getInstance();
+        dependencyContext.getDependency(SpringDataMongoV2Configuration.class).ifPresent(dependency -> {
+            this.driverConfiguration = (SpringDataMongoV2Configuration) dependency.getInstance();
+        });
     }
 
+    @Deprecated
     @Override
     public SpringDataMongoV2Driver setDriverConfiguration(SpringDataMongoV2Configuration driverConfiguration) {
         this.driverConfiguration = driverConfiguration;

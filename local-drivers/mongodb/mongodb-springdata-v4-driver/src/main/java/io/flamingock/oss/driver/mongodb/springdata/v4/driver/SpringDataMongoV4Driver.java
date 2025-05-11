@@ -20,17 +20,19 @@ import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
-import io.flamingock.core.community.driver.SpringdataDriver;
+import io.flamingock.core.community.LocalEngine;
+import io.flamingock.core.community.driver.LocalDriver;
+import io.flamingock.core.community.driver.OverridesDrivers;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.springdata.v4.config.SpringDataMongoV4Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v4.internal.SpringDataMongoV4Engine;
-import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.community.LocalEngine;
+import io.flamingock.oss.driver.mongodb.sync.v4.driver.MongoSync4Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-public class SpringDataMongoV4Driver implements SpringdataDriver<SpringDataMongoV4Configuration> {
+@OverridesDrivers({MongoSync4Driver.class})
+public class SpringDataMongoV4Driver implements LocalDriver<SpringDataMongoV4Configuration> {
     private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoV4Driver.class);
 
 
@@ -41,9 +43,9 @@ public class SpringDataMongoV4Driver implements SpringdataDriver<SpringDataMongo
 
     @Deprecated
     public static SpringDataMongoV4Driver withLockStrategy(MongoTemplate mongoTemplate,
-                                                    @Deprecated long lockAcquiredForMillis,
-                                                    @Deprecated long lockQuitTryingAfterMillis,
-                                                    @Deprecated long lockTryFrequencyMillis) {
+                                                           @Deprecated long lockAcquiredForMillis,
+                                                           @Deprecated long lockQuitTryingAfterMillis,
+                                                           @Deprecated long lockTryFrequencyMillis) {
         logWarningFieldIgnored("lockAcquiredForMillis", lockAcquiredForMillis);
         logWarningFieldIgnored("lockQuitTryingAfterMillis", lockQuitTryingAfterMillis);
         logWarningFieldIgnored("lockTryFrequencyMillis", lockTryFrequencyMillis);
@@ -55,7 +57,8 @@ public class SpringDataMongoV4Driver implements SpringdataDriver<SpringDataMongo
         return new SpringDataMongoV4Driver(mongoTemplate);
     }
 
-    public SpringDataMongoV4Driver() {}
+    public SpringDataMongoV4Driver() {
+    }
 
     public SpringDataMongoV4Driver(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
