@@ -22,6 +22,7 @@ import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.builder.local.CommunityConfiguration;
 import io.flamingock.core.builder.local.CommunityConfigurator;
 import io.flamingock.core.builder.local.LocalSystemModuleManager;
+import io.flamingock.core.community.driver.SpringdataDriver;
 import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
@@ -60,6 +61,16 @@ public class CommunityFlamingockBuilder
     }
 
     private LocalDriver<?> getLocalDriver() {
+
+        List<SpringdataDriver> springdataDrivers = StreamSupport
+                .stream(ServiceLoader.load(SpringdataDriver.class).spliterator(), false)
+                .collect(Collectors.toList());
+        if (springdataDrivers.size() == 1) {
+            return springdataDrivers.get(0);
+        } else if (springdataDrivers.size() > 1) { //TODO: Check Exceptions Messages
+            throw new FlamingockException("Only one driver is permitted");
+        }
+
         List<LocalDriver> drivers = StreamSupport
                 .stream(ServiceLoader.load(LocalDriver.class).spliterator(), false)
                 .collect(Collectors.toList());

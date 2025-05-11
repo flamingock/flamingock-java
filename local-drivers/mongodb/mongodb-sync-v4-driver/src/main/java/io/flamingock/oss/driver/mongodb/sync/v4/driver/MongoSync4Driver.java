@@ -18,6 +18,7 @@ package io.flamingock.oss.driver.mongodb.sync.v4.driver;
 
 import com.mongodb.client.MongoClient;
 import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.driver.LocalDriver;
@@ -32,9 +33,9 @@ public class MongoSync4Driver implements LocalDriver<MongoDBSync4Configuration> 
     private static final Logger logger = LoggerFactory.getLogger(MongoSync4Driver.class);
 
 
-    private final MongoClient mongoClient;
+    private MongoClient mongoClient;
 
-    private final String databaseName;
+    private String databaseName;
 
     private MongoDBSync4Configuration driverConfiguration;
 
@@ -56,6 +57,7 @@ public class MongoSync4Driver implements LocalDriver<MongoDBSync4Configuration> 
         return new MongoSync4Driver(mongoClient, databaseName);
     }
 
+    public MongoSync4Driver() {}
 
     public MongoSync4Driver(MongoClient mongoClient, String databaseName) {
         this.mongoClient = mongoClient;
@@ -64,9 +66,20 @@ public class MongoSync4Driver implements LocalDriver<MongoDBSync4Configuration> 
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        //TODO: Implement
+        this.mongoClient = (MongoClient) dependencyContext
+                .getDependency(MongoClient.class)
+                .orElseThrow(() -> new FlamingockException("MongoClient is needed to be added as dependency"))
+                .getInstance();
+        this.databaseName = (String) dependencyContext
+                .getDependency("databaseName")
+                .orElseThrow(() -> new FlamingockException("databaseName is needed to be added as property"))
+                .getInstance();
+        dependencyContext.getDependency(MongoDBSync4Configuration.class).ifPresent(dependency -> {
+            this.driverConfiguration = (MongoDBSync4Configuration) dependency.getInstance();
+        });
     }
 
+    @Deprecated
     @Override
     public MongoSync4Driver setDriverConfiguration(MongoDBSync4Configuration driverConfiguration) {
         this.driverConfiguration = driverConfiguration;

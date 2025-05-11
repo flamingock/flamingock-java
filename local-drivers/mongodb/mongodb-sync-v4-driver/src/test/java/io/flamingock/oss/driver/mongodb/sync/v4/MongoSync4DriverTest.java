@@ -117,7 +117,8 @@ class MongoSync4DriverTest {
             );
 
             Flamingock.local()
-                    .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                    .addDependency(mongoClient)
+                    .addDependency("databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .build()
@@ -147,7 +148,9 @@ class MongoSync4DriverTest {
             );
 
             Flamingock.local()
-                    .setDriver(new MongoSync4Driver(mongoClient, DB_NAME).setDriverConfiguration(driverConfiguration))
+                    .addDependency(mongoClient)
+                    .addDependency("databaseName", DB_NAME)
+                    .addDependency(driverConfiguration)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .build()
@@ -173,7 +176,8 @@ class MongoSync4DriverTest {
             );
 
             Flamingock.local()
-                    .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                    .addDependency(mongoClient)
+                    .addDependency("databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .build()
@@ -214,7 +218,8 @@ class MongoSync4DriverTest {
             );
 
             Flamingock.local()
-                    .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                    .addDependency(mongoClient)
+                    .addDependency("databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithoutTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .disableTransaction()
@@ -258,7 +263,8 @@ class MongoSync4DriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                        .addDependency(mongoClient)
+                        .addDependency("databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithTransaction"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
 
@@ -299,7 +305,8 @@ class MongoSync4DriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                        .addDependency(mongoClient)
+                        .addDependency("databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithRollback"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
                         .disableTransaction()
@@ -343,7 +350,8 @@ class MongoSync4DriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
-                        .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                        .addDependency(mongoClient)
+                        .addDependency("databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithoutRollback"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
                         .disableTransaction()

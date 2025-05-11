@@ -32,7 +32,6 @@ import io.flamingock.oss.driver.mongodb.springdata.v4.changes._0_mongock_create_
 import io.flamingock.oss.driver.mongodb.springdata.v4.changes._1_create_client_collection_happy;
 import io.flamingock.oss.driver.mongodb.springdata.v4.changes._2_insert_federico_happy_non_transactional;
 import io.flamingock.oss.driver.mongodb.springdata.v4.changes._3_insert_jorge_happy_non_transactional;
-import io.flamingock.oss.driver.mongodb.springdata.v4.driver.SpringDataMongoV4Driver;
 import io.mongock.driver.mongodb.sync.v4.driver.MongoSync4Driver;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.bson.Document;
@@ -119,7 +118,6 @@ class MongoSpringDataV4ImporterTest {
             );
 
             Flamingock.local()
-                    .setDriver(new SpringDataMongoV4Driver(mongoTemplate))
                     .withImporter(withSource(mongo3Driver.getMigrationRepositoryName()))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)

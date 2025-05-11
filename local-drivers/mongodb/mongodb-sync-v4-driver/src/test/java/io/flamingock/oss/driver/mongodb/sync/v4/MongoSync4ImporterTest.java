@@ -31,7 +31,6 @@ import io.flamingock.oss.driver.mongodb.sync.v4.changes._0_mongock_create_author
 import io.flamingock.oss.driver.mongodb.sync.v4.changes._1_create_client_collection_happy;
 import io.flamingock.oss.driver.mongodb.sync.v4.changes._2_insert_federico_happy_non_transactional;
 import io.flamingock.oss.driver.mongodb.sync.v4.changes._3_insert_jorge_happy_non_transactional;
-import io.flamingock.oss.driver.mongodb.sync.v4.driver.MongoSync4Driver;
 import io.mongock.runner.standalone.MongockStandalone;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
@@ -54,7 +53,6 @@ import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfigur
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 @Testcontainers
@@ -121,7 +119,8 @@ class MongoSync4ImporterTest {
             );
 
             Flamingock.local()
-                    .setDriver(new MongoSync4Driver(mongoClient, DB_NAME))
+                    .addDependency(mongoClient)
+                    .addDependency("databaseName", DB_NAME)
                     .withImporter(withSource("mongockChangeLog"))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.withImporter"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
