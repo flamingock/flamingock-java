@@ -34,7 +34,7 @@ public class CommunityFlamingockBuilder
 
     private final CommunityConfiguration communityConfiguration;
 
-    private LocalDriver<?> connectionDriver;
+    private LocalDriver connectionDriver;
 
     private LocalEngine engine;
 
@@ -53,7 +53,7 @@ public class CommunityFlamingockBuilder
         return this;
     }
 
-    private LocalDriver<?> getLocalDriver() {
+    private LocalDriver getLocalDriver() {
         return LocalDriver.getDriver().orElse(null);
     }
 
@@ -76,14 +76,7 @@ public class CommunityFlamingockBuilder
     }
 
     @Override
-    @Deprecated
-    public CommunityFlamingockBuilder setDriver(LocalDriver<?> connectionDriver) {
-        this.connectionDriver = connectionDriver;
-        return this;
-    }
-
-    @Override
-    public LocalDriver<?> getDriver() {
+    public LocalDriver getDriver() {
         return connectionDriver;
     }
 

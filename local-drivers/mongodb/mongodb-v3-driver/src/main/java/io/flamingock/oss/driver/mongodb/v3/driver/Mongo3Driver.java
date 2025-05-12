@@ -26,12 +26,8 @@ import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
 import io.flamingock.oss.driver.mongodb.v3.internal.Mongo3Engine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class Mongo3Driver implements LocalDriver<MongoDB3Configuration> {
-    private static final Logger logger = LoggerFactory.getLogger(Mongo3Driver.class);
-
+public class Mongo3Driver implements LocalDriver {
 
     private MongoClient mongoClient;
 
@@ -39,29 +35,7 @@ public class Mongo3Driver implements LocalDriver<MongoDB3Configuration> {
 
     private MongoDB3Configuration driverConfiguration;
 
-
-    @Deprecated
-    public static Mongo3Driver withLockStrategy(MongoClient mongoClient,
-                                                String databaseName,
-                                                @Deprecated long lockAcquiredForMillis,
-                                                @Deprecated long lockQuitTryingAfterMillis,
-                                                @Deprecated long lockTryFrequencyMillis) {
-        logWarningFieldIgnored("lockAcquiredForMillis", lockAcquiredForMillis);
-        logWarningFieldIgnored("lockQuitTryingAfterMillis", lockQuitTryingAfterMillis);
-        logWarningFieldIgnored("lockTryFrequencyMillis", lockTryFrequencyMillis);
-        return new Mongo3Driver(mongoClient, databaseName);
-    }
-
-    @Deprecated
-    public static Mongo3Driver withDefaultLock(MongoClient mongoClient, String databaseName) {
-        return new Mongo3Driver(mongoClient, databaseName);
-    }
-
-    public Mongo3Driver() {}
-
-    public Mongo3Driver(MongoClient mongoClient, String databaseName) {
-        this.mongoClient = mongoClient;
-        this.databaseName = databaseName;
+    public Mongo3Driver() {
     }
 
     @Override
@@ -79,13 +53,6 @@ public class Mongo3Driver implements LocalDriver<MongoDB3Configuration> {
         });
     }
 
-    @Deprecated
-    @Override
-    public Mongo3Driver setDriverConfiguration(MongoDB3Configuration driverConfiguration) {
-        this.driverConfiguration = driverConfiguration;
-        return this;
-    }
-
     @Override
     public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
         Mongo3Engine engine = new Mongo3Engine(
@@ -97,11 +64,6 @@ public class Mongo3Driver implements LocalDriver<MongoDB3Configuration> {
 
         engine.initialize(runnerId);
         return engine;
-    }
-
-    private static void logWarningFieldIgnored(String name, long value) {
-        logger.warn("Parameter[{}] with value[{}] will be ignored. It needs to be injected in the configuration",
-                name, value);
     }
 
 }

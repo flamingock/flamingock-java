@@ -19,10 +19,8 @@ package io.flamingock.core.builder.local;
 import io.flamingock.core.community.driver.LocalDriver;
 
 public interface CommunityConfigurator<HOLDER> {
-    //TODO remove this method and load with ServiceLoader
-    HOLDER setDriver(LocalDriver<?> connectionDriver);
 
-    LocalDriver<?> getDriver();
+    LocalDriver getDriver();
 
     HOLDER disableTransaction();
 

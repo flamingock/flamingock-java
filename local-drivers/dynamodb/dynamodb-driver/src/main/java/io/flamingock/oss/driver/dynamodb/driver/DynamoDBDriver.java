@@ -26,58 +26,23 @@ import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
 import io.flamingock.oss.driver.dynamodb.internal.DynamoDBEngine;
 import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDBDriver implements LocalDriver<DynamoDBConfiguration> {
-
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBDriver.class);
+public class DynamoDBDriver implements LocalDriver {
 
     private DynamoClients client;
 
     private DynamoDBConfiguration driverConfiguration;
 
-    public DynamoDBDriver() {}
-
-    public DynamoDBDriver(DynamoDbClient client) {
-        this.client = new DynamoClients(client);
-    }
-
-    @Deprecated
-    public static DynamoDBDriver withLockStrategy(DynamoDbClient client,
-                                                  @Deprecated long lockAcquiredForMillis,
-                                                  @Deprecated long lockQuitTryingAfterMillis,
-                                                  @Deprecated long lockTryFrequencyMillis) {
-        logWarningFieldIgnored("lockAcquiredForMillis", lockAcquiredForMillis);
-        logWarningFieldIgnored("lockQuitTryingAfterMillis", lockQuitTryingAfterMillis);
-        logWarningFieldIgnored("lockTryFrequencyMillis", lockTryFrequencyMillis);
-        return new DynamoDBDriver(client);
-    }
-
-    @Deprecated
-    public static DynamoDBDriver withDefaultLock(DynamoDbClient client) {
-        return new DynamoDBDriver(client);
-    }
-
-    private static void logWarningFieldIgnored(String name, long value) {
-        logger.warn("Parameter[{}] with value[{}] will be ignored. It needs to be injected in the configuration",
-                name, value);
-    }
-
-    @Deprecated
-    @Override
-    public DynamoDBDriver setDriverConfiguration(DynamoDBConfiguration driverConfiguration) {
-        this.driverConfiguration = driverConfiguration;
-        return this;
+    public DynamoDBDriver() {
     }
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
         this.client = new DynamoClients((DynamoDbClient) dependencyContext
-                        .getDependency(DynamoDbClient.class)
-                        .orElseThrow(() -> new FlamingockException("DynamoDbClient is needed to be added as dependency"))
-                        .getInstance()
+                .getDependency(DynamoDbClient.class)
+                .orElseThrow(() -> new FlamingockException("DynamoDbClient is needed to be added as dependency"))
+                .getInstance()
         );
         dependencyContext.getDependency(DynamoDBConfiguration.class).ifPresent(dependency -> {
             this.driverConfiguration = (DynamoDBConfiguration) dependency.getInstance();

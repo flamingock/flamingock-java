@@ -27,41 +27,16 @@ import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v2.internal.SpringDataMongoV2Engine;
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OverridesDrivers({Mongo3Driver.class})
-public class SpringDataMongoV2Driver implements LocalDriver<SpringDataMongoV2Configuration> {
-    private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoV2Driver.class);
-
+public class SpringDataMongoV2Driver implements LocalDriver {
 
     private MongoTemplate mongoTemplate;
 
     private SpringDataMongoV2Configuration driverConfiguration;
 
-
-    @Deprecated
-    public static SpringDataMongoV2Driver withLockStrategy(MongoTemplate mongoTemplate,
-                                                           @Deprecated long lockAcquiredForMillis,
-                                                           @Deprecated long lockQuitTryingAfterMillis,
-                                                           @Deprecated long lockTryFrequencyMillis) {
-        logWarningFieldIgnored("lockAcquiredForMillis", lockAcquiredForMillis);
-        logWarningFieldIgnored("lockQuitTryingAfterMillis", lockQuitTryingAfterMillis);
-        logWarningFieldIgnored("lockTryFrequencyMillis", lockTryFrequencyMillis);
-        return new SpringDataMongoV2Driver(mongoTemplate);
-    }
-
-    @Deprecated
-    public static SpringDataMongoV2Driver withDefaultLock(MongoTemplate mongoTemplate) {
-        return new SpringDataMongoV2Driver(mongoTemplate);
-    }
-
     public SpringDataMongoV2Driver() {
-    }
-
-    public SpringDataMongoV2Driver(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
     }
 
     @Override
@@ -75,13 +50,6 @@ public class SpringDataMongoV2Driver implements LocalDriver<SpringDataMongoV2Con
         });
     }
 
-    @Deprecated
-    @Override
-    public SpringDataMongoV2Driver setDriverConfiguration(SpringDataMongoV2Configuration driverConfiguration) {
-        this.driverConfiguration = driverConfiguration;
-        return this;
-    }
-
     @Override
     public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
         SpringDataMongoV2Engine engine = new SpringDataMongoV2Engine(
@@ -91,11 +59,6 @@ public class SpringDataMongoV2Driver implements LocalDriver<SpringDataMongoV2Con
                 driverConfiguration != null ? driverConfiguration : SpringDataMongoV2Configuration.getDefault());
         engine.initialize(runnerId);
         return engine;
-    }
-
-    private static void logWarningFieldIgnored(String name, long value) {
-        logger.warn("Parameter[{}] with value[{}] will be ignored. It needs to be injected in the configuration",
-                name, value);
     }
 
 }

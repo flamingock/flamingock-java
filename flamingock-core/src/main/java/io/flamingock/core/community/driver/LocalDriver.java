@@ -28,17 +28,14 @@ import java.util.Set;
 
 import io.flamingock.core.runtime.dependency.DependencyContext;
 
-public interface LocalDriver<DRIVER_CONFIGURATION extends DriverConfigurable> extends LocalEngineFactory {
+public interface LocalDriver extends LocalEngineFactory {
 
     void initialize(DependencyContext dependencyContext);
 
-    @Deprecated
-    LocalDriver<DRIVER_CONFIGURATION> setDriverConfiguration(DRIVER_CONFIGURATION configuration);
+    static Optional<LocalDriver> getDriver() {
 
-    static Optional<LocalDriver<?>> getDriver() {
-
-        Pair<LocalDriver<?>, Set<Class<?>>> current = null;//contains driver and the list of precedent classes
-        for(LocalDriver<?> driver : ServiceLoader.load(LocalDriver.class)) {
+        Pair<LocalDriver, Set<Class<?>>> current = null;//contains driver and the list of precedent classes
+        for(LocalDriver driver : ServiceLoader.load(LocalDriver.class)) {
 
             Set<Class<?>> precedentClasses;
             OverridesDrivers annotation = driver.getClass().getAnnotation(OverridesDrivers.class);

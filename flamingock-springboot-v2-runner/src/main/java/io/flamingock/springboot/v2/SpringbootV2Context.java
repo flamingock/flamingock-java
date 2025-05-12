@@ -59,7 +59,7 @@ public class SpringbootV2Context {
 
     @Bean("flamingock-builder")
     @Profile(Constants.NON_CLI_PROFILE)
-    public RunnerBuilder flamingockBuilder(Optional<LocalDriver<?>> connectionDriverOptional,
+    public RunnerBuilder flamingockBuilder(Optional<LocalDriver> connectionDriverOptional,
                                            SpringbootV2Properties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher) {
@@ -71,7 +71,6 @@ public class SpringbootV2Context {
                             new SimpleDependencyInjectableContext(),//
                             new LocalSystemModuleManager()
                     )
-                    .setDriver(connectionDriverOptional.get())
                     .addDependency(SpringRunnerType.class, configurationProperties.getRunnerType())
                     .addDependency(ApplicationContext.class, springContext)
                     .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);

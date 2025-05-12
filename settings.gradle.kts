@@ -75,10 +75,6 @@ include("local-drivers:couchbase:couchbase-driver")
 project(":local-drivers:couchbase:couchbase-driver").name = "couchbase-driver"
 project(":local-drivers:couchbase:couchbase-driver").projectDir = file("local-drivers/couchbase/couchbase-driver")
 
-include("local-drivers:couchbase:couchbase-springboot-v2-driver")
-project(":local-drivers:couchbase:couchbase-springboot-v2-driver").name = "couchbase-springboot-v2-driver"
-project(":local-drivers:couchbase:couchbase-springboot-v2-driver").projectDir = file("local-drivers/couchbase/couchbase-springboot-v2-driver")
-
 include("local-drivers:dynamodb:dynamodb-driver")
 project(":local-drivers:dynamodb:dynamodb-driver").name = "dynamodb-driver"
 project(":local-drivers:dynamodb:dynamodb-driver").projectDir = file("local-drivers/dynamodb/dynamodb-driver")
