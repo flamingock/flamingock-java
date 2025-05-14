@@ -25,7 +25,6 @@ import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import io.flamingock.core.runtime.dependency.exception.DependencyInjectionException;
 import io.flamingock.core.runtime.proxy.LockGuardProxyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,7 +146,7 @@ public final class RuntimeManager implements DependencyInjectable {
             if (parameter.isAnnotationPresent(Nullable.class)) {
                 return null;
             } else {
-                throw new DependencyInjectionException(type, name);
+                throw new MissingInjectedParameterException(type, name);
             }
         }
 

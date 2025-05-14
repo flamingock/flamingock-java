@@ -19,7 +19,6 @@ package io.flamingock.core.task.navigation.navigator;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.cloud.transaction.OngoingStatusRepository;
 import io.flamingock.core.runtime.RuntimeManager;
-import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
 import io.flamingock.core.runtime.dependency.PriorityDependencyInjectableContext;
 
 public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractStepNavigator {

@@ -41,17 +41,30 @@ public class CouchbaseDriver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        this.cluster = (Cluster) dependencyContext
-                .getDependency(Cluster.class)
-                .orElseThrow(() -> new FlamingockException("DynamoDbClient is needed to be added as dependency"))
-                .getInstance();
-        this.collection = (Collection) dependencyContext
-                .getDependency(Collection.class)
-                .orElseThrow(() -> new FlamingockException("DynamoDbClient is needed to be added as dependency"))
-                .getInstance();
-        dependencyContext.getDependency(CouchbaseConfiguration.class).ifPresent(dependency -> {
-            this.driverConfiguration = (CouchbaseConfiguration) dependency.getInstance();
-        });
+        this.cluster = dependencyContext
+                .getDependencyValue(Cluster.class)
+                .orElseThrow(() -> new FlamingockException("Couchbase Cluster is needed to be added as dependency"));
+        this.collection = dependencyContext
+                .getDependencyValue(Collection.class)
+                .orElseThrow(() -> new FlamingockException("Couchbase Collection is needed to be added as dependency"));
+        this.driverConfiguration = generateConfig(dependencyContext);
+    }
+
+    public CouchbaseConfiguration generateConfig(DependencyContext dependencyContext) {
+        CouchbaseConfiguration configuration = dependencyContext
+                .getDependencyValue(CouchbaseConfiguration.class)
+                .orElse(CouchbaseConfiguration.getDefault());
+        dependencyContext.getPropertyAs("couchbase.autoCreate", boolean.class)
+                .ifPresent(configuration::setIndexCreation);
+        dependencyContext.getPropertyAs("couchbase.auditRepositoryName", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("couchbase.lockRepositoryName", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        return configuration;
     }
 
     @Override
@@ -63,7 +76,7 @@ public class CouchbaseDriver implements LocalDriver {
                 collection,
                 coreConfiguration,
                 localConfiguration,
-                driverConfiguration != null ? driverConfiguration : CouchbaseConfiguration.getDefault());
+                driverConfiguration);
         couchbaseEngine.initialize(runnerId);
         return couchbaseEngine;
     }

@@ -1,8 +1,8 @@
 package io.flamingock.core.annotations;
 
 import io.flamingock.commons.utils.Result;
-import io.flamingock.core.cloud.audit.CloudAuditWriter;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
+import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.audit.domain.ExecutionAuditItem;
 import io.flamingock.core.engine.audit.domain.RollbackAuditItem;
 import io.flamingock.core.engine.audit.domain.StartExecutionAuditItem;
@@ -55,7 +55,7 @@ public class TestRunner {
                         TestTaskExecution... executionSteps
     ) {
         checker.reset();
-        CloudAuditWriter auditWriterMock = mock(CloudAuditWriter.class);
+        AuditWriter auditWriterMock = mock(AuditWriter.class);
         when(auditWriterMock.writeStartExecution(any(StartExecutionAuditItem.class))).thenReturn(Result.OK());
         when(auditWriterMock.writeExecution(any(ExecutionAuditItem.class))).thenReturn(Result.OK());
         when(auditWriterMock.writeRollback(any(RollbackAuditItem.class))).thenReturn(Result.OK());

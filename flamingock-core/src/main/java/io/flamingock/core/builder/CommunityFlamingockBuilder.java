@@ -58,6 +58,11 @@ public class CommunityFlamingockBuilder
     }
 
     @Override
+    protected void injectSpecificDependencies() {
+        addDependency(communityConfiguration);
+    }
+
+    @Override
     protected ConnectionEngine getConnectionEngine(RunnerId runnerId) {
         connectionDriver.initialize(dependencyContext);
         engine = connectionDriver.initializeAndGetEngine(

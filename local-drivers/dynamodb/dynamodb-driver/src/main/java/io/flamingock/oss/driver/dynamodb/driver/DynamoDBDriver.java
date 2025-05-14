@@ -39,14 +39,35 @@ public class DynamoDBDriver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        this.client = new DynamoClients((DynamoDbClient) dependencyContext
-                .getDependency(DynamoDbClient.class)
-                .orElseThrow(() -> new FlamingockException("DynamoDbClient is needed to be added as dependency"))
-                .getInstance()
-        );
-        dependencyContext.getDependency(DynamoDBConfiguration.class).ifPresent(dependency -> {
-            this.driverConfiguration = (DynamoDBConfiguration) dependency.getInstance();
-        });
+        this.client = new DynamoClients(dependencyContext
+                .getDependencyValue(DynamoDbClient.class)
+                .orElseThrow(() -> new FlamingockException("DynamoDbClient is needed to be added as dependency")));
+        this.driverConfiguration = generateConfig(dependencyContext);
+    }
+
+    public DynamoDBConfiguration generateConfig(DependencyContext dependencyContext) {
+        DynamoDBConfiguration configuration = dependencyContext
+                .getDependencyValue(DynamoDBConfiguration.class)
+                .orElse(DynamoDBConfiguration.getDefault());
+        dependencyContext.getPropertyAs("dynamodb.autoCreate", boolean.class)
+                .ifPresent(configuration::setIndexCreation);
+        dependencyContext.getPropertyAs("dynamodb.auditRepositoryName", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("dynamodb.lockRepositoryName", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("dynamodb.readCapacityUnits", int.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("dynamodb.writeCapacityUnits", int.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        return configuration;
     }
 
     @Override
@@ -55,7 +76,7 @@ public class DynamoDBDriver implements LocalDriver {
                 client,
                 coreConfiguration,
                 localConfiguration,
-                driverConfiguration != null ? driverConfiguration : DynamoDBConfiguration.getDefault());
+                driverConfiguration);
         dynamodbEngine.initialize(runnerId);
         return dynamodbEngine;
     }

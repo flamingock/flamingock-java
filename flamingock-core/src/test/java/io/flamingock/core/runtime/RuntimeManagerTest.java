@@ -3,7 +3,6 @@ package io.flamingock.core.runtime;
 
 import io.flamingock.core.api.annotations.Nullable;
 import io.flamingock.core.runtime.dependency.SimpleDependencyInjectableContext;
-import io.flamingock.core.runtime.dependency.exception.DependencyInjectionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ class RuntimeManagerTest {
                 .build();
 
         Method methodWithNoNullable = RuntimeManagerTest.class.getMethod("methodWithNoNullable", ParameterClass.class);
-        DependencyInjectionException ex = Assertions.assertThrows(DependencyInjectionException.class, () -> runtimeManager.executeMethodWithInjectedDependencies(new RuntimeManagerTest(), methodWithNoNullable));
+        MissingInjectedParameterException ex = Assertions.assertThrows(MissingInjectedParameterException.class, () -> runtimeManager.executeMethodWithInjectedDependencies(new RuntimeManagerTest(), methodWithNoNullable));
         assertEquals(ParameterClass.class, ex.getWrongParameter());
     }
 

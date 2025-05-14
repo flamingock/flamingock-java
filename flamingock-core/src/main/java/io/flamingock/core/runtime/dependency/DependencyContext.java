@@ -43,6 +43,30 @@ public interface DependencyContext extends PropertyDependencyResolver {
     Optional<Dependency> getDependency(String name);
 
     /**
+     * Retrieves a dependency by type or throws {@link NotFoundDependencyException} if not found.
+     *
+     * @param type the class type of the dependency
+     * @return the {@link Dependency} instance
+     */
+    default Dependency getRequiredDependency(Class<?> type) {
+        return getDependency(type).orElseThrow(() ->
+                new NotFoundDependencyException(type)
+        );
+    }
+
+    /**
+     * Retrieves a dependency by name or throws {@link NotFoundDependencyException} if not found.
+     *
+     * @param name the name of the dependency
+     * @return the {@link Dependency} instance
+     */
+    default Dependency getRequiredDependency(String name) {
+        return getDependency(name).orElseThrow(() ->
+                new NotFoundDependencyException(name)
+        );
+    }
+
+    /**
      * Retrieves the value of a dependency by type, automatically casting it.
      *
      * @param type the class type of the dependency
@@ -51,8 +75,7 @@ public interface DependencyContext extends PropertyDependencyResolver {
      */
     default <T> Optional<T> getDependencyValue(Class<T> type) {
         return getDependency(type)
-                .map(Dependency::getInstance)
-                .map(type::cast);
+                .map(d -> d.getInstanceAs(type));
     }
 
     /**
@@ -65,7 +88,32 @@ public interface DependencyContext extends PropertyDependencyResolver {
      */
     default <T> Optional<T> getDependencyValue(String name, Class<T> type) {
         return getDependency(name)
-                .map(Dependency::getInstance)
-                .map(type::cast);
+                .map(d -> d.getInstanceAs(type));
     }
+
+
+    /**
+     * Retrieves a dependency value by type or throws {@link NotFoundDependencyException} if not found.
+     *
+     * @param type the expected type of the instance
+     * @param <T>  the type of the dependency value
+     * @return the dependency instance casted to the expected type
+     */
+    default <T> T getRequiredDependencyValue(Class<T> type) {
+        return getRequiredDependency(type).getInstanceAs(type);
+    }
+
+    /**
+     * Retrieves a dependency value by name or throws {@link NotFoundDependencyException} if not found.
+     *
+     * @param name the name of the dependency
+     * @param type the expected type of the instance
+     * @param <T>  the type of the dependency value
+     * @return the dependency instance casted to the expected type
+     */
+    default <T> T getRequiredDependencyValue(String name, Class<T> type) {
+        return getRequiredDependency(name).getInstanceAs(type);
+    }
+
+
 }

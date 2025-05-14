@@ -16,6 +16,7 @@
 
 package io.flamingock.core.builder.cloud;
 
+
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 
 public interface CloudConfigurator<HOLDER> {

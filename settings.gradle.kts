@@ -121,3 +121,10 @@ project(":importers:mongodb-importer-sync-v4").projectDir = file("importers/mong
 include("importers:mongodb-importer-v3")
 project(":importers:mongodb-importer-v3").name = "mongodb-importer-v3"
 project(":importers:mongodb-importer-v3").projectDir = file("importers/mongodb-importer-v3")
+
+//////////////////////////////////////
+// CLOUD
+//////////////////////////////////////
+include("cloud-edition")
+project(":cloud-edition").name = "cloud-edition"
+project(":cloud-edition").projectDir = file("cloud-edition")

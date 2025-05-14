@@ -13,7 +13,7 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 
 
-    testAnnotationProcessor(project(":flamingock-processor"))
+//    testAnnotationProcessor(project(":flamingock-processor"))
     testImplementation(project(":utils-test"))
 }
 

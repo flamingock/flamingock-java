@@ -27,6 +27,8 @@ import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.MongoSync4Engine;
 
+import java.time.Duration;
+
 public class MongoSync4Driver implements LocalDriver {
 
     private MongoClient mongoClient;
@@ -40,17 +42,46 @@ public class MongoSync4Driver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        this.mongoClient = (MongoClient) dependencyContext
-                .getDependency(MongoClient.class)
-                .orElseThrow(() -> new FlamingockException("MongoClient is needed to be added as dependency"))
-                .getInstance();
-        this.databaseName = (String) dependencyContext
-                .getDependency("databaseName")
-                .orElseThrow(() -> new FlamingockException("databaseName is needed to be added as property"))
-                .getInstance();
-        dependencyContext.getDependency(MongoDBSync4Configuration.class).ifPresent(dependency -> {
-            this.driverConfiguration = (MongoDBSync4Configuration) dependency.getInstance();
-        });
+        this.mongoClient = dependencyContext
+                .getDependencyValue(MongoClient.class)
+                .orElseThrow(() -> new FlamingockException("MongoClient is needed to be added as dependency"));
+        this.databaseName = dependencyContext
+                .getPropertyAs("databaseName", String.class)
+                .orElseThrow(() -> new FlamingockException("databaseName is needed to be added as property"));
+        this.driverConfiguration = generateConfig(dependencyContext);
+    }
+
+    public MongoDBSync4Configuration generateConfig(DependencyContext dependencyContext) {
+        MongoDBSync4Configuration configuration = dependencyContext
+                .getDependencyValue(MongoDBSync4Configuration.class)
+                .orElse(MongoDBSync4Configuration.getDefault());
+        dependencyContext.getPropertyAs("mongodb.autoCreate", boolean.class)
+                .ifPresent(configuration::setIndexCreation);
+        dependencyContext.getPropertyAs("mongodb.auditRepositoryName", String.class)
+                .ifPresent(configuration::setMigrationRepositoryName);
+        dependencyContext.getPropertyAs("mongodb.lockRepositoryName", String.class)
+                .ifPresent(configuration::setLockRepositoryName);
+        dependencyContext.getPropertyAs("mongodb.readConcern", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.writeConcern.w", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.writeConcern.journal", boolean.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.writeConcern.wTimeout", Duration.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.readPreference", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        return configuration;
     }
 
 
@@ -61,7 +92,7 @@ public class MongoSync4Driver implements LocalDriver {
                 databaseName,
                 coreConfiguration,
                 localConfiguration,
-                driverConfiguration != null ? driverConfiguration : MongoDBSync4Configuration.getDefault());
+                driverConfiguration);
         engine.initialize(runnerId);
         return engine;
     }

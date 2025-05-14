@@ -16,18 +16,17 @@
 
 package io.flamingock.core.builder;
 
-import io.flamingock.commons.utils.JsonObjectMapper;
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.commons.utils.http.Http;
 import io.flamingock.core.cloud.CloudEngine;
+import io.flamingock.core.cloud.CloudDriver;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.builder.cloud.CloudConfiguration;
 import io.flamingock.core.builder.cloud.CloudConfigurator;
 import io.flamingock.core.builder.cloud.CloudSystemModuleManager;
 import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.engine.ConnectionEngine;
+import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import org.apache.http.impl.client.HttpClients;
 
 public class CloudFlamingockBuilder
         extends AbstractFlamingockBuilder<CloudFlamingockBuilder>
@@ -59,15 +58,21 @@ public class CloudFlamingockBuilder
 
 
     @Override
+    protected void injectSpecificDependencies() {
+        addDependency(cloudConfiguration);
+    }
+
+    @Override
     protected ConnectionEngine getConnectionEngine(RunnerId runnerId) {
-        //TODO get the driver from serviceLoader
-        engine = CloudEngine.newFactory(
-                runnerId,
-                coreConfiguration,
-                cloudConfiguration,
-                cloudTransactioner,
-                Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE)
-        ).initializeAndGet();
+        //TODO get transactioner from ServiceLoader
+        // currently injecting it into the context for the driver to pick it up
+        if(cloudTransactioner != null) {
+            dependencyContext.addDependency(new Dependency(CloudTransactioner.class, cloudTransactioner));
+        }
+
+        CloudDriver cloudDriver = CloudDriver.getDriver().orElse(null);
+        cloudDriver.initialize(dependencyContext);
+        engine = cloudDriver.initializeAndGet();
 
         return engine;
     }

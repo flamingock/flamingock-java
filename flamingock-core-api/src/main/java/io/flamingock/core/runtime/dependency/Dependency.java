@@ -85,6 +85,10 @@ public class Dependency {
     return instance;
   }
 
+  public <T> T getInstanceAs(Class<T> type) {
+    return type.cast(instance);
+  }
+
   public boolean isDefaultNamed() {
     return DEFAULT_NAME.equals(name);
   }

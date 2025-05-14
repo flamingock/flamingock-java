@@ -29,6 +29,8 @@ import io.flamingock.oss.driver.mongodb.springdata.v2.internal.SpringDataMongoV2
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.time.Duration;
+
 @OverridesDrivers({Mongo3Driver.class})
 public class SpringDataMongoV2Driver implements LocalDriver {
 
@@ -41,13 +43,43 @@ public class SpringDataMongoV2Driver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        this.mongoTemplate = (MongoTemplate) dependencyContext
-                .getDependency(MongoTemplate.class)
-                .orElseThrow(() -> new FlamingockException("MongoTemplate is needed to be added as dependency"))
-                .getInstance();
-        dependencyContext.getDependency(SpringDataMongoV2Configuration.class).ifPresent(dependency -> {
-            this.driverConfiguration = (SpringDataMongoV2Configuration) dependency.getInstance();
-        });
+        this.mongoTemplate = dependencyContext
+                .getDependencyValue(MongoTemplate.class)
+                .orElseThrow(() -> new FlamingockException("MongoTemplate is needed to be added as dependency"));
+        this.driverConfiguration = generateConfig(dependencyContext);
+    }
+
+    public SpringDataMongoV2Configuration generateConfig(DependencyContext dependencyContext) {
+        SpringDataMongoV2Configuration configuration = dependencyContext
+                .getDependencyValue(SpringDataMongoV2Configuration.class)
+                .orElse(SpringDataMongoV2Configuration.getDefault());
+        dependencyContext.getPropertyAs("mongodb.autoCreate", boolean.class)
+                .ifPresent(configuration::setIndexCreation);
+        dependencyContext.getPropertyAs("mongodb.auditRepositoryName", String.class)
+                .ifPresent(configuration::setMigrationRepositoryName);
+        dependencyContext.getPropertyAs("mongodb.lockRepositoryName", String.class)
+                .ifPresent(configuration::setLockRepositoryName);
+        dependencyContext.getPropertyAs("mongodb.readConcern", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.writeConcern.w", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.writeConcern.journal", boolean.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.writeConcern.wTimeout", Duration.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        dependencyContext.getPropertyAs("mongodb.readPreference", String.class)
+                .ifPresent(d -> {
+                    //TODO
+                });
+        return configuration;
     }
 
     @Override
@@ -56,7 +88,7 @@ public class SpringDataMongoV2Driver implements LocalDriver {
                 mongoTemplate,
                 coreConfiguration,
                 localConfiguration,
-                driverConfiguration != null ? driverConfiguration : SpringDataMongoV2Configuration.getDefault());
+                driverConfiguration);
         engine.initialize(runnerId);
         return engine;
     }
