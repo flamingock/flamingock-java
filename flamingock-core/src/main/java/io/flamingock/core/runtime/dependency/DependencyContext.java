@@ -16,13 +16,56 @@
 
 package io.flamingock.core.runtime.dependency;
 
-import io.flamingock.core.runtime.dependency.exception.ForbiddenParameterException;
-
 import java.util.Optional;
 
-public interface DependencyContext {
+/**
+ * Represents a container for runtime dependencies.
+ * Allows retrieval of registered {@link Dependency} instances by type or name.
+ * <p>
+ * Also provides typed access to the instance values directly via {@code getDependencyValue}.
+ */
+public interface DependencyContext extends PropertyDependencyResolver {
 
-    Optional<Dependency> getDependency(Class<?> type) throws ForbiddenParameterException;
+    /**
+     * Retrieves an optional dependency by its type.
+     *
+     * @param type the class type of the dependency
+     * @return an {@link Optional} containing the dependency if found, otherwise empty
+     */
+    Optional<Dependency> getDependency(Class<?> type);
 
-    Optional<Dependency> getDependency(String name) throws ForbiddenParameterException;
+    /**
+     * Retrieves an optional dependency by its registered name.
+     *
+     * @param name the name under which the dependency was registered
+     * @return an {@link Optional} containing the dependency if found, otherwise empty
+     */
+    Optional<Dependency> getDependency(String name);
+
+    /**
+     * Retrieves the value of a dependency by type, automatically casting it.
+     *
+     * @param type the class type of the dependency
+     * @param <T>  the type of the dependency value
+     * @return an {@link Optional} containing the instance if found and castable, otherwise empty
+     */
+    default <T> Optional<T> getDependencyValue(Class<T> type) {
+        return getDependency(type)
+                .map(Dependency::getInstance)
+                .map(type::cast);
+    }
+
+    /**
+     * Retrieves the value of a dependency by name, automatically casting it.
+     *
+     * @param name the name of the dependency
+     * @param type the expected type of the instance
+     * @param <T>  the type of the dependency value
+     * @return an {@link Optional} containing the instance if found and castable, otherwise empty
+     */
+    default <T> Optional<T> getDependencyValue(String name, Class<T> type) {
+        return getDependency(name)
+                .map(Dependency::getInstance)
+                .map(type::cast);
+    }
 }

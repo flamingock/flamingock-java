@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Context

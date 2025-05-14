@@ -16,27 +16,27 @@
 
 package io.flamingock.core.runtime.dependency;
 
-import io.flamingock.core.runtime.dependency.exception.ForbiddenParameterException;
+
 
 import java.util.Optional;
 import java.util.function.Predicate;
 
-public abstract class AbstractDependencyContext implements DependencyContext {
+public abstract class AbstractSimpleDependencyContext implements DependencyContext {
 
     @Override
-    public Optional<Dependency> getDependency(Class<?> type) throws ForbiddenParameterException {
+    public Optional<Dependency> getDependency(Class<?> type) {
         return getDependency(dependency -> type.isAssignableFrom(dependency.getType()));
     }
 
     @Override
-    public Optional<Dependency> getDependency(String name) throws ForbiddenParameterException {
+    public Optional<Dependency> getDependency(String name) {
         if(name == null || name.isEmpty() || Dependency.DEFAULT_NAME.equals(name)) {
             throw new IllegalArgumentException("name cannot be null/empty  when retrieving dependency by name");
         }
         return getDependency(dependency -> name.equals(dependency.getName()));
     }
 
-    private Optional<Dependency> getDependency(Predicate<Dependency> filter) throws ForbiddenParameterException {
+    private Optional<Dependency> getDependency(Predicate<Dependency> filter) {
 
         Optional<Dependency> dependencyOptional = getFromStorage(filter);
         if (!dependencyOptional.isPresent()) {
@@ -47,6 +47,16 @@ public abstract class AbstractDependencyContext implements DependencyContext {
         return DependencyBuildable.class.isAssignableFrom(dependency.getClass())
                 ? getDependency(((DependencyBuildable) dependency).getImplType())
                 : dependencyOptional;
+    }
+
+    @Override
+    public Optional<String> getProperty(String key) {
+        return getDependencyValue(key, String.class);
+    }
+
+    @Override
+    public <T> Optional<T> getPropertyAs(String key, Class<T> type) {
+        return getDependencyValue(key, type);
     }
 
 

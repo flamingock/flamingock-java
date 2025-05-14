@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 Flamingock (https://oss.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.flamingock.springboot.v3;
 
 import io.flamingock.core.builder.FrameworkPlugin;
@@ -11,7 +27,6 @@ import io.flamingock.core.event.model.IStageFailedEvent;
 import io.flamingock.core.event.model.IStageIgnoredEvent;
 import io.flamingock.core.event.model.IStageStartedEvent;
 import io.flamingock.core.runtime.dependency.DependencyContext;
-import io.flamingock.core.runtime.dependency.DependencyContextWrapper;
 import io.flamingock.core.task.filter.TaskFilter;
 import io.flamingock.springboot.v3.event.SpringPipelineFailedEvent;
 import io.flamingock.springboot.v3.event.SpringPipelineIgnoredEvent;
@@ -28,19 +43,19 @@ import java.util.List;
 import java.util.Optional;
 
 public class SpringbootV3Plugin implements FrameworkPlugin {
-    
+
     private ApplicationContext applicationContext;
     private ApplicationEventPublisher eventPublisher;
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        if(dependencyContext.getDependency(ApplicationContext.class).isPresent()) {
+        if (dependencyContext.getDependency(ApplicationContext.class).isPresent()) {
             applicationContext = (ApplicationContext) dependencyContext
                     .getDependency(ApplicationContext.class)
                     .get()
-                    .getInstance();    
+                    .getInstance();
         }
-        if(dependencyContext.getDependency(ApplicationEventPublisher.class).isPresent()) {
+        if (dependencyContext.getDependency(ApplicationEventPublisher.class).isPresent()) {
             eventPublisher = (ApplicationEventPublisher) dependencyContext
                     .getDependency(ApplicationContext.class)
                     .get()
@@ -50,7 +65,7 @@ public class SpringbootV3Plugin implements FrameworkPlugin {
 
     @Override
     public Optional<EventPublisher> getEventPublisher() {
-        if(eventPublisher != null) {
+        if (eventPublisher != null) {
             return Optional.of(
                     new SimpleEventPublisher()
                             //pipeline
@@ -70,20 +85,14 @@ public class SpringbootV3Plugin implements FrameworkPlugin {
 
     @Override
     public Optional<DependencyContext> getDependencyContext() {
-        if(applicationContext != null) {
-            DependencyContext springDependencyContext = new DependencyContextWrapper(
-                    type -> applicationContext.getBean(type),
-                    name -> applicationContext.getBean(name)
-            );
-            return Optional.of(springDependencyContext);
-        } else {
-            return Optional.empty();
-        }
+        return applicationContext != null
+                ? Optional.of(new SpringbootV3DependencyContext(applicationContext))
+                : Optional.empty();
     }
 
     @Override
     public List<TaskFilter> getTaskFilters() {
-        if(applicationContext != null) {
+        if (applicationContext != null) {
             String[] activeProfiles = SpringbootUtil.getActiveProfiles(applicationContext);
             return Collections.singletonList(new SpringbootV3ProfileFilter(activeProfiles));
         } else {

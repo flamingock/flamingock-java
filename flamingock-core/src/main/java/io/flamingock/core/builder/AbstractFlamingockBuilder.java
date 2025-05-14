@@ -59,7 +59,7 @@ import java.util.stream.StreamSupport;
 public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingockBuilder<HOLDER>>
         implements
         CoreConfigurator<HOLDER>,
-        StandaloneConfigurator<HOLDER>,
+        ContextConfigurator<HOLDER>,
         RunnerBuilder {
     private static final Logger logger = LoggerFactory.getLogger(AbstractFlamingockBuilder.class);
 
@@ -362,7 +362,13 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     @Override
     public HOLDER addDependency(Object instance) {
-        return addDependency(Dependency.DEFAULT_NAME, instance.getClass(), instance);
+        if(instance instanceof Dependency) {
+            dependencyContext.addDependency(instance);
+            return getSelf();
+        } else {
+            return addDependency(Dependency.DEFAULT_NAME, instance.getClass(), instance);
+        }
+
     }
 
     @Override

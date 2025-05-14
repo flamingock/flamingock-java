@@ -24,10 +24,6 @@ public class DependencyInjectionException extends FlamingockException {
   private final Class<?> wrongParameter;
   private final String name;
 
-  public DependencyInjectionException(Class<?> wrongParameter) {
-    this(wrongParameter, null);
-  }
-
   public DependencyInjectionException(Class<?> wrongParameter, String name) {
     super();
     this.wrongParameter = wrongParameter;

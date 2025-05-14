@@ -16,5 +16,11 @@
 
 package io.flamingock.core.runtime.dependency;
 
+/**
+ * A composite interface that combines {@link DependencyContext} (for resolving dependencies)
+ * and {@link DependencyInjectable} (for injecting dependencies).
+ * <p>
+ * Implementations are both capable of providing and accepting dependencies at runtime.
+ */
 public interface DependencyInjectableContext extends DependencyContext, DependencyInjectable {
 }
