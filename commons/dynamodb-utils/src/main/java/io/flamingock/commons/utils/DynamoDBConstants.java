@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package io.flamingock.core.cloud.changes;
+package io.flamingock.commons.utils;
 
-import io.flamingock.core.api.annotations.Change;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.utils.TaskExecutionChecker;
+public final class DynamoDBConstants {
+    public static final String AUDIT_LOG_TABLE_NAME = "flamingock_audit_log";
+    public static final String AUDIT_LOG_PK = "partitionKey";
+    public static final String AUDIT_LOG_STAGE_ID = "stageId";
 
-@Change(id = "create-persons-table-from-template", order = "1")
-public class CloudChange1 {
-    public static final TaskExecutionChecker checker = new TaskExecutionChecker();
-
-    @Execution
-    public void execution() {
-        checker.markExecution();
-    }
-
-
+    public static final String LOCK_TABLE_NAME = "locks";
+    public static final String LOCK_PK = "partitionKey";
+    public static final String LOCK_OWNER = "lockOwner";
 }

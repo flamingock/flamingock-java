@@ -25,12 +25,11 @@ import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
 import io.flamingock.oss.driver.dynamodb.internal.DynamoDBEngine;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBDriver implements LocalDriver {
 
-    private DynamoClients client;
+    private DynamoDbClient client;
 
     private DynamoDBConfiguration driverConfiguration;
 
@@ -39,35 +38,10 @@ public class DynamoDBDriver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        this.client = new DynamoClients(dependencyContext
-                .getDependencyValue(DynamoDbClient.class)
-                .orElseThrow(() -> new FlamingockException("DynamoDbClient is needed to be added as dependency")));
-        this.driverConfiguration = generateConfig(dependencyContext);
-    }
-
-    public DynamoDBConfiguration generateConfig(DependencyContext dependencyContext) {
-        DynamoDBConfiguration configuration = dependencyContext
-                .getDependencyValue(DynamoDBConfiguration.class)
-                .orElse(DynamoDBConfiguration.getDefault());
-        dependencyContext.getPropertyAs("dynamodb.autoCreate", boolean.class)
-                .ifPresent(configuration::setIndexCreation);
-        dependencyContext.getPropertyAs("dynamodb.auditRepositoryName", String.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("dynamodb.lockRepositoryName", String.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("dynamodb.readCapacityUnits", int.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("dynamodb.writeCapacityUnits", int.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        return configuration;
+        this.client = dependencyContext
+                .getRequiredDependencyValue(DynamoDbClient.class);
+        this.driverConfiguration = new DynamoDBConfiguration();
+        this.driverConfiguration.mergeConfig(dependencyContext);
     }
 
     @Override

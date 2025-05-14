@@ -21,7 +21,7 @@ import io.flamingock.core.community.lock.LockEntry;
 import io.flamingock.core.community.lock.LockEntryField;
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockStatus;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
+import io.flamingock.commons.utils.DynamoDBConstants;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;

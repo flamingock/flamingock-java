@@ -55,7 +55,7 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
     @Override
     public void initialize() {
         TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
-        transactionWrapper = new DynamoDBTransactionWrapper(dynamoDBUtil.getEnhancedClient(), transactionManager);
+        transactionWrapper = new DynamoDBTransactionWrapper(dynamoDBUtil.getDynamoDbClient(), transactionManager);
 
         dynamoDBUtil.createTable(
                 dynamoDBUtil.getAttributeDefinitions("taskId", null),

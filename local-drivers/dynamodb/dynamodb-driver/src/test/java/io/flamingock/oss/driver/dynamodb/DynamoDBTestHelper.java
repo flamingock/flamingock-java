@@ -19,8 +19,7 @@ package io.flamingock.oss.driver.dynamodb;
 import io.flamingock.core.engine.audit.writer.AuditEntry;
 import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
+import io.flamingock.commons.utils.DynamoDBUtil;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -30,18 +29,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DynamoDBTestHelper {
-    public final DynamoClients client;
+    public final DynamoDBUtil dynamoDBUtil;
 
     public DynamoDBTestHelper(DynamoDbClient client) {
-        this.client = new DynamoClients(client);
+        this.dynamoDBUtil = new DynamoDBUtil(client);
     }
 
     public boolean tableExists(String tableName) {
-        return client.getDynamoDbClient().listTables().tableNames().contains(tableName);
+        return dynamoDBUtil.getDynamoDbClient().listTables().tableNames().contains(tableName);
     }
 
     public List<AuditEntry> getAuditEntriesSorted(String auditLogTable) {
-        return client.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(AuditEntryEntity.class))
+        return dynamoDBUtil.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(AuditEntryEntity.class))
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)
                         .build()
@@ -54,7 +53,7 @@ public class DynamoDBTestHelper {
     }
 
     public List<ChangeEntryDynamoDB> getChangeEntriesSorted(String auditLogTable) {
-        return client.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(ChangeEntryDynamoDB.class))
+        return dynamoDBUtil.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(ChangeEntryDynamoDB.class))
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)
                         .build()

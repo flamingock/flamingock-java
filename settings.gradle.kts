@@ -75,6 +75,10 @@ include("local-drivers:couchbase:couchbase-driver")
 project(":local-drivers:couchbase:couchbase-driver").name = "couchbase-driver"
 project(":local-drivers:couchbase:couchbase-driver").projectDir = file("local-drivers/couchbase/couchbase-driver")
 
+include("commons:dynamodb-utils")
+project(":commons:dynamodb-utils").name = "dynamodb-utils"
+project(":commons:dynamodb-utils").projectDir = file("commons/dynamodb-utils")
+
 include("local-drivers:dynamodb:dynamodb-driver")
 project(":local-drivers:dynamodb:dynamodb-driver").name = "dynamodb-driver"
 project(":local-drivers:dynamodb:dynamodb-driver").projectDir = file("local-drivers/dynamodb/dynamodb-driver")
@@ -104,10 +108,6 @@ project(":utils-test").projectDir = file("utils-test")
 include("utils")
 project(":utils").name = "utils"
 project(":utils").projectDir = file("utils")
-
-include("dynamodb-utils")
-project(":dynamodb-utils").name = "dynamodb-utils"
-project(":dynamodb-utils").projectDir = file("dynamodb-utils")
 
 
 //////////////////////////////////////

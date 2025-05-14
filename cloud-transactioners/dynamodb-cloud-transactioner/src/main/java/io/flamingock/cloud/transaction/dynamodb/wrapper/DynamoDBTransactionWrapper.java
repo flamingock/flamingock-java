@@ -16,6 +16,7 @@
 
 package io.flamingock.cloud.transaction.dynamodb.wrapper;
 
+import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.core.community.TransactionManager;
 import io.flamingock.core.runtime.dependency.Dependency;
 import io.flamingock.core.runtime.dependency.DependencyInjectable;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
 import java.util.function.Supplier;
@@ -34,11 +36,11 @@ public class DynamoDBTransactionWrapper implements TransactionWrapper {
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBTransactionWrapper.class);
 
     private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager;
-    private final DynamoDbEnhancedClient client;
+    private final DynamoDBUtil dynamoDBUtil;
 
 
-    public DynamoDBTransactionWrapper(DynamoDbEnhancedClient client, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager) {
-        this.client = client;
+    public DynamoDBTransactionWrapper(DynamoDbClient client, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager) {
+        this.dynamoDBUtil = new DynamoDBUtil(client);
         this.transactionManager = transactionManager;
     }
 
@@ -52,7 +54,7 @@ public class DynamoDBTransactionWrapper implements TransactionWrapper {
             T result = operation.get();
             if (!(result instanceof FailedStep)) {
                 try {
-                    client.transactWriteItems(writeRequestBuilder.build());
+                    dynamoDBUtil.getEnhancedClient().transactWriteItems(writeRequestBuilder.build());
                 } catch (TransactionCanceledException ex) {
                     ex.cancellationReasons().forEach(cancellationReason -> logger.info(cancellationReason.toString()));
                 }

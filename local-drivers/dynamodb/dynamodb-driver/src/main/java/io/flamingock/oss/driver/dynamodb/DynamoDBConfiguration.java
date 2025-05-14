@@ -16,25 +16,72 @@
 
 package io.flamingock.oss.driver.dynamodb;
 
+import io.flamingock.commons.utils.DynamoDBConstants;
 import io.flamingock.core.community.driver.DriverConfigurable;
+import io.flamingock.core.runtime.dependency.DependencyContext;
 
 public class DynamoDBConfiguration implements DriverConfigurable {
 
-    private boolean indexCreation = true;
-
-    DynamoDBConfiguration(Boolean indexCreation) {
-        this.indexCreation = indexCreation;
-    }
+    private boolean autoCreate = true;
+    private String auditRepositoryName = DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
+    private String lockRepositoryName = DynamoDBConstants.LOCK_TABLE_NAME;
+    private long readCapacityUnits = 5L;
+    private long writeCapacityUnits = 5L;
 
     public static DynamoDBConfiguration getDefault() {
-        return new DynamoDBConfiguration(true);
+        return new DynamoDBConfiguration();
     }
 
-    public boolean isIndexCreation() {
-        return indexCreation;
+    public boolean isAutoCreate() {
+        return autoCreate;
     }
 
-    public void setIndexCreation(boolean indexCreation) {
-        this.indexCreation = indexCreation;
+    public void setAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
+    }
+
+    public String getAuditRepositoryName() {
+        return auditRepositoryName;
+    }
+
+    public void setAuditRepositoryName(String auditRepositoryName) {
+        this.auditRepositoryName = auditRepositoryName;
+    }
+
+    public String getLockRepositoryName() {
+        return lockRepositoryName;
+    }
+
+    public void setLockRepositoryName(String lockRepositoryName) {
+        this.lockRepositoryName = lockRepositoryName;
+    }
+
+    public long getReadCapacityUnits() {
+        return readCapacityUnits;
+    }
+
+    public void setReadCapacityUnits(long readCapacityUnits) {
+        this.readCapacityUnits = readCapacityUnits;
+    }
+
+    public long getWriteCapacityUnits() {
+        return writeCapacityUnits;
+    }
+
+    public void setWriteCapacityUnits(long writeCapacityUnits) {
+        this.writeCapacityUnits = writeCapacityUnits;
+    }
+
+    public void mergeConfig(DependencyContext dependencyContext) {
+        dependencyContext.getPropertyAs("dynamodb.autoCreate", boolean.class)
+                .ifPresent(this::setAutoCreate);
+        dependencyContext.getPropertyAs("dynamodb.auditRepositoryName", String.class)
+                .ifPresent(this::setAuditRepositoryName);
+        dependencyContext.getPropertyAs("dynamodb.lockRepositoryName", String.class)
+                .ifPresent(this::setLockRepositoryName);
+        dependencyContext.getPropertyAs("dynamodb.readCapacityUnits", long.class)
+                .ifPresent(this::setReadCapacityUnits);
+        dependencyContext.getPropertyAs("dynamodb.writeCapacityUnits", long.class)
+                .ifPresent(this::setWriteCapacityUnits);
     }
 }

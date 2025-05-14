@@ -50,7 +50,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfiguration;
-import static io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
+import static io.flamingock.commons.utils.DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 

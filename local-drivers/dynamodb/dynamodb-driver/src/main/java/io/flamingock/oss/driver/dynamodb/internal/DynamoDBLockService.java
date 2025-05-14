@@ -25,9 +25,8 @@ import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.LockServiceException;
 import io.flamingock.core.engine.lock.LockStatus;
 import io.flamingock.oss.driver.dynamodb.internal.entities.LockEntryEntity;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBConstants;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoDBUtil;
+import io.flamingock.commons.utils.DynamoDBConstants;
+import io.flamingock.commons.utils.DynamoDBUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -36,6 +35,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.sql.Timestamp;
@@ -47,30 +47,28 @@ public class DynamoDBLockService implements LocalLockService {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBLockService.class);
 
-    protected final DynamoClients client;
+    private final DynamoDBUtil dynamoDBUtil;
 
     private final TimeService timeService;
-    private final DynamoDBUtil dynamoDBUtil = new DynamoDBUtil();
     protected DynamoDbTable<LockEntryEntity> table;
 
-    protected DynamoDBLockService(DynamoClients client, TimeService timeService) {
-        this.client = client;
+    protected DynamoDBLockService(DynamoDbClient client, TimeService timeService) {
+        this.dynamoDBUtil = new DynamoDBUtil(client);
         this.timeService = timeService;
     }
 
-    protected void initialize(Boolean indexCreation) {
-        if (indexCreation) {
+    protected void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
+        if (autoCreate) {
             dynamoDBUtil.createTable(
-                    client.getDynamoDbClient(),
                     dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
                     dynamoDBUtil.getKeySchemas(DynamoDBConstants.LOCK_PK, null),
-                    dynamoDBUtil.getProvisionedThroughput(5L, 5L),
-                    DynamoDBConstants.LOCK_TABLE_NAME,
+                    dynamoDBUtil.getProvisionedThroughput(readCapacityUnits, writeCapacityUnits),
+                    tableName,
                     emptyList(),
                     emptyList()
             );
         }
-        table = client.getEnhancedClient().table(DynamoDBConstants.LOCK_TABLE_NAME, TableSchema.fromBean(LockEntryEntity.class));
+        table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(LockEntryEntity.class));
     }
 
     @Override

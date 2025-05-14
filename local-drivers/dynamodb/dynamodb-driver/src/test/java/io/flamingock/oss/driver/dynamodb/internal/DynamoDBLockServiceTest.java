@@ -7,7 +7,7 @@ import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockKey;
-import io.flamingock.oss.driver.dynamodb.internal.util.DynamoClients;
+import io.flamingock.commons.utils.DynamoDBConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,8 +37,8 @@ class DynamoDBLockServiceTest {
 
         client = DynamoDbClient.builder().region(Region.EU_WEST_1).endpointOverride(new URI("http://localhost:8000")).credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("dummye", "dummye"))).build();
 
-        lockService = new DynamoDBLockService(new DynamoClients(client), new TimeService());
-        lockService.initialize(true);
+        lockService = new DynamoDBLockService(client, new TimeService());
+        lockService.initialize(true, DynamoDBConstants.LOCK_TABLE_NAME, 5L, 5L);
 
     }
 
