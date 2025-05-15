@@ -36,6 +36,8 @@ public class CloudFlamingockBuilder
 
     private final CloudConfiguration cloudConfiguration;
 
+    private final CloudDriver driver;
+
     private CloudTransactioner cloudTransactioner;
 
     private CloudEngine engine;
@@ -43,13 +45,14 @@ public class CloudFlamingockBuilder
     protected CloudFlamingockBuilder(CoreConfiguration coreConfiguration,
                                      CloudConfiguration cloudConfiguration,
                                      DependencyInjectableContext dependencyInjectableContext,
-                                     CloudSystemModuleManager systemModuleManager) {
+                                     CloudSystemModuleManager systemModuleManager,
+                                     CloudDriver driver) {
         super(coreConfiguration, dependencyInjectableContext, systemModuleManager);
         this.cloudConfiguration = cloudConfiguration;
         this.systemModuleManager = systemModuleManager;
+        this.driver = driver;
 
     }
-
 
     @Override
     protected CloudFlamingockBuilder getSelf() {
@@ -69,10 +72,8 @@ public class CloudFlamingockBuilder
         if(cloudTransactioner != null) {
             dependencyContext.addDependency(new Dependency(CloudTransactioner.class, cloudTransactioner));
         }
-
-        CloudDriver cloudDriver = CloudDriver.getDriver().orElse(null);
-        cloudDriver.initialize(dependencyContext);
-        engine = cloudDriver.initializeAndGet();
+        driver.initialize(dependencyContext);
+        engine = driver.initializeAndGet();
 
         return engine;
     }

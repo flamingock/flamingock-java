@@ -21,40 +21,74 @@ import io.flamingock.core.builder.cloud.CloudSystemModuleManager;
 import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.builder.local.CommunityConfiguration;
 import io.flamingock.core.builder.local.LocalSystemModuleManager;
+import io.flamingock.core.cloud.CloudDriver;
+import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.runtime.dependency.SimpleDependencyInjectableContext;
 
-public final class Flamingock {
+public class Flamingock {
 
-    private Flamingock() {
+    protected Flamingock() {
     }
 
     public static AbstractFlamingockBuilder<?> builder() {
-        return new CloudFlamingockBuilder(
-                new CoreConfiguration(),
-                new CloudConfiguration(),
-                new SimpleDependencyInjectableContext(),
-                new CloudSystemModuleManager());
+        Driver driver = Driver.getDriver();
+        if(driver.isCloud()) {
+            return new CloudFlamingockBuilder(
+                    new CoreConfiguration(),
+                    new CloudConfiguration(),
+                    new SimpleDependencyInjectableContext(),
+                    new CloudSystemModuleManager(),
+                    (CloudDriver) driver);
+        } else {
+            return new CommunityFlamingockBuilder(
+                    new CoreConfiguration(),
+                    new CommunityConfiguration(),
+                    new SimpleDependencyInjectableContext(),
+                    new LocalSystemModuleManager(),
+                    (LocalDriver) driver);
+        }
     }
 
+    protected static AbstractFlamingockBuilder<?> builder(CoreConfiguration coreConfiguration,
+                                                          CloudConfiguration cloudConfiguration,
+                                                          CommunityConfiguration communityConfiguration) {
+        Driver driver = Driver.getDriver();
+        if(driver.isCloud()) {
+            return new CloudFlamingockBuilder(
+                    coreConfiguration,
+                    cloudConfiguration,
+                    new SimpleDependencyInjectableContext(),
+                    new CloudSystemModuleManager(),
+                    (CloudDriver) driver);
+        } else {
+            return new CommunityFlamingockBuilder(
+                    coreConfiguration,
+                    communityConfiguration,
+                    new SimpleDependencyInjectableContext(),
+                    new LocalSystemModuleManager(),
+                    (LocalDriver) driver);
+        }
+    }
 
+    @Deprecated
     public static CloudFlamingockBuilder cloud() {
         return new CloudFlamingockBuilder(
                 new CoreConfiguration(),
                 new CloudConfiguration(),
                 new SimpleDependencyInjectableContext(),
-                new CloudSystemModuleManager());
+                new CloudSystemModuleManager(),
+                CloudDriver.getDriver().orElseThrow(()-> new RuntimeException("No Cloud edition detected")));
     }
 
+    @Deprecated
     public static CommunityFlamingockBuilder local() {
         return new CommunityFlamingockBuilder(
                 new CoreConfiguration(),
                 new CommunityConfiguration(),
                 new SimpleDependencyInjectableContext(),
-                new LocalSystemModuleManager());
+                new LocalSystemModuleManager(),
+                LocalDriver.getDriver().orElseThrow(()-> new RuntimeException("No compatible Community edition detected")));
     }
 
-    private static boolean isCommunityEdition() {
-        return false;
-    }
 
 }

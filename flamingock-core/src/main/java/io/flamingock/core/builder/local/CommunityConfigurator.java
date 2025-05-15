@@ -16,11 +16,8 @@
 
 package io.flamingock.core.builder.local;
 
-import io.flamingock.core.community.driver.LocalDriver;
-
 public interface CommunityConfigurator<HOLDER> {
 
-    LocalDriver getDriver();
 
     HOLDER disableTransaction();
 
