@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface SystemModule extends Comparable<SystemModule> {
 
+    void initialise();
+
     PreviewStage getStage();
 
 

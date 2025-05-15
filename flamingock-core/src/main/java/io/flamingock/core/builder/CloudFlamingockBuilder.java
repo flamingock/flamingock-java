@@ -22,7 +22,6 @@ import io.flamingock.core.cloud.CloudDriver;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.builder.cloud.CloudConfiguration;
 import io.flamingock.core.builder.cloud.CloudConfigurator;
-import io.flamingock.core.builder.cloud.CloudSystemModuleManager;
 import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.runtime.dependency.Dependency;
@@ -32,7 +31,7 @@ public class CloudFlamingockBuilder
         extends AbstractFlamingockBuilder<CloudFlamingockBuilder>
         implements CloudConfigurator<CloudFlamingockBuilder> {
 
-    private final CloudSystemModuleManager systemModuleManager;
+    private final DefaultSystemModuleManager systemModuleManager;
 
     private final CloudConfiguration cloudConfiguration;
 
@@ -45,7 +44,7 @@ public class CloudFlamingockBuilder
     protected CloudFlamingockBuilder(CoreConfiguration coreConfiguration,
                                      CloudConfiguration cloudConfiguration,
                                      DependencyInjectableContext dependencyInjectableContext,
-                                     CloudSystemModuleManager systemModuleManager,
+                                     DefaultSystemModuleManager systemModuleManager,
                                      CloudDriver driver) {
         super(coreConfiguration, dependencyInjectableContext, systemModuleManager);
         this.cloudConfiguration = cloudConfiguration;
@@ -63,26 +62,24 @@ public class CloudFlamingockBuilder
     @Override
     protected void injectSpecificDependencies() {
         addDependency(cloudConfiguration);
-    }
 
-    @Override
-    protected ConnectionEngine getConnectionEngine(RunnerId runnerId) {
         //TODO get transactioner from ServiceLoader
         // currently injecting it into the context for the driver to pick it up
         if(cloudTransactioner != null) {
-            dependencyContext.addDependency(new Dependency(CloudTransactioner.class, cloudTransactioner));
+            addDependency(new Dependency(CloudTransactioner.class, cloudTransactioner));
         }
-        driver.initialize(dependencyContext);
-        engine = driver.initializeAndGet();
+    }
 
+    @Override
+    protected ConnectionEngine getConnectionEngine() {
+        driver.initialize(dependencyContext);
+        engine = driver.getEngine();
         return engine;
     }
 
     @Override
     protected void configureSystemModules() {
-        //todo change this
-        systemModuleManager.initialize(
-                engine.getEnvironmentId(), engine.getServiceId(), engine.getJwt(), cloudConfiguration.getHost());
+
     }
 
     @Override

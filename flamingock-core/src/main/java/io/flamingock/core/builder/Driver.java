@@ -3,17 +3,20 @@ package io.flamingock.core.builder;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.cloud.CloudDriver;
 import io.flamingock.core.community.driver.LocalDriver;
+import io.flamingock.core.engine.ConnectionEngine;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 
 import java.util.Optional;
 
-public interface Driver {
+public interface Driver<ENGINE extends ConnectionEngine> {
 
     default boolean isCloud() {
         return false;
     }
 
     void initialize(DependencyContext dependencyContext);
+
+    ENGINE getEngine();
 
     static Driver getDriver() {
         Optional<CloudDriver> cloudDriver = CloudDriver.getDriver();

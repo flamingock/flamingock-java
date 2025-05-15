@@ -33,7 +33,9 @@ import java.time.Duration;
 
 @OverridesDrivers({MongoSync4Driver.class})
 public class SpringDataMongoV3Driver implements LocalDriver {
-
+    private RunnerId runnerId;
+    private CoreConfigurable coreConfiguration;
+    private CommunityConfigurable communityConfiguration;
     private MongoTemplate mongoTemplate;
 
     private SpringDataMongoV3Configuration driverConfiguration;
@@ -43,6 +45,11 @@ public class SpringDataMongoV3Driver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
+        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+
+        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+
         this.mongoTemplate = dependencyContext
                 .getDependencyValue(MongoTemplate.class)
                 .orElseThrow(() -> new FlamingockException("MongoTemplate is needed to be added as dependency"));
@@ -83,11 +90,11 @@ public class SpringDataMongoV3Driver implements LocalDriver {
     }
 
     @Override
-    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
+    public LocalEngine getEngine() {
         SpringDataMongoV3Engine engine = new SpringDataMongoV3Engine(
                 mongoTemplate,
                 coreConfiguration,
-                localConfiguration,
+                communityConfiguration,
                 driverConfiguration);
         engine.initialize(runnerId);
         return engine;

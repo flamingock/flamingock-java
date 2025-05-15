@@ -29,7 +29,9 @@ import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseEngine;
 
 public class CouchbaseDriver implements LocalDriver {
-
+    private RunnerId runnerId;
+    private CoreConfigurable coreConfiguration;
+    private CommunityConfigurable communityConfiguration;
     private Collection collection;
 
     private Cluster cluster;
@@ -41,6 +43,11 @@ public class CouchbaseDriver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
+        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+
+        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+
         this.cluster = dependencyContext
                 .getDependencyValue(Cluster.class)
                 .orElseThrow(() -> new FlamingockException("Couchbase Cluster is needed to be added as dependency"));
@@ -68,14 +75,12 @@ public class CouchbaseDriver implements LocalDriver {
     }
 
     @Override
-    public LocalEngine initializeAndGetEngine(RunnerId runnerId,
-                                              CoreConfigurable coreConfiguration,
-                                              CommunityConfigurable localConfiguration) {
+    public LocalEngine getEngine() {
         CouchbaseEngine couchbaseEngine = new CouchbaseEngine(
                 cluster,
                 collection,
                 coreConfiguration,
-                localConfiguration,
+                communityConfiguration,
                 driverConfiguration);
         couchbaseEngine.initialize(runnerId);
         return couchbaseEngine;

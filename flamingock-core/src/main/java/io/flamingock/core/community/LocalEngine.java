@@ -16,14 +16,14 @@
 
 package io.flamingock.core.community;
 
-import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.core.engine.ConnectionEngine;
+import io.flamingock.core.system.SystemModule;
 
 import java.util.Optional;
 
 public interface LocalEngine extends ConnectionEngine {
 
-    Optional<? extends LocalSystemModule> getMongockLegacyImporterModule();
+    Optional<? extends SystemModule> getMongockLegacyImporterModule();
 
 
 }

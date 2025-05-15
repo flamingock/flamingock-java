@@ -4,22 +4,21 @@ import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.audit.importer.changeunit.FlamingockLocalImporterChangeUnit;
 import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
 import io.flamingock.core.pipeline.PipelineDescriptor;
-import io.flamingock.core.preview.PreviewStage;
-import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
+import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.preview.builder.PreviewTaskBuilder;
+import io.flamingock.core.runtime.dependency.Dependency;
+import io.flamingock.core.system.SystemModule;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class ImporterModule implements LocalSystemModule {
+public class ImporterModule implements SystemModule {
 
     public static final String FROM_MONGOCK_NAME = "from-mongock-importer";
     public static final String FROM_FLAMINGOCK_LITE_NAME = "from-flamingock-local-importer";
-
 
 
     private final List<CodePreviewChangeUnit> fromMongockChangeUnits = Collections.singletonList(

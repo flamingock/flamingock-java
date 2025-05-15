@@ -34,7 +34,9 @@ public class MongoSync4Driver implements LocalDriver {
     private MongoClient mongoClient;
 
     private String databaseName;
-
+    private RunnerId runnerId;
+    private CoreConfigurable coreConfiguration;
+    private CommunityConfigurable communityConfiguration;
     private MongoDBSync4Configuration driverConfiguration;
 
     public MongoSync4Driver() {
@@ -42,6 +44,11 @@ public class MongoSync4Driver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
+        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+
+        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+
         this.mongoClient = dependencyContext
                 .getDependencyValue(MongoClient.class)
                 .orElseThrow(() -> new FlamingockException("MongoClient is needed to be added as dependency"));
@@ -86,12 +93,12 @@ public class MongoSync4Driver implements LocalDriver {
 
 
     @Override
-    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
+    public LocalEngine getEngine() {
         MongoSync4Engine engine = new MongoSync4Engine(
                 mongoClient,
                 databaseName,
                 coreConfiguration,
-                localConfiguration,
+                communityConfiguration,
                 driverConfiguration);
         engine.initialize(runnerId);
         return engine;

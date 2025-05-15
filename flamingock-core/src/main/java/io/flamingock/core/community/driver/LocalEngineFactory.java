@@ -6,8 +6,4 @@ import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 
 public interface LocalEngineFactory {
-
-    LocalEngine initializeAndGetEngine(RunnerId runnerId,
-                                       CoreConfigurable coreConfiguration,
-                                       CommunityConfigurable localConfiguration);
 }

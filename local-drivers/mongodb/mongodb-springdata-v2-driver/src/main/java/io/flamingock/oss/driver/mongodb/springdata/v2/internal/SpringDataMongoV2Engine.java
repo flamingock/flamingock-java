@@ -18,14 +18,14 @@ package io.flamingock.oss.driver.mongodb.springdata.v2.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
-import io.flamingock.core.engine.audit.importer.ImporterModule;
-import io.flamingock.core.community.LocalExecutionPlanner;
-import io.flamingock.core.community.AbstractLocalEngine;
-import io.flamingock.core.community.LocalAuditor;
+import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
-import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.system.LocalSystemModule;
+import io.flamingock.core.community.AbstractLocalEngine;
+import io.flamingock.core.community.LocalAuditor;
+import io.flamingock.core.community.LocalExecutionPlanner;
+import io.flamingock.core.engine.audit.importer.ImporterModule;
+import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongodb.v3.MongoImporterReader;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
@@ -42,7 +42,7 @@ public class SpringDataMongoV2Engine extends AbstractLocalEngine {
     private SpringDataMongoV2Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
-    private LocalSystemModule mongockImporter = null;
+    private SystemModule mongockImporter = null;
     private final SpringDataMongoV2Configuration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
 
@@ -104,7 +104,7 @@ public class SpringDataMongoV2Engine extends AbstractLocalEngine {
     }
 
     @Override
-    public Optional<LocalSystemModule> getMongockLegacyImporterModule() {
+    public Optional<SystemModule> getMongockLegacyImporterModule() {
         return Optional.ofNullable(mongockImporter);
     }
 }

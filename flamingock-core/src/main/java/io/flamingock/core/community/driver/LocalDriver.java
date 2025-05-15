@@ -27,9 +27,10 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 import io.flamingock.core.builder.Driver;
+import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 
-public interface LocalDriver extends Driver, LocalEngineFactory {
+public interface LocalDriver extends Driver<LocalEngine>, LocalEngineFactory {
 
     static Optional<LocalDriver> getDriver() {
 

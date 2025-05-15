@@ -17,7 +17,6 @@
 package io.flamingock.oss.driver.dynamodb.driver;
 
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
@@ -30,7 +29,9 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class DynamoDBDriver implements LocalDriver {
 
     private DynamoDbClient client;
-
+    private RunnerId runnerId;
+    private CoreConfigurable coreConfiguration;
+    private CommunityConfigurable communityConfiguration;
     private DynamoDBConfiguration driverConfiguration;
 
     public DynamoDBDriver() {
@@ -38,18 +39,24 @@ public class DynamoDBDriver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        this.client = dependencyContext
-                .getRequiredDependencyValue(DynamoDbClient.class);
-        this.driverConfiguration = new DynamoDBConfiguration();
+        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+
+        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+
+        this.client = dependencyContext.getRequiredDependencyValue(DynamoDbClient.class);
+
+        this.driverConfiguration = dependencyContext.getDependencyValue(DynamoDBConfiguration.class)
+                .orElse(new DynamoDBConfiguration());
         this.driverConfiguration.mergeConfig(dependencyContext);
     }
 
     @Override
-    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
+    public LocalEngine getEngine() {
         DynamoDBEngine dynamodbEngine = new DynamoDBEngine(
                 client,
                 coreConfiguration,
-                localConfiguration,
+                communityConfiguration,
                 driverConfiguration);
         dynamodbEngine.initialize(runnerId);
         return dynamodbEngine;

@@ -16,11 +16,9 @@
 
 package io.flamingock.core.builder;
 
-import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.builder.local.CommunityConfiguration;
 import io.flamingock.core.builder.local.CommunityConfigurator;
-import io.flamingock.core.builder.local.LocalSystemModuleManager;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.engine.ConnectionEngine;
@@ -30,18 +28,18 @@ public class CommunityFlamingockBuilder
         extends AbstractFlamingockBuilder<CommunityFlamingockBuilder>
         implements CommunityConfigurator<CommunityFlamingockBuilder> {
 
-    private final LocalSystemModuleManager systemModuleManager;
+    private final DefaultSystemModuleManager systemModuleManager;
 
     private final CommunityConfiguration communityConfiguration;
 
-    private LocalDriver driver;
+    private final LocalDriver driver;
 
     private LocalEngine engine;
 
     protected CommunityFlamingockBuilder(CoreConfiguration coreConfiguration,
                                          CommunityConfiguration communityConfiguration,
                                          DependencyInjectableContext dependencyInjectableContext,
-                                         LocalSystemModuleManager systemModuleManager,
+                                         DefaultSystemModuleManager systemModuleManager,
                                          LocalDriver driver) {
         super(coreConfiguration, dependencyInjectableContext, systemModuleManager);
         this.communityConfiguration = communityConfiguration;
@@ -60,14 +58,11 @@ public class CommunityFlamingockBuilder
     }
 
     @Override
-    protected ConnectionEngine getConnectionEngine(RunnerId runnerId) {
+    protected ConnectionEngine getConnectionEngine() {
         driver.initialize(dependencyContext);
-        engine = driver.initializeAndGetEngine(
-                runnerId,
-                coreConfiguration,
-                communityConfiguration
-        );
+        engine = driver.getEngine();
         return engine;
+
     }
 
     @Override

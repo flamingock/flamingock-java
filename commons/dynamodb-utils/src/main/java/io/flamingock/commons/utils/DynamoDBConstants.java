@@ -17,11 +17,11 @@
 package io.flamingock.commons.utils;
 
 public final class DynamoDBConstants {
-    public static final String AUDIT_LOG_TABLE_NAME = "flamingock_audit_log";
+    public static final String AUDIT_LOG_TABLE_NAME = "flamingockEntries";
     public static final String AUDIT_LOG_PK = "partitionKey";
     public static final String AUDIT_LOG_STAGE_ID = "stageId";
 
-    public static final String LOCK_TABLE_NAME = "locks";
+    public static final String LOCK_TABLE_NAME = "flamingockLock";
     public static final String LOCK_PK = "partitionKey";
     public static final String LOCK_OWNER = "lockOwner";
 }

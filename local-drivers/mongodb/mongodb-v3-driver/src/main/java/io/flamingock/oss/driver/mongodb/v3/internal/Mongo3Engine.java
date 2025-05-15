@@ -24,12 +24,12 @@ import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
-import io.flamingock.core.engine.audit.importer.ImporterModule;
 import io.flamingock.core.community.AbstractLocalEngine;
 import io.flamingock.core.community.LocalAuditor;
 import io.flamingock.core.community.LocalExecutionPlanner;
 import io.flamingock.core.community.TransactionManager;
-import io.flamingock.core.system.LocalSystemModule;
+import io.flamingock.core.engine.audit.importer.ImporterModule;
+import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
@@ -46,7 +46,7 @@ public class Mongo3Engine extends AbstractLocalEngine {
     private Mongo3Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
-    private LocalSystemModule mongockImporter = null;
+    private SystemModule mongockImporter = null;
 
 
     public Mongo3Engine(MongoClient mongoClient,
@@ -107,7 +107,7 @@ public class Mongo3Engine extends AbstractLocalEngine {
     }
 
     @Override
-    public Optional<LocalSystemModule> getMongockLegacyImporterModule() {
+    public Optional<SystemModule> getMongockLegacyImporterModule() {
         return Optional.ofNullable(mongockImporter);
     }
 }

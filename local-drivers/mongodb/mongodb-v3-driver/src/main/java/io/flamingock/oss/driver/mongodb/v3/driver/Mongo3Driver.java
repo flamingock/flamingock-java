@@ -35,6 +35,9 @@ public class Mongo3Driver implements LocalDriver {
 
     private String databaseName;
 
+    private RunnerId runnerId;
+    private CoreConfigurable coreConfiguration;
+    private CommunityConfigurable communityConfiguration;
     private MongoDB3Configuration driverConfiguration;
 
     public Mongo3Driver() {
@@ -42,6 +45,11 @@ public class Mongo3Driver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
+        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+
+        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+
         this.mongoClient = dependencyContext
                 .getDependencyValue(MongoClient.class)
                 .orElseThrow(() -> new FlamingockException("MongoClient is needed to be added as dependency"));
@@ -85,12 +93,12 @@ public class Mongo3Driver implements LocalDriver {
     }
 
     @Override
-    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
+    public LocalEngine getEngine() {
         Mongo3Engine engine = new Mongo3Engine(
                 mongoClient,
                 databaseName,
                 coreConfiguration,
-                localConfiguration,
+                communityConfiguration,
                 driverConfiguration);
 
         engine.initialize(runnerId);

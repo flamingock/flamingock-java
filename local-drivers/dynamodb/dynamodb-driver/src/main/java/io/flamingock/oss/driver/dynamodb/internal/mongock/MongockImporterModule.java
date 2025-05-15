@@ -17,20 +17,18 @@
 package io.flamingock.oss.driver.dynamodb.internal.mongock;
 
 import io.flamingock.core.engine.audit.AuditWriter;
-import io.flamingock.core.preview.PreviewStage;
-import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.system.LocalSystemModule;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
+import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.preview.builder.PreviewTaskBuilder;
+import io.flamingock.core.runtime.dependency.Dependency;
+import io.flamingock.core.system.SystemModule;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 import java.util.Collections;
 import java.util.List;
 
-public class MongockImporterModule implements LocalSystemModule {
-
-
+public class MongockImporterModule implements SystemModule {
 
 
     private static final List<CodePreviewChangeUnit> MONGOCK_CHANGE_UNITS = Collections.singletonList(

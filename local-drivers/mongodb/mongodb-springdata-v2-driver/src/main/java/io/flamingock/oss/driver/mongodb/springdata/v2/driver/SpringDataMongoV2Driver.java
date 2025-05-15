@@ -26,6 +26,7 @@ import io.flamingock.core.community.driver.OverridesDrivers;
 import io.flamingock.core.runtime.dependency.DependencyContext;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v2.internal.SpringDataMongoV2Engine;
+import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -36,6 +37,9 @@ public class SpringDataMongoV2Driver implements LocalDriver {
 
     private MongoTemplate mongoTemplate;
 
+    private RunnerId runnerId;
+    private CoreConfigurable coreConfiguration;
+    private CommunityConfigurable communityConfiguration;
     private SpringDataMongoV2Configuration driverConfiguration;
 
     public SpringDataMongoV2Driver() {
@@ -43,6 +47,11 @@ public class SpringDataMongoV2Driver implements LocalDriver {
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
+        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+
+        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+
         this.mongoTemplate = dependencyContext
                 .getDependencyValue(MongoTemplate.class)
                 .orElseThrow(() -> new FlamingockException("MongoTemplate is needed to be added as dependency"));
@@ -83,11 +92,11 @@ public class SpringDataMongoV2Driver implements LocalDriver {
     }
 
     @Override
-    public LocalEngine initializeAndGetEngine(RunnerId runnerId, CoreConfigurable coreConfiguration, CommunityConfigurable localConfiguration) {
+    public LocalEngine getEngine() {
         SpringDataMongoV2Engine engine = new SpringDataMongoV2Engine(
                 mongoTemplate,
                 coreConfiguration,
-                localConfiguration,
+                communityConfiguration,
                 driverConfiguration);
         engine.initialize(runnerId);
         return engine;

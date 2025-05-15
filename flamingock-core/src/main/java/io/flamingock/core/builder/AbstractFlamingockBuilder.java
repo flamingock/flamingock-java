@@ -95,7 +95,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     protected abstract void injectSpecificDependencies();
 
-    protected abstract ConnectionEngine getConnectionEngine(RunnerId runnerId);
+    protected abstract ConnectionEngine getConnectionEngine();
 
     protected abstract void configureSystemModules();
 
@@ -111,7 +111,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         injectDependencies(runnerId);
 
         //START SPECIFIC CONFIG BLOCK: Cloud VS Local
-        ConnectionEngine engine = getConnectionEngine(runnerId);
+        ConnectionEngine engine = getConnectionEngine();
         configureSystemModules();
         /*
          * FINISHED SPECIFIC CONFIG BLOCK

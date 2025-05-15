@@ -28,10 +28,6 @@ public class DynamoDBConfiguration implements DriverConfigurable {
     private long readCapacityUnits = 5L;
     private long writeCapacityUnits = 5L;
 
-    public static DynamoDBConfiguration getDefault() {
-        return new DynamoDBConfiguration();
-    }
-
     public boolean isAutoCreate() {
         return autoCreate;
     }

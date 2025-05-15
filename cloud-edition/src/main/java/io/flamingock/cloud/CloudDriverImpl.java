@@ -9,6 +9,7 @@ import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.builder.cloud.CloudConfigurable;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.cloud.CloudDriver;
+import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.cloud.api.auth.AuthResponse;
 import io.flamingock.cloud.audit.HtttpAuditWriter;
 import io.flamingock.cloud.auth.AuthManager;
@@ -32,30 +33,47 @@ import java.io.IOException;
 
 public class CloudDriverImpl  implements CloudDriver {
     private static final Logger logger = LoggerFactory.getLogger(CloudDriverImpl.class);
+    private CloudEngineImpl engine;
 
-    private RunnerId runnerId;
-    private CoreConfigurable coreConfiguration;
-    private CloudConfigurable cloudConfiguration;
-    private CloudTransactioner transactioner;
-    private Http.RequestBuilderFactory requestBuilderFactory;
 
     @Override
     public void initialize(DependencyContext dependencyContext) {
-        this.runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
-        this.coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
-        this.cloudConfiguration = dependencyContext.getRequiredDependencyValue(CloudConfigurable.class);
-        this.transactioner = dependencyContext.getDependencyValue(CloudTransactioner.class).orElse(null);
-        this.requestBuilderFactory = Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
+        RunnerId runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+
+        CoreConfigurable coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
+        CloudConfigurable cloudConfiguration = dependencyContext.getRequiredDependencyValue(CloudConfigurable.class);
+        CloudTransactioner transactioner = dependencyContext.getDependencyValue(CloudTransactioner.class).orElse(null);
+
+        Http.RequestBuilderFactory requestBuilderFactory =
+                Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
+
+        synchronized (this) {
+            this.engine = buildEngine(
+                    runnerId,
+                    coreConfiguration,
+                    cloudConfiguration,
+                    transactioner,
+                    requestBuilderFactory
+            );
+        }
     }
 
     @Override
-    public CloudEngineImpl initializeAndGet() {
+    public CloudEngineImpl getEngine() {
+        return engine;
+    }
 
+    @NotNull
+    private CloudEngineImpl buildEngine(RunnerId runnerId,
+                                        CoreConfigurable coreConfiguration,
+                                        CloudConfigurable cloudConfiguration,
+                                        CloudTransactioner transactioner,
+                                        Http.RequestBuilderFactory requestBuilderFactory) {
         AuthManager authManager = new AuthManager(
                 cloudConfiguration.getApiToken(),
                 cloudConfiguration.getServiceName(),
                 cloudConfiguration.getEnvironmentName(),
-                getAuthClient());
+                getAuthClient(cloudConfiguration, requestBuilderFactory));
         AuthResponse authResponse = authManager.authenticate();
 
         EnvironmentId environmentId = EnvironmentId.fromString(authResponse.getEnvironmentId());
@@ -75,19 +93,30 @@ public class CloudDriverImpl  implements CloudDriver {
             transactioner.initialize();
         }
 
+        ExecutionPlanner executionPlanner = getExecutionPlanner(
+                runnerId,
+                coreConfiguration,
+                cloudConfiguration,
+                requestBuilderFactory,
+                transactioner,
+                authManager,
+                environmentId,
+                serviceId);
+
         return new CloudEngineImpl(
                 environmentId,
                 serviceId,
                 authResponse.getJwt(),
                 auditWriter,
-                getExecutionPlanner(authManager, environmentId, serviceId),
+                executionPlanner,
                 transactioner,
-                getCloser()
+                getCloser(requestBuilderFactory, transactioner)
         );
     }
 
     @NotNull
-    private HttpAuthClient getAuthClient() {
+    private HttpAuthClient getAuthClient(CloudConfigurable cloudConfiguration,
+                                         Http.RequestBuilderFactory requestBuilderFactory) {
         return new HttpAuthClient(
                 cloudConfiguration.getHost(),
                 cloudConfiguration.getApiVersion(),
@@ -95,7 +124,14 @@ public class CloudDriverImpl  implements CloudDriver {
     }
 
     @NotNull
-    private ExecutionPlanner getExecutionPlanner(AuthManager authManager, EnvironmentId environmentId, ServiceId serviceId) {
+    private ExecutionPlanner getExecutionPlanner(RunnerId runnerId,
+                                                 CoreConfigurable coreConfiguration,
+                                                 CloudConfigurable cloudConfiguration,
+                                                 Http.RequestBuilderFactory requestBuilderFactory,
+                                                 CloudTransactioner transactioner,
+                                                 AuthManager authManager,
+                                                 EnvironmentId environmentId,
+                                                 ServiceId serviceId) {
         LockServiceClient lockClient = new HttpLockServiceClient(
                 cloudConfiguration.getHost(),
                 cloudConfiguration.getApiVersion(),
@@ -124,7 +160,8 @@ public class CloudDriverImpl  implements CloudDriver {
     }
 
     @NotNull
-    private Runnable getCloser() {
+    private Runnable getCloser(Http.RequestBuilderFactory requestBuilderFactory,
+                               CloudTransactioner transactioner) {
         return () -> {
             if (requestBuilderFactory != null) {
                 try {
