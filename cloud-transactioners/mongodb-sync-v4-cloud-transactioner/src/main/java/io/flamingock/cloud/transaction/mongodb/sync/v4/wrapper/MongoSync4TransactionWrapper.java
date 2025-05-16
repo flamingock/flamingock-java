@@ -18,9 +18,9 @@ package io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper;
 
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
-import io.flamingock.core.runtime.dependency.Dependency;
+import io.flamingock.core.context.Dependency;
 import io.flamingock.core.task.navigation.step.FailedStep;
-import io.flamingock.core.runtime.dependency.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.core.community.TransactionManager;

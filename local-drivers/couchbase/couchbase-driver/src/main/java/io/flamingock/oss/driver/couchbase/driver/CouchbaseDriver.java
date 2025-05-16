@@ -19,23 +19,21 @@ package io.flamingock.oss.driver.couchbase.driver;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.context.DependencyContext;
 import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseEngine;
 
 public class CouchbaseDriver implements LocalDriver {
+
+    private Cluster cluster;
+    private Collection collection;
     private RunnerId runnerId;
     private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
-    private Collection collection;
-
-    private Cluster cluster;
-
     private CouchbaseConfiguration driverConfiguration;
 
     public CouchbaseDriver() {
@@ -48,30 +46,12 @@ public class CouchbaseDriver implements LocalDriver {
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
         communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
 
-        this.cluster = dependencyContext
-                .getDependencyValue(Cluster.class)
-                .orElseThrow(() -> new FlamingockException("Couchbase Cluster is needed to be added as dependency"));
-        this.collection = dependencyContext
-                .getDependencyValue(Collection.class)
-                .orElseThrow(() -> new FlamingockException("Couchbase Collection is needed to be added as dependency"));
-        this.driverConfiguration = generateConfig(dependencyContext);
-    }
+        this.cluster = dependencyContext.getRequiredDependencyValue(Cluster.class);
+        this.collection = dependencyContext.getRequiredDependencyValue(Collection.class);
 
-    public CouchbaseConfiguration generateConfig(DependencyContext dependencyContext) {
-        CouchbaseConfiguration configuration = dependencyContext
-                .getDependencyValue(CouchbaseConfiguration.class)
-                .orElse(CouchbaseConfiguration.getDefault());
-        dependencyContext.getPropertyAs("couchbase.autoCreate", boolean.class)
-                .ifPresent(configuration::setIndexCreation);
-        dependencyContext.getPropertyAs("couchbase.auditRepositoryName", String.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("couchbase.lockRepositoryName", String.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        return configuration;
+        this.driverConfiguration = dependencyContext.getDependencyValue(CouchbaseConfiguration.class)
+                .orElse(new CouchbaseConfiguration());
+        this.driverConfiguration.mergeConfig(dependencyContext);
     }
 
     @Override

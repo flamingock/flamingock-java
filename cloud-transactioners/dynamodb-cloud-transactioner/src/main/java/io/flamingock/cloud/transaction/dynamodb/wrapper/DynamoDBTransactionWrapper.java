@@ -18,14 +18,13 @@ package io.flamingock.cloud.transaction.dynamodb.wrapper;
 
 import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.core.community.TransactionManager;
-import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.runtime.dependency.DependencyInjectable;
+import io.flamingock.core.context.Dependency;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;

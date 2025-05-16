@@ -27,7 +27,7 @@ import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.core.pipeline.execution.TaskSummary;
 import io.flamingock.core.runtime.RuntimeManager;
-import io.flamingock.core.runtime.dependency.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.executable.ExecutableTask;
 import io.flamingock.core.task.navigation.step.ExecutableStep;
 import io.flamingock.core.task.navigation.step.RollableFailedStep;

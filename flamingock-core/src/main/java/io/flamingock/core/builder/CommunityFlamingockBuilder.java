@@ -21,55 +21,26 @@ import io.flamingock.core.builder.local.CommunityConfiguration;
 import io.flamingock.core.builder.local.CommunityConfigurator;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.engine.ConnectionEngine;
-import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
+import io.flamingock.core.context.DependencyInjectableContext;
+import io.flamingock.core.plugin.PluginManager;
+import io.flamingock.core.system.DefaultSystemModuleManager;
+import io.flamingock.core.system.SystemModuleManager;
 
 public class CommunityFlamingockBuilder
         extends AbstractFlamingockBuilder<CommunityFlamingockBuilder>
         implements CommunityConfigurator<CommunityFlamingockBuilder> {
 
-    private final DefaultSystemModuleManager systemModuleManager;
-
     private final CommunityConfiguration communityConfiguration;
 
-    private final LocalDriver driver;
-
-    private LocalEngine engine;
 
     protected CommunityFlamingockBuilder(CoreConfiguration coreConfiguration,
                                          CommunityConfiguration communityConfiguration,
                                          DependencyInjectableContext dependencyInjectableContext,
-                                         DefaultSystemModuleManager systemModuleManager,
+                                         PluginManager pluginManager,
+                                         SystemModuleManager systemModuleManager,
                                          LocalDriver driver) {
-        super(coreConfiguration, dependencyInjectableContext, systemModuleManager);
+        super(coreConfiguration, dependencyInjectableContext, pluginManager, systemModuleManager, driver);
         this.communityConfiguration = communityConfiguration;
-        this.systemModuleManager = systemModuleManager;
-        this.driver = driver;
-    }
-
-    @Override
-    protected CommunityFlamingockBuilder getSelf() {
-        return this;
-    }
-
-    @Override
-    protected void injectSpecificDependencies() {
-        addDependency(communityConfiguration);
-    }
-
-    @Override
-    protected ConnectionEngine getConnectionEngine() {
-        driver.initialize(dependencyContext);
-        engine = driver.getEngine();
-        return engine;
-
-    }
-
-    @Override
-    protected void configureSystemModules() {
-        //TODO change this
-        engine.getMongockLegacyImporterModule().ifPresent(systemModuleManager::add);
-        systemModuleManager.initialize();
     }
 
     @Override
@@ -82,4 +53,15 @@ public class CommunityFlamingockBuilder
     public boolean isTransactionDisabled() {
         return communityConfiguration.isTransactionDisabled();
     }
+
+    @Override
+    protected CommunityFlamingockBuilder getSelf() {
+        return this;
+    }
+
+    @Override
+    protected void doUpdateContext() {
+        addDependency(communityConfiguration);
+    }
+
 }

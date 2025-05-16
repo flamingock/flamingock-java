@@ -19,7 +19,7 @@ package io.flamingock.core.task.navigation.navigator;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.context.DependencyContext;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 public interface StepNavigatorBuilder {

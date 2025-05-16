@@ -16,7 +16,7 @@
 
 package io.flamingock.springboot.v3;
 
-import io.flamingock.core.builder.FrameworkPlugin;
+import io.flamingock.core.plugin.Plugin;
 import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.event.SimpleEventPublisher;
 import io.flamingock.core.event.model.IPipelineFailedEvent;
@@ -26,7 +26,7 @@ import io.flamingock.core.event.model.IStageCompletedEvent;
 import io.flamingock.core.event.model.IStageFailedEvent;
 import io.flamingock.core.event.model.IStageIgnoredEvent;
 import io.flamingock.core.event.model.IStageStartedEvent;
-import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.context.DependencyContext;
 import io.flamingock.core.task.filter.TaskFilter;
 import io.flamingock.springboot.v3.event.SpringPipelineFailedEvent;
 import io.flamingock.springboot.v3.event.SpringPipelineIgnoredEvent;
@@ -42,7 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class SpringbootV3Plugin implements FrameworkPlugin {
+public class SpringbootV3Plugin implements Plugin {
 
     private ApplicationContext applicationContext;
     private ApplicationEventPublisher eventPublisher;

@@ -22,7 +22,6 @@ import io.flamingock.core.api.template.TemplateFactory;
 import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.builder.core.CoreConfigurator;
 import io.flamingock.core.engine.ConnectionEngine;
-import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.event.CompositeEventPublisher;
 import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.event.SimpleEventPublisher;
@@ -35,14 +34,16 @@ import io.flamingock.core.event.model.IStageFailedEvent;
 import io.flamingock.core.event.model.IStageIgnoredEvent;
 import io.flamingock.core.event.model.IStageStartedEvent;
 import io.flamingock.core.pipeline.Pipeline;
-import io.flamingock.core.pipeline.PipelineDescriptor;
+import io.flamingock.core.plugin.Plugin;
+import io.flamingock.core.plugin.PluginManager;
 import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runner.RunnerBuilder;
-import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.runtime.dependency.DependencyContext;
-import io.flamingock.core.runtime.dependency.DependencyInjectableContext;
-import io.flamingock.core.runtime.dependency.PriorityDependencyContext;
+import io.flamingock.core.context.Dependency;
+import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.DependencyInjectableContext;
+import io.flamingock.core.context.PriorityDependencyContext;
+import io.flamingock.core.system.SystemModuleManager;
 import io.flamingock.core.task.filter.TaskFilter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -51,10 +52,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.ServiceLoader;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingockBuilder<HOLDER>>
         implements
@@ -63,11 +62,12 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         RunnerBuilder {
     private static final Logger logger = LoggerFactory.getLogger(AbstractFlamingockBuilder.class);
 
-    private final SystemModuleManager<?> systemModuleManager;
-
+    private final PluginManager pluginManager;
+    private final SystemModuleManager systemModuleManager;
+    private final DependencyInjectableContext dependencyContext;
     protected final CoreConfiguration coreConfiguration;
 
-    protected final DependencyInjectableContext dependencyContext;
+    private final Driver<?> driver;
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
     private Consumer<IPipelineCompletedEvent> pipelineCompletedListener;
     private Consumer<IPipelineIgnoredEvent> pipelineIgnoredListener;
@@ -86,18 +86,17 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     protected AbstractFlamingockBuilder(
             CoreConfiguration coreConfiguration,
             DependencyInjectableContext dependencyContext,
-            SystemModuleManager<?> systemModuleManager
-    ) {
+            PluginManager pluginManager,
+            SystemModuleManager systemModuleManager,
+            Driver<?> driver) {
+        this.pluginManager = pluginManager;
         this.systemModuleManager = systemModuleManager;
         this.dependencyContext = dependencyContext;
         this.coreConfiguration = coreConfiguration;
+        this.driver = driver;
     }
 
-    protected abstract void injectSpecificDependencies();
-
-    protected abstract ConnectionEngine getConnectionEngine();
-
-    protected abstract void configureSystemModules();
+    protected abstract void doUpdateContext();
 
     protected abstract HOLDER getSelf();
 
@@ -108,62 +107,59 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);
-        injectDependencies(runnerId);
+        updateContext(runnerId);
 
-        //START SPECIFIC CONFIG BLOCK: Cloud VS Local
-        ConnectionEngine engine = getConnectionEngine();
-        configureSystemModules();
-        /*
-         * FINISHED SPECIFIC CONFIG BLOCK
-         */
-        systemModuleManager
-                .getDependencies()
-                .forEach(d -> addDependency(d.getName(), d.getType(), d.getInstance()));
+        driver.initialize(dependencyContext);
+        ConnectionEngine engine = driver.getEngine();
+        engine.contributeToSystemModules(systemModuleManager);
+        engine.contributeToContext(dependencyContext);
 
+        systemModuleManager.initialize(dependencyContext);
+        systemModuleManager.contributeToContext(dependencyContext);
 
-        //Injecting auditWriter
-        addDependency(AuditWriter.class, engine.getAuditWriter());
+        pluginManager.initialize(dependencyContext);
 
-        List<FrameworkPlugin> frameworkPlugins = getPluginList();
-        initializeFrameworkPlugins(frameworkPlugins);
-
-
-        // Builds a hierarchical dependency context by chaining all plugin-provided contexts,
-        // placing Flamingock's core context at the top.
-
-        Pipeline pipeline = Pipeline.builder()
-                .addFilters(getTaskFiltersFromPlugins(frameworkPlugins))
-                .addPreviewPipeline(coreConfiguration.getPreviewPipeline())
-                .addBeforeUserStages(systemModuleManager.getSortedSystemStagesBefore())
-                .addAfterUserStages(systemModuleManager.getSortedSystemStagesAfter())
-                .build();
-
-
-        //injecting the pipeline descriptor to the dependencies
-        addDependency(PipelineDescriptor.class, pipeline);
+        Pipeline pipeline = buildPipeline();
+        pipeline.contributeToContext(dependencyContext);
 
         return PipelineRunnerCreator.createWithFinalizer(
                 runnerId,
                 pipeline,
                 engine,
                 coreConfiguration,
-                buildEventPublisher(frameworkPlugins),
-                getMergedDependencyContext(frameworkPlugins),
+                buildEventPublisher(),
+                buildHierarchicalContext(),
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
                 engine.getCloser()
         );
     }
 
-    private void injectDependencies(RunnerId runnerId) {
+    private Pipeline buildPipeline() {
+        List<TaskFilter> taskFiltersFromPlugins = pluginManager.getPlugins()
+                .stream()
+                .map(Plugin::getTaskFilters)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+        ;
+        return Pipeline.builder()
+                .addFilters(taskFiltersFromPlugins)
+                .addPreviewPipeline(coreConfiguration.getPreviewPipeline())
+                .addBeforeUserStages(systemModuleManager.getSortedSystemStagesBefore())
+                .addAfterUserStages(systemModuleManager.getSortedSystemStagesAfter())
+                .build();
+    }
+
+    private void updateContext(RunnerId runnerId) {
         logger.trace("injecting internal configuration");
         addDependency(runnerId);
         addDependency(coreConfiguration);
-        injectSpecificDependencies();
+        doUpdateContext();
     }
 
-    private DependencyContext getMergedDependencyContext(List<FrameworkPlugin> frameworkPlugins) {
-        List<DependencyContext> dependencyContextsFromPlugins = frameworkPlugins.stream()
-                .map(FrameworkPlugin::getDependencyContext)
+    private DependencyContext buildHierarchicalContext() {
+        List<DependencyContext> dependencyContextsFromPlugins = pluginManager.getPlugins()
+                .stream()
+                .map(Plugin::getDependencyContext)
                 .flatMap(CollectionUtil::optionalToStream)
                 .collect(Collectors.toList());
         return dependencyContextsFromPlugins
@@ -174,29 +170,9 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
                 .orElse(dependencyContext);
     }
 
-    private void initializeFrameworkPlugins(List<FrameworkPlugin> frameworkPlugins) {
-        frameworkPlugins
-                .forEach(plugin -> plugin.initialize(dependencyContext));
-
-    }
-
-    private List<TaskFilter> getTaskFiltersFromPlugins(List<FrameworkPlugin> frameworkPlugins) {
-        return frameworkPlugins.stream()
-                .map(FrameworkPlugin::getTaskFilters)
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-    }
 
     @NotNull
-    private List<FrameworkPlugin> getPluginList() {
-        return StreamSupport
-                .stream(ServiceLoader.load(FrameworkPlugin.class).spliterator(), false)
-                .collect(Collectors.toList());
-    }
-
-    @NotNull
-    protected EventPublisher buildEventPublisher(List<FrameworkPlugin> frameworkPlugins) {
-
+    private EventPublisher buildEventPublisher() {
 
         SimpleEventPublisher simpleEventPublisher = new SimpleEventPublisher()
                 //pipeline events
@@ -211,8 +187,9 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
                 .addListener(IStageFailedEvent.class, getStageFailureListener());
         //TODO this addition is not good, but it will be refactored, once all the builders merged
 
-        List<EventPublisher> eventPublishersFromPlugins = frameworkPlugins.stream()
-                .map(FrameworkPlugin::getEventPublisher)
+        List<EventPublisher> eventPublishersFromPlugins = pluginManager.getPlugins()
+                .stream()
+                .map(Plugin::getEventPublisher)
                 .flatMap(CollectionUtil::optionalToStream)
                 .collect(Collectors.toList());
         eventPublishersFromPlugins.add(simpleEventPublisher);

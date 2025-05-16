@@ -18,7 +18,7 @@ package io.flamingock.core.cloud.utils;
 
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
-import io.flamingock.core.runtime.dependency.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 
 import java.util.Arrays;

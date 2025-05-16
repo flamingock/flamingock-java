@@ -56,9 +56,9 @@ public class CouchbaseEngine extends AbstractLocalEngine {
     @Override
     protected void doInitialize(RunnerId runnerId) {
         auditor = new CouchbaseAuditor(cluster, collection);
-        auditor.initialize(driverConfiguration.isIndexCreation());
+        auditor.initialize(driverConfiguration.isAutoCreate());
         CouchbaseLockService lockService = new CouchbaseLockService(cluster, collection, TimeService.getDefault());
-        lockService.initialize(driverConfiguration.isIndexCreation());
+        lockService.initialize(driverConfiguration.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
     }
 

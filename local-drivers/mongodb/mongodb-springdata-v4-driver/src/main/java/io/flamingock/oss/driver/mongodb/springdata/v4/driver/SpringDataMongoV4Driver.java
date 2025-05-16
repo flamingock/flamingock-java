@@ -23,7 +23,7 @@ import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.community.driver.OverridesDrivers;
-import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.context.DependencyContext;
 import io.flamingock.oss.driver.mongodb.springdata.v4.config.SpringDataMongoV4Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v4.internal.SpringDataMongoV4Engine;
 import io.flamingock.oss.driver.mongodb.sync.v4.driver.MongoSync4Driver;

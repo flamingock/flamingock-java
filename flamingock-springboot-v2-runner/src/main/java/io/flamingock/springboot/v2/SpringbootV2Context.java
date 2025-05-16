@@ -60,51 +60,7 @@ public class SpringbootV2Context extends Flamingock {
                 .addDependency(ApplicationContext.class, springContext)
                 .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
 
-//        if (connectionDriverOptional.isPresent() && configurationProperties.isCloudConfigurationEmpty()) {
-//            return new SpringbootV2LocalBuilder(
-//                    configurationProperties.getCoreConfiguration(),
-//                    configurationProperties.getLocalConfiguration(),
-//                    new SimpleDependencyInjectableContext(),//
-//                    new LocalSystemModuleManager()
-//            )
-//                    .addDependency(SpringRunnerType.class, configurationProperties.getRunnerType())
-//                    .addDependency(ApplicationContext.class, springContext)
-//                    .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
-//
-//        } else {
-//            return new SpringbootV2CloudBuilder(
-//                    configurationProperties.getCoreConfiguration(),
-//                    configurationProperties.getCloudProperties(),
-//                    new SimpleDependencyInjectableContext(),
-//                    new CloudSystemModuleManager()
-//            )
-//                    .addDependency(SpringRunnerType.class, configurationProperties.getRunnerType())
-//                    .addDependency(ApplicationContext.class, springContext)
-//                    .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
-//        }
-
     }
 
-//    /**
-//     * This class is just to have access to the protected constructor
-//     */
-//    private static class SpringbootV2LocalBuilder extends CommunityFlamingockBuilder {
-//        protected SpringbootV2LocalBuilder(CoreConfiguration coreConfiguration,
-//                                           CommunityConfiguration communityConfiguration,
-//                                           DependencyInjectableContext dependencyInjectableContext,
-//                                           LocalSystemModuleManager systemModuleManager) {
-//            super(coreConfiguration, communityConfiguration, dependencyInjectableContext, systemModuleManager);
-//        }
-//    }
-//
-//    /**
-//     * This class is just to have access to the protected constructor
-//     */
-//    private static class SpringbootV2CloudBuilder extends CloudFlamingockBuilder {
-//
-//        protected SpringbootV2CloudBuilder(CoreConfiguration coreConfiguration, CloudConfiguration cloudConfiguration, DependencyInjectableContext dependencyInjectableContext, CloudSystemModuleManager systemModuleManager) {
-//            super(coreConfiguration, cloudConfiguration, dependencyInjectableContext, systemModuleManager);
-//        }
-//    }
 
 }

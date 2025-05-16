@@ -16,12 +16,14 @@
 
 package io.flamingock.oss.driver.dynamodb.internal.mongock;
 
+import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.preview.builder.PreviewTaskBuilder;
-import io.flamingock.core.runtime.dependency.Dependency;
+import io.flamingock.core.context.Dependency;
 import io.flamingock.core.system.SystemModule;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
@@ -54,13 +56,17 @@ public class MongockImporterModule implements SystemModule {
     }
 
     @Override
-    public void initialise() {
+    public void initialize(DependencyContext dependencyContext) {
+
+    }
+
+
+    @Override
+    public void contributeToContext(DependencyInjectable dependencyInjectable) {
         InternalMongockImporterConfiguration configuration = new InternalMongockImporterConfiguration(
                 sourceTable, auditWriter
         );
-        dependencies = Collections.singletonList(
-                new Dependency(InternalMongockImporterConfiguration.class, configuration)
-        );
+        dependencyInjectable.addDependency(new Dependency(InternalMongockImporterConfiguration.class, configuration));
     }
 
     @Override

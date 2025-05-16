@@ -1,5 +1,8 @@
 package io.flamingock.core.engine.audit.importer;
 
+import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectableContext;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.audit.importer.changeunit.FlamingockLocalImporterChangeUnit;
 import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
@@ -8,7 +11,7 @@ import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.preview.builder.PreviewTaskBuilder;
-import io.flamingock.core.runtime.dependency.Dependency;
+import io.flamingock.core.context.Dependency;
 import io.flamingock.core.system.SystemModule;
 
 import java.util.Arrays;
@@ -69,10 +72,12 @@ public class ImporterModule implements SystemModule {
     }
 
     @Override
-    public void initialise() {
-        dependencies = Collections.singletonList(
-                new Dependency(ImporterReader.class, importReader)
-        );
+    public void initialize(DependencyContext dependencyContext) {
+    }
+
+    @Override
+    public void contributeToContext(DependencyInjectable dependencyInjectable) {
+        dependencyInjectable.addDependency(new Dependency(ImporterReader.class, importReader));
     }
 
     @Override

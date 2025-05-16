@@ -22,6 +22,7 @@ import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
+import io.flamingock.core.system.SystemModuleManager;
 
 import java.util.Optional;
 
@@ -83,6 +84,8 @@ public final class CloudEngineImpl implements CloudEngine {
         return Optional.ofNullable(cloudTransactioner);
     }
 
-
-
+    @Override
+    public void contributeToSystemModules(SystemModuleManager systemModuleManager) {
+        //TODO it will need to inject the SystemModule for Mongock importer
+    }
 }

@@ -2,7 +2,7 @@ package io.flamingock.core.runtime;
 
 
 import io.flamingock.core.api.annotations.Nullable;
-import io.flamingock.core.runtime.dependency.SimpleDependencyInjectableContext;
+import io.flamingock.core.context.SimpleDependencyInjectableContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

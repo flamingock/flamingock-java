@@ -26,7 +26,7 @@ import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.core.pipeline.execution.StageExecutor;
-import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.context.DependencyContext;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 public final class PipelineRunnerCreator {

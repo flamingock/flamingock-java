@@ -17,20 +17,22 @@
 package io.flamingock.oss.driver.couchbase;
 
 import io.flamingock.core.community.driver.DriverConfigurable;
+import io.flamingock.core.context.DependencyContext;
 
 public class CouchbaseConfiguration implements DriverConfigurable {
 
-    public static CouchbaseConfiguration getDefault() {
-        return new CouchbaseConfiguration();
+    private boolean autoCreate = true;
+
+    public boolean isAutoCreate() {
+        return autoCreate;
     }
 
-    private boolean indexCreation = true;
-
-    public boolean isIndexCreation() {
-        return indexCreation;
+    public void setAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
     }
 
-    public void setIndexCreation(boolean value) {
-        this.indexCreation = value;
+    public void mergeConfig(DependencyContext dependencyContext) {
+        dependencyContext.getPropertyAs("couchbase.autoCreate", boolean.class)
+                .ifPresent(this::setAutoCreate);
     }
 }

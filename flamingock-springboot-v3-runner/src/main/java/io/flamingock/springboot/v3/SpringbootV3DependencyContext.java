@@ -16,8 +16,8 @@
 
 package io.flamingock.springboot.v3;
 
-import io.flamingock.core.runtime.dependency.Dependency;
-import io.flamingock.core.runtime.dependency.DependencyContext;
+import io.flamingock.core.context.Dependency;
+import io.flamingock.core.context.DependencyContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
