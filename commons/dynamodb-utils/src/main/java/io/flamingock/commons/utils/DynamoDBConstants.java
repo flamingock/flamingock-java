@@ -17,7 +17,7 @@
 package io.flamingock.commons.utils;
 
 public final class DynamoDBConstants {
-    public static final String AUDIT_LOG_TABLE_NAME = "flamingockEntries";
+    public static final String AUDIT_LOG_TABLE_NAME = "flamingockAuditLogs";
     public static final String AUDIT_LOG_PK = "partitionKey";
     public static final String AUDIT_LOG_STAGE_ID = "stageId";
 

@@ -20,7 +20,7 @@ import io.flamingock.core.community.driver.DriverConfigurable;
 
 public class MongoDBDriverConfiguration implements DriverConfigurable {
 
-    public final static String DEFAULT_AUDIT_REPOSITORY_NAME = "flamingockEntries";
+    public final static String DEFAULT_AUDIT_REPOSITORY_NAME = "flamingockAuditLogs";
     public final static String DEFAULT_LOCK_REPOSITORY_NAME = "flamingockLock";
 
     private boolean autoCreate = true;
