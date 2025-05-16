@@ -3,7 +3,7 @@ package io.flamingock.oss.driver.dynamodb.internal;
 
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockKey;

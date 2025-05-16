@@ -17,7 +17,7 @@
 package io.flamingock.core.builder;
 
 
-import io.flamingock.core.context.Dependency;
+import io.flamingock.commons.utils.Property;
 import io.flamingock.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.core.event.model.IPipelineFailedEvent;
 import io.flamingock.core.event.model.IPipelineIgnoredEvent;
@@ -207,171 +207,83 @@ public interface ContextConfigurator<HOLDER> {
      */
     Consumer<IStageFailedEvent> getStageFailureListener();
 
+    HOLDER setProperty(Property property);
 
-    default HOLDER setProperty(String key, String value) {
-        return addDependency(key, String.class, value);
-    }
+    HOLDER setProperty(String key, String value);
 
-    default HOLDER setProperty(String key, Boolean value) {
-        return addDependency(key,Boolean.class, value);
-    }
+    HOLDER setProperty(String key, Boolean value);
 
-    default HOLDER setProperty(String key, Integer value) {
-        return addDependency(key, Integer.class, value);
-    }
+    HOLDER setProperty(String key, Integer value);
 
-    default HOLDER setProperty(String key, Float value) {
-        return addDependency(key, Float.class, value);
-    }
+    HOLDER setProperty(String key, Float value);
 
-    default HOLDER setProperty(String key, Long value) {
-        return addDependency(key, Long.class, value);
-    }
+    HOLDER setProperty(String key, Long value);
 
-    default HOLDER setProperty(String key, Double value) {
-        return addDependency(key, Double.class, value);
-    }
+    HOLDER setProperty(String key, Double value);
 
-    default HOLDER setProperty(String key, UUID value) {
-        return addDependency(key, UUID.class, value);
-    }
+    HOLDER setProperty(String key, UUID value);
 
-    default HOLDER setProperty(String key, Currency value) {
-        return addDependency(key, Currency.class, value);
-    }
+    HOLDER setProperty(String key, Currency value);
 
-    default HOLDER setProperty(String key, Locale value) {
-        return addDependency(key, Locale.class, value);
-    }
+    HOLDER setProperty(String key, Locale value);
 
-    default HOLDER setProperty(String key, Charset value) {
-        return addDependency(key, Charset.class, value);
-    }
+    HOLDER setProperty(String key, Charset value);
 
-    default HOLDER setProperty(String key, File value) {
-        return addDependency(key, File.class, value);
-    }
+    HOLDER setProperty(String key, File value);
 
-    default HOLDER setProperty(String key, Path value) {
-        return addDependency(key, Path.class, value);
-    }
+    HOLDER setProperty(String key, Path value);
 
-    default HOLDER setProperty(String key, InetAddress value) {
-        return addDependency(key, InetAddress.class, value);
-    }
+    HOLDER setProperty(String key, InetAddress value);
 
-    default HOLDER setProperty(String key, URL value) {
-        return addDependency(key, URL.class, value);
-    }
+    HOLDER setProperty(String key, URL value);
 
-    default HOLDER setProperty(String key, URI value) {
-        return addDependency(key, URI.class, value);
-    }
+    HOLDER setProperty(String key, URI value);
 
-    default HOLDER setProperty(String key, Duration value) {
-        return addDependency(key, Duration.class, value);
-    }
+    HOLDER setProperty(String key, Duration value);
 
-    default HOLDER setProperty(String key, Period value) {
-        return addDependency(key, Period.class, value);
-    }
+    HOLDER setProperty(String key, Period value);
 
-    default HOLDER setProperty(String key, Instant value) {
-        return addDependency(key, Instant.class, value);
-    }
+    HOLDER setProperty(String key, Instant value);
 
-    default HOLDER setProperty(String key, LocalDate value) {
-        return addDependency(key, LocalDate.class, value);
-    }
+    HOLDER setProperty(String key, LocalDate value);
 
-    default HOLDER setProperty(String key, LocalTime value) {
-        return addDependency(key, LocalTime.class, value);
-    }
+    HOLDER setProperty(String key, LocalTime value);
 
-    default HOLDER setProperty(String key, LocalDateTime value) {
-        return addDependency(key, LocalDateTime.class, value);
-    }
+    HOLDER setProperty(String key, LocalDateTime value);
 
-    default HOLDER setProperty(String key, ZonedDateTime value) {
-        return addDependency(key, ZonedDateTime.class, value);
-    }
+    HOLDER setProperty(String key, ZonedDateTime value);
 
-    default HOLDER setProperty(String key, OffsetDateTime value) {
-        return addDependency(key, OffsetDateTime.class, value);
-    }
+    HOLDER setProperty(String key, OffsetDateTime value);
 
-    default HOLDER setProperty(String key, OffsetTime value) {
-        return addDependency(key, OffsetTime.class, value);
-    }
+    HOLDER setProperty(String key, OffsetTime value);
 
-    default HOLDER setProperty(String key, java.util.Date value) {
-        return addDependency(key, java.util.Date.class, value);
-    }
+    HOLDER setProperty(String key, java.util.Date value);
 
-    default HOLDER setProperty(String key, java.sql.Date value) {
-        return addDependency(key, java.sql.Date.class, value);
-    }
+    HOLDER setProperty(String key, java.sql.Date value);
 
-    default HOLDER setProperty(String key, Time value) {
-        return addDependency(key, Time.class, value);
-    }
+    HOLDER setProperty(String key, Time value);
 
-    default HOLDER setProperty(String key, Timestamp value) {
-        return addDependency(key, Timestamp.class, value);
-    }
+    HOLDER setProperty(String key, Timestamp value);
 
-    default HOLDER setProperty(String key, String[] value) {
-        return addDependency(key, String[].class, value);
-    }
+    HOLDER setProperty(String key, String[] value);
 
-    default HOLDER setProperty(String key, Integer[] value) {
-        return addDependency(key, Integer[].class, value);
-    }
+    HOLDER setProperty(String key, Integer[] value);
 
-    default HOLDER setProperty(String key, Long[] value) {
-        return addDependency(key, Long[].class, value);
-    }
+    HOLDER setProperty(String key, Long[] value);
 
-    default HOLDER setProperty(String key, Double[] value) {
-        return addDependency(key, Double[].class, value);
-    }
+    HOLDER setProperty(String key, Double[] value);
 
-    default HOLDER setProperty(String key, Float[] value) {
-        return addDependency(key, Float[].class, value);
-    }
+    HOLDER setProperty(String key, Float[] value);
 
-    default HOLDER setProperty(String key, Boolean[] value) {
-        return addDependency(key, Boolean[].class, value);
-    }
+    HOLDER setProperty(String key, Boolean[] value);
 
-    default HOLDER setProperty(String key, Byte[] value) {
-        return addDependency(key, Byte[].class, value);
-    }
+    HOLDER setProperty(String key, Byte[] value);
 
-    default HOLDER setProperty(String key, Short[] value) {
-        return addDependency(key, Short[].class, value);
-    }
+    HOLDER setProperty(String key, Short[] value);
 
-    default HOLDER setProperty(String key, Character[] value) {
-        return addDependency(key, Character[].class, value);
-    }
+    HOLDER setProperty(String key, Character[] value);
 
-    /**
-     * Sets a property as an enum value. Throws an exception if the value is not an enum.
-     *
-     * @param key   property key
-     * @param value enum value or null
-     * @return fluent builder
-     * @throws IllegalArgumentException if {@code value} is not null and not an enum constant
-     */
-    default HOLDER setEnumProperty(String key, Object value) {
-        if (value == null) {
-            return addDependency(key, null);
-        } else if (!(value instanceof Enum)) {
-            throw new IllegalArgumentException("setEnumProperty requires an enum value or null for: " + value);
-        }
-        Enum<?> enumValue = (Enum<?>) value;
-        return addDependency(key, enumValue.getClass(), enumValue);
-    }
+    <T extends Enum<T>> HOLDER setProperty(String key, T value);
+
 
 }

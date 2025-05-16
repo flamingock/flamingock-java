@@ -29,7 +29,7 @@ import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.engine.lock.LockRefreshDaemon;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.LoadedStage;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

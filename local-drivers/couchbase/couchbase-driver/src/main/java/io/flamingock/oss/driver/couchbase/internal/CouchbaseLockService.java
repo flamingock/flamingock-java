@@ -29,7 +29,7 @@ import io.flamingock.core.community.lock.LockEntry;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.LockServiceException;
 import io.flamingock.core.engine.lock.LockStatus;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.oss.driver.couchbase.internal.util.CouchBaseUtil;

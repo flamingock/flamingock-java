@@ -16,9 +16,7 @@
 
 package io.flamingock.core.context;
 
-import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.commons.utils.id.EnvironmentId;
-import io.flamingock.commons.utils.id.ServiceId;
+import io.flamingock.commons.utils.Property;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -51,7 +49,7 @@ import java.util.UUID;
  */
 public class PriorityContext extends PriorityContextResolver implements Context {
 
-    private final Context priorityInjectableContext;
+    private final Context priorityContext;
 
     /**
      * Creates a context that combines a writable {@link SimpleContext}
@@ -67,12 +65,12 @@ public class PriorityContext extends PriorityContextResolver implements Context 
      * Creates a context that combines the given writable {@code priorityInjectableContext}
      * with the given read-only {@code baseContext}.
      *
-     * @param priorityInjectableContext the context where dependencies are added or removed
+     * @param priorityContext the context where dependencies are added or removed
      * @param baseContext               the fallback context used only for resolution
      */
-    public PriorityContext(Context priorityInjectableContext, ContextResolver baseContext) {
-        super(priorityInjectableContext, baseContext);
-        this.priorityInjectableContext = priorityInjectableContext;
+    public PriorityContext(Context priorityContext, ContextResolver baseContext) {
+        super(priorityContext, baseContext);
+        this.priorityContext = priorityContext;
     }
 
     /**
@@ -82,7 +80,7 @@ public class PriorityContext extends PriorityContextResolver implements Context 
      */
     @Override
     public void addDependency(Dependency dependency) {
-        priorityInjectableContext.addDependency(dependency);
+        priorityContext.addDependency(dependency);
     }
 
     /**
@@ -93,212 +91,202 @@ public class PriorityContext extends PriorityContextResolver implements Context 
      */
     @Override
     public void removeDependencyByRef(Dependency dependency) {
-        priorityInjectableContext.removeDependencyByRef(dependency);
+        priorityContext.removeDependencyByRef(dependency);
     }
-
+    
     @Override
-    public void setProperty(String key, EnvironmentId value) {
-        priorityInjectableContext.setProperty(key, value);
-    }
-
-    @Override
-    public void setProperty(String key, ServiceId value) {
-        priorityInjectableContext.setProperty(key, value);
-    }
-
-    @Override
-    public void setProperty(String key, RunnerId value) {
-        priorityInjectableContext.setProperty(key, value);
+    public void setProperty(Property value) {
+        priorityContext.setProperty(value);
     }
 
     @Override
     public void setProperty(String key, String value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Boolean value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Integer value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Float value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Long value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Double value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, UUID value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Currency value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Locale value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Charset value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, File value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Path value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, InetAddress value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, URL value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, URI value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Duration value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Period value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Instant value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, LocalDate value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, LocalTime value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, LocalDateTime value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, ZonedDateTime value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, OffsetDateTime value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, OffsetTime value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Date value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, java.sql.Date value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Time value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Timestamp value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, String[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Integer[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Long[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Double[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Float[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Boolean[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Byte[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Short[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
     public void setProperty(String key, Character[] value) {
-        priorityInjectableContext.setProperty(key, value);
+        priorityContext.setProperty(key, value);
     }
 
     @Override
-    public void setEnumProperty(String key, Object value) {
-        priorityInjectableContext.setEnumProperty(key, value);
+    public <T extends Enum<T>> void setProperty(String key, T value) {
+        priorityContext.setProperty(key, value);
     }
 
 }

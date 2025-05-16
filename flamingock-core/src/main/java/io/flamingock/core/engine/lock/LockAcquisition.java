@@ -1,6 +1,6 @@
 package io.flamingock.core.engine.lock;
 
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 
 public class LockAcquisition {
 

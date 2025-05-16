@@ -1,8 +1,6 @@
 package io.flamingock.core.context;
 
-import io.flamingock.commons.utils.RunnerId;
-import io.flamingock.commons.utils.id.EnvironmentId;
-import io.flamingock.commons.utils.id.ServiceId;
+import io.flamingock.commons.utils.Property;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -27,14 +25,9 @@ import java.util.UUID;
 
 public interface PropertyInjectable {
 
-    void setProperty(String key, EnvironmentId value);
-
-    void setProperty(String key, ServiceId value);
-
-    void setProperty(String key, RunnerId value);
+    void setProperty(Property value);
 
     void setProperty(String key, String value);
-
 
     void setProperty(String key, Boolean value);
 
@@ -108,12 +101,5 @@ public interface PropertyInjectable {
 
     void setProperty(String key, Character[] value);
 
-    /**
-     * Sets a property as an enum value. Throws an exception if the value is not an enum.
-     *
-     * @param key   property key
-     * @param value enum value or null
-     * @throws IllegalArgumentException if {@code value} is not null and not an enum constant
-     */
-    void setEnumProperty(String key, Object value);
+    <T extends Enum<T>> void setProperty(String key, T value);
 }

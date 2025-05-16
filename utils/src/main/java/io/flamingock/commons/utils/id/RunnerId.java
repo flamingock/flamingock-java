@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.flamingock.commons.utils;
+package io.flamingock.commons.utils.id;
 
-import io.flamingock.commons.utils.id.Id;
+import io.flamingock.commons.utils.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,10 +24,11 @@ import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
-public final class RunnerId extends Id {
+public final class RunnerId extends Id implements Property {
 
     private static final Logger logger = LoggerFactory.getLogger(RunnerId.class);
     public static final String DELIMITER = "_";
+    private final static String PROPERTY_KEY = "runner.id";
 
 
     public static RunnerId generate() {
@@ -57,4 +58,8 @@ public final class RunnerId extends Id {
         super(value);
     }
 
+    @Override
+    public String getKey() {
+        return PROPERTY_KEY;
+    }
 }

@@ -1,7 +1,7 @@
 package io.flamingock.cloud;
 
 import io.flamingock.commons.utils.JsonObjectMapper;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.commons.utils.http.Http;
 import io.flamingock.commons.utils.id.EnvironmentId;

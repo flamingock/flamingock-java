@@ -20,7 +20,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;

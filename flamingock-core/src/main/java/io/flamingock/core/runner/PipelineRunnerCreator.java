@@ -16,7 +16,7 @@
 
 package io.flamingock.core.runner;
 
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.engine.ConnectionEngine;

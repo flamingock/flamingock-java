@@ -16,14 +16,13 @@
 
 package io.flamingock.core.runner;
 
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.engine.execution.ExecutionPlan;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.engine.lock.LockException;
 import io.flamingock.core.event.EventPublisher;
-import io.flamingock.core.event.SimpleEventPublisher;
 import io.flamingock.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.core.event.model.impl.PipelineFailedEvent;
 import io.flamingock.core.event.model.impl.PipelineStartedEvent;

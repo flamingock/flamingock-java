@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.mongodb.springdata.v2.driver;
 
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;

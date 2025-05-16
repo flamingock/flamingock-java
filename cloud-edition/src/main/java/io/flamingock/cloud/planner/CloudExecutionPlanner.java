@@ -16,7 +16,7 @@
 
 package io.flamingock.cloud.planner;
 
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.StopWatch;
 import io.flamingock.commons.utils.ThreadSleeper;
 import io.flamingock.commons.utils.TimeService;

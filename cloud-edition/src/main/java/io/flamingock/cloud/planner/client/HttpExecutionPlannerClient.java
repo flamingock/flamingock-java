@@ -21,7 +21,7 @@ import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
 import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
 import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.http.Http;
 
 public class HttpExecutionPlannerClient implements ExecutionPlannerClient {

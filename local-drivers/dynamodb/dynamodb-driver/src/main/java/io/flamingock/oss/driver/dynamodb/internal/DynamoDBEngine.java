@@ -18,7 +18,7 @@ package io.flamingock.oss.driver.dynamodb.internal;
 
 import io.flamingock.cloud.transaction.dynamodb.wrapper.DynamoDBTransactionWrapper;
 import io.flamingock.commons.utils.DynamoDBUtil;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;

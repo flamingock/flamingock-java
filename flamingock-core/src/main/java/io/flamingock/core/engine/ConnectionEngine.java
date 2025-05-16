@@ -35,8 +35,8 @@ public interface ConnectionEngine extends SystemModuleContributor, ContextContri
     Optional<? extends TransactionWrapper> getTransactionWrapper();
 
     @Override
-    default void contributeToContext(ContextInjectable dependencyInjectable) {
-        dependencyInjectable.addDependency(new Dependency(AuditWriter.class, getAuditWriter()));
+    default void contributeToContext(ContextInjectable contextInjectable) {
+        contextInjectable.addDependency(new Dependency(AuditWriter.class, getAuditWriter()));
     }
 
     default Runnable getCloser() {

@@ -18,7 +18,7 @@ package io.flamingock.oss.driver.couchbase.driver;
 
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;

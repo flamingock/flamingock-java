@@ -17,7 +17,8 @@
 package io.flamingock.core.builder;
 
 import io.flamingock.commons.utils.CollectionUtil;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.Property;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.api.template.TemplateFactory;
 import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.builder.core.CoreConfigurator;
@@ -49,9 +50,29 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.ZonedDateTime;
+import java.util.Currency;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -64,8 +85,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     private final PluginManager pluginManager;
     private final SystemModuleManager systemModuleManager;
-    private final Context dependencyContext;
-    protected final CoreConfiguration coreConfiguration;
+    private final Context context;
+    private final CoreConfiguration coreConfiguration;
 
     private final Driver<?> driver;
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
@@ -85,13 +106,13 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     protected AbstractFlamingockBuilder(
             CoreConfiguration coreConfiguration,
-            Context dependencyContext,
+            Context context,
             PluginManager pluginManager,
             SystemModuleManager systemModuleManager,
             Driver<?> driver) {
         this.pluginManager = pluginManager;
         this.systemModuleManager = systemModuleManager;
-        this.dependencyContext = dependencyContext;
+        this.context = context;
         this.coreConfiguration = coreConfiguration;
         this.driver = driver;
     }
@@ -109,18 +130,18 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         logger.info("Generated runner id:  {}", runnerId);
         updateContext(runnerId);
 
-        driver.initialize(dependencyContext);
+        driver.initialize(context);
         ConnectionEngine engine = driver.getEngine();
         engine.contributeToSystemModules(systemModuleManager);
-        engine.contributeToContext(dependencyContext);
+        engine.contributeToContext(context);
 
-        systemModuleManager.initialize(dependencyContext);
-        systemModuleManager.contributeToContext(dependencyContext);
+        systemModuleManager.initialize(context);
+        systemModuleManager.contributeToContext(context);
 
-        pluginManager.initialize(dependencyContext);
+        pluginManager.initialize(context);
 
         Pipeline pipeline = buildPipeline();
-        pipeline.contributeToContext(dependencyContext);
+        pipeline.contributeToContext(context);
 
         return PipelineRunnerCreator.createWithFinalizer(
                 runnerId,
@@ -151,7 +172,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     private void updateContext(RunnerId runnerId) {
         logger.trace("injecting internal configuration");
-        addDependency(runnerId);
+        setProperty(runnerId);
         addDependency(coreConfiguration);
         doUpdateContext();
     }
@@ -166,8 +187,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
                 .stream()
                 .filter(Objects::nonNull)
                 .reduce((previous, current) -> new PriorityContextResolver(current, previous))
-                .<ContextResolver>map(accumulated -> new PriorityContextResolver(dependencyContext, accumulated))
-                .orElse(dependencyContext);
+                .<ContextResolver>map(accumulated -> new PriorityContextResolver(context, accumulated))
+                .orElse(context);
     }
 
 
@@ -343,14 +364,14 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     @Override
     public HOLDER addDependency(String name, Class<?> type, Object instance) {
-        dependencyContext.addDependency(new Dependency(name, type, instance));
+        context.addDependency(new Dependency(name, type, instance));
         return getSelf();
     }
 
     @Override
     public HOLDER addDependency(Object instance) {
         if(instance instanceof Dependency) {
-            dependencyContext.addDependency(instance);
+            context.addDependency(instance);
             return getSelf();
         } else {
             return addDependency(Dependency.DEFAULT_NAME, instance.getClass(), instance);
@@ -455,4 +476,240 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     public Consumer<IStageFailedEvent> getStageFailureListener() {
         return stageFailedListener;
     }
+
+
+    @Override
+    public HOLDER setProperty(Property property) {
+        context.setProperty(property);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, String value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Boolean value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Integer value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Float value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Long value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Double value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, UUID value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Currency value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Locale value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Charset value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, File value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Path value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, InetAddress value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, URL value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, URI value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Duration value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Period value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Instant value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, LocalDate value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, LocalTime value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, LocalDateTime value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, ZonedDateTime value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, OffsetDateTime value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, OffsetTime value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, java.util.Date value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, java.sql.Date value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Time value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Timestamp value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, String[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Integer[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Long[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Double[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Float[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Boolean[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Byte[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Short[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public HOLDER setProperty(String key, Character[] value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
+    @Override
+    public <T extends Enum<T>> HOLDER setProperty(String key, T value) {
+        context.setProperty(key, value);
+        return getSelf();
+    }
+
 }

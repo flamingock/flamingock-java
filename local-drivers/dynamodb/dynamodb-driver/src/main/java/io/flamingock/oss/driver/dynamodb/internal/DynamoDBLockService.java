@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.dynamodb.internal;
 
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.core.community.lock.LocalLockService;
 import io.flamingock.core.community.lock.LockEntry;

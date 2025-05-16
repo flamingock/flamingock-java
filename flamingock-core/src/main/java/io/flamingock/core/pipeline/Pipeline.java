@@ -93,8 +93,8 @@ public class Pipeline implements PipelineDescriptor {
     }
 
     @Override
-    public void contributeToContext(ContextInjectable dependencyInjectable) {
-        dependencyInjectable.addDependency(new Dependency(PipelineDescriptor.class, this));
+    public void contributeToContext(ContextInjectable contextInjectable) {
+        contextInjectable.addDependency(new Dependency(PipelineDescriptor.class, this));
     }
 
 

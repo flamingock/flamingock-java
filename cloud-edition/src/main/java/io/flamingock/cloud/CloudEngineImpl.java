@@ -17,12 +17,11 @@
 package io.flamingock.cloud;
 
 import io.flamingock.commons.utils.id.EnvironmentId;
+import io.flamingock.commons.utils.id.JwtProperty;
 import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.cloud.CloudEngine;
 import io.flamingock.core.context.ContextInjectable;
-import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.system.SystemModuleManager;
@@ -88,11 +87,11 @@ public final class CloudEngineImpl implements CloudEngine {
     }
 
     @Override
-    public void contributeToContext(ContextInjectable dependencyInjectable) {
-        CloudEngine.super.contributeToContext(dependencyInjectable);
-        dependencyInjectable.setProperty("cloud.jwt", jwt);
-        dependencyInjectable.setProperty("cloud.environment.id", environmentId);
-        dependencyInjectable.setProperty("cloud.service.id", serviceId);
+    public void contributeToContext(ContextInjectable contextInjectable) {
+        CloudEngine.super.contributeToContext(contextInjectable);
+        contextInjectable.setProperty(JwtProperty.fromString(jwt));
+        contextInjectable.setProperty(environmentId);
+        contextInjectable.setProperty(serviceId);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package io.flamingock.core.community;
 
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.system.SystemModule;

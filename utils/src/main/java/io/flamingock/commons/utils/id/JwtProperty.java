@@ -18,21 +18,21 @@ package io.flamingock.commons.utils.id;
 
 import io.flamingock.commons.utils.Property;
 
-public class EnvironmentId extends Id implements Property {
+public class JwtProperty extends Id implements Property {
 
-    private final static String PROPERTY_KEY = "cloud.environment.id";
+    private final static String PROPERTY_KEY = "cloud.jwt";
 
-    public static EnvironmentId fromString(String value) {
-        return new EnvironmentId(value);
+    public static JwtProperty fromString(String value) {
+        return new JwtProperty(value);
     }
 
-    private EnvironmentId(String value) {
+    private JwtProperty(String value) {
         super(value);
     }
 
     @Override
     public boolean equals(Object o) {
-        return super.equals(o) && o instanceof EnvironmentId;
+        return super.equals(o) && o instanceof JwtProperty;
     }
 
 

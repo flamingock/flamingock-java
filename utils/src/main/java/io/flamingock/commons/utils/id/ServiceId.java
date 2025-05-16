@@ -16,7 +16,10 @@
 
 package io.flamingock.commons.utils.id;
 
-public class ServiceId extends Id {
+import io.flamingock.commons.utils.Property;
+
+public class ServiceId extends Id implements Property {
+    private final static String PROPERTY_KEY = "cloud.service.id";
 
     public static ServiceId fromString(String value) {
         return new ServiceId(value);
@@ -31,5 +34,9 @@ public class ServiceId extends Id {
         return super.equals(o) && o instanceof ServiceId;
     }
 
+    @Override
+    public String getKey() {
+        return PROPERTY_KEY;
+    }
 
 }

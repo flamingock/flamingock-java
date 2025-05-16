@@ -75,8 +75,8 @@ public class ImporterModule implements SystemModule {
     }
 
     @Override
-    public void contributeToContext(ContextInjectable dependencyInjectable) {
-        dependencyInjectable.addDependency(new Dependency(ImporterReader.class, importReader));
+    public void contributeToContext(ContextInjectable contextInjectable) {
+        contextInjectable.addDependency(new Dependency(ImporterReader.class, importReader));
     }
 
     @Override

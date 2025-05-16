@@ -23,7 +23,7 @@ import io.flamingock.core.engine.lock.LockAcquisition;
 import io.flamingock.core.engine.lock.LockKey;
 import io.flamingock.core.engine.lock.LockService;
 import io.flamingock.core.engine.lock.LockServiceException;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -62,11 +62,11 @@ public class MongockImporterModule implements SystemModule {
 
 
     @Override
-    public void contributeToContext(ContextInjectable dependencyInjectable) {
+    public void contributeToContext(ContextInjectable contextInjectable) {
         InternalMongockImporterConfiguration configuration = new InternalMongockImporterConfiguration(
                 sourceTable, auditWriter
         );
-        dependencyInjectable.addDependency(new Dependency(InternalMongockImporterConfiguration.class, configuration));
+        contextInjectable.addDependency(new Dependency(InternalMongockImporterConfiguration.class, configuration));
     }
 
     @Override

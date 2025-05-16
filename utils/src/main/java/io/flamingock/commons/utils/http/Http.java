@@ -19,7 +19,7 @@ package io.flamingock.commons.utils.http;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.flamingock.commons.utils.JsonObjectMapper;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.ServerException;
 import io.flamingock.commons.utils.FlamingockError;
 import org.apache.http.HttpEntity;

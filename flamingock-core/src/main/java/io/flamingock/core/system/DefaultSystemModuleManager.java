@@ -27,7 +27,7 @@ public class DefaultSystemModuleManager implements SystemModuleManager {
     }
 
     @Override
-    public void contributeToContext(ContextInjectable dependencyInjectable) {
-        systemModules.forEach(module -> module.contributeToContext(dependencyInjectable));
+    public void contributeToContext(ContextInjectable contextInjectable) {
+        systemModules.forEach(module -> module.contributeToContext(contextInjectable));
     }
 }

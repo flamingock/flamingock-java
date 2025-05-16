@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.mongodb.v3.driver;
 
 import com.mongodb.client.MongoClient;
-import io.flamingock.commons.utils.RunnerId;
+import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
