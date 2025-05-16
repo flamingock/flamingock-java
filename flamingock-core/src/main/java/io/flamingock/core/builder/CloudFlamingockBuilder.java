@@ -22,7 +22,7 @@ import io.flamingock.core.builder.core.CoreConfiguration;
 import io.flamingock.core.cloud.CloudDriver;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyInjectableContext;
+import io.flamingock.core.context.Context;
 import io.flamingock.core.plugin.PluginManager;
 import io.flamingock.core.system.SystemModuleManager;
 
@@ -38,7 +38,7 @@ public class CloudFlamingockBuilder
 
     protected CloudFlamingockBuilder(CoreConfiguration coreConfiguration,
                                      CloudConfiguration cloudConfiguration,
-                                     DependencyInjectableContext dependencyInjectableContext,
+                                     Context dependencyInjectableContext,
                                      PluginManager pluginManager,
                                      SystemModuleManager systemModuleManager,
                                      CloudDriver driver) {

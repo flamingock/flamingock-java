@@ -22,7 +22,7 @@ import io.flamingock.cloud.planner.client.HttpExecutionPlannerClient;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import org.apache.http.impl.client.HttpClients;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class CloudDriverImpl  implements CloudDriver {
 
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         RunnerId runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
 
         CoreConfigurable coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);

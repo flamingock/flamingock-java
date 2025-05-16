@@ -2,7 +2,7 @@ package io.flamingock.core.runtime;
 
 
 import io.flamingock.core.api.annotations.Nullable;
-import io.flamingock.core.context.SimpleDependencyInjectableContext;
+import io.flamingock.core.context.SimpleContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ class RuntimeManagerTest {
     void shouldThrowExceptionIfNoNullableAnnotation() throws NoSuchMethodException {
 
         RuntimeManager runtimeManager = RuntimeManager.builder()
-                .setDependencyContext(new SimpleDependencyInjectableContext())
+                .setDependencyContext(new SimpleContext())
                 .setLock(null)
                 .build();
 
@@ -32,7 +32,7 @@ class RuntimeManagerTest {
     void shouldNotThrowExceptionIfNullableAnnotation() throws NoSuchMethodException {
 
         RuntimeManager runtimeManager = RuntimeManager.builder()
-                .setDependencyContext(new SimpleDependencyInjectableContext())
+                .setDependencyContext(new SimpleContext())
                 .setLock(null)
                 .build();
 

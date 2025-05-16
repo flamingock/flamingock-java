@@ -23,7 +23,7 @@ import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.community.driver.OverridesDrivers;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v2.internal.SpringDataMongoV2Engine;
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;
@@ -45,7 +45,7 @@ public class SpringDataMongoV2Driver implements LocalDriver {
     }
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
 
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
@@ -57,7 +57,7 @@ public class SpringDataMongoV2Driver implements LocalDriver {
         this.driverConfiguration = generateConfig(dependencyContext);
     }
 
-    public SpringDataMongoV2Configuration generateConfig(DependencyContext dependencyContext) {
+    public SpringDataMongoV2Configuration generateConfig(ContextResolver dependencyContext) {
         SpringDataMongoV2Configuration configuration = dependencyContext
                 .getDependencyValue(SpringDataMongoV2Configuration.class)
                 .orElse(SpringDataMongoV2Configuration.getDefault());

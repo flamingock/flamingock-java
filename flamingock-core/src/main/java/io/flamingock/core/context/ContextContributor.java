@@ -1,5 +1,5 @@
 package io.flamingock.core.context;
 
 public interface ContextContributor {
-    void contributeToContext(DependencyInjectable dependencyInjectable);
+    void contributeToContext(ContextInjectable dependencyInjectable);
 }

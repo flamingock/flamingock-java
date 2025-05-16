@@ -20,6 +20,7 @@ import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.cloud.CloudEngine;
+import io.flamingock.core.context.ContextInjectable;
 import io.flamingock.core.context.Dependency;
 import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.engine.audit.AuditWriter;
@@ -86,13 +87,12 @@ public final class CloudEngineImpl implements CloudEngine {
         return Optional.ofNullable(cloudTransactioner);
     }
 
-    //TODO call ContextInjector.setProperty("cloud.jwt", jwt)
     @Override
-    public void contributeToContext(DependencyInjectable dependencyInjectable) {
+    public void contributeToContext(ContextInjectable dependencyInjectable) {
         CloudEngine.super.contributeToContext(dependencyInjectable);
-        dependencyInjectable.addDependency(new Dependency("cloud.jwt", String.class, jwt));
-        dependencyInjectable.addDependency(new Dependency("cloud.environment.id", String.class, environmentId));
-        dependencyInjectable.addDependency(new Dependency("cloud.service.id", String.class, serviceId));
+        dependencyInjectable.setProperty("cloud.jwt", jwt);
+        dependencyInjectable.setProperty("cloud.environment.id", environmentId);
+        dependencyInjectable.setProperty("cloud.service.id", serviceId);
     }
 
     @Override

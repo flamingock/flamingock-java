@@ -17,6 +17,7 @@
 package io.flamingock.core.pipeline;
 
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.context.ContextInjectable;
 import io.flamingock.core.context.Dependency;
 import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.preview.PreviewPipeline;
@@ -92,7 +93,7 @@ public class Pipeline implements PipelineDescriptor {
     }
 
     @Override
-    public void contributeToContext(DependencyInjectable dependencyInjectable) {
+    public void contributeToContext(ContextInjectable dependencyInjectable) {
         dependencyInjectable.addDependency(new Dependency(PipelineDescriptor.class, this));
     }
 

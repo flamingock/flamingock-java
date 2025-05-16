@@ -21,8 +21,8 @@ import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.ExecutableStage;
 import io.flamingock.core.pipeline.StageDescriptor;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyContext;
-import io.flamingock.core.context.PriorityDependencyInjectableContext;
+import io.flamingock.core.context.ContextResolver;
+import io.flamingock.core.context.PriorityContext;
 import io.flamingock.core.task.executable.ExecutableTask;
 import io.flamingock.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
 import io.flamingock.core.task.navigation.navigator.StepNavigatorBuilder;
@@ -34,13 +34,13 @@ public class StageExecutor {
     protected final AuditWriter auditWriter;
 
     protected final TransactionWrapper transactionWrapper;
-    private final DependencyContext baseDependencyContext;
+    private final ContextResolver baseDependencyContext;
 
-    private StageExecutor(DependencyContext dependencyContext, AuditWriter auditWriter) {
+    private StageExecutor(ContextResolver dependencyContext, AuditWriter auditWriter) {
         this(dependencyContext, auditWriter, null);
     }
 
-    public StageExecutor(DependencyContext dependencyContext,
+    public StageExecutor(ContextResolver dependencyContext,
                          AuditWriter auditWriter,
                          TransactionWrapper transactionWrapper) {
         this.baseDependencyContext = dependencyContext;
@@ -59,7 +59,7 @@ public class StageExecutor {
         //TODO think that we can build the StepNavigator sequentially and then execute it in Parallel
         // this would save memory footprint
 
-        PriorityDependencyInjectableContext dependencyContext = new PriorityDependencyInjectableContext(baseDependencyContext);
+        PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
 
         try {

@@ -23,7 +23,7 @@ import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseEngine;
 
@@ -40,7 +40,7 @@ public class CouchbaseDriver implements LocalDriver {
     }
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
 
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);

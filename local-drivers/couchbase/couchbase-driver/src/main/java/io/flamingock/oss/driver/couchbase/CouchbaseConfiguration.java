@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.couchbase;
 
 import io.flamingock.core.community.driver.DriverConfigurable;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 
 public class CouchbaseConfiguration implements DriverConfigurable {
 
@@ -31,7 +31,7 @@ public class CouchbaseConfiguration implements DriverConfigurable {
         this.autoCreate = autoCreate;
     }
 
-    public void mergeConfig(DependencyContext dependencyContext) {
+    public void mergeConfig(ContextResolver dependencyContext) {
         dependencyContext.getPropertyAs("couchbase.autoCreate", boolean.class)
                 .ifPresent(this::setAutoCreate);
     }

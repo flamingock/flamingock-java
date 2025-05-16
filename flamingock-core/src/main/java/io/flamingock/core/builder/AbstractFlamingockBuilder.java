@@ -40,9 +40,9 @@ import io.flamingock.core.runner.PipelineRunnerCreator;
 import io.flamingock.core.runner.Runner;
 import io.flamingock.core.runner.RunnerBuilder;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyContext;
-import io.flamingock.core.context.DependencyInjectableContext;
-import io.flamingock.core.context.PriorityDependencyContext;
+import io.flamingock.core.context.ContextResolver;
+import io.flamingock.core.context.Context;
+import io.flamingock.core.context.PriorityContextResolver;
 import io.flamingock.core.system.SystemModuleManager;
 import io.flamingock.core.task.filter.TaskFilter;
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +64,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     private final PluginManager pluginManager;
     private final SystemModuleManager systemModuleManager;
-    private final DependencyInjectableContext dependencyContext;
+    private final Context dependencyContext;
     protected final CoreConfiguration coreConfiguration;
 
     private final Driver<?> driver;
@@ -85,7 +85,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     protected AbstractFlamingockBuilder(
             CoreConfiguration coreConfiguration,
-            DependencyInjectableContext dependencyContext,
+            Context dependencyContext,
             PluginManager pluginManager,
             SystemModuleManager systemModuleManager,
             Driver<?> driver) {
@@ -156,8 +156,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         doUpdateContext();
     }
 
-    private DependencyContext buildHierarchicalContext() {
-        List<DependencyContext> dependencyContextsFromPlugins = pluginManager.getPlugins()
+    private ContextResolver buildHierarchicalContext() {
+        List<ContextResolver> dependencyContextsFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getDependencyContext)
                 .flatMap(CollectionUtil::optionalToStream)
@@ -165,8 +165,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         return dependencyContextsFromPlugins
                 .stream()
                 .filter(Objects::nonNull)
-                .reduce((previous, current) -> new PriorityDependencyContext(current, previous))
-                .<DependencyContext>map(accumulated -> new PriorityDependencyContext(dependencyContext, accumulated))
+                .reduce((previous, current) -> new PriorityContextResolver(current, previous))
+                .<ContextResolver>map(accumulated -> new PriorityContextResolver(dependencyContext, accumulated))
                 .orElse(dependencyContext);
     }
 

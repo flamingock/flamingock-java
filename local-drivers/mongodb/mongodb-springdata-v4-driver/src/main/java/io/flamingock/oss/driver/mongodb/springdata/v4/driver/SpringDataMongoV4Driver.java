@@ -23,7 +23,7 @@ import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
 import io.flamingock.core.community.driver.OverridesDrivers;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.mongodb.springdata.v4.config.SpringDataMongoV4Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v4.internal.SpringDataMongoV4Engine;
 import io.flamingock.oss.driver.mongodb.sync.v4.driver.MongoSync4Driver;
@@ -45,7 +45,7 @@ public class SpringDataMongoV4Driver implements LocalDriver {
     }
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
 
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
@@ -57,7 +57,7 @@ public class SpringDataMongoV4Driver implements LocalDriver {
         this.driverConfiguration = generateConfig(dependencyContext);
     }
 
-    public SpringDataMongoV4Configuration generateConfig(DependencyContext dependencyContext) {
+    public SpringDataMongoV4Configuration generateConfig(ContextResolver dependencyContext) {
         SpringDataMongoV4Configuration configuration = dependencyContext
                 .getDependencyValue(SpringDataMongoV4Configuration.class)
                 .orElse(SpringDataMongoV4Configuration.getDefault());

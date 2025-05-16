@@ -19,7 +19,7 @@ package io.flamingock.core.task.navigation.navigator;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 public interface StepNavigatorBuilder {
@@ -31,7 +31,7 @@ public interface StepNavigatorBuilder {
 
     StepNavigatorBuilder setLock(Lock lock);
 
-    StepNavigatorBuilder setDependencyContext(DependencyContext staticContext);
+    StepNavigatorBuilder setDependencyContext(ContextResolver staticContext);
 
     StepNavigatorBuilder setTransactionWrapper(TransactionWrapper transactionWrapper);
 
@@ -46,7 +46,7 @@ public interface StepNavigatorBuilder {
 
         protected Lock lock = null;
 
-        protected DependencyContext staticContext;
+        protected ContextResolver staticContext;
 
         protected TransactionWrapper transactionWrapper = null;
 
@@ -66,7 +66,7 @@ public interface StepNavigatorBuilder {
         }
 
         @Override
-        public StepNavigatorBuilder setDependencyContext(DependencyContext staticContext) {
+        public StepNavigatorBuilder setDependencyContext(ContextResolver staticContext) {
             this.staticContext = staticContext;
             return this;
         }

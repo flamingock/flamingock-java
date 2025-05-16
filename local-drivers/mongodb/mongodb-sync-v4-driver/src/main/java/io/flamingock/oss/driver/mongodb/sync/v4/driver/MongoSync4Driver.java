@@ -24,7 +24,7 @@ import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.MongoSync4Engine;
 
 import java.time.Duration;
@@ -43,7 +43,7 @@ public class MongoSync4Driver implements LocalDriver {
     }
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
 
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
@@ -58,7 +58,7 @@ public class MongoSync4Driver implements LocalDriver {
         this.driverConfiguration = generateConfig(dependencyContext);
     }
 
-    public MongoDBSync4Configuration generateConfig(DependencyContext dependencyContext) {
+    public MongoDBSync4Configuration generateConfig(ContextResolver dependencyContext) {
         MongoDBSync4Configuration configuration = dependencyContext
                 .getDependencyValue(MongoDBSync4Configuration.class)
                 .orElse(MongoDBSync4Configuration.getDefault());

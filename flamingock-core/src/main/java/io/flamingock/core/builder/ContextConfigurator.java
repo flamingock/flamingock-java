@@ -17,6 +17,7 @@
 package io.flamingock.core.builder;
 
 
+import io.flamingock.core.context.Dependency;
 import io.flamingock.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.core.event.model.IPipelineFailedEvent;
 import io.flamingock.core.event.model.IPipelineIgnoredEvent;
@@ -366,9 +367,11 @@ public interface ContextConfigurator<HOLDER> {
     default HOLDER setEnumProperty(String key, Object value) {
         if (value == null) {
             return addDependency(key, null);
-        } else if (!value.getClass().isEnum()) {
-            throw new IllegalArgumentException("setEnumProperty requires an enum value or null");
+        } else if (!(value instanceof Enum)) {
+            throw new IllegalArgumentException("setEnumProperty requires an enum value or null for: " + value);
         }
-        return addDependency(key, value.getClass(), value);
+        Enum<?> enumValue = (Enum<?>) value;
+        return addDependency(key, enumValue.getClass(), enumValue);
     }
+
 }

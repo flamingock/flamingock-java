@@ -23,7 +23,7 @@ import java.util.Optional;
  * <p>
  * Allows retrieving properties as raw {@code String} values or converted to a specific type.
  */
-public interface PropertyDependencyResolver {
+public interface PropertyResolver {
 
     /**
      * Retrieves the property value associated with the given key as a {@link String}.

@@ -18,7 +18,7 @@ package io.flamingock.oss.driver.dynamodb;
 
 import io.flamingock.commons.utils.DynamoDBConstants;
 import io.flamingock.core.community.driver.DriverConfigurable;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 
 public class DynamoDBConfiguration implements DriverConfigurable {
 
@@ -68,7 +68,7 @@ public class DynamoDBConfiguration implements DriverConfigurable {
         this.writeCapacityUnits = writeCapacityUnits;
     }
 
-    public void mergeConfig(DependencyContext dependencyContext) {
+    public void mergeConfig(ContextResolver dependencyContext) {
         dependencyContext.getPropertyAs("dynamodb.autoCreate", boolean.class)
                 .ifPresent(this::setAutoCreate);
         dependencyContext.getPropertyAs("dynamodb.auditRepositoryName", String.class)

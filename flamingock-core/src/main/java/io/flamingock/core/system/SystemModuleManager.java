@@ -2,17 +2,13 @@ package io.flamingock.core.system;
 
 import io.flamingock.core.context.ContextContributor;
 import io.flamingock.core.context.ContextInitializable;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.core.preview.PreviewStage;
-import io.flamingock.core.context.Dependency;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -23,7 +19,7 @@ public interface SystemModuleManager extends ContextInitializable, ContextContri
 
     Iterable<SystemModule> getModules();
 
-    void initialize(DependencyContext dependencyContext);
+    void initialize(ContextResolver dependencyContext);
 
     default List<PreviewStage> getSortedSystemStagesBefore() {
         return Helper.getSortedSystemStages(getModules(), true);

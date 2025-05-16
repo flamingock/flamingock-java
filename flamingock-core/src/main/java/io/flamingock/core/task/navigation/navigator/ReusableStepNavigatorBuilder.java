@@ -19,7 +19,7 @@ package io.flamingock.core.task.navigation.navigator;
 import io.flamingock.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.core.cloud.transaction.OngoingStatusRepository;
 import io.flamingock.core.runtime.RuntimeManager;
-import io.flamingock.core.context.PriorityDependencyInjectableContext;
+import io.flamingock.core.context.PriorityContext;
 
 public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractStepNavigator {
 
@@ -45,7 +45,7 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
         instance.setAuditWriter(auditWriter);
 
         RuntimeManager runtimeManager = RuntimeManager.builder()
-                .setDependencyContext(new PriorityDependencyInjectableContext(staticContext))
+                .setDependencyContext(new PriorityContext(staticContext))
                 .setLock(lock)
                 .build();
         instance.setRuntimeManager(runtimeManager);

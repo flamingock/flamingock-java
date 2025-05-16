@@ -1,6 +1,6 @@
 package io.flamingock.core.plugin;
 
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +13,7 @@ public class DefaultPluginManager implements PluginManager {
     private List<Plugin> frameworkPlugins;
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         frameworkPlugins = StreamSupport
                 .stream(ServiceLoader.load(Plugin.class).spliterator(), false)
                 .peek(frameworkPlugin -> frameworkPlugin.initialize(dependencyContext))

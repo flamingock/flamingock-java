@@ -17,7 +17,7 @@
 package io.flamingock.springboot.v3;
 
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
@@ -25,13 +25,13 @@ import java.util.Optional;
 
 
 /**
- * Implementation of {@link DependencyContext} that resolves dependencies and properties
+ * Implementation of {@link ContextResolver} that resolves dependencies and properties
  * using a Spring Boot 2 {@link ApplicationContext}.
  * <p>
  * It supports retrieval of beans by type or name and reads namespaced properties (prefixed with {@code flamingock.})
  * from the Spring {@link Environment}.
  */
-public class SpringbootV3DependencyContext implements DependencyContext {
+public class SpringbootV3DependencyContext implements ContextResolver {
 
     private final ApplicationContext applicationContext;
     private final Environment environment;

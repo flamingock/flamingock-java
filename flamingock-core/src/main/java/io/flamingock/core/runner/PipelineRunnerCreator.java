@@ -26,7 +26,7 @@ import io.flamingock.core.event.EventPublisher;
 import io.flamingock.core.pipeline.Pipeline;
 import io.flamingock.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.core.pipeline.execution.StageExecutor;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.core.transaction.TransactionWrapper;
 
 public final class PipelineRunnerCreator {
@@ -39,7 +39,7 @@ public final class PipelineRunnerCreator {
                                 ConnectionEngine connectionEngine,
                                 CoreConfigurable coreConfiguration,
                                 EventPublisher eventPublisher,
-                                DependencyContext dependencyContext,
+                                ContextResolver dependencyContext,
                                 boolean isThrowExceptionIfCannotObtainLock) {
         return create(runnerId,
                 pipeline,
@@ -61,7 +61,7 @@ public final class PipelineRunnerCreator {
                                              ConnectionEngine engine,
                                              CoreConfigurable coreConfiguration,
                                              EventPublisher eventPublisher,
-                                             DependencyContext dependencyContext,
+                                             ContextResolver dependencyContext,
                                              boolean isThrowExceptionIfCannotObtainLock,
                                              Runnable finalizer) {
         return create(
@@ -84,7 +84,7 @@ public final class PipelineRunnerCreator {
                                  ExecutionPlanner executionPlanner,
                                  CoreConfigurable coreConfiguration,
                                  EventPublisher eventPublisher,
-                                 DependencyContext dependencyContext,
+                                 ContextResolver dependencyContext,
                                  boolean isThrowExceptionIfCannotObtainLock,
                                  Runnable finalizer) {
         //Instantiated here, so we don't wait until Runner.run() and fail fast

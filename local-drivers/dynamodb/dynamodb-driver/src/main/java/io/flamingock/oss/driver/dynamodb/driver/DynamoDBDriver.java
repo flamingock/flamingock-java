@@ -21,7 +21,7 @@ import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
 import io.flamingock.oss.driver.dynamodb.internal.DynamoDBEngine;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -38,7 +38,7 @@ public class DynamoDBDriver implements LocalDriver {
     }
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
 
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);

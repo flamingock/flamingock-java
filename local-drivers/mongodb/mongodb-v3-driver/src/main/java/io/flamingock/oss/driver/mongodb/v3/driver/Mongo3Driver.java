@@ -23,7 +23,7 @@ import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
 import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.context.DependencyContext;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
 import io.flamingock.oss.driver.mongodb.v3.internal.Mongo3Engine;
 
@@ -44,7 +44,7 @@ public class Mongo3Driver implements LocalDriver {
     }
 
     @Override
-    public void initialize(DependencyContext dependencyContext) {
+    public void initialize(ContextResolver dependencyContext) {
         runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
 
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
@@ -59,7 +59,7 @@ public class Mongo3Driver implements LocalDriver {
         this.driverConfiguration = generateConfig(dependencyContext);
     }
 
-    public MongoDB3Configuration generateConfig(DependencyContext dependencyContext) {
+    public MongoDB3Configuration generateConfig(ContextResolver dependencyContext) {
         MongoDB3Configuration configuration = dependencyContext
                 .getDependencyValue(MongoDB3Configuration.class)
                 .orElse(MongoDB3Configuration.getDefault());

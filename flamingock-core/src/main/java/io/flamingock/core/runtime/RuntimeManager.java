@@ -24,7 +24,7 @@ import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.engine.lock.Lock;
 import io.flamingock.core.context.Dependency;
 import io.flamingock.core.context.DependencyInjectable;
-import io.flamingock.core.context.DependencyInjectableContext;
+import io.flamingock.core.context.Context;
 import io.flamingock.core.runtime.proxy.LockGuardProxyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,12 +50,12 @@ public final class RuntimeManager implements DependencyInjectable {
             ? parameter.getAnnotation(Named.class).value()
             : null;
     private final Set<Class<?>> nonProxyableTypes = Collections.emptySet();
-    private final DependencyInjectableContext dependencyContext;
+    private final Context dependencyContext;
     private final LockGuardProxyFactory proxyFactory;
     private final boolean isNativeImage;
 
     private RuntimeManager(LockGuardProxyFactory proxyFactory,
-                           DependencyInjectableContext dependencyContext,
+                           Context dependencyContext,
                            boolean isNativeImage) {
         this.dependencyContext = dependencyContext;
         this.proxyFactory = proxyFactory;
@@ -171,7 +171,7 @@ public final class RuntimeManager implements DependencyInjectable {
     public static final class Builder {
 
 
-        private DependencyInjectableContext dependencyContext;
+        private Context dependencyContext;
         private Lock lock;
         private Boolean forceNativeImage = null;
 
@@ -184,7 +184,7 @@ public final class RuntimeManager implements DependencyInjectable {
             this.forceNativeImage = forceNativeImage;
         }
 
-        public Builder setDependencyContext(DependencyInjectableContext dependencyContext) {
+        public Builder setDependencyContext(Context dependencyContext) {
             this.dependencyContext = dependencyContext;
             return this;
         }

@@ -16,7 +16,7 @@ import io.flamingock.core.utils.TestTaskExecution;
 import io.flamingock.core.pipeline.execution.ExecutionContext;
 import io.flamingock.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.core.runtime.RuntimeManager;
-import io.flamingock.core.context.DependencyInjectableContext;
+import io.flamingock.core.context.Context;
 import io.flamingock.core.task.executable.ExecutableTask;
 import io.flamingock.core.task.navigation.navigator.StepNavigator;
 import org.junit.jupiter.api.Assertions;
@@ -62,7 +62,7 @@ public class TestRunner {
 
         TaskSummarizer stepSummarizerMock = new TaskSummarizer("taskId");
         RuntimeManager runtimeManagerMock = RuntimeManager.builder()
-                .setDependencyContext(mock(DependencyInjectableContext.class))
+                .setDependencyContext(mock(Context.class))
                 .setLock(mock(Lock.class))
                 .build();
 

@@ -17,6 +17,7 @@
 package io.flamingock.core.engine;
 
 import io.flamingock.core.context.ContextContributor;
+import io.flamingock.core.context.ContextInjectable;
 import io.flamingock.core.context.Dependency;
 import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.engine.audit.AuditWriter;
@@ -33,7 +34,8 @@ public interface ConnectionEngine extends SystemModuleContributor, ContextContri
 
     Optional<? extends TransactionWrapper> getTransactionWrapper();
 
-    default void contributeToContext(DependencyInjectable dependencyInjectable) {
+    @Override
+    default void contributeToContext(ContextInjectable dependencyInjectable) {
         dependencyInjectable.addDependency(new Dependency(AuditWriter.class, getAuditWriter()));
     }
 
