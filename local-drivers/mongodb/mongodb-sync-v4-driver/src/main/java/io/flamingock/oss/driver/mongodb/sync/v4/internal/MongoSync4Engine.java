@@ -109,7 +109,7 @@ public class MongoSync4Engine extends AbstractLocalEngine {
     }
 
     @Override
-    public Optional<SystemModule> getMongockLegacyImporterModule() {
+    protected Optional<SystemModule> getMongockLegacyImporterModule() {
         return Optional.ofNullable(mongockImporter);
     }
 }

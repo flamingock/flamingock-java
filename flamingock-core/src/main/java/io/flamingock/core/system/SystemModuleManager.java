@@ -25,12 +25,6 @@ public interface SystemModuleManager extends ContextInitializable, ContextContri
 
     void initialize(DependencyContext dependencyContext);
 
-    default Iterable<Dependency> getDependencies() {
-        Set<Dependency> dependencies = new HashSet<>();
-        getModules().forEach(m -> dependencies.addAll(m.getDependencies()));
-        return new LinkedList<>(dependencies);
-    }
-
     default List<PreviewStage> getSortedSystemStagesBefore() {
         return Helper.getSortedSystemStages(getModules(), true);
     }

@@ -23,7 +23,4 @@ import java.util.Optional;
 
 public interface LocalEngine extends ConnectionEngine {
 
-    Optional<? extends SystemModule> getMongockLegacyImporterModule();
-
-
 }

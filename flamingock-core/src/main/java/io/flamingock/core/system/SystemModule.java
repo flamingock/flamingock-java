@@ -18,11 +18,6 @@ public interface SystemModule extends Comparable<SystemModule>, ContextInitializ
     int getOrder();
 
     /**
-     * @return the dependencies built by the module that are not in the application context
-     */
-    List<Dependency> getDependencies();
-
-    /**
      * Indicates if this should
      */
     boolean isBeforeUserStages();

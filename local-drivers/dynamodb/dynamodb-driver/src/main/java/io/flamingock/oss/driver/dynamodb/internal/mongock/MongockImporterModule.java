@@ -48,7 +48,6 @@ public class MongockImporterModule implements SystemModule {
     );
     private final DynamoDbTable<ChangeEntryDynamoDB> sourceTable;
     private final AuditWriter auditWriter;
-    private List<Dependency> dependencies;
 
     public MongockImporterModule(DynamoDbTable<ChangeEntryDynamoDB> sourceTable, AuditWriter auditWriter) {
         this.sourceTable = sourceTable;
@@ -81,11 +80,6 @@ public class MongockImporterModule implements SystemModule {
     @Override
     public int getOrder() {
         return 0;
-    }
-
-    @Override
-    public List<Dependency> getDependencies() {
-        return dependencies;
     }
 
     @Override

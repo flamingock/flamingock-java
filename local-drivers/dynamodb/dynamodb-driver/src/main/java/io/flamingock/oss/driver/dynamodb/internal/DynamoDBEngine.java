@@ -101,7 +101,7 @@ public class DynamoDBEngine extends AbstractLocalEngine {
     }
 
     @Override
-    public Optional<MongockImporterModule> getMongockLegacyImporterModule() {
+    protected Optional<MongockImporterModule> getMongockLegacyImporterModule() {
         return Optional.ofNullable(mongockImporter);
     }
 }

@@ -61,7 +61,6 @@ public class ImporterModule implements SystemModule {
 
     private ImporterReader importReader;
     private boolean fromMongock;
-    private List<Dependency> dependencies;
 
     public ImporterModule() {
     }
@@ -92,11 +91,6 @@ public class ImporterModule implements SystemModule {
     @Override
     public int getOrder() {
         return 0;
-    }
-
-    @Override
-    public List<Dependency> getDependencies() {
-        return dependencies;
     }
 
     @Override

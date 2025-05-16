@@ -18,6 +18,8 @@ package io.flamingock.core.community.driver;
 
 import io.flamingock.commons.utils.Pair;
 import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.builder.Driver;
+import io.flamingock.core.community.LocalEngine;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,20 +28,17 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import io.flamingock.core.builder.Driver;
-import io.flamingock.core.community.LocalEngine;
-
-public interface LocalDriver extends Driver<LocalEngine>, LocalEngineFactory {
+public interface LocalDriver extends Driver<LocalEngine> {
 
     static Optional<LocalDriver> getDriver() {
 
         Pair<LocalDriver, Set<Class<?>>> current = null;//contains driver and the list of precedent classes
-        for(LocalDriver driver : ServiceLoader.load(LocalDriver.class)) {
+        for (LocalDriver driver : ServiceLoader.load(LocalDriver.class)) {
 
             Set<Class<?>> precedentClasses;
             OverridesDrivers annotation = driver.getClass().getAnnotation(OverridesDrivers.class);
 
-            if(annotation != null && annotation.value() != null) {
+            if (annotation != null && annotation.value() != null) {
                 precedentClasses = new HashSet<>(Arrays.asList(annotation.value()));
             } else {
                 precedentClasses = Collections.emptySet();

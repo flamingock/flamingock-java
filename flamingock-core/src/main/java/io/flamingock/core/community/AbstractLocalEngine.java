@@ -3,7 +3,10 @@ package io.flamingock.core.community;
 import io.flamingock.commons.utils.RunnerId;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.local.CommunityConfigurable;
+import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.system.SystemModuleManager;
+
+import java.util.Optional;
 
 public abstract class AbstractLocalEngine implements LocalEngine {
 
@@ -14,6 +17,8 @@ public abstract class AbstractLocalEngine implements LocalEngine {
     }
 
     abstract protected void doInitialize(RunnerId runnerId);
+
+    abstract protected Optional<? extends SystemModule> getMongockLegacyImporterModule();
 
     public void initialize(RunnerId runnerId) {
         doInitialize(runnerId);
