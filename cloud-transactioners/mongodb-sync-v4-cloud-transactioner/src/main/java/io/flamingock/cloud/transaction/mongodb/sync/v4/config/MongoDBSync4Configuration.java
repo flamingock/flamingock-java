@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.oss.driver.mongodb.v3;
+package io.flamingock.cloud.transaction.mongodb.sync.v4.config;
 
 import com.mongodb.ReadConcernLevel;
 import com.mongodb.ReadPreference;
@@ -25,7 +25,7 @@ import io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-public class MongoDB3Configuration extends MongoDBDriverConfiguration {
+public class MongoDBSync4Configuration extends MongoDBDriverConfiguration {
     private ReadConcernLevel readConcern = ReadConcernLevel.MAJORITY;
     private WriteConcernLevel writeConcern = WriteConcernLevel.MAJORITY_WITH_JOURNAL;
     private ReadPreferenceLevel readPreference = ReadPreferenceLevel.PRIMARY;

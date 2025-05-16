@@ -16,11 +16,12 @@
 
 package io.flamingock.oss.driver.mongodb.sync.v4.internal;
 
+import com.mongodb.ReadConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Configuration;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4TransactionWrapper;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
@@ -71,17 +72,25 @@ public class MongoSync4Engine extends AbstractLocalEngine {
         //Auditor
         auditor = new MongoSync4Auditor(
                 database,
-                driverConfiguration.getMigrationRepositoryName(),
-                driverConfiguration.getReadWriteConfiguration(),
+                driverConfiguration.getAuditRepositoryName(),
+                new ReadWriteConfiguration(
+                        driverConfiguration.getBuiltMongoDBWriteConcern(),
+                        new ReadConcern(driverConfiguration.getReadConcern()),
+                        driverConfiguration.getReadPreference().getValue()
+                ),
                 sessionManager);
-        auditor.initialize(driverConfiguration.isIndexCreation());
+        auditor.initialize(driverConfiguration.isAutoCreate());
         //Lock
         MongoSync4LockService lockService = new MongoSync4LockService(
                 database,
                 driverConfiguration.getLockRepositoryName(),
-                driverConfiguration.getReadWriteConfiguration(),
+                new ReadWriteConfiguration(
+                        driverConfiguration.getBuiltMongoDBWriteConcern(),
+                        new ReadConcern(driverConfiguration.getReadConcern()),
+                        driverConfiguration.getReadPreference().getValue()
+                ),
                 TimeService.getDefault());
-        lockService.initialize(driverConfiguration.isIndexCreation());
+        lockService.initialize(driverConfiguration.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if (coreConfiguration.isMongockImporterEnabled()) {

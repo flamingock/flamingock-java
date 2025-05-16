@@ -18,12 +18,12 @@ package io.flamingock.oss.driver.mongodb.v3.internal;
 
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
+import io.flamingock.core.community.TransactionManager;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.core.community.TransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ public class Mongo3TransactionWrapper implements TransactionWrapper {
         } finally {
             //Although the ClientSession itself has been closed, it needs to be removed from the map
             sessionManager.closeSession(sessionId);
-            if(clienteSessionDependency != null) {
+            if (clienteSessionDependency != null) {
                 dependencyInjectable.removeDependencyByRef(clienteSessionDependency);
             }
         }

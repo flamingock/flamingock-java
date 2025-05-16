@@ -20,15 +20,15 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.commons.utils.Result;
+import io.flamingock.core.community.LocalAuditor;
+import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.oss.driver.mongodb.springdata.v3.internal.mongodb.SpringDataMongoV3CollectionWrapper;
 import io.flamingock.oss.driver.mongodb.springdata.v3.internal.mongodb.SpringDataMongoV3DocumentWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
-import io.flamingock.core.community.LocalAuditor;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.oss.driver.mongodb.sync.v4.internal.ReadWriteConfiguration;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
@@ -41,15 +41,15 @@ import java.util.stream.Collectors;
 import static io.flamingock.core.community.AuditEntryField.*;
 
 public class SpringDataMongoV3Auditor implements LocalAuditor {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoV3Auditor.class);
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<SpringDataMongoV3DocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new SpringDataMongoV3DocumentWrapper(new Document()));
 
     SpringDataMongoV3Auditor(MongoTemplate mongoTemplate,
-                      String collectionName,
-                      ReadWriteConfiguration readWriteConfiguration) {
+                             String collectionName,
+                             ReadWriteConfiguration readWriteConfiguration) {
         this.collection = mongoTemplate.getCollection(collectionName)
                 .withReadConcern(readWriteConfiguration.getReadConcern())
                 .withReadPreference(readWriteConfiguration.getReadPreference())
@@ -62,7 +62,7 @@ public class SpringDataMongoV3Auditor implements LocalAuditor {
                 () -> new SpringDataMongoV3DocumentWrapper(new Document()),
                 new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
         );
-        if(indexCreation) {
+        if (indexCreation) {
             initializer.initialize();
         } else {
             initializer.justValidateCollection();

@@ -24,13 +24,13 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.core.community.lock.LocalLockService;
-import io.flamingock.core.engine.lock.LockAcquisition;
-import io.flamingock.core.community.lock.LockEntry;
-import io.flamingock.core.engine.lock.LockKey;
-import io.flamingock.core.engine.lock.LockServiceException;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
+import io.flamingock.core.community.lock.LocalLockService;
+import io.flamingock.core.community.lock.LockEntry;
+import io.flamingock.core.engine.lock.LockAcquisition;
+import io.flamingock.core.engine.lock.LockKey;
+import io.flamingock.core.engine.lock.LockServiceException;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBLockMapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.Mongo3CollectionWrapper;
@@ -41,10 +41,7 @@ import org.bson.conversions.Bson;
 
 import java.util.Date;
 
-import static io.flamingock.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.core.community.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.core.community.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.core.community.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.core.community.lock.LockEntryField.*;
 import static io.flamingock.core.engine.lock.LockStatus.LOCK_HELD;
 
 public class Mongo3LockService implements LocalLockService {
@@ -108,7 +105,7 @@ public class Mongo3LockService implements LocalLockService {
     }
 
 
-    protected void insertUpdate(LockEntry newLock, boolean onlyIfSameOwner)  {
+    protected void insertUpdate(LockEntry newLock, boolean onlyIfSameOwner) {
         boolean lockHeld;
         String debErrorDetail = "not db error";
         Bson acquireLockQuery = getAcquireLockQuery(newLock.getKey(), newLock.getOwner(), onlyIfSameOwner);

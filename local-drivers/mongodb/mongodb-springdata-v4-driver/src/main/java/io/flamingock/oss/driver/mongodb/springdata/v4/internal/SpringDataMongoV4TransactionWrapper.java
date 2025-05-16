@@ -17,15 +17,13 @@
 package io.flamingock.oss.driver.mongodb.springdata.v4.internal;
 
 import com.mongodb.TransactionOptions;
-
-import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.core.task.navigation.step.FailedStep;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
-
-import org.springframework.data.mongodb.core.MongoTemplate;
+import io.flamingock.oss.driver.mongodb.sync.v4.internal.ReadWriteConfiguration;
 import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -38,12 +36,12 @@ public class SpringDataMongoV4TransactionWrapper implements TransactionWrapper {
     private final MongoTransactionManager txManager;
 
     SpringDataMongoV4TransactionWrapper(MongoTemplate mongoTemplate, ReadWriteConfiguration readWriteConfiguration) {
-        this.txManager = new MongoTransactionManager(mongoTemplate.getMongoDatabaseFactory(), 
-                                                    TransactionOptions.builder()
-                                                                        .readConcern(readWriteConfiguration.getReadConcern())
-                                                                        .readPreference(readWriteConfiguration.getReadPreference())
-                                                                        .writeConcern(readWriteConfiguration.getWriteConcern())
-                                                                        .build());
+        this.txManager = new MongoTransactionManager(mongoTemplate.getMongoDatabaseFactory(),
+                TransactionOptions.builder()
+                        .readConcern(readWriteConfiguration.getReadConcern())
+                        .readPreference(readWriteConfiguration.getReadPreference())
+                        .writeConcern(readWriteConfiguration.getWriteConcern())
+                        .build());
     }
 
     @Override

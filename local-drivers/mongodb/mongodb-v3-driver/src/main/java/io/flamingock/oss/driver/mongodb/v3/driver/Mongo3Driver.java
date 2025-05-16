@@ -18,7 +18,6 @@ package io.flamingock.oss.driver.mongodb.v3.driver;
 
 import com.mongodb.client.MongoClient;
 import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.LocalEngine;
@@ -27,14 +26,10 @@ import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
 import io.flamingock.oss.driver.mongodb.v3.internal.Mongo3Engine;
 
-import java.time.Duration;
-
 public class Mongo3Driver implements LocalDriver {
 
     private MongoClient mongoClient;
-
     private String databaseName;
-
     private RunnerId runnerId;
     private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
@@ -50,46 +45,12 @@ public class Mongo3Driver implements LocalDriver {
         coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
         communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
 
-        this.mongoClient = dependencyContext
-                .getDependencyValue(MongoClient.class)
-                .orElseThrow(() -> new FlamingockException("MongoClient is needed to be added as dependency"));
-        this.databaseName = dependencyContext
-                .getPropertyAs("databaseName", String.class)
-                .orElseThrow(() -> new FlamingockException("databaseName is needed to be added as property"));
-        this.driverConfiguration = generateConfig(dependencyContext);
-    }
+        this.mongoClient = dependencyContext.getRequiredDependencyValue(MongoClient.class);
+        this.databaseName = dependencyContext.getRequiredPropertyAs("mongodb.databaseName", String.class);
 
-    public MongoDB3Configuration generateConfig(ContextResolver dependencyContext) {
-        MongoDB3Configuration configuration = dependencyContext
-                .getDependencyValue(MongoDB3Configuration.class)
-                .orElse(MongoDB3Configuration.getDefault());
-        dependencyContext.getPropertyAs("mongodb.autoCreate", boolean.class)
-                .ifPresent(configuration::setIndexCreation);
-        dependencyContext.getPropertyAs("mongodb.auditRepositoryName", String.class)
-                .ifPresent(configuration::setMigrationRepositoryName);
-        dependencyContext.getPropertyAs("mongodb.lockRepositoryName", String.class)
-                .ifPresent(configuration::setLockRepositoryName);
-        dependencyContext.getPropertyAs("mongodb.readConcern", String.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("mongodb.writeConcern.w", String.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("mongodb.writeConcern.journal", boolean.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("mongodb.writeConcern.wTimeout", Duration.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        dependencyContext.getPropertyAs("mongodb.readPreference", String.class)
-                .ifPresent(d -> {
-                    //TODO
-                });
-        return configuration;
+        this.driverConfiguration = dependencyContext.getDependencyValue(MongoDB3Configuration.class)
+                .orElse(new MongoDB3Configuration());
+        this.driverConfiguration.mergeConfig(dependencyContext);
     }
 
     @Override
@@ -100,7 +61,6 @@ public class Mongo3Driver implements LocalDriver {
                 coreConfiguration,
                 communityConfiguration,
                 driverConfiguration);
-
         engine.initialize(runnerId);
         return engine;
     }

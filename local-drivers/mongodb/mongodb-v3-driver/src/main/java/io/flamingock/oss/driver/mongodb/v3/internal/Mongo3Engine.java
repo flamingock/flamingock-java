@@ -16,6 +16,7 @@
 
 package io.flamingock.oss.driver.mongodb.v3.internal;
 
+import com.mongodb.ReadConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -33,6 +34,7 @@ import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
 import io.flamingock.oss.driver.mongodb.v3.MongoDB3Configuration;
+import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
 import org.bson.Document;
 
 import java.util.Optional;
@@ -69,17 +71,25 @@ public class Mongo3Engine extends AbstractLocalEngine {
                 : new Mongo3TransactionWrapper(sessionManager);
         //Auditor
         auditor = new Mongo3Auditor(database,
-                driverConfiguration.getMigrationRepositoryName(),
-                driverConfiguration.getReadWriteConfiguration(),
+                driverConfiguration.getAuditRepositoryName(),
+                new ReadWriteConfiguration(
+                        driverConfiguration.getBuiltMongoDBWriteConcern(),
+                        new ReadConcern(driverConfiguration.getReadConcern()),
+                        driverConfiguration.getReadPreference().getValue()
+                ),
                 sessionManager);
-        auditor.initialize(driverConfiguration.isIndexCreation());
+        auditor.initialize(driverConfiguration.isAutoCreate());
         //Lock
         Mongo3LockService lockService = new Mongo3LockService(
                 database,
                 driverConfiguration.getLockRepositoryName(),
-                driverConfiguration.getReadWriteConfiguration(),
+                new ReadWriteConfiguration(
+                        driverConfiguration.getBuiltMongoDBWriteConcern(),
+                        new ReadConcern(driverConfiguration.getReadConcern()),
+                        driverConfiguration.getReadPreference().getValue()
+                ),
                 TimeService.getDefault());
-        lockService.initialize(driverConfiguration.isIndexCreation());
+        lockService.initialize(driverConfiguration.isAutoCreate());
         //Execution planner
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer

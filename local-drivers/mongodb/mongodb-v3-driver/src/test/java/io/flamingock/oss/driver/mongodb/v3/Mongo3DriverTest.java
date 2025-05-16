@@ -18,6 +18,7 @@ package io.flamingock.oss.driver.mongodb.v3;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.ReadPreference;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -55,7 +56,7 @@ import java.util.List;
 import java.util.Set;
 
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -93,7 +94,7 @@ class Mongo3DriverTest {
 
     @BeforeEach
     void setupEach() {
-        mongoDatabase.getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME).drop();
+        mongoDatabase.getCollection(DEFAULT_AUDIT_REPOSITORY_NAME).drop();
         mongoDatabase.getCollection(DEFAULT_LOCK_REPOSITORY_NAME).drop();
         mongoDatabase.getCollection(CUSTOM_AUDIT_REPOSITORY_NAME).drop();
         mongoDatabase.getCollection(CUSTOM_LOCK_REPOSITORY_NAME).drop();
@@ -117,14 +118,14 @@ class Mongo3DriverTest {
 
             Flamingock.local()
                     .addDependency(mongoClient)
-                    .addDependency("databaseName", DB_NAME)
+                    .addDependency("mongodb.databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .build()
                     .run();
         }
 
-        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_MIGRATION_REPOSITORY_NAME));
+        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_REPOSITORY_NAME));
         assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
 
         assertFalse(mongoDBTestHelper.collectionExists(CUSTOM_AUDIT_REPOSITORY_NAME));
@@ -145,7 +146,7 @@ class Mongo3DriverTest {
 
             Flamingock.local()
                     .addDependency(mongoClient)
-                    .setProperty("databaseName", DB_NAME)
+                    .setProperty("mongodb.databaseName", DB_NAME)
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
@@ -154,7 +155,7 @@ class Mongo3DriverTest {
                     .run();
         }
 
-        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_MIGRATION_REPOSITORY_NAME));
+        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_REPOSITORY_NAME));
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
 
         assertTrue(mongoDBTestHelper.collectionExists(CUSTOM_AUDIT_REPOSITORY_NAME));
@@ -174,7 +175,7 @@ class Mongo3DriverTest {
 
             Flamingock.local()
                     .addDependency(mongoClient)
-                    .addDependency("databaseName", DB_NAME)
+                    .addDependency("mongodb.databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .build()
@@ -184,7 +185,7 @@ class Mongo3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -216,7 +217,7 @@ class Mongo3DriverTest {
 
             Flamingock.local()
                     .addDependency(mongoClient)
-                    .addDependency("databaseName", DB_NAME)
+                    .addDependency("mongodb.databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithoutTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .disableTransaction()
@@ -228,7 +229,7 @@ class Mongo3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -261,10 +262,9 @@ class Mongo3DriverTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
                         .addDependency(mongoClient)
-                        .addDependency("databaseName", DB_NAME)
+                        .addDependency("mongodb.databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithTransaction"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
-
                         .build()
                         .run();
             });
@@ -272,7 +272,7 @@ class Mongo3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -303,7 +303,7 @@ class Mongo3DriverTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
                         .addDependency(mongoClient)
-                        .addDependency("databaseName", DB_NAME)
+                        .addDependency("mongodb.databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithRollback"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
                         .disableTransaction()
@@ -316,7 +316,7 @@ class Mongo3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -348,7 +348,7 @@ class Mongo3DriverTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 Flamingock.local()
                         .addDependency(mongoClient)
-                        .addDependency("databaseName", DB_NAME)
+                        .addDependency("mongodb.databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithoutRollback"))
                         .addDependency(mongoClient.getDatabase(DB_NAME))
                         .disableTransaction()
@@ -360,7 +360,7 @@ class Mongo3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());

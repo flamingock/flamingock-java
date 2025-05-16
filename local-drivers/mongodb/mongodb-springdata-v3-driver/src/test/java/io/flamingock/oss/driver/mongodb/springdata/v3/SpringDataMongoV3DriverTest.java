@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.Set;
 
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -84,7 +84,7 @@ class SpringDataMongoV3DriverTest {
 
     @BeforeEach
     void setupEach() {
-        mongoTemplate.getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME).drop();
+        mongoTemplate.getCollection(DEFAULT_AUDIT_REPOSITORY_NAME).drop();
         mongoTemplate.getCollection(DEFAULT_LOCK_REPOSITORY_NAME).drop();
         mongoTemplate.getCollection(CUSTOM_AUDIT_REPOSITORY_NAME).drop();
         mongoTemplate.getCollection(CUSTOM_LOCK_REPOSITORY_NAME).drop();
@@ -116,7 +116,7 @@ class SpringDataMongoV3DriverTest {
         }
 
 
-        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_MIGRATION_REPOSITORY_NAME));
+        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_REPOSITORY_NAME));
         assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
 
         assertFalse(mongoDBTestHelper.collectionExists(CUSTOM_AUDIT_REPOSITORY_NAME));
@@ -143,7 +143,7 @@ class SpringDataMongoV3DriverTest {
                     .run();
         }
 
-        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_MIGRATION_REPOSITORY_NAME));
+        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_REPOSITORY_NAME));
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
 
         assertTrue(mongoDBTestHelper.collectionExists(CUSTOM_AUDIT_REPOSITORY_NAME));
@@ -170,7 +170,7 @@ class SpringDataMongoV3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -202,6 +202,7 @@ class SpringDataMongoV3DriverTest {
             Flamingock.local()
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithoutTransaction"))
                     .addDependency(mongoTemplate)
+                    .disableTransaction()
                     .build()
                     .run();
         }
@@ -209,7 +210,7 @@ class SpringDataMongoV3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -250,7 +251,7 @@ class SpringDataMongoV3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -282,6 +283,7 @@ class SpringDataMongoV3DriverTest {
                 Flamingock.local()
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.failedWithoutTransactionWithRollback"))
                         .addDependency(mongoTemplate)
+                        .disableTransaction()
                         .build()
                         .run();
             });
@@ -290,7 +292,7 @@ class SpringDataMongoV3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -332,7 +334,7 @@ class SpringDataMongoV3DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());

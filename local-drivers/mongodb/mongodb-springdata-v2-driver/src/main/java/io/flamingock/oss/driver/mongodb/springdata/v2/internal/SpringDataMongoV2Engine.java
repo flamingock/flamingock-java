@@ -68,14 +68,14 @@ public class SpringDataMongoV2Engine extends AbstractLocalEngine {
 
         auditor = new SpringDataMongoV2Auditor(
                 mongoTemplate,
-                driverConfiguration.getMigrationRepositoryName(),
+                driverConfiguration.getAuditRepositoryName(),
                 readWriteConfiguration);
-        auditor.initialize(driverConfiguration.isIndexCreation());
+        auditor.initialize(driverConfiguration.isAutoCreate());
         SpringDataMongoV2LockService lockService = new SpringDataMongoV2LockService(
                 mongoTemplate.getDb(),
                 driverConfiguration.getLockRepositoryName(),
                 readWriteConfiguration);
-        lockService.initialize(driverConfiguration.isIndexCreation());
+        lockService.initialize(driverConfiguration.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if (coreConfiguration.isMongockImporterEnabled()) {

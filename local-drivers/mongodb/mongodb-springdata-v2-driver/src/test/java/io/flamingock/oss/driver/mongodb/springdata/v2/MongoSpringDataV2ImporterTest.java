@@ -52,7 +52,7 @@ import java.util.List;
 
 import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -78,7 +78,7 @@ class MongoSpringDataV2ImporterTest {
 
     @BeforeEach
     void setupEach() {
-        mongoTemplate.getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME).drop();
+        mongoTemplate.getCollection(DEFAULT_AUDIT_REPOSITORY_NAME).drop();
         mongoTemplate.getCollection(DEFAULT_LOCK_REPOSITORY_NAME).drop();
     }
 
@@ -124,7 +124,7 @@ class MongoSpringDataV2ImporterTest {
                     .run();
         }
 
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(8, auditLog.size());
         checkAuditEntry(
                 auditLog.get(0),

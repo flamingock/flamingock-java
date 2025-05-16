@@ -51,7 +51,7 @@ import java.util.List;
 
 import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -81,7 +81,7 @@ class MongoSync4ImporterTest {
 
     @BeforeEach
     void setupEach() {
-        mongoDatabase.getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME).drop();
+        mongoDatabase.getCollection(DEFAULT_AUDIT_REPOSITORY_NAME).drop();
         mongoDatabase.getCollection(DEFAULT_LOCK_REPOSITORY_NAME).drop();
     }
 
@@ -120,7 +120,7 @@ class MongoSync4ImporterTest {
 
             Flamingock.local()
                     .addDependency(mongoClient)
-                    .addDependency("databaseName", DB_NAME)
+                    .setProperty("mongodb.databaseName", DB_NAME)
                     .withImporter(withSource("mongockChangeLog"))
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.withImporter"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
@@ -129,7 +129,7 @@ class MongoSync4ImporterTest {
                     .run();
         }
 
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(8, auditLog.size());
         checkAuditEntry(
                 auditLog.get(0),

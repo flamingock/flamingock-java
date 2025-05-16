@@ -19,7 +19,6 @@ package io.flamingock.core.engine;
 import io.flamingock.core.context.ContextContributor;
 import io.flamingock.core.context.ContextInjectable;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.engine.audit.AuditWriter;
 import io.flamingock.core.engine.execution.ExecutionPlanner;
 import io.flamingock.core.system.SystemModuleContributor;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.oss.driver.mongodb.v3.internal.mongodb;
+package io.flamingock.oss.driver.mongodb.sync.v4.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;

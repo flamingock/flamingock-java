@@ -16,7 +16,6 @@
 
 package io.flamingock.core.engine.audit.domain;
 
-import io.flamingock.core.task.navigation.step.ExecutableStep;
 import io.flamingock.core.task.navigation.step.FailedWithErrorStep;
 import io.flamingock.core.task.navigation.step.StartStep;
 import io.flamingock.core.task.navigation.step.TaskStep;
@@ -64,6 +63,7 @@ public final class RuntimeContext {
     public String getStageName() {
         return stageName;
     }
+
     public long getDuration() {
         return duration;
     }

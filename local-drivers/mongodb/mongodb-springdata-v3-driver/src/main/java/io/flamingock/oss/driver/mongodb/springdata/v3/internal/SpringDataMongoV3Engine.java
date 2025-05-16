@@ -18,18 +18,18 @@ package io.flamingock.oss.driver.mongodb.springdata.v3.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
 import io.flamingock.core.community.AbstractLocalEngine;
 import io.flamingock.core.community.LocalAuditor;
 import io.flamingock.core.community.LocalExecutionPlanner;
+import io.flamingock.core.engine.audit.importer.ImporterModule;
 import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.transaction.TransactionWrapper;
-import io.flamingock.core.engine.audit.importer.ImporterModule;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
 import io.flamingock.oss.driver.mongodb.springdata.v3.config.SpringDataMongoV3Configuration;
+import io.flamingock.oss.driver.mongodb.sync.v4.internal.ReadWriteConfiguration;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -67,14 +67,14 @@ public class SpringDataMongoV3Engine extends AbstractLocalEngine {
 
         auditor = new SpringDataMongoV3Auditor(
                 mongoTemplate,
-                driverConfiguration.getMigrationRepositoryName(),
+                driverConfiguration.getAuditRepositoryName(),
                 readWriteConfiguration);
-        auditor.initialize(driverConfiguration.isIndexCreation());
+        auditor.initialize(driverConfiguration.isAutoCreate());
         SpringDataMongoV3LockService lockService = new SpringDataMongoV3LockService(
                 mongoTemplate.getDb(),
                 driverConfiguration.getLockRepositoryName(),
                 readWriteConfiguration);
-        lockService.initialize(driverConfiguration.isIndexCreation());
+        lockService.initialize(driverConfiguration.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if (coreConfiguration.isMongockImporterEnabled()) {

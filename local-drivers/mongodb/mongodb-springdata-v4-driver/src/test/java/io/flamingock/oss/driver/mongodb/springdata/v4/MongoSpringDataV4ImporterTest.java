@@ -54,7 +54,7 @@ import java.util.List;
 
 import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_MIGRATION_REPOSITORY_NAME;
+import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -80,7 +80,7 @@ class MongoSpringDataV4ImporterTest {
 
     @BeforeEach
     void setupEach() {
-        mongoTemplate.getCollection(DEFAULT_MIGRATION_REPOSITORY_NAME).drop();
+        mongoTemplate.getCollection(DEFAULT_AUDIT_REPOSITORY_NAME).drop();
         mongoTemplate.getCollection(DEFAULT_LOCK_REPOSITORY_NAME).drop();
     }
 
@@ -110,7 +110,7 @@ class MongoSpringDataV4ImporterTest {
 
         //When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(mongoDBTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
                     new Trio<>(_0_mongock_create_authors_collection.class, Collections.singletonList(MongoTemplate.class)),
                     new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
                     new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
@@ -126,7 +126,7 @@ class MongoSpringDataV4ImporterTest {
                     .run();
         }
 
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_MIGRATION_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
         assertEquals(8, auditLog.size());
         checkAuditEntry(
                 auditLog.get(0),

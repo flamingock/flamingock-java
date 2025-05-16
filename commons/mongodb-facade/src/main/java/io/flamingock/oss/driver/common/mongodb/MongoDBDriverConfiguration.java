@@ -20,36 +20,35 @@ import io.flamingock.core.community.driver.DriverConfigurable;
 
 public class MongoDBDriverConfiguration implements DriverConfigurable {
 
-    public final static String DEFAULT_MIGRATION_REPOSITORY_NAME = "flamingockEntries";
+    public final static String DEFAULT_AUDIT_REPOSITORY_NAME = "flamingockEntries";
     public final static String DEFAULT_LOCK_REPOSITORY_NAME = "flamingockLock";
 
-
-    private String migrationRepositoryName = DEFAULT_MIGRATION_REPOSITORY_NAME;
+    private boolean autoCreate = true;
+    private String auditRepositoryName = DEFAULT_AUDIT_REPOSITORY_NAME;
     private String lockRepositoryName = DEFAULT_LOCK_REPOSITORY_NAME;
-    private boolean indexCreation = true;
 
-
-    public String getMigrationRepositoryName() {
-        return migrationRepositoryName;
+    public boolean isAutoCreate() {
+        return autoCreate;
     }
 
-    public void setMigrationRepositoryName(String value) {
-        this.migrationRepositoryName = value;
+    public void setAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
+    }
+
+    public String getAuditRepositoryName() {
+        return auditRepositoryName;
+    }
+
+    public void setAuditRepositoryName(String auditRepositoryName) {
+        this.auditRepositoryName = auditRepositoryName;
     }
 
     public String getLockRepositoryName() {
         return lockRepositoryName;
     }
 
-    public void setLockRepositoryName(String value) {
-        this.lockRepositoryName = value;
+    public void setLockRepositoryName(String lockRepositoryName) {
+        this.lockRepositoryName = lockRepositoryName;
     }
 
-    public boolean isIndexCreation() {
-        return indexCreation;
-    }
-
-    public void setIndexCreation(boolean value) {
-        this.indexCreation = value;
-    }
 }

@@ -18,7 +18,6 @@ package io.flamingock.oss.driver.mongodb.springdata.v4.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.cofig.ReadWriteConfiguration;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.core.builder.core.CoreConfigurable;
 import io.flamingock.core.builder.local.CommunityConfigurable;
@@ -30,6 +29,7 @@ import io.flamingock.core.system.SystemModule;
 import io.flamingock.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
 import io.flamingock.oss.driver.mongodb.springdata.v4.config.SpringDataMongoV4Configuration;
+import io.flamingock.oss.driver.mongodb.sync.v4.internal.ReadWriteConfiguration;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -66,14 +66,14 @@ public class SpringDataMongoV4Engine extends AbstractLocalEngine {
                 : new SpringDataMongoV4TransactionWrapper(mongoTemplate, readWriteConfiguration);
         auditor = new SpringDataMongoV4Auditor(
                 mongoTemplate,
-                driverConfiguration.getMigrationRepositoryName(),
+                driverConfiguration.getAuditRepositoryName(),
                 readWriteConfiguration);
-        auditor.initialize(driverConfiguration.isIndexCreation());
+        auditor.initialize(driverConfiguration.isAutoCreate());
         SpringDataMongoV4LockService lockService = new SpringDataMongoV4LockService(
                 mongoTemplate.getDb(),
                 driverConfiguration.getLockRepositoryName(),
                 readWriteConfiguration);
-        lockService.initialize(driverConfiguration.isIndexCreation());
+        lockService.initialize(driverConfiguration.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
         if (coreConfiguration.isMongockImporterEnabled()) {
