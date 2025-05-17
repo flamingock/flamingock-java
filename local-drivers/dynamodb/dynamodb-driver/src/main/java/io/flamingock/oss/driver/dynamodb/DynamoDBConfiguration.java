@@ -69,15 +69,15 @@ public class DynamoDBConfiguration implements DriverConfigurable {
     }
 
     public void mergeConfig(ContextResolver dependencyContext) {
-        dependencyContext.getPropertyAs("dynamodb.autoCreate", boolean.class)
+        dependencyContext.getPropertyAs("dynamodb.autoCreate", Boolean.class)
                 .ifPresent(this::setAutoCreate);
         dependencyContext.getPropertyAs("dynamodb.auditRepositoryName", String.class)
                 .ifPresent(this::setAuditRepositoryName);
         dependencyContext.getPropertyAs("dynamodb.lockRepositoryName", String.class)
                 .ifPresent(this::setLockRepositoryName);
-        dependencyContext.getPropertyAs("dynamodb.readCapacityUnits", long.class)
+        dependencyContext.getPropertyAs("dynamodb.readCapacityUnits", Long.class)
                 .ifPresent(this::setReadCapacityUnits);
-        dependencyContext.getPropertyAs("dynamodb.writeCapacityUnits", long.class)
+        dependencyContext.getPropertyAs("dynamodb.writeCapacityUnits", Long.class)
                 .ifPresent(this::setWriteCapacityUnits);
     }
 }

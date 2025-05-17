@@ -18,6 +18,7 @@ package io.flamingock.oss.driver.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
+import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
@@ -54,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -129,9 +131,29 @@ class DynamoDBDriverTest {
     }
 
     @Test
-    @DisplayName("When standalone runs the driver with CUSTOM repository names related tables should exists")
-    void happyPathWithCustomRepositoryNames() {
+    @DisplayName("When standalone runs the driver with CUSTOM config properties all properties are correctly set")
+    void happyPathWithCustomConfigOptions() {
         //Given-When
+
+        DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);
+        dynamoDBUtil.createTable(
+                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getKeySchemas(DynamoDBConstants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getProvisionedThroughput(1L, 2L),
+                CUSTOM_AUDIT_REPOSITORY_NAME,
+                emptyList(),
+                emptyList()
+        );
+        dynamoDBUtil.createTable(
+                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
+                dynamoDBUtil.getKeySchemas(DynamoDBConstants.LOCK_PK, null),
+                dynamoDBUtil.getProvisionedThroughput(1L, 2L),
+                CUSTOM_LOCK_REPOSITORY_NAME,
+                emptyList(),
+                emptyList()
+        );
+
+        DynamoDBConfiguration config = new DynamoDBConfiguration();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -141,13 +163,23 @@ class DynamoDBDriverTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
+                    .addDependency(config)
+                    .setProperty("dynamodb.autoCreate", false)
                     .setProperty("dynamodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("dynamodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
+                    .setProperty("dynamodb.readCapacityUnits", 1L)
+                    .setProperty("dynamodb.writeCapacityUnits", 2L)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
                     .build()
                     .run();
         }
+
+        assertFalse(config.isAutoCreate());
+        assertEquals(CUSTOM_AUDIT_REPOSITORY_NAME, config.getAuditRepositoryName());
+        assertEquals(CUSTOM_LOCK_REPOSITORY_NAME, config.getLockRepositoryName());
+        assertEquals(1L, config.getReadCapacityUnits());
+        assertEquals(2L, config.getWriteCapacityUnits());
 
         assertFalse(dynamoDBTestHelper.tableExists(DynamoDBConstants.AUDIT_LOG_TABLE_NAME));
         assertFalse(dynamoDBTestHelper.tableExists(DynamoDBConstants.LOCK_TABLE_NAME));
