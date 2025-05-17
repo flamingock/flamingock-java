@@ -5,6 +5,19 @@ rootProject.name = "flamingock-project"
 //////////////////////////////////////
 // CORE
 //////////////////////////////////////
+include("flamingock-core")
+include("flamingock-processor")
+include("flamingock-springboot-v2-runner")
+include("flamingock-springboot-v3-runner")
+include("flamingock-graalvm")
+include("flamingock-core-api")
+
+
+//////////////////////////////////////
+// CLOUD
+//////////////////////////////////////
+include("flamingock-cloud-edition")
+
 include("cloud-transactioners:sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").projectDir = file("cloud-transactioners/sql-cloud-transactioner")
 project(":cloud-transactioners:sql-cloud-transactioner").name = "sql-cloud-transactioner"
@@ -17,45 +30,12 @@ include("cloud-transactioners:dynamodb-cloud-transactioner")
 project(":cloud-transactioners:dynamodb-cloud-transactioner").projectDir = file("cloud-transactioners/dynamodb-cloud-transactioner")
 project(":cloud-transactioners:dynamodb-cloud-transactioner").name = "dynamodb-cloud-transactioner"
 
-
-include("flamingock-core-api")
-project(":flamingock-core-api").name = "flamingock-core-api"
-project(":flamingock-core-api").projectDir = file("flamingock-core-api")
-
-include("flamingock-core")
-project(":flamingock-core").projectDir = file("flamingock-core")
-project(":flamingock-core").name = "flamingock-core"
-
-include("flamingock-processor")
-project(":flamingock-processor").projectDir = file("flamingock-processor")
-project(":flamingock-processor").name = "flamingock-processor"
-
-include("flamingock-springboot-v2-runner")
-project(":flamingock-springboot-v2-runner").projectDir = file("flamingock-springboot-v2-runner")
-project(":flamingock-springboot-v2-runner").name = "flamingock-springboot-v2-runner"
-
-include("flamingock-springboot-v3-runner")
-project(":flamingock-springboot-v3-runner").projectDir = file("flamingock-springboot-v3-runner")
-project(":flamingock-springboot-v3-runner").name = "flamingock-springboot-v3-runner"
-
-include("flamingock-graalvm")
-project(":flamingock-graalvm").projectDir = file("flamingock-graalvm")
-project(":flamingock-graalvm").name = "flamingock-graalvm"
-
 //////////////////////////////////////
-// CLOUD
-//////////////////////////////////////
-include("cloud-edition")
-project(":cloud-edition").name = "cloud-edition"
-project(":cloud-edition").projectDir = file("cloud-edition")
-
-//////////////////////////////////////
-// DRIVERS
+// COMMUNITY
 //////////////////////////////////////
 
-include("community-edition-commons")
-project(":community-edition-commons").name = "community-edition-commons"
-project(":community-edition-commons").projectDir = file("community-edition-commons")
+include("flamingock-ce-bom")
+include("flamingock-ce-commons")
 
 include("commons:mongodb-facade")
 project(":commons:mongodb-facade").name = "mongodb-facade"
@@ -112,12 +92,8 @@ project(":templates:mongodb-change-template").projectDir = file("templates/mongo
 // UTILS
 //////////////////////////////////////
 include("utils-test")
-project(":utils-test").name = "utils-test"
-project(":utils-test").projectDir = file("utils-test")
-
 include("utils")
-project(":utils").name = "utils"
-project(":utils").projectDir = file("utils")
+
 
 
 //////////////////////////////////////
@@ -131,3 +107,4 @@ project(":importers:mongodb-importer-sync-v4").projectDir = file("importers/mong
 include("importers:mongodb-importer-v3")
 project(":importers:mongodb-importer-v3").name = "mongodb-importer-v3"
 project(":importers:mongodb-importer-v3").projectDir = file("importers/mongodb-importer-v3")
+

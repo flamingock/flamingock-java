@@ -1,37 +1,40 @@
+import org.jreleaser.model.Active
+import org.jreleaser.model.UpdateSection
+import org.json.JSONObject
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.util.Base64
-import org.jreleaser.model.Active
-import org.jreleaser.model.UpdateSection
+import java.util.*
 
-import org.json.JSONObject
+fun Project.isLibraryModule(): Boolean = name !in setOf(
+    "flamingock-community-bom",
+    "flamingock-cloud-bom"
+)
 
 buildscript {
     repositories {
         mavenCentral()
     }
-
     dependencies {
         classpath("org.json:json:20210307")
     }
 }
-
 
 plugins {
     `kotlin-dsl`
     `maven-publish`
     id("java-library")
     id("org.jreleaser") version "1.15.0"
-
 }
 
 allprojects {
     group = "io.flamingock"
     version = "0.0.34-beta"
 
-    apply(plugin = "org.jetbrains.kotlin.jvm")
+    if (isLibraryModule()) {
+        apply(plugin = "org.jetbrains.kotlin.jvm")
+    }
 
     repositories {
         mavenCentral()
@@ -39,66 +42,42 @@ allprojects {
 }
 
 val coreProjects = setOf(
-    "flamingock-core",
-    "flamingock-core-api",
-    "flamingock-springboot-v2-runner",
-    "flamingock-springboot-v3-runner",
-    "flamingock-graalvm",
-    "utils"
+    "flamingock-core", "flamingock-core-api", "flamingock-springboot-v2-runner",
+    "flamingock-springboot-v3-runner", "flamingock-graalvm", "utils"
 )
 
 val localDriverProjects = setOf(
-    "driver-common",
-    "couchbase-driver",
-    "couchbase-springboot-v2-driver",
-    "dynamodb-driver",
-    "mongodb-facade",
-    "mongodb-springdata-v2-driver",
-    "mongodb-springdata-v3-driver",
-    "mongodb-springdata-v4-driver",
-    "mongodb-sync-v4-driver",
-    "mongodb-v3-driver",
-    "mongodb-importer"
+    "driver-common", "couchbase-driver", "couchbase-springboot-v2-driver",
+    "dynamodb-driver", "mongodb-facade", "mongodb-springdata-v2-driver",
+    "mongodb-springdata-v3-driver", "mongodb-springdata-v4-driver",
+    "mongodb-sync-v4-driver", "mongodb-v3-driver", "mongodb-importer"
 )
 
-val templateProjects = setOf(
-    "sql-template",
-    "mongodb-change-template"
-)
-
+val templateProjects = setOf("sql-template", "mongodb-change-template")
 
 val transactionerProjects = setOf(
-    "sql-cloud-transactioner",
-    "mongodb-sync-v4-cloud-transactioner",
-    "dynamodb-cloud-transactioner"
+    "sql-cloud-transactioner", "mongodb-sync-v4-cloud-transactioner", "dynamodb-cloud-transactioner"
 )
 
 val allProjects = coreProjects + localDriverProjects + templateProjects + transactionerProjects
 
-
 val projectNameMaxLength = coreProjects.maxOf { it.length }
-val tabWidth = 8 //Usually 8 spaces)
+val tabWidth = 8
 val statusPosition = ((projectNameMaxLength / tabWidth) + 1) * tabWidth
-
 val httpClient: HttpClient = HttpClient.newHttpClient()
 val mavenUsername: String? = System.getenv("JRELEASER_MAVENCENTRAL_USERNAME")
 val mavenPassword: String? = System.getenv("JRELEASER_MAVENCENTRAL_PASSWORD")
-val encodedCredentials: String? = if (mavenUsername != null && mavenPassword != null) Base64.getEncoder()
-    .encodeToString("$mavenUsername:$mavenPassword".toByteArray()) else null
-
-
+val encodedCredentials: String? = if (mavenUsername != null && mavenPassword != null)
+    Base64.getEncoder().encodeToString("$mavenUsername:$mavenPassword".toByteArray()) else null
 
 val module: String? = project.findProperty("module") as String?
 val releaseBundle: String? = project.findProperty("releaseBundle") as String?
 
-val projectsToRelease = if(module != null) {
-    if(allProjects.contains(module)) {
-        setOf(module)
-    } else {
-        throw RuntimeException("$module is not withing the releseable modules $allProjects")
-    }
+val projectsToRelease = if (module != null) {
+    require(allProjects.contains(module)) { "$module is not within the releasable modules $allProjects" }
+    setOf(module)
 } else {
-    when(releaseBundle) {
+    when (releaseBundle) {
         "core" -> coreProjects
         "driver" -> localDriverProjects
         "template" -> templateProjects
@@ -107,7 +86,6 @@ val projectsToRelease = if(module != null) {
         else -> setOf()
     }
 }
-
 
 jreleaser {
     project {
@@ -118,51 +96,40 @@ jreleaser {
     gitRootSearch.set(true)
     release {
         github {
-            //Requires env variable: JRELEASER_GITHUB_TOKEN
             update {
                 enabled.set(true)
-                sections.set(setOf(
-                    UpdateSection.TITLE,
-                    UpdateSection.BODY,
-                    UpdateSection.ASSETS
-                ))
+                sections.set(setOf(UpdateSection.TITLE, UpdateSection.BODY, UpdateSection.ASSETS))
             }
-
             prerelease {
                 enabled.set(true)
                 pattern.set(".*-(beta|snapshot|alpha)\$")
             }
-
             changelog {
                 enabled.set(true)
-                sort.set(org.jreleaser.model.Changelog.Sort.DESC)
                 formatted.set(Active.ALWAYS)
-                links.set(true)
                 sort.set(org.jreleaser.model.Changelog.Sort.DESC)
-
-                releaseName.set("Release {{tagName}}")
-
-                content.set("""
-                ## Changelog
-                {{changelogChanges}}
-                {{changelogContributors}}
-                """)
-
-                categoryTitleFormat.set("### {{categoryTitle}}")
+                links.set(true)
                 preset.set("conventional-commits")
-                format.set("""
-                    |- {{commitShortHash}} 
-                        |{{#commitIsConventional}}
-                            |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
-                            |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
-                            |{{conventionalCommitDescription}}
-                            |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
-                        |{{/commitIsConventional}}
-                        |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
-                        |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}} 
-                        |({{commitAuthor}})
-                    |""".trimMargin().replace("\n", "").replace("\r", ""))
-
+                releaseName.set("Release {{tagName}}")
+                content.set("""
+                    ## Changelog
+                    {{changelogChanges}}
+                    {{changelogContributors}}
+                """.trimIndent())
+                categoryTitleFormat.set("### {{categoryTitle}}")
+                format.set(
+                    """|- {{commitShortHash}} 
+                       |{{#commitIsConventional}}
+                       |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
+                       |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
+                       |{{conventionalCommitDescription}}
+                       |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
+                       |{{/commitIsConventional}}
+                       |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
+                       |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}} 
+                       |({{commitAuthor}})
+                    |""".trimMargin().replace("\n", "").replace("\r", "")
+                )
                 contributors {
                     enabled.set(true)
                     format.set("- {{contributorName}} ({{contributorUsernameAsLink}})")
@@ -172,33 +139,34 @@ jreleaser {
     }
 }
 
-
 val isReleasing = getIsReleasing()
-
-if(isReleasing) {
-    logger.lifecycle("Release bundle: $releaseBundle")
-}
+if (isReleasing) logger.lifecycle("Release bundle: $releaseBundle")
 
 subprojects {
-    apply(plugin = "java-library")
 
     apply(plugin = "maven-publish")
 
+    val fromComponentPublishing = if (project.isLibraryModule()) "java" else "javaPlatform"
+    val mavenPublication = if (project.isLibraryModule()) "maven" else "communityBom"
+
+    if (project.isLibraryModule()) {
+        apply(plugin = "java-library")
+    } else {
+        apply(plugin = "java-platform")
+    }
+
     publishing {
         publications {
-            create<MavenPublication>("maven") {
+            create<MavenPublication>(mavenPublication) {
                 groupId = project.group.toString()
                 artifactId = project.name
                 version = project.version.toString()
-
-                from(components["java"])
-
+                from(components[fromComponentPublishing])
                 pom {
                     name.set(project.name)
                     description.set("Description should be here")
                     url.set("https://github.com/mongock/flamingock-project")
                     inceptionYear.set("2024")
-
                     licenses {
                         license {
                             name.set("Apache-2.0")
@@ -212,14 +180,13 @@ subprojects {
                         }
                     }
                     scm {
-                        connection.set("scm:git:https://github.com:mongock/flamingock-project.git")
+                        connection.set("scm:git:https://github.com/mongock/flamingock-project.git")
                         developerConnection.set("scm:git:ssh://github.com:mongock/flamingock-project.git")
                         url.set("https://github.com/mongock/flamingock-project")
                     }
                 }
             }
         }
-
         repositories {
             maven {
                 url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
@@ -228,170 +195,129 @@ subprojects {
         }
     }
 
-
     val tabsPrefix = getTabsPrefix()
-    if (isReleasing) {
-        if (project.isReleasable()) {
-            if (!project.getIfAlreadyReleasedFromCentralPortal()) {
-                logger.lifecycle("${project.name}${tabsPrefix}\uD83D\uDE80 PUBLISHING")
+    if (isReleasing && project.isReleasable()) {
+        if (!project.getIfAlreadyReleasedFromCentralPortal()) {
+            logger.lifecycle("${project.name}${tabsPrefix}\uD83D\uDE80 PUBLISHING")
+            if (project.isLibraryModule()) {
                 java {
                     withSourcesJar()
                     withJavadocJar()
                 }
+            }
 
-
-                tasks.register("createStagingDeployFolder") {
-                    group = "build"
-                    description = "Creates the staging-deploy folder inside the build directory."
-
-                    doLast {
-                        val stagingDeployDir = layout.buildDirectory.dir("jreleaser").get().asFile
-                        if (!stagingDeployDir.exists()) {
-                            stagingDeployDir.mkdirs()
-                            println("Created: $stagingDeployDir")
-                        }
+            tasks.register("createStagingDeployFolder") {
+                group = "build"
+                description = "Creates the staging-deploy folder inside the build directory."
+                doLast {
+                    val stagingDeployDir = layout.buildDirectory.dir("jreleaser").get().asFile
+                    if (!stagingDeployDir.exists()) {
+                        stagingDeployDir.mkdirs()
+                        println("Created: $stagingDeployDir")
                     }
                 }
+            }
 
-                tasks.matching { it.name == "publish" }.configureEach {
-                    finalizedBy("createStagingDeployFolder")
+            tasks.matching { it.name == "publish" }.configureEach {
+                finalizedBy("createStagingDeployFolder")
+            }
+
+            apply(plugin = "org.jreleaser")
+
+            jreleaser {
+                project {
+                    description.set("Description should be here")
+                    inceptionYear.set("2024")
+                    authors.set(setOf("dieppa"))
                 }
-
-                apply(plugin = "org.jreleaser")
-
-                jreleaser {
-                    project {
-                        description.set("Description should be here")
-                        inceptionYear.set("2024")
-                        authors.set(setOf("dieppa"))
+                signing {
+                    active.set(Active.ALWAYS)
+                    armored = true
+                    enabled = true
+                }
+                gitRootSearch.set(true)
+                release {
+                    github {
+                        skipRelease.set(true)
+                        skipTag.set(true)
                     }
-                    signing {
-                        active.set(Active.ALWAYS)
-                        armored = true
-                        enabled = true
-                        //Requires env variables
-                        // JRELEASER_GPG_PUBLIC_KEY
-                        // JRELEASER_GPG_SECRET_KEY
-                        // JRELEASER_GPG_PASSPHRASE
-
-                    }
-
-                    gitRootSearch.set(true)
-                    release {
-                        github {
-                            skipRelease.set(true)
-                            skipTag.set(true)
-                        }
-                    }
-
-                    deploy {
-                        maven {
-                            mavenCentral {
-                                //Requires env variables
-                                // JRELEASER_MAVENCENTRAL_USERNAME
-                                // JRELEASER_MAVENCENTRAL_PASSWORD
-
-                                create("sonatype") {
-                                    active.set(Active.ALWAYS)
-                                    applyMavenCentralRules.set(true)
-                                    url.set("https://central.sonatype.com/api/v1/publisher")
-                                    stagingRepository("build/staging-deploy")
-                                    maxRetries.set(90)
-                                    retryDelay.set(20)
-                                }
-
-
+                }
+                deploy {
+                    maven {
+                        mavenCentral {
+                            create("sonatype") {
+                                active.set(Active.ALWAYS)
+                                applyMavenCentralRules.set(true)
+                                url.set("https://central.sonatype.com/api/v1/publisher")
+                                stagingRepository("build/staging-deploy")
+                                maxRetries.set(90)
+                                retryDelay.set(20)
                             }
                         }
                     }
                 }
-            } else {
-                logger.lifecycle("${project.name}${tabsPrefix}✅  ALREADY PUBLISHED")
             }
         } else {
-            if(allProjects.contains(project.name)) {
-                logger.lifecycle("${project.name}${tabsPrefix}\uD83D\uDCA4 NOT RELEASING")
-            } else {
-                logger.lifecycle("${project.name}${tabsPrefix}\uD83D\uDEAB NOT RELEASABLE")
+            logger.lifecycle("${project.name}${tabsPrefix}✅  ALREADY PUBLISHED")
+        }
+    }
+
+    if (project.isLibraryModule()) {
+        val implementation by configurations
+        val testImplementation by configurations
+        val testRuntimeOnly by configurations
+
+        dependencies {
+            implementation(kotlin("stdlib-jdk8"))
+            implementation("org.slf4j", "slf4j-api", "2.0.6")
+
+            testImplementation("org.slf4j:slf4j-simple:2.0.6")
+            testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+            testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+            testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+
+            testImplementation("org.mockito:mockito-core:4.11.0")
+            testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
+            testImplementation("org.mockito:mockito-inline:4.11.0")
+        }
+
+        tasks.withType<Test>().configureEach {
+            useJUnitPlatform()
+            testLogging {
+                events(
+                    org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
+                    org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
+                    org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
+                    org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_OUT,
+                )
             }
-
         }
-    }
 
-    repositories {
-        mavenLocal()
-    }
-
-
-    val implementation by configurations
-    val testImplementation by configurations
-    val testRuntimeOnly by configurations
-
-    dependencies {
-        implementation(kotlin("stdlib-jdk8"))
-        implementation("org.slf4j", "slf4j-api", "2.0.6")
-
-        testImplementation("org.slf4j:slf4j-simple:2.0.6")
-        testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
-        testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
-
-        testImplementation("org.mockito:mockito-core:4.11.0")
-        testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
-        testImplementation("org.mockito:mockito-inline:4.11.0")
-
-    }
-    tasks.withType<Test>().configureEach {
-        useJUnitPlatform()
-        testLogging {
-            events(
-                org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
-                org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
-                org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
-                org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_OUT,
-            )
-        }
-    }
-
-
-    tasks.getByName<Test>("test") {
-        useJUnitPlatform()
-    }
-
-    java {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(8))
+        java {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(8))
+            }
         }
     }
 }
 
 fun Project.isReleasable(): Boolean = projectsToRelease.contains(name)
 
-
 fun Project.getIfAlreadyReleasedFromCentralPortal(): Boolean {
     val url = "https://central.sonatype.com/api/v1/publisher/published?namespace=${group}&name=$name&version=$version"
-    val request = HttpRequest.newBuilder().uri(URI.create(url)).header("accept", "application/json")
+    val request = HttpRequest.newBuilder().uri(URI.create(url))
+        .header("accept", "application/json")
         .header("Authorization", "Basic $encodedCredentials").GET().build()
-
 
     val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
     logger.debug("${project.name}: response from Maven Publisher[${response.statusCode()}]: ${response.body()}")
     return if (response.statusCode() == 200) {
-        val jsonObject = JSONObject(response.body())
-        val map: Map<String, Any> = jsonObject.toMap()
-        if (map["published"] != null && map["published"] is Boolean) {
-            val isPublished = map["published"] as Boolean
-            isPublished
-        } else {
-            throw RuntimeException("Error parsing response from Maven Publisher: body = ${response.body()})")
-
-        }
+        val map = JSONObject(response.body()).toMap()
+        map["published"] as? Boolean ?: error("Invalid response body: ${response.body()}")
     } else {
-        //TODO implement retry
-        throw RuntimeException("Error calling Maven Publisher(status:${response.statusCode()}, body:${response.body()})")
+        error("Error calling Maven Publisher(status:${response.statusCode()}, body:${response.body()})")
     }
 }
-
 
 fun Project.getTabsPrefix(): String {
     val currentPosition = name.length
@@ -400,12 +326,7 @@ fun Project.getTabsPrefix(): String {
 }
 
 fun Project.getIsReleasing() =
-    gradle.startParameter.taskNames.contains("jreleaserFullRelease")
-            || gradle.startParameter.taskNames.contains("jreleaserDeploy")
-            || gradle.startParameter.taskNames.contains("publish")
+    gradle.startParameter.taskNames.any { it in listOf("jreleaserFullRelease", "jreleaserDeploy", "publish") }
 
 private val Project.verifyPublicationUrl: String
-    get() {
-        val groupIdPath = group.toString().replace(".", "/")
-        return "https://repo.maven.apache.org/maven2/$groupIdPath/$name/$version/"
-    }
+    get() = "https://repo.maven.apache.org/maven2/${group.toString().replace(".", "/")}/$name/$version/"

@@ -7,7 +7,7 @@ dependencies {
     testImplementation("org.testcontainers:mongodb:1.18.3")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")
 
-    testImplementation(project(":cloud-edition"))
+    testImplementation(project(":flamingock-cloud-edition"))
     testImplementation(project(":utils-test"))
 }
 

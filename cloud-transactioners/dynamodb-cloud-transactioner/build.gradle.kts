@@ -8,7 +8,7 @@ dependencies {
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")
     testImplementation("com.amazonaws:DynamoDBLocal:1.25.0")
 
-    testImplementation(project(":cloud-edition"))
+    testImplementation(project(":flamingock-cloud-edition"))
     testImplementation(project(":utils-test"))
 }
 
