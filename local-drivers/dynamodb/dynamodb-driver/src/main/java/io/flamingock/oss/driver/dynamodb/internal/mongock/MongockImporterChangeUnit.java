@@ -19,12 +19,12 @@ package io.flamingock.oss.driver.dynamodb.internal.mongock;
 
 import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.engine.audit.AuditWriter;
-import io.flamingock.core.engine.audit.importer.model.ChangeEntry;
-import io.flamingock.core.engine.audit.importer.model.ChangeState;
-import io.flamingock.core.engine.audit.importer.model.ChangeType;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.legacy.MongockLegacyIdGenerator;
+import io.flamingock.internal.core.engine.audit.AuditWriter;
+import io.flamingock.internal.core.engine.audit.importer.model.ChangeEntry;
+import io.flamingock.internal.core.engine.audit.importer.model.ChangeState;
+import io.flamingock.internal.core.engine.audit.importer.model.ChangeType;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.legacy.MongockLegacyIdGenerator;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 

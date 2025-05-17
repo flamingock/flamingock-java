@@ -16,7 +16,7 @@
 
 package io.flamingock.springboot.v3.event;
 
-import io.flamingock.core.event.model.IPipelineStartedEvent;
+import io.flamingock.internal.core.event.model.IPipelineStartedEvent;
 import org.springframework.context.ApplicationEvent;
 
 public class SpringPipelineStartedEvent extends ApplicationEvent implements IPipelineStartedEvent {

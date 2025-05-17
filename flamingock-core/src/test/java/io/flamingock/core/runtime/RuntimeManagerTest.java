@@ -2,7 +2,9 @@ package io.flamingock.core.runtime;
 
 
 import io.flamingock.core.api.annotations.Nullable;
-import io.flamingock.core.context.SimpleContext;
+import io.flamingock.internal.core.context.SimpleContext;
+import io.flamingock.internal.core.runtime.MissingInjectedParameterException;
+import io.flamingock.internal.core.runtime.RuntimeManager;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,7 @@ import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RuntimeManagerTest {
+public class RuntimeManagerTest {
 
     @Test
     @DisplayName("should throw exception when executing method if no dependency and not annotated with @Nullable")

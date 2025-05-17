@@ -17,8 +17,8 @@
 package io.flamingock.core.springboot.v2;
 
 import io.flamingock.core.api.annotations.Change;
-import io.flamingock.core.task.loaded.CodeLoadedChangeUnit;
-import io.flamingock.core.task.loaded.LoadedTaskBuilder;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Profile;

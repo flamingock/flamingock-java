@@ -18,16 +18,15 @@ package io.flamingock.oss.driver.mongodb.v3;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.ReadPreference;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.builder.Flamingock;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.builder.FlamingockFactory;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
-import io.flamingock.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.runner.PipelineExecutionException;
 
 import io.flamingock.oss.driver.mongodb.v3.changes._1_create_client_collection_happy;
 import io.flamingock.oss.driver.mongodb.v3.changes._2_insert_federico_happy_non_transactional;
@@ -116,7 +115,7 @@ class Mongo3DriverTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            Flamingock.local()
+            FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
                     .addDependency("mongodb.databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
@@ -144,7 +143,7 @@ class Mongo3DriverTest {
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            Flamingock.local()
+            FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
                     .setProperty("mongodb.databaseName", DB_NAME)
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
@@ -173,7 +172,7 @@ class Mongo3DriverTest {
                     new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            Flamingock.local()
+            FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
                     .addDependency("mongodb.databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
@@ -215,7 +214,7 @@ class Mongo3DriverTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)))
             );
 
-            Flamingock.local()
+            FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
                     .addDependency("mongodb.databaseName", DB_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithoutTransaction"))
@@ -260,7 +259,7 @@ class Mongo3DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                Flamingock.local()
+                FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoClient)
                         .addDependency("mongodb.databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithTransaction"))
@@ -301,7 +300,7 @@ class Mongo3DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                Flamingock.local()
+                FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoClient)
                         .addDependency("mongodb.databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithRollback"))
@@ -346,7 +345,7 @@ class Mongo3DriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                Flamingock.local()
+                FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoClient)
                         .addDependency("mongodb.databaseName", DB_NAME)
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithoutRollback"))

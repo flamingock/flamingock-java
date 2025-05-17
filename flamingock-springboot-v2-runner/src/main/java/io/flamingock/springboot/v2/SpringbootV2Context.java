@@ -17,8 +17,8 @@
 package io.flamingock.springboot.v2;
 
 import io.flamingock.commons.utils.Constants;
-import io.flamingock.core.builder.Flamingock;
-import io.flamingock.core.runner.RunnerBuilder;
+import io.flamingock.internal.core.builder.FlamingockFactory;
+import io.flamingock.internal.core.runner.RunnerBuilder;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
 @ConditionalOnExpression("${flamingock.enabled:true}")
-public class SpringbootV2Context extends Flamingock {
+public class SpringbootV2Context {
 
 
     @Bean("flamingock-runner")
@@ -51,7 +51,7 @@ public class SpringbootV2Context extends Flamingock {
     public RunnerBuilder flamingockBuilder(SpringbootV2Properties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher) {
-        return builder(
+        return FlamingockFactory.getEditionAwareBuilder(
                 configurationProperties.getCoreConfiguration(),
                 configurationProperties.getCloudProperties(),
                 configurationProperties.getLocalConfiguration()

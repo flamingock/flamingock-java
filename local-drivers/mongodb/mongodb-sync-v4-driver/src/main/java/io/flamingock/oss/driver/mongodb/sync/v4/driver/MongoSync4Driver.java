@@ -19,11 +19,11 @@ package io.flamingock.oss.driver.mongodb.sync.v4.driver;
 import com.mongodb.client.MongoClient;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Configuration;
 import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.core.builder.core.CoreConfigurable;
-import io.flamingock.core.builder.local.CommunityConfigurable;
-import io.flamingock.core.community.LocalEngine;
-import io.flamingock.core.community.driver.LocalDriver;
-import io.flamingock.core.context.ContextResolver;
+import io.flamingock.internal.core.builder.core.CoreConfigurable;
+import io.flamingock.internal.core.builder.local.CommunityConfigurable;
+import io.flamingock.internal.core.community.LocalEngine;
+import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.context.ContextResolver;
 import io.flamingock.oss.driver.mongodb.sync.v4.internal.MongoSync4Engine;
 
 public class MongoSync4Driver implements LocalDriver {

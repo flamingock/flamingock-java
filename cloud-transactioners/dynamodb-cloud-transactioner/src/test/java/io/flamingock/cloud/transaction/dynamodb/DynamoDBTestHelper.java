@@ -17,7 +17,7 @@
 package io.flamingock.cloud.transaction.dynamodb;
 
 import io.flamingock.commons.utils.DynamoDBUtil;
-import io.flamingock.core.engine.audit.domain.AuditItem;
+import io.flamingock.internal.core.engine.audit.domain.AuditItem;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;

@@ -1,7 +1,7 @@
 package io.flamingock.core;
 
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

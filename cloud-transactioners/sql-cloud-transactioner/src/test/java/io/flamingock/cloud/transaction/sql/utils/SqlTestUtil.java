@@ -16,7 +16,7 @@
 
 package io.flamingock.cloud.transaction.sql.utils;
 
-import io.flamingock.core.engine.audit.domain.AuditItem;
+import io.flamingock.internal.core.engine.audit.domain.AuditItem;
 import org.junit.jupiter.api.Assertions;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;

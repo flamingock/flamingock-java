@@ -21,7 +21,7 @@ import io.flamingock.core.cloud.api.planner.response.StageResponse;
 import io.flamingock.core.cloud.api.planner.response.TaskResponse;
 import io.flamingock.core.cloud.api.vo.ActionResponse;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -31,7 +31,7 @@ import io.flamingock.core.cloud.api.auth.AuthResponse;
 import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
 import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.planner.request.StageRequest; import io.flamingock.core.cloud.api.planner.request.TaskRequest;
-import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
 
 import java.util.*;
 import java.util.stream.Collectors;

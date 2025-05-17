@@ -28,11 +28,11 @@ import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4Collect
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4DocumentWrapper;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
-import io.flamingock.core.community.lock.LocalLockService;
-import io.flamingock.core.community.lock.LockEntry;
-import io.flamingock.core.engine.lock.LockAcquisition;
-import io.flamingock.core.engine.lock.LockKey;
-import io.flamingock.core.engine.lock.LockServiceException;
+import io.flamingock.internal.core.community.lock.LocalLockService;
+import io.flamingock.internal.core.community.lock.LockEntry;
+import io.flamingock.internal.core.engine.lock.LockAcquisition;
+import io.flamingock.internal.core.engine.lock.LockKey;
+import io.flamingock.internal.core.engine.lock.LockServiceException;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBLockMapper;
 import org.bson.Document;
@@ -40,8 +40,11 @@ import org.bson.conversions.Bson;
 
 import java.util.Date;
 
-import static io.flamingock.core.community.lock.LockEntryField.*;
-import static io.flamingock.core.engine.lock.LockStatus.LOCK_HELD;
+import static io.flamingock.internal.core.engine.lock.LockStatus.LOCK_HELD;
+import static io.flamingock.internal.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
+import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIELD;
+import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
+import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_FIELD;
 
 public class MongoSync4LockService implements LocalLockService {
 

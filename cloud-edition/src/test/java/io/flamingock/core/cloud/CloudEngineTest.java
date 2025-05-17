@@ -22,11 +22,11 @@ import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.commons.utils.ThreadSleeper;
 import io.flamingock.core.api.exception.FlamingockException;
-import io.flamingock.core.builder.CloudFlamingockBuilder;
-import io.flamingock.core.builder.Flamingock;
+import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
+import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
-import io.flamingock.core.engine.lock.LockException;
-import io.flamingock.core.runner.Runner;
+import io.flamingock.internal.core.engine.lock.LockException;
+import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -105,7 +105,7 @@ public class CloudEngineTest {
                 .setApiToken(apiToken)
                 .setJwt(jwt);
 
-        flamingockBuilder = Flamingock.cloud()
+        flamingockBuilder = FlamingockFactory.getCloudBuilder()
                 .setApiToken(apiToken)
                 .setHost("http://localhost:" + runnerServerPort)
                 .setService(serviceName)

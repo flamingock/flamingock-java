@@ -16,18 +16,18 @@
 
 package io.flamingock.springboot.v2;
 
-import io.flamingock.core.plugin.Plugin;
-import io.flamingock.core.event.EventPublisher;
-import io.flamingock.core.event.SimpleEventPublisher;
-import io.flamingock.core.event.model.IPipelineFailedEvent;
-import io.flamingock.core.event.model.IPipelineIgnoredEvent;
-import io.flamingock.core.event.model.IPipelineStartedEvent;
-import io.flamingock.core.event.model.IStageCompletedEvent;
-import io.flamingock.core.event.model.IStageFailedEvent;
-import io.flamingock.core.event.model.IStageIgnoredEvent;
-import io.flamingock.core.event.model.IStageStartedEvent;
-import io.flamingock.core.context.ContextResolver;
-import io.flamingock.core.task.filter.TaskFilter;
+import io.flamingock.internal.core.plugin.Plugin;
+import io.flamingock.internal.core.event.EventPublisher;
+import io.flamingock.internal.core.event.SimpleEventPublisher;
+import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
+import io.flamingock.internal.core.event.model.IPipelineIgnoredEvent;
+import io.flamingock.internal.core.event.model.IPipelineStartedEvent;
+import io.flamingock.internal.core.event.model.IStageCompletedEvent;
+import io.flamingock.internal.core.event.model.IStageFailedEvent;
+import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
+import io.flamingock.internal.core.event.model.IStageStartedEvent;
+import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.springboot.v2.event.SpringPipelineFailedEvent;
 import io.flamingock.springboot.v2.event.SpringPipelineIgnoredEvent;
 import io.flamingock.springboot.v2.event.SpringPipelineStartedEvent;

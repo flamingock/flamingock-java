@@ -17,13 +17,13 @@
 package io.flamingock.cloud.transaction.sql;
 
 import io.flamingock.core.api.exception.FlamingockException;
-import io.flamingock.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
-import io.flamingock.core.engine.audit.domain.AuditItem;
+import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
+import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.engine.audit.domain.AuditItem;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyInjectable;
+import io.flamingock.internal.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
-import io.flamingock.core.task.navigation.step.FailedStep;
+import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

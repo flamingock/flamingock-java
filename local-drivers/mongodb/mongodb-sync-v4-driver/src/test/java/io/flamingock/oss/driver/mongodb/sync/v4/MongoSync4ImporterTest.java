@@ -22,10 +22,10 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.builder.Flamingock;
-import io.flamingock.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.legacy.MongockLegacyIdGenerator;
+import io.flamingock.internal.core.builder.FlamingockFactory;
+import io.flamingock.internal.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.oss.driver.mongodb.sync.v4.changes._0_mongock_create_authors_collection;
 import io.flamingock.oss.driver.mongodb.sync.v4.changes._1_create_client_collection_happy;
@@ -49,7 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.builder.core.CoreConfiguration.ImporterConfiguration.withSource;
+import static io.flamingock.internal.core.builder.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -118,7 +118,7 @@ class MongoSync4ImporterTest {
                     new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
             );
 
-            Flamingock.local()
+            FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
                     .setProperty("mongodb.databaseName", DB_NAME)
                     .withImporter(withSource("mongockChangeLog"))

@@ -17,8 +17,7 @@
 package io.flamingock.oss.driver.dynamodb.internal.mongock;
 
 import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.engine.audit.AuditWriter;
-import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
+import io.flamingock.internal.core.engine.audit.AuditWriter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 @NonLockGuarded

@@ -16,7 +16,7 @@
 
 package io.flamingock.springboot.v2;
 
-import io.flamingock.core.runner.Runner;
+import io.flamingock.internal.core.runner.Runner;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;

@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.dynamodb;
 
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
 import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
 import io.flamingock.commons.utils.DynamoDBUtil;

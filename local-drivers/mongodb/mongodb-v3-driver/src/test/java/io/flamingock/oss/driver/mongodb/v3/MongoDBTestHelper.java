@@ -22,7 +22,7 @@ import io.flamingock.commons.utils.Pair;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.api.annotations.Change;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
@@ -42,8 +42,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.community.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.core.community.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_TIMESTAMP;
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;

@@ -17,12 +17,12 @@
 package io.flamingock.cloud.transaction.dynamodb.wrapper;
 
 import io.flamingock.commons.utils.DynamoDBUtil;
-import io.flamingock.core.community.TransactionManager;
+import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyInjectable;
+import io.flamingock.internal.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
-import io.flamingock.core.task.navigation.step.FailedStep;
-import io.flamingock.core.transaction.TransactionWrapper;
+import io.flamingock.internal.core.task.navigation.step.FailedStep;
+import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;

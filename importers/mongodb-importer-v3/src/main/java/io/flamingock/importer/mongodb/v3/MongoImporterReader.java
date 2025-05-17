@@ -1,11 +1,11 @@
 package io.flamingock.importer.mongodb.v3;
 
 import com.mongodb.client.MongoCollection;
-import io.flamingock.core.engine.audit.importer.ImporterReader;
-import io.flamingock.core.engine.audit.importer.model.ChangeEntry;
-import io.flamingock.core.engine.audit.importer.model.ChangeState;
-import io.flamingock.core.engine.audit.importer.model.ChangeType;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.importer.ImporterReader;
+import io.flamingock.internal.core.engine.audit.importer.model.ChangeEntry;
+import io.flamingock.internal.core.engine.audit.importer.model.ChangeState;
+import io.flamingock.internal.core.engine.audit.importer.model.ChangeType;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import org.bson.Document;
 
 import java.time.Instant;

@@ -16,8 +16,8 @@
 
 package io.flamingock.springboot.v3.event;
 
-import io.flamingock.core.event.model.IPipelineFailedEvent;
-import io.flamingock.core.event.model.IStageFailedEvent;
+import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
+import io.flamingock.internal.core.event.model.IStageFailedEvent;
 import org.springframework.context.ApplicationEvent;
 
 public class SpringStageFailedEvent extends ApplicationEvent implements IPipelineFailedEvent {

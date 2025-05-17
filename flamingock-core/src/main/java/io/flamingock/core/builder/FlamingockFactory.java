@@ -25,36 +25,15 @@ import io.flamingock.core.context.SimpleContext;
 import io.flamingock.core.plugin.DefaultPluginManager;
 import io.flamingock.core.system.DefaultSystemModuleManager;
 
-public class Flamingock {
+public final class FlamingockFactory {
 
-    protected Flamingock() {
+    private FlamingockFactory() {
     }
 
-    public static AbstractFlamingockBuilder<?> builder() {
-        Driver driver = Driver.getDriver();
-        if (driver.isCloud()) {
-            return new CloudFlamingockBuilder(
-                    new CoreConfiguration(),
-                    new CloudConfiguration(),
-                    new SimpleContext(),
-                    new DefaultPluginManager(),
-                    new DefaultSystemModuleManager(),
-                    (CloudDriver) driver);
-        } else {
-            return new CommunityFlamingockBuilder(
-                    new CoreConfiguration(),
-                    new CommunityConfiguration(),
-                    new SimpleContext(),
-                    new DefaultPluginManager(),
-                    new DefaultSystemModuleManager(),
-                    (LocalDriver) driver);
-        }
-    }
-
-    protected static AbstractFlamingockBuilder<?> builder(CoreConfiguration coreConfiguration,
-                                                          CloudConfiguration cloudConfiguration,
-                                                          CommunityConfiguration communityConfiguration) {
-        Driver driver = Driver.getDriver();
+    public static AbstractFlamingockBuilder<?> getEditionAwareBuilder(CoreConfiguration coreConfiguration,
+                                                                         CloudConfiguration cloudConfiguration,
+                                                                         CommunityConfiguration communityConfiguration) {
+        Driver<?> driver = Driver.getDriver();
         if (driver.isCloud()) {
             return new CloudFlamingockBuilder(
                     coreConfiguration,
@@ -74,8 +53,7 @@ public class Flamingock {
         }
     }
 
-    @Deprecated
-    public static CloudFlamingockBuilder cloud() {
+    public static CloudFlamingockBuilder getCloudBuilder() {
         return new CloudFlamingockBuilder(
                 new CoreConfiguration(),
                 new CloudConfiguration(),
@@ -85,8 +63,7 @@ public class Flamingock {
                 CloudDriver.getDriver().orElseThrow(() -> new RuntimeException("No Cloud edition detected")));
     }
 
-    @Deprecated
-    public static CommunityFlamingockBuilder local() {
+    public static CommunityFlamingockBuilder getCommunityBuilder() {
         return new CommunityFlamingockBuilder(
                 new CoreConfiguration(),
                 new CommunityConfiguration(),
@@ -95,6 +72,5 @@ public class Flamingock {
                 new DefaultSystemModuleManager(),
                 LocalDriver.getDriver().orElseThrow(() -> new RuntimeException("No compatible Community edition detected")));
     }
-
 
 }

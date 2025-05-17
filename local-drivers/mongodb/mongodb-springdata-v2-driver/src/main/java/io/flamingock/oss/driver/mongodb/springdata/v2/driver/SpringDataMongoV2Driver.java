@@ -17,11 +17,11 @@
 package io.flamingock.oss.driver.mongodb.springdata.v2.driver;
 
 import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.core.builder.core.CoreConfigurable;
-import io.flamingock.core.builder.local.CommunityConfigurable;
-import io.flamingock.core.community.LocalEngine;
-import io.flamingock.core.community.driver.OverridesDrivers;
-import io.flamingock.core.context.ContextResolver;
+import io.flamingock.internal.core.builder.core.CoreConfigurable;
+import io.flamingock.internal.core.builder.local.CommunityConfigurable;
+import io.flamingock.internal.core.community.LocalEngine;
+import io.flamingock.internal.core.community.driver.OverridesDrivers;
+import io.flamingock.internal.core.context.ContextResolver;
 import io.flamingock.oss.driver.mongodb.springdata.v2.config.SpringDataMongoV2Configuration;
 import io.flamingock.oss.driver.mongodb.springdata.v2.internal.SpringDataMongoV2Engine;
 import io.flamingock.oss.driver.mongodb.v3.driver.Mongo3Driver;

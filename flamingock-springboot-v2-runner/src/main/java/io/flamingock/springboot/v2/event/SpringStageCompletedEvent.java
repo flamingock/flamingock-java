@@ -17,8 +17,8 @@
 package io.flamingock.springboot.v2.event;
 
 
-import io.flamingock.core.event.model.IPipelineCompletedEvent;
-import io.flamingock.core.event.model.IStageCompletedEvent;
+import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
+import io.flamingock.internal.core.event.model.IStageCompletedEvent;
 import org.springframework.context.ApplicationEvent;
 
 public class SpringStageCompletedEvent extends ApplicationEvent implements IPipelineCompletedEvent {

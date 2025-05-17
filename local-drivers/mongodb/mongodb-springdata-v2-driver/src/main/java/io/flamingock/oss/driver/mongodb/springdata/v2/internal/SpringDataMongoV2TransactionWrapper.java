@@ -18,10 +18,10 @@ package io.flamingock.oss.driver.mongodb.springdata.v2.internal;
 
 import com.mongodb.TransactionOptions;
 
-import io.flamingock.core.task.navigation.step.FailedStep;
-import io.flamingock.core.context.DependencyInjectable;
+import io.flamingock.internal.core.task.navigation.step.FailedStep;
+import io.flamingock.internal.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
-import io.flamingock.core.transaction.TransactionWrapper;
+import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.mongodb.v3.internal.mongodb.ReadWriteConfiguration;
 
 import org.springframework.data.mongodb.core.MongoTemplate;

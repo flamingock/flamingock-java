@@ -25,15 +25,15 @@ import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Config
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4TransactionWrapper;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
-import io.flamingock.core.builder.core.CoreConfigurable;
-import io.flamingock.core.builder.local.CommunityConfigurable;
-import io.flamingock.core.community.AbstractLocalEngine;
-import io.flamingock.core.community.LocalAuditor;
-import io.flamingock.core.community.LocalExecutionPlanner;
-import io.flamingock.core.community.TransactionManager;
-import io.flamingock.core.engine.audit.importer.ImporterModule;
-import io.flamingock.core.system.SystemModule;
-import io.flamingock.core.transaction.TransactionWrapper;
+import io.flamingock.internal.core.builder.core.CoreConfigurable;
+import io.flamingock.internal.core.builder.local.CommunityConfigurable;
+import io.flamingock.internal.core.community.AbstractLocalEngine;
+import io.flamingock.internal.core.community.LocalAuditor;
+import io.flamingock.internal.core.community.LocalExecutionPlanner;
+import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.engine.audit.importer.ImporterModule;
+import io.flamingock.internal.core.system.SystemModule;
+import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
 import org.bson.Document;
 

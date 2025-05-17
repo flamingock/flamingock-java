@@ -16,13 +16,13 @@
 
 package io.flamingock.springboot.v2;
 
-import io.flamingock.core.builder.TransactionStrategy;
-import io.flamingock.core.builder.cloud.CloudConfigurable;
-import io.flamingock.core.builder.cloud.CloudConfiguration;
-import io.flamingock.core.builder.core.CoreConfigurable;
-import io.flamingock.core.builder.core.CoreConfiguration;
-import io.flamingock.core.builder.local.CommunityConfigurable;
-import io.flamingock.core.builder.local.CommunityConfiguration;
+import io.flamingock.internal.core.builder.TransactionStrategy;
+import io.flamingock.internal.core.builder.cloud.CloudConfigurable;
+import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
+import io.flamingock.internal.core.builder.core.CoreConfigurable;
+import io.flamingock.internal.core.builder.core.CoreConfiguration;
+import io.flamingock.internal.core.builder.local.CommunityConfigurable;
+import io.flamingock.internal.core.builder.local.CommunityConfiguration;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.processor.util.Deserializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;

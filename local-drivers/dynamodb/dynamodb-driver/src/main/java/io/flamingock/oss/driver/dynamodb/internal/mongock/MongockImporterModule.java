@@ -16,16 +16,15 @@
 
 package io.flamingock.oss.driver.dynamodb.internal.mongock;
 
-import io.flamingock.core.context.ContextInjectable;
-import io.flamingock.core.context.ContextResolver;
-import io.flamingock.core.context.DependencyInjectable;
-import io.flamingock.core.engine.audit.AuditWriter;
+import io.flamingock.internal.core.context.ContextInjectable;
+import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.internal.core.engine.audit.AuditWriter;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.preview.builder.PreviewTaskBuilder;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.core.system.SystemModule;
+import io.flamingock.internal.core.system.SystemModule;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 import java.util.Collections;

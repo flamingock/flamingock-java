@@ -19,7 +19,7 @@ package io.flamingock.cloud.lock.client;
 import io.flamingock.cloud.auth.AuthManager;
 import io.flamingock.core.cloud.api.lock.LockExtensionRequest;
 import io.flamingock.core.cloud.api.lock.LockResponse;
-import io.flamingock.core.engine.lock.LockKey;
+import io.flamingock.internal.core.engine.lock.LockKey;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.http.Http;
 

@@ -17,10 +17,10 @@
 package io.flamingock.oss.driver.dynamodb.internal;
 
 import io.flamingock.commons.utils.Result;
-import io.flamingock.core.community.TransactionManager;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.engine.audit.writer.AuditStageStatus;
-import io.flamingock.core.community.LocalAuditor;
+import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
 import io.flamingock.commons.utils.DynamoDBConstants;
 import io.flamingock.commons.utils.DynamoDBUtil;

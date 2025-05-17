@@ -16,11 +16,11 @@
 
 package io.flamingock.springboot.v3;
 
-import io.flamingock.core.task.filter.TaskFilter;
-import io.flamingock.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.core.task.loaded.AbstractReflectionLoadedTask;
-import io.flamingock.core.task.loaded.CodeLoadedChangeUnit;
-import io.flamingock.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.core.task.filter.TaskFilter;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
 import org.springframework.context.annotation.Profile;
 
 import java.util.Arrays;

@@ -17,7 +17,7 @@
 package io.flamingock.springboot.v2.event;
 
 
-import io.flamingock.core.event.model.IPipelineIgnoredEvent;
+import io.flamingock.internal.core.event.model.IPipelineIgnoredEvent;
 import org.springframework.context.ApplicationEvent;
 
 public class SpringPipelineIgnoredEvent extends ApplicationEvent implements IPipelineIgnoredEvent {

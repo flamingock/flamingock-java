@@ -1,11 +1,11 @@
 package io.flamingock.cloud.audit;
 
 import io.flamingock.commons.utils.Result;
-import io.flamingock.core.engine.audit.AuditWriter;
-import io.flamingock.core.engine.audit.domain.ExecutionAuditItem;
-import io.flamingock.core.engine.audit.domain.RollbackAuditItem;
-import io.flamingock.core.engine.audit.domain.StartExecutionAuditItem;
-import io.flamingock.core.engine.audit.writer.AuditEntryMapper;
+import io.flamingock.internal.core.engine.audit.AuditWriter;
+import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditItem;
+import io.flamingock.internal.core.engine.audit.domain.RollbackAuditItem;
+import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditItem;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntryMapper;
 
 public interface CloudAuditWriter extends AuditWriter {
 

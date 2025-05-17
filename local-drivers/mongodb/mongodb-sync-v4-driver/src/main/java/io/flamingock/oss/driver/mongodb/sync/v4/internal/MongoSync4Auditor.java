@@ -25,10 +25,10 @@ import com.mongodb.client.result.UpdateResult;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4CollectionWrapper;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4DocumentWrapper;
 import io.flamingock.commons.utils.Result;
-import io.flamingock.core.community.LocalAuditor;
-import io.flamingock.core.community.TransactionManager;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.internal.core.community.LocalAuditor;
+import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import org.bson.Document;
@@ -39,7 +39,10 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.community.AuditEntryField.*;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_AUTHOR;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_ID;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_STATE;
 
 public class MongoSync4Auditor implements LocalAuditor {
 

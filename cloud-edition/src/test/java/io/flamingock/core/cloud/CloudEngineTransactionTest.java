@@ -21,12 +21,12 @@ import io.flamingock.core.cloud.changes.CloudChange2;
 import io.flamingock.core.cloud.utils.TestCloudTransactioner;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
-import io.flamingock.core.builder.CloudFlamingockBuilder;
-import io.flamingock.core.builder.Flamingock;
+import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
+import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.cloud.transaction.TaskWithOngoingStatus;
-import io.flamingock.core.runner.Runner;
+import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,7 +99,7 @@ public class CloudEngineTransactionTest {
                 .setApiToken(apiToken)
                 .setJwt(jwt);
 
-        flamingockBuilder = Flamingock.cloud()
+        flamingockBuilder = FlamingockFactory.getCloudBuilder()
                 .setApiToken(apiToken)
                 .setHost("http://localhost:" + runnerServerPort)
                 .setService(serviceName)

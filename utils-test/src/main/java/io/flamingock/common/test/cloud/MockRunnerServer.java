@@ -32,7 +32,7 @@ import io.flamingock.core.cloud.api.planner.request.StageRequest;
 import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
 import io.flamingock.core.cloud.api.planner.response.StageResponse;
 import io.flamingock.core.cloud.api.planner.response.TaskResponse;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 
 import java.util.*;
 import java.util.stream.Collectors;

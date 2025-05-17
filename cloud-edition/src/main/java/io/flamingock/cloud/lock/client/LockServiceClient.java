@@ -18,7 +18,7 @@ package io.flamingock.cloud.lock.client;
 
 import io.flamingock.core.cloud.api.lock.LockExtensionRequest;
 import io.flamingock.core.cloud.api.lock.LockResponse;
-import io.flamingock.core.engine.lock.LockKey;
+import io.flamingock.internal.core.engine.lock.LockKey;
 import io.flamingock.commons.utils.id.RunnerId;
 
 public interface LockServiceClient {

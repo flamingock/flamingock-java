@@ -19,7 +19,7 @@ package io.flamingock.oss.driver.mongodb.v3;
 import com.mongodb.ReadConcernLevel;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import io.flamingock.core.context.ContextResolver;
+import io.flamingock.internal.core.context.ContextResolver;
 import io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration;
 
 import java.time.Duration;

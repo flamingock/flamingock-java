@@ -21,9 +21,9 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
 import io.flamingock.commons.utils.Result;
-import io.flamingock.core.community.LocalAuditor;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
-import io.flamingock.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.internal.core.community.LocalAuditor;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.oss.driver.mongodb.springdata.v3.internal.mongodb.SpringDataMongoV3CollectionWrapper;
@@ -38,7 +38,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.community.AuditEntryField.*;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_AUTHOR;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_ID;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_STATE;
 
 public class SpringDataMongoV3Auditor implements LocalAuditor {
 

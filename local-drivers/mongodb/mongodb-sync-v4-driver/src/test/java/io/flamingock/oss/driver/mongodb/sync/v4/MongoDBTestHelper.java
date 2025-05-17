@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.mongodb.sync.v4;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4DocumentWrapper;
@@ -29,8 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.community.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.core.community.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.AuditEntryField.KEY_TIMESTAMP;
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;

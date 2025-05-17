@@ -20,6 +20,7 @@ import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.core.api.exception.FlamingockException;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
+import io.flamingock.internal.core.pipeline.Pipeline;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

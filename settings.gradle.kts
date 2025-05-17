@@ -43,9 +43,19 @@ project(":flamingock-graalvm").projectDir = file("flamingock-graalvm")
 project(":flamingock-graalvm").name = "flamingock-graalvm"
 
 //////////////////////////////////////
+// CLOUD
+//////////////////////////////////////
+include("cloud-edition")
+project(":cloud-edition").name = "cloud-edition"
+project(":cloud-edition").projectDir = file("cloud-edition")
+
+//////////////////////////////////////
 // DRIVERS
 //////////////////////////////////////
 
+include("community-edition-commons")
+project(":community-edition-commons").name = "community-edition-commons"
+project(":community-edition-commons").projectDir = file("community-edition-commons")
 
 include("commons:mongodb-facade")
 project(":commons:mongodb-facade").name = "mongodb-facade"
@@ -121,10 +131,3 @@ project(":importers:mongodb-importer-sync-v4").projectDir = file("importers/mong
 include("importers:mongodb-importer-v3")
 project(":importers:mongodb-importer-v3").name = "mongodb-importer-v3"
 project(":importers:mongodb-importer-v3").projectDir = file("importers/mongodb-importer-v3")
-
-//////////////////////////////////////
-// CLOUD
-//////////////////////////////////////
-include("cloud-edition")
-project(":cloud-edition").name = "cloud-edition"
-project(":cloud-edition").projectDir = file("cloud-edition")
