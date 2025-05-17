@@ -18,10 +18,12 @@ package io.flamingock.oss.driver.mongodb.sync.v4;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.ReadConcernLevel;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Configuration;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
@@ -47,6 +49,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -131,9 +134,11 @@ class MongoSync4DriverTest {
     }
 
     @Test
-    @DisplayName("When standalone runs the driver with CUSTOM repository names related collections should exists")
-    void happyPathWithCustomRepositoryNames() {
+    @DisplayName("When standalone runs the driver with CUSTOM config properties all properties are correctly set")
+    void happyPathWithCustomConfigOptions() {
         //Given-When
+
+        MongoDBSync4Configuration config = new MongoDBSync4Configuration();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -143,15 +148,32 @@ class MongoSync4DriverTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
+                    .addDependency(config)
                     .addDependency(mongoClient)
                     .setProperty("mongodb.databaseName", DB_NAME)
+                    .setProperty("mongodb.indexCreation", true)
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
+                    .setProperty("mongodb.readConcern", "LOCAL")
+//                    .setProperty("mongodb.writeConcern.w", 1)
+//                    .setProperty("mongodb.writeConcern.journal", false)
+//                    .setProperty("mongodb.writeConcern.wTimeout", Duration.ofSeconds(2))
+                    .setProperty("mongodb.readPreference", MongoDBSync4Configuration.ReadPreferenceLevel.SECONDARY)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoClient.getDatabase(DB_NAME))
                     .build()
                     .run();
         }
+
+        assertTrue(config.isAutoCreate());
+        //TODO: assertFalse(config.isIndexCreation());
+        assertEquals(CUSTOM_AUDIT_REPOSITORY_NAME, config.getAuditRepositoryName());
+        assertEquals(CUSTOM_LOCK_REPOSITORY_NAME, config.getLockRepositoryName());
+        assertEquals(ReadConcernLevel.LOCAL, config.getReadConcern());
+//        assertEquals(1, config.getWriteConcern().getW());
+//        assertEquals(false, config.getWriteConcern().isJournal());
+//        assertEquals(Duration.ofSeconds(2), config.getWriteConcern().getwTimeoutMs());
+        assertEquals(MongoDBSync4Configuration.ReadPreferenceLevel.SECONDARY, config.getReadPreference());
 
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_REPOSITORY_NAME));
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));

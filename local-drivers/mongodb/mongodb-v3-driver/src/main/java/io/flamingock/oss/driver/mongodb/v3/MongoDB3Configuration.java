@@ -25,6 +25,8 @@ import io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import static com.mongodb.assertions.Assertions.isTrue;
+
 public class MongoDB3Configuration extends MongoDBDriverConfiguration {
     private ReadConcernLevel readConcern = ReadConcernLevel.MAJORITY;
     private WriteConcernLevel writeConcern = WriteConcernLevel.MAJORITY_WITH_JOURNAL;
@@ -59,14 +61,19 @@ public class MongoDB3Configuration extends MongoDBDriverConfiguration {
     }
 
     public WriteConcern getBuiltMongoDBWriteConcern() {
-        WriteConcern wc = new WriteConcern(writeConcern.w).withJournal(writeConcern.journal);
+        WriteConcern wc;
+        if (writeConcern.w instanceof String) {
+            wc = new WriteConcern((String) writeConcern.w).withJournal(writeConcern.journal);
+        } else {
+            wc = new WriteConcern((int) writeConcern.w).withJournal(writeConcern.journal);
+        }
         return writeConcern.getwTimeoutMs() == null
                 ? wc
                 : wc.withWTimeout(writeConcern.getwTimeoutMs().toMillis(), TimeUnit.MILLISECONDS);
     }
 
     public void mergeConfig(ContextResolver dependencyContext) {
-        dependencyContext.getPropertyAs("mongodb.autoCreate", boolean.class)
+        dependencyContext.getPropertyAs("mongodb.autoCreate", Boolean.class)
                 .ifPresent(this::setAutoCreate);
         dependencyContext.getPropertyAs("mongodb.auditRepositoryName", String.class)
                 .ifPresent(this::setAuditRepositoryName);
@@ -76,9 +83,9 @@ public class MongoDB3Configuration extends MongoDBDriverConfiguration {
         dependencyContext.getPropertyAs("mongodb.readConcern", String.class)
                 .ifPresent(this::setReadConcern);
 
-        dependencyContext.getPropertyAs("mongodb.writeConcern.w", String.class)
+        dependencyContext.getPropertyAs("mongodb.writeConcern.w", Object.class)
                 .ifPresent(this.writeConcern::setW);
-        dependencyContext.getPropertyAs("mongodb.writeConcern.journal", boolean.class)
+        dependencyContext.getPropertyAs("mongodb.writeConcern.journal", Boolean.class)
                 .ifPresent(this.writeConcern::setJournal);
         dependencyContext.getPropertyAs("mongodb.writeConcern.wTimeout", Duration.class)
                 .ifPresent(this.writeConcern::setwTimeoutMs);
@@ -111,7 +118,7 @@ public class MongoDB3Configuration extends MongoDBDriverConfiguration {
                 WriteConcern.MAJORITY.getWString(),
                 Duration.ofSeconds(1),
                 true);
-        private String w;
+        private Object w;
         private Duration wTimeoutMs;
         private Boolean journal;
 
@@ -124,11 +131,17 @@ public class MongoDB3Configuration extends MongoDBDriverConfiguration {
         public WriteConcernLevel() {
         }
 
-        public String getW() {
-            return w;
+        public int getW() {
+            isTrue("w is an Integer", w != null && w instanceof Integer);
+            return (Integer) w;
         }
 
-        public void setW(String w) {
+        public String getStringW() {
+            isTrue("w is a String", w != null && w instanceof String);
+            return (String) w;
+        }
+
+        public void setW(Object w) {
             this.w = w;
         }
 
