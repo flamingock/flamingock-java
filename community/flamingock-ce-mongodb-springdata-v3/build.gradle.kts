@@ -1,8 +1,8 @@
 dependencies {
-    implementation(project(":commons:mongodb-facade"))
+    implementation(project(":utils:mongodb-util"))
     implementation(project(":importers:mongodb-importer-sync-v4"))
 
-    implementation(project(":flamingock-core"))
+    implementation(project(":core:flamingock-core"))
     api(project(":community:flamingock-ce-mongodb-sync-v4"))
 
     implementation("org.springframework.data:spring-data-mongodb:3.2.12")
@@ -12,7 +12,7 @@ dependencies {
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:2.7.12")
 
-    testImplementation(project(":flamingock-core"))
+    testImplementation(project(":core:flamingock-core"))
     testImplementation("org.testcontainers:mongodb:1.18.3")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")
 

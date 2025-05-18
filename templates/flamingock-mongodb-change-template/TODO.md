@@ -1,0 +1,6 @@
+- add Client session when transactional
+- Problem: transactional is passed dynamically while the clientSession is statically in the signature
+  - Check how transaction is handle in the entire framework
+  - Should we add an annotation to the changeUnit parameter to allow nulls, like `@Nullable`
+- test
+- rename template to changeTemplate

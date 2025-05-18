@@ -5,12 +5,22 @@ rootProject.name = "flamingock-project"
 //////////////////////////////////////
 // CORE
 //////////////////////////////////////
-include("flamingock-core")
-include("flamingock-processor")
-include("flamingock-springboot-v2-runner")
-include("flamingock-springboot-v3-runner")
-include("flamingock-graalvm")
-include("flamingock-core-api")
+include("core:flamingock-core")
+project(":core:flamingock-core").name = "flamingock-core"
+project(":core:flamingock-core").projectDir = file("core/flamingock-core")
+
+include("core:flamingock-processor")
+project(":core:flamingock-processor").name = "flamingock-processor"
+project(":core:flamingock-processor").projectDir = file("core/flamingock-processor")
+
+include("core:flamingock-graalvm")
+project(":core:flamingock-graalvm").name = "flamingock-graalvm"
+project(":core:flamingock-graalvm").projectDir = file("core/flamingock-graalvm")
+
+
+include("core:flamingock-core-api")
+project(":core:flamingock-core-api").name = "flamingock-core-api"
+project(":core:flamingock-core-api").projectDir = file("core/flamingock-core-api")
 
 
 //////////////////////////////////////
@@ -64,23 +74,32 @@ include("community:flamingock-ce-dynamodb")
 project(":community:flamingock-ce-dynamodb").name = "flamingock-ce-dynamodb"
 project(":community:flamingock-ce-dynamodb").projectDir = file("community/flamingock-ce-dynamodb")
 
+//////////////////////////////////////
+// PLUGINS
+//////////////////////////////////////
+include("platform-plugins:flamingock-springboot-v2-integration")
+project(":platform-plugins:flamingock-springboot-v2-integration").name = "flamingock-springboot-v2-integration"
+project(":platform-plugins:flamingock-springboot-v2-integration").projectDir = file("platform-plugins/flamingock-springboot-v2-integration")
 
+include("platform-plugins:flamingock-springboot-v3-integration")
+project(":platform-plugins:flamingock-springboot-v3-integration").name = "flamingock-springboot-v3-integration"
+project(":platform-plugins:flamingock-springboot-v3-integration").projectDir = file("platform-plugins/flamingock-springboot-v3-integration")
 
 //////////////////////////////////////
 // TRANSACTIONERS
 //////////////////////////////////////
 
-include("transactioners:sql-cloud-transactioner")
-project(":transactioners:sql-cloud-transactioner").projectDir = file("transactioners/sql-cloud-transactioner")
-project(":transactioners:sql-cloud-transactioner").name = "sql-cloud-transactioner"
+include("transactioners:sql-transactioner")
+project(":transactioners:sql-transactioner").projectDir = file("transactioners/sql-transactioner")
+project(":transactioners:sql-transactioner").name = "sql-transactioner"
 
-include("transactioners:mongodb-sync-v4-cloud-transactioner")
-project(":transactioners:mongodb-sync-v4-cloud-transactioner").projectDir = file("transactioners/mongodb-sync-v4-cloud-transactioner")
-project(":transactioners:mongodb-sync-v4-cloud-transactioner").name = "mongodb-sync-v4-cloud-transactioner"
+include("transactioners:mongodb-sync-v4-transactioner")
+project(":transactioners:mongodb-sync-v4-transactioner").projectDir = file("transactioners/mongodb-sync-v4-transactioner")
+project(":transactioners:mongodb-sync-v4-transactioner").name = "mongodb-sync-v4-transactioner"
 
-include("transactioners:dynamodb-cloud-transactioner")
-project(":transactioners:dynamodb-cloud-transactioner").projectDir = file("transactioners/dynamodb-cloud-transactioner")
-project(":transactioners:dynamodb-cloud-transactioner").name = "dynamodb-cloud-transactioner"
+include("transactioners:dynamodb-transactioner")
+project(":transactioners:dynamodb-transactioner").projectDir = file("transactioners/dynamodb-transactioner")
+project(":transactioners:dynamodb-transactioner").name = "dynamodb-transactioner"
 
 
 
@@ -89,15 +108,15 @@ project(":transactioners:dynamodb-cloud-transactioner").name = "dynamodb-cloud-t
 //////////////////////////////////////
 
 //SQL
-include("templates:sql-template")
-project(":templates:sql-template").name = "sql-template"
-project(":templates:sql-template").projectDir = file("templates/sql-template")
+include("templates:flamingock-sql-template")
+project(":templates:flamingock-sql-template").name = "flamingock-sql-template"
+project(":templates:flamingock-sql-template").projectDir = file("templates/flamingock-sql-template")
 
 
 //MONGODB
-include("templates:mongodb-change-template")
-project(":templates:mongodb-change-template").name = "mongodb-change-template"
-project(":templates:mongodb-change-template").projectDir = file("templates/mongodb-change-template")
+include("templates:flamingock-mongodb-change-template")
+project(":templates:flamingock-mongodb-change-template").name = "flamingock-mongodb-change-template"
+project(":templates:flamingock-mongodb-change-template").projectDir = file("templates/flamingock-mongodb-change-template")
 
 
 //////////////////////////////////////
@@ -116,14 +135,20 @@ project(":importers:mongodb-importer-v3").projectDir = file("importers/mongodb-i
 //////////////////////////////////////
 // UTILS
 //////////////////////////////////////
-include("utils-test")
-include("utils")
+include("utils:general-util")
+project(":utils:general-util").name = "general-util"
+project(":utils:general-util").projectDir = file("utils/general-util")
 
-include("commons:mongodb-facade")
-project(":commons:mongodb-facade").name = "mongodb-facade"
-project(":commons:mongodb-facade").projectDir = file("commons/mongodb-facade")
+include("utils:test-util")
+project(":utils:test-util").name = "test-util"
+project(":utils:test-util").projectDir = file("utils/test-util")
 
 
-include("commons:dynamodb-utils")
-project(":commons:dynamodb-utils").name = "dynamodb-utils"
-project(":commons:dynamodb-utils").projectDir = file("commons/dynamodb-utils")
+include("utils:mongodb-util")
+project(":utils:mongodb-util").name = "mongodb-util"
+project(":utils:mongodb-util").projectDir = file("utils/mongodb-util")
+
+
+include("utils:dynamodb-util")
+project(":utils:dynamodb-util").name = "dynamodb-util"
+project(":utils:dynamodb-util").projectDir = file("utils/dynamodb-util")

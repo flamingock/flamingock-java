@@ -42,21 +42,21 @@ allprojects {
 }
 
 val coreProjects = setOf(
-    "flamingock-core", "flamingock-core-api", "flamingock-springboot-v2-runner",
-    "flamingock-springboot-v3-runner", "flamingock-graalvm", "utils"
+    "flamingock-core", "flamingock-core-api", "flamingock-springboot-v2-integration",
+    "flamingock-springboot-v3-integration", "flamingock-graalvm", "utils"
 )
 
 val localDriverProjects = setOf(
     "driver-common", "couchbase-driver", "couchbase-springboot-v2-driver",
-    "flamingock-ce-dynamodb", "mongodb-facade", "flamingock-ce-mongodb-springdata-v2",
+    "flamingock-ce-dynamodb", "mongodb-util", "flamingock-ce-mongodb-springdata-v2",
     "flamingock-ce-mongodb-springdata-v3", "flamingock-ce-mongodb-springdata-v4",
     "flamingock-ce-mongodb-sync-v4", "flamingock-ce-mongodb-v3", "mongodb-importer"
 )
 
-val templateProjects = setOf("sql-template", "mongodb-change-template")
+val templateProjects = setOf("flamingock-sql-template", "flamingock-mongodb-change-template")
 
 val transactionerProjects = setOf(
-    "sql-cloud-transactioner", "mongodb-sync-v4-cloud-transactioner", "dynamodb-cloud-transactioner"
+    "sql-transactioner", "mongodb-sync-v4-transactioner", "dynamodb-transactioner"
 )
 
 val allProjects = coreProjects + localDriverProjects + templateProjects + transactionerProjects
