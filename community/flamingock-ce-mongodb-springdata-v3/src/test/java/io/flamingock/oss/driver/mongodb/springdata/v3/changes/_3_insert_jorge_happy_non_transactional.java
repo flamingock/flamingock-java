@@ -22,7 +22,7 @@ import io.flamingock.core.api.annotations.Execution;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@Change( id="insert-jorge-document" , order = "3")
+@Change( id="insert-jorge-document" , order = "003")
 public class _3_insert_jorge_happy_non_transactional {
 
     @Execution

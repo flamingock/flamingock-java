@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.runner;
 
-import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.error.FlamingockException;
 
 public class PipelineExecutionException extends FlamingockException {
 

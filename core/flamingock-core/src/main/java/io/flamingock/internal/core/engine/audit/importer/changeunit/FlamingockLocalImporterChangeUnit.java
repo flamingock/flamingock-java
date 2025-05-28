@@ -32,7 +32,7 @@ import io.flamingock.internal.core.pipeline.PipelineDescriptor;
  * - Flamingock local   to Flamingock cloud
  * We need to differentiate it, as we can have two steps(Mongock to Flamingock local to Flamingock Cloud)
  */
-@Change(id = FlamingockLocalImporterChangeUnit.IMPORTER_FROM_FLAMINGOCK_LOCAL, order = "2")
+@Change(id = FlamingockLocalImporterChangeUnit.IMPORTER_FROM_FLAMINGOCK_LOCAL, order = "002")
 public class FlamingockLocalImporterChangeUnit {
     public static final String IMPORTER_FROM_FLAMINGOCK_LOCAL = "importer-from-flamingock-local";
 

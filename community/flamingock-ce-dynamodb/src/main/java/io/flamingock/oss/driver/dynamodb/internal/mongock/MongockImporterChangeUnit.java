@@ -35,7 +35,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Change(id = "mongock-local-legacy-importer-dynamodb", order = "1")
+@Change(id = "mongock-local-legacy-importer-dynamodb", order = "001")
 public class MongockImporterChangeUnit {
 
 

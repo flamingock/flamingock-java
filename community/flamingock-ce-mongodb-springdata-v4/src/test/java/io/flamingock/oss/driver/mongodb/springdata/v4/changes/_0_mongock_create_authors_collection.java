@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
-@ChangeUnit(id = "create-author-collection", order = "0", author = "mongock")
+@ChangeUnit(id = "create-author-collection", order = "000", author = "mongock")
 public class _0_mongock_create_authors_collection {
 
     public final static int INITIAL_CLIENTS = 10;

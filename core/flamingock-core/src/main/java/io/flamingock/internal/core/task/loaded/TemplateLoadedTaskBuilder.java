@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.error.FlamingockException;
 import io.flamingock.core.api.template.ChangeTemplate;
 import io.flamingock.core.api.template.TemplateFactory;
 import io.flamingock.core.preview.AbstractPreviewTask;

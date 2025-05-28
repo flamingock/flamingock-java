@@ -16,6 +16,10 @@
 
 package io.flamingock.internal.core.pipeline;
 
+
+import io.flamingock.core.api.error.validation.Validatable;
+import io.flamingock.core.api.error.validation.ValidationError;
+
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
 import io.flamingock.core.preview.PreviewStage;
@@ -24,16 +28,21 @@ import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * It's the result of adding the loaded task to the ProcessDefinition
  */
-public class LoadedStage {
+public class LoadedStage implements Validatable {
 
     public static Builder builder() {
         return new Builder();
@@ -81,12 +90,74 @@ public class LoadedStage {
         return parallel;
     }
 
+
+    /**
+     * Returns a set of all task IDs defined within this stage.
+     * <p>
+     * It is assumed that task IDs within a stage are unique,
+     * so the returned {@code Set} will not contain duplicates.
+     */
+    public Set<String> getTaskIds() {
+        return getLoadedTasks().stream()
+                .map(AbstractLoadedTask::getId)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Validates the stage and returns a list of validation errors
+     * Validations:
+     * 1. has name
+     * 2. no duplicate task IDs within stage
+     * 3. all tasks in the stage are valid
+     * 
+     * @return list of validation errors, or empty list if the stage is valid
+     */
+    @Override
+    public List<ValidationError> getValidationErrors() {
+        List<ValidationError> errors = new ArrayList<>();
+
+        // Validate stage name
+        if (name == null || name.trim().isEmpty()) {
+            errors.add(new ValidationError("Stage name cannot be null or empty", "unknown", "stage"));
+            return errors; // Return early as we need the name for further error reporting
+        }
+
+        // Check if stage is empty
+        if (loadedTasks == null || loadedTasks.isEmpty()) {
+            String message = String.format("Stage[%s] must contain at least one task", name);
+            return Collections.singletonList(new ValidationError(message, name, "stage"));
+        }
+        getTaskIdDuplicationError().ifPresent(errors::add);
+        getLoadedTasks().stream().map(AbstractLoadedTask::getValidationErrors).forEach(errors::addAll);
+        return errors;
+    }
+
     @Override
     public String toString() {
         return "LoadedStage{" + "name='" + name + '\'' +
                 ", loadedTasks=" + loadedTasks +
                 ", parallel=" + parallel +
                 '}';
+    }
+
+    private Optional<ValidationError> getTaskIdDuplicationError() {
+        Set<String> seen = new HashSet<>();
+        Set<String> duplicates = new HashSet<>();
+
+        for (AbstractLoadedTask task : getLoadedTasks()) {
+            String id = task.getId();
+            if (!seen.add(id)) {
+                duplicates.add(id);
+            }
+        }
+
+        if (!duplicates.isEmpty()) {
+            String duplicateIdsString = String.join(", ", duplicates);
+            String message = String.format("Duplicate changeUnit IDs found in stage: %s", duplicateIdsString);
+            return Optional.of(new ValidationError(message, name, "stage"));
+        } else {
+            return Optional.empty();
+        }
     }
 
     public static class Builder {

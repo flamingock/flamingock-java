@@ -101,7 +101,7 @@ class MixAnnotationsTest {
 
 
 
-    @Change(id = "taskId", order = "1")
+    @Change(id = "taskId", order = "001")
     public static class NewChangeUnitWithOldExecution {
 
         @io.mongock.api.annotations.Execution
@@ -116,7 +116,7 @@ class MixAnnotationsTest {
         }
     }
 
-    @Change(id = "taskId", order = "1")
+    @Change(id = "taskId", order = "001")
     public static class NewChangeUnitWithOldRollback {
 
         @Execution
@@ -131,7 +131,7 @@ class MixAnnotationsTest {
         }
     }
 
-    @io.mongock.api.annotations.ChangeUnit(id = "taskId", order = "1")
+    @io.mongock.api.annotations.ChangeUnit(id = "taskId", order = "001")
     public static class OldChangeUnitWithNewExecution {
 
         @Execution
@@ -146,7 +146,7 @@ class MixAnnotationsTest {
         }
     }
 
-    @io.mongock.api.annotations.ChangeUnit(id = "taskId", order = "1")
+    @io.mongock.api.annotations.ChangeUnit(id = "taskId", order = "001")
     public static class OldChangeUnitWithOldExecutionAndNewRollback {
 
         @io.mongock.api.annotations.Execution
@@ -163,7 +163,7 @@ class MixAnnotationsTest {
 
 
 
-    @io.mongock.api.annotations.ChangeUnit(id = "taskId", order = "1")
+    @io.mongock.api.annotations.ChangeUnit(id = "taskId", order = "001")
     public static class OldChangeUnitWithNewExecutionAndOldRollback {
 
         @Execution

@@ -18,7 +18,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import static java.util.Collections.emptyList;
 
 
-@ChangeUnit(id = "client-initializer", order = "1", author = "mongock")
+@ChangeUnit(id = "client-initializer", order = "001", author = "mongock")
 public class _0_mongock_create_authors_collection {
 
     public final static int INITIAL_CLIENTS = 10;

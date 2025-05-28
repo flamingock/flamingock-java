@@ -24,7 +24,7 @@ import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import org.bson.Document;
 
-@Change(id = "insert-clients", order = "2")
+@Change(id = "insert-clients", order = "002")
 public class HappyInsertClientsChange {
 
     @Execution

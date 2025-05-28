@@ -22,7 +22,7 @@ import io.flamingock.core.api.annotations.Execution;
 
 import java.util.Arrays;
 
-@Change(id = "create-index", order = "1")
+@Change(id = "create-index", order = "001")
 public class ACreateIndex {
 
 	@Execution

@@ -42,7 +42,7 @@ public class ImporterModule implements SystemModule {
     private final List<CodePreviewChangeUnit> fromMongockChangeUnits = Collections.singletonList(
             PreviewTaskBuilder.getCodeBuilder()
                     .setId(MongockImporterChangeUnit.IMPORTER_FROM_MONGOCK)
-                    .setOrder("1")
+                    .setOrder("001")
                     .setSourceClassPath(MongockImporterChangeUnit.class.getName())
                     .setExecutionMethod(new PreviewMethod("execution", Arrays.asList(
                             ImporterReader.class.getName(),
@@ -59,7 +59,7 @@ public class ImporterModule implements SystemModule {
     private final List<CodePreviewChangeUnit> fromFlamingockChangeUnits = Collections.singletonList(
             PreviewTaskBuilder.getCodeBuilder()
                     .setId(FlamingockLocalImporterChangeUnit.IMPORTER_FROM_FLAMINGOCK_LOCAL)
-                    .setOrder("2")
+                    .setOrder("002")
                     .setSourceClassPath(MongockImporterChangeUnit.class.getName())
                     .setExecutionMethod(new PreviewMethod("execution", Arrays.asList(
                             ImporterReader.class.getName(),

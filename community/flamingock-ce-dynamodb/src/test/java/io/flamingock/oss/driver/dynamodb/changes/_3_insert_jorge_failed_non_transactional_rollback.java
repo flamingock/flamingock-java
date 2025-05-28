@@ -28,7 +28,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@Change(id = "execution-with-exception", order = "3", transactional = false)
+@Change(id = "execution-with-exception", order = "003", transactional = false)
 public class _3_insert_jorge_failed_non_transactional_rollback {
 
     @Execution

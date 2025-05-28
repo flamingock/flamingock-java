@@ -20,7 +20,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 
-@Change( id="create-client-collection" , order = "1", transactional = false)
+@Change( id="create-client-collection" , order = "001", transactional = false)
 public class _1_create_client_collection_happy {
 
     @Execution

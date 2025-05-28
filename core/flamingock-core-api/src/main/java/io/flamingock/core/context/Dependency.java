@@ -17,7 +17,7 @@
 package io.flamingock.core.context;
 
 
-import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.error.FlamingockException;
 
 import java.util.Objects;
 

@@ -20,7 +20,7 @@ import io.flamingock.commons.utils.Constants;
 import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.annotations.Nullable;
-import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.error.FlamingockException;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.core.context.Dependency;
 import io.flamingock.internal.core.context.DependencyInjectable;

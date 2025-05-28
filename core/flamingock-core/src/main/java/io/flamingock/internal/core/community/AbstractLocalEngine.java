@@ -17,7 +17,7 @@
 package io.flamingock.internal.core.community;
 
 import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.error.FlamingockException;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.system.SystemModule;
 import io.flamingock.internal.core.system.SystemModuleManager;

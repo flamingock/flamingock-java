@@ -16,16 +16,30 @@
 
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.core.api.error.validation.Validatable;
+import io.flamingock.core.api.error.validation.ValidationError;
+
 import io.flamingock.core.task.AbstractTaskDescriptor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
-public abstract class AbstractLoadedTask extends AbstractTaskDescriptor {
+public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implements Validatable {
 
 
+    /**
+     * Regex pattern for validating the order field in ChangeUnits.
+     * The pattern matches strings like "001", "999", "0010", "9999".
+     * It requires at least 3 digits with leading zeros.
+     * Empty is not allowed
+     */
+    private final static String ORDER_REG_EXP = "^\\d{3,}$";
+    private final static Pattern ORDER_PATTERN = Pattern.compile(ORDER_REG_EXP);
 
     public AbstractLoadedTask(String id,
                               String order,
@@ -41,5 +55,36 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor {
     public abstract Method getExecutionMethod();
 
     public abstract Optional<Method> getRollbackMethod();
+
+
+    @Override
+    public List<ValidationError> getValidationErrors() {
+        List<ValidationError> errors = new ArrayList<>();
+        final String entityType = "task";
+
+        // Validate ID is not null or empty
+        if (id == null || id.trim().isEmpty()) {
+            errors.add(new ValidationError("ID cannot be null or empty", "unknown", entityType));
+        }
+
+
+        getOrder().ifPresent(orderValue -> {
+            if (!ORDER_PATTERN.matcher(orderValue).matches()) {
+                String message = String.format("Invalid order field format in changeUnit[%s]. Order must match pattern: %s", id, ORDER_REG_EXP);
+                errors.add(new ValidationError(message, id, entityType
+                ));
+            }
+        });
+
+
+        // Validate source is not null or empty
+        if (source == null || source.trim().isEmpty()) {
+            errors.add(new ValidationError("Source cannot be null or empty", id, entityType));
+        }
+
+        return errors;
+    }
+
+
 
 }

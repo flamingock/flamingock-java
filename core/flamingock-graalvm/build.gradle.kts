@@ -5,6 +5,8 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 
+    // GraalVM SDK for native image support
+    compileOnly("org.graalvm.sdk:graal-sdk:22.3.0")
 }
 
 java {

@@ -23,7 +23,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@Change(id = "unhappy-insert-clients", order = "2")
+@Change(id = "unhappy-insert-clients", order = "002")
 public class _1_insert_client_unhappy {
 
     @Execution

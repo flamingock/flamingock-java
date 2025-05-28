@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.error.FlamingockException;
 import io.flamingock.internal.core.cloud.CloudDriver;
 import io.flamingock.internal.core.community.driver.LocalDriver;
 import io.flamingock.internal.core.context.ContextInitializable;

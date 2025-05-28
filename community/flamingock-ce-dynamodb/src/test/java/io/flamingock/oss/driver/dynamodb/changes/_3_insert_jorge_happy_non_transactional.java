@@ -25,7 +25,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@Change(id = "insert-another-user", order = "4", transactional = false)
+@Change(id = "insert-another-user", order = "004", transactional = false)
 public class _3_insert_jorge_happy_non_transactional {
 
     @Execution

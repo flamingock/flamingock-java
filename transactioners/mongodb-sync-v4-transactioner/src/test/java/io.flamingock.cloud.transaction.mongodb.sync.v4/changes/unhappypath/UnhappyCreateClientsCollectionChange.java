@@ -21,7 +21,7 @@ import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.NonLockGuarded;
 
-@Change(id = "create-clients-collection", order = "1", transactional = false)
+@Change(id = "create-clients-collection", order = "001", transactional = false)
 public class UnhappyCreateClientsCollectionChange {
 
     @Execution

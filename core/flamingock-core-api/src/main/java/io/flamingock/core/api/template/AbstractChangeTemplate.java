@@ -16,6 +16,8 @@ public abstract class AbstractChangeTemplate<CONFIG extends ChangeTemplateConfig
 
     private final Class<CONFIG> configClass;
 
+    protected String changeId;
+    protected boolean isTransactional;
     protected CONFIG configuration;
 
     private final Set<Class<?>> reflectiveClasses;
@@ -37,14 +39,22 @@ public abstract class AbstractChangeTemplate<CONFIG extends ChangeTemplateConfig
     }
 
     @Override
+    public void setChangeId(String changeId) {
+        this.changeId = changeId;
+    }
+    @Override
     public void setConfiguration(CONFIG configuration) {
         logger.trace("setting {} config[{}]: {}", getClass(), getConfigClass(), configuration);
         this.configuration = configuration;
     }
 
-
     @Override
     public Class<CONFIG> getConfigClass() {
         return configClass;
+    }
+
+    @Override
+    public void setTransactional(boolean isTransactional) {
+        this.isTransactional = isTransactional;
     }
 }

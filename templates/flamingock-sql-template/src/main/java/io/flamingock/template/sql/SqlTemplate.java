@@ -29,12 +29,14 @@ public class SqlTemplate implements ChangeTemplate<SqlTemplateConfiguration> {
 
     private SqlTemplateConfiguration configuration;
 
-    private static void execute(Connection connection, String sql) {
-        try {
-            connection.createStatement().executeUpdate(sql);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    @Override
+    public void setChangeId(String changeId) {
+
+    }
+
+    @Override
+    public void setTransactional(boolean isTransactional) {
+
     }
 
     @Override
@@ -55,5 +57,13 @@ public class SqlTemplate implements ChangeTemplate<SqlTemplateConfiguration> {
     @Override
     public Collection<Class<?>> getReflectiveClasses() {
         return Collections.singletonList(SqlTemplateConfiguration.class);
+    }
+
+    private static void execute(Connection connection, String sql) {
+        try {
+            connection.createStatement().executeUpdate(sql);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

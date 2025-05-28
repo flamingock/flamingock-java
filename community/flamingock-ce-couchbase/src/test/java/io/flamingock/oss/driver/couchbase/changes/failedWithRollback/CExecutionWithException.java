@@ -22,7 +22,7 @@ import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
 
-@Change( id="execution-with-exception" , order = "3")
+@Change( id="execution-with-exception" , order = "003")
 public class CExecutionWithException {
 
     @Execution

@@ -25,7 +25,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@Change(id = "insert-user", order = "2")
+@Change(id = "insert-user", order = "002")
 public class _2_insert_federico_happy_transactional {
 
     @Execution

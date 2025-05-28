@@ -23,7 +23,7 @@ import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 import org.bson.Document;
 
-@Change( id="insert-federico-document" , order = "2")
+@Change( id="insert-federico-document" , order = "002")
 public class _2_insert_federico_happy_transactional {
 
     @Execution

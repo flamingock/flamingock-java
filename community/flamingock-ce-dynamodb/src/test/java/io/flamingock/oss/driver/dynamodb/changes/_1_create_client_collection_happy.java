@@ -25,7 +25,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 
 import static java.util.Collections.emptyList;
 
-@Change(id = "table-create", order = "1", transactional = false)
+@Change(id = "table-create", order = "001", transactional = false)
 public class _1_create_client_collection_happy {
 
     private final DynamoDBUtil dynamoDBUtil = new DynamoDBUtil();

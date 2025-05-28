@@ -23,7 +23,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@Change(id = "unhappy-create-table-clients", order = "1", transactional = false)
+@Change(id = "unhappy-create-table-clients", order = "001", transactional = false)
 public class _1_create_clients2_table_happy {
 
     @Execution

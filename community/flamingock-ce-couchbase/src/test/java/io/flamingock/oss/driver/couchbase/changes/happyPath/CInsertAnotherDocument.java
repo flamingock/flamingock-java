@@ -21,7 +21,7 @@ import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.core.api.annotations.Change;
 import io.flamingock.core.api.annotations.Execution;
 
-@Change( id="insert-another-document" , order = "3")
+@Change( id="insert-another-document" , order = "003")
 public class CInsertAnotherDocument {
 
     @Execution

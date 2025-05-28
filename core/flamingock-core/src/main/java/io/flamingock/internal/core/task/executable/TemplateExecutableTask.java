@@ -20,11 +20,14 @@ import io.flamingock.core.api.template.ChangeTemplate;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
 import io.flamingock.commons.utils.FileUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoadedChangeUnit> {
+    private final Logger logger = LoggerFactory.getLogger("TemplateExecutableTask");
 
     public TemplateExecutableTask(String stageName,
                                   TemplateLoadedChangeUnit descriptor,
@@ -36,8 +39,12 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
 
     @Override
     protected void executeInternal(RuntimeManager runtimeManager, Method method ) {
+        logger.debug("Starting execution of changeUnit[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
+        logger.debug("changeUnit[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
         Object instance = runtimeManager.getInstance(descriptor.getConstructor());
-        setConfiguration(runtimeManager, (ChangeTemplate<?>) instance);
+        ChangeTemplate<?> changeTemplateInstance = (ChangeTemplate<?>) instance;
+        changeTemplateInstance.setTransactional(descriptor.isTransactional());
+        setConfiguration(runtimeManager, changeTemplateInstance);
         runtimeManager.executeMethodWithInjectedDependencies(instance, method);
     }
 

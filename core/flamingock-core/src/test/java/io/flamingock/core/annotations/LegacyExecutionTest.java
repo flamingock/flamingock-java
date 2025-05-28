@@ -53,7 +53,7 @@ class LegacyExecutionTest {
     }
 
 
-    @ChangeUnit(id = "taskId", order = "1")
+    @ChangeUnit(id = "taskId", order = "001")
     public static class SingleChangeUnit {
 
         @Execution
@@ -69,7 +69,7 @@ class LegacyExecutionTest {
     }
 
 
-    @ChangeUnit(id = "taskId", order = "1")
+    @ChangeUnit(id = "taskId", order = "001")
     public static class ChangeUnitWithBeforeExecution {
 
         @BeforeExecution

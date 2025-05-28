@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package io.flamingock.template.sql;
+package io.flamingock.core.api.error.validation;
 
+import java.util.List;
 
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.NonLockGuardedType;
-import io.flamingock.core.api.template.ChangeTemplateConfig;
+public interface Validatable {
 
-@NonLockGuarded(NonLockGuardedType.NONE)
-public class SqlTemplateConfiguration extends ChangeTemplateConfig<String, String> {
+    List<ValidationError> getValidationErrors();
+
+    default boolean isValid() {
+        return getValidationErrors().isEmpty();
+    }
 }

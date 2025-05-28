@@ -15,6 +15,10 @@ import java.lang.reflect.Type;
  */
 public interface ChangeTemplate<CONFIG extends ChangeTemplateConfig<?, ?>> extends ReflectionMetadataProvider {
 
+    void setChangeId(String changeId);
+
+    void setTransactional(boolean isTransactional);
+
     /**
      * Injects the configuration for this template.
      *

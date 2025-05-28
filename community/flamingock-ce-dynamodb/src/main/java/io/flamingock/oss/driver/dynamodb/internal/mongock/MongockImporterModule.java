@@ -36,7 +36,7 @@ public class MongockImporterModule implements SystemModule {
     private static final List<CodePreviewChangeUnit> MONGOCK_CHANGE_UNITS = Collections.singletonList(
             PreviewTaskBuilder.getCodeBuilder()
                     .setId("mongock-local-legacy-importer-dynamodb")
-                    .setOrder("1")
+                    .setOrder("001")
                     .setSourceClassPath(MongockImporterChangeUnit.class.getName())
                     .setExecutionMethod(new PreviewMethod("execution", Collections.singletonList(
                             InternalMongockImporterConfiguration.class.getName())))

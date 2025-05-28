@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.commons.utils.ReflectionUtil;
 import io.flamingock.core.api.annotations.FlamingockConstructor;
-import io.flamingock.core.api.exception.FlamingockException;
+import io.flamingock.core.api.error.FlamingockException;
 import io.mongock.api.annotations.ChangeUnitConstructor;
 
 import java.lang.reflect.Constructor;
