@@ -1,4 +1,0 @@
-package io.mongock.runner.springboot.mongockscanpackage;
-
-public class ModuleConfigMongockScanPackage {
-}
