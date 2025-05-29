@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-public class MongockStandaloneTest {
+public class MongockModuleConfigTest {
 
   @Test
   void shouldAddPackage_whenAddMethodCalled() {
@@ -16,9 +16,7 @@ public class MongockStandaloneTest {
     RunnerStandaloneBuilder builder = spy(MongockStandaloneFixture.builder(false));
     String expectedPackage = "com.example.packageone.migrations";
 
-    // Implementação simples do módulo
     class TestConfig implements MongockModuleConfig {
-
       @Override
       public void configure(MongockScanPackage scan) {
         scan.add(expectedPackage);
@@ -45,7 +43,6 @@ public class MongockStandaloneTest {
         "com.example.packagetree.migrations"
     ));
 
-    // Implementação simples do módulo
     class TestConfig implements MongockModuleConfig {
 
       @Override
@@ -68,7 +65,6 @@ public class MongockStandaloneTest {
     // Arrange
     RunnerStandaloneBuilder builder = spy(MongockStandaloneFixture.builder(false));
 
-    // Implementação simples do módulo
     class TestConfig implements MongockModuleConfig {
 
       @Override
