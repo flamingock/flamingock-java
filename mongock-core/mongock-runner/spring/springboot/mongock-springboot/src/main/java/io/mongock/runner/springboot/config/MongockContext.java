@@ -39,7 +39,7 @@ public class MongockContext extends MongockContextBase<MongockConfiguration> {
    * Configures the packages that will be scanned to find Mongock migrations
    * based on the @MongockScanPackage annotation found in Spring beans.
    */
-  private void addPackagesFromAnnotationMongockScanPackage(RunnerSpringbootBuilder builder,
+  public void addPackagesFromAnnotationMongockScanPackage(RunnerSpringbootBuilder builder,
                                                            ApplicationContext springContext) {
 
     // Finds all beans that have the @MongockScanPackage annotation
