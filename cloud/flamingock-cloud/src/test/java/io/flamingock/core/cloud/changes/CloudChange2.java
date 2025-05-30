@@ -16,11 +16,11 @@
 
 package io.flamingock.core.cloud.changes;
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.utils.TaskExecutionChecker;
 
-@Change(id = "create-persons-table-from-template-2", order = "002")
+@ChangeUnit(id = "create-persons-table-from-template-2", order = "002")
 public class CloudChange2 {
     public static final TaskExecutionChecker checker = new TaskExecutionChecker();
 

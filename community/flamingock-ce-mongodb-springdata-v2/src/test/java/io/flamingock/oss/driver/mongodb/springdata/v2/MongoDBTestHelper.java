@@ -21,7 +21,7 @@ import com.mongodb.client.MongoDatabase;
 
 import io.flamingock.commons.utils.Pair;
 import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
@@ -40,7 +40,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.mongock.api.annotations.ChangeUnit;
 import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,12 +51,12 @@ public class MongoDBTestHelper {
     private final MongoDBAuditMapper<SpringDataMongoV2DocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new SpringDataMongoV2DocumentWrapper(new Document()));
 
     private static final Function<Class<?>, Trio<String, String, Boolean>> infoExtractor = c-> {
-        Change ann = c.getAnnotation(Change.class);
+        ChangeUnit ann = c.getAnnotation(ChangeUnit.class);
         return new Trio<>(ann.id(), ann.order(), ann.transactional());
     };
 
     private static final Function<Class<?>, Trio<String, String, Boolean>> infoExtractorLegacy = c-> {
-        ChangeUnit ann = c.getAnnotation(ChangeUnit.class);
+        io.mongock.api.annotations.ChangeUnit ann = c.getAnnotation(io.mongock.api.annotations.ChangeUnit.class);
         return new Trio<>("[" + ann.author() + "]" + ann.id(), ann.order(), ann.transactional());
     };
 
@@ -93,7 +92,7 @@ public class MongoDBTestHelper {
      * <p>
      * Each change unit is derived from a {@link Pair} where:
      * <ul>
-     *   <li>The first item is the {@link Class} annotated with {@link Change} or {@link ChangeUnit}</li>
+     *   <li>The first item is the {@link Class} annotated with {@link ChangeUnit} or {@link io.mongock.api.annotations.ChangeUnit}</li>
      *   <li>The second item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Execution}</li>
      *   <li>The third item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @RollbackExecution}</li>
      * </ul>
@@ -106,7 +105,7 @@ public class MongoDBTestHelper {
 
         List<CodePreviewChangeUnit> tasks = Arrays.stream(changeDefinitions)
                 .map(trio -> {
-                    boolean isNewChangeUnit = trio.getFirst().isAnnotationPresent(Change.class);
+                    boolean isNewChangeUnit = trio.getFirst().isAnnotationPresent(ChangeUnit.class);
                     Function<Class<?>, Trio<String, String, Boolean>> extractor = isNewChangeUnit
                             ? infoExtractor
                             : infoExtractorLegacy;

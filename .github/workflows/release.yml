@@ -228,7 +228,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
- sql-transactioner:
+  sql-transactioner:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:

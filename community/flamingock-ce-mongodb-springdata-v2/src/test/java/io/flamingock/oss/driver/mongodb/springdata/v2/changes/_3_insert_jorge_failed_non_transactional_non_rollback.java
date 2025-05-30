@@ -17,13 +17,12 @@
 package io.flamingock.oss.driver.mongodb.springdata.v2.changes;
 
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@Change( id="insert-jorge-document" , order = "003", transactional = false)
+@ChangeUnit( id="insert-jorge-document" , order = "003", transactional = false)
 public class _3_insert_jorge_failed_non_transactional_non_rollback {
 
     @Execution

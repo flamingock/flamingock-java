@@ -17,12 +17,11 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.commons.utils.StringUtil;
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.preview.AbstractPreviewTask;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.internal.core.utils.ExecutionUtils;
-import io.mongock.api.annotations.ChangeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +58,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     public static boolean supportsSourceClass(Class<?> sourceClass) {
-        return sourceClass.isAnnotationPresent(Change.class) || sourceClass.isAnnotationPresent(ChangeUnit.class);
+        return sourceClass.isAnnotationPresent(ChangeUnit.class) || sourceClass.isAnnotationPresent(io.mongock.api.annotations.ChangeUnit.class);
 
     }
 
@@ -80,19 +79,19 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     private CodeLoadedTaskBuilder setSourceClass(Class<?> sourceClass) {
-        if (sourceClass.isAnnotationPresent(Change.class)) {
-            setFromFlamingockChangeAnnotation(sourceClass, sourceClass.getAnnotation(Change.class));
+        if (sourceClass.isAnnotationPresent(ChangeUnit.class)) {
+            setFromFlamingockChangeAnnotation(sourceClass, sourceClass.getAnnotation(ChangeUnit.class));
             return this;
 
         } else if (ExecutionUtils.isLegacyChangeUnit(sourceClass)) {
-            setFromLegacyChangeUnitAnnotation(sourceClass, sourceClass.getAnnotation(ChangeUnit.class));
+            setFromLegacyChangeUnitAnnotation(sourceClass, sourceClass.getAnnotation(io.mongock.api.annotations.ChangeUnit.class));
             return this;
 
         } else {
             throw new IllegalArgumentException(String.format(
-                    "Change class[%s] should be annotate with %s",
+                    "Change unit class[%s] should be annotate with %s",
                     sourceClass.getName(),
-                    Change.class.getName()
+                    ChangeUnit.class.getName()
             ));
         }
     }
@@ -155,7 +154,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         }
     }
 
-    private void setFromLegacyChangeUnitAnnotation(Class<?> sourceClass, ChangeUnit annotation) {
+    private void setFromLegacyChangeUnitAnnotation(Class<?> sourceClass, io.mongock.api.annotations.ChangeUnit annotation) {
         logger.warn("Detected legacy changeUnit[{}]. If it's an old changeUnit created for Mongock, it's fine. " +
                         "Otherwise, it's highly recommended us the new API[in package {}]",
                 sourceClass.getName(),
@@ -169,7 +168,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setSystem(false);
     }
 
-    private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, Change annotation) {
+    private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, ChangeUnit annotation) {
         setId(annotation.id());
         setOrder(annotation.order());
         setTemplateName(sourceClass.getName());

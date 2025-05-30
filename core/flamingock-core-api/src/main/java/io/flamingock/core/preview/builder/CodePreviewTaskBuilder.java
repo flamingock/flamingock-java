@@ -16,14 +16,13 @@
 
 package io.flamingock.core.preview.builder;
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.mongock.api.annotations.BeforeExecution;
-import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.RollbackBeforeExecution;
 import org.jetbrains.annotations.NotNull;
 
@@ -121,12 +120,12 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     }
 
     CodePreviewTaskBuilder setTypeElement(TypeElement typeElement) {
-        Change changeAnnotation = typeElement.getAnnotation(Change.class);
-        if (changeAnnotation != null) {
-            setFieldsFromChange(typeElement, changeAnnotation);
+        ChangeUnit changeUnitAnnotation = typeElement.getAnnotation(ChangeUnit.class);
+        if (changeUnitAnnotation != null) {
+            setFieldsFromChange(typeElement, changeUnitAnnotation);
         }
 
-        ChangeUnit legacyChangeUnitAnnotation = typeElement.getAnnotation(ChangeUnit.class);
+        io.mongock.api.annotations.ChangeUnit legacyChangeUnitAnnotation = typeElement.getAnnotation(io.mongock.api.annotations.ChangeUnit.class);
         if (legacyChangeUnitAnnotation != null) {
 
             setFieldsFromLegacy(typeElement, legacyChangeUnitAnnotation);
@@ -140,7 +139,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         return isNewChangeUnit ? getCodePreviewChange() : getCodePreviewLegacyChange();
     }
 
-    private CodePreviewChangeUnit setFieldsFromChange(TypeElement typeElement, Change annotation) {
+    private CodePreviewChangeUnit setFieldsFromChange(TypeElement typeElement, ChangeUnit annotation) {
         setId(annotation.id());
         setOrder(annotation.order());
         setSourceClassPath(typeElement.getQualifiedName().toString());
@@ -154,7 +153,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     }
 
 
-    private void setFieldsFromLegacy(TypeElement typeElement, ChangeUnit annotation) {
+    private void setFieldsFromLegacy(TypeElement typeElement, io.mongock.api.annotations.ChangeUnit annotation) {
         setId(annotation.id());
         setOrder(annotation.order());
         setSourceClassPath(typeElement.getQualifiedName().toString());

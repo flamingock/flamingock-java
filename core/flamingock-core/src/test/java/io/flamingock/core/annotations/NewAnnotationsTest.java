@@ -16,7 +16,7 @@
 
 package io.flamingock.core.annotations;
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
 import io.flamingock.core.utils.TaskExecutionChecker;
@@ -61,7 +61,7 @@ class NewAnnotationsTest {
         );
     }
 
-    @Change(id = "taskId", order = "001")
+    @ChangeUnit(id = "taskId", order = "001")
     public static class SingleChangeUnit {
 
         @Execution
@@ -76,7 +76,7 @@ class NewAnnotationsTest {
         }
     }
 
-    @Change(id = "taskId", order = "001")
+    @ChangeUnit(id = "taskId", order = "001")
     public static class ChangeUnitWithExecutionError {
 
         @Execution

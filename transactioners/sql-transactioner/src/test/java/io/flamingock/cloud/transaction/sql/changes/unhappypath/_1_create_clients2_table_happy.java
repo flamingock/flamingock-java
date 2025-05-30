@@ -16,14 +16,14 @@
 
 package io.flamingock.cloud.transaction.sql.changes.unhappypath;
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@Change(id = "unhappy-create-table-clients", order = "001", transactional = false)
+@ChangeUnit(id = "unhappy-create-table-clients", order = "001", transactional = false)
 public class _1_create_clients2_table_happy {
 
     @Execution

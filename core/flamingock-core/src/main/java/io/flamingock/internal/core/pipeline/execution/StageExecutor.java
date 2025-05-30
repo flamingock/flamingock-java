@@ -28,6 +28,7 @@ import io.flamingock.internal.core.task.navigation.navigator.ReusableStepNavigat
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class StageExecutor {
@@ -35,15 +36,14 @@ public class StageExecutor {
 
     protected final TransactionWrapper transactionWrapper;
     private final ContextResolver baseDependencyContext;
-
-    private StageExecutor(ContextResolver dependencyContext, AuditWriter auditWriter) {
-        this(dependencyContext, auditWriter, null);
-    }
+    private final Set<Class<?>> nonGuardedTypes;
 
     public StageExecutor(ContextResolver dependencyContext,
+                         Set<Class<?>> nonGuardedTypes,
                          AuditWriter auditWriter,
                          TransactionWrapper transactionWrapper) {
         this.baseDependencyContext = dependencyContext;
+        this.nonGuardedTypes = nonGuardedTypes;
         this.auditWriter = auditWriter;
         this.transactionWrapper = transactionWrapper;
     }
@@ -68,6 +68,7 @@ public class StageExecutor {
                             .setAuditWriter(auditWriter)
                             .setDependencyContext(dependencyContext)
                             .setLock(lock)
+                            .setNonGuardedTypes(nonGuardedTypes)
                             .setTransactionWrapper(transactionWrapper)
                             .setSummarizer(new TaskSummarizer(task.getId()))
                             .build()

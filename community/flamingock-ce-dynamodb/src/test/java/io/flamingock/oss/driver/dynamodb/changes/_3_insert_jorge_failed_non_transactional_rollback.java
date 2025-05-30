@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.dynamodb.changes;
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
 import io.flamingock.oss.driver.dynamodb.changes.common.UserEntity;
@@ -28,7 +28,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@Change(id = "execution-with-exception", order = "003", transactional = false)
+@ChangeUnit(id = "execution-with-exception", order = "003", transactional = false)
 public class _3_insert_jorge_failed_non_transactional_rollback {
 
     @Execution

@@ -37,7 +37,11 @@ import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
 import org.bson.Document;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public class MongoSync4Engine extends AbstractLocalEngine {
 
@@ -111,6 +115,10 @@ public class MongoSync4Engine extends AbstractLocalEngine {
         return executionPlanner;
     }
 
+    @Override
+    public Set<Class<?>> getNonGuardedTypes() {
+        return new HashSet<>(Collections.singletonList(ClientSession.class));
+    }
 
     @Override
     public Optional<TransactionWrapper> getTransactionWrapper() {

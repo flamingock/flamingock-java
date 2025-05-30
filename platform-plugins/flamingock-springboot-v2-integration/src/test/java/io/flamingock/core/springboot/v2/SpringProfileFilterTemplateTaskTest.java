@@ -16,7 +16,7 @@
 
 package io.flamingock.core.springboot.v2;
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.template.ChangeFileDescriptor;
 import io.flamingock.core.api.template.ChangeTemplate;
 import io.flamingock.core.api.template.ChangeTemplateConfig;
@@ -128,22 +128,22 @@ class SpringProfileFilterTemplateTaskTest {
 
     public static abstract class TemplateSimulate implements ChangeTemplate<ChangeTemplateConfig<Object, Object>> {}
 
-    @Change(id = "not-annotated", order = "000")
+    @ChangeUnit(id = "not-annotated", order = "000")
     public static class NotAnnotated {
     }
 
     @Profile("P1")
-    @Change(id = "annotated-p1", order = "001")
+    @ChangeUnit(id = "annotated-p1", order = "001")
     public static class P1 {
     }
 
     @Profile("!P1")
-    @Change(id = "annotated-!-p1", order = "002")
+    @ChangeUnit(id = "annotated-!-p1", order = "002")
     public static class NotP1 {
     }
 
     @Profile({"P1", "P2"})
-    @Change(id = "annotated-p1-p2", order = "003")
+    @ChangeUnit(id = "annotated-p1-p2", order = "003")
     public static class P1AndP2 {
     }
 }

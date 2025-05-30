@@ -81,7 +81,7 @@ class MongoSync4DriverTest {
 
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
 
     @BeforeAll
     static void beforeAll() {

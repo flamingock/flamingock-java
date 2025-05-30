@@ -29,32 +29,12 @@ import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.context.ContextResolver;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
+import java.util.Set;
+
 public final class PipelineRunnerCreator {
 
     private PipelineRunnerCreator() {
     }
-
-    public static Runner create(RunnerId runnerId,
-                                Pipeline pipeline,
-                                ConnectionEngine connectionEngine,
-                                CoreConfigurable coreConfiguration,
-                                EventPublisher eventPublisher,
-                                ContextResolver dependencyContext,
-                                boolean isThrowExceptionIfCannotObtainLock) {
-        return create(runnerId,
-                pipeline,
-                connectionEngine.getAuditWriter(),
-                connectionEngine.getTransactionWrapper().orElse(null),
-                connectionEngine.getExecutionPlanner(),
-                coreConfiguration,
-                eventPublisher,
-                dependencyContext,
-                isThrowExceptionIfCannotObtainLock,
-                () -> {
-                }
-        );
-    }
-
 
     public static Runner createWithFinalizer(RunnerId runnerId,
                                              Pipeline pipeline,
@@ -62,6 +42,7 @@ public final class PipelineRunnerCreator {
                                              CoreConfigurable coreConfiguration,
                                              EventPublisher eventPublisher,
                                              ContextResolver dependencyContext,
+                                             Set<Class<?>> nonGuardedTypes,
                                              boolean isThrowExceptionIfCannotObtainLock,
                                              Runnable finalizer) {
         return create(
@@ -73,6 +54,7 @@ public final class PipelineRunnerCreator {
                 coreConfiguration,
                 eventPublisher,
                 dependencyContext,
+                nonGuardedTypes,
                 isThrowExceptionIfCannotObtainLock,
                 finalizer);
     }
@@ -85,10 +67,11 @@ public final class PipelineRunnerCreator {
                                  CoreConfigurable coreConfiguration,
                                  EventPublisher eventPublisher,
                                  ContextResolver dependencyContext,
+                                 Set<Class<?>> nonGuardedTypes,
                                  boolean isThrowExceptionIfCannotObtainLock,
                                  Runnable finalizer) {
         //Instantiated here, so we don't wait until Runner.run() and fail fast
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, auditWriter, transactionWrapper);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditWriter, transactionWrapper);
         return new PipelineRunner(
                 runnerId,
                 pipeline,

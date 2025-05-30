@@ -7,7 +7,7 @@ dependencies {
 }
 
 description = "Annotation processor for Flamingock. Generates code and metadata from Flamingock annotations such as " +
-        "@Change and @ChangeUnit, as well as from templated changes, enabling compile-time processing."
+        "@ChangeUnit, as well as from templated changes, enabling compile-time processing."
 
 java {
     toolchain {

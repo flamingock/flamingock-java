@@ -16,11 +16,11 @@
 
 package io.flamingock.oss.driver.mongodb.springdata.v4.changes;
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@Change( id="create-client-collection" , order = "001", transactional = false)
+@ChangeUnit( id="create-client-collection" , order = "001", transactional = false)
 public class _1_create_client_collection_happy {
 
     @Execution

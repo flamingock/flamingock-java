@@ -67,7 +67,7 @@ class MongoSync4ImporterTest {
     private static MongoDBTestHelper mongoDBTestHelper;
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
 
     @BeforeAll
     static void beforeAll() {

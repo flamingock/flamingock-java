@@ -48,22 +48,33 @@ public class LockGuardProxyFactory implements GuardProxyFactory {
         };
     }
 
-    private final Lock lockManager;
+    private final Set<Class<?>> nonGuardedTypes;
+
+    public static LockGuardProxyFactory withLock(Lock lock) {
+        return new LockGuardProxyFactory(lock);
+    }
+
+    public static LockGuardProxyFactory withLockAndNonGuardedClasses(Lock lock, Set<Class<?>> nonGuardedTypes) {
+        return new LockGuardProxyFactory(lock, Collections.emptyList(), nonGuardedTypes, Collections.emptySet());
+
+    }
+
+    private final Lock lock;
     private final Collection<String> notProxiedPackagePrefixes;
     private final Set<String> nonGuardedMethods;
 
-    public LockGuardProxyFactory(Lock lock) {
-        this(lock, Collections.emptyList(), DEFAULT_NON_GUARDED_METHODS);
+    private LockGuardProxyFactory(Lock lock) {
+        this(lock, Collections.emptyList(), Collections.emptySet(), DEFAULT_NON_GUARDED_METHODS);
     }
 
-    public LockGuardProxyFactory(Lock lock, Collection<String> notProxiedPackagePrefixes) {
-        this(lock, notProxiedPackagePrefixes, DEFAULT_NON_GUARDED_METHODS);
-    }
-
-    public LockGuardProxyFactory(Lock lock, Collection<String> notProxiedPackagePrefixes, Set<String> nonGuardedMethods) {
-        this.lockManager = lock;
-        this.notProxiedPackagePrefixes = notProxiedPackagePrefixes;
-        this.nonGuardedMethods = nonGuardedMethods;
+    private LockGuardProxyFactory(Lock lock,
+                                  Collection<String> notProxiedPackagePrefixes,
+                                  Set<Class<?>> nonGuardedTypes,
+                                  Set<String> nonGuardedMethods) {
+        this.lock = lock;
+        this.notProxiedPackagePrefixes = notProxiedPackagePrefixes != null ? notProxiedPackagePrefixes : Collections.emptySet();
+        this.nonGuardedTypes = nonGuardedTypes != null ? nonGuardedTypes : Collections.emptySet();
+        this.nonGuardedMethods = nonGuardedMethods != null ? nonGuardedMethods : Collections.emptySet();
     }
 
     @SuppressWarnings("unchecked")
@@ -77,12 +88,18 @@ public class LockGuardProxyFactory implements GuardProxyFactory {
 
     private boolean shouldBeLockGuardProxied(Object targetObject, Class<?> interfaceType) {
         return targetObject != null
+                && !isTargetInstanceOfNonGuardedTypes(targetObject)
                 && !Modifier.isFinal(interfaceType.getModifiers())
                 && isPackageProxiable(interfaceType.getPackage().getName())
                 && ExecutionUtils.isNotLockGuardAnnotated(interfaceType)
                 && ExecutionUtils.isNotLockGuardAnnotated(targetObject.getClass())
                 && !JdkUtil.isInternalJdkClass(targetObject.getClass())
                 && !JdkUtil.isInternalJdkClass(interfaceType);
+    }
+
+    private boolean isTargetInstanceOfNonGuardedTypes(Object targetObject) {
+        return nonGuardedTypes.stream()
+                .anyMatch(nonGuardedType -> nonGuardedType.isAssignableFrom(targetObject.getClass()));
     }
 
     private boolean isPackageProxiable(String packageName) {
@@ -102,7 +119,7 @@ public class LockGuardProxyFactory implements GuardProxyFactory {
                 .getInstantiatorOf(proxyFactory.createClass())
                 .newInstance();
 
-        ((javassist.util.proxy.Proxy) proxyInstance).setHandler(new LockGuardMethodHandler<>(impl, lockManager, this, nonGuardedMethods));
+        ((javassist.util.proxy.Proxy) proxyInstance).setHandler(new LockGuardMethodHandler<>(impl, lock, this, nonGuardedMethods));
         return proxyInstance;
     }
 

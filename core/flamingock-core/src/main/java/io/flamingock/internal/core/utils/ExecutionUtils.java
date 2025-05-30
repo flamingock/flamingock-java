@@ -17,7 +17,7 @@
 package io.flamingock.internal.core.utils;
 
 import io.flamingock.commons.utils.ReflectionUtil;
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.annotations.NonLockGuardedType;
 
@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 
 public final class ExecutionUtils {
 
-    private static final Class<Change> CHANGE_UNIT_CLASS = Change.class;
+    private static final Class<ChangeUnit> CHANGE_UNIT_CLASS = ChangeUnit.class;
 
     private static final Class<io.mongock.api.annotations.ChangeUnit> LEGACY_CHANGE_UNIT_CLASS = io.mongock.api.annotations.ChangeUnit.class;
 

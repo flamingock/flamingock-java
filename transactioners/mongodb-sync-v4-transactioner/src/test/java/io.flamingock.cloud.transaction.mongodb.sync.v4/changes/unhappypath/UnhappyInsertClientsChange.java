@@ -19,12 +19,12 @@ package io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import org.bson.Document;
 
-@Change(id = "insert-clients", order = "002")
+@ChangeUnit(id = "insert-clients", order = "002")
 public class UnhappyInsertClientsChange {
 
     @Execution

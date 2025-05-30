@@ -150,6 +150,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
                 coreConfiguration,
                 buildEventPublisher(),
                 buildHierarchicalContext(),
+                engine.getNonGuardedTypes(),
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
                 engine.getCloser()
         );

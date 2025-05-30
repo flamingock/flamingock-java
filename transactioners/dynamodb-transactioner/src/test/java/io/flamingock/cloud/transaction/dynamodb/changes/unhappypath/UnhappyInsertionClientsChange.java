@@ -18,7 +18,7 @@ package io.flamingock.cloud.transaction.dynamodb.changes.unhappypath;
 
 import io.flamingock.cloud.transaction.dynamodb.changes.common.UserEntity;
 import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -26,7 +26,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@Change(id = "unhappy-insert-clients", order = "002")
+@ChangeUnit(id = "unhappy-insert-clients", order = "002")
 public class UnhappyInsertionClientsChange {
 
     @Execution

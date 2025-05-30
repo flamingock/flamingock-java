@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.dynamodb.internal.mongock;
 
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.internal.core.engine.audit.AuditWriter;
 import io.flamingock.internal.core.engine.audit.importer.model.ChangeEntry;
@@ -35,7 +35,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Change(id = "mongock-local-legacy-importer-dynamodb", order = "001")
+@ChangeUnit(id = "mongock-local-legacy-importer-dynamodb", order = "001")
 public class MongockImporterChangeUnit {
 
 

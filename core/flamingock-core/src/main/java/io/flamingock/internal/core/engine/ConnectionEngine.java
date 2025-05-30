@@ -24,7 +24,9 @@ import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.system.SystemModuleContributor;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 public interface ConnectionEngine extends SystemModuleContributor, ContextContributor {
     AuditWriter getAuditWriter();
@@ -43,4 +45,7 @@ public interface ConnectionEngine extends SystemModuleContributor, ContextContri
         };
     }
 
+    default Set<Class<?>> getNonGuardedTypes() {
+        return Collections.emptySet();
+    }
 }

@@ -22,6 +22,8 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.context.ContextResolver;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
+import java.util.Set;
+
 public interface StepNavigatorBuilder {
 
 
@@ -32,6 +34,8 @@ public interface StepNavigatorBuilder {
     StepNavigatorBuilder setLock(Lock lock);
 
     StepNavigatorBuilder setDependencyContext(ContextResolver staticContext);
+
+    StepNavigatorBuilder setNonGuardedTypes(Set<Class<?>> types);
 
     StepNavigatorBuilder setTransactionWrapper(TransactionWrapper transactionWrapper);
 
@@ -47,6 +51,8 @@ public interface StepNavigatorBuilder {
         protected Lock lock = null;
 
         protected ContextResolver staticContext;
+
+        protected Set<Class<?>> nonGuardedTypes;
 
         protected TransactionWrapper transactionWrapper = null;
 
@@ -70,6 +76,13 @@ public interface StepNavigatorBuilder {
             this.staticContext = staticContext;
             return this;
         }
+
+        @Override
+        public StepNavigatorBuilder setNonGuardedTypes(Set<Class<?>> nonGuardedTypes) {
+            this.nonGuardedTypes = nonGuardedTypes;
+            return this;
+        }
+
 
         @Override
         public StepNavigatorBuilder setLock(Lock lock) {

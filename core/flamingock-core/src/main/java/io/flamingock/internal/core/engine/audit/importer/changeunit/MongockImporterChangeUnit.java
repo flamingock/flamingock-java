@@ -17,7 +17,7 @@
 package io.flamingock.internal.core.engine.audit.importer.changeunit;
 
 
-import io.flamingock.core.api.annotations.Change;
+import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.internal.core.engine.audit.AuditWriter;
@@ -32,7 +32,7 @@ import io.flamingock.internal.core.pipeline.PipelineDescriptor;
  * - Flamingock local   to Flamingock cloud
  * We need to differentiate it, as we can have two steps(Mongock to Flamingock local to Flamingock Cloud)
  */
-@Change(id = MongockImporterChangeUnit.IMPORTER_FROM_MONGOCK, order = "001")
+@ChangeUnit(id = MongockImporterChangeUnit.IMPORTER_FROM_MONGOCK, order = "001")
 public class MongockImporterChangeUnit {
     public static final String IMPORTER_FROM_MONGOCK = "importer-from-mongock";
 

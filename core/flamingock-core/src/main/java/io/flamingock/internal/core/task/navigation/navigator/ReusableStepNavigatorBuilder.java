@@ -47,7 +47,9 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
         RuntimeManager runtimeManager = RuntimeManager.builder()
                 .setDependencyContext(new PriorityContext(staticContext))
                 .setLock(lock)
+                .setNonGuardedTypes(nonGuardedTypes)
                 .build();
+
         instance.setRuntimeManager(runtimeManager);
         instance.setTransactionWrapper(transactionWrapper);
         OngoingStatusRepository ongoingTasksRepository = transactionWrapper != null && CloudTransactioner.class.isAssignableFrom(transactionWrapper.getClass())

@@ -174,9 +174,15 @@ public final class RuntimeManager implements DependencyInjectable {
         private Context dependencyContext;
         private Lock lock;
         private Boolean forceNativeImage = null;
+        private Set<Class<?>> nonGuardedTypes;
 
         public Builder setLock(Lock lock) {
             this.lock = lock;
+            return this;
+        }
+
+        public Builder setNonGuardedTypes(Set<Class<?>> nonGuardedTypes) {
+            this.nonGuardedTypes = nonGuardedTypes;
             return this;
         }
 
@@ -191,7 +197,7 @@ public final class RuntimeManager implements DependencyInjectable {
 
 
         public RuntimeManager build() {
-            LockGuardProxyFactory proxyFactory = new LockGuardProxyFactory(lock);
+            LockGuardProxyFactory proxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
             boolean isNativeImage;
             if(forceNativeImage != null) {
                 isNativeImage = forceNativeImage;
