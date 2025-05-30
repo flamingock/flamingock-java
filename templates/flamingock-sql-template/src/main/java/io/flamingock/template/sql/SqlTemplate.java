@@ -18,6 +18,7 @@ package io.flamingock.template.sql;
 
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
+import io.flamingock.core.api.template.AbstractChangeTemplate;
 import io.flamingock.core.api.template.ChangeTemplate;
 
 import java.sql.Connection;
@@ -25,23 +26,10 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 
-public class SqlTemplate implements ChangeTemplate<SqlTemplateConfiguration> {
+public class SqlTemplate extends AbstractChangeTemplate<SqlTemplateConfiguration> {
 
-    private SqlTemplateConfiguration configuration;
-
-    @Override
-    public void setChangeId(String changeId) {
-
-    }
-
-    @Override
-    public void setTransactional(boolean isTransactional) {
-
-    }
-
-    @Override
-    public void setConfiguration(SqlTemplateConfiguration configuration) {
-        this.configuration = configuration;
+    public SqlTemplate() {
+        super(SqlTemplateConfiguration.class);
     }
 
     @Execution
@@ -52,11 +40,6 @@ public class SqlTemplate implements ChangeTemplate<SqlTemplateConfiguration> {
     @RollbackExecution
     public void rollback(Connection connection) {
         execute(connection, configuration.getRollback());
-    }
-
-    @Override
-    public Collection<Class<?>> getReflectiveClasses() {
-        return Collections.singletonList(SqlTemplateConfiguration.class);
     }
 
     private static void execute(Connection connection, String sql) {
