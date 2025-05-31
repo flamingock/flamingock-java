@@ -18,7 +18,7 @@ public class MongockScanPackage {
   }
 
   public void addAll(List<String> packageNames) {
-    if (!packageNames.isEmpty()) {
+    if (packageNames != null && !packageNames.isEmpty()) {
       builder.addMigrationScanPackages(packageNames);
     }
   }
