@@ -3,7 +3,7 @@ dependencies {
     implementation(project(":importers:mongodb-importer-sync-v4"))
 
     implementation(project(":core:flamingock-core"))
-    api(project(":community:flamingock-ce-mongodb-sync-v4"))
+    api(project(":community:flamingock-ce-mongodb-sync"))
 
     implementation("org.springframework.data:spring-data-mongodb:4.1.3")
     implementation("org.mongodb:mongodb-driver-sync:4.9.1")

@@ -189,11 +189,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  flamingock-ce-mongodb-sync-v4:
+  flamingock-ce-mongodb-sync:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: flamingock-ce-mongodb-sync-v4
+      module: flamingock-ce-mongodb-sync
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -295,7 +295,7 @@ jobs:
 
 
   run-examples-with-released-version:
-    needs: [flamingock-core,flamingock-core-api,flamingock-springboot-v2-integration,flamingock-springboot-v3-integration,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,flamingock-ce-dynamodb,mongodb-util,flamingock-ce-mongodb-springdata-v2,flamingock-ce-mongodb-springdata-v3,flamingock-ce-mongodb-springdata-v4,flamingock-ce-mongodb-sync-v4,flamingock-ce-mongodb-v3,flamingock-sql-template,sql-transactioner, mongodb-sync-v4-transactioner, dynamodb-transactioner, mongodb-importer, flamingock-graalvm]
+    needs: [flamingock-core,flamingock-core-api,flamingock-springboot-v2-integration,flamingock-springboot-v3-integration,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,flamingock-ce-dynamodb,mongodb-util,flamingock-ce-mongodb-springdata-v2,flamingock-ce-mongodb-springdata-v3,flamingock-ce-mongodb-springdata-v4,flamingock-ce-mongodb-sync,flamingock-ce-mongodb-v3,flamingock-sql-template,sql-transactioner, mongodb-sync-v4-transactioner, dynamodb-transactioner, mongodb-importer, flamingock-graalvm]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -323,7 +323,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 #  test-examples:
-#    needs: [ flamingock-core,flamingock-core-api,flamingock-springboot-v2-integration,flamingock-springboot-v3-integration,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,flamingock-ce-dynamodb,mongodb-util,flamingock-ce-mongodb-springdata-v2,flamingock-ce-mongodb-springdata-v3,flamingock-ce-mongodb-springdata-v4,flamingock-ce-mongodb-sync-v4,flamingock-ce-mongodb-v3,flamingock-sql-template,sql-transactioner ]
+#    needs: [ flamingock-core,flamingock-core-api,flamingock-springboot-v2-integration,flamingock-springboot-v3-integration,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,flamingock-ce-dynamodb,mongodb-util,flamingock-ce-mongodb-springdata-v2,flamingock-ce-mongodb-springdata-v3,flamingock-ce-mongodb-springdata-v4,flamingock-ce-mongodb-sync,flamingock-ce-mongodb-v3,flamingock-sql-template,sql-transactioner ]
 #    run: |
 #        curl -X POST \
 #             -H "Accept: application/vnd.github+json" \
