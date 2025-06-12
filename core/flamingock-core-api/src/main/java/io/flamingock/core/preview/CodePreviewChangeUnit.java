@@ -22,6 +22,8 @@ import java.beans.Transient;
 public class CodePreviewChangeUnit extends AbstractPreviewTask {
     private PreviewMethod executionMethodName;
     private PreviewMethod rollbackMethodName;
+    private PreviewMethod beforeExecutionMethodName;
+    private PreviewMethod rollbackBeforeExecutionMethodName;
 
     private String sourcePackage;
 
@@ -34,12 +36,16 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
                                  String sourceClassPath,
                                  PreviewMethod executionMethodPreview,
                                  PreviewMethod rollbackMethodPreview,
+                                 PreviewMethod beforeExecutionMethodPreview,
+                                 PreviewMethod rollbackBeforeExecutionMethodPreview,
                                  boolean runAlways,
                                  boolean transactional,
                                  boolean system) {
         super(id, order, sourceClassPath, runAlways, transactional, system);
         this.executionMethodName = executionMethodPreview;
         this.rollbackMethodName = rollbackMethodPreview;
+        this.beforeExecutionMethodName = beforeExecutionMethodPreview;
+        this.rollbackBeforeExecutionMethodName = rollbackBeforeExecutionMethodPreview;
         this.sourcePackage = sourceClassPath.substring(0, sourceClassPath.lastIndexOf("."));    }
 
 
@@ -57,6 +63,22 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
 
     public void setRollbackMethodName(PreviewMethod rollbackMethodName) {
         this.rollbackMethodName = rollbackMethodName;
+    }
+
+    public PreviewMethod getBeforeExecutionMethodName() {
+        return beforeExecutionMethodName;
+    }
+
+    public void setBeforeExecutionMethodName(PreviewMethod beforeExecutionMethodName) {
+        this.beforeExecutionMethodName = beforeExecutionMethodName;
+    }
+
+    public PreviewMethod getRollbackBeforeExecutionMethodName() {
+        return rollbackBeforeExecutionMethodName;
+    }
+
+    public void setRollbackBeforeExecutionMethodName(PreviewMethod rollbackBeforeExecutionMethodName) {
+        this.rollbackBeforeExecutionMethodName = rollbackBeforeExecutionMethodName;
     }
 
     @Transient

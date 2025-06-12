@@ -24,7 +24,6 @@ import io.flamingock.internal.core.engine.audit.importer.model.ChangeEntry;
 import io.flamingock.internal.core.engine.audit.importer.model.ChangeState;
 import io.flamingock.internal.core.engine.audit.importer.model.ChangeType;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
-import io.flamingock.internal.core.legacy.MongockLegacyIdGenerator;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
@@ -41,11 +40,10 @@ public class MongockImporterChangeUnit {
 
     private static ChangeEntry toChangeEntry(ChangeEntryDynamoDB changeEntryDynamoDB) {
         Date timestamp = Date.from(Instant.ofEpochMilli(changeEntryDynamoDB.getTimestamp()));
-        String id = MongockLegacyIdGenerator.getNewId(changeEntryDynamoDB.getChangeId(), changeEntryDynamoDB.getAuthor());
 
         return new ChangeEntry(
                 changeEntryDynamoDB.getExecutionId(),
-                id,
+                changeEntryDynamoDB.getChangeId(),
                 changeEntryDynamoDB.getAuthor(),
                 timestamp,
                 ChangeState.valueOf(changeEntryDynamoDB.getState()),

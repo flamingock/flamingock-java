@@ -6,7 +6,6 @@ import io.flamingock.core.api.template.ChangeTemplateConfig;
 import io.flamingock.core.api.template.TemplateFactory;
 import io.flamingock.internal.core.pipeline.LoadedStage;
 import io.flamingock.internal.core.pipeline.Pipeline;
-import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
@@ -52,7 +51,6 @@ public class RegistrationFeature implements Feature {
         registerClass(PreviewPipeline.class.getName());
         registerClass(PreviewStage.class.getName());
         registerClass(CodePreviewChangeUnit.class.getName());
-        registerClass(CodePreviewLegacyChangeUnit.class.getName());
         registerClass(PreviewMethod.class);
         registerClass(ChangeTemplateConfig.class);
         registerClass(TemplatePreviewChangeUnit.class.getName());

@@ -136,8 +136,7 @@ public class ChangesPreProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<>(Arrays.asList(
-                ChangeUnit.class.getName(),
-                io.mongock.api.annotations.ChangeUnit.class.getName()
+                ChangeUnit.class.getName()
         ));
     }
 

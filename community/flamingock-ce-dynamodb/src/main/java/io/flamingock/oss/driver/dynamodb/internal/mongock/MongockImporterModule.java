@@ -42,7 +42,6 @@ public class MongockImporterModule implements SystemModule {
                             InternalMongockImporterConfiguration.class.getName())))
                     .setRunAlways(false)
                     .setTransactional(true)
-                    .setNewChangeUnit(true)
                     .setSystem(true)
                     .build()
     );

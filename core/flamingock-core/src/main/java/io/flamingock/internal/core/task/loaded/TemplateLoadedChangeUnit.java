@@ -40,7 +40,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
                              boolean runAlways,
                              boolean systemTask,
                              Map<String, Object> templateConfiguration) {
-        super(id, order, templateClass, runAlways, transactional, true, systemTask);
+        super(id, order, templateClass, runAlways, transactional, systemTask);
         this.profiles = profiles;
         this.templateConfiguration = templateConfiguration;
     }

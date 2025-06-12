@@ -33,71 +33,23 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
                          Class<?> source,
                          boolean runAlways,
                          boolean transactional,
-                         boolean newChangeUnit,
                          boolean systemTask) {
-        super(id, order, source, runAlways, transactional, newChangeUnit, systemTask);
+        super(id, order, source, runAlways, transactional, systemTask);
     }
 
     @Override
     public Method getExecutionMethod() {
-        if (isNewChangeUnit()) {
-            Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), Execution.class);
-            return firstAnnotatedMethod
-                    .orElseThrow(() -> new IllegalArgumentException(String.format(
-                            "Executable changeUnit[%s] without %s method",
-                            getSource(),
-                            Execution.class.getName())));
-        } else {
-            Optional<Method> legacyExecutionMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), io.mongock.api.annotations.Execution.class);
-            if (!legacyExecutionMethod.isPresent()) {
-                if (ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), Execution.class).isPresent()) {
-                    throw new IllegalArgumentException(String.format(
-                            "You are using new API for Execution annotation in your changeUnit class[%s], however your class is annotated with legacy ChangeUnit annotation[%s]. " +
-                                    "It's highly recommended to use the new API[in package %s], unless it's a legacy changeUnit created with Mongock",
-                            getSource(),
-                            io.mongock.api.annotations.Execution.class.getName(),
-                            "io.flamingock.core.api.annotations"));
-                }
-            }
-            return legacyExecutionMethod
-                    .orElseThrow(() -> new IllegalArgumentException(String.format(
-                            "Your changeUnit class[%s] doesn't contain execution method.\n" +
-                                    "It's highly recommended to use the new API[in package %s].\n" +
-                                    "In case it's an legacy changeUnit created with Mongock, please add the execution method annotated with legacy API[%s] ",
-                            getSource(),
-                            "io.flamingock.core.api.annotations",
-                            io.mongock.api.annotations.Execution.class.getName())));
-        }
+        Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), Execution.class);
+        return firstAnnotatedMethod
+                .orElseThrow(() -> new IllegalArgumentException(String.format(
+                        "Executable changeUnit[%s] without %s method",
+                        getSource(),
+                        Execution.class.getName())));
     }
 
     @Override
     public Optional<Method> getRollbackMethod() {
-        if (isNewChangeUnit()) {
-            Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class);
-            if (!firstAnnotatedMethod.isPresent()) {
-                if (ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), io.mongock.api.annotations.RollbackExecution.class).isPresent()) {
-                    throw new IllegalArgumentException(String.format(
-                            "Executable changeUnit[%s] rollback method should be annotated with new API[%s], instead of legacy API[%s] ",
-                            getSource(),
-                            RollbackExecution.class.getName(),
-                            io.mongock.api.annotations.RollbackExecution.class.getName()));
-                }
-            }
-            return firstAnnotatedMethod;
-        } else {
-            Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), io.mongock.api.annotations.RollbackExecution.class);
-            if (!firstAnnotatedMethod.isPresent()) {
-                if (ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class).isPresent()) {
-                    throw new IllegalArgumentException(String.format(
-                            "You are using new API for RollbackExecution annotation in your changeUnit class[%s], however your class is annotated with legacy ChangeUnit annotation[%s]. " +
-                                    "It's highly recommended to use the new API[in package %s], unless it's a legacy changeUnit created with Mongock",
-                            getSource(),
-                            io.mongock.api.annotations.RollbackExecution.class.getName(),
-                            "io.flamingock.core.api.annotations"));
-                }
-            }
-            return firstAnnotatedMethod;
-        }
+        return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class);
     }
 
     public Optional<Method> getBeforeExecutionMethod() {
@@ -109,12 +61,7 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
     }
 
     private Optional<Method> getMethodFromDeprecatedAnnotation(Class<? extends Annotation> annotation) {
-        Optional<Method> rollbackBeforeExecution = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), annotation);
-        if (isNewChangeUnit() && rollbackBeforeExecution.isPresent()) {
-            throw new IllegalArgumentException(String.format("You are using legacy annotation [%s] with new API. You should create an independent ChangeUnit for it",
-                    annotation.getName()));
-        }
-        return isNewChangeUnit() ? Optional.empty() : rollbackBeforeExecution;
+        return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), annotation);
     }
 
 

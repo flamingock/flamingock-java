@@ -30,8 +30,7 @@ public final class AnnotationFinder {
 
     public Map<String, List<AbstractPreviewTask>> getCodedChangeUnitsMapByPackage() {
         logger.info("Searching for code-based changes (Java classes annotated with @ChangeUnit annotation)");
-        Collection<CodePreviewChangeUnit> allChanges = new LinkedList<>(findAnnotatedChanges(io.mongock.api.annotations.ChangeUnit.class));
-        allChanges.addAll(findAnnotatedChanges(ChangeUnit.class));
+        Collection<CodePreviewChangeUnit> allChanges = new LinkedList<>(findAnnotatedChanges(ChangeUnit.class));
         Map<String, List<AbstractPreviewTask>> mapByPackage = new HashMap<>();
         for(CodePreviewChangeUnit item: allChanges) {
             mapByPackage.compute(item.getSourcePackage(), (key, descriptors) -> {

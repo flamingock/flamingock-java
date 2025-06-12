@@ -20,7 +20,6 @@ import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.api.annotations.Execution;
 import io.flamingock.core.api.annotations.RollbackExecution;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
-import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
@@ -52,7 +51,6 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private PreviewMethod rollbackBeforeExecutionMethod;
     private boolean runAlways;
     private boolean transactional;
-    private boolean isNewChangeUnit;
     private boolean system;
 
     private CodePreviewTaskBuilder() {
@@ -109,11 +107,6 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         return this;
     }
 
-    public CodePreviewTaskBuilder setNewChangeUnit(boolean newChangeUnit) {
-        isNewChangeUnit = newChangeUnit;
-        return this;
-    }
-
     public CodePreviewTaskBuilder setSystem(boolean system) {
         this.system = system;
         return this;
@@ -124,36 +117,16 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         if (changeUnitAnnotation != null) {
             setFieldsFromChange(typeElement, changeUnitAnnotation);
         }
-
-        io.mongock.api.annotations.ChangeUnit legacyChangeUnitAnnotation = typeElement.getAnnotation(io.mongock.api.annotations.ChangeUnit.class);
-        if (legacyChangeUnitAnnotation != null) {
-
-            setFieldsFromLegacy(typeElement, legacyChangeUnitAnnotation);
-        }
         return this;
     }
 
 
     @Override
     public CodePreviewChangeUnit build() {
-        return isNewChangeUnit ? getCodePreviewChange() : getCodePreviewLegacyChange();
-    }
-
-    private CodePreviewChangeUnit setFieldsFromChange(TypeElement typeElement, ChangeUnit annotation) {
-        setId(annotation.id());
-        setOrder(annotation.order());
-        setSourceClassPath(typeElement.getQualifiedName().toString());
-        setExecutionMethod(getAnnotatedMethodInfo(typeElement, Execution.class).orElse(null));
-        setRollbackMethod(getAnnotatedMethodInfo(typeElement, RollbackExecution.class).orElse(null));
-        setTransactional(annotation.transactional());
-        setRunAlways(annotation.runAlways());
-        setNewChangeUnit(true);
-        setSystem(false);
         return getCodePreviewChange();
     }
 
-
-    private void setFieldsFromLegacy(TypeElement typeElement, io.mongock.api.annotations.ChangeUnit annotation) {
+    private CodePreviewChangeUnit setFieldsFromChange(TypeElement typeElement, ChangeUnit annotation) {
         setId(annotation.id());
         setOrder(annotation.order());
         setSourceClassPath(typeElement.getQualifiedName().toString());
@@ -163,26 +136,13 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         setRollbackBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, RollbackBeforeExecution.class).orElse(null));
         setTransactional(annotation.transactional());
         setRunAlways(annotation.runAlways());
-        setNewChangeUnit(false);
         setSystem(false);
+        return getCodePreviewChange();
     }
 
     @NotNull
     private CodePreviewChangeUnit getCodePreviewChange() {
         return new CodePreviewChangeUnit(
-                id,
-                order,
-                sourceClassPath,
-                executionMethod,
-                rollbackMethod,
-                runAlways,
-                transactional,
-                system);
-    }
-
-    @NotNull
-    private CodePreviewLegacyChangeUnit getCodePreviewLegacyChange() {
-        return new CodePreviewLegacyChangeUnit(
                 id,
                 order,
                 sourceClassPath,

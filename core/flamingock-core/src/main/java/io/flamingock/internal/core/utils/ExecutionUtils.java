@@ -26,14 +26,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class ExecutionUtils {
 
     private static final Class<ChangeUnit> CHANGE_UNIT_CLASS = ChangeUnit.class;
-
-    private static final Class<io.mongock.api.annotations.ChangeUnit> LEGACY_CHANGE_UNIT_CLASS = io.mongock.api.annotations.ChangeUnit.class;
 
 
     private ExecutionUtils() {
@@ -41,7 +37,7 @@ public final class ExecutionUtils {
 
     @SuppressWarnings("unchecked")
     public static Collection<Class<?>> loadExecutionClassesFromPackage(String packagePath) {
-        return ReflectionUtil.loadAnnotatedClassesFromPackage(packagePath, ExecutionUtils.CHANGE_UNIT_CLASS, ExecutionUtils.LEGACY_CHANGE_UNIT_CLASS);
+        return ReflectionUtil.loadAnnotatedClassesFromPackage(packagePath, ExecutionUtils.CHANGE_UNIT_CLASS);
     }
 
     /**
@@ -53,19 +49,11 @@ public final class ExecutionUtils {
     }
 
     public static boolean isChangeUnit(Class<?> clazz) {
-        return clazz.isAnnotationPresent(CHANGE_UNIT_CLASS) || clazz.isAnnotationPresent(LEGACY_CHANGE_UNIT_CLASS);
-    }
-
-    public static boolean isNewChangeUnit(Class<?> clazz) {
         return clazz.isAnnotationPresent(CHANGE_UNIT_CLASS);
     }
 
-    public static boolean isLegacyChangeUnit(Class<?> clazz) {
-        return clazz.isAnnotationPresent(LEGACY_CHANGE_UNIT_CLASS);
-    }
-
     public static boolean isNotLockGuardAnnotated(Class<?> type) {
-        return !type.isAnnotationPresent(NonLockGuarded.class) && !type.isAnnotationPresent(io.changock.migration.api.annotations.NonLockGuarded.class);
+        return !type.isAnnotationPresent(NonLockGuarded.class);
     }
 
     public static List<NonLockGuardedType> getLockGuardedTypeFromMethod(Method method) {
@@ -73,22 +61,7 @@ public final class ExecutionUtils {
         if (nonLockGuardedAnnotation != null) {
             return Arrays.asList(nonLockGuardedAnnotation.value());
         } else {
-            io.changock.migration.api.annotations.NonLockGuarded legacyNonLockGuardedAnnotation = method.getAnnotation(io.changock.migration.api.annotations.NonLockGuarded.class);
-            if (legacyNonLockGuardedAnnotation != null) {
-                return Stream.of(legacyNonLockGuardedAnnotation.value())
-                        .map(legacyValue -> {
-                            switch (legacyValue) {
-                                case METHOD:
-                                    return NonLockGuardedType.METHOD;
-                                case RETURN:
-                                    return NonLockGuardedType.RETURN;
-                                default:
-                                    return NonLockGuardedType.NONE;
-                            }
-                        }).collect(Collectors.toList());
-            } else {
-                return Collections.emptyList();
-            }
+            return Collections.emptyList();
         }
     }
 

@@ -24,7 +24,6 @@ import io.flamingock.commons.utils.Trio;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.engine.audit.importer.changeunit.MongockImporterChangeUnit;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
-import io.flamingock.internal.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.oss.driver.mongodb.springdata.v3.changes._0_mongock_create_authors_collection;
 import io.flamingock.oss.driver.mongodb.springdata.v3.changes._1_create_client_collection_happy;
@@ -50,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static io.flamingock.commons.utils.Constants.DEFAULT_MIGRATION_AUTHOR;
 import static io.flamingock.internal.core.builder.core.CoreConfiguration.ImporterConfiguration.withSource;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
 import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
@@ -129,7 +129,8 @@ class MongoSpringDataV3ImporterTest {
         checkAuditEntry(
                 auditLog.get(0),
                 mongockDbState.get(0).getString("executionId"),
-                MongockLegacyIdGenerator.getNewId(mongockDbState.get(0).getString("changeId"), mongockDbState.get(0).getString("author")),
+                mongockDbState.get(0).getString("changeId"),
+                mongockDbState.get(0).getString("author"),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(0).getString("changeLogClass"),
                 mongockDbState.get(0).getString("changeSetMethod"),
@@ -138,7 +139,8 @@ class MongoSpringDataV3ImporterTest {
         checkAuditEntry(
                 auditLog.get(1),
                 mongockDbState.get(1).getString("executionId"),
-                MongockLegacyIdGenerator.getNewId(mongockDbState.get(1).getString("changeId"), mongockDbState.get(1).getString("author")),
+                mongockDbState.get(1).getString("changeId"),
+                mongockDbState.get(1).getString("author"),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(1).getString("changeLogClass"),
                 mongockDbState.get(1).getString("changeSetMethod"),
@@ -148,7 +150,8 @@ class MongoSpringDataV3ImporterTest {
         checkAuditEntry(
                 auditLog.get(2),
                 mongockDbState.get(2).getString("executionId"),
-                MongockLegacyIdGenerator.getNewId(mongockDbState.get(2).getString("changeId"), mongockDbState.get(2).getString("author")),
+                mongockDbState.get(2).getString("changeId"),
+                mongockDbState.get(2).getString("author"),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(2).getString("changeLogClass"),
                 mongockDbState.get(2).getString("changeSetMethod"),
@@ -158,7 +161,8 @@ class MongoSpringDataV3ImporterTest {
         checkAuditEntry(
                 auditLog.get(3),
                 mongockDbState.get(3).getString("executionId"),
-                MongockLegacyIdGenerator.getNewId(mongockDbState.get(3).getString("changeId"), mongockDbState.get(3).getString("author")),
+                mongockDbState.get(3).getString("changeId"),
+                mongockDbState.get(3).getString("author"),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(3).getString("changeLogClass"),
                 mongockDbState.get(3).getString("changeSetMethod"),
@@ -169,6 +173,7 @@ class MongoSpringDataV3ImporterTest {
                 auditLog.get(4),
                 auditLog.get(4).getExecutionId(),
                 MongockImporterChangeUnit.IMPORTER_FROM_MONGOCK,
+                DEFAULT_MIGRATION_AUTHOR,
                 AuditEntry.Status.EXECUTED,
                 MongockImporterChangeUnit.class.getName(),
                 "execution",
@@ -181,6 +186,7 @@ class MongoSpringDataV3ImporterTest {
     private void checkAuditEntry(AuditEntry actualAuditEntry,
                                  String expectedExecutionId,
                                  String expectedTaskId,
+                                 String expectedAuthor,
                                  AuditEntry.Status expectedStatus,
                                  String expectedClassName,
                                  String expectedMethodName,
@@ -188,6 +194,7 @@ class MongoSpringDataV3ImporterTest {
                                  boolean expectedSystemChange) {
         assertEquals(expectedExecutionId, actualAuditEntry.getExecutionId());
         assertEquals(expectedTaskId, actualAuditEntry.getTaskId());
+        assertEquals(expectedAuthor, actualAuditEntry.getAuthor());
         assertEquals(expectedStatus, actualAuditEntry.getState());
         assertEquals(expectedClassName, actualAuditEntry.getClassName());
         assertEquals(expectedMethodName, actualAuditEntry.getMethodName());

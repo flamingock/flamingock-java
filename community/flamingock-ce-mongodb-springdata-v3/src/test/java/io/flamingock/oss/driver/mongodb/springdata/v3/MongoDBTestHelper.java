@@ -25,7 +25,6 @@ import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
-import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
@@ -53,11 +52,6 @@ public class MongoDBTestHelper {
     private static final Function<Class<?>, Trio<String, String, Boolean>> infoExtractor = c-> {
         ChangeUnit ann = c.getAnnotation(ChangeUnit.class);
         return new Trio<>(ann.id(), ann.order(), ann.transactional());
-    };
-
-    private static final Function<Class<?>, Trio<String, String, Boolean>> infoExtractorLegacy = c-> {
-        io.mongock.api.annotations.ChangeUnit ann = c.getAnnotation(io.mongock.api.annotations.ChangeUnit.class);
-        return new Trio<>("[" + ann.author() + "]" + ann.id(), ann.order(), ann.transactional());
     };
 
     public MongoDBTestHelper(MongoDatabase mongoDatabase) {
@@ -106,52 +100,28 @@ public class MongoDBTestHelper {
 
         List<CodePreviewChangeUnit> tasks = Arrays.stream(changeDefinitions)
                 .map(trio -> {
-                    boolean isNewChangeUnit = trio.getFirst().isAnnotationPresent(ChangeUnit.class);
-                    Function<Class<?>, Trio<String, String, Boolean>> extractor = isNewChangeUnit
-                            ? infoExtractor
-                            : infoExtractorLegacy;
+                    Function<Class<?>, Trio<String, String, Boolean>> extractor = infoExtractor;
                     Trio<String, String, Boolean> changeInfo = extractor.apply(trio.getFirst());
                     PreviewMethod rollback = null;
+                    PreviewMethod rollbackBeforeExecution = null;
                     if (trio.getThird() != null) {
                         rollback = new PreviewMethod("rollbackExecution", getParameterTypes(trio.getThird()));
+                        rollbackBeforeExecution = new PreviewMethod("rollbackBeforeExecution", getParameterTypes(trio.getThird()));
                     }
 
                     List<CodePreviewChangeUnit> changes = new ArrayList<>();
-
-                    if(isNewChangeUnit) {
-                        changes.add(new CodePreviewChangeUnit(
-                                changeInfo.getFirst(),
-                                changeInfo.getSecond(),
-                                trio.getFirst().getName(),
-                                new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
-                                rollback,
-                                false,
-                                changeInfo.getThird(),
-                                false
-                        ));
-                    } else {
-
-                        //we are assuming, for testing purpose, that if it's legacy, it provides beforeExecution,
-                        // with same parameterTypes and, if 'rollbackBeforeExecution' provided too, it is with the same
-                        //parameters
-                        PreviewMethod rollbackBeforeExecution = null;
-                        if (trio.getThird() != null) {
-                            rollbackBeforeExecution = new PreviewMethod("rollbackBeforeExecution", getParameterTypes(trio.getThird()));
-                        }
-                        changes.add(new CodePreviewLegacyChangeUnit(
-                                changeInfo.getFirst(),
-                                changeInfo.getSecond(),
-                                trio.getFirst().getName(),
-                                new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
-                                rollback,
-                                new PreviewMethod("beforeExecution", getParameterTypes(trio.getSecond())),
-                                rollbackBeforeExecution,
-                                false,
-                                changeInfo.getThird(),
-                                false
-                        ));
-
-                    }
+                    changes.add(new CodePreviewChangeUnit(
+                            changeInfo.getFirst(),
+                            changeInfo.getSecond(),
+                            trio.getFirst().getName(),
+                            new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
+                            rollback,
+                            new PreviewMethod("beforeExecution", getParameterTypes(trio.getSecond())),
+                            rollbackBeforeExecution,
+                            false,
+                            changeInfo.getThird(),
+                            false
+                    ));
                     return changes;
                 })
                 .flatMap(List::stream)

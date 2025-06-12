@@ -152,8 +152,6 @@ public final class RuntimeManager implements DependencyInjectable {
 
         boolean lockGuarded = !type.isAnnotationPresent(NonLockGuarded.class)
                 && !parameter.isAnnotationPresent(NonLockGuarded.class)
-                && !type.isAnnotationPresent(io.changock.migration.api.annotations.NonLockGuarded.class)
-                && !parameter.isAnnotationPresent(io.changock.migration.api.annotations.NonLockGuarded.class)
                 && !nonProxyableTypes.contains(type)
                 && !isNativeImage
                 ;

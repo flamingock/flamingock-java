@@ -50,7 +50,6 @@ public class ImporterModule implements SystemModule {
                             PipelineDescriptor.class.getName())))
                     .setRunAlways(false)
                     .setTransactional(true)
-                    .setNewChangeUnit(true)
                     .setSystem(true)
                     .build()
     );
@@ -67,7 +66,6 @@ public class ImporterModule implements SystemModule {
                             PipelineDescriptor.class.getName())))
                     .setRunAlways(false)
                     .setTransactional(true)
-                    .setNewChangeUnit(true)
                     .setSystem(true)
                     .build()
     );

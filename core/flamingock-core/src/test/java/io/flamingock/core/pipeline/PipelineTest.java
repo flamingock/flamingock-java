@@ -108,6 +108,8 @@ public class PipelineTest {
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
+                null,
+                null,
                 false,
                 true,
                 false);
@@ -117,6 +119,8 @@ public class PipelineTest {
                 "abc", // Non-numeric
                 PipelineTest.class.getName(),
                 executionMethod,
+                null,
+                null,
                 null,
                 false,
                 true,
@@ -151,6 +155,8 @@ public class PipelineTest {
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
+                null,
+                null,
                 false,
                 true,
                 false);
@@ -160,6 +166,8 @@ public class PipelineTest {
                 "999", // Valid 3-digit format
                 PipelineTest.class.getName(),
                 executionMethod,
+                null,
+                null,
                 null,
                 false,
                 true,
@@ -171,6 +179,8 @@ public class PipelineTest {
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
+                null,
+                null,
                 false,
                 true,
                 false);
@@ -180,6 +190,8 @@ public class PipelineTest {
                 "9999", // Valid 4-digit format
                 PipelineTest.class.getName(),
                 executionMethod,
+                null,
+                null,
                 null,
                 false,
                 true,
@@ -212,6 +224,8 @@ public class PipelineTest {
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
+                null,
+                null,
                 false,
                 true,
                 false);
@@ -222,6 +236,8 @@ public class PipelineTest {
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
+                null,
+                null,
                 false,
                 true,
                 false);
@@ -231,6 +247,8 @@ public class PipelineTest {
                 "003",
                 PipelineTest.class.getName(),
                 executionMethod,
+                null,
+                null,
                 null,
                 false,
                 true,

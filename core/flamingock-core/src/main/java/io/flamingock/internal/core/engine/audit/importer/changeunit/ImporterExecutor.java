@@ -17,11 +17,9 @@
 package io.flamingock.internal.core.engine.audit.importer.changeunit;
 
 
-import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.internal.core.engine.audit.AuditWriter;
 import io.flamingock.internal.core.engine.audit.importer.ImporterReader;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
-import io.flamingock.internal.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.internal.core.pipeline.PipelineDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,25 +45,6 @@ public final class ImporterExecutor {
      * - Mongock            to Flamingock local
      * - Mongock            to Flamingock Cloud
      * - Flamingock local   to Flamingock Cloud
-     * <p>
-     * ### **Key Considerations**
-     * One crucial aspect to consider is the identifier structure for change units:
-     * - Change units annotated with the legacy annotation ({@link io.mongock.api.annotations.ChangeUnit}) use an identifier
-     * that consists of **changeId/taskId + author**.
-     * - Change units annotated with the new annotation ({@link ChangeUnit})
-     * use only the **id** as the identifier.
-     * <p>
-     * Although Flamingock is backward compatible with Mongock and technically supports the legacy annotation
-     * (which is **highly discouraged**), this introduces a complexity when reading from the database:
-     * <p>
-     * - When reading from a **Mongock database**, we need to construct the identifier as `(id + author)`,
-     * formatted as `[author]id` (see {@link MongockLegacyIdGenerator}).
-     * - When reading from a **Flamingock local database**, the change units are already stored with the final identifier (`[author]id`).
-     * <p>
-     * ### **Practical Implication**
-     * - When reading from a **Mongock database**, the retrieved ID must first be **transformed** before comparison.
-     * - When reading from a **Flamingock local database**, the stored ID is already in its final form and can be **compared directly**.
-     *
      * @param importerReader     Database log reader.
      * @param auditWriter        Destination writer.
      * @param pipelineDescriptor Structure containing all information about the changes and tasks to execute.
@@ -100,20 +79,15 @@ public final class ImporterExecutor {
         String originalTaskId = auditEntry.getTaskId();
         int index = originalTaskId.indexOf("_before");
         return index >= 0 ? originalTaskId.substring(0, index) : originalTaskId;
-
     }
 
     private static String getTaskIdToLookForInPipeline(AuditEntry auditEntry, boolean fromMongockDb) {
-        return fromMongockDb
-                ? MongockLegacyIdGenerator.getNewId(getBaseTaskId(auditEntry), auditEntry.getAuthor())
-                : getBaseTaskId(auditEntry);
+        return getBaseTaskId(auditEntry);
     }
 
 
     private static String getTransformedTaskIdToBeStored(AuditEntry auditEntry, boolean fromMongockDb) {
-        return fromMongockDb
-                ? MongockLegacyIdGenerator.getNewId(auditEntry.getTaskId(), auditEntry.getAuthor())
-                : getBaseTaskId(auditEntry);
+        return auditEntry.getTaskId();
     }
 
     private static void logStarting(boolean fromMongockDb, String sourceDescription, boolean isCloud) {

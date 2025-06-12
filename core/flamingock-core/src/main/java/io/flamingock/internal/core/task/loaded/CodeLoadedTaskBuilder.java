@@ -20,8 +20,6 @@ import io.flamingock.commons.utils.StringUtil;
 import io.flamingock.core.api.annotations.ChangeUnit;
 import io.flamingock.core.preview.AbstractPreviewTask;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
-import io.flamingock.core.preview.CodePreviewLegacyChangeUnit;
-import io.flamingock.internal.core.utils.ExecutionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +33,6 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private boolean isRunAlways;
     private boolean isTransactional;
     private boolean isSystem;
-    private boolean isNewChangeUnit;
     private boolean isBeforeExecution;//only for old change units
 
     private CodeLoadedTaskBuilder() {
@@ -58,7 +55,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     public static boolean supportsSourceClass(Class<?> sourceClass) {
-        return sourceClass.isAnnotationPresent(ChangeUnit.class) || sourceClass.isAnnotationPresent(io.mongock.api.annotations.ChangeUnit.class);
+        return sourceClass.isAnnotationPresent(ChangeUnit.class);
 
     }
 
@@ -69,22 +66,13 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setTemplateName(preview.getSource());
         setRunAlways(preview.isRunAlways());
         setTransactional(preview.isTransactional());
-        setLegacyChangeUnit(preview instanceof CodePreviewLegacyChangeUnit);
         setSystem(preview.isSystem());
         return this;
-    }
-
-    private void setLegacyChangeUnit(boolean legacyChangeUnit) {
-        setNewChangeUnit(!legacyChangeUnit);
     }
 
     private CodeLoadedTaskBuilder setSourceClass(Class<?> sourceClass) {
         if (sourceClass.isAnnotationPresent(ChangeUnit.class)) {
             setFromFlamingockChangeAnnotation(sourceClass, sourceClass.getAnnotation(ChangeUnit.class));
-            return this;
-
-        } else if (ExecutionUtils.isLegacyChangeUnit(sourceClass)) {
-            setFromLegacyChangeUnitAnnotation(sourceClass, sourceClass.getAnnotation(io.mongock.api.annotations.ChangeUnit.class));
             return this;
 
         } else {
@@ -126,11 +114,6 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setNewChangeUnit(boolean newChangeUnit) {
-        this.isNewChangeUnit = newChangeUnit;
-        return this;
-    }
-
     public CodeLoadedTaskBuilder setBeforeExecution(boolean beforeExecution) {
         isBeforeExecution = beforeExecution;
         return this;
@@ -146,26 +129,11 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
                     Class.forName(source),
                     isRunAlways,
                     isTransactional,
-                    isNewChangeUnit,
                     isSystem
             );
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void setFromLegacyChangeUnitAnnotation(Class<?> sourceClass, io.mongock.api.annotations.ChangeUnit annotation) {
-        logger.warn("Detected legacy changeUnit[{}]. If it's an old changeUnit created for Mongock, it's fine. " +
-                        "Otherwise, it's highly recommended us the new API[in package {}]",
-                sourceClass.getName(),
-                "io.flamingock.core.api.annotations");
-        setId(annotation.id());
-        setOrder(annotation.order());
-        setTemplateName(sourceClass.getName());
-        setRunAlways(annotation.runAlways());
-        setTransactional(annotation.transactional());
-        setNewChangeUnit(false);
-        setSystem(false);
     }
 
     private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, ChangeUnit annotation) {
@@ -174,7 +142,6 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setTemplateName(sourceClass.getName());
         setRunAlways(annotation.runAlways());
         setTransactional(annotation.transactional());
-        setNewChangeUnit(true);
         setSystem(false);
     }
 

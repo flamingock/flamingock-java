@@ -74,7 +74,6 @@ public class MongoImporterReader implements ImporterReader {
 
     private static ChangeEntry toChangeEntry(Document document) {
         Date timestamp = document.getDate("timestamp");
-//        String id = MongockLegacyIdGenerator.getNewId(document.getString("changeId"), document.getString("author"));
         return new ChangeEntry(
                 document.getString("executionId"),
                 document.getString("changeId"),

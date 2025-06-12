@@ -26,7 +26,6 @@ import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
-import io.flamingock.internal.core.legacy.MongockLegacyIdGenerator;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.oss.driver.dynamodb.changes._0_mongock_create_authors_collection;
 import io.flamingock.oss.driver.dynamodb.changes._1_create_client_collection_happy;
@@ -49,6 +48,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
+import static io.flamingock.commons.utils.Constants.DEFAULT_MIGRATION_AUTHOR;
 import static io.flamingock.internal.core.builder.core.CoreConfiguration.ImporterConfiguration;
 import static io.flamingock.commons.utils.DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -156,7 +156,8 @@ class DynamoDBImporterTest {
                 auditLog.get(0),
                 mongockDbState.get(0).getExecutionId(),
                 null,
-                MongockLegacyIdGenerator.getNewId( mongockDbState.get(0).getChangeId(), mongockDbState.get(0).getAuthor()),
+                mongockDbState.get(0).getChangeId(),
+                mongockDbState.get(0).getAuthor(),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(0).getChangeLogClass(),
                 mongockDbState.get(0).getChangeSetMethod(),
@@ -166,7 +167,8 @@ class DynamoDBImporterTest {
                 auditLog.get(1),
                 mongockDbState.get(1).getExecutionId(),
                 null,
-                MongockLegacyIdGenerator.getNewId( mongockDbState.get(1).getChangeId(), mongockDbState.get(1).getAuthor()),
+                mongockDbState.get(1).getChangeId(),
+                mongockDbState.get(1).getAuthor(),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(1).getChangeLogClass(),
                 mongockDbState.get(1).getChangeSetMethod(),
@@ -177,7 +179,8 @@ class DynamoDBImporterTest {
                 auditLog.get(2),
                 mongockDbState.get(2).getExecutionId(),
                 null,
-                MongockLegacyIdGenerator.getNewId( mongockDbState.get(2).getChangeId(), mongockDbState.get(2).getAuthor()),
+                mongockDbState.get(2).getChangeId(),
+                mongockDbState.get(2).getAuthor(),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(2).getChangeLogClass(),
                 mongockDbState.get(2).getChangeSetMethod(),
@@ -188,7 +191,8 @@ class DynamoDBImporterTest {
                 auditLog.get(3),
                 mongockDbState.get(3).getExecutionId(),
                 null,
-                MongockLegacyIdGenerator.getNewId( mongockDbState.get(3).getChangeId(), mongockDbState.get(3).getAuthor()),
+                mongockDbState.get(3).getChangeId(),
+                mongockDbState.get(3).getAuthor(),
                 AuditEntry.Status.EXECUTED,
                 mongockDbState.get(3).getChangeLogClass(),
                 mongockDbState.get(3).getChangeSetMethod(),
@@ -200,6 +204,7 @@ class DynamoDBImporterTest {
                 auditLog.get(4).getExecutionId(),
                 "dynamodb-local-legacy-importer",
                 "mongock-local-legacy-importer-dynamodb",
+                DEFAULT_MIGRATION_AUTHOR,
                 AuditEntry.Status.EXECUTED,
                 MongockImporterChangeUnit.class.getName(),
                 "execution",
@@ -213,6 +218,7 @@ class DynamoDBImporterTest {
                                  String expectedExecutionId,
                                  String expectedStageId,
                                  String expectedTaskId,
+                                 String expectedAuthor,
                                  AuditEntry.Status expectedStatus,
                                  String expectedClassName,
                                  String expectedMethodName,
@@ -221,6 +227,7 @@ class DynamoDBImporterTest {
         assertEquals(expectedExecutionId, actualAuditEntry.getExecutionId());
         assertEquals(expectedStageId, actualAuditEntry.getStageId());
         assertEquals(expectedTaskId, actualAuditEntry.getTaskId());
+        assertEquals(expectedAuthor, actualAuditEntry.getAuthor());
         assertEquals(expectedStatus, actualAuditEntry.getState());
         assertEquals(expectedClassName, actualAuditEntry.getClassName());
         assertEquals(expectedMethodName, actualAuditEntry.getMethodName());
