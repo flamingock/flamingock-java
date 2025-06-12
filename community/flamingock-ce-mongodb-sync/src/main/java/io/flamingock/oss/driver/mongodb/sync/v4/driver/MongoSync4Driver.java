@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.mongodb.sync.v4.driver;
 
 import com.mongodb.client.MongoClient;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;

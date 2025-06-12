@@ -23,7 +23,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
@@ -49,7 +49,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;

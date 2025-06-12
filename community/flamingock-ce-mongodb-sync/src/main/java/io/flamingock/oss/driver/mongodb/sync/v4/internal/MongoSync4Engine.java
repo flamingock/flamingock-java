@@ -21,8 +21,8 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Configuration;
-import io.flamingock.cloud.transaction.mongodb.sync.v4.wrapper.MongoSync4TransactionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4TransactionWrapper;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.TimeService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
@@ -37,7 +37,6 @@ import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
 import org.bson.Document;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;

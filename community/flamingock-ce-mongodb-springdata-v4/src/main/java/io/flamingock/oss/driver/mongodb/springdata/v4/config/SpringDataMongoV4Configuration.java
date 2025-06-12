@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.mongodb.springdata.v4.config;
 
-import io.flamingock.cloud.transaction.mongodb.sync.v4.config.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 

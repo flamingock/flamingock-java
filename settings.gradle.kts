@@ -85,9 +85,9 @@ include("transactioners:sql-transactioner")
 project(":transactioners:sql-transactioner").projectDir = file("transactioners/sql-transactioner")
 project(":transactioners:sql-transactioner").name = "sql-transactioner"
 
-include("transactioners:mongodb-sync-v4-transactioner")
-project(":transactioners:mongodb-sync-v4-transactioner").projectDir = file("transactioners/mongodb-sync-v4-transactioner")
-project(":transactioners:mongodb-sync-v4-transactioner").name = "mongodb-sync-v4-transactioner"
+include("transactioners:mongodb-sync-transactioner")
+project(":transactioners:mongodb-sync-transactioner").projectDir = file("transactioners/mongodb-sync-transactioner")
+project(":transactioners:mongodb-sync-transactioner").name = "mongodb-sync-transactioner"
 
 include("transactioners:dynamodb-transactioner")
 project(":transactioners:dynamodb-transactioner").projectDir = file("transactioners/dynamodb-transactioner")
@@ -106,9 +106,9 @@ project(":templates:flamingock-sql-template").projectDir = file("templates/flami
 
 
 //MONGODB
-include("templates:flamingock-mongodb-change-template")
-project(":templates:flamingock-mongodb-change-template").name = "flamingock-mongodb-change-template"
-project(":templates:flamingock-mongodb-change-template").projectDir = file("templates/flamingock-mongodb-change-template")
+include("templates:flamingock-mongodb-sync-template")
+project(":templates:flamingock-mongodb-sync-template").name = "flamingock-mongodb-sync-template"
+project(":templates:flamingock-mongodb-sync-template").projectDir = file("templates/flamingock-mongodb-sync-template")
 
 
 //////////////////////////////////////
