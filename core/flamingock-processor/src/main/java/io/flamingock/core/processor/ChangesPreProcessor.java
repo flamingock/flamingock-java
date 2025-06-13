@@ -44,7 +44,7 @@ import java.util.Set;
  *         The final structure is serialized into
  *         <code>META-INF/flamingock/metadata-full.json</code>.</li>
  * </ul>
- * </p>
+ * <p>
  *
  * <h2>Runtime Behavior</h2>
  * At runtime, the Flamingock library follows this lookup order for metadata:
@@ -55,7 +55,7 @@ import java.util.Set;
  *         the system falls back to <code>META-INF/flamingock/metadata-templated.json</code>.</li>
  *     <li><b>If neither file exists, the Flamingock library throws an exception.</b></li>
  * </ol>
- * </p>
+ * <p>
  *
  * <h2>Usage</h2>
  * This annotation processor is automatically triggered during compilation.
@@ -66,7 +66,7 @@ import java.util.Set;
  * The processor detects and processes classes annotated with:
  * <ul>
  *     <li>{@link  ChangeUnit} - Represents a change unit defined within the code.</li>
- *     <li>{@link  io.mongock.api.annotations.ChangeUnit} - Represents a legacy change unit defined within the code.</li>
+ *     <li>io.mongock.api.annotations.ChangeUnit - Represents a legacy change unit defined within the code.</li>
  * </ul>
  *
  * <h2>Generated Metadata Files</h2>

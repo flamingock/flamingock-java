@@ -119,11 +119,6 @@ project(":importers:flamingock-mongodb-sync-importer").name = "flamingock-mongod
 project(":importers:flamingock-mongodb-sync-importer").projectDir = file("importers/flamingock-mongodb-sync-importer")
 
 
-include("importers:mongodb-importer-v3")
-project(":importers:mongodb-importer-v3").name = "mongodb-importer-v3"
-project(":importers:mongodb-importer-v3").projectDir = file("importers/mongodb-importer-v3")
-
-
 //////////////////////////////////////
 // UTILS
 //////////////////////////////////////

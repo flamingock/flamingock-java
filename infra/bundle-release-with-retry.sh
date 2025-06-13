@@ -2,7 +2,7 @@
 
 validate_bundle() {
   case "$1" in
-    all|core|driver|transactioner|template)
+    all|core|cloud|community|plugins|transactioners|templates|utils)
       return 0
       ;;
     *)

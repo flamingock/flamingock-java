@@ -16,6 +16,8 @@
 
 package io.flamingock.internal.core.context;
 
+import io.flamingock.core.context.Dependency;
+
 /**
  * Represents a container for runtime dependencies.
  * Allows retrieval of registered {@link Dependency} instances by type or name.
