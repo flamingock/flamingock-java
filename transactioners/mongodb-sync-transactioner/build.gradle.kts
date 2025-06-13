@@ -24,6 +24,6 @@ java {
     }
 }
 
-configurations {
-    testImplementation.extendsFrom(compileOnly)
+configurations.testImplementation {
+    extendsFrom(configurations.compileOnly.get())
 }

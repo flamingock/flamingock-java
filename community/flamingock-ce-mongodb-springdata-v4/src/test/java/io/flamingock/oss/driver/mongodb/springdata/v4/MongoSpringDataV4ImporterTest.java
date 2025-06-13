@@ -62,7 +62,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MongoSpringDataV4ImporterTest {
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
     private static final String DB_NAME = "test";
     private static MongoClient mongoClient;
     private static MongoTemplate mongoTemplate;

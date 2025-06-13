@@ -63,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpringDataMongoV4DriverTest {
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
     private static final String DB_NAME = "test";
     private static final String CLIENTS_COLLECTION = "clientCollection";
     private static final String CUSTOM_AUDIT_REPOSITORY_NAME = "testFlamingockAudit";
