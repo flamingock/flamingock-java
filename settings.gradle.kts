@@ -50,13 +50,13 @@ include("community:flamingock-ce-mongodb-sync")
 project(":community:flamingock-ce-mongodb-sync").name = "flamingock-ce-mongodb-sync"
 project(":community:flamingock-ce-mongodb-sync").projectDir = file("community/flamingock-ce-mongodb-sync")
 
-include("community:flamingock-ce-mongodb-springdata-v3")
-project(":community:flamingock-ce-mongodb-springdata-v3").name = "flamingock-ce-mongodb-springdata-v3"
-project(":community:flamingock-ce-mongodb-springdata-v3").projectDir = file("community/flamingock-ce-mongodb-springdata-v3")
+include("community:flamingock-ce-mongodb-springdata-v3-legacy")
+project(":community:flamingock-ce-mongodb-springdata-v3-legacy").name = "flamingock-ce-mongodb-springdata-v3-legacy"
+project(":community:flamingock-ce-mongodb-springdata-v3-legacy").projectDir = file("community/flamingock-ce-mongodb-springdata-v3-legacy")
 
-include("community:flamingock-ce-mongodb-springdata-v4")
-project(":community:flamingock-ce-mongodb-springdata-v4").name = "flamingock-ce-mongodb-springdata-v4"
-project(":community:flamingock-ce-mongodb-springdata-v4").projectDir = file("community/flamingock-ce-mongodb-springdata-v4")
+include("community:flamingock-ce-mongodb-springdata")
+project(":community:flamingock-ce-mongodb-springdata").name = "flamingock-ce-mongodb-springdata"
+project(":community:flamingock-ce-mongodb-springdata").projectDir = file("community/flamingock-ce-mongodb-springdata")
 
 include("community:flamingock-ce-couchbase")
 project(":community:flamingock-ce-couchbase").name = "flamingock-ce-couchbase"
@@ -69,13 +69,13 @@ project(":community:flamingock-ce-dynamodb").projectDir = file("community/flamin
 //////////////////////////////////////
 // PLUGINS
 //////////////////////////////////////
-include("platform-plugins:flamingock-springboot-v2-integration")
-project(":platform-plugins:flamingock-springboot-v2-integration").name = "flamingock-springboot-v2-integration"
-project(":platform-plugins:flamingock-springboot-v2-integration").projectDir = file("platform-plugins/flamingock-springboot-v2-integration")
+include("platform-plugins:flamingock-springboot-integration-v2-legacy")
+project(":platform-plugins:flamingock-springboot-integration-v2-legacy").name = "flamingock-springboot-integration-v2-legacy"
+project(":platform-plugins:flamingock-springboot-integration-v2-legacy").projectDir = file("platform-plugins/flamingock-springboot-integration-v2-legacy")
 
-include("platform-plugins:flamingock-springboot-v3-integration")
-project(":platform-plugins:flamingock-springboot-v3-integration").name = "flamingock-springboot-v3-integration"
-project(":platform-plugins:flamingock-springboot-v3-integration").projectDir = file("platform-plugins/flamingock-springboot-v3-integration")
+include("platform-plugins:flamingock-springboot-integration")
+project(":platform-plugins:flamingock-springboot-integration").name = "flamingock-springboot-integration"
+project(":platform-plugins:flamingock-springboot-integration").projectDir = file("platform-plugins/flamingock-springboot-integration")
 
 //////////////////////////////////////
 // TRANSACTIONERS
@@ -114,9 +114,9 @@ project(":templates:flamingock-mongodb-sync-template").projectDir = file("templa
 //////////////////////////////////////
 // INTERNAL
 //////////////////////////////////////
-include("importers:mongodb-importer-sync-v4")
-project(":importers:mongodb-importer-sync-v4").name = "mongodb-importer-sync-v4"
-project(":importers:mongodb-importer-sync-v4").projectDir = file("importers/mongodb-importer-sync-v4")
+include("importers:flamingock-mongodb-sync-importer")
+project(":importers:flamingock-mongodb-sync-importer").name = "flamingock-mongodb-sync-importer"
+project(":importers:flamingock-mongodb-sync-importer").projectDir = file("importers/flamingock-mongodb-sync-importer")
 
 
 include("importers:mongodb-importer-v3")

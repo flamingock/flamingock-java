@@ -9,8 +9,8 @@ Update your build configuration to replace Mongock dependencies with Flamingock 
 
 **Gradle:**
 ```kotlin
-implementation("io.flamingock:flamingock-springboot-v2-integration:$flamingockLatestVersion")
-implementation("io.flamingock:flamingock-ce-mongodb-springdata-v3:$flamingockLatestVersion")
+implementation("io.flamingock:flamingock-springboot-integration:$flamingockLatestVersion")
+implementation("io.flamingock:flamingock-ce-mongodb-springdata:$flamingockLatestVersion")
 ```
 
 **Maven:**
@@ -18,12 +18,12 @@ implementation("io.flamingock:flamingock-ce-mongodb-springdata-v3:$flamingockLat
 <dependencies>
    <dependency>
       <groupId>io.flamingock</groupId>
-      <artifactId>flamingock-springboot-v2-integration</artifactId>
+      <artifactId>flamingock-springboot-integration</artifactId>
       <version>${flamingock.latestVersion}</version>
    </dependency>
    <dependency>
       <groupId>io.flamingock</groupId>
-      <artifactId>flamingock-ce-mongodb-springdata-v3</artifactId>
+      <artifactId>flamingock-ce-mongodb-springdata</artifactId>
       <version>${flamingock.latestVersion}</version>
    </dependency>
 </dependencies>
