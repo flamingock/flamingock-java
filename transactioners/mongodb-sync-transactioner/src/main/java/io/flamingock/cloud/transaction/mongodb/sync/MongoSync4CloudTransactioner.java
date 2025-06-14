@@ -30,7 +30,7 @@ import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;

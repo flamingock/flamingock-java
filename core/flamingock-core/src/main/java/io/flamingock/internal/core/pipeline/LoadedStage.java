@@ -17,11 +17,11 @@
 package io.flamingock.internal.core.pipeline;
 
 
-import io.flamingock.core.api.error.validation.Validatable;
-import io.flamingock.core.api.error.validation.ValidationError;
+import io.flamingock.core.error.validation.Validatable;
+import io.flamingock.core.error.validation.ValidationError;
 
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
-import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;

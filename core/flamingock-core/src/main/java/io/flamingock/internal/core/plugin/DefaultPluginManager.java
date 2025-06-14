@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.plugin;
 
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 
 import java.util.Collection;
 import java.util.List;

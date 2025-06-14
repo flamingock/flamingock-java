@@ -20,7 +20,7 @@ import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
 import io.flamingock.cloud.auth.AuthManager;
 import io.flamingock.commons.utils.id.EnvironmentId;
 import io.flamingock.commons.utils.id.ServiceId;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.audit.AuditEntry;
 import io.flamingock.commons.utils.id.RunnerId;
 import io.flamingock.commons.utils.Result;
 import io.flamingock.commons.utils.http.Http;

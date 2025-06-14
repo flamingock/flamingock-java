@@ -1,11 +1,11 @@
 package io.flamingock.importer.mongodb.sync.v4;
 
 import com.mongodb.client.MongoCollection;
-import io.flamingock.internal.core.engine.audit.importer.ImporterReader;
-import io.flamingock.internal.core.engine.audit.importer.model.ChangeEntry;
-import io.flamingock.internal.core.engine.audit.importer.model.ChangeState;
-import io.flamingock.internal.core.engine.audit.importer.model.ChangeType;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.importer.ImporterReader;
+import io.flamingock.internal.core.importer.model.MongockChangeEntry;
+import io.flamingock.internal.core.importer.model.ChangeState;
+import io.flamingock.internal.core.importer.model.ChangeType;
+import io.flamingock.core.audit.AuditEntry;
 import org.bson.Document;
 
 import java.time.Instant;
@@ -46,7 +46,7 @@ public class MongoImporterReader implements ImporterReader {
     }
 
     private static AuditEntry toAuditEntry(Document document) {
-        ChangeEntry changeEntry = toChangeEntry(document);
+        MongockChangeEntry changeEntry = toChangeEntry(document);
         LocalDateTime timestamp = Instant.ofEpochMilli(changeEntry.getTimestamp().getTime())
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
@@ -72,9 +72,9 @@ public class MongoImporterReader implements ImporterReader {
         );
     }
 
-    private static ChangeEntry toChangeEntry(Document document) {
+    private static MongockChangeEntry toChangeEntry(Document document) {
         Date timestamp = document.getDate("timestamp");
-        return new ChangeEntry(
+        return new MongockChangeEntry(
                 document.getString("executionId"),
                 document.getString("changeId"),
                 document.getString("author"),

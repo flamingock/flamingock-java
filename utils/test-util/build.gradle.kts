@@ -3,7 +3,7 @@ dependencies {
 
     api(project(":utils:general-util"))
     api(project(":core:flamingock-core"))
-    api(project(":core:flamingock-core-api"))
+    api(project(":core:flamingock-core-commons"))
 
     api("javax.inject:javax.inject:1")
     api("org.reflections:reflections:0.10.1")

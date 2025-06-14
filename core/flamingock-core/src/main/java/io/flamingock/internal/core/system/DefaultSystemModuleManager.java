@@ -16,8 +16,10 @@
 
 package io.flamingock.internal.core.system;
 
-import io.flamingock.internal.core.context.ContextInjectable;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextInjectable;
+import io.flamingock.core.context.ContextResolver;
+import io.flamingock.core.system.SystemModule;
+import io.flamingock.core.system.SystemModuleManager;
 
 import java.util.LinkedHashSet;
 import java.util.Set;

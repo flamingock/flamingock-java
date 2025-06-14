@@ -20,9 +20,9 @@ import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfigurator;
 import io.flamingock.internal.core.community.driver.LocalDriver;
-import io.flamingock.internal.core.context.Context;
+import io.flamingock.core.context.Context;
 import io.flamingock.internal.core.plugin.PluginManager;
-import io.flamingock.internal.core.system.SystemModuleManager;
+import io.flamingock.core.system.SystemModuleManager;
 
 public class CommunityFlamingockBuilder
         extends AbstractFlamingockBuilder<CommunityFlamingockBuilder>

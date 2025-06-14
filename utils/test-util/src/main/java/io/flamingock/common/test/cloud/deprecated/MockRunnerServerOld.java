@@ -21,7 +21,7 @@ import io.flamingock.core.cloud.api.planner.response.StageResponse;
 import io.flamingock.core.cloud.api.planner.response.TaskResponse;
 import io.flamingock.core.cloud.api.vo.ActionResponse;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.audit.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;

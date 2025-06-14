@@ -23,7 +23,7 @@ import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.LocalEngine;
 import io.flamingock.internal.core.community.driver.LocalDriver;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.couchbase.CouchbaseConfiguration;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseEngine;
 

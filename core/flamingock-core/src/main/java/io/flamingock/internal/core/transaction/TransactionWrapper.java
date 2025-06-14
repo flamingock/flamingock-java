@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.transaction;
 
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 
 import java.util.function.Supplier;

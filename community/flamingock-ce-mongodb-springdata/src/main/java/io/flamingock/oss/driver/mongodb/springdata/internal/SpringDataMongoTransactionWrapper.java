@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.mongodb.springdata.internal;
 
 import com.mongodb.TransactionOptions;
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;

@@ -18,7 +18,7 @@ package io.flamingock.oss.driver.dynamodb;
 
 import io.flamingock.commons.utils.DynamoDBConstants;
 import io.flamingock.internal.core.community.driver.DriverConfigurable;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 
 public class DynamoDBConfiguration implements DriverConfigurable {
 

@@ -126,7 +126,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     }
 
-    public static abstract class TemplateSimulate implements ChangeTemplate<ChangeTemplateConfig<Object, Object>> {}
+    public static abstract class TemplateSimulate implements ChangeTemplate<ChangeTemplateConfig<Object, Object, Object>> {}
 
     @ChangeUnit(id = "not-annotated", order = "000")
     public static class NotAnnotated {

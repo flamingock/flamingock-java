@@ -16,14 +16,15 @@
 
 package io.flamingock.internal.core.pipeline;
 
-import io.flamingock.core.api.error.FlamingockException;
-import io.flamingock.core.api.error.validation.ValidationError;
-import io.flamingock.core.api.error.validation.ValidationResult;
+import io.flamingock.core.error.FlamingockException;
+import io.flamingock.core.error.validation.ValidationError;
+import io.flamingock.core.error.validation.ValidationResult;
 import io.flamingock.core.context.Dependency;
+import io.flamingock.core.pipeline.PipelineDescriptor;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;
 import io.flamingock.core.task.TaskDescriptor;
-import io.flamingock.internal.core.context.ContextInjectable;
+import io.flamingock.core.context.ContextInjectable;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import org.jetbrains.annotations.NotNull;

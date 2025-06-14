@@ -16,8 +16,8 @@
 
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.core.api.error.validation.Validatable;
-import io.flamingock.core.api.error.validation.ValidationError;
+import io.flamingock.core.error.validation.Validatable;
+import io.flamingock.core.error.validation.ValidationError;
 
 import io.flamingock.core.task.AbstractTaskDescriptor;
 

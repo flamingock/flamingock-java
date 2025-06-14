@@ -18,16 +18,16 @@ package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.commons.utils.Result;
 import io.flamingock.internal.core.cloud.transaction.OngoingStatusRepository;
-import io.flamingock.internal.core.engine.audit.AuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditItem;
-import io.flamingock.internal.core.engine.audit.domain.RollbackAuditItem;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
+import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.RuntimeContext;
-import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditItem;
+import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.RuntimeManager;
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
@@ -62,13 +62,13 @@ public class StepNavigator {
 
     private TaskSummarizer summarizer;
 
-    private AuditWriter auditWriter;
+    private ExecutionAuditWriter auditWriter;
 
     private RuntimeManager runtimeManager;
 
     private TransactionWrapper transactionWrapper;
 
-    public StepNavigator(AuditWriter auditWriter,
+    public StepNavigator(ExecutionAuditWriter auditWriter,
                          TaskSummarizer summarizer,
                          RuntimeManager runtimeManager,
                          TransactionWrapper transactionWrapper,
@@ -90,7 +90,7 @@ public class StepNavigator {
         this.summarizer = summarizer;
     }
 
-    void setAuditWriter(AuditWriter auditWriter) {
+    void setAuditWriter(ExecutionAuditWriter auditWriter) {
         this.auditWriter = auditWriter;
     }
 
@@ -188,7 +188,7 @@ public class StepNavigator {
                                                ExecutionContext executionContext,
                                                LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setStartStep(startStep).setExecutedAt(executedAt).build();
-        Result auditResult = auditWriter.writeStartExecution(new StartExecutionAuditItem(startStep.getLoadedTask(), executionContext, runtimeContext));
+        Result auditResult = auditWriter.writeStartExecution(new StartExecutionAuditContextBundle(startStep.getLoadedTask(), executionContext, runtimeContext));
         logAuditResult(auditResult, startStep.getLoadedTask().getId(), START_DESC);
         ExecutableStep executableStep = startStep.start();
         summarizer.add(executableStep);
@@ -200,7 +200,7 @@ public class StepNavigator {
                                                    LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setExecutionStep(executionStep).setExecutedAt(executedAt).build();
 
-        Result auditResult = auditWriter.writeExecution(new ExecutionAuditItem(executionStep.getLoadedTask(), executionContext, runtimeContext));
+        Result auditResult = auditWriter.writeExecution(new ExecutionAuditContextBundle(executionStep.getLoadedTask(), executionContext, runtimeContext));
         logAuditResult(auditResult, executionStep.getLoadedTask().getId(), EXECUTION_DESC);
         AfterExecutionAuditStep afterExecutionAudit = executionStep.applyAuditResult(auditResult);
         summarizer.add(afterExecutionAudit);
@@ -249,7 +249,7 @@ public class StepNavigator {
 
     private void auditManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setManualRollbackStep(rolledBackStep).setExecutedAt(executedAt).build();
-        Result auditResult = auditWriter.writeRollback(new RollbackAuditItem(rolledBackStep.getLoadedTask(), executionContext, runtimeContext));
+        Result auditResult = auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext));
         logAuditResult(auditResult, rolledBackStep.getLoadedTask().getId(), MANUAL_ROLLBACK_DESC);
         CompletedFailedManualRollback failedStep = rolledBackStep.applyAuditResult(auditResult);
         summarizer.add(failedStep);
@@ -257,7 +257,7 @@ public class StepNavigator {
 
     private void auditAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setAutoRollbackStep(rolledBackStep).setExecutedAt(executedAt).build();
-        Result auditResult = auditWriter.writeRollback(new RollbackAuditItem(rolledBackStep.getLoadedTask(), executionContext, runtimeContext));
+        Result auditResult = auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext));
         logAuditResult(auditResult, rolledBackStep.getLoadedTask().getId(), AUTO_ROLLBACK_DESC);
         summarizer.add(rolledBackStep);
     }

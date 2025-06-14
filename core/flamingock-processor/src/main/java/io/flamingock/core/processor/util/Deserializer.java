@@ -1,16 +1,13 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.commons.utils.JsonObjectMapper;
-import io.flamingock.core.api.metadata.Constants;
+import io.flamingock.core.metadata.Constants;
 import io.flamingock.core.preview.PreviewPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public final class Deserializer {

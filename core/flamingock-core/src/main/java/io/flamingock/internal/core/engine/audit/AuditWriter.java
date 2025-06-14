@@ -16,10 +16,10 @@
 
 package io.flamingock.internal.core.engine.audit;
 
-import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditItem;
-import io.flamingock.internal.core.engine.audit.domain.RollbackAuditItem;
-import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditItem;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
+import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
+import io.flamingock.core.audit.AuditEntry;
 import io.flamingock.commons.utils.Result;
 
 /**
@@ -31,11 +31,11 @@ import io.flamingock.commons.utils.Result;
  */
 public interface AuditWriter {
 
-    Result writeStartExecution(StartExecutionAuditItem auditItem);
+    Result writeStartExecution(StartExecutionAuditContextBundle auditContextBundle);
 
-    Result writeExecution(ExecutionAuditItem auditItem);
+    Result writeExecution(ExecutionAuditContextBundle auditContextBundle);
 
-    Result writeRollback(RollbackAuditItem auditItem);
+    Result writeRollback(RollbackAuditContextBundle auditContextBundle);
 
     Result writeEntry(AuditEntry auditEntry);
 

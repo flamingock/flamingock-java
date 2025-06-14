@@ -16,9 +16,9 @@
 
 package io.flamingock.internal.core.plugin;
 
-import io.flamingock.internal.core.context.ContextInitializable;
+import io.flamingock.core.context.ContextInitializable;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 
 import java.util.Collections;

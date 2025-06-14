@@ -17,6 +17,7 @@
 package io.flamingock.internal.core.context;
 
 
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.core.context.Dependency;
 import io.flamingock.core.context.DependencyBuildable;
 

@@ -16,7 +16,7 @@
 
 package io.flamingock.oss.driver.couchbase.internal.util;
 
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.audit.AuditEntry;
 import io.flamingock.oss.driver.couchbase.internal.CouchbaseConstants;
 
 public class AuditEntryKeyGenerator {

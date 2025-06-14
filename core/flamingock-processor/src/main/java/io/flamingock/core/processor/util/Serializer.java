@@ -2,8 +2,7 @@ package io.flamingock.core.processor.util;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.flamingock.commons.utils.JsonObjectMapper;
-import io.flamingock.core.api.metadata.Constants;
-import io.flamingock.core.preview.AbstractPreviewTask;
+import io.flamingock.core.metadata.Constants;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewPipeline;
 import io.flamingock.core.preview.PreviewStage;

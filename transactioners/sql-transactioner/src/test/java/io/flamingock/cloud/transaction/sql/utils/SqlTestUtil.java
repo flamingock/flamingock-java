@@ -16,7 +16,7 @@
 
 package io.flamingock.cloud.transaction.sql.utils;
 
-import io.flamingock.internal.core.engine.audit.domain.AuditItem;
+import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import org.junit.jupiter.api.Assertions;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -74,7 +74,7 @@ public final class SqlTestUtil {
 
             connection.setAutoCommit(false);
             preparedStatement.setString(1, taskId);
-            preparedStatement.setString(2, AuditItem.Operation.EXECUTION.toString());
+            preparedStatement.setString(2, AuditContextBundle.Operation.EXECUTION.toString());
             preparedStatement.executeUpdate();
             connection.commit();
             checkAtLeastOneOngoingTask(connection);

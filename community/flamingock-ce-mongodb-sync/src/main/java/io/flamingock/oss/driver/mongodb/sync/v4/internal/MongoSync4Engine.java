@@ -19,7 +19,6 @@ package io.flamingock.oss.driver.mongodb.sync.v4.internal;
 import com.mongodb.ReadConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
 import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4TransactionWrapper;
@@ -31,11 +30,7 @@ import io.flamingock.internal.core.community.AbstractLocalEngine;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.engine.audit.importer.ImporterModule;
-import io.flamingock.internal.core.system.SystemModule;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.importer.mongodb.sync.v4.MongoImporterReader;
-import org.bson.Document;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -51,7 +46,6 @@ public class MongoSync4Engine extends AbstractLocalEngine {
     private MongoSync4Auditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
-    private SystemModule mongockImporter = null;
 
 
     public MongoSync4Engine(MongoClient mongoClient,
@@ -95,13 +89,6 @@ public class MongoSync4Engine extends AbstractLocalEngine {
                 TimeService.getDefault());
         lockService.initialize(driverConfiguration.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
-        //Mongock importer
-        if (coreConfiguration.isMongockImporterEnabled()) {
-            MongoCollection<Document> legacyCollectionToImportFrom = database
-                    .getCollection(coreConfiguration.getLegacyMongockChangelogSource());
-            MongoImporterReader importerReader = new MongoImporterReader(legacyCollectionToImportFrom);
-            mongockImporter = new ImporterModule(importerReader);
-        }
     }
 
     @Override
@@ -124,8 +111,4 @@ public class MongoSync4Engine extends AbstractLocalEngine {
         return Optional.ofNullable(transactionWrapper);
     }
 
-    @Override
-    protected Optional<SystemModule> getMongockLegacyImporterModule() {
-        return Optional.ofNullable(mongockImporter);
-    }
 }

@@ -20,9 +20,9 @@ import io.flamingock.cloud.planner.CloudExecutionPlanner;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.cloud.planner.client.HttpExecutionPlannerClient;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.engine.audit.AuditWriter;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 import org.apache.http.impl.client.HttpClients;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -78,7 +78,7 @@ public class CloudDriverImpl  implements CloudDriver {
         EnvironmentId environmentId = EnvironmentId.fromString(authResponse.getEnvironmentId());
         ServiceId serviceId = ServiceId.fromString(authResponse.getServiceId());
 
-        AuditWriter auditWriter = new HtttpAuditWriter(
+        ExecutionAuditWriter auditWriter = new HtttpAuditWriter(
                 cloudConfiguration.getHost(),
                 environmentId,
                 serviceId,

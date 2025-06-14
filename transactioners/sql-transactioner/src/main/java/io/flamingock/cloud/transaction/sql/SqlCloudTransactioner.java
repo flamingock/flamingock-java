@@ -16,12 +16,12 @@
 
 package io.flamingock.cloud.transaction.sql;
 
-import io.flamingock.core.api.error.FlamingockException;
+import io.flamingock.core.error.FlamingockException;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
-import io.flamingock.internal.core.engine.audit.domain.AuditItem;
+import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import org.slf4j.Logger;
@@ -107,7 +107,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
             Set<TaskWithOngoingStatus> ongoingStatuses = new HashSet<>();
             while (resultSet.next()) {
                 String taskId = resultSet.getString("task_id");
-                AuditItem.Operation operation = AuditItem.Operation.valueOf(resultSet.getString("operation"));
+                AuditContextBundle.Operation operation = AuditContextBundle.Operation.valueOf(resultSet.getString("operation"));
                 ongoingStatuses.add(new TaskWithOngoingStatus(taskId, operation.toOngoingStatusOperation()));
             }
             return ongoingStatuses;

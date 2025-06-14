@@ -27,8 +27,8 @@ import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWr
 import io.flamingock.commons.utils.Result;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
-import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import org.bson.Document;

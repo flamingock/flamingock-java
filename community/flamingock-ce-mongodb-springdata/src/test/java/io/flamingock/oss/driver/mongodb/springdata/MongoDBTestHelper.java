@@ -22,7 +22,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.commons.utils.Pair;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.audit.AuditEntry;
 import io.flamingock.commons.utils.TimeUtil;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;

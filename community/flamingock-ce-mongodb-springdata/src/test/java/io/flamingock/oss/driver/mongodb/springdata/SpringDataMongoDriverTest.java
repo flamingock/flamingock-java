@@ -23,7 +23,7 @@ import com.mongodb.client.MongoClients;
 import io.flamingock.commons.utils.Trio;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.audit.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.oss.driver.mongodb.springdata.changes._1_create_client_collection_happy;

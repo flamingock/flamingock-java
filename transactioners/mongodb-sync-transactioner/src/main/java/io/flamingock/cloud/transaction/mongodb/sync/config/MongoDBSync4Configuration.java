@@ -19,7 +19,7 @@ package io.flamingock.cloud.transaction.mongodb.sync.config;
 import com.mongodb.ReadConcernLevel;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration;
 
 import java.time.Duration;

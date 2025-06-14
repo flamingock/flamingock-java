@@ -17,7 +17,7 @@
 package io.flamingock.oss.driver.couchbase;
 
 import io.flamingock.internal.core.community.driver.DriverConfigurable;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 
 public class CouchbaseConfiguration implements DriverConfigurable {
 

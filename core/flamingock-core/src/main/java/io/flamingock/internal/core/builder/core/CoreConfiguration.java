@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.builder.core;
 
-import io.flamingock.internal.core.system.SystemModule;
+import io.flamingock.core.system.SystemModule;
 import io.flamingock.internal.core.builder.TransactionStrategy;
 
 import io.flamingock.core.processor.util.Deserializer;

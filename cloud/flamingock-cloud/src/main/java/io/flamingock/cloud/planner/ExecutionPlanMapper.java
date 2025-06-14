@@ -28,7 +28,7 @@ import io.flamingock.core.cloud.api.planner.response.RequiredActionTask;
 import io.flamingock.core.cloud.api.vo.OngoingStatus;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.engine.lock.LockKey;
 import io.flamingock.internal.core.pipeline.ExecutableStage;
@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.core.engine.audit.writer.AuditEntry.Status.EXECUTED;
+import static io.flamingock.core.audit.AuditEntry.Status.EXECUTED;
 
 public final class ExecutionPlanMapper {
 

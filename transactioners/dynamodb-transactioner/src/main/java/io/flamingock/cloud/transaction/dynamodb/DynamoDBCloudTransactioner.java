@@ -21,7 +21,7 @@ import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;

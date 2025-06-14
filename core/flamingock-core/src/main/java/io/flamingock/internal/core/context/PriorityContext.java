@@ -17,6 +17,8 @@
 package io.flamingock.internal.core.context;
 
 import io.flamingock.commons.utils.Property;
+import io.flamingock.core.context.Context;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.core.context.Dependency;
 
 import java.io.File;

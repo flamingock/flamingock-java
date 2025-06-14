@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.executable.builder;
 
 import io.flamingock.commons.utils.FileUtil;
 import io.flamingock.core.api.template.ChangeTemplateConfig;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.audit.AuditEntry;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
@@ -108,7 +108,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
 
     }
 
-    private <T extends ChangeTemplateConfig<?,?>> T getConfig(Class<T> configClass, TemplateLoadedChangeUnit loadedTask) {
+    private <T extends ChangeTemplateConfig<?, ?,?>> T getConfig(Class<T> configClass, TemplateLoadedChangeUnit loadedTask) {
         return FileUtil.getFromMap(configClass, loadedTask.getTemplateConfiguration());
     }
 

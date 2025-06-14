@@ -17,7 +17,7 @@
 package io.flamingock.cloud.transaction.dynamodb;
 
 import io.flamingock.commons.utils.DynamoDBUtil;
-import io.flamingock.internal.core.engine.audit.domain.AuditItem;
+import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
@@ -58,7 +58,7 @@ public class DynamoDBTestHelper {
         DynamoDbTable<OngoingTaskEntity> table = dynamoDBUtil.getEnhancedClient().table(OngoingTaskEntity.tableName, TableSchema.fromBean(OngoingTaskEntity.class));
         table.putItem(
                 PutItemEnhancedRequest.builder(OngoingTaskEntity.class)
-                        .item(new OngoingTaskEntity(taskId, AuditItem.Operation.EXECUTION.toString()))
+                        .item(new OngoingTaskEntity(taskId, AuditContextBundle.Operation.EXECUTION.toString()))
                         .build()
         );
         checkAtLeastOneOngoingTask();

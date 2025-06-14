@@ -1,7 +1,5 @@
 package io.flamingock.core.api.template;
 
-import io.flamingock.core.api.metadata.ReflectionMetadataProvider;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -13,7 +11,7 @@ import java.lang.reflect.Type;
  *
  * @param <CONFIG> The type of configuration this template works with.
  */
-public interface ChangeTemplate<CONFIG extends ChangeTemplateConfig<?, ?>> extends ReflectionMetadataProvider {
+public interface ChangeTemplate<CONFIG extends ChangeTemplateConfig<?, ?, ?>> extends ReflectionMetadataProvider {
 
     void setChangeId(String changeId);
 

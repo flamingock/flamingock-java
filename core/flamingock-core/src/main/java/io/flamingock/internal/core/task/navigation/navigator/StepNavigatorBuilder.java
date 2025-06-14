@@ -16,10 +16,10 @@
 
 package io.flamingock.internal.core.task.navigation.navigator;
 
-import io.flamingock.internal.core.engine.audit.AuditWriter;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Set;
@@ -29,7 +29,7 @@ public interface StepNavigatorBuilder {
 
     StepNavigatorBuilder setSummarizer(TaskSummarizer summarizer);
 
-    StepNavigatorBuilder setAuditWriter(AuditWriter auditWriter);
+    StepNavigatorBuilder setAuditWriter(ExecutionAuditWriter auditWriter);
 
     StepNavigatorBuilder setLock(Lock lock);
 
@@ -46,7 +46,7 @@ public interface StepNavigatorBuilder {
 
 
         protected TaskSummarizer summarizer = null;
-        protected AuditWriter auditWriter = null;
+        protected ExecutionAuditWriter auditWriter = null;
 
         protected Lock lock = null;
 
@@ -66,7 +66,7 @@ public interface StepNavigatorBuilder {
         }
 
         @Override
-        public StepNavigatorBuilder setAuditWriter(AuditWriter auditWriter) {
+        public StepNavigatorBuilder setAuditWriter(ExecutionAuditWriter auditWriter) {
             this.auditWriter = auditWriter;
             return this;
         }

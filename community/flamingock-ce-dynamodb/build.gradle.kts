@@ -2,7 +2,7 @@ dependencies {
     implementation(project(":utils:dynamodb-util"))
     api(project(":core:flamingock-core"))
 
-    implementation("software.amazon.awssdk:dynamodb-enhanced:2.25.28")
+    compileOnly("software.amazon.awssdk:dynamodb-enhanced:[2.0.0,3.0.0)")
 
     api(project(":transactioners:dynamodb-transactioner"))
 
@@ -20,4 +20,8 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))
     }
+}
+
+configurations.testImplementation {
+    extendsFrom(configurations.compileOnly.get())
 }

@@ -17,7 +17,7 @@
 package io.flamingock.core.pipeline;
 
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
-import io.flamingock.core.api.error.FlamingockException;
+import io.flamingock.core.error.FlamingockException;
 import io.flamingock.core.preview.CodePreviewChangeUnit;
 import io.flamingock.core.preview.PreviewMethod;
 import io.flamingock.core.preview.PreviewPipeline;

@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.engine.audit;
 
-import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 
 public interface AuditReader {
     AuditStageStatus getAuditStageStatus();

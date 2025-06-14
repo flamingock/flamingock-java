@@ -20,7 +20,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4CollectionWrapper;
 import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWrapper;
-import io.flamingock.internal.core.engine.audit.domain.AuditItem;
+import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
 import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
 import org.bson.Document;
@@ -56,7 +56,7 @@ public class MongoDBTestHelper {
         Document filter = new Document("taskId", taskId);
 
         Document newDocument = new Document("taskId", taskId)
-                .append("operation", AuditItem.Operation.EXECUTION.toString());
+                .append("operation", AuditContextBundle.Operation.EXECUTION.toString());
 
         onGoingTasksCollection.updateOne(
                 filter,

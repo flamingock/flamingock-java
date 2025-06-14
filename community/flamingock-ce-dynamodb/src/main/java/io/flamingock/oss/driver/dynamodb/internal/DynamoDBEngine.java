@@ -27,8 +27,6 @@ import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.oss.driver.dynamodb.DynamoDBConfiguration;
-import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
-import io.flamingock.oss.driver.dynamodb.internal.mongock.MongockImporterModule;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
@@ -45,7 +43,6 @@ public class DynamoDBEngine extends AbstractLocalEngine {
     private DynamoDBAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
-    private MongockImporterModule mongockImporter = null;
 
 
     public DynamoDBEngine(DynamoDbClient client,
@@ -77,11 +74,7 @@ public class DynamoDBEngine extends AbstractLocalEngine {
                 driverConfiguration.getWriteCapacityUnits());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
         //Mongock importer
-        if (coreConfiguration.isMongockImporterEnabled()) {
-            DynamoDbTable<ChangeEntryDynamoDB> sourceTable = dynamoDBUtil.getEnhancedClient()
-                    .table(coreConfiguration.getLegacyMongockChangelogSource(), TableSchema.fromBean(ChangeEntryDynamoDB.class));
-            mongockImporter = new MongockImporterModule(sourceTable, auditor);
-        }
+
     }
 
     @Override
@@ -100,8 +93,4 @@ public class DynamoDBEngine extends AbstractLocalEngine {
         return Optional.ofNullable(transactionWrapper);
     }
 
-    @Override
-    protected Optional<MongockImporterModule> getMongockLegacyImporterModule() {
-        return Optional.ofNullable(mongockImporter);
-    }
 }

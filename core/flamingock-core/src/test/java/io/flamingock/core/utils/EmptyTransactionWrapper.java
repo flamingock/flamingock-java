@@ -1,6 +1,6 @@
 package io.flamingock.core.utils;
 
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 

@@ -21,7 +21,7 @@ import io.flamingock.internal.core.community.lock.LocalLock;
 import io.flamingock.internal.core.community.lock.LocalLockService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.audit.AuditReader;
-import io.flamingock.internal.core.engine.audit.writer.AuditStageStatus;
+import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.core.engine.execution.ExecutionPlan;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.engine.lock.Lock;

@@ -9,8 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.api.metadata.Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH;
-import static io.flamingock.core.api.metadata.Constants.TEMPLATED_GRAALVM_REFLECT_CLASSES_PATH;
+import static io.flamingock.core.metadata.Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH;
+import static io.flamingock.core.metadata.Constants.TEMPLATED_GRAALVM_REFLECT_CLASSES_PATH;
 
 public final class FileUtil {
 

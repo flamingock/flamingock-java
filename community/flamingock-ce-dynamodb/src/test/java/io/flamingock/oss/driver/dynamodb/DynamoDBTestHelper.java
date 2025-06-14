@@ -16,9 +16,9 @@
 
 package io.flamingock.oss.driver.dynamodb;
 
-import io.flamingock.internal.core.engine.audit.writer.AuditEntry;
+import io.flamingock.core.audit.AuditEntry;
 import io.flamingock.oss.driver.dynamodb.internal.entities.AuditEntryEntity;
-import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
+//import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
 import io.flamingock.commons.utils.DynamoDBUtil;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
@@ -52,15 +52,15 @@ public class DynamoDBTestHelper {
                 .collect(Collectors.toList());
     }
 
-    public List<ChangeEntryDynamoDB> getChangeEntriesSorted(String auditLogTable) {
-        return dynamoDBUtil.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(ChangeEntryDynamoDB.class))
-                .scan(ScanEnhancedRequest.builder()
-                        .consistentRead(true)
-                        .build()
-                )
-                .items()
-                .stream()
-                .sorted(Comparator.comparing(ChangeEntryDynamoDB::getTimestamp))
-                .collect(Collectors.toList());
-    }
+//    public List<ChangeEntryDynamoDB> getChangeEntriesSorted(String auditLogTable) {
+//        return dynamoDBUtil.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(ChangeEntryDynamoDB.class))
+//                .scan(ScanEnhancedRequest.builder()
+//                        .consistentRead(true)
+//                        .build()
+//                )
+//                .items()
+//                .stream()
+//                .sorted(Comparator.comparing(ChangeEntryDynamoDB::getTimestamp))
+//                .collect(Collectors.toList());
+//    }
 }

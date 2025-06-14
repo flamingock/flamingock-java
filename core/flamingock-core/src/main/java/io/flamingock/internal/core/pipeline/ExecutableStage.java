@@ -16,6 +16,7 @@
 
 package io.flamingock.internal.core.pipeline;
 
+import io.flamingock.core.pipeline.StageDescriptor;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class ExecutableStage implements StageDescriptor{
+public class ExecutableStage implements StageDescriptor {
 
     protected final List<? extends ExecutableTask> tasks;
     private final String name;

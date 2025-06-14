@@ -19,24 +19,23 @@ package io.flamingock.internal.core.community;
 
 import io.flamingock.commons.utils.Result;
 import io.flamingock.internal.core.engine.audit.AuditReader;
-import io.flamingock.internal.core.engine.audit.AuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditItem;
-import io.flamingock.internal.core.engine.audit.domain.RollbackAuditItem;
-import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditItem;
-import io.flamingock.internal.core.engine.audit.writer.AuditEntryMapper;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
+import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
+import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
 
-public interface LocalAuditor extends AuditWriter, AuditReader {
+public interface LocalAuditor extends ExecutionAuditWriter, AuditReader {
 
-    default Result writeStartExecution(StartExecutionAuditItem auditItem) {
+    default Result writeStartExecution(StartExecutionAuditContextBundle auditContextBundle) {
         return Result.OK();
     }
 
-    default Result writeExecution(ExecutionAuditItem auditItem) {
-        return writeEntry(AuditEntryMapper.map(auditItem));
+    default Result writeExecution(ExecutionAuditContextBundle auditContextBundle) {
+        return writeEntry(auditContextBundle.toAuditEntry());
     }
 
-    default Result writeRollback(RollbackAuditItem auditItem) {
-        return writeEntry(AuditEntryMapper.map(auditItem));
+    default Result writeRollback(RollbackAuditContextBundle auditContextBundle) {
+        return writeEntry(auditContextBundle.toAuditEntry());
     }
 
 }

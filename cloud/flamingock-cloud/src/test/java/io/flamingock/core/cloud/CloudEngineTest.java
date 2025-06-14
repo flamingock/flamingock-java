@@ -21,7 +21,7 @@ import io.flamingock.core.cloud.changes.CloudChange2;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.commons.utils.ThreadSleeper;
-import io.flamingock.core.api.error.FlamingockException;
+import io.flamingock.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.core.cloud.api.audit.AuditEntryRequest;

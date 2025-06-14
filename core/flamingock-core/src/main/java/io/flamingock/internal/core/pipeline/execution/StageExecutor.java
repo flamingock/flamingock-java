@@ -16,12 +16,12 @@
 
 package io.flamingock.internal.core.pipeline.execution;
 
-import io.flamingock.internal.core.engine.audit.AuditWriter;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.ExecutableStage;
-import io.flamingock.internal.core.pipeline.StageDescriptor;
+import io.flamingock.core.pipeline.StageDescriptor;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.internal.core.context.ContextResolver;
+import io.flamingock.core.context.ContextResolver;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public class StageExecutor {
-    protected final AuditWriter auditWriter;
+    protected final ExecutionAuditWriter auditWriter;
 
     protected final TransactionWrapper transactionWrapper;
     private final ContextResolver baseDependencyContext;
@@ -40,7 +40,7 @@ public class StageExecutor {
 
     public StageExecutor(ContextResolver dependencyContext,
                          Set<Class<?>> nonGuardedTypes,
-                         AuditWriter auditWriter,
+                         ExecutionAuditWriter auditWriter,
                          TransactionWrapper transactionWrapper) {
         this.baseDependencyContext = dependencyContext;
         this.nonGuardedTypes = nonGuardedTypes;

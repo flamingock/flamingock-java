@@ -1,0 +1,14 @@
+package io.flamingock.importer.adapter.couchbase;
+
+import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.importer.ImporterAdapter;
+
+import java.util.Collections;
+import java.util.List;
+
+public class CouchbaseImporterAdapter implements ImporterAdapter {
+    @Override
+    public List<AuditEntry> getAuditEntries() {
+        return Collections.emptyList();
+    }
+}

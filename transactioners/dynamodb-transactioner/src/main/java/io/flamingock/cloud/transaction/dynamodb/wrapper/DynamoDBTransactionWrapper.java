@@ -19,7 +19,7 @@ package io.flamingock.cloud.transaction.dynamodb.wrapper;
 import io.flamingock.commons.utils.DynamoDBUtil;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.core.context.Dependency;
-import io.flamingock.internal.core.context.DependencyInjectable;
+import io.flamingock.core.context.DependencyInjectable;
 import io.flamingock.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
