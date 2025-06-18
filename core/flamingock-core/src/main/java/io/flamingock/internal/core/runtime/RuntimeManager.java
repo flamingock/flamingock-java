@@ -16,15 +16,15 @@
 
 package io.flamingock.internal.core.runtime;
 
-import io.flamingock.commons.utils.Constants;
-import io.flamingock.commons.utils.StringUtil;
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.Nullable;
-import io.flamingock.core.error.FlamingockException;
+import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.StringUtil;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.Nullable;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.engine.lock.Lock;
-import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyInjectable;
-import io.flamingock.core.context.Context;
+import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

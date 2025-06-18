@@ -19,7 +19,7 @@ package io.flamingock.internal.core.task.navigation.navigator;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Set;

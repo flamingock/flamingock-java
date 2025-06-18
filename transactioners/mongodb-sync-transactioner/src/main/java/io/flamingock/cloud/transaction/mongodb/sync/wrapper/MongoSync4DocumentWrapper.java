@@ -16,7 +16,7 @@
 
 package io.flamingock.cloud.transaction.mongodb.sync.wrapper;
 
-import io.flamingock.oss.driver.common.mongodb.DocumentWrapper;
+import io.flamingock.internal.common.mongodb.DocumentWrapper;
 import org.bson.Document;
 
 public class MongoSync4DocumentWrapper implements DocumentWrapper {

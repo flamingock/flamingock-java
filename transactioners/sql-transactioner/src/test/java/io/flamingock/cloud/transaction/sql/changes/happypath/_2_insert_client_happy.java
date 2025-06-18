@@ -16,8 +16,8 @@
 
 package io.flamingock.cloud.transaction.sql.changes.happypath;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

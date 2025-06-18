@@ -16,14 +16,14 @@
 
 package io.flamingock.cloud.audit;
 
-import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
+import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.cloud.auth.AuthManager;
-import io.flamingock.commons.utils.id.EnvironmentId;
-import io.flamingock.commons.utils.id.ServiceId;
-import io.flamingock.core.audit.AuditEntry;
-import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.commons.utils.Result;
-import io.flamingock.commons.utils.http.Http;
+import io.flamingock.internal.util.id.EnvironmentId;
+import io.flamingock.internal.util.id.ServiceId;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.Result;
+import io.flamingock.internal.util.http.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

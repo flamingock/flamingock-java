@@ -17,7 +17,7 @@
 package io.flamingock.internal.core.engine.audit.domain;
 
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 public class StartExecutionAuditContextBundle extends AuditContextBundle {
 

@@ -16,8 +16,8 @@
 
 package io.flamingock.core.cloud.changes;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
 import io.flamingock.core.utils.TaskExecutionChecker;
 
 @ChangeUnit(id = "create-persons-table-from-template", order = "001")

@@ -16,8 +16,8 @@
 
 package io.flamingock.internal.core.runner;
 
-import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.commons.utils.StringUtil;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.ConnectionEngine;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
@@ -26,7 +26,7 @@ import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.pipeline.Pipeline;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
-import io.flamingock.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Set;

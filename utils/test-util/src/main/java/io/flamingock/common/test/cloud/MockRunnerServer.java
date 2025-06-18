@@ -26,20 +26,20 @@ import io.flamingock.common.test.cloud.mock.MockExecutionPlanBuilder;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.common.test.cloud.prototype.PrototypeTask;
-import io.flamingock.core.cloud.api.auth.AuthRequest;
-import io.flamingock.core.cloud.api.auth.AuthResponse;
-import io.flamingock.core.cloud.api.planner.request.StageRequest;
-import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
-import io.flamingock.core.cloud.api.planner.response.StageResponse;
-import io.flamingock.core.cloud.api.planner.response.TaskResponse;
-import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.common.cloud.auth.AuthRequest;
+import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.internal.common.cloud.planner.request.StageRequest;
+import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
+import io.flamingock.internal.common.cloud.planner.response.StageResponse;
+import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.flamingock.common.test.cloud.utils.JsonMapper.toJson;
-import static io.flamingock.core.cloud.api.planner.response.RequiredActionTask.PENDING_EXECUTION;
+import static io.flamingock.internal.common.cloud.planner.response.RequiredActionTask.PENDING_EXECUTION;
 
 public final class MockRunnerServer {
 

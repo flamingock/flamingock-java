@@ -1,6 +1,6 @@
 package io.flamingock.common.test.cloud;
 
-import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
+import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 
 public class AuditRequestExpectation {
     private final String taskId;

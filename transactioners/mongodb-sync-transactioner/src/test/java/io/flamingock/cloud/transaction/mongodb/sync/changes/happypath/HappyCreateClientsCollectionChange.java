@@ -17,9 +17,9 @@
 package io.flamingock.cloud.transaction.mongodb.sync.changes.happypath;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.NonLockGuarded;
 
 @ChangeUnit(id = "create-clients-collection", order = "001", transactional = false)
 public class HappyCreateClientsCollectionChange {

@@ -1,12 +1,12 @@
 package io.flamingock.core.processor;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.preview.PreviewPipeline;
-import io.flamingock.core.preview.PreviewStage;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.LoggerPreProcessor;
 import io.flamingock.core.processor.util.Serializer;
-import io.flamingock.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 

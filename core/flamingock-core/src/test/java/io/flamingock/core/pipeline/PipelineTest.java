@@ -17,11 +17,11 @@
 package io.flamingock.core.pipeline;
 
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
-import io.flamingock.core.error.FlamingockException;
-import io.flamingock.core.preview.CodePreviewChangeUnit;
-import io.flamingock.core.preview.PreviewMethod;
-import io.flamingock.core.preview.PreviewPipeline;
-import io.flamingock.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.PreviewMethod;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.core.pipeline.Pipeline;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;

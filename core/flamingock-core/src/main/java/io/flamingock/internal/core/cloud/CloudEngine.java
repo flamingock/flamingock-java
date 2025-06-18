@@ -16,8 +16,8 @@
 
 package io.flamingock.internal.core.cloud;
 
-import io.flamingock.commons.utils.id.EnvironmentId;
-import io.flamingock.commons.utils.id.ServiceId;
+import io.flamingock.internal.util.id.EnvironmentId;
+import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.core.engine.ConnectionEngine;
 
 public interface CloudEngine extends ConnectionEngine {

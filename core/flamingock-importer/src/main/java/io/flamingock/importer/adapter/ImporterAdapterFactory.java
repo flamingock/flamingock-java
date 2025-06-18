@@ -1,6 +1,6 @@
 package io.flamingock.importer.adapter;
 
-import io.flamingock.core.error.FlamingockException;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.importer.ImporterAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

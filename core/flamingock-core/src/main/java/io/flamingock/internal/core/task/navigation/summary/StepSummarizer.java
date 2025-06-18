@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.task.navigation.summary;
 
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.complete.CompletedAlreadyAppliedStep;

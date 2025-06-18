@@ -16,10 +16,10 @@
 
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.core.api.template.ChangeTemplate;
+import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
-import io.flamingock.commons.utils.FileUtil;
+import io.flamingock.internal.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

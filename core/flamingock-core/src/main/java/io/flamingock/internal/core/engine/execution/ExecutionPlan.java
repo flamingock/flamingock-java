@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.engine.execution;
 
-import io.flamingock.commons.utils.TriConsumer;
+import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.ExecutableStage;

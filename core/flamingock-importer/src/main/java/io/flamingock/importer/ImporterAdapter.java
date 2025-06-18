@@ -16,7 +16,7 @@
 
 package io.flamingock.importer;
 
-import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.util.List;
 

@@ -16,13 +16,13 @@
 
 package io.flamingock.cloud.transaction.sql.utils;
 
-import io.flamingock.commons.utils.Pair;
-import io.flamingock.commons.utils.Trio;
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.preview.CodePreviewChangeUnit;
-import io.flamingock.core.preview.PreviewMethod;
-import io.flamingock.core.preview.PreviewPipeline;
-import io.flamingock.core.preview.PreviewStage;
+import io.flamingock.internal.util.Pair;
+import io.flamingock.internal.util.Trio;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.PreviewMethod;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.preview.PreviewStage;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

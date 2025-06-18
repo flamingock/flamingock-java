@@ -17,7 +17,7 @@
 package io.flamingock.internal.core.engine.lock;
 
 
-import io.flamingock.commons.utils.id.Id;
+import io.flamingock.internal.util.id.Id;
 
 public class LockKey extends Id {
 

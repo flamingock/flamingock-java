@@ -1,6 +1,6 @@
 package io.flamingock.common.test.pipeline;
 
-import io.flamingock.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 
 public abstract class ChangeUnitTestDefinition {
 

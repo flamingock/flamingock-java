@@ -22,7 +22,7 @@ import io.flamingock.internal.core.task.navigation.step.complete.CompletedAlread
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompletedFailedManualRollback;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.RolledBackStep;
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.navigation.summary.AbstractTaskStepSummaryLine;
 import io.flamingock.internal.core.task.navigation.summary.StepSummarizer;
 import io.flamingock.internal.core.task.navigation.summary.StepSummaryLine;

@@ -16,7 +16,7 @@
 
 package io.flamingock.cloud.transaction.dynamodb;
 
-import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;

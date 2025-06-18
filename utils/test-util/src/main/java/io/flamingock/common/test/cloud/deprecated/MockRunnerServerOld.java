@@ -16,21 +16,21 @@
 
 package io.flamingock.common.test.cloud.deprecated;
 
-import io.flamingock.core.cloud.api.planner.response.LockResponse;
-import io.flamingock.core.cloud.api.planner.response.StageResponse;
-import io.flamingock.core.cloud.api.planner.response.TaskResponse;
-import io.flamingock.core.cloud.api.vo.ActionResponse;
-import io.flamingock.core.cloud.api.vo.OngoingStatus;
-import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.common.cloud.planner.response.LockResponse;
+import io.flamingock.internal.common.cloud.planner.response.StageResponse;
+import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
+import io.flamingock.internal.common.cloud.vo.ActionResponse;
+import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import io.flamingock.core.cloud.api.auth.AuthRequest;
-import io.flamingock.core.cloud.api.auth.AuthResponse;
-import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
-import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
-import io.flamingock.core.cloud.api.planner.request.StageRequest; import io.flamingock.core.cloud.api.planner.request.TaskRequest;
+import io.flamingock.internal.common.cloud.auth.AuthRequest;
+import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
+import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
+import io.flamingock.internal.common.cloud.planner.request.StageRequest; import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
 import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
 
 import java.util.*;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.flamingock.common.test.cloud.utils.JsonMapper.toJson;
-import static io.flamingock.core.cloud.api.planner.response.RequiredActionTask.PENDING_EXECUTION;
+import static io.flamingock.internal.common.cloud.planner.response.RequiredActionTask.PENDING_EXECUTION;
 
 @Deprecated
 public final class MockRunnerServerOld {

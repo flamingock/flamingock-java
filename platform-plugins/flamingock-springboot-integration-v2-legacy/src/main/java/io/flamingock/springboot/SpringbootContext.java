@@ -16,7 +16,7 @@
 
 package io.flamingock.springboot;
 
-import io.flamingock.commons.utils.Constants;
+import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.RunnerBuilder;
 import org.springframework.beans.factory.InitializingBean;

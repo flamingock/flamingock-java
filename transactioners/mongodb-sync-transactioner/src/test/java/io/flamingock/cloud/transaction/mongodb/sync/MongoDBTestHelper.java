@@ -21,8 +21,8 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4CollectionWrapper;
 import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWrapper;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
-import io.flamingock.oss.driver.common.mongodb.CollectionInitializator;
-import io.flamingock.oss.driver.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.internal.common.mongodb.CollectionInitializator;
+import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import org.bson.Document;
 
 import java.util.HashSet;

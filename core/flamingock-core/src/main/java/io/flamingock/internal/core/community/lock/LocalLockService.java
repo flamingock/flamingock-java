@@ -20,7 +20,7 @@ import io.flamingock.internal.core.engine.lock.LockAcquisition;
 import io.flamingock.internal.core.engine.lock.LockKey;
 import io.flamingock.internal.core.engine.lock.LockService;
 import io.flamingock.internal.core.engine.lock.LockServiceException;
-import io.flamingock.commons.utils.id.RunnerId;
+import io.flamingock.internal.util.id.RunnerId;
 
 public interface LocalLockService extends LockService {
     /**

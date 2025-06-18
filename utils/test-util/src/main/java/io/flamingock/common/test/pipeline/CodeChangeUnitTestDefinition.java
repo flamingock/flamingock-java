@@ -1,13 +1,12 @@
 package io.flamingock.common.test.pipeline;
 
-import io.flamingock.commons.utils.CollectionUtil;
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.preview.AbstractPreviewTask;
-import io.flamingock.core.preview.CodePreviewChangeUnit;
-import io.flamingock.core.preview.PreviewMethod;
+import io.flamingock.internal.util.CollectionUtil;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.PreviewMethod;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 

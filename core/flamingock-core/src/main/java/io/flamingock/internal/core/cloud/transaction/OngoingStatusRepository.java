@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.cloud.transaction;
 
-import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import java.util.Set;
 

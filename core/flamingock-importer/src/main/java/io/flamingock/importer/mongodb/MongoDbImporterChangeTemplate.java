@@ -17,12 +17,12 @@
 package io.flamingock.importer.mongodb;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.RollbackExecution;
-import io.flamingock.core.api.template.AbstractChangeTemplate;
-import io.flamingock.core.audit.AuditWriter;
-import io.flamingock.core.pipeline.PipelineDescriptor;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.internal.common.core.audit.AuditWriter;
+import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.importer.ImporterTemplateConfiguration;
 

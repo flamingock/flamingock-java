@@ -1,7 +1,7 @@
 package io.flamingock.common.test.pipeline;
 
-import io.flamingock.core.preview.AbstractPreviewTask;
-import io.flamingock.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 
 import java.util.Collections;
 import java.util.Map;

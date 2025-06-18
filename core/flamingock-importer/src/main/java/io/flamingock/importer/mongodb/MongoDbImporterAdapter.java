@@ -6,7 +6,7 @@ import io.flamingock.importer.ImporterAdapter;
 import io.flamingock.importer.model.MongockChangeEntry;
 import io.flamingock.importer.model.MongockChangeState;
 import io.flamingock.importer.model.MongockChangeType;
-import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import org.bson.Document;
 
 import java.time.Instant;

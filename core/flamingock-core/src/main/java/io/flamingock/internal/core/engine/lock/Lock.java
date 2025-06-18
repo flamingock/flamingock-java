@@ -17,9 +17,9 @@
 package io.flamingock.internal.core.engine.lock;
 
 
-import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.commons.utils.TimeService;
-import io.flamingock.commons.utils.TimeUtil;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

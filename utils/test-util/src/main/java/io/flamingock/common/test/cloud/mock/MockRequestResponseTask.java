@@ -1,11 +1,7 @@
 package io.flamingock.common.test.cloud.mock;
 
-import io.flamingock.core.cloud.api.audit.AuditEntryRequest;
-import io.flamingock.core.cloud.api.planner.response.RequiredActionTask;
-import io.flamingock.core.cloud.api.vo.OngoingStatus;
-
-import java.util.Arrays;
-import java.util.List;
+import io.flamingock.internal.common.cloud.planner.response.RequiredActionTask;
+import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 
 public class MockRequestResponseTask {
     private final String taskId;

@@ -16,8 +16,8 @@
 
 package io.flamingock.importer.adapter.dynamodb.outdated;
 
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.audit.AuditWriter;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 
 @NonLockGuarded

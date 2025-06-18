@@ -16,16 +16,16 @@
 
 package io.flamingock.cloud.planner;
 
-import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.commons.utils.TimeService;
-import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
-import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
-import io.flamingock.core.cloud.api.planner.request.StageRequest;
-import io.flamingock.core.cloud.api.planner.request.TaskRequest;
-import io.flamingock.core.cloud.api.planner.response.StageResponse;
-import io.flamingock.core.cloud.api.planner.response.TaskResponse;
-import io.flamingock.core.cloud.api.planner.response.RequiredActionTask;
-import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
+import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
+import io.flamingock.internal.common.cloud.planner.request.StageRequest;
+import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
+import io.flamingock.internal.common.cloud.planner.response.StageResponse;
+import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
+import io.flamingock.internal.common.cloud.planner.response.RequiredActionTask;
+import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
@@ -33,7 +33,7 @@ import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.engine.lock.LockKey;
 import io.flamingock.internal.core.pipeline.ExecutableStage;
 import io.flamingock.internal.core.pipeline.LoadedStage;
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.audit.AuditEntry.Status.EXECUTED;
+import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTED;
 
 public final class ExecutionPlanMapper {
 

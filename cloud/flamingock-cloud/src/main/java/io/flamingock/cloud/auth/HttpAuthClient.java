@@ -16,9 +16,9 @@
 
 package io.flamingock.cloud.auth;
 
-import io.flamingock.commons.utils.http.Http;
-import io.flamingock.core.cloud.api.auth.AuthRequest;
-import io.flamingock.core.cloud.api.auth.AuthResponse;
+import io.flamingock.internal.util.http.Http;
+import io.flamingock.internal.common.cloud.auth.AuthRequest;
+import io.flamingock.internal.common.cloud.auth.AuthResponse;
 
 public class HttpAuthClient implements AuthClient {
 

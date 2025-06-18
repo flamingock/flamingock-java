@@ -17,7 +17,7 @@
 package io.flamingock.internal.core.builder;
 
 
-import io.flamingock.commons.utils.Property;
+import io.flamingock.internal.util.Property;
 import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
 import io.flamingock.internal.core.event.model.IPipelineIgnoredEvent;

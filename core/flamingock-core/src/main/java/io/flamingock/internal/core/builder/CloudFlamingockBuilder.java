@@ -21,10 +21,10 @@ import io.flamingock.internal.core.builder.cloud.CloudConfigurator;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.cloud.CloudDriver;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.Context;
+import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.plugin.PluginManager;
-import io.flamingock.core.system.SystemModuleManager;
+import io.flamingock.internal.common.core.system.SystemModuleManager;
 
 public class CloudFlamingockBuilder
         extends AbstractFlamingockBuilder<CloudFlamingockBuilder>

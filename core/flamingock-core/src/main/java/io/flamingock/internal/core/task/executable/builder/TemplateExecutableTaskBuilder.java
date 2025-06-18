@@ -16,9 +16,9 @@
 
 package io.flamingock.internal.core.task.executable.builder;
 
-import io.flamingock.commons.utils.FileUtil;
-import io.flamingock.core.api.template.ChangeTemplateConfig;
-import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.util.FileUtil;
+import io.flamingock.api.template.ChangeTemplateConfig;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;

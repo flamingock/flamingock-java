@@ -1,1 +1,1 @@
-io.flamingock.oss.driver.mongodb.springdata.driver.SpringDataMongoDriver
+io.flamingock.community.mongodb.springdata.driver.SpringDataMongoDriver

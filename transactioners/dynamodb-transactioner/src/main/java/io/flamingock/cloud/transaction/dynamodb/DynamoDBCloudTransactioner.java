@@ -17,12 +17,12 @@
 package io.flamingock.cloud.transaction.dynamodb;
 
 import io.flamingock.cloud.transaction.dynamodb.wrapper.DynamoDBTransactionWrapper;
-import io.flamingock.commons.utils.DynamoDBUtil;
+import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.core.context.DependencyInjectable;
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

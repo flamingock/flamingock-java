@@ -1,8 +1,8 @@
 package io.flamingock.template.mongodb.model;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.NonLockGuardedType;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.NonLockGuardedType;
 import io.flamingock.template.mongodb.model.operator.MongoOperator;
 import org.bson.Document;
 

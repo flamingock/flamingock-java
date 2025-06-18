@@ -1,6 +1,6 @@
 package io.flamingock.core.annotations;
 
-import io.flamingock.commons.utils.Result;
+import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
@@ -16,7 +16,7 @@ import io.flamingock.core.utils.TestTaskExecution;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.RuntimeManager;
-import io.flamingock.core.context.Context;
+import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
 import org.junit.jupiter.api.Assertions;

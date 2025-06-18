@@ -16,9 +16,9 @@
 
 package io.flamingock.core.annotations;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
 import org.junit.jupiter.api.DisplayName;

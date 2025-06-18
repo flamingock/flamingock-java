@@ -23,7 +23,7 @@ import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
-import io.flamingock.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.core.processor.util.Deserializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

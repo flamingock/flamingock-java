@@ -16,10 +16,10 @@
 
 package io.flamingock.internal.core.utils;
 
-import io.flamingock.commons.utils.ReflectionUtil;
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.NonLockGuardedType;
+import io.flamingock.internal.util.ReflectionUtil;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.NonLockGuardedType;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

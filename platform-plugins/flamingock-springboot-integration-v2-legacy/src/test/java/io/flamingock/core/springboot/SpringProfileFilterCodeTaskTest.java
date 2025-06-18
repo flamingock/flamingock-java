@@ -16,7 +16,7 @@
 
 package io.flamingock.core.springboot;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
 import org.junit.jupiter.api.DisplayName;

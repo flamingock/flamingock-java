@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.engine.lock;
 
-import io.flamingock.core.error.FlamingockException;
+import io.flamingock.internal.common.core.error.FlamingockException;
 
 public class LockException extends FlamingockException {
   public LockException(Throwable throwable) {

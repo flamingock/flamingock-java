@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.plugin;
 
-import io.flamingock.core.context.ContextInitializable;
+import io.flamingock.internal.common.core.context.ContextInitializable;
 
 import java.util.Collection;
 

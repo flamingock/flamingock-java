@@ -1,7 +1,7 @@
 package io.flamingock.core.runtime;
 
 
-import io.flamingock.core.api.annotations.Nullable;
+import io.flamingock.api.annotations.Nullable;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.MissingInjectedParameterException;
 import io.flamingock.internal.core.runtime.RuntimeManager;

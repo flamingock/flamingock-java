@@ -18,8 +18,8 @@ package io.flamingock.core.cloud.utils;
 
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
-import io.flamingock.core.context.DependencyInjectable;
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 import java.util.Arrays;
 import java.util.HashSet;

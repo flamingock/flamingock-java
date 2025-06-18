@@ -17,12 +17,12 @@
 package io.flamingock.importer.changeunit;
 
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.audit.AuditWriter;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.importer.ImporterAdapter;
-import io.flamingock.core.pipeline.PipelineDescriptor;
+import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import io.flamingock.importer.ImporterExecutor;
 
 /**

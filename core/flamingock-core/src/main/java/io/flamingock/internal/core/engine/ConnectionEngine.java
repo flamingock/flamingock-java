@@ -16,12 +16,12 @@
 
 package io.flamingock.internal.core.engine;
 
-import io.flamingock.core.context.ContextContributor;
-import io.flamingock.core.context.ContextInjectable;
-import io.flamingock.core.context.Dependency;
+import io.flamingock.internal.common.core.context.ContextContributor;
+import io.flamingock.internal.common.core.context.ContextInjectable;
+import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
-import io.flamingock.core.system.SystemModuleContributor;
+import io.flamingock.internal.common.core.system.SystemModuleContributor;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Collections;

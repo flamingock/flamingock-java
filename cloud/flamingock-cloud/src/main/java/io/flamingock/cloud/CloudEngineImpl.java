@@ -16,12 +16,12 @@
 
 package io.flamingock.cloud;
 
-import io.flamingock.commons.utils.id.EnvironmentId;
-import io.flamingock.commons.utils.id.JwtProperty;
-import io.flamingock.commons.utils.id.ServiceId;
+import io.flamingock.internal.util.id.EnvironmentId;
+import io.flamingock.internal.util.id.JwtProperty;
+import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.cloud.CloudEngine;
-import io.flamingock.core.context.ContextInjectable;
+import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 

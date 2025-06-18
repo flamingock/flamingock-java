@@ -16,8 +16,8 @@
 
 package io.flamingock.internal.core.community.driver;
 
-import io.flamingock.commons.utils.Pair;
-import io.flamingock.core.error.FlamingockException;
+import io.flamingock.internal.util.Pair;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.Driver;
 import io.flamingock.internal.core.community.LocalEngine;
 

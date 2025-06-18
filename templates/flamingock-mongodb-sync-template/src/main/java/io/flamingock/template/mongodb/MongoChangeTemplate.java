@@ -18,10 +18,10 @@ package io.flamingock.template.mongodb;
 
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.Nullable;
-import io.flamingock.core.api.annotations.RollbackExecution;
-import io.flamingock.core.api.template.AbstractChangeTemplate;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Nullable;
+import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.template.mongodb.model.MongoOperation;
 
 public class MongoChangeTemplate extends AbstractChangeTemplate<MongoChangeTemplateConfig> {

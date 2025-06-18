@@ -20,7 +20,7 @@ import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.execution.FailedExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.execution.SuccessExecutionStep;
 import io.flamingock.internal.core.runtime.RuntimeManager;
-import io.flamingock.commons.utils.StopWatch;
+import io.flamingock.internal.util.StopWatch;
 
 public class ExecutableStep extends AbstractTaskStep {
 

@@ -1,1 +1,1 @@
-io.flamingock.oss.driver.dynamodb.driver.DynamoDBDriver
+io.flamingock.community.dynamodb.driver.DynamoDBDriver

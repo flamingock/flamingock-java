@@ -19,9 +19,9 @@ package io.flamingock.cloud.transaction.mongodb.sync.changes.happypath;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.NonLockGuarded;
 import org.bson.Document;
 
 @ChangeUnit(id = "insert-clients", order = "002")

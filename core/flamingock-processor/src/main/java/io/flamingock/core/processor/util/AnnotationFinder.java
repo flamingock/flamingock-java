@@ -1,9 +1,9 @@
 package io.flamingock.core.processor.util;
 
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.preview.AbstractPreviewTask;
-import io.flamingock.core.preview.CodePreviewChangeUnit;
-import io.flamingock.core.preview.builder.PreviewTaskBuilder;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;

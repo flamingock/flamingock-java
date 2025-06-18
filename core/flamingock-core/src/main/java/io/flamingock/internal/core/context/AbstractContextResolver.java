@@ -17,9 +17,9 @@
 package io.flamingock.internal.core.context;
 
 
-import io.flamingock.core.context.ContextResolver;
-import io.flamingock.core.context.Dependency;
-import io.flamingock.core.context.DependencyBuildable;
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.DependencyBuildable;
 
 import java.util.Optional;
 import java.util.function.Predicate;

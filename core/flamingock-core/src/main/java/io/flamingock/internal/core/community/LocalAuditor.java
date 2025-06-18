@@ -17,7 +17,7 @@
 package io.flamingock.internal.core.community;
 
 
-import io.flamingock.commons.utils.Result;
+import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.engine.audit.AuditReader;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;

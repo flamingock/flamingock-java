@@ -26,8 +26,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
-import static io.flamingock.oss.driver.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
+import static io.flamingock.internal.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

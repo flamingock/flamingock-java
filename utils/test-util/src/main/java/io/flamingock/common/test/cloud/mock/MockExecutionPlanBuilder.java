@@ -5,21 +5,21 @@ import io.flamingock.common.test.cloud.prototype.PrototypeTask;
 import io.flamingock.common.test.cloud.execution.ExecutionAwaitRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
-import io.flamingock.core.cloud.api.planner.request.ExecutionPlanRequest;
-import io.flamingock.core.cloud.api.planner.request.StageRequest;
-import io.flamingock.core.cloud.api.planner.request.TaskRequest;
-import io.flamingock.core.cloud.api.planner.response.ExecutionPlanResponse;
-import io.flamingock.core.cloud.api.planner.response.LockResponse;
-import io.flamingock.core.cloud.api.planner.response.StageResponse;
-import io.flamingock.core.cloud.api.planner.response.TaskResponse;
-import io.flamingock.core.cloud.api.vo.ActionResponse;
-import io.flamingock.core.cloud.api.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
+import io.flamingock.internal.common.cloud.planner.request.StageRequest;
+import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
+import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
+import io.flamingock.internal.common.cloud.planner.response.LockResponse;
+import io.flamingock.internal.common.cloud.planner.response.StageResponse;
+import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
+import io.flamingock.internal.common.cloud.vo.ActionResponse;
+import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.cloud.api.planner.response.RequiredActionTask.PENDING_EXECUTION;
+import static io.flamingock.internal.common.cloud.planner.response.RequiredActionTask.PENDING_EXECUTION;
 
 public class MockExecutionPlanBuilder {
 

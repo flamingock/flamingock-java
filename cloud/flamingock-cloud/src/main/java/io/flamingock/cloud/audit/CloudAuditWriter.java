@@ -1,6 +1,6 @@
 package io.flamingock.cloud.audit;
 
-import io.flamingock.commons.utils.Result;
+import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;

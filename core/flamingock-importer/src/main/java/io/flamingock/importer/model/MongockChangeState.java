@@ -16,7 +16,7 @@
 
 package io.flamingock.importer.model;
 
-import io.flamingock.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
 public enum MongockChangeState {
   EXECUTED, FAILED, ROLLED_BACK, ROLLBACK_FAILED, IGNORED;

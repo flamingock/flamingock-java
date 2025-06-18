@@ -16,8 +16,8 @@
 
 package io.flamingock.internal.core.pipeline;
 
-import io.flamingock.core.pipeline.StageDescriptor;
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.pipeline.StageDescriptor;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 
 import java.util.Collection;

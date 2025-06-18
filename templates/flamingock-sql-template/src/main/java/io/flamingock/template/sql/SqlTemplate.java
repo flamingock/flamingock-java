@@ -16,9 +16,9 @@
 
 package io.flamingock.template.sql;
 
-import io.flamingock.core.api.annotations.Execution;
-import io.flamingock.core.api.annotations.RollbackExecution;
-import io.flamingock.core.api.template.AbstractChangeTemplate;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.template.AbstractChangeTemplate;
 
 import java.sql.Connection;
 import java.sql.SQLException;

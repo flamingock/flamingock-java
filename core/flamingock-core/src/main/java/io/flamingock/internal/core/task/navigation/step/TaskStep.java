@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.task.navigation.step;
 
-import io.flamingock.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 
 public interface TaskStep {

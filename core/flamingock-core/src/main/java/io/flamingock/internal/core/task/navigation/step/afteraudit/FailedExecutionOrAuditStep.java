@@ -19,7 +19,7 @@ package io.flamingock.internal.core.task.navigation.step.afteraudit;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.SuccessableStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.commons.utils.Result;
+import io.flamingock.internal.util.Result;
 
 import java.util.List;
 import java.util.stream.Collectors;

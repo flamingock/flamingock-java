@@ -16,11 +16,11 @@
 
 package io.flamingock.internal.core.engine.audit;
 
-import io.flamingock.core.audit.AuditWriter;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
-import io.flamingock.commons.utils.Result;
+import io.flamingock.internal.util.Result;
 
 /**
  * This class implements the Facade pattern containing the responsibility to log the taskStep, map it to Entry

@@ -16,8 +16,8 @@
 
 package io.flamingock.internal.core.community;
 
-import io.flamingock.commons.utils.id.RunnerId;
-import io.flamingock.core.error.FlamingockException;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 
 public abstract class AbstractLocalEngine implements LocalEngine {

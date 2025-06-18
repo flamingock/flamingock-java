@@ -20,7 +20,7 @@ import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.task.navigation.step.SuccessableStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompletedFailedManualRollback;
 import io.flamingock.internal.core.task.executable.Rollback;
-import io.flamingock.commons.utils.Result;
+import io.flamingock.internal.util.Result;
 
 public class ManualRolledBackStep extends RolledBackStep implements SuccessableStep, FailedStep {
 

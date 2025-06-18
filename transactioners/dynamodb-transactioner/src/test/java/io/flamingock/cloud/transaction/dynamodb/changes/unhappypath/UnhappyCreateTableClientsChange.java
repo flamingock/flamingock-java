@@ -17,10 +17,10 @@
 package io.flamingock.cloud.transaction.dynamodb.changes.unhappypath;
 
 import io.flamingock.cloud.transaction.dynamodb.changes.common.UserEntity;
-import io.flamingock.commons.utils.DynamoDBUtil;
-import io.flamingock.core.api.annotations.NonLockGuarded;
-import io.flamingock.core.api.annotations.ChangeUnit;
-import io.flamingock.core.api.annotations.Execution;
+import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 

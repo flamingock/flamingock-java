@@ -16,21 +16,21 @@
 
 package io.flamingock.internal.core.builder.core;
 
-import io.flamingock.core.system.SystemModule;
+import io.flamingock.internal.common.core.system.SystemModule;
 import io.flamingock.internal.core.builder.TransactionStrategy;
 
 import io.flamingock.core.processor.util.Deserializer;
-import io.flamingock.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.flamingock.commons.utils.Constants.DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
-import static io.flamingock.commons.utils.Constants.DEFAULT_MIGRATION_AUTHOR;
-import static io.flamingock.commons.utils.Constants.DEFAULT_QUIT_TRYING_AFTER_MILLIS;
-import static io.flamingock.commons.utils.Constants.DEFAULT_TRY_FREQUENCY_MILLIS;
+import static io.flamingock.internal.util.Constants.DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
+import static io.flamingock.internal.util.Constants.DEFAULT_MIGRATION_AUTHOR;
+import static io.flamingock.internal.util.Constants.DEFAULT_QUIT_TRYING_AFTER_MILLIS;
+import static io.flamingock.internal.util.Constants.DEFAULT_TRY_FREQUENCY_MILLIS;
 
 public class CoreConfiguration implements CoreConfigurable {
 
