@@ -108,7 +108,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
 
     }
 
-    private <T extends ChangeTemplateConfig<?, ?,?>> T getConfig(Class<T> configClass, TemplateLoadedChangeUnit loadedTask) {
+    private <T extends ChangeTemplateConfig<?,?>> T getConfig(Class<T> configClass, TemplateLoadedChangeUnit loadedTask) {
         return FileUtil.getFromMap(configClass, loadedTask.getTemplateConfiguration());
     }
 

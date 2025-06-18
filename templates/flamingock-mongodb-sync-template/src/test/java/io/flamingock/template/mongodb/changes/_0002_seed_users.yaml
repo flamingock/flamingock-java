@@ -1,0 +1,16 @@
+id: seed-users
+order: 0002
+transactional: true
+template: MongoChangeTemplate
+templateConfiguration:
+  execution:
+    type: insert
+    collection: users
+    parameters:
+      documents:
+        - name: "Admin"
+          email: "admin@company.com"
+          roles: [ "superuser" ]
+        - name: "Backup"
+          email: "backup@company.com"
+          roles: [ "readonly" ]

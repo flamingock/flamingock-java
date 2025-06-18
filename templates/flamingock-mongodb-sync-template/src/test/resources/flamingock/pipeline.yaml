@@ -1,0 +1,5 @@
+pipeline:
+  stages:
+    - name: "MongoDB Changes"
+      description: "With templates"
+      sourcesPackage: "io.flamingock.template.mongodb.changes"

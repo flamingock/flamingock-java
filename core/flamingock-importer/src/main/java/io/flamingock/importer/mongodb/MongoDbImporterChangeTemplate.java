@@ -36,7 +36,7 @@ public class MongoDbImporterChangeTemplate extends AbstractChangeTemplate<Import
     public void execution(MongoDatabase db,
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
-        String collectionName = configuration.getShared().getOrigin();
+        String collectionName = "";//configuration.getShared().getOrigin();
         MongoDbImporterAdapter adapter = new MongoDbImporterAdapter(db, collectionName);
         ImporterExecutor.runImport(adapter, auditWriter, pipelineDescriptor);
     }

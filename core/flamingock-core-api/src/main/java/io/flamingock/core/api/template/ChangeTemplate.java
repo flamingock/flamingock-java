@@ -11,7 +11,7 @@ import java.lang.reflect.Type;
  *
  * @param <CONFIG> The type of configuration this template works with.
  */
-public interface ChangeTemplate<CONFIG extends ChangeTemplateConfig<?, ?, ?>> extends ReflectionMetadataProvider {
+public interface ChangeTemplate<CONFIG extends ChangeTemplateConfig<?, ?>> extends ReflectionMetadataProvider {
 
     void setChangeId(String changeId);
 

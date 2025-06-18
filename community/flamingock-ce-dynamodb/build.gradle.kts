@@ -1,10 +1,12 @@
 dependencies {
     implementation(project(":utils:dynamodb-util"))
-    api(project(":core:flamingock-core"))
+    implementation(project(":core:flamingock-core"))
+    api(project(":community:flamingock-ce-commons"))
+
+    api(project(":transactioners:dynamodb-transactioner"))
 
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:[2.0.0,3.0.0)")
 
-    api(project(":transactioners:dynamodb-transactioner"))
 
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")
     testImplementation("com.amazonaws:DynamoDBLocal:1.25.0")

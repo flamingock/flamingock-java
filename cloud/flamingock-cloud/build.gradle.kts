@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":core:flamingock-core"))
+    implementation(project(":core:flamingock-core"))
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":utils:test-util"))

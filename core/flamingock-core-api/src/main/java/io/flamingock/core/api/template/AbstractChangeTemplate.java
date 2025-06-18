@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public abstract class AbstractChangeTemplate<CONFIG extends ChangeTemplateConfig<?, ?, ?>> implements ChangeTemplate<CONFIG> {
+public abstract class AbstractChangeTemplate<CONFIG extends ChangeTemplateConfig<?, ?>> implements ChangeTemplate<CONFIG> {
 
     private final Logger logger = LoggerFactory.getLogger("AbstractChangeTemplate");
 

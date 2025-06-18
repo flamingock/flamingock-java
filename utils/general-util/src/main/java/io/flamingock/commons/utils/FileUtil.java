@@ -82,8 +82,11 @@ public final class FileUtil {
         Yaml yamlWriter = new Yaml();
         StringWriter writer = new StringWriter();
         yamlWriter.dump(source, writer);
-        return new Yaml(new Constructor(type, new LoaderOptions()))
-                .load(writer.toString());
+        String string = writer.toString();
+        Constructor constructor = new Constructor(type, new LoaderOptions());
+        Yaml yaml = new Yaml(constructor);
+        return yaml
+                .load(string);
     }
 
     public static boolean isExistingDir(File directory) {

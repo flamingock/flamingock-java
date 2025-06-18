@@ -19,6 +19,7 @@ package io.flamingock.commons.utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class CollectionUtil {
@@ -32,4 +33,13 @@ public final class CollectionUtil {
     public static <T> Stream<T> optionalToStream(Optional<T> optional) {
         return optional.map(Stream::of).orElseGet(Stream::empty);
     }
+
+
+    public static List<String> getClassNames(List<Class<?>> classses) {
+        return classses
+                .stream()
+                .map(Class::getName)
+                .collect(Collectors.toList());
+    }
+
 }

@@ -4,26 +4,17 @@ import io.flamingock.core.api.annotations.NonLockGuarded;
 import io.flamingock.core.api.annotations.NonLockGuardedType;
 
 @NonLockGuarded(NonLockGuardedType.NONE)
-public class ChangeTemplateConfig<SHARED, EXECUTION, ROLLBACK> {
-    protected SHARED shared;
+public class ChangeTemplateConfig<EXECUTION, ROLLBACK> {
+
     protected EXECUTION execution;
     protected ROLLBACK rollback;
 
     public ChangeTemplateConfig() {
     }
 
-    public ChangeTemplateConfig(SHARED shared, EXECUTION execution, ROLLBACK rollback) {
-        this.shared = shared;
+    public ChangeTemplateConfig(EXECUTION execution, ROLLBACK rollback) {
         this.execution = execution;
         this.rollback = rollback;
-    }
-
-    public SHARED getShared() {
-        return shared;
-    }
-
-    public void setShared(SHARED shared) {
-        this.shared = shared;
     }
 
     public EXECUTION getExecution() {
