@@ -18,14 +18,16 @@ package io.flamingock.internal.common.mongodb;
 
 import io.flamingock.internal.core.community.driver.DriverConfigurable;
 
+import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.internal.core.community.Constants.DEFAULT_LOCK_STORE_NAME;
+
+
 public class MongoDBDriverConfiguration implements DriverConfigurable {
 
-    public final static String DEFAULT_AUDIT_REPOSITORY_NAME = "flamingockAuditLogs";
-    public final static String DEFAULT_LOCK_REPOSITORY_NAME = "flamingockLock";
 
     private boolean autoCreate = true;
-    private String auditRepositoryName = DEFAULT_AUDIT_REPOSITORY_NAME;
-    private String lockRepositoryName = DEFAULT_LOCK_REPOSITORY_NAME;
+    private String auditRepositoryName = DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = DEFAULT_LOCK_STORE_NAME;
 
     public boolean isAutoCreate() {
         return autoCreate;

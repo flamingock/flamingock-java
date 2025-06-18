@@ -23,10 +23,11 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.internal.core.community.Constants;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 
-import static io.flamingock.internal.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
+import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,10 +48,6 @@ class MongoChangeTemplateTest {
 
     private static final String DB_NAME = "test";
 
-    private static final String CLIENTS_COLLECTION = "clientCollection";
-
-    private static final String CUSTOM_AUDIT_REPOSITORY_NAME = "testFlamingockAudit";
-    private static final String CUSTOM_LOCK_REPOSITORY_NAME = "testFlamingockLock";
 
     private static MongoClient mongoClient;
 
@@ -71,13 +68,13 @@ class MongoChangeTemplateTest {
 
     @BeforeEach
     void setupEach() {
-        mongoDatabase.getCollection(CUSTOM_AUDIT_REPOSITORY_NAME).drop();
-        mongoDatabase.getCollection(CUSTOM_LOCK_REPOSITORY_NAME).drop();
+        mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
+        mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
     }
 
     @AfterEach
     void tearDownEach() {
-        mongoDatabase.getCollection(CLIENTS_COLLECTION).drop();
+//        mongoDatabase.getCollection(CLIENTS_COLLECTION).drop();
     }
 
     @Test
@@ -92,7 +89,7 @@ class MongoChangeTemplateTest {
                 .run();
 
 
-        List<Document> auditLog = mongoDatabase.getCollection(DEFAULT_AUDIT_REPOSITORY_NAME)
+        List<Document> auditLog = mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME)
                 .find()
                 .into(new ArrayList<>());
 
@@ -101,19 +98,25 @@ class MongoChangeTemplateTest {
 
         assertEquals("create-users-collection-with-index", createCollectionAudit.getString("changeId"));
         assertEquals("EXECUTED", createCollectionAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString("changeLogClass"));
+        assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
 
         Document seedAudit = auditLog.get(1);
         assertEquals("seed-users", seedAudit.getString("changeId"));
         assertEquals("EXECUTED", seedAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString("changeLogClass"));
+        assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
 
-    }
+        List<Document> users = mongoDatabase.getCollection("users")
+                .find()
+                .into(new ArrayList<>());
 
+        assertEquals(2, users.size());
+        assertEquals("Admin", users.get(0).getString("name"));
+        assertEquals("admin@company.com", users.get(0).getString("email"));
+        assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
 
-    //TODO move to a mongodb util to be reused
-    private static boolean collectionExists(String collectionName) {
-        return mongoDatabase.listCollectionNames().into(new ArrayList()).contains(collectionName);
+        assertEquals("Backup", users.get(1).getString("name"));
+        assertEquals("backup@company.com", users.get(1).getString("email"));
+        assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
     }
 
 

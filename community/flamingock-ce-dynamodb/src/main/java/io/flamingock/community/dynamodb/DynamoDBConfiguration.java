@@ -16,15 +16,15 @@
 
 package io.flamingock.community.dynamodb;
 
-import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
-import io.flamingock.internal.core.community.driver.DriverConfigurable;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.community.Constants;
+import io.flamingock.internal.core.community.driver.DriverConfigurable;
 
 public class DynamoDBConfiguration implements DriverConfigurable {
 
     private boolean autoCreate = true;
-    private String auditRepositoryName = DynamoDBConstants.AUDIT_LOG_TABLE_NAME;
-    private String lockRepositoryName = DynamoDBConstants.LOCK_TABLE_NAME;
+    private String auditRepositoryName = Constants.DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = Constants.DEFAULT_LOCK_STORE_NAME;
     private long readCapacityUnits = 5L;
     private long writeCapacityUnits = 5L;
 

@@ -37,10 +37,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.LinkedList;
 
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_STATE;
+import static io.flamingock.internal.core.community.Constants.KEY_AUTHOR;
+import static io.flamingock.internal.core.community.Constants.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_STATE;
 
 public class SpringDataMongoAuditor implements LocalAuditor {
 

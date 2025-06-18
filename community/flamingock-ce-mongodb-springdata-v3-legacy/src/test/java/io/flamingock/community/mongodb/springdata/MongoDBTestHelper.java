@@ -42,8 +42,8 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.internal.core.community.Constants.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_TIMESTAMP;
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;

@@ -21,19 +21,19 @@ import io.flamingock.internal.util.TimeUtil;
 
 import java.util.function.Supplier;
 
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGELOG_CLASS;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGESET_METHOD;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_ERROR_TRACE;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_HOSTNAME;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_MILLIS;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_METADATA;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_STATE;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_SYSTEM_CHANGE;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_TIMESTAMP;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_TYPE;
+import static io.flamingock.internal.core.community.Constants.KEY_AUTHOR;
+import static io.flamingock.internal.core.community.Constants.KEY_CHANGEUNIT_CLASS;
+import static io.flamingock.internal.core.community.Constants.KEY_INVOKED_METHOD;
+import static io.flamingock.internal.core.community.Constants.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_ERROR_TRACE;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_MILLIS;
+import static io.flamingock.internal.core.community.Constants.KEY_METADATA;
+import static io.flamingock.internal.core.community.Constants.KEY_STATE;
+import static io.flamingock.internal.core.community.Constants.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.core.community.Constants.KEY_TIMESTAMP;
+import static io.flamingock.internal.core.community.Constants.KEY_TYPE;
 
 public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
 
@@ -51,8 +51,8 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
         document.append(KEY_TIMESTAMP, TimeUtil.toDate(auditEntry.getCreatedAt()));
         document.append(KEY_STATE, auditEntry.getState().name());
         document.append(KEY_TYPE, auditEntry.getType().name());
-        document.append(KEY_CHANGELOG_CLASS, auditEntry.getClassName());
-        document.append(KEY_CHANGESET_METHOD, auditEntry.getMethodName());
+        document.append(KEY_CHANGEUNIT_CLASS, auditEntry.getClassName());
+        document.append(KEY_INVOKED_METHOD, auditEntry.getMethodName());
         document.append(KEY_METADATA, auditEntry.getMetadata());
         document.append(KEY_EXECUTION_MILLIS, auditEntry.getExecutionMillis());
         document.append(KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
@@ -70,8 +70,8 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
                 TimeUtil.toLocalDateTime(entry.get(KEY_TIMESTAMP)),
                 entry.containsKey(KEY_STATE) ? AuditEntry.Status.valueOf(entry.getString(KEY_STATE)) : null,
                 entry.containsKey(KEY_TYPE) ? AuditEntry.ExecutionType.valueOf(entry.getString(KEY_TYPE)) : null,
-                entry.getString(KEY_CHANGELOG_CLASS),
-                entry.getString(KEY_CHANGESET_METHOD),
+                entry.getString(KEY_CHANGEUNIT_CLASS),
+                entry.getString(KEY_INVOKED_METHOD),
                 entry.containsKey(KEY_EXECUTION_MILLIS) && entry.get(KEY_EXECUTION_MILLIS) != null
                         ? ((Number) entry.get(KEY_EXECUTION_MILLIS)).longValue() : -1L,
                 entry.getString(KEY_EXECUTION_HOSTNAME),

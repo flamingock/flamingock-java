@@ -27,19 +27,19 @@ import io.flamingock.internal.util.TimeUtil;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGELOG_CLASS;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGESET_METHOD;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_ERROR_TRACE;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_HOSTNAME;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_MILLIS;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_METADATA;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_STATE;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_SYSTEM_CHANGE;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_TIMESTAMP;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_TYPE;
+import static io.flamingock.internal.core.community.Constants.KEY_AUTHOR;
+import static io.flamingock.internal.core.community.Constants.KEY_CHANGEUNIT_CLASS;
+import static io.flamingock.internal.core.community.Constants.KEY_INVOKED_METHOD;
+import static io.flamingock.internal.core.community.Constants.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_ERROR_TRACE;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_MILLIS;
+import static io.flamingock.internal.core.community.Constants.KEY_METADATA;
+import static io.flamingock.internal.core.community.Constants.KEY_STATE;
+import static io.flamingock.internal.core.community.Constants.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.core.community.Constants.KEY_TIMESTAMP;
+import static io.flamingock.internal.core.community.Constants.KEY_TYPE;
 import static io.flamingock.internal.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
 import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIELD;
 import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
@@ -57,8 +57,8 @@ public final class CouchBaseUtil {
                 jsonObject.get(KEY_TIMESTAMP) != null ? TimeUtil.toLocalDateTime(jsonObject.getLong(KEY_TIMESTAMP)) : null,
                 jsonObject.get(KEY_STATE) != null ? AuditEntry.Status.valueOf(jsonObject.getString(KEY_STATE)) : null,
                 jsonObject.get(KEY_TYPE) != null ? AuditEntry.ExecutionType.valueOf(jsonObject.getString(KEY_TYPE)) : null,
-                jsonObject.getString(KEY_CHANGELOG_CLASS),
-                jsonObject.getString(KEY_CHANGESET_METHOD),
+                jsonObject.getString(KEY_CHANGEUNIT_CLASS),
+                jsonObject.getString(KEY_INVOKED_METHOD),
                 jsonObject.getLong(KEY_EXECUTION_MILLIS),
                 jsonObject.getString(KEY_EXECUTION_HOSTNAME),
                 jsonObject.get(KEY_METADATA) != null ? jsonObject.getObject(KEY_METADATA).toMap() : null,

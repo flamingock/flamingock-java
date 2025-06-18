@@ -39,10 +39,10 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.internal.core.community.AuditEntryField.KEY_STATE;
+import static io.flamingock.internal.core.community.Constants.KEY_AUTHOR;
+import static io.flamingock.internal.core.community.Constants.KEY_CHANGE_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_ID;
+import static io.flamingock.internal.core.community.Constants.KEY_STATE;
 
 public class MongoSync4Auditor implements LocalAuditor {
 

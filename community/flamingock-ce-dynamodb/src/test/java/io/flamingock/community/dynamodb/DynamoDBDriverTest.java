@@ -18,12 +18,6 @@ package io.flamingock.community.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.internal.util.Trio;
-import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.core.processor.util.Deserializer;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.community.dynamodb.changes._1_create_client_collection_happy;
 import io.flamingock.community.dynamodb.changes._2_insert_federico_happy_non_transactional;
 import io.flamingock.community.dynamodb.changes._2_insert_federico_happy_transactional;
@@ -33,7 +27,13 @@ import io.flamingock.community.dynamodb.changes._3_insert_jorge_failed_transacti
 import io.flamingock.community.dynamodb.changes._3_insert_jorge_happy_non_transactional;
 import io.flamingock.community.dynamodb.changes._3_insert_jorge_happy_transactional;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
-import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
+import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.core.builder.FlamingockFactory;
+import io.flamingock.internal.core.community.Constants;
+import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.util.Trio;
+import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,7 +56,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class DynamoDBDriverTest {
@@ -106,7 +109,7 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with DEFAULT repository names related tables should exists")
     void happyPathWithDefaultRepositoryNames() {
         //Given-When
-        try(MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
                     new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
@@ -123,8 +126,8 @@ class DynamoDBDriverTest {
 
 
         //Then
-        assertTrue(dynamoDBTestHelper.tableExists(DynamoDBConstants.AUDIT_LOG_TABLE_NAME));
-        assertTrue(dynamoDBTestHelper.tableExists(DynamoDBConstants.LOCK_TABLE_NAME));
+        assertTrue(dynamoDBTestHelper.tableExists(Constants.DEFAULT_AUDIT_STORE_NAME));
+        assertTrue(dynamoDBTestHelper.tableExists(Constants.DEFAULT_LOCK_STORE_NAME));
 
         assertFalse(dynamoDBTestHelper.tableExists(CUSTOM_AUDIT_REPOSITORY_NAME));
         assertFalse(dynamoDBTestHelper.tableExists(CUSTOM_LOCK_REPOSITORY_NAME));
@@ -137,16 +140,16 @@ class DynamoDBDriverTest {
 
         DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);
         dynamoDBUtil.createTable(
-                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.AUDIT_LOG_PK, null),
-                dynamoDBUtil.getKeySchemas(DynamoDBConstants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getAttributeDefinitions(Constants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getKeySchemas(Constants.AUDIT_LOG_PK, null),
                 dynamoDBUtil.getProvisionedThroughput(1L, 2L),
                 CUSTOM_AUDIT_REPOSITORY_NAME,
                 emptyList(),
                 emptyList()
         );
         dynamoDBUtil.createTable(
-                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
-                dynamoDBUtil.getKeySchemas(DynamoDBConstants.LOCK_PK, null),
+                dynamoDBUtil.getAttributeDefinitions(Constants.LOCK_PK, null),
+                dynamoDBUtil.getKeySchemas(Constants.LOCK_PK, null),
                 dynamoDBUtil.getProvisionedThroughput(1L, 2L),
                 CUSTOM_LOCK_REPOSITORY_NAME,
                 emptyList(),
@@ -181,8 +184,8 @@ class DynamoDBDriverTest {
         assertEquals(1L, config.getReadCapacityUnits());
         assertEquals(2L, config.getWriteCapacityUnits());
 
-        assertFalse(dynamoDBTestHelper.tableExists(DynamoDBConstants.AUDIT_LOG_TABLE_NAME));
-        assertFalse(dynamoDBTestHelper.tableExists(DynamoDBConstants.LOCK_TABLE_NAME));
+        assertFalse(dynamoDBTestHelper.tableExists(Constants.DEFAULT_AUDIT_STORE_NAME));
+        assertFalse(dynamoDBTestHelper.tableExists(Constants.DEFAULT_LOCK_STORE_NAME));
 
         assertTrue(dynamoDBTestHelper.tableExists(CUSTOM_AUDIT_REPOSITORY_NAME));
         assertTrue(dynamoDBTestHelper.tableExists(CUSTOM_LOCK_REPOSITORY_NAME));
@@ -210,7 +213,7 @@ class DynamoDBDriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(DynamoDBConstants.AUDIT_LOG_TABLE_NAME);
+        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("table-create", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -252,7 +255,7 @@ class DynamoDBDriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(DynamoDBConstants.AUDIT_LOG_TABLE_NAME);
+        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("table-create", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -297,7 +300,7 @@ class DynamoDBDriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(DynamoDBConstants.AUDIT_LOG_TABLE_NAME);
+        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("table-create", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -339,7 +342,7 @@ class DynamoDBDriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(DynamoDBConstants.AUDIT_LOG_TABLE_NAME);
+        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
         assertEquals(4, auditLog.size());
         assertEquals("table-create", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -385,7 +388,7 @@ class DynamoDBDriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(DynamoDBConstants.AUDIT_LOG_TABLE_NAME);
+        List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("table-create", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());

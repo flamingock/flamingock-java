@@ -56,8 +56,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.flamingock.internal.common.mongodb.MongoDBDriverConfiguration.DEFAULT_LOCK_REPOSITORY_NAME;
-import static io.flamingock.internal.common.mongodb.MongoDBDriverConfiguration.DEFAULT_AUDIT_REPOSITORY_NAME;
+import static io.flamingock.internal.core.community.Constants.DEFAULT_LOCK_STORE_NAME;
+import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -95,8 +95,8 @@ class MongoSync4DriverTest {
 
     @BeforeEach
     void setupEach() {
-        mongoDatabase.getCollection(DEFAULT_AUDIT_REPOSITORY_NAME).drop();
-        mongoDatabase.getCollection(DEFAULT_LOCK_REPOSITORY_NAME).drop();
+        mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
+        mongoDatabase.getCollection(DEFAULT_LOCK_STORE_NAME).drop();
         mongoDatabase.getCollection(CUSTOM_AUDIT_REPOSITORY_NAME).drop();
         mongoDatabase.getCollection(CUSTOM_LOCK_REPOSITORY_NAME).drop();
     }
@@ -126,8 +126,8 @@ class MongoSync4DriverTest {
                     .run();
         }
 
-        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_REPOSITORY_NAME));
-        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
+        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_STORE_NAME));
+        assertTrue(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_STORE_NAME));
 
         assertFalse(mongoDBTestHelper.collectionExists(CUSTOM_AUDIT_REPOSITORY_NAME));
         assertFalse(mongoDBTestHelper.collectionExists(CUSTOM_LOCK_REPOSITORY_NAME));
@@ -175,8 +175,8 @@ class MongoSync4DriverTest {
 //        assertEquals(Duration.ofSeconds(2), config.getWriteConcern().getwTimeoutMs());
         assertEquals(MongoDBSync4Configuration.ReadPreferenceLevel.SECONDARY, config.getReadPreference());
 
-        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_REPOSITORY_NAME));
-        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_REPOSITORY_NAME));
+        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_STORE_NAME));
+        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_STORE_NAME));
 
         assertTrue(mongoDBTestHelper.collectionExists(CUSTOM_AUDIT_REPOSITORY_NAME));
         assertTrue(mongoDBTestHelper.collectionExists(CUSTOM_LOCK_REPOSITORY_NAME));
@@ -205,7 +205,7 @@ class MongoSync4DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -249,7 +249,7 @@ class MongoSync4DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -292,7 +292,7 @@ class MongoSync4DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -336,7 +336,7 @@ class MongoSync4DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
@@ -380,7 +380,7 @@ class MongoSync4DriverTest {
 
         //Then
         //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_REPOSITORY_NAME);
+        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());

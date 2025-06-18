@@ -16,17 +16,17 @@
 
 package io.flamingock.community.dynamodb.internal;
 
-import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.util.TimeService;
+import io.flamingock.community.dynamodb.internal.entities.LockEntryEntity;
+import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.community.lock.LocalLockService;
 import io.flamingock.internal.core.community.lock.LockEntry;
 import io.flamingock.internal.core.engine.lock.LockAcquisition;
 import io.flamingock.internal.core.engine.lock.LockKey;
 import io.flamingock.internal.core.engine.lock.LockServiceException;
 import io.flamingock.internal.core.engine.lock.LockStatus;
-import io.flamingock.community.dynamodb.internal.entities.LockEntryEntity;
-import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
+import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.internal.util.id.RunnerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -60,8 +60,8 @@ public class DynamoDBLockService implements LocalLockService {
     protected void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
         if (autoCreate) {
             dynamoDBUtil.createTable(
-                    dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
-                    dynamoDBUtil.getKeySchemas(DynamoDBConstants.LOCK_PK, null),
+                    dynamoDBUtil.getAttributeDefinitions(Constants.LOCK_PK, null),
+                    dynamoDBUtil.getKeySchemas(Constants.LOCK_PK, null),
                     dynamoDBUtil.getProvisionedThroughput(readCapacityUnits, writeCapacityUnits),
                     tableName,
                     emptyList(),
