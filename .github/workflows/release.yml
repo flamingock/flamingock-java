@@ -405,7 +405,7 @@ jobs:
 #        run: ./misc/buildAll.sh
 
   github-release:
-    needs: [run-examples-with-released-version]
+#    needs: [run-examples-with-released-version]
     uses: ./.github/workflows/github-release.yml
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
