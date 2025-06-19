@@ -4,23 +4,28 @@ import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 
 import java.util.Collections;
-import java.util.Map;
 
 public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
 
     private final String templateName;
-    private final Map<String, Object> templateConfiguration;
+    private final Object configuration;
+    private final Object execution;
+    private final Object rollback;
 
 
     public TemplateChangeUnitTestDefinition(String id,
                                             String order,
                                             String templateName,
                                             boolean transactional,
-                                            Map<String, Object> templateConfiguration) {
+                                            Object configuration,
+                                            Object execution,
+                                            Object rollback) {
         super(id, order, transactional);
         this.templateName = templateName;
-        this.templateConfiguration = templateConfiguration;
+        this.configuration = configuration;
+        this.execution = execution;
+        this.rollback = rollback;
     }
 
 
@@ -34,7 +39,9 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 isTransactional(),
                 false,
                 false,
-                templateConfiguration
+                configuration,
+                execution,
+                rollback
         );
     }
 

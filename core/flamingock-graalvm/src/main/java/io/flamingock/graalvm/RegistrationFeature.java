@@ -88,7 +88,7 @@ public class RegistrationFeature implements Feature {
         registerClass(TemplateFactory.class);
         registerClass(ChangeTemplate.class);
         registerClass(AbstractChangeTemplate.class);
-        for (ChangeTemplate<?> template : ServiceLoader.load(ChangeTemplate.class)) {
+        for (ChangeTemplate<?, ?, ?> template : ServiceLoader.load(ChangeTemplate.class)) {
             registerClass(template.getClass());
             template.getReflectiveClasses().forEach(RegistrationFeature::registerClass);
         }

@@ -42,25 +42,54 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
         logger.debug("Starting execution of changeUnit[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
         logger.debug("changeUnit[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
         Object instance = runtimeManager.getInstance(descriptor.getConstructor());
-        ChangeTemplate<?> changeTemplateInstance = (ChangeTemplate<?>) instance;
+        ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
         changeTemplateInstance.setTransactional(descriptor.isTransactional());
-        setConfiguration(runtimeManager, changeTemplateInstance);
+        setExecutionData(runtimeManager, changeTemplateInstance, "Configuration");
+        setExecutionData(runtimeManager, changeTemplateInstance, "Execution");
+        setExecutionData(runtimeManager, changeTemplateInstance, "Rollback");
         runtimeManager.executeMethodWithInjectedDependencies(instance, method);
     }
 
-    private void setConfiguration(RuntimeManager runtimeManager, ChangeTemplate<?> instance) {
-        Class<?> configClass = instance.getConfigClass();
-        Method setConfigurationMethod = getConfigMethod(instance.getClass());
-        runtimeManager.executeMethodWithParameters(
-                instance,
-                setConfigurationMethod,
-                FileUtil.getFromMap(configClass, descriptor.getTemplateConfiguration()));
+
+    private void setExecutionData(RuntimeManager runtimeManager,
+                                  ChangeTemplate<?, ?, ?> instance,
+                                  String setterName) {
+        Class<?> parameterClass;
+        Object data;
+        switch (setterName) {
+            case "Configuration":
+                parameterClass = instance.getConfigurationClass();
+                data = descriptor.getConfiguration();
+                break;
+            case "Execution":
+                parameterClass = instance.getExecutionClass();
+                data = descriptor.getExecution();
+                break;
+            case "Rollback":
+                parameterClass = instance.getRollbackClass();
+                data = descriptor.getRollback();
+                break;
+            default:
+                throw new RuntimeException("Not found config setter for template: " + instance.getClass().getSimpleName());
+        }
+        Method setConfigurationMethod = getSetterMethod(instance.getClass(), "set" + setterName);
+
+        if(data != null && Void.class != parameterClass) {
+            runtimeManager.executeMethodWithParameters(
+                    instance,
+                    setConfigurationMethod,
+                    FileUtil.getFromMap(parameterClass, data));
+        } else if(Void.class != parameterClass ) {
+            logger.warn("No '{}' section provided for template-based changeUnit[{}] of type[{}]", setterName, descriptor.getId(), descriptor.getTemplateClass().getName());
+        }
+
     }
 
-    private Method getConfigMethod(Class<?> changeTemplateClass) {
+
+    private Method getSetterMethod(Class<?> changeTemplateClass, String methodName) {
 
         return Arrays.stream(changeTemplateClass.getMethods())
-                .filter(m-> "setConfiguration".equals(m.getName()))
+                .filter(m-> methodName.equals(m.getName()))
                 .findFirst()
                 .orElseThrow(()-> new RuntimeException("Not found config setter for template: " + changeTemplateClass.getSimpleName()));
 

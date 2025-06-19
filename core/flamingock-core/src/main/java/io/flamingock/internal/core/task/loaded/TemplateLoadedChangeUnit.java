@@ -23,30 +23,44 @@ import io.flamingock.api.template.ChangeTemplate;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 
 public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
 
-    private final Map<String, Object> templateConfiguration;
     private final List<String> profiles;
+    private final Object configuration;
+    private final Object execution;
+    private final Object rollback;
 
     TemplateLoadedChangeUnit(String id,
                              String order,
-                             Class<? extends ChangeTemplate<?>> templateClass,
+                             Class<? extends ChangeTemplate<?,?,?>> templateClass,
                              List<String> profiles,
                              boolean transactional,
                              boolean runAlways,
                              boolean systemTask,
-                             Map<String, Object> templateConfiguration) {
+                             Object configuration,
+                             Object execution,
+                             Object rollback) {
         super(id, order, templateClass, runAlways, transactional, systemTask);
         this.profiles = profiles;
-        this.templateConfiguration = templateConfiguration;
+        this.transactional = transactional;
+        this.configuration = configuration;
+        this.execution = execution;
+        this.rollback = rollback;
     }
 
-    public Map<String, Object> getTemplateConfiguration() {
-        return templateConfiguration;
+    public Object getConfiguration() {
+        return configuration;
+    }
+
+    public Object getExecution() {
+        return execution;
+    }
+
+    public Object getRollback() {
+        return rollback;
     }
 
     public List<String> getProfiles() {
@@ -54,8 +68,8 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
     }
 
     @SuppressWarnings("unchecked")
-    public Class<? extends ChangeTemplate<?>> getTemplateClass() {
-        return (Class<? extends ChangeTemplate<?>>) this.getSourceClass();
+    public Class<? extends ChangeTemplate<?,?,?>> getTemplateClass() {
+        return (Class<? extends ChangeTemplate<?,?,?>>) this.getSourceClass();
     }
 
     @Override

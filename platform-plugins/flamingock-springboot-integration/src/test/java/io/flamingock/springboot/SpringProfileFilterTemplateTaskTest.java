@@ -116,7 +116,9 @@ class SpringProfileFilterTemplateTaskTest {
                 TemplateSimulate.class.getSimpleName(),
                 profiles,
                 true,
-                new HashMap<>()
+                null,
+                null,
+                null
         );
 
         TemplatePreviewChangeUnit preview = PreviewTaskBuilder.getTemplateBuilder(changeFileDescriptor).build();
@@ -125,7 +127,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     }
 
-    public static abstract class TemplateSimulate implements ChangeTemplate<ChangeTemplateConfig<Object, Object>> {}
+    public static abstract class TemplateSimulate implements ChangeTemplate<Void, Object, Object> {}
 
     @ChangeUnit(id = "not-annotated", order = "000")
     public static class NotAnnotated {

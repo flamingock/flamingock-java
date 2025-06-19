@@ -78,7 +78,7 @@ public final class FileUtil {
         }
     }
 
-    public static <T> T getFromMap(Class<T> type, Map<?, ?> source) {
+    public static <T> T getFromMap(Class<T> type, Object source) {
         Yaml yamlWriter = new Yaml();
         StringWriter writer = new StringWriter();
         yamlWriter.dump(source, writer);

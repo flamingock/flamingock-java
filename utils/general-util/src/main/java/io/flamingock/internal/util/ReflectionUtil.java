@@ -22,6 +22,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +35,65 @@ import java.util.stream.Stream;
 
 public final class ReflectionUtil {
     private ReflectionUtil() {}
+
+    /**
+     * Retrieves the actual type arguments used in a class's generic superclass as Class objects.
+     * This method traverses the class hierarchy to find the first parameterized superclass
+     * and returns its type arguments as Class objects.
+     *
+     * @param clazz The class to analyze for generic type arguments
+     * @return An array of Class objects representing the actual type arguments
+     * @throws IllegalStateException If no parameterized superclass can be found in the hierarchy
+     * @throws ClassCastException If any type argument is not a Class (e.g., type variable, wildcard)
+     */
+    @SuppressWarnings("unchecked")
+    public static Class<?>[] getActualTypeArguments(Class<?> clazz) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Class cannot be null");
+        }
+
+        Class<?> currentClass = clazz;
+        while (currentClass != null && currentClass != Object.class) {
+            // Check superclass for generic type parameters
+            Type genericSuperclass = currentClass.getGenericSuperclass();
+            if (genericSuperclass instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) genericSuperclass;
+                Type[] typeArgs = pt.getActualTypeArguments();
+                Class<?>[] classArgs = new Class<?>[typeArgs.length];
+                
+                for (int i = 0; i < typeArgs.length; i++) {
+                    if (!(typeArgs[i] instanceof Class<?>)) {
+                        throw new ClassCastException("Type argument " + typeArgs[i] + " is not a Class");
+                    }
+                    classArgs[i] = (Class<?>) typeArgs[i];
+                }
+                
+                return classArgs;
+            }
+
+            // Check interfaces for generic type parameters
+            for (Type genericInterface : currentClass.getGenericInterfaces()) {
+                if (genericInterface instanceof ParameterizedType) {
+                    ParameterizedType pt = (ParameterizedType) genericInterface;
+                    Type[] typeArgs = pt.getActualTypeArguments();
+                    Class<?>[] classArgs = new Class<?>[typeArgs.length];
+                    
+                    for (int i = 0; i < typeArgs.length; i++) {
+                        if (!(typeArgs[i] instanceof Class<?>)) {
+                            throw new ClassCastException("Type argument " + typeArgs[i] + " is not a Class");
+                        }
+                        classArgs[i] = (Class<?>) typeArgs[i];
+                    }
+                    
+                    return classArgs;
+                }
+            }
+
+            currentClass = currentClass.getSuperclass();
+        }
+
+        throw new IllegalStateException("Unable to determine generic type arguments from class hierarchy");
+    }
 
 
     @SuppressWarnings("unchecked")

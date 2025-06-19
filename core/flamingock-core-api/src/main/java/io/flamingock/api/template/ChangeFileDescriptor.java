@@ -16,20 +16,16 @@
 
 package io.flamingock.api.template;
 
-import java.util.Map;
-
 public class ChangeFileDescriptor {
     private String id;
-
     private String order;
-
     private String template;
-
     private String profiles; //colon-separated list of profiles
-
     private Boolean transactional;
+    private Object configuration;
+    private Object execution;
+    private Object rollback;
 
-    private Map<String, Object> templateConfiguration;
 
     public ChangeFileDescriptor() {
     }
@@ -39,14 +35,19 @@ public class ChangeFileDescriptor {
                                 String template,
                                 String profiles,
                                 Boolean transactional,
-                                Map<String, Object> templateConfiguration) {
+                                Object configuration,
+                                Object execution,
+                                Object rollback) {
         this.id = id;
         this.order = order;
         this.template = template;
         this.profiles = profiles;
         this.transactional = transactional;
-        this.templateConfiguration = templateConfiguration;
+        this.configuration = configuration;
+        this.execution = execution;
+        this.rollback = rollback;
     }
+
 
     public String getId() {
         return id;
@@ -80,9 +81,6 @@ public class ChangeFileDescriptor {
         this.profiles = profiles;
     }
 
-    public Map<String, Object> getTemplateConfiguration() {
-        return templateConfiguration;
-    }
 
     public Boolean getTransactional() {
         return transactional;
@@ -92,7 +90,27 @@ public class ChangeFileDescriptor {
         this.transactional = transactional;
     }
 
-    public void setTemplateConfiguration(Map<String, Object> templateConfiguration) {
-        this.templateConfiguration = templateConfiguration;
+    public Object getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Object configuration) {
+        this.configuration = configuration;
+    }
+
+    public Object getExecution() {
+        return execution;
+    }
+
+    public void setExecution(Object execution) {
+        this.execution = execution;
+    }
+
+    public Object getRollback() {
+        return rollback;
+    }
+
+    public void setRollback(Object rollback) {
+        this.rollback = rollback;
     }
 }

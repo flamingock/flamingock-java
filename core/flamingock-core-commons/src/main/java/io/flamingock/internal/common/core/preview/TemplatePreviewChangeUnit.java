@@ -17,12 +17,13 @@
 package io.flamingock.internal.common.core.preview;
 
 import java.util.List;
-import java.util.Map;
 
 public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
 
     private List<String> profiles;
-    private Map<String, Object> templateConfiguration;
+    private Object configuration;
+    private Object execution;
+    private Object rollback;
 
     public TemplatePreviewChangeUnit() {}
 
@@ -35,18 +36,15 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                                      boolean transactional,
                                      boolean runAlways,
                                      boolean system,
-                                     Map<String, Object> templateConfiguration) {
+                                     Object configuration,
+                                     Object execution,
+                                     Object rollback
+                                     ) {
         super(id, order, templateName, runAlways, transactional, system);
         this.profiles = profiles;
-        this.templateConfiguration = templateConfiguration;
-    }
-
-    public Map<String, Object> getTemplateConfiguration() {
-        return templateConfiguration;
-    }
-
-    public void setTemplateConfiguration(Map<String, Object> templateConfiguration) {
-        this.templateConfiguration = templateConfiguration;
+        this.configuration = configuration;
+        this.execution = execution;
+        this.rollback = rollback;
     }
 
     public String getTemplateName() {
@@ -61,10 +59,36 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
         this.profiles = profiles;
     }
 
+    public Object getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Object configuration) {
+        this.configuration = configuration;
+    }
+
+    public Object getExecution() {
+        return execution;
+    }
+
+    public void setExecution(Object execution) {
+        this.execution = execution;
+    }
+
+    public Object getRollback() {
+        return rollback;
+    }
+
+    public void setRollback(Object rollback) {
+        this.rollback = rollback;
+    }
+
     @Override
     public String toString() {
         return "TemplatePreviewChangeUnit{" + "profiles=" + profiles +
-                ", templateConfiguration=" + templateConfiguration +
+                ", configuration=" + configuration +
+                ", execution=" + execution +
+                ", rollback=" + rollback +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +
                 ", source='" + source + '\'' +

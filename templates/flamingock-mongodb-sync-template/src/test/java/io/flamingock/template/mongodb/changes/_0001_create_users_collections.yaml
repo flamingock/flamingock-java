@@ -2,7 +2,7 @@ id: create-users-collection-with-index
 order: 0001
 transactional: false
 template: MongoChangeTemplate
-templateConfiguration:
-  execution:
-    type: createCollection
-    collection: users
+execution:
+  type: createCollection
+  collection: users
+

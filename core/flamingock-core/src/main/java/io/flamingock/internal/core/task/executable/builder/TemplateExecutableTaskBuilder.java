@@ -16,12 +16,12 @@
 
 package io.flamingock.internal.core.task.executable.builder;
 
-import io.flamingock.internal.util.FileUtil;
 import io.flamingock.api.template.ChangeTemplateConfig;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +51,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
 
     @Override
     public TemplateLoadedChangeUnit cast(AbstractLoadedTask loadedTask) {
-        return (TemplateLoadedChangeUnit)loadedTask;
+        return (TemplateLoadedChangeUnit) loadedTask;
     }
 
     @Override
@@ -81,9 +81,9 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
                                                           TemplateLoadedChangeUnit loadedTask,
                                                           AuditEntry.Status initialState) {
         Method rollbackMethod = null;
-        if(loadedTask.getTemplateConfiguration().containsKey("rollback")) {
+        if (loadedTask.getRollback() != null) {
             rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
-            if(rollbackMethod != null) {
+            if (rollbackMethod != null) {
                 logger.trace("ChangeUnit[{}] provides rollback in configuration", loadedTask.getId());
             } else {
                 logger.warn("ChangeUnit[{}] provides rollback in configuration, but based on a template[{}] not supporting manual rollback",
@@ -92,11 +92,12 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
                 );
             }
         } else {
-            if(loadedTask.getRollbackMethod().isPresent()) {
+            if (loadedTask.getRollbackMethod().isPresent()) {
                 logger.warn("ChangeUnit[{}] does not provide rollback, but based on a template[{}] support manual rollback",
                         loadedTask.getId(),
                         loadedTask.getSource()
-                );            }
+                );
+            }
         }
         return new TemplateExecutableTask(
                 stageName,
@@ -107,10 +108,5 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
         );
 
     }
-
-    private <T extends ChangeTemplateConfig<?,?>> T getConfig(Class<T> configClass, TemplateLoadedChangeUnit loadedTask) {
-        return FileUtil.getFromMap(configClass, loadedTask.getTemplateConfiguration());
-    }
-
-
+    
 }

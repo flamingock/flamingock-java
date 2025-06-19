@@ -23,20 +23,20 @@ import io.flamingock.api.template.AbstractChangeTemplate;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class SqlTemplate extends AbstractChangeTemplate<SqlTemplateConfiguration> {
+public class SqlTemplate extends AbstractChangeTemplate<Void, String, String> {
 
     public SqlTemplate() {
-        super(SqlTemplateConfiguration.class);
+        super();
     }
 
     @Execution
     public void execution(Connection connection) {
-        execute(connection, configuration.getExecution());
+        execute(connection, execution);
     }
 
     @RollbackExecution
     public void rollback(Connection connection) {
-        execute(connection, configuration.getRollback());
+        execute(connection, rollback);
     }
 
     private static void execute(Connection connection, String sql) {
