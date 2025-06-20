@@ -16,9 +16,10 @@
 
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.task.ChangeCategory;
+import io.flamingock.internal.util.ReflectionUtil;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
 
@@ -50,6 +51,11 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
     @Override
     public Optional<Method> getRollbackMethod() {
         return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class);
+    }
+
+    @Override
+    public boolean hasCategory(ChangeCategory property) {
+        return false;
     }
 
     public Optional<Method> getBeforeExecutionMethod() {

@@ -16,10 +16,11 @@
 
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.internal.util.ReflectionUtil;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -35,7 +36,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
 
     TemplateLoadedChangeUnit(String id,
                              String order,
-                             Class<? extends ChangeTemplate<?,?,?>> templateClass,
+                             Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
                              List<String> profiles,
                              boolean transactional,
                              boolean runAlways,
@@ -68,8 +69,8 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
     }
 
     @SuppressWarnings("unchecked")
-    public Class<? extends ChangeTemplate<?,?,?>> getTemplateClass() {
-        return (Class<? extends ChangeTemplate<?,?,?>>) this.getSourceClass();
+    public Class<? extends ChangeTemplate<?, ?, ?>> getTemplateClass() {
+        return (Class<? extends ChangeTemplate<?, ?, ?>>) this.getSourceClass();
     }
 
     @Override
@@ -84,5 +85,10 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
     @Override
     public Optional<Method> getRollbackMethod() {
         return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class);
+    }
+
+    @Override
+    public boolean hasCategory(ChangeCategory property) {
+        return false;
     }
 }

@@ -31,8 +31,8 @@ import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.engine.lock.LockKey;
-import io.flamingock.internal.core.pipeline.ExecutableStage;
-import io.flamingock.internal.core.pipeline.LoadedStage;
+import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
+import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 import java.util.ArrayList;
@@ -47,13 +47,13 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTE
 
 public final class ExecutionPlanMapper {
 
-    public static ExecutionPlanRequest toRequest(List<LoadedStage> loadedStages,
+    public static ExecutionPlanRequest toRequest(List<AbstractLoadedStage> loadedStages,
                                                  long lockAcquiredForMillis,
                                                  Map<String, OngoingStatus> ongoingStatusesMap) {
 
         List<StageRequest> requestStages = new ArrayList<>(loadedStages.size());
         for (int i = 0; i < loadedStages.size(); i++) {
-            LoadedStage currentStage = loadedStages.get(i);
+            AbstractLoadedStage currentStage = loadedStages.get(i);
             List<TaskRequest> stageTasks = currentStage
                     .getLoadedTasks()
                     .stream()
@@ -78,7 +78,7 @@ public final class ExecutionPlanMapper {
         }
     }
 
-    static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<LoadedStage> loadedStages) {
+    static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<AbstractLoadedStage> loadedStages) {
         //Create a set for the filter in the loop
         List<StageResponse> stages = response.getStages() != null ? response.getStages() : Collections.emptyList();
         Set<String> stageNameSet = stages.stream().map(StageResponse::getName).collect(Collectors.toSet());
@@ -95,7 +95,7 @@ public final class ExecutionPlanMapper {
 
     }
 
-    private static ExecutableStage mapToExecutable(LoadedStage loadedStage, StageResponse stageResponse) {
+    private static ExecutableStage mapToExecutable(AbstractLoadedStage loadedStage, StageResponse stageResponse) {
 
         Map<String, RequiredActionTask> taskStateMap = stageResponse.getTasks()
                 .stream()

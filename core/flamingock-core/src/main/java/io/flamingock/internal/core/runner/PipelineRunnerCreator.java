@@ -23,7 +23,7 @@ import io.flamingock.internal.core.engine.ConnectionEngine;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.pipeline.Pipeline;
+import io.flamingock.internal.core.pipeline.loaded.Pipeline;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.common.core.context.ContextResolver;

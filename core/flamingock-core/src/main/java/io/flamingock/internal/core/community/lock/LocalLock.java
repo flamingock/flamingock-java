@@ -30,7 +30,7 @@ import java.time.Instant;
 
 public class LocalLock extends Lock {
 
-    private static final Logger logger = LoggerFactory.getLogger(LocalLock.class);
+    private static final Logger logger = LoggerFactory.getLogger("Flamingock-Lock");
 
 
     public static Lock getLock(long leaseMillis,

@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.common.core.preview.builder;
 
-import io.flamingock.api.template.ChangeFileDescriptor;
+import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import org.jetbrains.annotations.NotNull;
 

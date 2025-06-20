@@ -17,10 +17,9 @@
 package io.flamingock.core.springboot;
 
 import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.template.ChangeFileDescriptor;
+import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.api.template.ChangeTemplateConfig;
-import io.flamingock.api.template.TemplateFactory;
+import io.flamingock.internal.common.core.template.TemplateManager;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
@@ -31,8 +30,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Profile;
 
-import java.util.HashMap;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,7 +39,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     @BeforeAll
     static void beforeAll() {
-        TemplateFactory.addTemplate(TemplateSimulate.class.getSimpleName(), TemplateSimulate.class);
+        TemplateManager.addTemplate(TemplateSimulate.class.getSimpleName(), TemplateSimulate.class);
     }
 
     @Test

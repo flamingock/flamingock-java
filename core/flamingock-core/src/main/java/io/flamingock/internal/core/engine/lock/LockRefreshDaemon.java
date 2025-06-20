@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class LockRefreshDaemon extends Thread {
 
-    private static final Logger logger = LoggerFactory.getLogger(LockRefreshDaemon.class);
+    private static final Logger logger = LoggerFactory.getLogger("Flamingock-LockRefreshDaemon");
 
     private final Lock lock;
 

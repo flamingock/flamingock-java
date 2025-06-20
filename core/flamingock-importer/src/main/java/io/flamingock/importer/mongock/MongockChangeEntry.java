@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package io.flamingock.importer.model;
+package io.flamingock.importer.mongock;
 
 import java.util.Date;
 
-//TODO rename to MongockLegacyAuditEntry
 public class MongockChangeEntry {
 
     protected String executionId;
@@ -36,8 +35,6 @@ public class MongockChangeEntry {
     protected Boolean systemChange;
     protected Date originalTimestamp;
 
-//    public ChangeEntry() {
-//    }
 
     public MongockChangeEntry(String executionId,
                               String changeId,

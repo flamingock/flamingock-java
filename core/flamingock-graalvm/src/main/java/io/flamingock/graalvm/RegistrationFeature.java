@@ -2,24 +2,22 @@ package io.flamingock.graalvm;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.api.template.ChangeTemplateConfig;
-import io.flamingock.api.template.TemplateFactory;
-import io.flamingock.importer.adapter.ImporterAdapterFactory;
-import io.flamingock.internal.core.pipeline.LoadedStage;
-import io.flamingock.internal.core.pipeline.Pipeline;
+import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import io.flamingock.internal.common.core.system.SystemModule;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.template.TemplateManager;
+import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.pipeline.loaded.Pipeline;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
@@ -53,20 +51,16 @@ public class RegistrationFeature implements Feature {
         registerClass(PreviewStage.class.getName());
         registerClass(CodePreviewChangeUnit.class.getName());
         registerClass(PreviewMethod.class);
-        registerClass(ChangeTemplateConfig.class);
         registerClass(TemplatePreviewChangeUnit.class.getName());
 
         //Loaded
         registerClass(Pipeline.class.getName());
-        registerClass(LoadedStage.class.getName());
+        registerClass(AbstractLoadedStage.class.getName());
         registerClass(AbstractLoadedTask.class.getName());
         registerClass(AbstractReflectionLoadedTask.class.getName());
         registerClass(AbstractLoadedChangeUnit.class.getName());
         registerClass(CodeLoadedChangeUnit.class.getName());
         registerClass(TemplateLoadedChangeUnit.class.getName());
-
-        //Importer adapter
-        registerClass(ImporterAdapterFactory.getImporterAdapter().getClass());
 
         //others
         registerClass(CoderResult.class.getName());
@@ -85,13 +79,14 @@ public class RegistrationFeature implements Feature {
 
     private void registerTemplates() {
         logger.startRegistration("templates");
-        registerClass(TemplateFactory.class);
+        registerClass(TemplateManager.class);
         registerClass(ChangeTemplate.class);
         registerClass(AbstractChangeTemplate.class);
-        for (ChangeTemplate<?, ?, ?> template : ServiceLoader.load(ChangeTemplate.class)) {
+        TemplateManager.getTemplates().forEach(template -> {
             registerClass(template.getClass());
             template.getReflectiveClasses().forEach(RegistrationFeature::registerClass);
-        }
+        });
+
         logger.completedRegistration("templates");
     }
 

@@ -18,8 +18,8 @@ package io.flamingock.internal.core.engine.execution;
 
 import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.engine.lock.Lock;
-import io.flamingock.internal.core.pipeline.ExecutablePipeline;
-import io.flamingock.internal.core.pipeline.ExecutableStage;
+import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
+import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 
 import java.util.List;
 

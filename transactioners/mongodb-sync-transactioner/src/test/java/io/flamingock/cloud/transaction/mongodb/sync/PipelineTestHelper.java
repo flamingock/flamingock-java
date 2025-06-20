@@ -16,6 +16,7 @@
 
 package io.flamingock.cloud.transaction.mongodb.sync;
 
+import io.flamingock.internal.common.core.preview.StageType;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.api.annotations.ChangeUnit;
@@ -94,6 +95,7 @@ public class PipelineTestHelper {
 
         PreviewStage stage = new PreviewStage(
                 stageName,
+                StageType.DEFAULT,
                 "some description",
                 null,
                 null,

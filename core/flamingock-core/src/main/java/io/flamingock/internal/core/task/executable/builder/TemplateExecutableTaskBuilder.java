@@ -16,12 +16,10 @@
 
 package io.flamingock.internal.core.task.executable.builder;
 
-import io.flamingock.api.template.ChangeTemplateConfig;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
-import io.flamingock.internal.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +32,7 @@ import java.util.List;
  * Factory for ChangeUnit classes
  */
 public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<TemplateLoadedChangeUnit> {
-    private final static Logger logger = LoggerFactory.getLogger("TemplateExecutableTaskBuilder");
+    private final static Logger logger = LoggerFactory.getLogger("Flamingock-TemplateExecutableTaskBuilder");
 
     private static final TemplateExecutableTaskBuilder instance = new TemplateExecutableTaskBuilder();
     private String stageName;

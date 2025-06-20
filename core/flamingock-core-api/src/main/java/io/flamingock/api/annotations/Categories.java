@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package io.flamingock.importer.model;
+package io.flamingock.api.annotations;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.api.task.ChangeCategory;
 
-public enum MongockChangeState {
-  EXECUTED, FAILED, ROLLED_BACK, ROLLBACK_FAILED, IGNORED;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  public AuditEntry.Status toAuditStatus() {
-    switch (this) {
-      case FAILED: return AuditEntry.Status.EXECUTION_FAILED;
-      case ROLLED_BACK: return AuditEntry.Status.ROLLED_BACK;
-      case ROLLBACK_FAILED: return AuditEntry.Status.ROLLBACK_FAILED;
-      default: return AuditEntry.Status.EXECUTED;
-    }
-  }
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Categories {
+
+    ChangeCategory[] value();
 
 }

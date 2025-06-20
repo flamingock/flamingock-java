@@ -22,7 +22,8 @@ import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.core.pipeline.Pipeline;
+import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.internal.core.pipeline.loaded.Pipeline;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -92,6 +93,7 @@ public class PipelineTest {
 
     private static PreviewStage getPreviewStage(String name) {
         PreviewStage stage = Mockito.mock(PreviewStage.class);
+        Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage.getName()).thenReturn(name);
         Mockito.when(stage.getTasks()).thenReturn(Collections.emptyList());
         return stage;
@@ -127,6 +129,7 @@ public class PipelineTest {
                 false);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
+        Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage.getName()).thenReturn("stage-with-invalid-order-tasks");
         Mockito.when(stage.getTasks()).thenReturn((Collection) Arrays.asList(taskWithInvalidOrder1, taskWithInvalidOrder2));
 
@@ -198,6 +201,7 @@ public class PipelineTest {
                 false);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
+        Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage.getName()).thenReturn("stage-with-valid-order-tasks");
         Mockito.when(stage.getTasks()).thenReturn((Collection) Arrays.asList(
                 taskWithValidOrder1, taskWithValidOrder2, taskWithValidOrder3, taskWithValidOrder4));
@@ -255,10 +259,12 @@ public class PipelineTest {
                 false);
 
         PreviewStage stage1 = Mockito.mock(PreviewStage.class);
+        Mockito.when(stage1.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage1.getName()).thenReturn("stage1");
         Mockito.when(stage1.getTasks()).thenReturn((Collection) Arrays.asList(task1, task2));
 
         PreviewStage stage2 = Mockito.mock(PreviewStage.class);
+        Mockito.when(stage2.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage2.getName()).thenReturn("stage2");
         Mockito.when(stage2.getTasks()).thenReturn((Collection) Collections.singletonList(task3));
 

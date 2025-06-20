@@ -18,7 +18,6 @@ package io.flamingock.internal.core.pipeline.execution;
 
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
-import io.flamingock.internal.core.pipeline.ExecutableStage;
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.ContextResolver;

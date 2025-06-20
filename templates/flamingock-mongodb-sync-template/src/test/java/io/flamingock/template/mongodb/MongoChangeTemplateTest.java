@@ -72,10 +72,7 @@ class MongoChangeTemplateTest {
         mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
     }
 
-    @AfterEach
-    void tearDownEach() {
-//        mongoDatabase.getCollection(CLIENTS_COLLECTION).drop();
-    }
+
 
     @Test
     @DisplayName("WHEN mongodb template THEN runs fine IF Flamingock mongodb sync ce")

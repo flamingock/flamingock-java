@@ -31,7 +31,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 
 public class Lock {
 
-    private static final Logger logger = LoggerFactory.getLogger(Lock.class);
+    private static final Logger logger = LoggerFactory.getLogger("Flamingock-Lock");
 
     public static final String LOG_EXPIRED_TEMPLATE = "Lock[{}] not refreshed at[{}] because the it's canceled/expired[{}]";
 

@@ -3,9 +3,9 @@ package io.flamingock.importer.mongodb;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.importer.ImporterAdapter;
-import io.flamingock.importer.model.MongockChangeEntry;
-import io.flamingock.importer.model.MongockChangeState;
-import io.flamingock.importer.model.MongockChangeType;
+import io.flamingock.importer.mongock.MongockChangeEntry;
+import io.flamingock.importer.mongock.MongockChangeState;
+import io.flamingock.importer.mongock.MongockChangeType;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import org.bson.Document;
 

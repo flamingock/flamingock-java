@@ -18,7 +18,7 @@ package io.flamingock.internal.common.core.preview;
 
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
-import io.flamingock.api.template.ChangeFileDescriptor;
+import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
 
 import java.io.File;
 import java.util.Collection;
@@ -37,6 +37,8 @@ public class PreviewStage {
 
     private String name;
 
+    private StageType type;
+
     private String description;
 
     private String sourcesPackage;
@@ -52,12 +54,14 @@ public class PreviewStage {
 
     //TODO it shouldn't be public
     public PreviewStage(String name,
+                        StageType type,
                         String description,
                         String sourcesPackage,
                         String resourcesDir,
                         Collection<? extends AbstractPreviewTask> tasks,
                         boolean parallel) {
         this.name = name;
+        this.type = type;
         this.description = description;
         this.sourcesPackage = sourcesPackage;
         this.resourcesDir = resourcesDir;
@@ -75,6 +79,14 @@ public class PreviewStage {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public StageType getType() {
+        return type;
+    }
+
+    public void setType(StageType type) {
+        this.type = type;
     }
 
     public String getDescription() {
@@ -133,11 +145,14 @@ public class PreviewStage {
     @Override
     public String toString() {
         return "PreviewStage{" + "name='" + name + '\'' +
+                ", type=" + type +
+                ", description='" + description + '\'' +
+                ", sourcesPackage='" + sourcesPackage + '\'' +
+                ", resourcesDir='" + resourcesDir + '\'' +
                 ", tasks=" + tasks +
                 ", parallel=" + parallel +
                 '}';
     }
-
 
     /**
      * Builder for constructing {@link PreviewStage} instances.
@@ -159,6 +174,7 @@ public class PreviewStage {
     public static class Builder {
 
         private String name;
+        private StageType type;
         private String description;
         private String resourcesDir;
         private String sourcesPackage;
@@ -178,6 +194,12 @@ public class PreviewStage {
          */
         public Builder setName(String name) {
             this.name = name;
+            return this;
+        }
+
+
+        public Builder setType(StageType type) {
+            this.type = type;
             return this;
         }
 
@@ -301,7 +323,7 @@ public class PreviewStage {
             Collection<AbstractPreviewTask> templatedTasksDescriptors = getTemplatedTaskDescriptors(resourcesDirectories);
             Collection<AbstractPreviewTask> allDescriptors = mergeDescriptors(templatedTasksDescriptors, changeUnitClassesList);
 
-            return new PreviewStage(name, description, sourcesPackage, resourcesDir, allDescriptors, parallel);
+            return new PreviewStage(name, type, description, sourcesPackage, resourcesDir, allDescriptors, parallel);
         }
 
         /**
@@ -350,6 +372,7 @@ public class PreviewStage {
                     .map(PreviewTaskBuilder::build)
                     .collect(Collectors.toList());
         }
+
     }
 
 

@@ -24,9 +24,10 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -141,6 +142,46 @@ public final class ReflectionUtil {
         return constructors[0];
     }
 
+    /**
+     * Collects all instances of a specific annotation type from a class, its superclass hierarchy, and implemented interfaces.
+     * This method recursively traverses the inheritance chain and interface hierarchy, collecting declared annotations
+     * of the specified type from each level. Only directly declared annotations are collected (not inherited ones).
+     * Duplicate annotations from the same class/interface are avoided through cycle detection.
+     *
+     * @param <A> The annotation type to collect
+     * @param clazz The class to start the search from
+     * @param annotationType The class object representing the annotation type to collect
+     * @return A list containing all found annotations of the specified type, ordered by traversal: starting class,
+     *         then superclasses (bottom-up), then interfaces at each level. Returns an empty list if no annotations are found.
+     * @throws NullPointerException if clazz or annotationType is null
+     */
+    public static <A extends Annotation> List<A> collectAllAnnotations(Class<?> clazz, Class<A> annotationType) {
+        Set<Class<?>> visited = new HashSet<>();
+        List<A> result = new ArrayList<>();
+
+        collectAnnotationsRecursive(clazz, annotationType, visited, result);
+
+        return result;
+    }
+
+    private static <A extends Annotation> void collectAnnotationsRecursive(Class<?> clazz, Class<A> annotationType, Set<Class<?>> visited, List<A> result) {
+        if (clazz == null || clazz == Object.class || !visited.add(clazz)) return;
+
+        // Primero la clase actual
+        A annotation = clazz.getDeclaredAnnotation(annotationType);
+        if (annotation != null) {
+            result.add(annotation);
+        }
+
+        // Luego superclase
+        collectAnnotationsRecursive(clazz.getSuperclass(), annotationType, visited, result);
+
+        // Finalmente interfaces
+        for (Class<?> iface : clazz.getInterfaces()) {
+            collectAnnotationsRecursive(iface, annotationType, visited, result);
+        }
+    }
+
 
     public static List<Constructor<?>> getConstructors(Class<?> source) {
         return Arrays.stream(source.getConstructors())
@@ -150,7 +191,6 @@ public final class ReflectionUtil {
     private static boolean isConstructorAnnotationPresent(Constructor<?> constructor, Class<? extends Annotation> annotationClass) {
         return constructor.isAnnotationPresent(annotationClass) ;
     }
-
 
     public static class ConstructorNotFound extends RuntimeException {
     }

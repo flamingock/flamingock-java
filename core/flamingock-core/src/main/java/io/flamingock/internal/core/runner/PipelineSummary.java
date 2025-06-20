@@ -16,8 +16,8 @@
 
 package io.flamingock.internal.core.runner;
 
-import io.flamingock.internal.core.pipeline.ExecutablePipeline;
-import io.flamingock.internal.core.pipeline.ExecutableStage;
+import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
+import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.StageSummary;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;

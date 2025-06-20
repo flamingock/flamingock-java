@@ -32,8 +32,8 @@ import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.execution.ExecutionPlan;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.engine.lock.LockException;
-import io.flamingock.internal.core.pipeline.ExecutableStage;
-import io.flamingock.internal.core.pipeline.LoadedStage;
+import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
+import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +74,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    public ExecutionPlan getNextExecution(List<LoadedStage> loadedStages) throws LockException {
+    public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
 
 
         //In every execution, as it start a stopwatch
@@ -130,7 +130,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         } while (true);
     }
 
-    private ExecutionPlanResponse createExecution(List<LoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
+    private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
 
         Map<String, OngoingStatus> ongoingStatusesMap = getOngoingStatuses()
                 .stream()
@@ -150,7 +150,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return ongoingStatusRepository != null ? ongoingStatusRepository.getOngoingStatuses() : Collections.emptySet();
     }
 
-    private ExecutionPlan buildNextExecutionPlan(List<LoadedStage> loadedStages, ExecutionPlanResponse response) {
+    private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {
         return ExecutionPlan.newExecution(
                 response.getExecutionId(),
                 ExecutionPlanMapper.extractLockFromResponse(response, coreConfiguration, runnerId, lockService, timeService),

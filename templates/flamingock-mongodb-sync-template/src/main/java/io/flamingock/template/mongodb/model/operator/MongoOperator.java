@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class MongoOperator {
-    protected static final Logger logger = LoggerFactory.getLogger(MongoOperator.class);
+    protected static final Logger logger = LoggerFactory.getLogger("Flamingock-MongoDB-Template");
 
     protected final MongoDatabase mongoDatabase;
     protected final MongoOperation op;

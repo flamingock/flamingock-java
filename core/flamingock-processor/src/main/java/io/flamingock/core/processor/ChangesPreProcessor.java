@@ -7,6 +7,7 @@ import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.LoggerPreProcessor;
 import io.flamingock.core.processor.util.Serializer;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.StageType;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -183,6 +184,7 @@ public class ChangesPreProcessor extends AbstractProcessor {
                 Collection<AbstractPreviewTask> changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
                 PreviewStage stage = PreviewStage.builder()
                         .setName(stageMap.get("name"))
+                        .setType(StageType.from(stageMap.get("type")))
                         .setDescription(stageMap.get("description"))
                         .setSourcesRoots(sourceRoots)
                         .setSourcesPackage(sourcesPackage)

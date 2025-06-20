@@ -19,6 +19,7 @@ package io.flamingock.community.mongodb.springdata;
 import java.util.function.Function;
 import com.mongodb.client.MongoDatabase;
 
+import io.flamingock.internal.common.core.preview.StageType;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.api.annotations.ChangeUnit;
@@ -129,6 +130,7 @@ public class MongoDBTestHelper {
 
         PreviewStage stage = new PreviewStage(
                 "stage-name",
+                StageType.DEFAULT,
                 "some description",
                 null,
                 null,

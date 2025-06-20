@@ -17,13 +17,13 @@
 package io.flamingock.internal.core.engine.execution;
 
 import io.flamingock.internal.core.engine.lock.LockException;
-import io.flamingock.internal.core.pipeline.LoadedStage;
+import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 
 import java.util.List;
 
 public abstract class ExecutionPlanner {
 
-    abstract public ExecutionPlan getNextExecution(List<LoadedStage> loadedStages) throws LockException;
+    abstract public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException;
 
 
 }

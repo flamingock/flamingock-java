@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 
 public final class RuntimeManager implements DependencyInjectable {
 
-    private static final Logger logger = LoggerFactory.getLogger(RuntimeManager.class);
+    private static final Logger logger = LoggerFactory.getLogger("Flamingock-RuntimeManager");
     private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
             ? parameter.getAnnotation(Named.class).value()
             : null;

@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class AbstractChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK> implements ChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK> {
+public abstract class AbstractChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK> implements ChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK> {
 
     private final Class<CONFIGURATION> configurationClass;
     private final Class<EXECUTION> executionClass;

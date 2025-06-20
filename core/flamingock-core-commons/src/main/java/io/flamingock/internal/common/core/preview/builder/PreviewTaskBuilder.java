@@ -3,7 +3,7 @@ package io.flamingock.internal.common.core.preview.builder;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
-import io.flamingock.api.template.ChangeFileDescriptor;
+import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
 
 import javax.lang.model.element.TypeElement;
 

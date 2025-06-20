@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.api.template.TemplateFactory;
+import io.flamingock.internal.common.core.template.TemplateManager;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 
@@ -28,7 +28,6 @@ import java.util.List;
 //TODO how to set transactional and runAlways
 public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoadedChangeUnit> {
 
-    private static final String TEMPLATE_NOT_FOUND_MSG = "Template [%s] not found. Ensure that the template's library is correctly imported and that the template class field in your templated ChangeUnit specifies the correct class path";
     private String id;
     private String order;
     private String templateName;
@@ -108,7 +107,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     @Override
     public TemplateLoadedChangeUnit build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
-        Class<? extends ChangeTemplate<?, ?, ?>> templateClass = TemplateFactory.getTemplate(templateName)
+        Class<? extends ChangeTemplate<?, ?, ?>> templateClass = TemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
         return new TemplateLoadedChangeUnit(
                 id,

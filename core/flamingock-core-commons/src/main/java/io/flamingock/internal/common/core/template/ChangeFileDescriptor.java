@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.api.template;
+package io.flamingock.internal.common.core.template;
 
 public class ChangeFileDescriptor {
     private String id;

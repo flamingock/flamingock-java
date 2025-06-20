@@ -27,8 +27,8 @@ import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.engine.lock.LockException;
 import io.flamingock.internal.core.engine.lock.LockRefreshDaemon;
-import io.flamingock.internal.core.pipeline.ExecutableStage;
-import io.flamingock.internal.core.pipeline.LoadedStage;
+import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
+import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import org.slf4j.Logger;
@@ -66,7 +66,7 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    public ExecutionPlan getNextExecution(List<LoadedStage> loadedStages) throws LockException {
+    public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
         AuditStageStatus currentAuditStageStatus = auditReader.getAuditStageStatus();
         logger.debug("Pulled remote state:\n{}", currentAuditStageStatus);
         List<ExecutableStage> executableStages = loadedStages

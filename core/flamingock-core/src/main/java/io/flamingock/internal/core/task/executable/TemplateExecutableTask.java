@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoadedChangeUnit> {
-    private final Logger logger = LoggerFactory.getLogger("TemplateExecutableTask");
+    private final Logger logger = LoggerFactory.getLogger("Flamingock-TemplateExecutableTask");
 
     public TemplateExecutableTask(String stageName,
                                   TemplateLoadedChangeUnit descriptor,

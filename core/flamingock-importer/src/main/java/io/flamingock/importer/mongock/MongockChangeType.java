@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.flamingock.importer.model;
+package io.flamingock.importer.mongock;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
