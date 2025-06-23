@@ -17,10 +17,17 @@
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
+import io.flamingock.api.task.ChangeCategory;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext.SortType.UNSORTED;
 
@@ -39,6 +46,29 @@ public class SystemLoadedStage extends AbstractLoadedStage {
                              boolean parallel) {
         super(name, type, loadedTasks, parallel, validationContext);
 
+    }
+
+
+    @Override
+    public List<ValidationError> getValidationErrors(PipelineValidationContext context) {
+        List<ValidationError> errors = super.getValidationErrors(context);
+        String changeCategoryErrorMsg = String.format(
+                "ChangeUnit in a system stage must have category %s or %s ",
+                ChangeCategory.SYSTEM, ChangeCategory.IMPORT);
+
+        for(AbstractLoadedTask task : getTasks()) {
+            if(task instanceof AbstractLoadedChangeUnit) {
+                AbstractLoadedChangeUnit changeUnit = (AbstractLoadedChangeUnit) task;
+                if(!changeUnit.hasCategory(ChangeCategory.IMPORT)) {
+                    errors.add(new ValidationError(changeCategoryErrorMsg, task.getId(), "changeUnit"));
+                }
+            } else {
+                errors.add(new ValidationError("ChangeUnit in a system stage must of type ChangeUnit", task.getId(), "changeUnit"));
+            }
+
+        }
+
+        return errors;
     }
 
 

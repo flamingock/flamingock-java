@@ -1,1 +1,1 @@
-io.flamingock.core.processor.ChangesPreProcessor
+io.flamingock.core.processor.PipelinePreProcessor

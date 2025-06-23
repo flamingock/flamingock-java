@@ -16,15 +16,15 @@
 
 package io.flamingock.internal.core.pipeline.loaded;
 
+import io.flamingock.internal.common.core.context.ContextInjectable;
+import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
-import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
@@ -40,33 +40,82 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Pipeline implements PipelineDescriptor {
+public class LoadedPipeline implements PipelineDescriptor {
 
-    private static final PipelineValidationContext CONTEXT = new PipelineValidationContext();
+    private static final PipelineValidationContext DEFAULT_CONTEXT = new PipelineValidationContext();
 
 
     private final Collection<TaskFilter> taskFilters;
 
+    private final AbstractLoadedStage systemStage;
     private final List<AbstractLoadedStage> loadedStages;
 
-    public static PipelineBuilder builder() {
-        return new PipelineBuilder();
+    public static LoadedPipelineBuilder builder() {
+        return new LoadedPipelineBuilder();
     }
 
-    private Pipeline(List<AbstractLoadedStage> loadedStages, Collection<TaskFilter> taskFilters) {
+    private LoadedPipeline(List<AbstractLoadedStage> loadedStages,
+                           Collection<TaskFilter> taskFilters) {
+        this(null, loadedStages, taskFilters);
+    }
+
+    private LoadedPipeline(AbstractLoadedStage systemStage,
+                           List<AbstractLoadedStage> loadedStages,
+                           Collection<TaskFilter> taskFilters) {
+        this.systemStage = systemStage;
         this.loadedStages = loadedStages;
         this.taskFilters = taskFilters;
     }
 
-    public List<AbstractLoadedStage> validateAndGetLoadedStages() {
-        validate();
+
+    /**
+     * Validates the entire pipeline configuration and throws an exception if validation fails.
+     * This method performs comprehensive validation including:
+     * <ul>
+     *   <li>Ensures the pipeline contains at least one stage</li>
+     *   <li>Validates each individual stage within the pipeline</li>
+     *   <li>Checks for duplicate task IDs across all stages</li>
+     * </ul>
+     *
+     * @throws FlamingockException if any validation errors are found, containing a formatted
+     *         message with all validation issues discovered
+     */
+    public void validate() throws FlamingockException{
+        ValidationResult errors = new ValidationResult("Pipeline validation error");
+
+
+        if(systemStage != null) {
+            errors.addAll(systemStage.getValidationErrors(DEFAULT_CONTEXT));
+        }
+
+        // Validate pipeline has stages
+        if (loadedStages == null || loadedStages.isEmpty()) {
+            errors.add(new ValidationError("Pipeline must contain at least one stage", "pipeline", "pipeline"));
+
+        } else {
+            loadedStages.stream()
+                    .map(stage -> stage.getValidationErrors(DEFAULT_CONTEXT))
+                    .forEach(errors::addAll);
+            getStagesIdDuplicationError().ifPresent(errors::add);
+        }
+
+        if (errors.hasErrors()) {
+            throw new FlamingockException(errors.formatMessage());
+        }
+    }
+
+    public Optional<AbstractLoadedStage> getSystemStage() {
+        return Optional.ofNullable(systemStage);
+    }
+
+    public List<AbstractLoadedStage> getStages() {
         return loadedStages;
     }
 
     @Override
     public Optional<AbstractLoadedTask> getLoadedTask(String taskId) {
         return loadedStages.stream()
-                .map(AbstractLoadedStage::getLoadedTasks)
+                .map(AbstractLoadedStage::getTasks)
                 .flatMap(Collection::stream)
                 .filter(loadedTask -> loadedTask.getId().equals(taskId))
                 .findFirst();
@@ -75,7 +124,7 @@ public class Pipeline implements PipelineDescriptor {
     @Override
     public Optional<String> getStageByTask(String taskId) {
         for (AbstractLoadedStage loadedStage : loadedStages) {
-            for (TaskDescriptor loadedTask : loadedStage.getLoadedTasks()) {
+            for (TaskDescriptor loadedTask : loadedStage.getTasks()) {
                 if (loadedTask.getId().equals(taskId)) {
                     return Optional.of(loadedStage.getName());
                 }
@@ -89,30 +138,6 @@ public class Pipeline implements PipelineDescriptor {
         contextInjectable.addDependency(new Dependency(PipelineDescriptor.class, this));
     }
 
-    /**
-     * Validates the pipeline and returns a list of validation errors.
-     * This includes validating that:
-     * 1. at least one stage
-     * 2. no empty stages
-     * 3. no duplicate task IDs across all stages
-     * 4. all stages in the pipeline are valid
-     */
-    private void validate() {
-        ValidationResult errors = new ValidationResult("Pipeline validation error");
-
-        // Validate pipeline has stages
-        if (loadedStages == null || loadedStages.isEmpty()) {
-            errors.add(new ValidationError("Pipeline must contain at least one stage", "pipeline", "pipeline"));
-
-        } else {
-            loadedStages.stream().map(stage -> stage.getValidationErrors(CONTEXT)).forEach(errors::addAll);
-            getStagesIdDuplicationError().ifPresent(errors::add);
-        }
-
-        if (errors.hasErrors()) {
-            throw new FlamingockException(errors.formatMessage());
-        }
-    }
 
 
     private Optional<ValidationError> getStagesIdDuplicationError() {
@@ -141,55 +166,67 @@ public class Pipeline implements PipelineDescriptor {
     }
 
 
-    public static class PipelineBuilder {
+    public static class LoadedPipelineBuilder {
 
         private Collection<PreviewStage> beforeUserStages = new LinkedHashSet<>();
         private PreviewPipeline previewPipeline;
         private Collection<PreviewStage> afterUserStages = new LinkedHashSet<>();
         private Collection<TaskFilter> taskFilters = new LinkedHashSet<>();
 
-        private PipelineBuilder() {
+        private LoadedPipelineBuilder() {
         }
 
-        public PipelineBuilder addBeforeUserStages(Collection<PreviewStage> stages) {
+        public LoadedPipelineBuilder addBeforeUserStages(Collection<PreviewStage> stages) {
             this.beforeUserStages = stages;
             return this;
         }
 
-        public PipelineBuilder addPreviewPipeline(PreviewPipeline previewPipeline) {
+        public LoadedPipelineBuilder addPreviewPipeline(PreviewPipeline previewPipeline) {
             this.previewPipeline = previewPipeline;
             return this;
         }
 
-        public PipelineBuilder addAfterUserStages(Collection<PreviewStage> stages) {
+        public LoadedPipelineBuilder addAfterUserStages(Collection<PreviewStage> stages) {
             this.afterUserStages = stages;
             return this;
         }
 
-        public PipelineBuilder addFilters(Collection<TaskFilter> taskFilters) {
+        public LoadedPipelineBuilder addFilters(Collection<TaskFilter> taskFilters) {
             this.taskFilters.addAll(taskFilters);
             return this;
         }
 
 
-        public Pipeline build() {
-            List<AbstractLoadedStage> allSortedStages = new LinkedList<>(transformToLoadedStages(beforeUserStages));
-            allSortedStages.addAll(transformToLoadedStages(previewPipeline.getStages()));
-            allSortedStages.addAll(transformToLoadedStages(afterUserStages));
+        public LoadedPipeline build() {
+            List<AbstractLoadedStage> allSortedStages = new LinkedList<>(transformListToLoadedStages(beforeUserStages));
+            allSortedStages.addAll(transformListToLoadedStages(previewPipeline.getStages()));
+            allSortedStages.addAll(transformListToLoadedStages(afterUserStages));
 
-            return new Pipeline(allSortedStages, taskFilters);
+            return transformToLoadedStage(previewPipeline.getSystemStage())
+                    .map(abstractLoadedStage -> new LoadedPipeline(
+                            abstractLoadedStage,
+                            allSortedStages,
+                            taskFilters
+                    )).orElseGet(() -> new LoadedPipeline(allSortedStages, taskFilters));
         }
 
         @NotNull
-        private static List<AbstractLoadedStage> transformToLoadedStages(Collection<PreviewStage> stages) {
+        private static List<AbstractLoadedStage> transformListToLoadedStages(Collection<PreviewStage> stages) {
             if (stages == null) {
                 return Collections.emptyList();
             }
             return stages
                     .stream()
-                    .map(AbstractLoadedStage.builder()::setPreviewStage)
-                    .map(AbstractLoadedStage.Builder::build)
+                    .map(LoadedPipelineBuilder::transformToLoadedStage)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .collect(Collectors.toList());
+        }
+
+        public static Optional<AbstractLoadedStage> transformToLoadedStage(PreviewStage previewStage) {
+            return previewStage != null
+                    ? Optional.of(AbstractLoadedStage.builder().setPreviewStage(previewStage).build())
+                    : Optional.empty();
         }
 
 

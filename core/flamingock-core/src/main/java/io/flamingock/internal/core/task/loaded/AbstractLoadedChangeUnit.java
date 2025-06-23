@@ -58,7 +58,7 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
                                        boolean systemTask) {
         super(id, order, sourceClass, runAlways, transactional, systemTask);
 
-        this.categories = ReflectionUtil.collectAllAnnotations(sourceClass, Categories.class).stream()
+        this.categories = ReflectionUtil.findAllAnnotations(sourceClass, Categories.class).stream()
                 .map(Categories::value)
                 .map(Arrays::asList)
                 .flatMap(List::stream)
@@ -128,7 +128,7 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
             }
 
         } else if(order != null) {
-            logger.warn("ChangeUnit[{}] is in a self sorted stage but order value was provided - order will be ignored and managed automatically by Flamingock", id);
+            logger.warn("ChangeUnit[{}] is in an auto-sorted stage but order value was provided - order will be ignored and managed automatically by Flamingock", id);
 
         }
         return Optional.empty();

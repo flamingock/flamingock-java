@@ -16,6 +16,7 @@
 
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.annotations.Categories;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.api.task.ChangeCategory;
@@ -23,8 +24,10 @@ import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.util.ReflectionUtil;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
@@ -87,8 +90,4 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
         return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class);
     }
 
-    @Override
-    public boolean hasCategory(ChangeCategory property) {
-        return false;
-    }
 }

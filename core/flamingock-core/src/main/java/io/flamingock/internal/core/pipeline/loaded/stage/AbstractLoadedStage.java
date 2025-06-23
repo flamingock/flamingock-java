@@ -58,19 +58,19 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
     private final StageType type;
 
-    private final Collection<AbstractLoadedTask> loadedTasks;
+    private final Collection<AbstractLoadedTask> tasks;
 
     private final boolean parallel;
 
 
     public AbstractLoadedStage(String name,
                                StageType type,
-                               Collection<AbstractLoadedTask> loadedTasks,
+                               Collection<AbstractLoadedTask> tasks,
                                boolean parallel,
                                StageValidationContext validationContext) {
         this.name = name;
         this.type = type;
-        this.loadedTasks = loadedTasks;
+        this.tasks = tasks;
         this.parallel = parallel;
         this.validationContext = validationContext;
     }
@@ -80,7 +80,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
         Map<String, AuditEntry.Status> statesMap = state.getEntryStatesMap();
 
-        List<ExecutableTask> tasks = loadedTasks
+        List<ExecutableTask> tasks = this.tasks
                 .stream()
                 .map(loadedTask -> ExecutableTaskBuilder.build(loadedTask, name, statesMap.get(loadedTask.getId())))
                 .flatMap(List::stream)
@@ -97,8 +97,8 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         return type;
     }
 
-    public Collection<AbstractLoadedTask> getLoadedTasks() {
-        return loadedTasks;
+    public Collection<AbstractLoadedTask> getTasks() {
+        return tasks;
     }
 
     public boolean isParallel() {
@@ -113,7 +113,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
      * so the returned {@code Set} will not contain duplicates.
      */
     public Set<String> getTaskIds() {
-        return getLoadedTasks().stream()
+        return getTasks().stream()
                 .map(AbstractLoadedTask::getId)
                 .collect(Collectors.toSet());
     }
@@ -138,19 +138,19 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         }
 
         // Check if stage is empty
-        if (loadedTasks == null || loadedTasks.isEmpty()) {
+        if (tasks == null || tasks.isEmpty()) {
             String message = String.format("Stage[%s] must contain at least one task", name);
             return Collections.singletonList(new ValidationError(message, name, "stage"));
         }
         getTaskIdDuplicationError().ifPresent(errors::add);
-        getLoadedTasks().stream().map(task -> task.getValidationErrors(validationContext)).forEach(errors::addAll);
+        getTasks().stream().map(task -> task.getValidationErrors(validationContext)).forEach(errors::addAll);
         return errors;
     }
 
     @Override
     public String toString() {
         return "LoadedStage{" + "name='" + name + '\'' +
-                ", loadedTasks=" + loadedTasks +
+                ", loadedTasks=" + tasks +
                 ", parallel=" + parallel +
                 '}';
     }
@@ -159,7 +159,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         Set<String> seen = new HashSet<>();
         Set<String> duplicates = new HashSet<>();
 
-        for (AbstractLoadedTask task : getLoadedTasks()) {
+        for (AbstractLoadedTask task : getTasks()) {
             String id = task.getId();
             if (!seen.add(id)) {
                 duplicates.add(id);
@@ -195,7 +195,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
             switch(previewStage.getType()) {
                 case LEGACY:
                     return new LegacyLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks, previewStage.isParallel());
-                case IMPORTER:
+                case SYSTEM:
                     return new SystemLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks, previewStage.isParallel());
                 case DEFAULT:
                 default:

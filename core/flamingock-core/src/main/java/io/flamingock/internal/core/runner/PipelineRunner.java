@@ -31,15 +31,17 @@ import io.flamingock.internal.core.event.model.impl.StageFailedEvent;
 import io.flamingock.internal.core.event.model.impl.StageStartedEvent;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.pipeline.loaded.Pipeline;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.execution.StageSummary;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.flamingock.internal.util.ObjectUtils.requireNonNull;
@@ -50,7 +52,7 @@ public class PipelineRunner implements Runner {
 
     private final RunnerId runnerId;
 
-    private final Pipeline pipeline;
+    private final LoadedPipeline pipeline;
 
     private final ExecutionPlanner executionPlanner;
 
@@ -65,7 +67,7 @@ public class PipelineRunner implements Runner {
     private final Runnable finalizer;
 
     public PipelineRunner(RunnerId runnerId,
-                          Pipeline pipeline,
+                          LoadedPipeline pipeline,
                           ExecutionPlanner executionPlanner,
                           StageExecutor stageExecutor,
                           OrphanExecutionContext orphanExecutionContext,
@@ -83,13 +85,13 @@ public class PipelineRunner implements Runner {
     }
 
 
-    private void run(Pipeline pipeline) throws FlamingockException {
+    private void run(LoadedPipeline pipeline) throws FlamingockException {
 
         eventPublisher.publish(new PipelineStartedEvent());
         PipelineSummary pipelineSummary = null;
         do {
-            List<AbstractLoadedStage> loadedStages = pipeline.validateAndGetLoadedStages();
-            try (ExecutionPlan execution = executionPlanner.getNextExecution(loadedStages)) {
+            List<AbstractLoadedStage> stages = validateAndGetStages(pipeline);
+            try (ExecutionPlan execution = executionPlanner.getNextExecution(stages)) {
                 if (pipelineSummary == null) {
                     pipelineSummary = new PipelineSummary(execution.getPipeline());
                 }
@@ -119,10 +121,6 @@ public class PipelineRunner implements Runner {
                 //execution, therefor the pipelinesSummary is initialised
                 requireNonNull(pipelineSummary).merge(e.getSummary());
                 throw new PipelineExecutionException(pipelineSummary);
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Throwable throwable) {
-                throw processAndGetFlamingockException(throwable);
             }
         } while (true);
 
@@ -131,6 +129,18 @@ public class PipelineRunner implements Runner {
 
         eventPublisher.publish(new PipelineCompletedEvent());
     }
+
+    @NotNull
+    private static List<AbstractLoadedStage> validateAndGetStages(LoadedPipeline pipeline) {
+        pipeline.validate();
+        List<AbstractLoadedStage> stages = new ArrayList<>();
+        if(pipeline.getSystemStage().isPresent()) {
+            stages.add(pipeline.getSystemStage().get());
+        }
+        stages.addAll(pipeline.getStages());
+        return stages;
+    }
+
 
     private StageSummary runStage(String executionId, Lock lock, ExecutableStage executableStage) {
         try {
@@ -166,6 +176,8 @@ public class PipelineRunner implements Runner {
     public void run() {
         try {
             this.run(pipeline);
+        } catch (Throwable throwable) {
+            throw processAndGetFlamingockException(throwable);
         } finally {
             finalizer.run();
         }

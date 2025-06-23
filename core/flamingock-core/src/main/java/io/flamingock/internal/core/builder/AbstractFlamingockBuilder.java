@@ -34,7 +34,7 @@ import io.flamingock.internal.core.event.model.IStageCompletedEvent;
 import io.flamingock.internal.core.event.model.IStageFailedEvent;
 import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
 import io.flamingock.internal.core.event.model.IStageStartedEvent;
-import io.flamingock.internal.core.pipeline.loaded.Pipeline;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.core.runner.PipelineRunnerCreator;
@@ -140,7 +140,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
         pluginManager.initialize(context);
 
-        Pipeline pipeline = buildPipeline();
+        LoadedPipeline pipeline = buildPipeline();
         pipeline.contributeToContext(context);
 
         return PipelineRunnerCreator.createWithFinalizer(
@@ -156,14 +156,14 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         );
     }
 
-    private Pipeline buildPipeline() {
+    private LoadedPipeline buildPipeline() {
         List<TaskFilter> taskFiltersFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getTaskFilters)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
         ;
-        return Pipeline.builder()
+        return LoadedPipeline.builder()
                 .addFilters(taskFiltersFromPlugins)
                 .addPreviewPipeline(coreConfiguration.getPreviewPipeline())
                 .addBeforeUserStages(systemModuleManager.getSortedSystemStagesBefore())

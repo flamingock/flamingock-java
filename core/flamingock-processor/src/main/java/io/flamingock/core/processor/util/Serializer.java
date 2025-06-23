@@ -48,20 +48,28 @@ public class Serializer {
 
     private void serializeClassesList(PreviewPipeline pipeline, String filePath) {
         writeToFile(filePath, writer -> {
-            for (PreviewStage stage : pipeline.getStages()) {
-                for (TaskDescriptor task : stage.getTasks()) {
+            if(pipeline.getSystemStage() != null) {
+                serializeClassesFromStage(writer, pipeline.getSystemStage());;
+            }
 
-                    if(CodePreviewChangeUnit.class.isAssignableFrom(task.getClass())) {
-                        try {
-                            writer.write(task.getSource());
-                            writer.write(System.lineSeparator());
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
+            for (PreviewStage stage : pipeline.getStages()) {
+                serializeClassesFromStage(writer, stage);
             }
         });
+    }
+
+    private static void serializeClassesFromStage(Writer writer, PreviewStage stage) {
+        for (TaskDescriptor task : stage.getTasks()) {
+
+            if(CodePreviewChangeUnit.class.isAssignableFrom(task.getClass())) {
+                try {
+                    writer.write(task.getSource());
+                    writer.write(System.lineSeparator());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     private void writeToFile(String filePath, Consumer<Writer> writerConsumer) {

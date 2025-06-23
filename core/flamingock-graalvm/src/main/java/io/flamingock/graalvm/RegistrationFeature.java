@@ -12,7 +12,7 @@ import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.template.TemplateManager;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.pipeline.loaded.Pipeline;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
@@ -54,7 +54,7 @@ public class RegistrationFeature implements Feature {
         registerClass(TemplatePreviewChangeUnit.class.getName());
 
         //Loaded
-        registerClass(Pipeline.class.getName());
+        registerClass(LoadedPipeline.class.getName());
         registerClass(AbstractLoadedStage.class.getName());
         registerClass(AbstractLoadedTask.class.getName());
         registerClass(AbstractReflectionLoadedTask.class.getName());

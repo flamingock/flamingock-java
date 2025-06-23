@@ -3,7 +3,7 @@ package io.flamingock.internal.common.core.preview;
 public enum StageType {
     DEFAULT,
     LEGACY("legacy"),
-    IMPORTER("importer");
+    SYSTEM("importer");
 
     private final String alias;
 

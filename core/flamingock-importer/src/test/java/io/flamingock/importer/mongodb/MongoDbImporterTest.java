@@ -82,20 +82,15 @@ public class MongoDbImporterTest {
     
     @Test
     void testImportMongockChangeLogs() {
-        System.out.println("Setting up test scenario...");
         //adds the Mongock
         mongockTestHelper.setupBasicScenario();
-        System.out.println("Mongock setup complete");
-        
-        System.out.println("Building Flamingock...");
+
         Runner flamingock = Flamingock.builder()
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setProperty("mongodb.databaseName", DB_NAME)
                 .build();
-        System.out.println("Flamingock built successfully");
-        
-        System.out.println("Running Flamingock...");
+
         flamingock.run();
 
         List<Document> auditLog = mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME)

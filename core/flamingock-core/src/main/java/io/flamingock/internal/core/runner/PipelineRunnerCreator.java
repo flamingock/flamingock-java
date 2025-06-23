@@ -23,7 +23,7 @@ import io.flamingock.internal.core.engine.ConnectionEngine;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.pipeline.loaded.Pipeline;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -37,7 +37,7 @@ public final class PipelineRunnerCreator {
     }
 
     public static Runner createWithFinalizer(RunnerId runnerId,
-                                             Pipeline pipeline,
+                                             LoadedPipeline pipeline,
                                              ConnectionEngine engine,
                                              CoreConfigurable coreConfiguration,
                                              EventPublisher eventPublisher,
@@ -60,7 +60,7 @@ public final class PipelineRunnerCreator {
     }
 
     private static Runner create(RunnerId runnerId,
-                                 Pipeline pipeline,
+                                 LoadedPipeline pipeline,
                                  ExecutionAuditWriter auditWriter,
                                  TransactionWrapper transactionWrapper,
                                  ExecutionPlanner executionPlanner,

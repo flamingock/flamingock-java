@@ -30,7 +30,7 @@ public class ValidationResult {
     }
 
     public String formatMessage() {
-        String body = String.join("\n\t- ", errors.stream().map(ValidationError::getMessage).collect(Collectors.toList()));
+        String body = errors.stream().map(ValidationError::getFormattedMessage).collect(Collectors.joining("\n\t- "));
         return String.format("%s:\n\t- %s", title, body);
     }
 }

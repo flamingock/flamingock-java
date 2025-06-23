@@ -1,7 +1,7 @@
 pipeline:
+  systemStage:
+    sourcesPackage: "io.flamingock.importer.mongodb.flamingock.system"
   stages:
-    - name: "Flamingock importer"
-      sourcesPackage: "io.flamingock.importer.mongodb.flamingock.importer"
     - name: "Legacy stage"
       description: "Changes from Mongock"
       type: "legacy"

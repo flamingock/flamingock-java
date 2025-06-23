@@ -8,6 +8,7 @@ import io.flamingock.core.processor.util.LoggerPreProcessor;
 import io.flamingock.core.processor.util.Serializer;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -89,7 +91,7 @@ import java.util.Set;
  * @since Flamingock v1.x
  */
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-public class ChangesPreProcessor extends AbstractProcessor {
+public class PipelinePreProcessor extends AbstractProcessor {
 
     private static final String RESOURCES_PATH_ARG = "resources";
     private static final String SOURCES_PATH_ARG = "sources";
@@ -112,7 +114,7 @@ public class ChangesPreProcessor extends AbstractProcessor {
     private Serializer serializer;
     private AnnotationFinder annotationFinder;
 
-    public ChangesPreProcessor(){}
+    public PipelinePreProcessor(){}
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -175,33 +177,63 @@ public class ChangesPreProcessor extends AbstractProcessor {
         try (InputStream inputStream = Files.newInputStream(pipelineFile.toPath())) {
             Yaml yaml = new Yaml();
             Map<String, Object> config = yaml.load(inputStream);
-            List<Map<String, String>> stageList = (List<Map<String, String>>) ((Map<String, Object>) config.get("pipeline")).get("stages");
+
+            Map<String, Object> pipelineMap = (Map<String, Object>) config.get("pipeline");
+
+
+            List<Map<String, String>> stageList = (List<Map<String, String>>) pipelineMap.get("stages");
+
 
             List<PreviewStage> stages = new ArrayList<>();
 
             for (Map<String, String> stageMap : stageList) {
-                String sourcesPackage = stageMap.get("sourcesPackage");
-                Collection<AbstractPreviewTask> changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
-                PreviewStage stage = PreviewStage.builder()
-                        .setName(stageMap.get("name"))
-                        .setType(StageType.from(stageMap.get("type")))
-                        .setDescription(stageMap.get("description"))
-                        .setSourcesRoots(sourceRoots)
-                        .setSourcesPackage(sourcesPackage)
-                        .setResourcesRoot(resourcesRoot)
-                        .setResourcesDir(stageMap.get("resourcesDir"))
-                        .setChanges(changeUnitClasses)
-                        .build();
+                PreviewStage stage = mapToStage(codedChangeUnitsByPackage, stageMap);
                 stages.add(stage);
             }
 
+            Optional<SystemPreviewStage> systemStage = getSystemStage(codedChangeUnitsByPackage, (Map<String, String> )pipelineMap.get("systemStage"));
 
-            return new PreviewPipeline(stages);
+            return systemStage
+                    .map(previewStage -> new PreviewPipeline(previewStage, stages))
+                    .orElseGet(() -> new PreviewPipeline(stages));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private Optional<SystemPreviewStage> getSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> systemStage) {
+        if(systemStage == null) {
+            return Optional.empty();
+        }
+        String sourcesPackage = systemStage.get("sourcesPackage");
+        Collection<AbstractPreviewTask> changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        SystemPreviewStage stage = PreviewStage.systemBuilder()
+                .setName("flamingock-system-stage")
+                .setDescription("Dedicated stage for system-level changes")
+                .setSourcesRoots(sourceRoots)
+                .setSourcesPackage(sourcesPackage)
+                .setResourcesRoot(resourcesRoot)
+                .setResourcesDir(systemStage.get("resourcesDir"))
+                .setChanges(changeUnitClasses)
+                .build();
+        return Optional.of(stage);
+    }
+
+    private PreviewStage mapToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> stageMap) {
+
+        String sourcesPackage = stageMap.get("sourcesPackage");
+        Collection<AbstractPreviewTask> changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        return PreviewStage.defaultBuilder(StageType.from(stageMap.get("type")))
+                .setName(stageMap.get("name"))
+                .setDescription(stageMap.get("description"))
+                .setSourcesRoots(sourceRoots)
+                .setSourcesPackage(sourcesPackage)
+                .setResourcesRoot(resourcesRoot)
+                .setResourcesDir(stageMap.get("resourcesDir"))
+                .setChanges(changeUnitClasses)
+                .build();
     }
 
     @NotNull

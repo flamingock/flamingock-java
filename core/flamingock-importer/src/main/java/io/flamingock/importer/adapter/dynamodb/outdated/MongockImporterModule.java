@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.preview.StageType;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.system.SystemModule;
@@ -69,7 +70,7 @@ public class MongockImporterModule implements SystemModule {
 
     @Override
     public PreviewStage getStage() {
-        return PreviewStage.builder()
+        return PreviewStage.defaultBuilder(StageType.DEFAULT)
                 .setName("dynamodb-local-legacy-importer")
                 .setDescription("DynamoDB importer from Mongock")
                 .setChanges(MONGOCK_CHANGE_UNITS)

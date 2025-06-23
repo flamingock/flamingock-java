@@ -155,30 +155,27 @@ public final class ReflectionUtil {
      *         then superclasses (bottom-up), then interfaces at each level. Returns an empty list if no annotations are found.
      * @throws NullPointerException if clazz or annotationType is null
      */
-    public static <A extends Annotation> List<A> collectAllAnnotations(Class<?> clazz, Class<A> annotationType) {
+    public static <A extends Annotation> List<A> findAllAnnotations(Class<?> clazz, Class<A> annotationType) {
         Set<Class<?>> visited = new HashSet<>();
         List<A> result = new ArrayList<>();
 
-        collectAnnotationsRecursive(clazz, annotationType, visited, result);
+        findAllAnnotationsInternal(clazz, annotationType, visited, result);
 
         return result;
     }
 
-    private static <A extends Annotation> void collectAnnotationsRecursive(Class<?> clazz, Class<A> annotationType, Set<Class<?>> visited, List<A> result) {
+    private static <A extends Annotation> void findAllAnnotationsInternal(Class<?> clazz, Class<A> annotationType, Set<Class<?>> visited, List<A> result) {
         if (clazz == null || clazz == Object.class || !visited.add(clazz)) return;
 
-        // Primero la clase actual
         A annotation = clazz.getDeclaredAnnotation(annotationType);
         if (annotation != null) {
             result.add(annotation);
         }
 
-        // Luego superclase
-        collectAnnotationsRecursive(clazz.getSuperclass(), annotationType, visited, result);
+        findAllAnnotationsInternal(clazz.getSuperclass(), annotationType, visited, result);
 
-        // Finalmente interfaces
         for (Class<?> iface : clazz.getInterfaces()) {
-            collectAnnotationsRecursive(iface, annotationType, visited, result);
+            findAllAnnotationsInternal(iface, annotationType, visited, result);
         }
     }
 

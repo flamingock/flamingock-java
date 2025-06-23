@@ -17,10 +17,15 @@
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
+import io.flamingock.api.task.ChangeCategory;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 
 import java.util.Collection;
+import java.util.List;
 
 import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext.SortType.SEQUENTIAL_SIMPLE;
 
@@ -40,6 +45,27 @@ public class LegacyLoadedStage extends AbstractLoadedStage {
 
     }
 
+    @Override
+    public List<ValidationError> getValidationErrors(PipelineValidationContext context) {
+        List<ValidationError> errors = super.getValidationErrors(context);
+        String changeCategoryErrorMsg = String.format(
+                "ChangeUnit[{}] in legacy stage cannot have categories %s or %s",
+                ChangeCategory.SYSTEM, ChangeCategory.IMPORT);
+
+        for(AbstractLoadedTask task : getTasks()) {
+            if(task instanceof AbstractLoadedChangeUnit) {
+                AbstractLoadedChangeUnit changeUnit = (AbstractLoadedChangeUnit) task;
+                if(changeUnit.hasAnyCategory(ChangeCategory.SYSTEM, ChangeCategory.IMPORT)) {
+                    errors.add(new ValidationError(changeCategoryErrorMsg, task.getId(), "changeUnit"));
+                }
+            } else {
+                errors.add(new ValidationError("Task in legacy stage must be a ChangeUnit", task.getId(), "changeUnit"));
+            }
+
+        }
+
+        return errors;
+    }
 
 
 }
