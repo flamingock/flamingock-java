@@ -1,6 +1,6 @@
 id: create-users-collection-with-index
 order: 0003
-transactional: false
+#transactional: false
 template: MongoChangeTemplate
 execution:
   type: createCollection

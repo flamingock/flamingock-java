@@ -9,8 +9,11 @@ import java.util.*
 
 fun Project.isLibraryModule(): Boolean = name !in setOf(
     "flamingock-community-bom",
-    "flamingock-cloud-bom"
+    "flamingock-cloud-bom",
+    "flamingock-ce-bom"  // Add this if it's the actual name
 )
+
+fun Project.isBomModule(): Boolean = name.endsWith("-bom")
 
 buildscript {
     repositories {
@@ -32,6 +35,7 @@ allprojects {
     group = "io.flamingock"
     version = "0.0.35-beta"
 
+    // Only apply kotlin plugin to library modules, not BOM modules
     if (isLibraryModule()) {
         apply(plugin = "org.jetbrains.kotlin.jvm")
     }
@@ -176,17 +180,27 @@ val isReleasing = getIsReleasing()
 if (isReleasing) logger.lifecycle("Release bundle: $releaseBundle")
 
 subprojects {
-
     apply(plugin = "maven-publish")
 
-    val fromComponentPublishing = if (project.isLibraryModule()) "java" else "javaPlatform"
-    val mavenPublication = if (project.isLibraryModule()) "maven" else "communityBom"
-
-    if (project.isLibraryModule()) {
-        apply(plugin = "java-library")
-    } else {
-        apply(plugin = "java-platform")
+    // Apply plugins based on project type
+    when {
+        isBomModule() -> {
+            println("Configuring BOM module: ${project.name}")
+            apply(plugin = "java-platform")
+        }
+        isLibraryModule() -> {
+            println("Configuring library module: ${project.name}")
+            apply(plugin = "java-library")
+        }
+        else -> {
+            println("Configuring standard module: ${project.name}")
+            apply(plugin = "java-library")
+        }
     }
+
+    // Set publication configuration based on project type
+    val fromComponentPublishing = if (isBomModule()) "javaPlatform" else "java"
+    val mavenPublication = if (isBomModule()) "communityBom" else "maven"
 
     publishing {
         publications {
@@ -232,7 +246,7 @@ subprojects {
     if (isReleasing && project.isReleasable()) {
         if (!project.getIfAlreadyReleasedFromCentralPortal()) {
             logger.lifecycle("${project.name}${tabsPrefix}\uD83D\uDE80 PUBLISHING")
-            if (project.isLibraryModule()) {
+            if (isLibraryModule()) {
                 java {
                     withSourcesJar()
                     withJavadocJar()
@@ -295,7 +309,7 @@ subprojects {
         }
     }
 
-    if (project.isLibraryModule()) {
+    if (isLibraryModule()) {
         val implementation by configurations
         val testImplementation by configurations
         val testRuntimeOnly by configurations

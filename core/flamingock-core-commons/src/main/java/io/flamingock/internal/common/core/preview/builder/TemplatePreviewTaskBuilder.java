@@ -129,7 +129,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         setConfiguration(templateTaskDescriptor.getConfiguration());
         setExecution(templateTaskDescriptor.getExecution());
         setRollback(templateTaskDescriptor.getRollback());
-        setTransactional(templateTaskDescriptor.getTransactional());
+        setTransactional(templateTaskDescriptor.getTransactional() != null ? templateTaskDescriptor.getTransactional() : true);
         setRunAlways(false);
         return this;
     }
