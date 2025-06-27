@@ -16,7 +16,7 @@
 
 package io.flamingock.common.test.pipeline;
 
-import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;

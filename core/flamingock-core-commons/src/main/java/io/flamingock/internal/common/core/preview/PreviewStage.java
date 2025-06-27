@@ -16,6 +16,7 @@
 
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
 import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
 import io.flamingock.internal.util.FileUtil;

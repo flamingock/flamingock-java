@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.flamingock.importer;
+package io.flamingock.api.annotations;
 
-import io.flamingock.api.annotations.Categories;
-import io.flamingock.api.task.ChangeCategory;
-import io.flamingock.api.template.AbstractChangeTemplate;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-
-@Categories(ChangeCategory.IMPORT)
-public class AbstractImporterChangeTemplate extends AbstractChangeTemplate<ImportConfiguration, Void, Void> {
-
-    public AbstractImporterChangeTemplate() {
-        super(ImportConfiguration.class);
-    }
-
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Pipeline {
+    
+    SystemStage systemStage();
+    
+    Stage[] stages();
 }

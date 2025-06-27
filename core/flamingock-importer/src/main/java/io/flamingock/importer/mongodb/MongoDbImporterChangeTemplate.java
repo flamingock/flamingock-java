@@ -33,7 +33,7 @@ public class MongoDbImporterChangeTemplate extends AbstractImporterChangeTemplat
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
         MongoDbImporterAdapter adapter = new MongoDbImporterAdapter(db, configuration.getOrigin());
-        ImporterExecutor.runImport(adapter, auditWriter, pipelineDescriptor);
+        ImporterExecutor.runImport(adapter, configuration, auditWriter, pipelineDescriptor);
     }
 
     @RollbackExecution

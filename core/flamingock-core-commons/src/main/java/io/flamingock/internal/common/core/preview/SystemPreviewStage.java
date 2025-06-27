@@ -16,6 +16,7 @@
 
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.api.StageType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

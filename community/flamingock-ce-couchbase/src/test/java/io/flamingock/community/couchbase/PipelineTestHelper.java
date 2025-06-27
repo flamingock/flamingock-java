@@ -16,7 +16,7 @@
 
 package io.flamingock.community.couchbase;
 
-import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.api.annotations.ChangeUnit;

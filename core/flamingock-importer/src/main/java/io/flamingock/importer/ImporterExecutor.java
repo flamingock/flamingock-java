@@ -21,7 +21,10 @@ import io.flamingock.importer.util.ImporterLogger;
 import io.flamingock.importer.util.PipelineHelper;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditWriter;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
+
+import java.util.List;
 
 /**
  * This changeUnit imports the Mongock data in the database to Flamingock(local or cloud).
@@ -50,13 +53,23 @@ public final class ImporterExecutor {
      * @param pipelineDescriptor Structure containing all information about the changes and tasks to execute.
      */
     public static void runImport(ImporterAdapter importerAdapter,
+                                 ImportConfiguration importConfiguration,
                                  AuditWriter auditWriter,
                                  PipelineDescriptor pipelineDescriptor) {
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
 
         importerLogger.logStart(importerAdapter, auditWriter);
 
-        importerAdapter.getAuditEntries().forEach(auditEntryFromOrigin -> {
+        List<AuditEntry> auditEntries = importerAdapter.getAuditEntries();
+        if(importConfiguration.isFailOnEmptyOrigin() &&  auditEntries.isEmpty()) {
+            throw new FlamingockException(
+                    String.format("No audit entries found when importing from '%s'. " +
+                                    "Set 'failOnEmptyOrigin=false' in the import changeUnit to disable this validation.",
+                            importConfiguration.getOrigin())
+            );
+        }
+
+        auditEntries.forEach(auditEntryFromOrigin -> {
             //This is the taskId present in the pipeline. If it's a system change or '..._before' won't appear
             AuditEntry auditEntryWithStageId = auditEntryFromOrigin.copyWithNewIdAndStageId(
                     pipelineHelper.getStorableTaskId(auditEntryFromOrigin),

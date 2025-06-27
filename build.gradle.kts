@@ -2,9 +2,8 @@ import org.jreleaser.model.Active
 import org.jreleaser.model.UpdateSection
 import org.json.JSONObject
 import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
+import java.net.URL
+import java.net.HttpURLConnection
 import java.util.*
 
 fun Project.isLibraryModule(): Boolean = name !in setOf(
@@ -33,7 +32,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.35-beta"
+    version = "0.0.36-beta"
 
     // Only apply kotlin plugin to library modules, not BOM modules
     if (isLibraryModule()) {
@@ -98,7 +97,7 @@ val allProjects = coreProjects + cloudProjects + communityProjects + pluginProje
 val projectNameMaxLength = coreProjects.maxOf { it.length }
 val tabWidth = 8
 val statusPosition = ((projectNameMaxLength / tabWidth) + 1) * tabWidth
-val httpClient: HttpClient = HttpClient.newHttpClient()
+// HTTP client functionality removed - replace with Java 8 compatible implementation if needed
 val mavenUsername: String? = System.getenv("JRELEASER_MAVENCENTRAL_USERNAME")
 val mavenPassword: String? = System.getenv("JRELEASER_MAVENCENTRAL_PASSWORD")
 val encodedCredentials: String? = if (mavenUsername != null && mavenPassword != null)
@@ -352,17 +351,24 @@ fun Project.isReleasable(): Boolean = projectsToRelease.contains(name)
 
 fun Project.getIfAlreadyReleasedFromCentralPortal(): Boolean {
     val url = "https://central.sonatype.com/api/v1/publisher/published?namespace=${group}&name=$name&version=$version"
-    val request = HttpRequest.newBuilder().uri(URI.create(url))
-        .header("accept", "application/json")
-        .header("Authorization", "Basic $encodedCredentials").GET().build()
-
-    val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-    logger.debug("${project.name}: response from Maven Publisher[${response.statusCode()}]: ${response.body()}")
-    return if (response.statusCode() == 200) {
-        val map = JSONObject(response.body()).toMap()
-        map["published"] as? Boolean ?: error("Invalid response body: ${response.body()}")
+    val connection = URL(url).openConnection() as HttpURLConnection
+    connection.requestMethod = "GET"
+    connection.setRequestProperty("accept", "application/json")
+    connection.setRequestProperty("Authorization", "Basic $encodedCredentials")
+    
+    val responseCode = connection.responseCode
+    val responseBody = if (responseCode == 200) {
+        connection.inputStream.bufferedReader().use { it.readText() }
     } else {
-        error("Error calling Maven Publisher(status:${response.statusCode()}, body:${response.body()})")
+        connection.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+    }
+    
+    logger.debug("${project.name}: response from Maven Publisher[$responseCode]: $responseBody")
+    return if (responseCode == 200) {
+        val map = JSONObject(responseBody).toMap()
+        map["published"] as? Boolean ?: error("Invalid response body: $responseBody")
+    } else {
+        error("Error calling Maven Publisher(status:$responseCode, body:$responseBody)")
     }
 }
 

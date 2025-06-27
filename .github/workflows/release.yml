@@ -406,6 +406,34 @@ jobs:
 
   github-release:
 #    needs: [run-examples-with-released-version]
+    needs: [
+      flamingock-core,
+      flamingock-core-commons,
+      flamingock-core-api,
+      flamingock-processor,
+      flamingock-graalvm,
+      flamingock-cloud,
+      flamingock-cloud-bom,
+      flamingock-ce-commons,
+      flamingock-ce-bom,
+      flamingock-ce-mongodb-sync,
+      flamingock-ce-mongodb-springdata-v3-legacy,
+      flamingock-ce-mongodb-springdata,
+      flamingock-ce-couchbase,
+      flamingock-ce-dynamodb,
+      flamingock-importer,
+      flamingock-springboot-integration-v2-legacy,
+      flamingock-springboot-integration,
+      sql-transactioner,
+      mongodb-sync-transactioner,
+      dynamodb-transactioner,
+      flamingock-sql-template,
+      flamingock-mongodb-sync-template,
+      general-util,
+      test-util,
+      mongodb-util,
+      dynamodb-util
+    ]
     uses: ./.github/workflows/github-release.yml
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}

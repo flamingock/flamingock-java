@@ -14,5 +14,6 @@ dependencies {
         api("io.flamingock:flamingock-ce-dynamodb:$version")
         api("io.flamingock:flamingock-sql-template:$version")
         api("io.flamingock:flamingock-mongodb-change-template:$version")
+        api("io.flamingock:flamingock-processor:${version}")
     }
 }

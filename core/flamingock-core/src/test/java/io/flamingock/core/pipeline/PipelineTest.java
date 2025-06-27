@@ -22,7 +22,7 @@ import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;

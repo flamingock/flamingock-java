@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.core.runtime.proxy;
 
-import io.flamingock.api.annotations.NonLockGuardedType;
+import io.flamingock.api.NonLockGuardedType;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.utils.ExecutionUtils;
 

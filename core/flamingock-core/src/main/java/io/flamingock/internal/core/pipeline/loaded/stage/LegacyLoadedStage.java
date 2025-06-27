@@ -19,7 +19,7 @@ package io.flamingock.internal.core.pipeline.loaded.stage;
 
 import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
-import io.flamingock.internal.common.core.preview.StageType;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
