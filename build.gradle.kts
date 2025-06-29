@@ -32,7 +32,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.36-beta"
+    version = "0.0.38-beta"
 
     // Only apply kotlin plugin to library modules, not BOM modules
     if (isLibraryModule()) {
