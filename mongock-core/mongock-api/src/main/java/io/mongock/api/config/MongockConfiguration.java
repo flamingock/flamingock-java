@@ -1,6 +1,7 @@
 package io.mongock.api.config;
 
 import io.mongock.api.config.executor.ExecutorConfiguration;
+import io.mongock.api.module.MongockModuleConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +91,11 @@ public class MongockConfiguration implements ExecutorConfiguration {
    * Package paths where the changeLogs are located. mandatory
    */
   private List<String> migrationScanPackage = new ArrayList<>();
+
+  /**
+   * List of Mongock modules that provide configuration, such as ChangeLog scan packages. Optional
+   */
+  private List<MongockModuleConfig> mongockModules = new ArrayList<>();
 
   /**
    * System version to start with. Default '0'
@@ -260,6 +266,14 @@ public class MongockConfiguration implements ExecutorConfiguration {
     this.migrationScanPackage = migrationScanPackage;
   }
 
+  public List<MongockModuleConfig> getMongockModules() {
+    return mongockModules;
+  }
+
+  public void setMongockModules(List<MongockModuleConfig> mongockModules) {
+    this.mongockModules = mongockModules;
+  }
+
   public boolean isIndexCreation() {
     return indexCreation;
   }
@@ -398,6 +412,7 @@ public class MongockConfiguration implements ExecutorConfiguration {
         Objects.equals(lockRepositoryName, that.lockRepositoryName) &&
         Objects.equals(lockQuitTryingAfterMillis, that.lockQuitTryingAfterMillis) &&
         Objects.equals(migrationScanPackage, that.migrationScanPackage) &&
+        Objects.equals(mongockModules, that.mongockModules) &&
         Objects.equals(startSystemVersion, that.startSystemVersion) &&
         Objects.equals(endSystemVersion, that.endSystemVersion) &&
         Objects.equals(serviceIdentifier, that.serviceIdentifier) &&

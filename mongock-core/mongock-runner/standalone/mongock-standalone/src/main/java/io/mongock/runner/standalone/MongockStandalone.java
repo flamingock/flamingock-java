@@ -28,11 +28,6 @@ public final class MongockStandalone {
       return this;
     }
 
-    @Override
-    public RunnerStandaloneBuilder addModuleConfig(MongockModuleConfig mongockModuleConfig) {
-      mongockModuleConfig.configure(new MongockScanPackage(this));
-      return this;
-    }
   }
 
 
