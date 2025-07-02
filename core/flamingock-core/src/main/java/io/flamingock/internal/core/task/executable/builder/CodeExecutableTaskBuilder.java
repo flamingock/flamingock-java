@@ -110,7 +110,7 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
                                                                                                         AuditEntry.Status initialState) {
         //Creates a new LoadedTask, based on the main one, but with the "beforeExecution id, also based on the main one"
         CodeLoadedChangeUnit loadedTask = LoadedTaskBuilder
-                .getCodeBuilderInstance(baseTask.getDescriptor().getSourceClass())
+                .getCodeBuilderInstance(baseTask.getDescriptor().getImplementationClass())
                 .setBeforeExecution(true)
                 .setTransactional(false)
                 .setSystem(baseTask.getDescriptor().isSystem())

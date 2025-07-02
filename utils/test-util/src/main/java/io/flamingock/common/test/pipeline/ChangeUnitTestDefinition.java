@@ -4,6 +4,7 @@ import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 
 public abstract class ChangeUnitTestDefinition {
 
+
     private final String id;
     private final String order;
     private final boolean transactional;

@@ -59,7 +59,7 @@ public class SpringbootProfileFilter implements TaskFilter {
         } else {
             String message = String.format(
                     "Non-Filterable task[%s]: %s",
-                    reflectionDescriptor.getSourceClass(),
+                    reflectionDescriptor.getImplementationClass(),
                     reflectionDescriptor.getClass());
             throw new RuntimeException(message);
         }
@@ -72,7 +72,7 @@ public class SpringbootProfileFilter implements TaskFilter {
 
 
     private boolean filterCodeChangeUnit(CodeLoadedChangeUnit reflectionDescriptor) {
-        Class<?> sourceClass = reflectionDescriptor.getSourceClass();
+        Class<?> sourceClass = reflectionDescriptor.getImplementationClass();
         if (!sourceClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches
         }

@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.common.core.preview.builder;
 
-import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
+import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 //TODO how to set transactional and runAlways
 class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewChangeUnit> {
 
+    private String fileName;
     private String id;
     private String order;
     private String templateClassPath;
@@ -47,10 +48,14 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         return new TemplatePreviewTaskBuilder();
     }
 
-    static TemplatePreviewTaskBuilder builder(ChangeFileDescriptor templateTaskDefinition) {
-        return new TemplatePreviewTaskBuilder().setFromDefinition(templateTaskDefinition);
+    static TemplatePreviewTaskBuilder builder(ChangeTemplateFileContent templateFileContent) {
+        return new TemplatePreviewTaskBuilder().setFromDefinition(templateFileContent);
     }
 
+    public TemplatePreviewTaskBuilder setFileName(String fileName) {
+        this.fileName = fileName;
+        return this;
+    }
 
     public TemplatePreviewTaskBuilder setId(String id) {
         this.id = id;
@@ -97,6 +102,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
 
         List<String> profiles = getProfiles();
         return new TemplatePreviewChangeUnit(
+                fileName,
                 id,
                 order,
                 templateClassPath,
@@ -121,7 +127,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     }
 
 
-    TemplatePreviewTaskBuilder setFromDefinition(ChangeFileDescriptor templateTaskDescriptor) {
+    TemplatePreviewTaskBuilder setFromDefinition(ChangeTemplateFileContent templateTaskDescriptor) {
         setId(templateTaskDescriptor.getId());
         setOrder(templateTaskDescriptor.getOrder());
         setTemplate(templateTaskDescriptor.getTemplate());

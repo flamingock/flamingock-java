@@ -8,13 +8,15 @@ import java.util.Collections;
 public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
 
+    private final String fileName;
     private final String templateName;
     private final Object configuration;
     private final Object execution;
     private final Object rollback;
 
 
-    public TemplateChangeUnitTestDefinition(String id,
+    public TemplateChangeUnitTestDefinition(String fileName,
+                                            String id,
                                             String order,
                                             String templateName,
                                             boolean transactional,
@@ -22,6 +24,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                             Object execution,
                                             Object rollback) {
         super(id, order, transactional);
+        this.fileName = fileName;
         this.templateName = templateName;
         this.configuration = configuration;
         this.execution = execution;
@@ -32,6 +35,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
     @Override
     public AbstractPreviewTask toPreview() {
         return new TemplatePreviewChangeUnit(
+                fileName,
                 getId(),
                 getOrder(),
                 templateName,

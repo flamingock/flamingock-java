@@ -31,16 +31,16 @@ import java.util.StringJoiner;
 public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
     CodeLoadedChangeUnit(String id,
                          String order,
-                         Class<?> source,
+                         Class<?> changeUnitClass,
                          boolean runAlways,
                          boolean transactional,
                          boolean systemTask) {
-        super(id, order, source, runAlways, transactional, systemTask);
+        super(changeUnitClass.getSimpleName(), id, order, changeUnitClass, runAlways, transactional, systemTask);
     }
 
     @Override
     public Method getExecutionMethod() {
-        Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), Execution.class);
+        Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Execution.class);
         return firstAnnotatedMethod
                 .orElseThrow(() -> new IllegalArgumentException(String.format(
                         "Executable changeUnit[%s] without %s method",
@@ -50,7 +50,7 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
 
     @Override
     public Optional<Method> getRollbackMethod() {
-        return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class);
+        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), RollbackExecution.class);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
     }
 
     private Optional<Method> getMethodFromDeprecatedAnnotation(Class<? extends Annotation> annotation) {
-        return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), annotation);
+        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), annotation);
     }
 
 

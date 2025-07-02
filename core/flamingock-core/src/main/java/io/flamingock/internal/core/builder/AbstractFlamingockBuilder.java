@@ -19,7 +19,7 @@ package io.flamingock.internal.core.builder;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.common.core.template.TemplateManager;
+import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.core.CoreConfigurator;
 import io.flamingock.internal.core.engine.ConnectionEngine;
@@ -124,7 +124,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     @Override
     public final Runner build() {
 
-        TemplateManager.loadTemplates();
+        ChangeTemplateManager.loadTemplates();
 
         RunnerId runnerId = RunnerId.generate();
         logger.info("Generated runner id:  {}", runnerId);

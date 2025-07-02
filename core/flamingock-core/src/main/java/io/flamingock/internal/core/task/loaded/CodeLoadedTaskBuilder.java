@@ -20,16 +20,12 @@ import io.flamingock.internal.util.StringUtil;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChangeUnit> {
 
-    private static final Logger logger = LoggerFactory.getLogger(CodeLoadedTaskBuilder.class);
-
     private String id;
-    private String order;
-    private String source;
+    private String orderInContent;
+    private String changeUnitClass;
     private boolean isRunAlways;
     private boolean isTransactional;
     private boolean isSystem;
@@ -62,8 +58,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
     private CodeLoadedTaskBuilder setPreview(CodePreviewChangeUnit preview) {
         setId(preview.getId());
-        setOrder(preview.getOrder().orElse(null));
-        setTemplateName(preview.getSource());
+        setOrderInContent(preview.getOrder().orElse(null));
+        setChangeUnitClass(preview.getSource());
         setRunAlways(preview.isRunAlways());
         setTransactional(preview.isTransactional());
         setSystem(preview.isSystem());
@@ -89,13 +85,13 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setOrder(String order) {
-        this.order = order;
+    public CodeLoadedTaskBuilder setOrderInContent(String orderInContent) {
+        this.orderInContent = orderInContent;
         return this;
     }
 
-    public CodeLoadedTaskBuilder setTemplateName(String templateName) {
-        this.source = templateName;
+    public CodeLoadedTaskBuilder setChangeUnitClass(String changeUnitClass) {
+        this.changeUnitClass = changeUnitClass;
         return this;
     }
 
@@ -123,10 +119,12 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     public CodeLoadedChangeUnit build() {
 
         try {
+
+            String order = LoadedChangeUnitUtil.getMatchedOrderFromClassName(id, orderInContent, changeUnitClass);
             return new CodeLoadedChangeUnit(
                     isBeforeExecution ? StringUtil.getBeforeExecutionId(id) : id,
                     order,
-                    Class.forName(source),
+                    Class.forName(changeUnitClass),
                     isRunAlways,
                     isTransactional,
                     isSystem
@@ -138,8 +136,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
     private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, ChangeUnit annotation) {
         setId(annotation.id());
-        setOrder(annotation.order());
-        setTemplateName(sourceClass.getName());
+        setOrderInContent(annotation.order());
+        setChangeUnitClass(sourceClass.getName());
         setRunAlways(annotation.runAlways());
         setTransactional(annotation.transactional());
         setSystem(false);

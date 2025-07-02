@@ -32,11 +32,11 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
 
     public AbstractLoadedTask(String id,
                               String order,
-                              String source,
+                              String implementationSourceName,
                               boolean runAlways,
                               boolean transactional,
                               boolean system) {
-        super(id, order, source, runAlways, transactional, system);
+        super(id, order, implementationSourceName, runAlways, transactional, system);
     }
 
     public abstract Constructor<?> getConstructor();

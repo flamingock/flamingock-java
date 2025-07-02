@@ -23,7 +23,7 @@ import java.util.ServiceLoader;
  * Factory implementations should be stateless and thread-safe, as they may be
  * instantiated multiple times and accessed concurrently.
  *
- * @see TemplateManager
+ * @see ChangeTemplateManager
  * @see ServiceLoader
  */
 
@@ -32,7 +32,7 @@ public interface ChangeTemplateFactory {
     /**
      * Returns a collection of {@link ChangeTemplate} instances provided by this factory.
      * <p>
-     * This method is called by {@link TemplateManager#getTemplates()} to discover templates
+     * This method is called by {@link ChangeTemplateManager#getTemplates()} to discover templates
      * in a federated manner. It is invoked in two contexts:
      * <ul>
      *   <li>During GraalVM build-time processing to register template classes for reflection</li>

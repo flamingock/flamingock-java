@@ -30,14 +30,14 @@ import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
-import io.flamingock.community.mongodb.sync.changes._1_create_client_collection_happy;
-import io.flamingock.community.mongodb.sync.changes._2_insert_federico_happy_transactional;
-import io.flamingock.community.mongodb.sync.changes._3_insert_jorge_failed_non_transactional_non_rollback;
-import io.flamingock.community.mongodb.sync.changes._3_insert_jorge_happy_transactional;
-import io.flamingock.community.mongodb.sync.changes._2_insert_federico_happy_non_transactional;
-import io.flamingock.community.mongodb.sync.changes._3_insert_jorge_happy_non_transactional;
-import io.flamingock.community.mongodb.sync.changes._3_insert_jorge_failed_transactional_non_rollback;
-import io.flamingock.community.mongodb.sync.changes._3_insert_jorge_failed_non_transactional_rollback;
+import io.flamingock.community.mongodb.sync.changes._001_create_client_collection_happy;
+import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
+import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_non_rollback;
+import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_transactional;
+import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_non_transactional;
+import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_non_transactional;
+import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_transactional_non_rollback;
+import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_rollback;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,9 +112,9 @@ class MongoSync4DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_2_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
-                    new CodeChangeUnitTestDefinition(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+                    new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                    new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -142,9 +142,9 @@ class MongoSync4DriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_2_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
-                    new CodeChangeUnitTestDefinition(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+                    new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                    new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -188,9 +188,9 @@ class MongoSync4DriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_2_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
-                    new CodeChangeUnitTestDefinition(_3_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+                    new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                    new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -230,9 +230,9 @@ class MongoSync4DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)))
+                    new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -274,9 +274,9 @@ class MongoSync4DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_3_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
+                    new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_003_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
@@ -315,9 +315,9 @@ class MongoSync4DriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_3_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
+                    new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_003_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
@@ -360,9 +360,9 @@ class MongoSync4DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(_1_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
-                    new CodeChangeUnitTestDefinition(_3_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
+                    new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                    new CodeChangeUnitTestDefinition(_003_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(MongoDatabase.class), Collections.singletonList(MongoDatabase.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {

@@ -27,14 +27,14 @@ import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
-import io.flamingock.community.mongodb.springdata.changes._1_create_client_collection_happy;
-import io.flamingock.community.mongodb.springdata.changes._2_insert_federico_happy_non_transactional;
-import io.flamingock.community.mongodb.springdata.changes._2_insert_federico_happy_transactional;
-import io.flamingock.community.mongodb.springdata.changes._3_insert_jorge_failed_non_transactional_non_rollback;
-import io.flamingock.community.mongodb.springdata.changes._3_insert_jorge_failed_non_transactional_rollback;
-import io.flamingock.community.mongodb.springdata.changes._3_insert_jorge_failed_transactional_non_rollback;
-import io.flamingock.community.mongodb.springdata.changes._3_insert_jorge_happy_non_transactional;
-import io.flamingock.community.mongodb.springdata.changes._3_insert_jorge_happy_transactional;
+import io.flamingock.community.mongodb.springdata.changes._001_create_client_collection_happy;
+import io.flamingock.community.mongodb.springdata.changes._002_insert_federico_happy_non_transactional;
+import io.flamingock.community.mongodb.springdata.changes._002_insert_federico_happy_transactional;
+import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_failed_non_transactional_non_rollback;
+import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_failed_non_transactional_rollback;
+import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_failed_transactional_non_rollback;
+import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_happy_non_transactional;
+import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_happy_transactional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,9 +102,9 @@ class SpringDataMongoV3DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_2_insert_federico_happy_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_002_insert_federico_happy_transactional.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_003_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -130,9 +130,9 @@ class SpringDataMongoV3DriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_2_insert_federico_happy_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_3_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_002_insert_federico_happy_transactional.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_003_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
             FlamingockFactory.getCommunityBuilder()
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
@@ -156,9 +156,9 @@ class SpringDataMongoV3DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_2_insert_federico_happy_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_3_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_002_insert_federico_happy_transactional.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_003_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -195,9 +195,9 @@ class SpringDataMongoV3DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_003_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
             FlamingockFactory.getCommunityBuilder()
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithoutTransaction"))
@@ -235,9 +235,9 @@ class SpringDataMongoV3DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_3_insert_jorge_failed_transactional_non_rollback.class, Collections.singletonList(MongoTemplate.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_003_insert_jorge_failed_transactional_non_rollback.class, Collections.singletonList(MongoTemplate.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
@@ -274,9 +274,9 @@ class SpringDataMongoV3DriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_3_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(MongoTemplate.class), Collections.singletonList(MongoTemplate.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_003_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(MongoTemplate.class), Collections.singletonList(MongoTemplate.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
@@ -316,9 +316,9 @@ class SpringDataMongoV3DriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_3_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(MongoTemplate.class), Collections.singletonList(MongoTemplate.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
+                    new Trio<>(_003_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(MongoTemplate.class), Collections.singletonList(MongoTemplate.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {

@@ -18,14 +18,14 @@ package io.flamingock.community.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import io.flamingock.community.dynamodb.changes._1_create_client_collection_happy;
-import io.flamingock.community.dynamodb.changes._2_insert_federico_happy_non_transactional;
-import io.flamingock.community.dynamodb.changes._2_insert_federico_happy_transactional;
-import io.flamingock.community.dynamodb.changes._3_insert_jorge_failed_non_transactional_non_rollback;
-import io.flamingock.community.dynamodb.changes._3_insert_jorge_failed_non_transactional_rollback;
-import io.flamingock.community.dynamodb.changes._3_insert_jorge_failed_transactional_non_rollback;
-import io.flamingock.community.dynamodb.changes._3_insert_jorge_happy_non_transactional;
-import io.flamingock.community.dynamodb.changes._3_insert_jorge_happy_transactional;
+import io.flamingock.community.dynamodb.changes._001_create_client_collection_happy;
+import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_non_transactional;
+import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_transactional;
+import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_non_transactional_non_rollback;
+import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_non_transactional_rollback;
+import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_transactional_non_rollback;
+import io.flamingock.community.dynamodb.changes._004_insert_jorge_happy_non_transactional;
+import io.flamingock.community.dynamodb.changes._004_insert_jorge_happy_transactional;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -111,9 +111,9 @@ class DynamoDBDriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                    new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                    new Trio<>(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
             );
 
 
@@ -160,9 +160,9 @@ class DynamoDBDriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                    new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                    new Trio<>(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -199,9 +199,9 @@ class DynamoDBDriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_2_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                    new Trio<>(_3_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                    new Trio<>(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -240,9 +240,9 @@ class DynamoDBDriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_3_insert_jorge_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_004_insert_jorge_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)))
             );
             FlamingockFactory.getCommunityBuilder()
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithoutTransaction"))
@@ -283,9 +283,9 @@ class DynamoDBDriverTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_3_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_003_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
@@ -326,9 +326,9 @@ class DynamoDBDriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_3_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_003_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
             );
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
@@ -370,9 +370,9 @@ class DynamoDBDriverTest {
         //Given-When
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(_1_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_2_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(_3_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
+                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_003_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(DynamoDbClient.class), Collections.singletonList(DynamoDbClient.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {

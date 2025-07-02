@@ -16,18 +16,14 @@
 
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Categories;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
-import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.util.ReflectionUtil;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
@@ -37,7 +33,8 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
     private final Object execution;
     private final Object rollback;
 
-    TemplateLoadedChangeUnit(String id,
+    TemplateLoadedChangeUnit(String changeUnitFileName,
+                             String id,
                              String order,
                              Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
                              List<String> profiles,
@@ -47,7 +44,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
                              Object configuration,
                              Object execution,
                              Object rollback) {
-        super(id, order, templateClass, runAlways, transactional, systemTask);
+        super(changeUnitFileName, id, order, templateClass, runAlways, transactional, systemTask);
         this.profiles = profiles;
         this.transactional = transactional;
         this.configuration = configuration;
@@ -71,14 +68,15 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
         return profiles;
     }
 
+
     @SuppressWarnings("unchecked")
     public Class<? extends ChangeTemplate<?, ?, ?>> getTemplateClass() {
-        return (Class<? extends ChangeTemplate<?, ?, ?>>) this.getSourceClass();
+        return (Class<? extends ChangeTemplate<?, ?, ?>>) this.getImplementationClass();
     }
 
     @Override
     public Method getExecutionMethod() {
-        return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), Execution.class)
+        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Execution.class)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(
                         "Templated[%s] without %s method",
                         getSource(),
@@ -87,7 +85,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
 
     @Override
     public Optional<Method> getRollbackMethod() {
-        return ReflectionUtil.findFirstAnnotatedMethod(getSourceClass(), RollbackExecution.class);
+        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), RollbackExecution.class);
     }
 
 }

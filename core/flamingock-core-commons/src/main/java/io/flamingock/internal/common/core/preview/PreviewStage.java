@@ -18,8 +18,9 @@ package io.flamingock.internal.common.core.preview;
 
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
-import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
+import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.util.FileUtil;
+import io.flamingock.internal.util.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -398,8 +399,12 @@ public class PreviewStage {
                     .stream()
                     .map(FileUtil::getAllYamlFiles)
                     .flatMap(Collection::stream)
-                    .map(file -> FileUtil.getFromYamlFile(file, ChangeFileDescriptor.class))
-                    .map(PreviewTaskBuilder::getTemplateBuilder)
+                    .map(file -> new Pair<>(
+                            file.getName(),
+                            FileUtil.getFromYamlFile(file, ChangeTemplateFileContent.class)
+                    ))
+                    .map(pairWithFileName -> PreviewTaskBuilder
+                            .getTemplateBuilder(pairWithFileName.getFirst(), pairWithFileName.getSecond()))
                     .map(PreviewTaskBuilder::build)
                     .collect(Collectors.toList());
         }

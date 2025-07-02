@@ -10,7 +10,7 @@ import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import io.flamingock.internal.common.core.system.SystemModule;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.common.core.template.TemplateManager;
+import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
@@ -79,10 +79,10 @@ public class RegistrationFeature implements Feature {
 
     private void registerTemplates() {
         logger.startRegistration("templates");
-        registerClass(TemplateManager.class);
+        registerClass(ChangeTemplateManager.class);
         registerClass(ChangeTemplate.class);
         registerClass(AbstractChangeTemplate.class);
-        TemplateManager.getTemplates().forEach(template -> {
+        ChangeTemplateManager.getTemplates().forEach(template -> {
             registerClass(template.getClass());
             template.getReflectiveClasses().forEach(RegistrationFeature::registerClass);
         });

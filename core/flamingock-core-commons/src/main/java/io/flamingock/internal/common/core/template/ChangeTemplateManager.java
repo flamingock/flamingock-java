@@ -39,16 +39,16 @@ import java.util.ServiceLoader;
  * is effectively read-only and can be safely accessed concurrently.
  */
 
-public final class TemplateManager {
+public final class ChangeTemplateManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(TemplateManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(ChangeTemplateManager.class);
 
     private static final Map<String, Class<? extends ChangeTemplate<?, ?, ?>>> templates = new HashMap<>();
 
     /**
      * Private constructor to prevent instantiation of this utility class.
      */
-    private TemplateManager() {
+    private ChangeTemplateManager() {
     }
 
 

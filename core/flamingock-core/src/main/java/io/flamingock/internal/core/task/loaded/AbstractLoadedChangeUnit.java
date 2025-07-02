@@ -50,15 +50,16 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
     private final Set<ChangeCategory> categories;
 
 
-    protected AbstractLoadedChangeUnit(String id,
+    protected AbstractLoadedChangeUnit(String fileName,
+                                       String id,
                                        String order,
-                                       Class<?> sourceClass,
+                                       Class<?> implementationClass,
                                        boolean runAlways,
                                        boolean transactional,
                                        boolean systemTask) {
-        super(id, order, sourceClass, runAlways, transactional, systemTask);
+        super(fileName, id, order, implementationClass, runAlways, transactional, systemTask);
 
-        this.categories = ReflectionUtil.findAllAnnotations(sourceClass, Categories.class).stream()
+        this.categories = ReflectionUtil.findAllAnnotations(implementationClass, Categories.class).stream()
                 .map(Categories::value)
                 .map(Arrays::asList)
                 .flatMap(List::stream)
@@ -68,7 +69,7 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
     @Override
     public Constructor<?> getConstructor() {
         try {
-            return ReflectionUtil.getConstructorWithAnnotationPreference(getSourceClass(), FlamingockConstructor.class);
+            return ReflectionUtil.getConstructorWithAnnotationPreference(getImplementationClass(), FlamingockConstructor.class);
         } catch (ReflectionUtil.MultipleAnnotatedConstructorsFound ex) {
             throw new FlamingockException("Found multiple constructors for class[%s] annotated with %s." +
                     " Annotate the one you want Flamingock to use to instantiate your changeUnit",

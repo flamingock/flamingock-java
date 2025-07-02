@@ -17,9 +17,9 @@
 package io.flamingock.springboot;
 
 import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.internal.common.core.template.ChangeFileDescriptor;
+import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.internal.common.core.template.TemplateManager;
+import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
@@ -38,7 +38,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     @BeforeAll
     static void beforeAll() {
-        TemplateManager.addTemplate(TemplateSimulate.class.getSimpleName(), TemplateSimulate.class);
+        ChangeTemplateManager.addTemplate(TemplateSimulate.class.getSimpleName(), TemplateSimulate.class);
     }
 
     @Test
@@ -107,7 +107,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     private AbstractLoadedTask getTemplateLoadedChangeUnit(String profiles) {
 
-        ChangeFileDescriptor changeFileDescriptor = new ChangeFileDescriptor(
+        ChangeTemplateFileContent changeFileDescriptor = new ChangeTemplateFileContent(
                 "template-base-change-id",
                 "1",
                 TemplateSimulate.class.getSimpleName(),
@@ -118,7 +118,7 @@ class SpringProfileFilterTemplateTaskTest {
                 null
         );
 
-        TemplatePreviewChangeUnit preview = PreviewTaskBuilder.getTemplateBuilder(changeFileDescriptor).build();
+        TemplatePreviewChangeUnit preview = PreviewTaskBuilder.getTemplateBuilder("TemplateBase.yaml", changeFileDescriptor).build();
 
         return LoadedTaskBuilder.getInstance(preview).build();
 

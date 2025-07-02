@@ -1,5 +1,5 @@
 id: migration-from-mongock
-order: 0005
+order: 0001
 transactional: false
 template: MongoDbImporterChangeTemplate
 configuration:

@@ -20,6 +20,7 @@ import java.util.List;
 
 public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
 
+    private String fileName;
     private List<String> profiles;
     private Object configuration;
     private Object execution;
@@ -29,7 +30,8 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
 
     //TODO add execution and rollbackMethod
     //TODO add configurationSetter and validation method
-    public TemplatePreviewChangeUnit(String id,
+    public TemplatePreviewChangeUnit(String fileName,
+                                     String id,
                                      String order,
                                      String templateName,
                                      List<String> profiles,
@@ -41,10 +43,19 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                                      Object rollback
                                      ) {
         super(id, order, templateName, runAlways, transactional, system);
+        this.fileName = fileName;
         this.profiles = profiles;
         this.configuration = configuration;
         this.execution = execution;
         this.rollback = rollback;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public String getTemplateName() {

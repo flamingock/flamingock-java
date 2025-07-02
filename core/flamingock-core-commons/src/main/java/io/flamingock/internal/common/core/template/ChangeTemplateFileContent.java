@@ -16,7 +16,7 @@
 
 package io.flamingock.internal.common.core.template;
 
-public class ChangeFileDescriptor {
+public class ChangeTemplateFileContent {
     private String id;
     private String order;
     private String template;
@@ -27,17 +27,17 @@ public class ChangeFileDescriptor {
     private Object rollback;
 
 
-    public ChangeFileDescriptor() {
+    public ChangeTemplateFileContent() {
     }
 
-    public ChangeFileDescriptor(String id,
-                                String order,
-                                String template,
-                                String profiles,
-                                Boolean transactional,
-                                Object configuration,
-                                Object execution,
-                                Object rollback) {
+    public ChangeTemplateFileContent(String id,
+                                     String order,
+                                     String template,
+                                     String profiles,
+                                     Boolean transactional,
+                                     Object configuration,
+                                     Object execution,
+                                     Object rollback) {
         this.id = id;
         this.order = order;
         this.template = template;
