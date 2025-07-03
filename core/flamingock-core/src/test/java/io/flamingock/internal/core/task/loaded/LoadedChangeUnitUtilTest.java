@@ -192,6 +192,57 @@ class LoadedChangeUnitUtilTest {
     }
 
     @Test
+    @DisplayName("Should extract order from inner class names (with $ separator)")
+    void shouldExtractOrderFromInnerClassNames() {
+        // Test inner class formats - order must be at the beginning of inner class name after $ separator
+        String changeUnitId = "test-id";
+        
+        // Inner class format
+        String result1 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilderTest$_100_noOrderInAnnotation");
+        assertEquals("100", result1);
+        
+        // Inner class with deeper nesting
+        String result2 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.example.test.OuterClass$InnerClass$_002_DeepInnerChangeUnit");
+        assertEquals("002", result2);
+        
+        // Static inner class with version order
+        String result3 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.mycompany.MyTest$_v1.2.3_StaticInnerChangeUnit");
+        assertEquals("v1.2.3", result3);
+        
+        // Multiple inner classes
+        String result4 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.example.OuterTest$MiddleClass$_alpha_InnerMostChangeUnit");
+        assertEquals("alpha", result4);
+    }
+
+    @Test
+    @DisplayName("Should handle inner class orderInAnnotation matching")
+    void shouldHandleInnerClassOrderInAnnotationMatching() {
+        // Test when annotation order matches inner class name order
+        String changeUnitId = "test-id";
+        String orderInAnnotation = "100";
+        String className = "io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilderTest$_100_noOrderInAnnotation";
+        
+        String result = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, orderInAnnotation, className);
+        assertEquals("100", result);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when inner class order does not match annotation")
+    void shouldThrowExceptionWhenInnerClassOrderDoesNotMatchAnnotation() {
+        // Test when annotation order does not match inner class name order
+        String changeUnitId = "test-id";
+        String orderInAnnotation = "200";
+        String className = "io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilderTest$_100_noOrderInAnnotation";
+        
+        FlamingockException exception = assertThrows(FlamingockException.class, () ->
+            LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, orderInAnnotation, className)
+        );
+        
+        assertEquals("ChangeUnit[test-id] Order mismatch: @ChangeUnit(order='200') does not match order in className='100'",
+                exception.getMessage());
+    }
+
+    @Test
     @DisplayName("Should handle null fileName gracefully")
     void shouldHandleNullFileNameGracefully() {
         // Given

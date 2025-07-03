@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Pipeline {
     
-    SystemStage systemStage();
+    SystemStage systemStage() default @SystemStage;
     
     Stage[] stages();
 }

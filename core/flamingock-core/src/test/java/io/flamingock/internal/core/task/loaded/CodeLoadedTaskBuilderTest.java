@@ -52,7 +52,7 @@ class CodeLoadedTaskBuilderTest {
         // This will throw ClassNotFoundException since the class doesn't exist
         // But it will call the order validation before that, so we can test the order logic
         RuntimeException exception = assertThrows(RuntimeException.class, () -> builder.build());
-        assertTrue(exception.getCause() instanceof ClassNotFoundException);
+        assertInstanceOf(ClassNotFoundException.class, exception.getCause());
     }
 
     @Test
@@ -69,7 +69,7 @@ class CodeLoadedTaskBuilderTest {
         // When & Then
         // This will throw ClassNotFoundException, but order validation happens first
         RuntimeException exception = assertThrows(RuntimeException.class, () -> builder.build());
-        assertTrue(exception.getCause() instanceof ClassNotFoundException);
+        assertInstanceOf(ClassNotFoundException.class, exception.getCause());
     }
 
     @Test
@@ -122,7 +122,7 @@ class CodeLoadedTaskBuilderTest {
         // When & Then
         // This will throw ClassNotFoundException, but order validation happens first
         RuntimeException exception = assertThrows(RuntimeException.class, () -> builder.build());
-        assertTrue(exception.getCause() instanceof ClassNotFoundException);
+        assertInstanceOf(ClassNotFoundException.class, exception.getCause());
     }
 
     @Test
@@ -139,7 +139,7 @@ class CodeLoadedTaskBuilderTest {
         // When & Then
         // This will throw ClassNotFoundException, but order validation happens first
         RuntimeException exception = assertThrows(RuntimeException.class, () -> builder.build());
-        assertTrue(exception.getCause() instanceof ClassNotFoundException);
+        assertInstanceOf(ClassNotFoundException.class, exception.getCause());
     }
 
     @Test
@@ -187,7 +187,7 @@ class CodeLoadedTaskBuilderTest {
     }
 
     // Test class with ChangeUnit annotation for testing setFromFlamingockChangeAnnotation
-    @ChangeUnit(id = "annotation-test", order = "100", runAlways = true, transactional = false)
+    @ChangeUnit(id = "annotation-test", order = "100", transactional = false)
     static class TestChangeUnitClass {
     }
 
@@ -204,8 +204,8 @@ class CodeLoadedTaskBuilderTest {
         assertEquals("annotation-test", result.getId());
         assertEquals("100", result.getOrder().orElse(null));
         assertEquals(TestChangeUnitClass.class, result.getImplementationClass());
-        assertTrue(result.isRunAlways());
-        assertFalse(result.isTransactional());
+        assertFalse(result.isRunAlways()); // Default is false since not specified in annotation
+        assertFalse(result.isTransactional()); // Explicitly set to false in annotation
         assertFalse(result.isSystem());
     }
 
@@ -216,4 +216,24 @@ class CodeLoadedTaskBuilderTest {
         assertTrue(CodeLoadedTaskBuilder.supportsSourceClass(TestChangeUnitClass.class));
         assertFalse(CodeLoadedTaskBuilder.supportsSourceClass(String.class));
     }
+
+    @ChangeUnit(id = "no-order-in_annotation")
+    static class _100_noOrderInAnnotation {
+    }
+
+    @Test
+    @DisplayName("Should build from annotated class correctly")
+    void shouldBuildFromAnnotatedClassCorrectlyWhenOrderInAnnotationNull() {
+        // Given
+        CodeLoadedTaskBuilder builderFromClass = CodeLoadedTaskBuilder.getInstanceFromClass(_100_noOrderInAnnotation.class);
+
+        // When
+        CodeLoadedChangeUnit result = builderFromClass.build();
+
+        // Then
+        assertEquals("no-order-in_annotation", result.getId());
+        assertEquals("100", result.getOrder().orElse(null));
+        assertEquals(_100_noOrderInAnnotation.class, result.getImplementationClass());
+    }
+
 }

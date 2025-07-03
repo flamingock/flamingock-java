@@ -26,6 +26,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ChangeUnit {
 
+    String NULL_ORDER = "NULL_VALUE";
+
     /**
      * Change unit's id. It will be used to identify both change entries, the one linked to @Execution and @BeforeExecution(this one with the suffix `_before`)
      * Equivalent to field `id` in ChangeSet annotation
@@ -40,7 +42,7 @@ public @interface ChangeUnit {
      *
      * @return ChangeSet's author
      */
-    String order();
+    String order() default NULL_ORDER;
 
     /**
      * Equivalent to field `author` in ChangeSet annotation
