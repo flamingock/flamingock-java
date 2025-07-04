@@ -22,10 +22,9 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.Pipeline;
+import io.flamingock.api.annotations.Flamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.api.annotations.SystemStage;
-import io.flamingock.community.Flamingock;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.Runner;
@@ -47,7 +46,7 @@ import static io.flamingock.api.StageType.LEGACY;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Pipeline(
+@Flamingock(
     systemStage = @SystemStage(sourcesPackage = "io.flamingock.importer.mongodb.flamingock.system"),
     stages = {
         @Stage(name = "Legacy stage", type = LEGACY, sourcesPackage = "io.flamingock.importer.mongodb.flamingock.legacy"),
@@ -98,10 +97,9 @@ public class MongoDbImporterTest {
         //adds the Mongock
         mongockTestHelper.setupBasicScenario();
 
-        Runner flamingock = Flamingock.builder()
+        Runner flamingock = io.flamingock.community.Flamingock.builder()
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setProperty("mongodb.databaseName", DB_NAME)
                 .build();
 
         flamingock.run();
@@ -143,10 +141,9 @@ public class MongoDbImporterTest {
     void failIfEmptyOrigin() {
         //adds the Mongock
 
-        Runner flamingock = Flamingock.builder()
+        Runner flamingock = io.flamingock.community.Flamingock.builder()
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setProperty("mongodb.databaseName", DB_NAME)
                 .build();
 
         //TODO should check error message, but currently it return the summary text

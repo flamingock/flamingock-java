@@ -119,9 +119,7 @@ class MongoSync4DriverTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
-                    .addDependency("mongodb.databaseName", DB_NAME)
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
-                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .addDependency(mongoDatabase)
                     .build()
                     .run();
         }
@@ -150,17 +148,12 @@ class MongoSync4DriverTest {
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(config)
                     .addDependency(mongoClient)
-                    .setProperty("mongodb.databaseName", DB_NAME)
+                    .addDependency(mongoDatabase)
                     .setProperty("mongodb.indexCreation", true)
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     .setProperty("mongodb.readConcern", "LOCAL")
-//                    .setProperty("mongodb.writeConcern.w", 1)
-//                    .setProperty("mongodb.writeConcern.journal", false)
-//                    .setProperty("mongodb.writeConcern.wTimeout", Duration.ofSeconds(2))
                     .setProperty("mongodb.readPreference", MongoDBSync4Configuration.ReadPreferenceLevel.SECONDARY)
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
-                    .addDependency(mongoClient.getDatabase(DB_NAME))
                     .build()
                     .run();
         }
@@ -195,9 +188,7 @@ class MongoSync4DriverTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
-                    .addDependency("mongodb.databaseName", DB_NAME)
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithTransaction"))
-                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .addDependency(mongoDatabase)
                     .build()
                     .run();
         }
@@ -237,9 +228,7 @@ class MongoSync4DriverTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
-                    .addDependency("mongodb.databaseName", DB_NAME)
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.happyPathWithoutTransaction"))
-                    .addDependency(mongoClient.getDatabase(DB_NAME))
+                    .addDependency(mongoDatabase)
                     .disableTransaction()
                     .build()
                     .run();
@@ -282,9 +271,7 @@ class MongoSync4DriverTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoClient)
-                        .addDependency("mongodb.databaseName", DB_NAME)
-                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithTransaction"))
-                        .addDependency(mongoClient.getDatabase(DB_NAME))
+                        .addDependency(mongoDatabase)
                         .build()
                         .run();
             });
@@ -323,9 +310,7 @@ class MongoSync4DriverTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoClient)
-                        .addDependency("mongodb.databaseName", DB_NAME)
-                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithRollback"))
-                        .addDependency(mongoClient.getDatabase(DB_NAME))
+                        .addDependency(mongoDatabase)
                         .disableTransaction()
                         .build()
                         .run();
@@ -368,9 +353,7 @@ class MongoSync4DriverTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoClient)
-                        .addDependency("mongodb.databaseName", DB_NAME)
-                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.sync.v4.changes.failedWithoutTransactionWithoutRollback"))
-                        .addDependency(mongoClient.getDatabase(DB_NAME))
+                        .addDependency(mongoDatabase)
                         .disableTransaction()
                         .build()
                         .run();

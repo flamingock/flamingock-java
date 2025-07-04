@@ -26,10 +26,6 @@ public class Serializer {
         this.logger = logger;
     }
 
-    public void serializeTemplatedPipeline(PreviewPipeline pipeline) {
-        serializePipelineTo(pipeline, Constants.TEMPLATED_PIPELINE_FILE_PATH);
-        serializeClassesList(pipeline, Constants.TEMPLATED_GRAALVM_REFLECT_CLASSES_PATH);
-    }
 
     public void serializeFullPipeline(PreviewPipeline pipeline) {
         serializePipelineTo(pipeline, Constants.FULL_PIPELINE_FILE_PATH);

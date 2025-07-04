@@ -1,6 +1,6 @@
 package io.flamingock.core.processor;
 
-import io.flamingock.api.annotations.Pipeline;
+import io.flamingock.api.annotations.Flamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.SystemStage;
@@ -32,12 +32,12 @@ public class PipelinePreProcessorTest {
     @TempDir
     Path tempDir;
     
-    private PipelinePreProcessor processor;
+    private FlamingockAnnotationProcessor processor;
     private File pipelineFile;
 
     @BeforeEach
     void setUp() throws Exception {
-        processor = spy(new PipelinePreProcessor());
+        processor = spy(new FlamingockAnnotationProcessor());
         pipelineFile = tempDir.resolve("pipeline.yaml").toFile();
         
         // Mock dependencies
@@ -69,26 +69,27 @@ public class PipelinePreProcessorTest {
         
         // Verify the cause is RuntimeException with expected message
         assertInstanceOf(RuntimeException.class, exception.getCause());
-        assertTrue(exception.getCause().getMessage().contains("No pipeline configuration found"));
+        assertTrue(exception.getCause().getMessage().contains("@Flamingock annotation is mandatory"));
     }
 
     /**
-     * Tests the pipeline processor using only file-based configuration with change units.
+     * Tests the pipeline processor using file-based configuration with @Flamingock annotation.
      * 
      * <p><b>Scenario:</b> Pipeline processor processes file-based configuration with available change units</p>
-     * <p><b>Given:</b> A pipeline.yaml file exists with sourcesPackage configuration and change units are available</p>
-     * <p><b>When:</b> The processor builds the pipeline without @Pipeline annotation</p>
+     * <p><b>Given:</b> A pipeline.yaml file exists and @Flamingock annotation is provided with empty pipelineFile</p>
+     * <p><b>When:</b> The processor builds the pipeline with @Flamingock annotation</p>
      * <p><b>Then:</b> A valid PreviewPipeline should be created from the file configuration</p>
      */
     @Test
-    @DisplayName("Given pipeline file exists and change units provided, when no @Pipeline annotation, then should use file configuration")
-    void SHOULD_useFileOnly_WHEN_fileProvidedAndNoPipelineAnnotationAndChangeUnitsProvided() throws Exception {
+    @DisplayName("Given pipeline file exists and @Flamingock annotation provided, when pipelineFile is empty, then should use default file configuration")
+    void SHOULD_useFileOnly_WHEN_fileProvidedAndFlamingockAnnotationWithoutPipelineFile() throws Exception {
         // Given
         createPipelineFile();
         Map<String, List<AbstractPreviewTask>> changeUnitsMap = createMockChangeUnitsMap();
+        Flamingock mockAnnotation = createMockPipelineAnnotationWithSourcesPackage();
         
         // When
-        PreviewPipeline result = invokeGetPipelineFromProcessChanges(changeUnitsMap, null);
+        PreviewPipeline result = invokeGetPipelineFromProcessChanges(changeUnitsMap, mockAnnotation);
         
         // Then
         assertNotNull(result);
@@ -107,7 +108,7 @@ public class PipelinePreProcessorTest {
     @DisplayName("Given no pipeline file but @Pipeline annotation provided, when processing pipeline, then should use annotation configuration")
     void SHOULD_usePipelineAnnotation_WHEN_noFileAndPipelineAnnotationAndChangeUnitsProvided() throws Exception {
         // Given - no file, annotation provided
-        Pipeline pipelineAnnotation = createMockPipelineAnnotationWithSourcesPackage();
+        Flamingock pipelineAnnotation = createMockPipelineAnnotationWithSourcesPackage();
         Map<String, List<AbstractPreviewTask>> changeUnitsMap = createMockChangeUnitsMap();
         
         // When
@@ -130,7 +131,7 @@ public class PipelinePreProcessorTest {
     void SHOULD_usePipelineAnnotationAndWarn_WHEN_bothFileAndPipelineAnnotationAndChangeUnitsProvided() throws Exception {
         // Given
         createPipelineFile();
-        Pipeline pipelineAnnotation = createMockPipelineAnnotationWithSourcesPackage();
+        Flamingock pipelineAnnotation = createMockPipelineAnnotationWithSourcesPackage();
         Map<String, List<AbstractPreviewTask>> changeUnitsMap = createMockChangeUnitsMap();
         
         // When
@@ -138,6 +139,79 @@ public class PipelinePreProcessorTest {
         
         // Then
         assertNotNull(result);
+    }
+
+    /**
+     * Tests that annotation with both pipelineFile and stages throws exception.
+     */
+    @Test
+    @DisplayName("Given @Flamingock with both pipelineFile and stages, when processing pipeline, then should throw RuntimeException")
+    void SHOULD_throwException_WHEN_annotationHasBothFileAndStages() throws Exception {
+        // Given
+        Map<String, List<AbstractPreviewTask>> emptyMap = new HashMap<>();
+        Flamingock invalidAnnotation = createMockAnnotationWithBothFileAndStages();
+        
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> 
+            invokeGetPipelineFromProcessChanges(emptyMap, invalidAnnotation));
+        
+        assertInstanceOf(RuntimeException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("cannot have both pipelineFile and stages"));
+    }
+
+    /**
+     * Tests that annotation with neither pipelineFile nor stages throws exception.
+     */
+    @Test
+    @DisplayName("Given @Flamingock with neither pipelineFile nor stages, when processing pipeline, then should throw RuntimeException")
+    void SHOULD_throwException_WHEN_annotationHasNeitherFileNorStages() throws Exception {
+        // Given
+        Map<String, List<AbstractPreviewTask>> emptyMap = new HashMap<>();
+        Flamingock emptyAnnotation = createMockAnnotationWithNeitherFileNorStages();
+        
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> 
+            invokeGetPipelineFromProcessChanges(emptyMap, emptyAnnotation));
+        
+        assertInstanceOf(RuntimeException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("must specify either pipelineFile OR stages"));
+    }
+
+    /**
+     * Tests that annotation with only pipelineFile works correctly.
+     */
+    @Test
+    @DisplayName("Given @Flamingock with only pipelineFile, when processing pipeline, then should use file configuration")
+    void SHOULD_useFileConfiguration_WHEN_annotationHasOnlyPipelineFile() throws Exception {
+        // Given
+        createPipelineFile();
+        Map<String, List<AbstractPreviewTask>> changeUnitsMap = createMockChangeUnitsMap();
+        Flamingock fileOnlyAnnotation = createMockAnnotationWithOnlyPipelineFile();
+        
+        // When
+        PreviewPipeline result = invokeGetPipelineFromProcessChanges(changeUnitsMap, fileOnlyAnnotation);
+        
+        // Then
+        assertNotNull(result);
+    }
+
+    /**
+     * Tests that systemStage with pipelineFile throws exception.
+     */
+    @Test
+    @DisplayName("Given @Flamingock with systemStage and pipelineFile, when processing pipeline, then should throw RuntimeException")
+    void SHOULD_throwException_WHEN_systemStageWithPipelineFile() throws Exception {
+        // Given
+        createPipelineFile();
+        Map<String, List<AbstractPreviewTask>> emptyMap = new HashMap<>();
+        Flamingock invalidAnnotation = createMockAnnotationWithSystemStageAndPipelineFile();
+        
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> 
+            invokeGetPipelineFromProcessChanges(emptyMap, invalidAnnotation));
+        
+        assertInstanceOf(RuntimeException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("SystemStage can only be configured when stages are provided"));
     }
 
     private void createPipelineFile() throws IOException {
@@ -158,8 +232,8 @@ public class PipelinePreProcessorTest {
         java.nio.file.Files.write(pipelineFile.toPath(), yamlContent.getBytes());
     }
 
-    private Pipeline createMockPipelineAnnotationWithSourcesPackage() {
-        return new Pipeline() {
+    private Flamingock createMockPipelineAnnotationWithSourcesPackage() {
+        return new Flamingock() {
             @Override
             public SystemStage systemStage() {
                 return new SystemStage() {
@@ -197,8 +271,152 @@ public class PipelinePreProcessorTest {
             }
 
             @Override
+            public String pipelineFile() { return ""; }
+
+            @Override
             public Class<? extends java.lang.annotation.Annotation> annotationType() {
-                return Pipeline.class;
+                return Flamingock.class;
+            }
+        };
+    }
+
+    private Flamingock createMockAnnotationWithBothFileAndStages() {
+        return new Flamingock() {
+            @Override
+            public SystemStage systemStage() {
+                return new SystemStage() {
+                    @Override
+                    public String sourcesPackage() { return "com.example.system"; }
+                    @Override
+                    public String resourcesDir() { return ""; }
+                    @Override
+                    public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                        return SystemStage.class;
+                    }
+                };
+            }
+
+            @Override
+            public Stage[] stages() {
+                return new Stage[]{
+                    new Stage() {
+                        @Override
+                        public String name() { return "test-stage"; }
+                        @Override
+                        public String description() { return ""; }
+                        @Override
+                        public StageType type() { return StageType.DEFAULT; }
+                        @Override
+                        public String sourcesPackage() { return "com.example.changes"; }
+                        @Override
+                        public String resourcesDir() { return ""; }
+                        @Override
+                        public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                            return Stage.class;
+                        }
+                    }
+                };
+            }
+
+            @Override
+            public String pipelineFile() { return "test-pipeline.yaml"; }
+
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return Flamingock.class;
+            }
+        };
+    }
+
+    private Flamingock createMockAnnotationWithNeitherFileNorStages() {
+        return new Flamingock() {
+            @Override
+            public SystemStage systemStage() {
+                return new SystemStage() {
+                    @Override
+                    public String sourcesPackage() { return ""; }
+                    @Override
+                    public String resourcesDir() { return ""; }
+                    @Override
+                    public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                        return SystemStage.class;
+                    }
+                };
+            }
+
+            @Override
+            public Stage[] stages() {
+                return new Stage[0]; // Empty array
+            }
+
+            @Override
+            public String pipelineFile() { return ""; }
+
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return Flamingock.class;
+            }
+        };
+    }
+
+    private Flamingock createMockAnnotationWithOnlyPipelineFile() {
+        return new Flamingock() {
+            @Override
+            public SystemStage systemStage() {
+                return new SystemStage() {
+                    @Override
+                    public String sourcesPackage() { return ""; }
+                    @Override
+                    public String resourcesDir() { return ""; }
+                    @Override
+                    public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                        return SystemStage.class;
+                    }
+                };
+            }
+
+            @Override
+            public Stage[] stages() {
+                return new Stage[0]; // Empty array
+            }
+
+            @Override
+            public String pipelineFile() { return pipelineFile.getAbsolutePath(); }
+
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return Flamingock.class;
+            }
+        };
+    }
+
+    private Flamingock createMockAnnotationWithSystemStageAndPipelineFile() {
+        return new Flamingock() {
+            @Override
+            public SystemStage systemStage() {
+                return new SystemStage() {
+                    @Override
+                    public String sourcesPackage() { return "com.example.system"; }
+                    @Override
+                    public String resourcesDir() { return ""; }
+                    @Override
+                    public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                        return SystemStage.class;
+                    }
+                };
+            }
+
+            @Override
+            public Stage[] stages() {
+                return new Stage[0]; // Empty array
+            }
+
+            @Override
+            public String pipelineFile() { return pipelineFile.getAbsolutePath(); }
+
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return Flamingock.class;
             }
         };
     }
@@ -211,15 +429,15 @@ public class PipelinePreProcessorTest {
         return map;
     }
 
-    private PreviewPipeline invokeGetPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> changeUnits, Pipeline annotation) throws Exception {
-        Method method = PipelinePreProcessor.class.getDeclaredMethod(
-            "getPipelineFromProcessChanges", Map.class, Pipeline.class);
+    private PreviewPipeline invokeGetPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> changeUnits, Flamingock annotation) throws Exception {
+        Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
+            "getPipelineFromProcessChanges", Map.class, Flamingock.class);
         method.setAccessible(true);
         return (PreviewPipeline) method.invoke(processor, changeUnits, annotation);
     }
 
     private void setPrivateField(String fieldName, Object value) throws Exception {
-        java.lang.reflect.Field field = PipelinePreProcessor.class.getDeclaredField(fieldName);
+        java.lang.reflect.Field field = FlamingockAnnotationProcessor.class.getDeclaredField(fieldName);
         field.setAccessible(true);
         field.set(processor, value);
     }

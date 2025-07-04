@@ -16,6 +16,8 @@
 
 package io.flamingock.core.cloud;
 
+import io.flamingock.api.annotations.Flamingock;
+import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.cloud.changes.CloudChange1;
 import io.flamingock.core.cloud.changes.CloudChange2;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
@@ -47,6 +49,9 @@ import static org.mockito.Mockito.verify;
 
 //TODO add listener to check final Summary
 //TODO verify calls to server
+@Flamingock(
+        stages = {@Stage(name = "stage-1", sourcesPackage = "io.flamingock.core.cloud.changes")}
+)
 public class CloudEngineTest {
 
     private final String apiToken = "FAKE_API_TOKEN";

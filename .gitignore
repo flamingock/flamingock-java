@@ -100,3 +100,7 @@ Vagrantfile
 .vscode/*
 
 dynamodb-local-metadata*
+
+# Claude Code configuration files
+CLAUDE.md
+.claude/settings.local.json

@@ -40,17 +40,17 @@ public class SpringDataMongoDriver extends MongoSync4Driver {
     }
 
     @Override
-    public void initialize(ContextResolver dependencyContext) {
-        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+    public void initialize(ContextResolver contextResolver) {
+        runnerId = contextResolver.getRequiredDependencyValue(RunnerId.class);
 
-        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
-        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+        coreConfiguration = contextResolver.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = contextResolver.getRequiredDependencyValue(CommunityConfigurable.class);
 
-        this.mongoTemplate = dependencyContext.getRequiredDependencyValue(MongoTemplate.class);
+        this.mongoTemplate = contextResolver.getRequiredDependencyValue(MongoTemplate.class);
 
-        this.driverConfiguration = dependencyContext.getDependencyValue(SpringDataMongoConfiguration.class)
+        this.driverConfiguration = contextResolver.getDependencyValue(SpringDataMongoConfiguration.class)
                 .orElse(new SpringDataMongoConfiguration());
-        this.driverConfiguration.mergeConfig(dependencyContext);
+        this.driverConfiguration.mergeConfig(contextResolver);
     }
 
     @Override
