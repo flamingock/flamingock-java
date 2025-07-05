@@ -1,0 +1,12 @@
+{
+  "setup": "DEFAULT",
+  "stages": [
+    {
+      "name": "test-stage",
+      "type": "USER",
+      "sourcesPackage": "io.flamingock.springboot.test",
+      "tasks": [],
+      "parallel": false
+    }
+  ]
+}

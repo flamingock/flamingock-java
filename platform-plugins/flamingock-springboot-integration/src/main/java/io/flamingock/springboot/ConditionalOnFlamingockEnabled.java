@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package io.flamingock.api.annotations;
+package io.flamingock.springboot;
 
+import org.springframework.context.annotation.Conditional;
+
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Pipeline {
-    
-    SystemStage systemStage() default @SystemStage;
-    
-    Stage[] stages();
+@Documented
+@Conditional(OnFlamingockEnabledCondition.class)
+public @interface ConditionalOnFlamingockEnabled {
 }

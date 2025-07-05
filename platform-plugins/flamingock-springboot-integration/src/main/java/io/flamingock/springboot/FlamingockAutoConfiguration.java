@@ -16,20 +16,26 @@
 
 package io.flamingock.springboot;
 
-import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.RunnerBuilder;
+import io.flamingock.internal.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
-@ConditionalOnExpression("${flamingock.enabled:true}")
-public class SpringbootContext {
-
+@AutoConfiguration
+@ConditionalOnClass(name = "org.springframework.boot.SpringApplication")
+@ConditionalOnFlamingockEnabled
+@EnableConfigurationProperties(SpringbootProperties.class)
+public class FlamingockAutoConfiguration {
 
     @Bean("flamingock-runner")
     @Profile(Constants.NON_CLI_PROFILE)
@@ -37,7 +43,6 @@ public class SpringbootContext {
     public ApplicationRunner applicationRunner(RunnerBuilder runnerBuilder) {
         return SpringbootUtil.toApplicationRunner(runnerBuilder.build());
     }
-
 
     @Bean("flamingock-runner")
     @Profile(Constants.NON_CLI_PROFILE)
@@ -48,6 +53,7 @@ public class SpringbootContext {
 
     @Bean("flamingock-builder")
     @Profile(Constants.NON_CLI_PROFILE)
+    @ConditionalOnMissingBean(RunnerBuilder.class)
     public RunnerBuilder flamingockBuilder(SpringbootProperties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher) {
@@ -60,6 +66,4 @@ public class SpringbootContext {
                 .addDependency(ApplicationContext.class, springContext)
                 .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
     }
-
-
 }

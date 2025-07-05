@@ -1,0 +1,15 @@
+{
+  "pipeline": {
+    "stages": [
+      {
+        "name": "test-stage",
+        "type": "DEFAULT",
+        "sourcesPackage": "io.flamingock.springboot.test",
+        "tasks": [],
+        "parallel": false
+      }
+    ]
+  },
+  "setup": "DEFAULT",
+  "pipelineFile": ""
+}

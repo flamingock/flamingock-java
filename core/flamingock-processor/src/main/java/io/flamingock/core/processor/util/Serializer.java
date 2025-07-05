@@ -5,6 +5,7 @@ import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 
@@ -16,7 +17,6 @@ import java.io.Writer;
 import java.util.function.Consumer;
 
 public class Serializer {
-    //requires JdkModule for optionals
 
     private final ProcessingEnvironment processingEnv;
     private final LoggerPreProcessor logger;
@@ -27,23 +27,23 @@ public class Serializer {
     }
 
 
-    public void serializeFullPipeline(PreviewPipeline pipeline) {
-        serializePipelineTo(pipeline, Constants.FULL_PIPELINE_FILE_PATH);
-        serializeClassesList(pipeline, Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH);
+    public void serializeFullPipeline(FlamingockMetadata metadata) {
+        serializePipelineTo(metadata);
+        serializeClassesList(metadata.getPipeline());
     }
 
-    private void serializePipelineTo(PreviewPipeline pipeline, String filePath) {
-        writeToFile(filePath, writer -> {
+    private void serializePipelineTo(FlamingockMetadata metadata) {
+        writeToFile(Constants.FULL_PIPELINE_FILE_PATH, writer -> {
             try {
-                writer.write(JsonObjectMapper.DEFAULT_INSTANCE.enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(pipeline));
+                writer.write(JsonObjectMapper.DEFAULT_INSTANCE.enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(metadata));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    private void serializeClassesList(PreviewPipeline pipeline, String filePath) {
-        writeToFile(filePath, writer -> {
+    private void serializeClassesList(PreviewPipeline pipeline) {
+        writeToFile(Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH, writer -> {
             if(pipeline.getSystemStage() != null) {
                 serializeClassesFromStage(writer, pipeline.getSystemStage());;
             }

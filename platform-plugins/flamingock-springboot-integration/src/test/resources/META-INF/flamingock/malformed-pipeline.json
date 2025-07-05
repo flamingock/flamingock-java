@@ -1,0 +1,9 @@
+{
+  "pipeline": {
+    "stages": [
+      {
+        "name": "test-stage",
+        "type": "DEFAULT"
+        // Malformed JSON - missing comma and closing bracket
+  "setup": "DEFAULT"
+}

@@ -4,6 +4,7 @@ import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Flamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.api.annotations.SystemStage;
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.core.processor.util.AnnotationFinder;
@@ -124,25 +125,21 @@ import java.util.Set;
 public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private static final String RESOURCES_PATH_ARG = "resources";
+
     private static final String SOURCES_PATH_ARG = "sources";
 
     private static final String DEFAULT_RESOURCES_PATH = "src/main/resources";
+
     private static final List<String> DEFAULT_SOURCE_DIRS = Arrays.asList(
             "src/main/java", "src/main/kotlin", "src/main/scala", "src/main/groovy"
     );
 
-    private static final String FLAMINGOCK_PIPELINE_FILE = "pipeline.yaml";
-    private static final String FLAMINGOCK_RESOURCE_DIR = "flamingock";
 
     private static final boolean hasProcessed = false;
 
-    private File pipelineFile;
     private String resourcesRoot = null;
-    private String flamingockDir = null;
     private List<String> sourceRoots = null;
     private LoggerPreProcessor logger;
-    private Serializer serializer;
-    private AnnotationFinder annotationFinder;
 
     public FlamingockAnnotationProcessor(){}
 
@@ -152,11 +149,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         logger = new LoggerPreProcessor(processingEnv);
         logger.info("Starting Flamingock annotation processor initialization.");
         resourcesRoot = getResourcesRoot();
-        flamingockDir = getFlamingockDir(resourcesRoot);
         sourceRoots = getSourcesPathList();
-        serializer = new Serializer(processingEnv, logger);
-        pipelineFile = getFlamingockPipelineFile();
-        
+
+
         logger.info("Initialization completed. Pipeline will be processed with @Flamingock annotation.");
     }
 
@@ -168,8 +163,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<>(Arrays.asList(
-                ChangeUnit.class.getName(),
-                Flamingock.class.getName()
+                Flamingock.class.getName(),
+                ChangeUnit.class.getName()
         ));
     }
 
@@ -184,18 +179,21 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             return true;
         }
 
-        AnnotationFinder finder = new AnnotationFinder(roundEnv, logger);
+        AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger);
+        Flamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation();
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
-                finder.getCodedChangeUnitsMapByPackage(),
-                finder.getPipelineAnnotation()
+                annotationFinder.getCodedChangeUnitsMapByPackage(),
+                flamingockAnnotation
         );
-        serializer.serializeFullPipeline(pipeline);
+        Serializer serializer = new Serializer(processingEnv, logger);
+        String setup = flamingockAnnotation.setup().toString();
+        String pipelineFile = flamingockAnnotation.pipelineFile();
+        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, setup, pipelineFile);
+        serializer.serializeFullPipeline(flamingockMetadata);
         logger.info("Finished processing annotated classes and generating metadata.");
         return true;
     }
 
-
-    @SuppressWarnings("unchecked")
     private PreviewPipeline getPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Flamingock pipelineAnnotation) {
         if (codedChangeUnitsByPackage == null) {
             codedChangeUnitsByPackage = new HashMap<>();
@@ -432,19 +430,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return resourcesDir;
     }
 
-    @NotNull
-    private String getFlamingockDir(String resourcesDir) {
 
-        if (resourcesDir.endsWith("/")) {
-            return resourcesDir + FLAMINGOCK_RESOURCE_DIR;
-        } else {
-            return resourcesDir + "/" + FLAMINGOCK_RESOURCE_DIR;
-        }
-    }
-
-    @NotNull
-    private File getFlamingockPipelineFile() {
-        return new File(flamingockDir, FLAMINGOCK_PIPELINE_FILE);
-    }
 
 }
