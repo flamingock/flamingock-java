@@ -7,12 +7,11 @@ import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
-import io.flamingock.internal.common.core.system.SystemModule;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
+import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
@@ -23,7 +22,6 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
 import java.nio.charset.CoderResult;
 import java.util.List;
-import java.util.ServiceLoader;
 
 
 public class RegistrationFeature implements Feature {
@@ -35,7 +33,6 @@ public class RegistrationFeature implements Feature {
         logger.startProcess("GraalVM classes registration");
         registerInternalClasses();
         registerTemplates();
-        registerModules();
         registerUserClasses();
         logger.finishedProcess("GraalVM classes registration");
     }
@@ -88,24 +85,6 @@ public class RegistrationFeature implements Feature {
         });
 
         logger.completedRegistration("templates");
-    }
-
-    private void registerModules() {
-        logger.startRegistration("system modules");
-        for (SystemModule systemModule : ServiceLoader.load(SystemModule.class)) {
-            PreviewStage previewStage = systemModule.getStage();
-            //Only registers code-base change units classes
-            //template-base change units not needed because Template classes
-            //already registered with registerTemplates()
-            previewStage.getTasks()
-                    .stream()
-                    .filter(task -> CodePreviewChangeUnit.class.isAssignableFrom(task.getClass()))
-                    .map(task -> (CodePreviewChangeUnit) task)
-                    .map(AbstractTaskDescriptor::getSource)
-                    .forEach(RegistrationFeature::registerClass);
-            registerClass(systemModule.getClass());
-        }
-        logger.completedRegistration("system modules");
     }
 
     private static void registerClass(String className) {

@@ -24,7 +24,6 @@ import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.plugin.PluginManager;
-import io.flamingock.internal.common.core.system.SystemModuleManager;
 
 public class CloudFlamingockBuilder
         extends AbstractFlamingockBuilder<CloudFlamingockBuilder>
@@ -40,9 +39,8 @@ public class CloudFlamingockBuilder
                                      CloudConfiguration cloudConfiguration,
                                      Context dependencyInjectableContext,
                                      PluginManager pluginManager,
-                                     SystemModuleManager systemModuleManager,
                                      CloudDriver driver) {
-        super(coreConfiguration, dependencyInjectableContext, pluginManager, systemModuleManager, driver);
+        super(coreConfiguration, dependencyInjectableContext, pluginManager, driver);
         this.cloudConfiguration = cloudConfiguration;
     }
 

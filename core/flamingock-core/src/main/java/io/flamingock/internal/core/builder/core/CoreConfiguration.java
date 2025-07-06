@@ -16,15 +16,11 @@
 
 package io.flamingock.internal.core.builder.core;
 
-import io.flamingock.internal.common.core.system.SystemModule;
-import io.flamingock.internal.core.builder.TransactionStrategy;
-
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.core.builder.TransactionStrategy;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static io.flamingock.internal.util.Constants.DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
@@ -78,8 +74,6 @@ public class CoreConfiguration implements CoreConfigurable {
      */
     private TransactionStrategy transactionStrategy = TransactionStrategy.CHANGE_UNIT;
 
-
-    private final List<SystemModule> systemModules = new ArrayList<>();
 
     public LockConfiguration getLockConfiguration() {
         return lockConfiguration;
@@ -206,7 +200,7 @@ public class CoreConfiguration implements CoreConfigurable {
     public Map<String, Object> getMetadata() {
         return metadata;
     }
-    
+
     @Override
     public String getDefaultAuthor() {
         return defaultAuthor;

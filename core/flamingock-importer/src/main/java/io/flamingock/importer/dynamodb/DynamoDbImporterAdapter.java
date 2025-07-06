@@ -1,4 +1,4 @@
-package io.flamingock.importer.adapter.dynamodb;
+package io.flamingock.importer.dynamodb;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.importer.ImporterAdapter;

@@ -22,7 +22,6 @@ import io.flamingock.internal.core.builder.local.CommunityConfigurator;
 import io.flamingock.internal.core.community.driver.LocalDriver;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.plugin.PluginManager;
-import io.flamingock.internal.common.core.system.SystemModuleManager;
 
 public class CommunityFlamingockBuilder
         extends AbstractFlamingockBuilder<CommunityFlamingockBuilder>
@@ -35,9 +34,8 @@ public class CommunityFlamingockBuilder
                                          CommunityConfiguration communityConfiguration,
                                          Context dependencyInjectableContext,
                                          PluginManager pluginManager,
-                                         SystemModuleManager systemModuleManager,
                                          LocalDriver driver) {
-        super(coreConfiguration, dependencyInjectableContext, pluginManager, systemModuleManager, driver);
+        super(coreConfiguration, dependencyInjectableContext, pluginManager, driver);
         this.communityConfiguration = communityConfiguration;
     }
 

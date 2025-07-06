@@ -1,4 +1,4 @@
-package io.flamingock.importer.adapter.couchbase;
+package io.flamingock.importer.couchbase;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.importer.ImporterAdapter;

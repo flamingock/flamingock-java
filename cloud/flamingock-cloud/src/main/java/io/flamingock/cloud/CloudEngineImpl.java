@@ -16,6 +16,7 @@
 
 package io.flamingock.cloud;
 
+import io.flamingock.internal.common.core.context.ContextContributor;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.JwtProperty;
 import io.flamingock.internal.util.id.ServiceId;
@@ -27,7 +28,7 @@ import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 
 import java.util.Optional;
 
-public final class CloudEngineImpl implements CloudEngine {
+public final class CloudEngineImpl implements CloudEngine, ContextContributor {
 
     private final EnvironmentId environmentId;
 
@@ -87,7 +88,6 @@ public final class CloudEngineImpl implements CloudEngine {
 
     @Override
     public void contributeToContext(ContextInjectable contextInjectable) {
-        CloudEngine.super.contributeToContext(contextInjectable);
         contextInjectable.setProperty(JwtProperty.fromString(jwt));
         contextInjectable.setProperty(environmentId);
         contextInjectable.setProperty(serviceId);
