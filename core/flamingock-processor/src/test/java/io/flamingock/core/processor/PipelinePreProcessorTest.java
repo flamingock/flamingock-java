@@ -3,7 +3,6 @@ package io.flamingock.core.processor;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.Flamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.api.annotations.SystemStage;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
@@ -72,12 +71,12 @@ public class PipelinePreProcessorTest {
         assertEquals(2, stages.length, "Should have 2 stages");
         
         PreviewStage firstStage = stages[0];
-        assertEquals("init", firstStage.getName());
+        assertEquals("init", firstStage.getName()); // Should be derived from location
         assertEquals(StageType.DEFAULT, firstStage.getType()); // Using DEFAULT as BEFORE doesn't exist
         assertEquals("com.example.init", firstStage.getSourcesPackage());
         
         PreviewStage secondStage = stages[1];
-        assertEquals("migration", secondStage.getName());
+        assertEquals("migrations", secondStage.getName()); // Should be derived from location
         assertEquals(StageType.DEFAULT, secondStage.getType());
         assertEquals("com.example.migrations", secondStage.getSourcesPackage());
     }
@@ -104,7 +103,7 @@ public class PipelinePreProcessorTest {
         
         PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
         PreviewStage stage = stages[0];
-        assertEquals("test-stage", stage.getName());
+        assertEquals("changes", stage.getName()); // Should be auto-derived from location
         assertEquals("com.example.changes", stage.getSourcesPackage());
     }
 
@@ -198,11 +197,9 @@ public class PipelinePreProcessorTest {
     private void createPipelineYamlFile() throws IOException {
         Path pipelineFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
-            "  systemStage:\n" +
-            "    sourcesPackage: com.example.system\n" +
+            "  systemStage: com.example.system\n" +
             "  stages:\n" +
-            "    - name: test-stage\n" +
-            "      sourcesPackage: com.example.changes\n";
+            "    - location: com.example.changes\n";
         Files.write(pipelineFile, yamlContent.getBytes());
     }
 
@@ -221,10 +218,10 @@ public class PipelinePreProcessorTest {
     // Mock annotation factories
     private Flamingock createMockAnnotationWithStages() {
         return new MockFlamingockBuilder()
-            .withSystemStage("com.example.system", "")
+            .withSystemStage("com.example.system")
             .withStages(
-                createMockStage("init", StageType.DEFAULT, "com.example.init"),
-                createMockStage("migration", StageType.DEFAULT, "com.example.migrations")
+                createMockStage("", StageType.DEFAULT, "com.example.init"),
+                createMockStage("", StageType.DEFAULT, "com.example.migrations")
             )
             .build();
     }
@@ -239,36 +236,24 @@ public class PipelinePreProcessorTest {
         return new MockFlamingockBuilder().build();
     }
 
-    private Stage createMockStage(String name, StageType type, String sourcesPackage) {
+    private Stage createMockStage(String name, StageType type, String location) {
         return new Stage() {
             @Override public String name() { return name; }
             @Override public String description() { return ""; }
             @Override public StageType type() { return type; }
-            @Override public String sourcesPackage() { return sourcesPackage; }
-            @Override public String resourcesDir() { return ""; }
+            @Override public String location() { return location; }
             @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return Stage.class; }
         };
     }
 
-    private SystemStage createMockSystemStage(String sourcesPackage, String resourcesDir) {
-        return new SystemStage() {
-            @Override public String sourcesPackage() { return sourcesPackage; }
-            @Override public String resourcesDir() { return resourcesDir; }
-            @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return SystemStage.class; }
-        };
-    }
 
     private static class MockFlamingockBuilder {
-        private SystemStage systemStage = null;
+        private String systemStageLocation = "";
         private Stage[] stages = new Stage[0];
         private String pipelineFile = "";
 
-        public MockFlamingockBuilder withSystemStage(String sourcesPackage, String resourcesDir) {
-            this.systemStage = new SystemStage() {
-                @Override public String sourcesPackage() { return sourcesPackage; }
-                @Override public String resourcesDir() { return resourcesDir; }
-                @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return SystemStage.class; }
-            };
+        public MockFlamingockBuilder withSystemStage(String systemStageLocation) {
+            this.systemStageLocation = systemStageLocation;
             return this;
         }
 
@@ -284,12 +269,8 @@ public class PipelinePreProcessorTest {
 
         public Flamingock build() {
             return new Flamingock() {
-                @Override public SystemStage systemStage() { 
-                    return systemStage != null ? systemStage : new SystemStage() {
-                        @Override public String sourcesPackage() { return ""; }
-                        @Override public String resourcesDir() { return ""; }
-                        @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return SystemStage.class; }
-                    };
+                @Override public String systemStage() { 
+                    return systemStageLocation;
                 }
                 @Override public Stage[] stages() { return stages; }
                 @Override public String pipelineFile() { return pipelineFile; }

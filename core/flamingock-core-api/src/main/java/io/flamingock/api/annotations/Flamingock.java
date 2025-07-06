@@ -45,10 +45,10 @@ import java.lang.annotation.Target;
  * Use {@link #stages()} and {@link #systemStage()} to define the pipeline inline:
  * <pre>
  * &#64;Flamingock(
- *     systemStage = &#64;SystemStage(sourcesPackage = "com.example.system"),
+ *     systemStage = "com.example.system",
  *     stages = {
- *         &#64;Stage(name = "init", type = StageType.BEFORE, sourcesPackage = "com.example.init"),
- *         &#64;Stage(name = "migration", type = StageType.DEFAULT, sourcesPackage = "com.example.migrations")
+ *         &#64;Stage(type = StageType.LEGACY, location = "com.example.init"),
+ *         &#64;Stage(location = "com.example.migrations")
  *     }
  * )
  * public class MyMigrationConfig {
@@ -68,7 +68,7 @@ import java.lang.annotation.Target;
  * <pre>
  * &#64;Flamingock(
  *     setup = SetupType.DEFAULT,  // Default value - automatic framework integration
- *     stages = { &#64;Stage(name = "migration", sourcesPackage = "com.example.migrations") }
+ *     stages = { &#64;Stage(location = "com.example.migrations") }
  * )
  * &#64;Configuration
  * public class FlamingockConfig {
@@ -84,7 +84,7 @@ import java.lang.annotation.Target;
  * <pre>
  * &#64;Flamingock(
  *     setup = SetupType.BUILDER,  // Manual configuration required
- *     stages = { &#64;Stage(name = "migration", sourcesPackage = "com.example.migrations") }
+ *     stages = { &#64;Stage(location = "com.example.migrations") }
  * )
  * &#64;Configuration
  * public class FlamingockConfig {
@@ -107,7 +107,6 @@ import java.lang.annotation.Target;
  * 
  * @since 1.0
  * @see Stage
- * @see SystemStage
  * @see SetupType
  */
 @Target(ElementType.TYPE)
@@ -115,21 +114,30 @@ import java.lang.annotation.Target;
 public @interface Flamingock {
     
     /**
-     * Configures the system stage for system-level changes that run before all other stages.
+     * Configures the system stage location for system-level changes that run before all other stages.
      * The system stage is dedicated to infrastructure and foundational changes.
      * 
      * <p>Can only be used with annotation-based configuration ({@link #stages()}), 
      * not with file-based configuration ({@link #pipelineFile()}).
      * 
+     * <p>The location format determines how it's interpreted:
+     * <ul>
+     *   <li><b>Package name:</b> Contains dots and no slashes (e.g., "com.example.system") - 
+     *       Used to scan for annotated change units in the specified package</li>
+     *   <li><b>Resource directory (relative):</b> Starts with "resources/" (e.g., "resources/system/migrations") - 
+     *       Used to scan for template-based change units in the specified resources directory</li>
+     *   <li><b>Resource directory (absolute):</b> Starts with "/" (e.g., "/absolute/path/to/system/templates") - 
+     *       Used to scan for template-based change units in the specified absolute path</li>
+     * </ul>
+     * 
      * <p>Example:
      * <pre>
-     * systemStage = &#64;SystemStage(sourcesPackage = "com.example.system.migrations")
+     * systemStage = "com.example.system"
      * </pre>
      * 
-     * @return the system stage configuration
-     * @see SystemStage
+     * @return the system stage location, or empty string if no system stage
      */
-    SystemStage systemStage() default @SystemStage;
+    String systemStage() default "";
     
     /**
      * Defines the pipeline stages for annotation-based configuration.
@@ -141,9 +149,9 @@ public @interface Flamingock {
      * <p>Example:
      * <pre>
      * stages = {
-     *     &#64;Stage(name = "before", type = StageType.BEFORE, sourcesPackage = "com.example.setup"),
-     *     &#64;Stage(name = "main", type = StageType.DEFAULT, sourcesPackage = "com.example.changes"),
-     *     &#64;Stage(name = "after", type = StageType.AFTER, sourcesPackage = "com.example.cleanup")
+     *     &#64;Stage(type = StageType.BEFORE, location = "com.example.setup"),
+     *     &#64;Stage(type = StageType.DEFAULT, location = "com.example.changes"),
+     *     &#64;Stage(type = StageType.AFTER, location = "com.example.cleanup")
      * }
      * </pre>
      * 

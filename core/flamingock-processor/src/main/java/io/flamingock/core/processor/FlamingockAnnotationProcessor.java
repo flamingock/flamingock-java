@@ -1,17 +1,16 @@
 package io.flamingock.core.processor;
 
+import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Flamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.api.annotations.SystemStage;
-import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.preview.PreviewPipeline;
-import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.LoggerPreProcessor;
 import io.flamingock.core.processor.util.Serializer;
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
-import io.flamingock.api.StageType;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
@@ -38,8 +37,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Annotation processor for Flamingock that generates metadata files containing information 
- * about templated and annotated changes. The processor requires a mandatory {@link Flamingock} 
+ * Annotation processor for Flamingock that generates metadata files containing information
+ * about templated and annotated changes. The processor requires a mandatory {@link Flamingock}
  * annotation to configure the pipeline.
  * <p>
  * <h2>@Flamingock Annotation Configuration</h2>
@@ -48,27 +47,27 @@ import java.util.Set;
  *     <li><b>File-based configuration:</b> Uses {@code pipelineFile} to reference a YAML pipeline definition</li>
  *     <li><b>Annotation-based configuration:</b> Uses {@code stages} array to define the pipeline inline</li>
  * </ul>
- * 
+ *
  * <h3>Pipeline File Resolution</h3>
  * When using {@code pipelineFile}, the processor provides resource resolution
  * supporting multiple file locations:
- * 
+ *
  * <h4>Examples:</h4>
  * <pre>{@code
  * // Absolute file path - highest priority
  * @Flamingock(pipelineFile = "/path/to/external/pipeline.yaml")
  * // Uses direct file system path
- * 
+ *
  * // Relative file path - second priority (relative to working directory)
  * @Flamingock(pipelineFile = "config/flamingock-pipeline.yaml")
  * // Resolves relative to current working directory, NOT as classpath resource
- * 
+ *
  * // Classpath resource - fallback if file doesn't exist relative to working directory
  * @Flamingock(pipelineFile = "flamingock/pipeline.yaml")
  * // If "flamingock/pipeline.yaml" doesn't exist in working directory,
  * // then tries: src/main/resources/flamingock/pipeline.yaml
  * // then tries: src/test/resources/flamingock/pipeline.yaml
- * 
+ *
  * // Resource with explicit "resources/" prefix (automatically stripped)
  * @Flamingock(pipelineFile = "resources/flamingock/pipeline.yaml")
  * // First tries: "resources/flamingock/pipeline.yaml" relative to working directory
@@ -92,8 +91,8 @@ import java.util.Set;
  * <h3>Annotation-based Configuration</h3>
  * <pre>{@code
  * @Flamingock(stages = {
- *     @Stage(name = "init", type = StageType.BEFORE, sourcesPackage = "com.example.init"),
- *     @Stage(name = "migration", type = StageType.DEFAULT, sourcesPackage = "com.example.migrations")
+ *     @Stage(type = StageType.BEFORE, location = "com.example.init"),
+ *     @Stage(location = "com.example.migrations")
  * })
  * }</pre>
  *
@@ -141,7 +140,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     private List<String> sourceRoots = null;
     private LoggerPreProcessor logger;
 
-    public FlamingockAnnotationProcessor(){}
+    public FlamingockAnnotationProcessor() {
+    }
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -198,29 +198,29 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         if (codedChangeUnitsByPackage == null) {
             codedChangeUnitsByPackage = new HashMap<>();
         }
-        
+
         if (pipelineAnnotation == null) {
             throw new RuntimeException("@Flamingock annotation is mandatory. Please annotate a class with @Flamingock to configure the pipeline.");
         }
-        
+
         boolean hasFileInAnnotation = !pipelineAnnotation.pipelineFile().isEmpty();
         boolean hasStagesInAnnotation = pipelineAnnotation.stages().length > 0;
-        boolean hasSystemStage = !pipelineAnnotation.systemStage().sourcesPackage().isEmpty();
-        
+        boolean hasSystemStage = !pipelineAnnotation.systemStage().isEmpty();
+
         // Validate mutually exclusive modes
         if (hasFileInAnnotation && hasStagesInAnnotation) {
             throw new RuntimeException("@Flamingock annotation cannot have both pipelineFile and stages configured. Choose one: either specify pipelineFile OR stages.");
         }
-        
+
         if (!hasFileInAnnotation && !hasStagesInAnnotation) {
             throw new RuntimeException("@Flamingock annotation must specify either pipelineFile OR stages configuration.");
         }
-        
+
         // SystemStage only allowed with stages, not with pipelineFile
         if (hasSystemStage && !hasStagesInAnnotation) {
             throw new RuntimeException("SystemStage can only be configured when stages are provided, not with pipelineFile.");
         }
-        
+
         if (hasFileInAnnotation) {
             logger.info("Reading flamingock pipeline from file specified in @Flamingock annotation: '" + pipelineAnnotation.pipelineFile() + "'");
             File specifiedPipelineFile = resolvePipelineFile(pipelineAnnotation.pipelineFile());
@@ -230,53 +230,81 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             return buildPipelineFromAnnotation(pipelineAnnotation, codedChangeUnitsByPackage);
         }
     }
-    
+
     private PreviewPipeline buildPipelineFromAnnotation(Flamingock pipelineAnnotation, Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage) {
         List<PreviewStage> stages = new ArrayList<>();
-        
+
         for (Stage stageAnnotation : pipelineAnnotation.stages()) {
             PreviewStage stage = mapAnnotationToStage(codedChangeUnitsByPackage, stageAnnotation);
             stages.add(stage);
         }
-        
+
         Optional<SystemPreviewStage> systemStage = getSystemStageFromAnnotation(codedChangeUnitsByPackage, pipelineAnnotation.systemStage());
-        
+
         return systemStage
                 .map(previewStage -> new PreviewPipeline(previewStage, stages))
                 .orElseGet(() -> new PreviewPipeline(stages));
     }
-    
+
     private PreviewStage mapAnnotationToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Stage stageAnnotation) {
-        String sourcesPackage = stageAnnotation.sourcesPackage().isEmpty() ? null : stageAnnotation.sourcesPackage();
-        Collection<AbstractPreviewTask> changeUnitClasses = sourcesPackage != null ? codedChangeUnitsByPackage.get(sourcesPackage) : null;
-        
+        String location = stageAnnotation.location();
+
+        if (location == null || location.trim().isEmpty()) {
+            throw new RuntimeException("@Stage annotation requires a location. Please specify the location field.");
+        }
+
+        String sourcesPackage = null;
+        String resourcesDir = null;
+        Collection<AbstractPreviewTask> changeUnitClasses = null;
+
+        if (isPackageName(location)) {
+            sourcesPackage = location;
+            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        } else {
+            resourcesDir = processResourceLocation(location);
+        }
+
+        // Derive name from location if not provided
+        String name = stageAnnotation.name();
+        if (name.isEmpty()) {
+            name = deriveNameFromLocation(location);
+        }
+
         return PreviewStage.defaultBuilder(stageAnnotation.type())
-                .setName(stageAnnotation.name())
+                .setName(name)
                 .setDescription(stageAnnotation.description().isEmpty() ? null : stageAnnotation.description())
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
-                .setResourcesDir(stageAnnotation.resourcesDir().isEmpty() ? null : stageAnnotation.resourcesDir())
+                .setResourcesDir(resourcesDir)
                 .setChanges(changeUnitClasses)
                 .build();
     }
-    
-    private Optional<SystemPreviewStage> getSystemStageFromAnnotation(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, SystemStage systemStageAnnotation) {
-        String sourcesPackage = systemStageAnnotation.sourcesPackage();
-        
-        // If no sourcesPackage specified for systemStage, don't create it
-        if (sourcesPackage == null || sourcesPackage.trim().isEmpty()) {
+
+    private Optional<SystemPreviewStage> getSystemStageFromAnnotation(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, String systemStageLocation) {
+        // If no location specified for systemStage, don't create it
+        if (systemStageLocation == null || systemStageLocation.trim().isEmpty()) {
             return Optional.empty();
         }
-        
-        Collection<AbstractPreviewTask> changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
-        
+
+        String sourcesPackage = null;
+        String resourcesDir = null;
+        Collection<AbstractPreviewTask> changeUnitClasses = null;
+
+        if (isPackageName(systemStageLocation)) {
+            sourcesPackage = systemStageLocation;
+            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        } else {
+            resourcesDir = processResourceLocation(systemStageLocation);
+        }
+
         SystemPreviewStage stage = PreviewStage.systemBuilder()
-                .setName("flamingock-system-stage")
+                .setName("SystemStage")
                 .setDescription("Dedicated stage for system-level changes")
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
+                .setResourcesDir(resourcesDir)
                 .setChanges(changeUnitClasses)
                 .build();
         return Optional.of(stage);
@@ -292,45 +320,45 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
      */
     private File resolvePipelineFile(String pipelineFilePath) {
         List<File> searchedFiles = new ArrayList<>();
-        
+
         // Try direct file path first (absolute or relative to current working directory)
         File result = tryResolveFile(new File(pipelineFilePath), "direct file path", searchedFiles);
         if (result != null) return result;
-        
+
         // Try as classpath resource in main resources
         result = tryResolveFile(new File(resourcesRoot + "/" + pipelineFilePath), "main resources", searchedFiles);
         if (result != null) return result;
-        
+
         // Try as classpath resource in test resources (for annotation processing during tests)
         String testResourcesRoot = resourcesRoot.replace("src/main/resources", "src/test/resources");
         result = tryResolveFile(new File(testResourcesRoot + "/" + pipelineFilePath), "test resources", searchedFiles);
         if (result != null) return result;
-        
+
         // Try with "resources/" prefix stripped (handle cases like "resources/flamingock/pipeline.yaml")
         if (pipelineFilePath.startsWith("resources/")) {
             String pathWithoutResourcesPrefix = pipelineFilePath.substring("resources/".length());
-            
+
             // Try in main resources without "resources/" prefix
             result = tryResolveFile(new File(resourcesRoot + "/" + pathWithoutResourcesPrefix), "main resources (stripped resources/ prefix)", searchedFiles);
             if (result != null) return result;
-            
+
             // Try in test resources without "resources/" prefix
             result = tryResolveFile(new File(testResourcesRoot + "/" + pathWithoutResourcesPrefix), "test resources (stripped resources/ prefix)", searchedFiles);
             if (result != null) return result;
         }
-        
+
         // If all resolution attempts failed, provide helpful error message
         StringBuilder searchedLocations = new StringBuilder("Searched locations:");
         for (int i = 0; i < searchedFiles.size(); i++) {
             searchedLocations.append(String.format("\n  %d. %s", i + 1, searchedFiles.get(i).getAbsolutePath()));
         }
-        
+
         throw new RuntimeException(
-            "Pipeline file specified in @Flamingock annotation does not exist: " + pipelineFilePath + "\n" +
-            searchedLocations
+                "Pipeline file specified in @Flamingock annotation does not exist: " + pipelineFilePath + "\n" +
+                        searchedLocations
         );
     }
-    
+
 
     private File tryResolveFile(File file, String description, List<File> searchedFiles) {
         searchedFiles.add(file);
@@ -360,7 +388,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 stages.add(stage);
             }
 
-            Optional<SystemPreviewStage> systemStage = getSystemStage(codedChangeUnitsByPackage, (Map<String, String> )pipelineMap.get("systemStage"));
+            Optional<SystemPreviewStage> systemStage = getSystemStage(codedChangeUnitsByPackage, (String) pipelineMap.get("systemStage"));
 
             return systemStage
                     .map(previewStage -> new PreviewPipeline(previewStage, stages))
@@ -372,19 +400,29 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     }
 
-    private Optional<SystemPreviewStage> getSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> systemStage) {
-        if(systemStage == null) {
+    private Optional<SystemPreviewStage> getSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, String systemStageLocation) {
+        if (systemStageLocation == null || systemStageLocation.trim().isEmpty()) {
             return Optional.empty();
         }
-        String sourcesPackage = systemStage.get("sourcesPackage");
-        Collection<AbstractPreviewTask> changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+
+        String sourcesPackage = null;
+        String resourcesDir = null;
+        Collection<AbstractPreviewTask> changeUnitClasses = null;
+
+        if (isPackageName(systemStageLocation)) {
+            sourcesPackage = systemStageLocation;
+            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        } else {
+            resourcesDir = processResourceLocation(systemStageLocation);
+        }
+
         SystemPreviewStage stage = PreviewStage.systemBuilder()
-                .setName("flamingock-system-stage")
+                .setName("SystemStage")
                 .setDescription("Dedicated stage for system-level changes")
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
-                .setResourcesDir(systemStage.get("resourcesDir"))
+                .setResourcesDir(resourcesDir)
                 .setChanges(changeUnitClasses)
                 .build();
         return Optional.of(stage);
@@ -392,15 +430,44 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private PreviewStage mapToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> stageMap) {
 
-        String sourcesPackage = stageMap.get("sourcesPackage");
-        Collection<AbstractPreviewTask> changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        // Try new location field first, fall back to legacy fields for compatibility
+        String location = stageMap.get("location");
+        if (location == null) {
+            // Legacy support - check old fields
+            String sourcesPackage = stageMap.get("sourcesPackage");
+            String resourcesDir = stageMap.get("resourcesDir");
+            location = sourcesPackage != null ? sourcesPackage : resourcesDir;
+        }
+
+        // Validate mandatory location field
+        if (location == null || location.trim().isEmpty()) {
+            throw new RuntimeException("Stage in YAML pipeline requires a 'location' field. Please specify the location where change units are found.");
+        }
+
+        String sourcesPackage = null;
+        String resourcesDir = null;
+        Collection<AbstractPreviewTask> changeUnitClasses = null;
+
+        if (isPackageName(location)) {
+            sourcesPackage = location;
+            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        } else {
+            resourcesDir = processResourceLocation(location);
+        }
+
+        // Derive name from location if not provided
+        String name = stageMap.get("name");
+        if (name == null || name.trim().isEmpty()) {
+            name = deriveNameFromLocation(location);
+        }
+
         return PreviewStage.defaultBuilder(StageType.from(stageMap.get("type")))
-                .setName(stageMap.get("name"))
+                .setName(name)
                 .setDescription(stageMap.get("description"))
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
-                .setResourcesDir(stageMap.get("resourcesDir"))
+                .setResourcesDir(resourcesDir)
                 .setChanges(changeUnitClasses)
                 .build();
     }
@@ -430,6 +497,72 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return resourcesDir;
     }
 
+    /**
+     * Determines if the given location string represents a package name.
+     * A package name contains dots and no slashes (e.g., "com.example.migrations").
+     *
+     * @param location the location string to check
+     * @return true if the location is a package name, false otherwise
+     */
+    private boolean isPackageName(String location) {
+        return location.contains(".") && !location.contains("/");
+    }
 
+
+    /**
+     * Derives a stage name from the location string by extracting the last segment.
+     * Examples:
+     * - "com.example.migrations" → "migrations"
+     * - "resources/db/migrations" → "migrations"
+     * - "/absolute/path/to/migrations" → "migrations"
+     *
+     * @param location the location string
+     * @return the derived name
+     */
+    private String deriveNameFromLocation(String location) {
+        if (location == null || location.isEmpty()) {
+            return "stage";
+        }
+
+        // Remove "resources/" prefix if present
+        String cleanLocation = location;
+        if (cleanLocation.startsWith("resources/")) {
+            cleanLocation = cleanLocation.substring("resources/".length());
+        }
+
+        // Split by either dots (for packages) or slashes (for paths)
+        String[] segments;
+        if (cleanLocation.contains(".") && !cleanLocation.contains("/")) {
+            // Package name - split by dots
+            segments = cleanLocation.split("\\.");
+        } else {
+            // Path - split by slashes
+            segments = cleanLocation.split("/");
+        }
+
+        // Get the last non-empty segment
+        for (int i = segments.length - 1; i >= 0; i--) {
+            String segment = segments[i].trim();
+            if (!segment.isEmpty()) {
+                return segment;
+            }
+        }
+
+        return "stage";
+    }
+
+    /**
+     * Processes a resource location to handle potential "resources/" prefix.
+     * Strips "resources/" prefix if present to avoid double-prefixing when
+     * concatenated with resourcesRoot ("src/main/resources").
+     *
+     * @param location the location string from user input
+     * @return processed location for use as resourcesDir
+     */
+    private String processResourceLocation(String location) {
+        return location != null && location.startsWith("resources/")
+                ? location.substring("resources/".length())
+                : location;
+    }
 
 }

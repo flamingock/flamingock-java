@@ -19,14 +19,39 @@ package io.flamingock.api.annotations;
 import io.flamingock.api.StageType;
 
 public @interface Stage {
-    
-    String name();
+    /**
+     * Specifies the location where change units are found. This field is mandatory.
+     *
+     * <p>The location format determines how it's interpreted:
+     * <ul>
+     *   <li><b>Package name:</b> Contains dots and no slashes (e.g., "com.example.migrations") -
+     *       Used to scan for annotated change units in the specified package</li>
+     *   <li><b>Resource directory (relative):</b> Starts with "resources/" (e.g., "resources/db/migrations") -
+     *       Used to scan for template-based change units in the specified resources directory</li>
+     *   <li><b>Resource directory (absolute):</b> Starts with "/" (e.g., "/absolute/path/to/templates") -
+     *       Used to scan for template-based change units in the specified absolute path</li>
+     * </ul>
+     *
+     * @return the location where change units are found (mandatory)
+     */
+    String location();
+
+    /**
+     * The name of the stage. If not specified, the name will be automatically derived from the location.
+     * 
+     * <p>Name derivation rules:
+     * <ul>
+     *   <li>Package: "com.example.migrations" → "migrations" (last segment)</li>
+     *   <li>Resource path: "resources/db/migrations" → "migrations" (last segment)</li>
+     *   <li>Absolute path: "/path/to/migrations" → "migrations" (last segment)</li>
+     * </ul>
+     * 
+     * @return the stage name, or empty string for auto-derived name
+     */
+    String name() default "";
     
     String description() default "";
     
     StageType type() default StageType.DEFAULT;
-    
-    String sourcesPackage() default "";
-    
-    String resourcesDir() default "";
+
 }

@@ -24,7 +24,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.Flamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.api.annotations.SystemStage;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.Runner;
@@ -47,10 +46,10 @@ import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STOR
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Flamingock(
-    systemStage = @SystemStage(sourcesPackage = "io.flamingock.importer.mongodb.flamingock.system"),
+    systemStage = "io.flamingock.importer.mongodb.flamingock.system",
     stages = {
-        @Stage(name = "Legacy stage", type = LEGACY, sourcesPackage = "io.flamingock.importer.mongodb.flamingock.legacy"),
-        @Stage(name = "MongoDB Changes", sourcesPackage = "io.flamingock.importer.mongodb.flamingock.mongodb")
+        @Stage(location = "io.flamingock.importer.mongodb.flamingock.legacy", type = LEGACY),
+        @Stage(location = "io.flamingock.importer.mongodb.flamingock.mongodb")
     }
 )
 @Testcontainers

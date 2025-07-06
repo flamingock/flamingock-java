@@ -104,7 +104,7 @@ public class CloudEngineTransactionTest {
                 .setHost("http://localhost:" + runnerServerPort)
                 .setService(serviceName)
                 .setEnvironment(environmentName)
-        //.addStage(new Stage("stage-1")
+        //.addStage(new Stage("changes")
 //                        .setCodePackages(Collections.singletonList("io.flamingock.core.cloud.changes")))
         ;
     }
@@ -123,7 +123,7 @@ public class CloudEngineTransactionTest {
         //GIVEN
         String executionId = "execution-1";
         mockRunnerServer
-                .addSimpleStageExecutionPlan(executionId, "stage-1", auditEntries)
+                .addSimpleStageExecutionPlan(executionId, "changes", auditEntries)
                 .addExecutionWithAllTasksRequestResponse(executionId)
                 .addExecutionContinueRequestResponse();
 
