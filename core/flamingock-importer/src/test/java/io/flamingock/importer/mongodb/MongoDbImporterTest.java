@@ -22,7 +22,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.Flamingock;
+import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.community.Constants;
@@ -45,7 +45,7 @@ import static io.flamingock.api.StageType.LEGACY;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Flamingock(
+@EnableFlamingock(
     systemStage = "io.flamingock.importer.mongodb.flamingock.system",
     stages = {
         @Stage(location = "io.flamingock.importer.mongodb.flamingock.legacy", type = LEGACY),

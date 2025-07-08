@@ -2,7 +2,7 @@ package io.flamingock.core.processor;
 
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Flamingock;
+import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.LoggerPreProcessor;
@@ -38,7 +38,7 @@ import java.util.Set;
 
 /**
  * Annotation processor for Flamingock that generates metadata files containing information
- * about templated and annotated changes. The processor requires a mandatory {@link Flamingock}
+ * about templated and annotated changes. The processor requires a mandatory {@link EnableFlamingock}
  * annotation to configure the pipeline.
  * <p>
  * <h2>@Flamingock Annotation Configuration</h2>
@@ -55,21 +55,21 @@ import java.util.Set;
  * <h4>Examples:</h4>
  * <pre>{@code
  * // Absolute file path - highest priority
- * @Flamingock(pipelineFile = "/path/to/external/pipeline.yaml")
+ * @EnableFlamingock(pipelineFile = "/path/to/external/pipeline.yaml")
  * // Uses direct file system path
  *
  * // Relative file path - second priority (relative to working directory)
- * @Flamingock(pipelineFile = "config/flamingock-pipeline.yaml")
+ * @EnableFlamingock(pipelineFile = "config/flamingock-pipeline.yaml")
  * // Resolves relative to current working directory, NOT as classpath resource
  *
  * // Classpath resource - fallback if file doesn't exist relative to working directory
- * @Flamingock(pipelineFile = "flamingock/pipeline.yaml")
+ * @EnableFlamingock(pipelineFile = "flamingock/pipeline.yaml")
  * // If "flamingock/pipeline.yaml" doesn't exist in working directory,
  * // then tries: src/main/resources/flamingock/pipeline.yaml
  * // then tries: src/test/resources/flamingock/pipeline.yaml
  *
  * // Resource with explicit "resources/" prefix (automatically stripped)
- * @Flamingock(pipelineFile = "resources/flamingock/pipeline.yaml")
+ * @EnableFlamingock(pipelineFile = "resources/flamingock/pipeline.yaml")
  * // First tries: "resources/flamingock/pipeline.yaml" relative to working directory
  * // If not found, strips "resources/" prefix and tries classpath resolution:
  * // src/main/resources/flamingock/pipeline.yaml or src/test/resources/flamingock/pipeline.yaml
@@ -90,7 +90,7 @@ import java.util.Set;
  *
  * <h3>Annotation-based Configuration</h3>
  * <pre>{@code
- * @Flamingock(stages = {
+ * @EnableFlamingock(stages = {
  *     @Stage(type = StageType.BEFORE, location = "com.example.init"),
  *     @Stage(location = "com.example.migrations")
  * })
@@ -98,20 +98,20 @@ import java.util.Set;
  *
  * <h2>Processing Phases</h2>
  * <ul>
- *     <li><b>Initialization:</b> Sets up resource paths and validates @Flamingock annotation</li>
+ *     <li><b>Initialization:</b> Sets up resource paths and validates @EnableFlamingock annotation</li>
  *     <li><b>Processing:</b> Generates {@code META-INF/flamingock/metadata-full.json} with complete pipeline metadata</li>
  * </ul>
  *
  * <h2>Validation Rules</h2>
  * <ul>
- *     <li>@Flamingock annotation is mandatory</li>
+ *     <li>@EnableFlamingock annotation is mandatory</li>
  *     <li>Must specify either {@code pipelineFile} OR {@code stages} (mutually exclusive)</li>
  *     <li>SystemStage can only be used with annotation-based configuration (not with pipelineFile)</li>
  * </ul>
  *
  * <h2>Supported Annotations</h2>
  * <ul>
- *     <li>{@link Flamingock} - Mandatory pipeline configuration</li>
+ *     <li>{@link EnableFlamingock} - Mandatory pipeline configuration</li>
  *     <li>{@link ChangeUnit} - Represents a change unit defined within the code</li>
  *     <li>io.mongock.api.annotations.ChangeUnit - Legacy change unit support</li>
  * </ul>
@@ -147,12 +147,12 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         logger = new LoggerPreProcessor(processingEnv);
-        logger.info("Starting Flamingock annotation processor initialization.");
+        logger.info("Starting EnableFlamingock annotation processor initialization.");
         resourcesRoot = getResourcesRoot();
         sourceRoots = getSourcesPathList();
 
 
-        logger.info("Initialization completed. Pipeline will be processed with @Flamingock annotation.");
+        logger.info("Initialization completed. Pipeline will be processed with @EnableFlamingock annotation.");
     }
 
     @Override
@@ -163,7 +163,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<>(Arrays.asList(
-                Flamingock.class.getName(),
+                EnableFlamingock.class.getName(),
                 ChangeUnit.class.getName()
         ));
     }
@@ -180,7 +180,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger);
-        Flamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation();
+        EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation();
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
                 annotationFinder.getCodedChangeUnitsMapByPackage(),
                 flamingockAnnotation
@@ -194,13 +194,13 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
-    private PreviewPipeline getPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Flamingock pipelineAnnotation) {
+    private PreviewPipeline getPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, EnableFlamingock pipelineAnnotation) {
         if (codedChangeUnitsByPackage == null) {
             codedChangeUnitsByPackage = new HashMap<>();
         }
 
         if (pipelineAnnotation == null) {
-            throw new RuntimeException("@Flamingock annotation is mandatory. Please annotate a class with @Flamingock to configure the pipeline.");
+            throw new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline.");
         }
 
         boolean hasFileInAnnotation = !pipelineAnnotation.pipelineFile().isEmpty();
@@ -209,11 +209,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         // Validate mutually exclusive modes
         if (hasFileInAnnotation && hasStagesInAnnotation) {
-            throw new RuntimeException("@Flamingock annotation cannot have both pipelineFile and stages configured. Choose one: either specify pipelineFile OR stages.");
+            throw new RuntimeException("@EnableFlamingock annotation cannot have both pipelineFile and stages configured. Choose one: either specify pipelineFile OR stages.");
         }
 
         if (!hasFileInAnnotation && !hasStagesInAnnotation) {
-            throw new RuntimeException("@Flamingock annotation must specify either pipelineFile OR stages configuration.");
+            throw new RuntimeException("@EnableFlamingock annotation must specify either pipelineFile OR stages configuration.");
         }
 
         // SystemStage only allowed with stages, not with pipelineFile
@@ -222,16 +222,16 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         if (hasFileInAnnotation) {
-            logger.info("Reading flamingock pipeline from file specified in @Flamingock annotation: '" + pipelineAnnotation.pipelineFile() + "'");
+            logger.info("Reading flamingock pipeline from file specified in @EnableFlamingock annotation: '" + pipelineAnnotation.pipelineFile() + "'");
             File specifiedPipelineFile = resolvePipelineFile(pipelineAnnotation.pipelineFile());
             return buildPipelineFromSpecifiedFile(specifiedPipelineFile, codedChangeUnitsByPackage);
         } else {
-            logger.info("Reading flamingock pipeline from @Flamingock annotation stages configuration");
+            logger.info("Reading flamingock pipeline from @EnableFlamingock annotation stages configuration");
             return buildPipelineFromAnnotation(pipelineAnnotation, codedChangeUnitsByPackage);
         }
     }
 
-    private PreviewPipeline buildPipelineFromAnnotation(Flamingock pipelineAnnotation, Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage) {
+    private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation, Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage) {
         List<PreviewStage> stages = new ArrayList<>();
 
         for (Stage stageAnnotation : pipelineAnnotation.stages()) {
@@ -311,10 +311,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     }
 
     /**
-     * Resolves a pipeline file path from the @Flamingock annotation, supporting both absolute file paths
+     * Resolves a pipeline file path from the @EnableFlamingock annotation, supporting both absolute file paths
      * and classpath resources. This method provides resource resolution for the Flamingock library.
      *
-     * @param pipelineFilePath the file path specified in the @Flamingock annotation
+     * @param pipelineFilePath the file path specified in the @EnableFlamingock annotation
      * @return a File object representing the resolved pipeline file
      * @throws RuntimeException if the file cannot be found in any of the supported locations
      */
@@ -354,7 +354,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         throw new RuntimeException(
-                "Pipeline file specified in @Flamingock annotation does not exist: " + pipelineFilePath + "\n" +
+                "Pipeline file specified in @EnableFlamingock annotation does not exist: " + pipelineFilePath + "\n" +
                         searchedLocations
         );
     }

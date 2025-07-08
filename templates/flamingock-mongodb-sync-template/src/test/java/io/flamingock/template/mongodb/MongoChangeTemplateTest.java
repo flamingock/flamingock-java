@@ -21,7 +21,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.Flamingock;
+import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.internal.core.community.Constants;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,7 +39,7 @@ import java.util.List;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Flamingock(pipelineFile = "flamingock/pipeline.yaml")
+@EnableFlamingock(pipelineFile = "flamingock/pipeline.yaml")
 @Testcontainers
 class MongoChangeTemplateTest {
 

@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
  * <h3>1. File-based Configuration</h3>
  * Use {@link #pipelineFile()} to reference a YAML pipeline definition:
  * <pre>
- * &#64;Flamingock(pipelineFile = "config/pipeline.yaml")
+ * &#64;EnableFlamingock(pipelineFile = "config/pipeline.yaml")
  * public class MyMigrationConfig {
  *     // Configuration class
  * }
@@ -44,7 +44,7 @@ import java.lang.annotation.Target;
  * <h3>2. Annotation-based Configuration</h3>
  * Use {@link #stages()} and {@link #systemStage()} to define the pipeline inline:
  * <pre>
- * &#64;Flamingock(
+ * &#64;EnableFlamingock(
  *     systemStage = "com.example.system",
  *     stages = {
  *         &#64;Stage(type = StageType.LEGACY, location = "com.example.init"),
@@ -66,7 +66,7 @@ import java.lang.annotation.Target;
  * In standalone applications, behaves the same as BUILDER setup.
  * 
  * <pre>
- * &#64;Flamingock(
+ * &#64;EnableFlamingock(
  *     setup = SetupType.DEFAULT,  // Default value - automatic framework integration
  *     stages = { &#64;Stage(location = "com.example.migrations") }
  * )
@@ -82,7 +82,7 @@ import java.lang.annotation.Target;
  * Useful when you need full control over the Flamingock setup process.
  * 
  * <pre>
- * &#64;Flamingock(
+ * &#64;EnableFlamingock(
  *     setup = SetupType.BUILDER,  // Manual configuration required
  *     stages = { &#64;Stage(location = "com.example.migrations") }
  * )
@@ -111,7 +111,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Flamingock {
+public @interface EnableFlamingock {
     
     /**
      * Configures the system stage location for system-level changes that run before all other stages.
@@ -202,7 +202,7 @@ public @interface Flamingock {
      * 
      * <p>Example with automatic setup (DEFAULT):
      * <pre>
-     * &#64;Flamingock(setup = SetupType.DEFAULT)  // or omit for default
+     * &#64;EnableFlamingock(setup = SetupType.DEFAULT)  // or omit for default
      * &#64;Configuration
      * public class Config {
      *     // Spring Boot auto-configures Flamingock
@@ -211,7 +211,7 @@ public @interface Flamingock {
      * 
      * <p>Example with manual setup (BUILDER):
      * <pre>
-     * &#64;Flamingock(setup = SetupType.BUILDER)
+     * &#64;EnableFlamingock(setup = SetupType.BUILDER)
      * &#64;Configuration  
      * public class Config {
      *     &#64;Bean

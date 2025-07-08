@@ -182,7 +182,7 @@ class ResolvePipelineFileTest {
         assertInstanceOf(RuntimeException.class, cause);
         
         String errorMessage = cause.getMessage();
-        assertTrue(errorMessage.contains("Pipeline file specified in @Flamingock annotation does not exist: " + fileName));
+        assertTrue(errorMessage.contains("Pipeline file specified in @EnableFlamingock annotation does not exist: " + fileName));
         assertTrue(errorMessage.contains("Searched locations:"));
         assertTrue(errorMessage.contains("1. "));
         assertTrue(errorMessage.contains("2. "));
@@ -204,7 +204,7 @@ class ResolvePipelineFileTest {
         assertInstanceOf(RuntimeException.class, cause);
         
         String errorMessage = cause.getMessage();
-        assertTrue(errorMessage.contains("Pipeline file specified in @Flamingock annotation does not exist: " + fileName));
+        assertTrue(errorMessage.contains("Pipeline file specified in @EnableFlamingock annotation does not exist: " + fileName));
         assertTrue(errorMessage.contains("Searched locations:"));
         assertTrue(errorMessage.contains("4. "));
         assertTrue(errorMessage.contains("5. "));
@@ -225,7 +225,7 @@ class ResolvePipelineFileTest {
         Throwable cause = exception.getCause();
         assertInstanceOf(RuntimeException.class, cause);
         
-        assertTrue(cause.getMessage().contains("Pipeline file specified in @Flamingock annotation does not exist: " + fileName));
+        assertTrue(cause.getMessage().contains("Pipeline file specified in @EnableFlamingock annotation does not exist: " + fileName));
     }
 
     @Test

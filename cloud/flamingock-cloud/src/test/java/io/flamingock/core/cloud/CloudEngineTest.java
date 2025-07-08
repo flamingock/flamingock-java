@@ -16,7 +16,7 @@
 
 package io.flamingock.core.cloud;
 
-import io.flamingock.api.annotations.Flamingock;
+import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.cloud.changes.CloudChange1;
 import io.flamingock.core.cloud.changes.CloudChange2;
@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verify;
 
 //TODO add listener to check final Summary
 //TODO verify calls to server
-@Flamingock(
+@EnableFlamingock(
         stages = {@Stage(location = "io.flamingock.core.cloud.changes")}
 )
 public class CloudEngineTest {

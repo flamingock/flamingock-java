@@ -1,7 +1,7 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Flamingock;
+import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
@@ -48,13 +48,13 @@ public final class AnnotationFinder {
         return mapByPackage;
     }
     
-    public Flamingock getPipelineAnnotation() {
-        logger.info("Searching for @Flamingock annotation");
-        return roundEnv.getElementsAnnotatedWith(Flamingock.class)
+    public EnableFlamingock getPipelineAnnotation() {
+        logger.info("Searching for @EnableFlamingock annotation");
+        return roundEnv.getElementsAnnotatedWith(EnableFlamingock.class)
                 .stream()
                 .filter(e -> e.getKind() == ElementKind.CLASS)
                 .map(e -> (TypeElement) e)
-                .map(e -> e.getAnnotation(Flamingock.class))
+                .map(e -> e.getAnnotation(EnableFlamingock.class))
                 .findFirst()
                 .orElse(null);
     }
