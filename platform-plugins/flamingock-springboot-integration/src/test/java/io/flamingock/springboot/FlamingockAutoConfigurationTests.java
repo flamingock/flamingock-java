@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FlamingockAutoConfigurationTests {
 
     private static final String PROFILE = "non-cli";   // adjust if Constants.NON_CLI_PROFILE differs
-    private static final String META_INF_PATH = "META-INF/flamingock/full-pipeline.json";
+    private static final String META_INF_PATH = "META-INF/flamingock/metadata.json";
 
     /**
      * Helper that builds a context runner with a custom class-loader
@@ -37,7 +37,7 @@ class FlamingockAutoConfigurationTests {
         if(json != null) {
             Path metaInfDir = dir.resolve("META-INF/flamingock");
             Files.createDirectories(metaInfDir);
-            Files.writeString(metaInfDir.resolve("full-pipeline.json"), json);
+            Files.writeString(metaInfDir.resolve("metadata.json"), json);
             // Build a new class loader that exposes the temp directory
             URL[] urls = { dir.toUri().toURL() };
             ClassLoader cl = new URLClassLoader(urls, getClass().getClassLoader());

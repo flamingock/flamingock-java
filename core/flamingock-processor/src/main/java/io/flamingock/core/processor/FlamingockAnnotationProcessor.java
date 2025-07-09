@@ -417,8 +417,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         SystemPreviewStage stage = PreviewStage.systemBuilder()
-                .setName("SystemStage")
-                .setDescription("Dedicated stage for system-level changes")
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
@@ -430,16 +428,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private PreviewStage mapToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> stageMap) {
 
-        // Try new location field first, fall back to legacy fields for compatibility
         String location = stageMap.get("location");
-        if (location == null) {
-            // Legacy support - check old fields
-            String sourcesPackage = stageMap.get("sourcesPackage");
-            String resourcesDir = stageMap.get("resourcesDir");
-            location = sourcesPackage != null ? sourcesPackage : resourcesDir;
-        }
 
-        // Validate mandatory location field
         if (location == null || location.trim().isEmpty()) {
             throw new RuntimeException("Stage in YAML pipeline requires a 'location' field. Please specify the location where change units are found.");
         }
@@ -455,7 +445,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             resourcesDir = processResourceLocation(location);
         }
 
-        // Derive name from location if not provided
         String name = stageMap.get("name");
         if (name == null || name.trim().isEmpty()) {
             name = deriveNameFromLocation(location);
@@ -520,9 +509,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
      * @return the derived name
      */
     private String deriveNameFromLocation(String location) {
-        if (location == null || location.isEmpty()) {
-            return "stage";
-        }
 
         // Remove "resources/" prefix if present
         String cleanLocation = location;
@@ -533,10 +519,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         // Split by either dots (for packages) or slashes (for paths)
         String[] segments;
         if (cleanLocation.contains(".") && !cleanLocation.contains("/")) {
-            // Package name - split by dots
             segments = cleanLocation.split("\\.");
         } else {
-            // Path - split by slashes
             segments = cleanLocation.split("/");
         }
 
@@ -548,7 +532,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             }
         }
 
-        return "stage";
+        return location;
     }
 
     /**

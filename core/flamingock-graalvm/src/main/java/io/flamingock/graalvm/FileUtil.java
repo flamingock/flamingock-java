@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.metadata.Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH;
-import static io.flamingock.internal.common.core.metadata.Constants.TEMPLATED_GRAALVM_REFLECT_CLASSES_PATH;
 
 public final class FileUtil {
 
@@ -21,11 +20,7 @@ public final class FileUtil {
         if (!classesToRegister.isEmpty()) {
             return classesToRegister;
         }
-        classesToRegister = fromFile(TEMPLATED_GRAALVM_REFLECT_CLASSES_PATH);
-        if (!classesToRegister.isEmpty()) {
-            return classesToRegister;
-        }
-        throw new RuntimeException("Flamingock: No valid GraalVM reflection file found");
+        throw new RuntimeException("Flamingock: No valid reflection file found");
     }
 
     private static List<String> fromFile(String filePath) {

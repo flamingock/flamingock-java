@@ -77,7 +77,10 @@ public class PreviewStage {
     }
 
     public static SystemPreviewStage.SystemBuilder systemBuilder() {
-        return new SystemPreviewStage.SystemBuilder();
+        SystemPreviewStage.SystemBuilder systemBuilder = new SystemPreviewStage.SystemBuilder();
+        systemBuilder.setName("system-stage");
+        systemBuilder.setDescription("Flamingock system stage");
+        return systemBuilder;
     }
 
     public String getName() {
