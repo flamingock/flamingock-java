@@ -6,7 +6,7 @@ dependencies {
     implementation(project(":utils:mongodb-util"))
 
     //General
-    compileOnly("org.mongodb:mongodb-driver-sync:[3.7.0,6.0.0)")
+    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
 
     //Test
     testImplementation("org.testcontainers:mongodb:1.18.3")

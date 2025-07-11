@@ -42,12 +42,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.flamingock.api.StageType.LEGACY;
+import static io.flamingock.api.StageType.SYSTEM;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @EnableFlamingock(
-    systemStage = "io.flamingock.importer.mongodb.flamingock.system",
     stages = {
+        @Stage(location = "io.flamingock.importer.mongodb.flamingock.system", type = SYSTEM),
         @Stage(location = "io.flamingock.importer.mongodb.flamingock.legacy", type = LEGACY),
         @Stage(location = "io.flamingock.importer.mongodb.flamingock.mongodb")
     }

@@ -19,6 +19,7 @@ package io.flamingock.springboot;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.SimpleEventPublisher;
+import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
 import io.flamingock.internal.core.event.model.IPipelineIgnoredEvent;
 import io.flamingock.internal.core.event.model.IPipelineStartedEvent;
@@ -28,6 +29,7 @@ import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
 import io.flamingock.internal.core.event.model.IStageStartedEvent;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.task.filter.TaskFilter;
+import io.flamingock.springboot.event.SpringPipelineCompletedEvent;
 import io.flamingock.springboot.event.SpringPipelineFailedEvent;
 import io.flamingock.springboot.event.SpringPipelineIgnoredEvent;
 import io.flamingock.springboot.event.SpringPipelineStartedEvent;
@@ -70,6 +72,7 @@ public class SpringbootPlugin implements Plugin {
                     new SimpleEventPublisher()
                             //pipeline
                             .addListener(IPipelineStartedEvent.class, e -> eventPublisher.publishEvent(new SpringPipelineStartedEvent(this, e)))
+                            .addListener(IPipelineCompletedEvent.class, e -> eventPublisher.publishEvent(new SpringPipelineCompletedEvent(this, e)))
                             .addListener(IPipelineIgnoredEvent.class, e -> eventPublisher.publishEvent(new SpringPipelineIgnoredEvent(this, e)))
                             .addListener(IPipelineFailedEvent.class, e -> eventPublisher.publishEvent(new SpringPipelineFailedEvent(this, e)))
                             //stage

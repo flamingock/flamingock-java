@@ -47,7 +47,7 @@ public class PipelinePreProcessorTest {
     @Test
     @DisplayName("Should create correct pipeline structure for annotation-based configuration")
     void shouldCreateCorrectPipelineStructureForAnnotationConfiguration() throws Exception {
-        // Given - create annotation with stages
+        // Given - create annotation with stages including system stage
         EnableFlamingock annotation = createMockAnnotationWithStages();
         Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
         
@@ -58,21 +58,22 @@ public class PipelinePreProcessorTest {
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
         assertNotNull(pipeline.getStages(), "Pipeline should have stages");
-        assertEquals(2, pipeline.getStages().size(), "Should have 2 stages");
+        assertEquals(2, pipeline.getStages().size(), "Should have 2 regular stages");
         
         // Verify system stage
         PreviewStage systemStage = pipeline.getSystemStage();
         assertNotNull(systemStage, "Should have system stage");
         assertEquals("com.example.system", systemStage.getSourcesPackage());
+        assertEquals("SystemStage", systemStage.getName());
         
         // Verify regular stages
         java.util.Collection<PreviewStage> stagesCollection = pipeline.getStages();
         PreviewStage[] stages = stagesCollection.toArray(new PreviewStage[0]);
-        assertEquals(2, stages.length, "Should have 2 stages");
+        assertEquals(2, stages.length, "Should have 2 regular stages");
         
         PreviewStage firstStage = stages[0];
         assertEquals("init", firstStage.getName()); // Should be derived from location
-        assertEquals(StageType.DEFAULT, firstStage.getType()); // Using DEFAULT as BEFORE doesn't exist
+        assertEquals(StageType.LEGACY, firstStage.getType());
         assertEquals("com.example.init", firstStage.getSourcesPackage());
         
         PreviewStage secondStage = stages[1];
@@ -99,8 +100,15 @@ public class PipelinePreProcessorTest {
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
         assertNotNull(pipeline.getStages(), "Pipeline should have stages");
-        assertEquals(1, pipeline.getStages().size(), "Should have 1 stage from file");
+        assertEquals(1, pipeline.getStages().size(), "Should have 1 regular stage from file");
         
+        // Verify system stage
+        PreviewStage systemStage = pipeline.getSystemStage();
+        assertNotNull(systemStage, "Should have system stage");
+        assertEquals("com.example.system", systemStage.getSourcesPackage());
+        assertEquals("SystemStage", systemStage.getName());
+        
+        // Verify regular stages
         PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
         PreviewStage stage = stages[0];
         assertEquals("changes", stage.getName()); // Should be auto-derived from location
@@ -148,7 +156,7 @@ public class PipelinePreProcessorTest {
         // Then - verify object structure (testing the actual objects, not JSON)
         assertNotNull(pipeline, "Pipeline should be created");
         assertNotNull(pipeline.getStages(), "Pipeline should have stages");
-        assertEquals(2, pipeline.getStages().size(), "Pipeline should have 2 stages");
+        assertEquals(2, pipeline.getStages().size(), "Pipeline should have 2 regular stages");
         
         PreviewStage systemStage = pipeline.getSystemStage();
         assertNotNull(systemStage, "Pipeline should have system stage");
@@ -157,11 +165,227 @@ public class PipelinePreProcessorTest {
         PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
         PreviewStage firstStage = stages[0];
         assertEquals("init", firstStage.getName());
-        assertEquals(StageType.DEFAULT, firstStage.getType());
+        assertEquals(StageType.LEGACY, firstStage.getType());
+    }
+
+    /**
+     * Test validation that only one SYSTEM stage is allowed in annotation configuration.
+     */
+    @Test
+    @DisplayName("Should throw error for multiple SYSTEM stages in annotation configuration")
+    void shouldThrowErrorForMultipleSystemStagesInAnnotation() throws Exception {
+        // Given - create annotation with multiple system stages
+        EnableFlamingock annotation = new MockFlamingockBuilder()
+            .withStages(
+                createMockStage("", StageType.SYSTEM, "com.example.system1"),
+                createMockStage("", StageType.SYSTEM, "com.example.system2"),
+                createMockStage("", StageType.DEFAULT, "com.example.migrations")
+            )
+            .build();
+        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        
+        // When & Then - should throw RuntimeException
+        Exception exception = assertThrows(Exception.class, () -> 
+            callGetPipelineFromProcessChanges(processor, changeUnits, annotation));
+        
+        Throwable cause = exception.getCause();
+        if (cause instanceof RuntimeException) {
+            assertTrue(cause.getMessage().contains("Multiple SYSTEM stages are not allowed"),
+                    "Should have error about multiple SYSTEM stages");
+        } else {
+            assertTrue(exception.getMessage().contains("Multiple SYSTEM stages are not allowed"),
+                    "Should have error about multiple SYSTEM stages");
+        }
+    }
+
+    /**
+     * Test validation that only one LEGACY stage is allowed in annotation configuration.
+     */
+    @Test
+    @DisplayName("Should throw error for multiple LEGACY stages in annotation configuration")
+    void shouldThrowErrorForMultipleLegacyStagesInAnnotation() throws Exception {
+        // Given - create annotation with multiple legacy stages
+        EnableFlamingock annotation = new MockFlamingockBuilder()
+            .withStages(
+                createMockStage("", StageType.LEGACY, "com.example.legacy1"),
+                createMockStage("", StageType.LEGACY, "com.example.legacy2"),
+                createMockStage("", StageType.DEFAULT, "com.example.migrations")
+            )
+            .build();
+        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        
+        // When & Then - should throw RuntimeException
+        Exception exception = assertThrows(Exception.class, () -> 
+            callGetPipelineFromProcessChanges(processor, changeUnits, annotation));
+        
+        Throwable cause = exception.getCause();
+        if (cause instanceof RuntimeException) {
+            assertTrue(cause.getMessage().contains("Multiple LEGACY stages are not allowed"),
+                    "Should have error about multiple LEGACY stages");
+        } else {
+            assertTrue(exception.getMessage().contains("Multiple LEGACY stages are not allowed"),
+                    "Should have error about multiple LEGACY stages");
+        }
+    }
+
+    /**
+     * Test validation that multiple DEFAULT stages are allowed.
+     */
+    @Test
+    @DisplayName("Should allow multiple DEFAULT stages in annotation configuration")
+    void shouldAllowMultipleDefaultStagesInAnnotation() throws Exception {
+        // Given - create annotation with multiple default stages
+        EnableFlamingock annotation = new MockFlamingockBuilder()
+            .withStages(
+                createMockStage("", StageType.DEFAULT, "com.example.migrations1"),
+                createMockStage("", StageType.DEFAULT, "com.example.migrations2"),
+                createMockStage("", StageType.DEFAULT, "com.example.migrations3")
+            )
+            .build();
+        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        
+        // When - build pipeline (should not throw exception)
+        PreviewPipeline pipeline = callGetPipelineFromProcessChanges(processor, changeUnits, annotation);
+        
+        // Then - verify multiple default stages are allowed
+        assertNotNull(pipeline, "Pipeline should be created");
+        assertEquals(3, pipeline.getStages().size(), "Should have 3 default stages");
+        assertNull(pipeline.getSystemStage(), "Should not have system stage");
+    }
+
+    /**
+     * Test that stages are ordered correctly regardless of declaration order.
+     */
+    @Test
+    @DisplayName("Should order stages by type priority: LEGACY before DEFAULT")
+    void shouldOrderStagesByTypePriorityLegacyBeforeDefault() throws Exception {
+        // Given - create annotation with stages in reverse order (DEFAULT first, LEGACY second)
+        EnableFlamingock annotation = new MockFlamingockBuilder()
+            .withStages(
+                createMockStage("", StageType.DEFAULT, "com.example.migrations"),
+                createMockStage("", StageType.LEGACY, "com.example.init"),
+                createMockStage("", StageType.DEFAULT, "com.example.cleanup")
+            )
+            .build();
+        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        
+        // When - build pipeline from annotation
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changeUnits);
+        
+        // Then - verify stages are sorted by type priority
+        assertNotNull(pipeline, "Pipeline should be created");
+        assertEquals(3, pipeline.getStages().size(), "Should have 3 stages");
+        
+        PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
+        
+        // First stage should be LEGACY (highest priority)
+        assertEquals(StageType.LEGACY, stages[0].getType());
+        assertEquals("init", stages[0].getName());
+        assertEquals("com.example.init", stages[0].getSourcesPackage());
+        
+        // Second and third stages should be DEFAULT (lower priority)
+        assertEquals(StageType.DEFAULT, stages[1].getType());
+        assertEquals("migrations", stages[1].getName());
+        assertEquals("com.example.migrations", stages[1].getSourcesPackage());
+        
+        assertEquals(StageType.DEFAULT, stages[2].getType());
+        assertEquals("cleanup", stages[2].getName());
+        assertEquals("com.example.cleanup", stages[2].getSourcesPackage());
+    }
+
+    /**
+     * Test that YAML stages are ordered correctly regardless of declaration order.
+     */
+    @Test
+    @DisplayName("Should order YAML stages by type priority: LEGACY before DEFAULT")
+    void shouldOrderYamlStagesByTypePriorityLegacyBeforeDefault() throws Exception {
+        // Given - create YAML file with stages in reverse order (DEFAULT first, LEGACY second)
+        Path pipelineFile = tempDir.resolve("pipeline.yaml");
+        String yamlContent = "pipeline:\n" +
+            "  stages:\n" +
+            "    - location: com.example.migrations\n" +
+            "    - location: com.example.init\n" +
+            "      type: legacy\n" +
+            "    - location: com.example.cleanup\n";
+        Files.write(pipelineFile, yamlContent.getBytes());
+        
+        EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
+        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        
+        // When - build pipeline from file
+        PreviewPipeline pipeline = buildPipelineFromFile(processor, annotation, changeUnits);
+        
+        // Then - verify stages are sorted by type priority
+        assertNotNull(pipeline, "Pipeline should be created");
+        assertEquals(3, pipeline.getStages().size(), "Should have 3 stages");
+        
+        PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
+        
+        // First stage should be LEGACY (highest priority)
+        assertEquals(StageType.LEGACY, stages[0].getType());
+        assertEquals("init", stages[0].getName());
+        assertEquals("com.example.init", stages[0].getSourcesPackage());
+        
+        // Second and third stages should be DEFAULT (lower priority)
+        assertEquals(StageType.DEFAULT, stages[1].getType());
+        assertEquals("migrations", stages[1].getName());
+        assertEquals("com.example.migrations", stages[1].getSourcesPackage());
+        
+        assertEquals(StageType.DEFAULT, stages[2].getType());
+        assertEquals("cleanup", stages[2].getName());
+        assertEquals("com.example.cleanup", stages[2].getSourcesPackage());
+    }
+
+    /**
+     * Test validation for YAML pipeline with multiple SYSTEM stages.
+     */
+    @Test
+    @DisplayName("Should throw error for multiple SYSTEM stages in YAML configuration")
+    void shouldThrowErrorForMultipleSystemStagesInYaml() throws Exception {
+        // Given - create YAML file with multiple system stages
+        Path pipelineFile = tempDir.resolve("pipeline.yaml");
+        String yamlContent = "pipeline:\n" +
+            "  stages:\n" +
+            "    - location: com.example.system1\n" +
+            "      type: importer\n" +
+            "    - location: com.example.system2\n" +
+            "      type: importer\n" +
+            "    - location: com.example.changes\n";
+        Files.write(pipelineFile, yamlContent.getBytes());
+        
+        EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
+        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        
+        // When & Then - should throw RuntimeException
+        Exception exception = assertThrows(Exception.class, () -> 
+            callGetPipelineFromProcessChanges(processor, changeUnits, annotation));
+        
+        Throwable cause = exception.getCause();
+        if (cause instanceof RuntimeException) {
+            assertTrue(cause.getMessage().contains("Multiple SYSTEM stages are not allowed"),
+                    "Should have error about multiple SYSTEM stages in YAML");
+        } else {
+            assertTrue(exception.getMessage().contains("Multiple SYSTEM stages are not allowed"),
+                    "Should have error about multiple SYSTEM stages in YAML");
+        }
     }
 
     // Helper methods using reflection to test the internal pipeline building logic
     private PreviewPipeline buildPipelineFromAnnotation(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changeUnits) throws Exception {
+        // Set up minimal processor state
+        setProcessorField(processor, "resourcesRoot", tempDir.toString());
+        setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
+        
+        // Initialize logger field
+        javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
+        setProcessorField(processor, "logger", new io.flamingock.core.processor.util.LoggerPreProcessor(mockEnv));
+        
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
             "buildPipelineFromAnnotation", EnableFlamingock.class, Map.class);
         method.setAccessible(true);
@@ -169,6 +393,14 @@ public class PipelinePreProcessorTest {
     }
 
     private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewTask>> changeUnits, EnableFlamingock annotation) throws Exception {
+        // Set up minimal processor state
+        setProcessorField(processor, "resourcesRoot", tempDir.toString());
+        setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
+        
+        // Initialize logger field
+        javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
+        setProcessorField(processor, "logger", new io.flamingock.core.processor.util.LoggerPreProcessor(mockEnv));
+        
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
             "getPipelineFromProcessChanges", Map.class, EnableFlamingock.class);
         method.setAccessible(true);
@@ -179,6 +411,10 @@ public class PipelinePreProcessorTest {
         // Set up minimal processor state
         setProcessorField(processor, "resourcesRoot", tempDir.toString());
         setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
+        
+        // Initialize logger field
+        javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
+        setProcessorField(processor, "logger", new io.flamingock.core.processor.util.LoggerPreProcessor(mockEnv));
         
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
             "buildPipelineFromSpecifiedFile", File.class, Map.class);
@@ -193,12 +429,72 @@ public class PipelinePreProcessorTest {
         field.setAccessible(true);
         field.set(processor, value);
     }
+    
+    private javax.annotation.processing.ProcessingEnvironment createMockProcessingEnvironment() {
+        return new javax.annotation.processing.ProcessingEnvironment() {
+            @Override
+            public java.util.Map<String, String> getOptions() {
+                return new java.util.HashMap<>();
+            }
+            
+            @Override
+            public javax.annotation.processing.Messager getMessager() {
+                return new javax.annotation.processing.Messager() {
+                    @Override
+                    public void printMessage(javax.tools.Diagnostic.Kind kind, CharSequence msg) {
+                        // Mock implementation - do nothing
+                    }
+                    
+                    @Override
+                    public void printMessage(javax.tools.Diagnostic.Kind kind, CharSequence msg, javax.lang.model.element.Element e) {
+                        // Mock implementation - do nothing
+                    }
+                    
+                    @Override
+                    public void printMessage(javax.tools.Diagnostic.Kind kind, CharSequence msg, javax.lang.model.element.Element e, javax.lang.model.element.AnnotationMirror a) {
+                        // Mock implementation - do nothing
+                    }
+                    
+                    @Override
+                    public void printMessage(javax.tools.Diagnostic.Kind kind, CharSequence msg, javax.lang.model.element.Element e, javax.lang.model.element.AnnotationMirror a, javax.lang.model.element.AnnotationValue v) {
+                        // Mock implementation - do nothing
+                    }
+                };
+            }
+            
+            @Override
+            public javax.annotation.processing.Filer getFiler() {
+                return null;
+            }
+            
+            @Override
+            public javax.lang.model.util.Elements getElementUtils() {
+                return null;
+            }
+            
+            @Override
+            public javax.lang.model.util.Types getTypeUtils() {
+                return null;
+            }
+            
+            @Override
+            public javax.lang.model.SourceVersion getSourceVersion() {
+                return javax.lang.model.SourceVersion.RELEASE_8;
+            }
+            
+            @Override
+            public java.util.Locale getLocale() {
+                return java.util.Locale.getDefault();
+            }
+        };
+    }
 
     private void createPipelineYamlFile() throws IOException {
         Path pipelineFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
-            "  systemStage: com.example.system\n" +
             "  stages:\n" +
+            "    - location: com.example.system\n" +
+            "      type: importer\n" +
             "    - location: com.example.changes\n";
         Files.write(pipelineFile, yamlContent.getBytes());
     }
@@ -209,18 +505,26 @@ public class PipelinePreProcessorTest {
         AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-source", false, true, false) {};
         
         map.put("com.example.system", Collections.singletonList(mockTask));
+        map.put("com.example.system1", Collections.singletonList(mockTask));
+        map.put("com.example.system2", Collections.singletonList(mockTask));
         map.put("com.example.init", Collections.singletonList(mockTask));
+        map.put("com.example.legacy1", Collections.singletonList(mockTask));
+        map.put("com.example.legacy2", Collections.singletonList(mockTask));
         map.put("com.example.migrations", Collections.singletonList(mockTask));
+        map.put("com.example.migrations1", Collections.singletonList(mockTask));
+        map.put("com.example.migrations2", Collections.singletonList(mockTask));
+        map.put("com.example.migrations3", Collections.singletonList(mockTask));
         map.put("com.example.changes", Collections.singletonList(mockTask));
+        map.put("com.example.cleanup", Collections.singletonList(mockTask));
         return map;
     }
 
     // Mock annotation factories
     private EnableFlamingock createMockAnnotationWithStages() {
         return new MockFlamingockBuilder()
-            .withSystemStage("com.example.system")
             .withStages(
-                createMockStage("", StageType.DEFAULT, "com.example.init"),
+                createMockStage("", StageType.SYSTEM, "com.example.system"),
+                createMockStage("", StageType.LEGACY, "com.example.init"),
                 createMockStage("", StageType.DEFAULT, "com.example.migrations")
             )
             .build();
@@ -248,14 +552,8 @@ public class PipelinePreProcessorTest {
 
 
     private static class MockFlamingockBuilder {
-        private String systemStageLocation = "";
         private Stage[] stages = new Stage[0];
         private String pipelineFile = "";
-
-        public MockFlamingockBuilder withSystemStage(String systemStageLocation) {
-            this.systemStageLocation = systemStageLocation;
-            return this;
-        }
 
         public MockFlamingockBuilder withStages(Stage... stages) {
             this.stages = stages;
@@ -269,9 +567,6 @@ public class PipelinePreProcessorTest {
 
         public EnableFlamingock build() {
             return new EnableFlamingock() {
-                @Override public String systemStage() { 
-                    return systemStageLocation;
-                }
                 @Override public Stage[] stages() { return stages; }
                 @Override public String pipelineFile() { return pipelineFile; }
                 @Override public io.flamingock.api.SetupType setup() { return io.flamingock.api.SetupType.DEFAULT; }

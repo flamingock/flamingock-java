@@ -42,11 +42,11 @@ import java.lang.annotation.Target;
  * </pre>
  * 
  * <h3>2. Annotation-based Configuration</h3>
- * Use {@link #stages()} and {@link #systemStage()} to define the pipeline inline:
+ * Use {@link #stages()} to define the pipeline inline:
  * <pre>
  * &#64;EnableFlamingock(
- *     systemStage = "com.example.system",
  *     stages = {
+ *         &#64;Stage(type = StageType.SYSTEM, location = "com.example.system"),
  *         &#64;Stage(type = StageType.LEGACY, location = "com.example.init"),
  *         &#64;Stage(location = "com.example.migrations")
  *     }
@@ -101,8 +101,9 @@ import java.lang.annotation.Target;
  * <h2>Validation Rules</h2>
  * <ul>
  *     <li>Either {@link #pipelineFile()} OR {@link #stages()} must be specified (mutually exclusive)</li>
- *     <li>{@link #systemStage()} can only be used with {@link #stages()}, not with {@link #pipelineFile()}</li>
  *     <li>At least one configuration mode must be provided</li>
+ *     <li>Maximum of 1 stage with type {@code StageType.SYSTEM} is allowed</li>
+ *     <li>Maximum of 1 stage with type {@code StageType.LEGACY} is allowed</li>
  * </ul>
  * 
  * @since 1.0
@@ -113,45 +114,27 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EnableFlamingock {
     
-    /**
-     * Configures the system stage location for system-level changes that run before all other stages.
-     * The system stage is dedicated to infrastructure and foundational changes.
-     * 
-     * <p>Can only be used with annotation-based configuration ({@link #stages()}), 
-     * not with file-based configuration ({@link #pipelineFile()}).
-     * 
-     * <p>The location format determines how it's interpreted:
-     * <ul>
-     *   <li><b>Package name:</b> Contains dots and no slashes (e.g., "com.example.system") - 
-     *       Used to scan for annotated change units in the specified package</li>
-     *   <li><b>Resource directory (relative):</b> Starts with "resources/" (e.g., "resources/system/migrations") - 
-     *       Used to scan for template-based change units in the specified resources directory</li>
-     *   <li><b>Resource directory (absolute):</b> Starts with "/" (e.g., "/absolute/path/to/system/templates") - 
-     *       Used to scan for template-based change units in the specified absolute path</li>
-     * </ul>
-     * 
-     * <p>Example:
-     * <pre>
-     * systemStage = "com.example.system"
-     * </pre>
-     * 
-     * @return the system stage location, or empty string if no system stage
-     */
-    String systemStage() default "";
     
     /**
-     * Defines the pipeline stages for annotation-based configuration.
-     * Each stage represents a logical grouping of changes that execute in sequence.
+     * Defines the pipeline stages.
+     * Each stage represents a logical grouping of changeUnits that execute in sequence.
      * 
      * <p>Mutually exclusive with {@link #pipelineFile()}. When using stages,
      * do not specify a pipeline file.
      * 
+     * <p>Stage type restrictions:
+     * <ul>
+     *   <li>Maximum of 1 stage with type {@code StageType.SYSTEM} is allowed</li>
+     *   <li>Maximum of 1 stage with type {@code StageType.LEGACY} is allowed</li>
+     *   <li>Unlimited stages with type {@code StageType.DEFAULT} are allowed</li>
+     * </ul>
+     * 
      * <p>Example:
      * <pre>
      * stages = {
-     *     &#64;Stage(type = StageType.BEFORE, location = "com.example.setup"),
-     *     &#64;Stage(type = StageType.DEFAULT, location = "com.example.changes"),
-     *     &#64;Stage(type = StageType.AFTER, location = "com.example.cleanup")
+     *     &#64;Stage(type = StageType.SYSTEM, location = "com.example.system"),
+     *     &#64;Stage(type = StageType.LEGACY, location = "com.example.init"),
+     *     &#64;Stage(type = StageType.DEFAULT, location = "com.example.changes")
      * }
      * </pre>
      * 

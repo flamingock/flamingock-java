@@ -75,10 +75,10 @@ public class IndexOptionsMapper {
             indexOptions.collation(getCollation(options, "collation"));
         }
         if (options.containsKey("wildcardProjection")) {
-            indexOptions.wildcardProjection(getBson(options, "wildcardProjection"));
+            throw new UnsupportedOperationException("wildcardProjection option is not supported in MongoDB driver versions 4.1.0 and above");
         }
         if (options.containsKey("hidden")) {
-            indexOptions.hidden(getBoolean(options, "hidden"));
+            throw new UnsupportedOperationException("hidden option is not supported in MongoDB driver versions 4.1.0 and above");
         }
 
         return indexOptions;

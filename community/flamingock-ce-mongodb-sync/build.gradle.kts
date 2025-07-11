@@ -7,7 +7,7 @@ dependencies {
     api(project(":transactioners:mongodb-sync-transactioner"))
     api(project(":community:flamingock-ce-commons"))
 
-    compileOnly("org.mongodb:mongodb-driver-sync:[3.7.0,6.0.0)")
+    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
 
 
     testImplementation(project(":utils:test-util"))

@@ -91,7 +91,8 @@ import java.util.Set;
  * <h3>Annotation-based Configuration</h3>
  * <pre>{@code
  * @EnableFlamingock(stages = {
- *     @Stage(type = StageType.BEFORE, location = "com.example.init"),
+ *     @Stage(type = StageType.SYSTEM, location = "com.example.system"),
+ *     @Stage(type = StageType.LEGACY, location = "com.example.init"),
  *     @Stage(location = "com.example.migrations")
  * })
  * }</pre>
@@ -106,7 +107,9 @@ import java.util.Set;
  * <ul>
  *     <li>@EnableFlamingock annotation is mandatory</li>
  *     <li>Must specify either {@code pipelineFile} OR {@code stages} (mutually exclusive)</li>
- *     <li>SystemStage can only be used with annotation-based configuration (not with pipelineFile)</li>
+ *     <li>Maximum of 1 stage with type {@code StageType.SYSTEM} is allowed</li>
+ *     <li>Maximum of 1 stage with type {@code StageType.LEGACY} is allowed</li>
+ *     <li>Unlimited stages with type {@code StageType.DEFAULT} are allowed</li>
  * </ul>
  *
  * <h2>Supported Annotations</h2>
@@ -205,7 +208,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         boolean hasFileInAnnotation = !pipelineAnnotation.pipelineFile().isEmpty();
         boolean hasStagesInAnnotation = pipelineAnnotation.stages().length > 0;
-        boolean hasSystemStage = !pipelineAnnotation.systemStage().isEmpty();
 
         // Validate mutually exclusive modes
         if (hasFileInAnnotation && hasStagesInAnnotation) {
@@ -216,9 +218,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException("@EnableFlamingock annotation must specify either pipelineFile OR stages configuration.");
         }
 
-        // SystemStage only allowed with stages, not with pipelineFile
-        if (hasSystemStage && !hasStagesInAnnotation) {
-            throw new RuntimeException("SystemStage can only be configured when stages are provided, not with pipelineFile.");
+        // Validate stage type restrictions when using annotation-based configuration
+        if (hasStagesInAnnotation) {
+            validateStageTypes(pipelineAnnotation.stages());
         }
 
         if (hasFileInAnnotation) {
@@ -231,19 +233,145 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
     }
 
+    /**
+     * Compares stages by type priority for sorting.
+     * Priority order: LEGACY (1) → DEFAULT (2)
+     * SYSTEM stages are handled separately and not included in this comparison.
+     *
+     * @param stage1 the first stage to compare
+     * @param stage2 the second stage to compare
+     * @return negative if stage1 has higher priority, positive if stage2 has higher priority, 0 if equal
+     */
+    private int compareStagesByTypePriority(PreviewStage stage1, PreviewStage stage2) {
+        return getStageTypePriority(stage1.getType()) - getStageTypePriority(stage2.getType());
+    }
+
+    /**
+     * Gets the priority value for a stage type.
+     * Lower values indicate higher priority (execute earlier).
+     *
+     * @param stageType the stage type
+     * @return priority value (LEGACY: 1, DEFAULT: 2)
+     */
+    private int getStageTypePriority(StageType stageType) {
+        switch (stageType) {
+            case SYSTEM: return 0;
+            case LEGACY: return 1;
+            case DEFAULT: return 2;
+            default: return 3;
+        }
+    }
+
+    /**
+     * Validates that stage types conform to the restrictions:
+     * - Maximum 1 SYSTEM stage allowed
+     * - Maximum 1 LEGACY stage allowed
+     * - Unlimited DEFAULT stages allowed
+     *
+     * @param stages the stages to validate
+     * @throws RuntimeException if validation fails
+     */
+    private void validateStageTypes(Stage[] stages) {
+        int systemStageCount = 0;
+        int legacyStageCount = 0;
+
+        for (Stage stage : stages) {
+            StageType stageType = stage.type();
+            
+            if (stageType == StageType.SYSTEM) {
+                systemStageCount++;
+                if (systemStageCount > 1) {
+                    throw new RuntimeException("Multiple SYSTEM stages are not allowed. Only one stage with type StageType.SYSTEM is permitted.");
+                }
+            } else if (stageType == StageType.LEGACY) {
+                legacyStageCount++;
+                if (legacyStageCount > 1) {
+                    throw new RuntimeException("Multiple LEGACY stages are not allowed. Only one stage with type StageType.LEGACY is permitted.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that stage types from YAML conform to the restrictions:
+     * - Maximum 1 SYSTEM stage allowed
+     * - Maximum 1 LEGACY stage allowed
+     * - Unlimited DEFAULT stages allowed
+     *
+     * @param stageList the stages from YAML to validate
+     * @throws RuntimeException if validation fails
+     */
+    private void validateStageTypesFromYaml(List<Map<String, String>> stageList) {
+        int systemStageCount = 0;
+        int legacyStageCount = 0;
+
+        for (Map<String, String> stageMap : stageList) {
+            StageType stageType = StageType.from(stageMap.get("type"));
+            
+            if (stageType == StageType.SYSTEM) {
+                systemStageCount++;
+                if (systemStageCount > 1) {
+                    throw new RuntimeException("Multiple SYSTEM stages are not allowed in YAML pipeline. Only one stage with type 'system' is permitted.");
+                }
+            } else if (stageType == StageType.LEGACY) {
+                legacyStageCount++;
+                if (legacyStageCount > 1) {
+                    throw new RuntimeException("Multiple LEGACY stages are not allowed in YAML pipeline. Only one stage with type 'legacy' is permitted.");
+                }
+            }
+        }
+    }
+
     private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation, Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage) {
         List<PreviewStage> stages = new ArrayList<>();
+        SystemPreviewStage systemStage = null;
 
         for (Stage stageAnnotation : pipelineAnnotation.stages()) {
-            PreviewStage stage = mapAnnotationToStage(codedChangeUnitsByPackage, stageAnnotation);
-            stages.add(stage);
+            if (stageAnnotation.type() == StageType.SYSTEM) {
+                // Handle system stage separately to maintain internal architecture
+                systemStage = mapAnnotationToSystemStage(codedChangeUnitsByPackage, stageAnnotation);
+            } else {
+                PreviewStage stage = mapAnnotationToStage(codedChangeUnitsByPackage, stageAnnotation);
+                stages.add(stage);
+            }
         }
 
-        Optional<SystemPreviewStage> systemStage = getSystemStageFromAnnotation(codedChangeUnitsByPackage, pipelineAnnotation.systemStage());
+        // Sort stages by type priority: LEGACY stages first, then DEFAULT stages
+        stages.sort(this::compareStagesByTypePriority);
 
-        return systemStage
-                .map(previewStage -> new PreviewPipeline(previewStage, stages))
-                .orElseGet(() -> new PreviewPipeline(stages));
+        return systemStage != null
+                ? new PreviewPipeline(systemStage, stages)
+                : new PreviewPipeline(stages);
+    }
+
+    private SystemPreviewStage mapAnnotationToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Stage stageAnnotation) {
+        String location = stageAnnotation.location();
+
+        if (location == null || location.trim().isEmpty()) {
+            throw new RuntimeException("@Stage annotation with type SYSTEM requires a location. Please specify the location field.");
+        }
+
+        String sourcesPackage = null;
+        String resourcesDir = null;
+        Collection<AbstractPreviewTask> changeUnitClasses = null;
+
+        if (isPackageName(location)) {
+            sourcesPackage = location;
+            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+        } else {
+            resourcesDir = processResourceLocation(location);
+        }
+
+        // For system stage, use hardcoded name and description to maintain consistency
+        return PreviewStage.systemBuilder()
+                .setName("SystemStage")
+                .setDescription("Dedicated stage for system-level changes")
+                .setSourcesRoots(sourceRoots)
+                .setSourcesPackage(sourcesPackage)
+                .setResourcesRoot(resourcesRoot)
+                .setResourcesDir(resourcesDir)
+                .setChanges(changeUnitClasses)
+                .build();
     }
 
     private PreviewStage mapAnnotationToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Stage stageAnnotation) {
@@ -281,34 +409,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .build();
     }
 
-    private Optional<SystemPreviewStage> getSystemStageFromAnnotation(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, String systemStageLocation) {
-        // If no location specified for systemStage, don't create it
-        if (systemStageLocation == null || systemStageLocation.trim().isEmpty()) {
-            return Optional.empty();
-        }
-
-        String sourcesPackage = null;
-        String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeUnitClasses = null;
-
-        if (isPackageName(systemStageLocation)) {
-            sourcesPackage = systemStageLocation;
-            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
-        } else {
-            resourcesDir = processResourceLocation(systemStageLocation);
-        }
-
-        SystemPreviewStage stage = PreviewStage.systemBuilder()
-                .setName("SystemStage")
-                .setDescription("Dedicated stage for system-level changes")
-                .setSourcesRoots(sourceRoots)
-                .setSourcesPackage(sourcesPackage)
-                .setResourcesRoot(resourcesRoot)
-                .setResourcesDir(resourcesDir)
-                .setChanges(changeUnitClasses)
-                .build();
-        return Optional.of(stage);
-    }
 
     /**
      * Resolves a pipeline file path from the @EnableFlamingock annotation, supporting both absolute file paths
@@ -377,22 +477,32 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
             Map<String, Object> pipelineMap = (Map<String, Object>) config.get("pipeline");
 
-
             List<Map<String, String>> stageList = (List<Map<String, String>>) pipelineMap.get("stages");
 
+            // Validate stage types from YAML configuration
+            validateStageTypesFromYaml(stageList);
 
             List<PreviewStage> stages = new ArrayList<>();
+            SystemPreviewStage systemStage = null;
 
             for (Map<String, String> stageMap : stageList) {
-                PreviewStage stage = mapToStage(codedChangeUnitsByPackage, stageMap);
-                stages.add(stage);
+                StageType stageType = StageType.from(stageMap.get("type"));
+                
+                if (stageType == StageType.SYSTEM) {
+                    // Handle system stage separately to maintain internal architecture
+                    systemStage = mapToSystemStage(codedChangeUnitsByPackage, stageMap);
+                } else {
+                    PreviewStage stage = mapToStage(codedChangeUnitsByPackage, stageMap);
+                    stages.add(stage);
+                }
             }
 
-            Optional<SystemPreviewStage> systemStage = getSystemStage(codedChangeUnitsByPackage, (String) pipelineMap.get("systemStage"));
+            // Sort stages by type priority: LEGACY stages first, then DEFAULT stages
+            stages.sort(this::compareStagesByTypePriority);
 
-            return systemStage
-                    .map(previewStage -> new PreviewPipeline(previewStage, stages))
-                    .orElseGet(() -> new PreviewPipeline(stages));
+            return systemStage != null
+                    ? new PreviewPipeline(systemStage, stages)
+                    : new PreviewPipeline(stages);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -400,30 +510,34 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     }
 
-    private Optional<SystemPreviewStage> getSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, String systemStageLocation) {
-        if (systemStageLocation == null || systemStageLocation.trim().isEmpty()) {
-            return Optional.empty();
+    private SystemPreviewStage mapToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> stageMap) {
+        String location = stageMap.get("location");
+
+        if (location == null || location.trim().isEmpty()) {
+            throw new RuntimeException("System stage in YAML pipeline requires a 'location' field. Please specify the location where change units are found.");
         }
 
         String sourcesPackage = null;
         String resourcesDir = null;
         Collection<AbstractPreviewTask> changeUnitClasses = null;
 
-        if (isPackageName(systemStageLocation)) {
-            sourcesPackage = systemStageLocation;
+        if (isPackageName(location)) {
+            sourcesPackage = location;
             changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
         } else {
-            resourcesDir = processResourceLocation(systemStageLocation);
+            resourcesDir = processResourceLocation(location);
         }
 
-        SystemPreviewStage stage = PreviewStage.systemBuilder()
+        // For system stage, use hardcoded name and description to maintain consistency
+        return PreviewStage.systemBuilder()
+                .setName("SystemStage")
+                .setDescription("Dedicated stage for system-level changes")
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
                 .setResourcesDir(resourcesDir)
                 .setChanges(changeUnitClasses)
                 .build();
-        return Optional.of(stage);
     }
 
     private PreviewStage mapToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> stageMap) {

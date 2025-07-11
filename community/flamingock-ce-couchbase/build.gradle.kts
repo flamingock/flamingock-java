@@ -1,5 +1,5 @@
 dependencies {
-    implementation(project(":core:flamingock-core"))
+    api(project(":core:flamingock-core"))
     api(project(":community:flamingock-ce-commons"))
     
     compileOnly("com.couchbase.client:java-client:[3.0.0,4.0.0)")

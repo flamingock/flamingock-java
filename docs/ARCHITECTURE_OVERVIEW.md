@@ -205,7 +205,7 @@ graph TB
     subgraph ExtDeps["Key External Dependencies"]
         direction LR
         Jackson[Jackson 2.16.0<br/>JSON Processing]
-        MongoDB[MongoDB Driver<br/>3.7.0-6.0.0]
+        MongoDB[MongoDB Driver<br/>4.0.0]
         Spring[Spring Framework<br/>6.0.0-7.0.0]
         AWS[AWS SDK<br/>DynamoDB Enhanced]
         Couchbase[Couchbase Client<br/>3.0.0-4.0.0]
@@ -311,7 +311,7 @@ graph TB
     mongodb-sync-transactioner[mongodb-sync-transactioner<br/>IBU]:::ibu
     flamingock-core[flamingock-core<br/>Internal]:::internal
     mongodb-util[mongodb-util<br/>Internal]:::internal
-    MongoDriver[MongoDB Driver<br/>3.7.0-6.0.0]:::external
+    MongoDriver[MongoDB Driver<br/>4.0.0]:::external
     
     flamingock-ce-mongodb-sync -->|api| flamingock-ce-commons
     flamingock-ce-mongodb-sync -->|api| mongodb-sync-transactioner
