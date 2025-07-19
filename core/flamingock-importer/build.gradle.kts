@@ -3,8 +3,8 @@ dependencies {
     implementation(project(":core:flamingock-core-commons"))
 
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
-    compileOnly("software.amazon.awssdk:dynamodb-enhanced:[2.0.0,3.0.0)")
-    compileOnly("com.couchbase.client:java-client:[3.0.0,4.0.0)")
+    compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
+    compileOnly("com.couchbase.client:java-client:3.0.0")
 
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
@@ -14,6 +14,8 @@ dependencies {
     testImplementation("org.testcontainers:mongodb:1.18.3")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")
     testImplementation("org.mockito:mockito-inline:4.11.0")
+
+    testImplementation("com.couchbase.client:java-client:3.0.0")
 }
 
 

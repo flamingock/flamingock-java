@@ -2,6 +2,7 @@ package io.flamingock.graalvm;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.importer.ImporterTemplateFactory;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -20,6 +21,8 @@ import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
+import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.CoderResult;
 import java.util.List;
@@ -31,79 +34,104 @@ public class RegistrationFeature implements Feature {
 
     @Override
     public void beforeAnalysis(BeforeAnalysisAccess access) {
-        logger.startProcess("GraalVM classes registration");
+        logger.startProcess("GraalVM classes registration and initialization");
+        initializeInternalClassesAtBuildTime();
+        initializeExternalClassesAtBuildTime();
         registerInternalClasses();
         registerTemplates();
         registerUserClasses();
-        logger.finishedProcess("GraalVM classes registration");
+        logger.finishedProcess("GraalVM classes registration and initialization");
     }
 
     private static void registerInternalClasses() {
-        logger.startRegistration("internal classes");
+        logger.startRegistrationProcess("internal classes");
 
-        registerClass(TaskDescriptor.class.getName());
-        registerClass(AbstractTaskDescriptor.class.getName());
+        registerClassForReflection(TaskDescriptor.class.getName());
+        registerClassForReflection(AbstractTaskDescriptor.class.getName());
 
         //preview
-        registerClass(PreviewPipeline.class.getName());
-        registerClass(PreviewStage.class.getName());
-        registerClass(CodePreviewChangeUnit.class.getName());
-        registerClass(PreviewMethod.class);
-        registerClass(TemplatePreviewChangeUnit.class.getName());
-        registerClass(FlamingockMetadata.class.getName());
+        registerClassForReflection(PreviewPipeline.class.getName());
+        registerClassForReflection(PreviewStage.class.getName());
+        registerClassForReflection(CodePreviewChangeUnit.class.getName());
+        registerClassForReflection(PreviewMethod.class);
+        registerClassForReflection(TemplatePreviewChangeUnit.class.getName());
+        registerClassForReflection(FlamingockMetadata.class.getName());
 
         //Loaded
-        registerClass(LoadedPipeline.class.getName());
-        registerClass(AbstractLoadedStage.class.getName());
-        registerClass(AbstractLoadedTask.class.getName());
-        registerClass(AbstractReflectionLoadedTask.class.getName());
-        registerClass(AbstractLoadedChangeUnit.class.getName());
-        registerClass(CodeLoadedChangeUnit.class.getName());
-        registerClass(TemplateLoadedChangeUnit.class.getName());
+        registerClassForReflection(LoadedPipeline.class.getName());
+        registerClassForReflection(AbstractLoadedStage.class.getName());
+        registerClassForReflection(AbstractLoadedTask.class.getName());
+        registerClassForReflection(AbstractReflectionLoadedTask.class.getName());
+        registerClassForReflection(AbstractLoadedChangeUnit.class.getName());
+        registerClassForReflection(CodeLoadedChangeUnit.class.getName());
+        registerClassForReflection(TemplateLoadedChangeUnit.class.getName());
 
         //others
-        registerClass(CoderResult.class.getName());
+        registerClassForReflection(CoderResult.class.getName());
+        registerClassForReflection(ImporterTemplateFactory.class.getName());
 
 
-        logger.completedRegistration("internal classes");
+        logger.completedRegistrationProcess("internal classes");
+    }
+
+    private static void initializeInternalClassesAtBuildTime() {
+        logger.startInitializationProcess("internal classes");
+        initializeClassAtBuildTime(CodeLoadedChangeUnit.class);
+        initializeClassAtBuildTime(AbstractLoadedChangeUnit.class);
+        initializeClassAtBuildTime(TemplateLoadedChangeUnit.class);
+        initializeClassAtBuildTime(ChangeTemplateManager.class);
+        initializeClassAtBuildTime(ImporterTemplateFactory.class);
+        logger.completeInitializationProcess("internal classes");
+    }
+
+    private static void initializeExternalClassesAtBuildTime() {
+        logger.startInitializationProcess("external classes");
+        initializeClassAtBuildTime(LoggerFactory.class);
+        logger.completeInitializationProcess("external classes");
     }
 
 
     private static void registerUserClasses() {
-        logger.startRegistration("user classes");
+        logger.startRegistrationProcess("user classes");
         List<String> classesToRegister = FileUtil.getClassesForRegistration();
-        classesToRegister.forEach(RegistrationFeature::registerClass);
-        logger.completedRegistration("user classes");
+        classesToRegister.forEach(RegistrationFeature::registerClassForReflection);
+        logger.completedRegistrationProcess("user classes");
     }
 
     private void registerTemplates() {
-        logger.startRegistration("templates");
-        registerClass(ChangeTemplateManager.class);
-        registerClass(ChangeTemplate.class);
-        registerClass(AbstractChangeTemplate.class);
+        logger.startRegistrationProcess("templates");
+        registerClassForReflection(ChangeTemplateManager.class);
+        registerClassForReflection(ChangeTemplate.class);
+        registerClassForReflection(AbstractChangeTemplate.class);
         ChangeTemplateManager.getTemplates().forEach(template -> {
-            registerClass(template.getClass());
-            template.getReflectiveClasses().forEach(RegistrationFeature::registerClass);
+            registerClassForReflection(template.getClass());
+            template.getReflectiveClasses().forEach(RegistrationFeature::registerClassForReflection);
         });
 
-        logger.completedRegistration("templates");
+        logger.completedRegistrationProcess("templates");
     }
 
-    private static void registerClass(String className) {
+    private static void registerClassForReflection(String className) {
         try {
-            registerClass(Class.forName(className));
+            registerClassForReflection(Class.forName(className));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void registerClass(Class<?> clazz) {
-        logger.initClassRegistration(clazz);
+    private static void registerClassForReflection(Class<?> clazz) {
+        logger.startClassRegistration(clazz);
         RuntimeReflection.register(clazz);
         RuntimeReflection.register(clazz.getFields());
         RuntimeReflection.register(clazz.getDeclaredFields());
         RuntimeReflection.register(clazz.getDeclaredConstructors());
         RuntimeReflection.register(clazz.getDeclaredMethods());
     }
+
+    private static void initializeClassAtBuildTime(Class<?> clazz) {
+        logger.startClassInitialization(clazz);
+        RuntimeClassInitialization.initializeAtBuildTime(clazz);
+    }
+
 
 }

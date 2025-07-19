@@ -5,7 +5,7 @@ dependencies {
 
     api(project(":transactioners:dynamodb-transactioner"))
 
-    compileOnly("software.amazon.awssdk:dynamodb-enhanced:[2.0.0,3.0.0)")
+    compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 
 
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")

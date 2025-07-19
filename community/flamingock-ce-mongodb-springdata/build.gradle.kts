@@ -1,9 +1,9 @@
 import org.gradle.kotlin.dsl.invoke
 
 val versions = mapOf(
-    "mongodb" to "[4.8.0, 5.6.0)",
-    "spring-data" to "[4.0.0, 5.0.0)",
-    "springboot" to "[3.0.0, 4.0.0)"
+    "mongodb" to "4.8.0",
+    "spring-data" to "4.0.0",
+    "springboot" to "3.0.0"
 )
 dependencies {
     implementation(project(":utils:mongodb-util"))
