@@ -16,7 +16,7 @@ We are the original authors of Mongock. Over the past couple of years, we've bee
 - Designed **from the ground up with auditability, determinism, and governance at its core**
 
 ### More highlights
-- Flexible/no‑code templates for defining changes
+- Flexible/low‑code templates for defining changes
 - Native GraalVM support
 - Advanced multi-stage workflows
 - …and more in the docs → [Features overview](https://docs.flamingock.io/docs/1.0.0/overview/key-features)
