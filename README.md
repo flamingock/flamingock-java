@@ -13,7 +13,7 @@ We are the original authors of Mongock. Over the past couple of years, we've bee
 
 - Robust support for MongoDB and NoSQL migrations, covering everything previously offered by Mongock
 - Extends beyond databases to orchestrate changes across message queues, contracts, APIs, configs, feature flags, and more
-- Designed from the ground up with auditability, determinism, and governance at its core
+- Designed **from the ground up with auditability, determinism, and governance at its core**
 
 ### More highlights
 - Flexible/no‑code templates for defining changes
