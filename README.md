@@ -3,20 +3,22 @@
 **Status:** This project is no longer maintained (as of 2025-08-01).  
 No new features will be added. Critical security fixes may be considered on a best-effort basis only.
 
+> For future-proof projects, we recommend transitioning to [Flamingock](#meet-flamingock).
+
 ---
 
 ## Meet Flamingock 🚀
 
-We are the original authors of Mongock. Over the last 1–2 years we’ve been heads‑down building **[Flamingock](https://github.com/flamingock/flamingock-project)** — a platform inspired by what worked in Mongock, but with a much broader scope: **auditable, deterministic evolution across your whole system**. (A managed cloud offering is also in the works.)
+We are the original authors of Mongock. Over the past couple of years, we've been heads‑down building **[Flamingock](https://github.com/flamingock/flamingock-project)** — a platform inspired by what worked in Mongock, but with a much broader scope: **auditable, deterministic evolution across your entire system**. (A managed cloud offering is also in the works.)
 
-- Covers everything Mongock did for MongoDB/NoSQL migrations **and much more**
-- Orchestrates changes across message queues, APIs, databases, feature flags, etc.
-- Built with auditability, determinism, and governance at its core
+- Robust support for MongoDB and NoSQL migrations, covering everything previously offered by Mongock
+- Extends beyond databases to orchestrate changes across message queues, contracts, APIs, configs, feature flags, and more
+- Designed from the ground up with auditability, determinism, and governance at its core
 
 ### More highlights
 - Flexible/no‑code templates for defining changes
 - Native GraalVM support
-- Advanced multi-stage workflow
+- Advanced multi-stage workflows
 - …and more in the docs → [Features overview](https://docs.flamingock.io/docs/1.0.0/overview/key-features)
 
 > Same creators. Broader scope. Better foundations.
@@ -27,9 +29,11 @@ We are the original authors of Mongock. Over the last 1–2 years we’ve been h
 
 ## Why the change?
 
-Mongock focused and helped teams evolve NoSQL databases with confidence.  
-But we realized that real-world evolution goes beyond databases: it touches contracts, queues, configs, compliance, etc.  
-**Flamingock is the natural evolution** to cover that larger problem space — not a direct continuation, but a new platform that also does what Mongock did.
+Mongock helped teams evolve NoSQL databases with confidence.  
+But in real-world systems, evolution doesn't stop at databases — it extends to message schemas, APIs, configurations, feature flags, and compliance rules.
+
+**Flamingock was built to support that full spectrum from day one.**  
+It’s not a direct continuation of Mongock, but a new platform that also does everything Mongock did — and much more.
 
 ---
 
@@ -37,11 +41,5 @@ But we realized that real-world evolution goes beyond databases: it touches cont
 
 - Your current versions will keep working as-is.
 - We strongly recommend evaluating Flamingock for new projects or when planning significant changes.
-- Upgrade help: see **[How to move from Mongock to Flamingock](https://docs.flamingock.io/docs/1.0.0/resources/upgrade-from-mongock)**.
-
----
-
-## Thank you 💚
-
-Mongock wouldn’t exist without its community.  
-We’re excited to keep pushing the boundaries of safe, auditable change with Flamingock. See you there!
+- Flamingock introduces a different architecture, but we’ve made it easy to transition when you're ready.
+- Upgrade help: see **[How to move from Mongock to Flamingock](https://docs.flamingock.io/docs/resources/upgrade-from-mongock)**
