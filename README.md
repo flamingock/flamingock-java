@@ -3,7 +3,7 @@
 **Status:** This project is no longer maintained (as of 2025-08-01).  
 No new features will be added. Critical security fixes may be considered on a best-effort basis only.
 
-> For future-proof projects, we recommend transitioning to [Flamingock](#meet-flamingock).
+> For future-proof projects, we recommend transitioning to [Flamingock](https://github.com/flamingock/flamingock-project).
 
 ---
 
