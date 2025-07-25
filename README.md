@@ -1,75 +1,105 @@
-![Header Image](misc/logo-with-text.png)
-___ 
+<p align="center">
+  <img src="misc/logo-with-text.png" width="420px" alt="Flamingock logo" />
+</p>
 
-**Flamingock** is the evolution of Mongock, designed as a cloud-native solution for managing versioning, and auditing changes in systems that evolve alongside your application.
 
-Whilst Mongock focused on versioning NoSQL databases, Flamingock extends this concept to all technologies, systems, and configurations, with built-in auditing and rollback capabilities.
-It ensures the application and its dependent components evolve together by managing configuration changes during startup to maintain version compatibility, streamline integration, and reduce conflicts at deployment time.
+<h3 align="center">Auditable, versioned changes across distributed systems.</h3>
+<p align="center">Evolve queues, DBs, APIs, configs, resources and more — governed, auditable, executed at startup in lockstep.</p>
 
-Flamingock also introduces new mechanisms for defining changes in an extensible and customizable manner, beyond traditional code-based methods.
+<p align="center"><small><a href="./mongock-migration-explanation.md">Coming from Mongock?</a></small></p>
+<br />
 
-> Additionally, Flamingock offers multiple infrastructure setups for providing flexibility to users, as it introduces a Cloud offering whilst still retaining existing supported databases such as MongoDB, DynamoDB, or Couchbase.
+<p align="center">
+  <a href="https://central.sonatype.com/search?q=io.flamingock">
+    <img src="https://img.shields.io/maven-central/v/io.flamingock/flamingock-core" alt="Maven Version" />
+  </a>
+  <a href="https://github.com/flamingock/flamingock-project/actions/workflows/build.yml">
+    <img src="https://github.com/flamingock/flamingock-project/actions/workflows/build.yml/badge.svg" alt="Build" />
+  </a>
+  <a href="https://github.com/flamingock/flamingock-project/actions/workflows/release.yml">
+    <img src="https://github.com/flamingock/flamingock-project/actions/workflows/release.yml/badge.svg" alt="Release" />
+  </a>
+  <a href="LICENSE.md">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Licence" />
+  </a>
+</p>
 
----
+**Flamingock** is an open-source engine for the governed and synchronized evolution of distributed systems — and the foundation of a broader Change-as-Code platform.
+
+With Flamingock, your application and the systems it interacts with — including databases, message queues, feature flags, configurations, APIs, and cloud resources — evolve together, in lockstep.
+
+**All changes are versioned, auditable**, and executed as part of the same deployment lifecycle.
+
+No more post-deploy scripts or manual tweaks: every change is declared alongside your code and applied safely during application startup.
+
+<br />
+
+## 📦 Editions
+Flamingock is open source at its core, and powers three editions:
+
+- **Community Edition**: Free and self-managed. Use your own audit store (e.g., MongoDB, DynamoDB). Ideal for basic change tracking.
+- **Cloud Edition**: Fully managed SaaS with a built-in audit store, dashboard, observability, governance, and premium features.
+- **Self-Hosted Edition**: Same advanced capabilities as Cloud, but deployable in your own infrastructure.
+
+> For more information about the editions, please feel free to ask us at <a href="mailto:support@flamingock.io">support@flamingock.io</a>.
+
+<br />
+
+## 💡 Introducing Change-as-Code (CaC)
+
+**Automate changes. Version changes. Control changes.**
+
+Flamingock is built around the principle of **Change-as-Code (CaC)** — the idea that **every change to your system’s behavior** (whether it's a schema update, config toggle, or infrastructure change) should be authored, versioned, and reviewed like application code.
+
+This enables true **lockstep evolution** between your application and the systems it relies on — ensuring everything stays compatible, consistent, and in sync across environments.
+
+No more fragile scripts or untracked console changes. With CaC:
+
+- All changes live in your VCS and follow strict ordering
+- Executions are automated and recorded in a centralized audit log
+- Rollbacks and multi-environment consistency become first-class citizens
+
+> Just like Infrastructure-as-Code reshaped provisioning, **Change-as-Code is redefining how systems evolve** — and Flamingock brings that principle to life.
+
+<br />
+
+## 🚀 Getting Started
+
+- Read the [getting started tutorial](https://docs.flamingock.io/docs/getting-started/get-started).
+- Explore real-world usage in the [examples repo](https://github.com/mongock/flamingock-examples).
+
+<br />
 
 ## 🔑 Key Features
-- 🔄 **Auditing & Rollback**: Comprehensive auditing capabilities with support for rollback of changes to ensure consistency and control.
 
-- ☁️ **Cloud-Native**: Offers a fully managed service by hosting Flamingock’s operational data on our servers, removing the need for users to set up and manage their own databases.
+- **Change-as-Code (CaC)**: Treat changes to databases, queues, APIs, or configs as code — versioned, executable, and auditable.
+- **Unified system evolution**: Orchestrate changes across your full stack: event schemas, feature flags, databases, S3, SaaS APIs, and more.
+- **Programmatic or declarative**: Write changes in Java/Kotlin or define them in YAML using official or custom templates.
+- **Startup-Time synchronization**: Apply versioned ChangeUnits when your app starts — keeping deployments consistent and safe.
+- **Audit logging & rollback**: Every change is recorded externally; rollback logic is built into each ChangeUnit.
+- **Multi-stage workflows**: Organize and execute your changes in coordinated, stage-based flows across instances.
+- **Native GraalVM support**: Compatible with native image builds for fast startup and low memory usage.
+- **Cloud-ready, OSS-Core**: Use locally, self-host, or plug into our managed Cloud — all powered by the same open source core.
 
-- 🔗 **Extended System Support**: Expands on Mongock's support to all systems, databases, technologies and configurations.
+<br />
 
-- 🚀 **Seamless Deployment**: Deploy your application and systems together, ensuring version compatibility and reducing deployment friction.
+## 🤝 Contributing
 
-- 🧩 **Flexible Migration Templates**: New mechanisms for defining changes, offering a no-code option to streamline and simplify change management.
+We welcome contributions from the community!  
+If you'd like to report a bug, suggest a feature, or open a pull request, check out our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-- ⚡ **GraalVM Support**: Enables the compilation of Java applications into native executables for improved performance.
+<br />
 
-- 👥 **Multi-Tenant Support**: Designed to handle multiple tenants within the same infrastructure.
+## 📢 Get Involved
 
-- 🔒 **Distributed Locking**: Ensures synchronized deployment of multiple service instances, maintaining consistency and preventing conflicts in distributed environments.
+⭐ Star the project to show support
+- Report issues in the [issue tracker](https://github.com/mongock/flamingock-project/issues)
+- Join the conversation in [GitHub discussions](https://github.com/mongock/flamingock-project/discussions)
 
-- 🛠️ **Advanced Workflow Management**: Enables multiple streams of change units that can be organized to execute sequentially, in parallel, or as a combination, providing flexibility in managing complex processes.
-
-- 🔀 **Parallel Synchronised Execution**: When workflows include parallel streams, they can be executed simultaneously by different service instances, maximizing efficiency in distributed deployments.
-___
-
-## 📂 Getting started with our examples  
-For full examples of how to use Flamingock in various environments, check the [examples project](https://github.com/mongock/flamingock-examples).
-
-___
-
-## 🔀 Migration from Mongock
-If you're transitioning from Mongock to Flamingock, we have separate migration guides for each use case:
-
-- **[Standalone Applications](MONGOCK_STANDALONE_MIGRATION.md)**: Detailed instructions for migrating from Mongock to Flamingock in a standalone Java application.
-- **[Spring Boot Applications](MONGOCK_SPRINGBOOT_MIGRATION.md)**: Step-by-step guide for migrating from Mongock to Flamingock in a Spring Boot application.
-
-Each guide provides specific instructions tailored to the corresponding environment. Follow the appropriate guide to ensure a smooth migration process.
-
-___
-
-## 📢 Contributing
-We welcome contributions! If you have an idea for a new example or improvement to an existing one, feel free to submit a pull request. Check out our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-___
-
-## 🤝 Get Involved
-⭐ Star the [Flamingock repository](https://github.com/mongock/flamingock-project) to show your support!
-
-🐞 Report issues or suggest features in the [Flamingock issue tracker](https://github.com/mongock/flamingock-project/issues).
-
-💬 Join the discussion in the [Flamingock community](https://github.com/mongock/flamingock-project/discussions).
-
-___
+<br />
 
 ## 📜 License
-This repository is licensed under the [Apache License 2.0](LICENSE.md).
 
-___
-
-## 🔥 Explore, experiment, and empower your projects with Flamingock!
-Let us know what you think or where you’d like to see Flamingock used next.
-
+Flamingock is open source under the [Apache License 2.0](LICENSE.md).
 
 
