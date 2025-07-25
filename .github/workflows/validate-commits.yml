@@ -1,0 +1,34 @@
+name: Validate Conventional Commits
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch full git history
+        run: git fetch --prune --unshallow || true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install commitlint
+        run: npm install --save-dev @commitlint/config-conventional @commitlint/cli
+
+      - name: Create commitlint config
+        run: |
+          echo "module.exports = {" > commitlint.config.js
+          echo "  extends: ['@commitlint/config-conventional']" >> commitlint.config.js
+          echo "};" >> commitlint.config.js
+      
+      - name: Lint last 20 commits
+        run: npx commitlint --from=HEAD~20
