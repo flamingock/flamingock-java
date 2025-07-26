@@ -2,9 +2,9 @@ name: Validate Conventional Commits
 
 on:
   push:
-    branches: [master, develop]
+    branches: [develop, master]
   pull_request:
-    branches: [master, develop]
+    branches: [master]
 
 jobs:
   commitlint:
@@ -29,6 +29,6 @@ jobs:
           echo "module.exports = {" > commitlint.config.js
           echo "  extends: ['@commitlint/config-conventional']" >> commitlint.config.js
           echo "};" >> commitlint.config.js
-      
+
       - name: Lint last 20 commits
-        run: npx commitlint --from=HEAD~20
+        run: npx commitlint --from=$GITHUB_SHA~1

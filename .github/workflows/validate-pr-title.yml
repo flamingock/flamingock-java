@@ -1,0 +1,28 @@
+name: Validate PR title (Conventional Commit)
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title against Conventional Commits
+        uses: amannn/action-semantic-pull-request@v5
+        with:
+          types: |
+            feat
+            fix
+            chore
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            revert
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
