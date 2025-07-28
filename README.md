@@ -12,7 +12,7 @@ We are the original authors of Mongock. Over the past couple of years, we've bee
 — a platform inspired by what worked in Mongock, but with a much broader scope: **auditable changes that evolve across your systems for any integrations**. (A managed cloud offering is also in the works.)
 
 - Robust support for MongoDB and NoSQL migrations, covering everything previously offered by Mongock
-- EExtends beyond databases to orchestrate changes across any component type (message queues, APIs, databases, feature flags, and more)
+- Extends beyond databases to orchestrate changes across any component type (message queues, APIs, databases, feature flags, and more)
 - Designed **from the ground up with auditability, determinism, and governance at its core**
 
 ### More highlights
