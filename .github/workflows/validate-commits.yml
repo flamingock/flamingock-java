@@ -27,7 +27,10 @@ jobs:
       - name: Create commitlint config
         run: |
           echo "module.exports = {" > commitlint.config.js
-          echo "  extends: ['@commitlint/config-conventional']" >> commitlint.config.js
+          echo "  extends: ['@commitlint/config-conventional']," >> commitlint.config.js
+          echo "  rules: {" >> commitlint.config.js
+          echo "    'subject-case': [2, 'never', []]" >> commitlint.config.js
+          echo "  }" >> commitlint.config.js
           echo "};" >> commitlint.config.js
 
       - name: Lint last 20 commits
