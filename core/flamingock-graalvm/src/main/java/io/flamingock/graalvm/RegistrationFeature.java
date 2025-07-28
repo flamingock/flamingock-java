@@ -8,6 +8,7 @@ import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
@@ -52,6 +53,7 @@ public class RegistrationFeature implements Feature {
         //preview
         registerClassForReflection(PreviewPipeline.class.getName());
         registerClassForReflection(PreviewStage.class.getName());
+        registerClassForReflection(SystemPreviewStage.class.getName());
         registerClassForReflection(CodePreviewChangeUnit.class.getName());
         registerClassForReflection(PreviewMethod.class);
         registerClassForReflection(TemplatePreviewChangeUnit.class.getName());
