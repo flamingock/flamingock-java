@@ -16,15 +16,14 @@
 
 package io.flamingock.springboot;
 
-import io.flamingock.internal.core.builder.TransactionStrategy;
+import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.core.builder.cloud.CloudConfigurable;
 import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
-import io.flamingock.internal.common.core.preview.PreviewPipeline;
-import io.flamingock.core.processor.util.Deserializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Map;
@@ -98,16 +97,6 @@ public class SpringbootProperties
     }
 
     @Override
-    public void setStartSystemVersion(String startSystemVersion) {
-        coreConfiguration.setStartSystemVersion(startSystemVersion);
-    }
-
-    @Override
-    public void setEndSystemVersion(String endSystemVersion) {
-        coreConfiguration.setEndSystemVersion(endSystemVersion);
-    }
-
-    @Override
     public void setServiceIdentifier(String serviceIdentifier) {
         coreConfiguration.setServiceIdentifier(serviceIdentifier);
     }
@@ -120,11 +109,6 @@ public class SpringbootProperties
     @Override
     public void setDefaultAuthor(String defaultAuthor) {
         coreConfiguration.setDefaultAuthor(defaultAuthor);
-    }
-
-    @Override
-    public void setTransactionStrategy(TransactionStrategy transactionStrategy) {
-        coreConfiguration.setTransactionStrategy(transactionStrategy);
     }
 
 
@@ -154,16 +138,6 @@ public class SpringbootProperties
     }
 
     @Override
-    public String getStartSystemVersion() {
-        return coreConfiguration.getStartSystemVersion();
-    }
-
-    @Override
-    public String getEndSystemVersion() {
-        return coreConfiguration.getEndSystemVersion();
-    }
-
-    @Override
     public String getServiceIdentifier() {
         return coreConfiguration.getServiceIdentifier();
     }
@@ -176,21 +150,6 @@ public class SpringbootProperties
     @Override
     public String getDefaultAuthor() {
         return coreConfiguration.getDefaultAuthor();
-    }
-
-    @Override
-    public TransactionStrategy getTransactionStrategy() {
-        return coreConfiguration.getTransactionStrategy();
-    }
-
-    @Override
-    public void setLegacyMongockChangelogSource(String legacyMongockChangelogSource) {
-        coreConfiguration.setLegacyMongockChangelogSource(legacyMongockChangelogSource);
-    }
-
-    @Override
-    public String getLegacyMongockChangelogSource() {
-        return coreConfiguration.getLegacyMongockChangelogSource();
     }
 
     public SpringRunnerType getRunnerType() {

@@ -118,8 +118,6 @@ class MongoSpringDataImporterTest {
 //            );
 //
 //            FlamingockFactory.getCommunityBuilder()
-//                    .withImporter(withSource(mongo3Driver.getMigrationRepositoryName()))
-//                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
 //                    .addDependency(mongoTemplate)
 //                    .disableTransaction()
 //                    .build()

@@ -298,18 +298,6 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     }
 
     @Override
-    public HOLDER setStartSystemVersion(String startSystemVersion) {
-        coreConfiguration.setStartSystemVersion(startSystemVersion);
-        return getSelf();
-    }
-
-    @Override
-    public HOLDER setEndSystemVersion(String endSystemVersion) {
-        coreConfiguration.setEndSystemVersion(endSystemVersion);
-        return getSelf();
-    }
-
-    @Override
     public HOLDER setServiceIdentifier(String serviceIdentifier) {
         coreConfiguration.setServiceIdentifier(serviceIdentifier);
         return getSelf();
@@ -324,12 +312,6 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     @Override
     public HOLDER setDefaultAuthor(String publicMigrationAuthor) {
         coreConfiguration.setDefaultAuthor(publicMigrationAuthor);
-        return getSelf();
-    }
-
-    @Override
-    public HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy) {
-        coreConfiguration.setTransactionStrategy(transactionStrategy);
         return getSelf();
     }
 
@@ -359,16 +341,6 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     }
 
     @Override
-    public String getStartSystemVersion() {
-        return coreConfiguration.getStartSystemVersion();
-    }
-
-    @Override
-    public String getEndSystemVersion() {
-        return coreConfiguration.getEndSystemVersion();
-    }
-
-    @Override
     public String getServiceIdentifier() {
         return coreConfiguration.getServiceIdentifier();
     }
@@ -383,22 +355,6 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         return coreConfiguration.getDefaultAuthor();
     }
 
-    @Override
-    public TransactionStrategy getTransactionStrategy() {
-        return coreConfiguration.getTransactionStrategy();
-    }
-
-
-    @Override
-    public HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration) {
-        coreConfiguration.setLegacyMongockChangelogSource(mongockImporterConfiguration.getLegacySourceName());
-        return getSelf();
-    }
-
-    @Override
-    public CoreConfiguration.ImporterConfiguration getMongockImporterConfiguration() {
-        return coreConfiguration.getMongockImporterConfiguration();
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////
     //  STANDALONE

@@ -107,8 +107,6 @@ class SpringDataMongoDriverTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
-                    .withImporter(CoreConfiguration.ImporterConfiguration.withSource("mongockChangeLog"))
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .build()
                     .run();

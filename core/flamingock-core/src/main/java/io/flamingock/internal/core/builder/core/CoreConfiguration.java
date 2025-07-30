@@ -18,7 +18,6 @@ package io.flamingock.internal.core.builder.core;
 
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
-import io.flamingock.internal.core.builder.TransactionStrategy;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,24 +62,9 @@ public class CoreConfiguration implements CoreConfigurable {
      * Default value: default_author
      */
     private String defaultAuthor = DEFAULT_MIGRATION_AUTHOR;
-    /**
-     * With the introduction of ExecutableChangeUnit in version 5, Mongock provides two strategies to approach the transactions(automatic and manually):
-     * - CHANGE_UNIT: Each change unit is wrapped in an independent transaction. This is the default and recommended way for two main reasons:
-     * 1. Change Unit provides a method `beforeExecution` which is executed before the transaction when strategy is CHANGE_UNIT.
-     * If the strategy is not CHANGE_UNIT, this method is likely to be executed inside the transaction.
-     * 2. It maximizes the `eventual completeness` options, as allows Mongock to divide the work in multiple chunks in case all of them together are
-     * too big.
-     * - EXECUTION: The entire migration's execution is wrapped in a transaction.
-     */
-    private TransactionStrategy transactionStrategy = TransactionStrategy.CHANGE_UNIT;
-
 
     public LockConfiguration getLockConfiguration() {
         return lockConfiguration;
-    }
-
-    public ImporterConfiguration getMongockImporterConfiguration() {
-        return mongockImporterConfiguration;
     }
 
     @Override
@@ -125,17 +109,6 @@ public class CoreConfiguration implements CoreConfigurable {
         this.enabled = enabled;
     }
 
-
-    @Override
-    public void setStartSystemVersion(String startSystemVersion) {
-        this.startSystemVersion = startSystemVersion;
-    }
-
-    @Override
-    public void setEndSystemVersion(String endSystemVersion) {
-        this.endSystemVersion = endSystemVersion;
-    }
-
     @Override
     public void setServiceIdentifier(String serviceIdentifier) {
         this.serviceIdentifier = serviceIdentifier;
@@ -149,11 +122,6 @@ public class CoreConfiguration implements CoreConfigurable {
     @Override
     public void setDefaultAuthor(String defaultAuthor) {
         this.defaultAuthor = defaultAuthor;
-    }
-
-    @Override
-    public void setTransactionStrategy(TransactionStrategy transactionStrategy) {
-        this.transactionStrategy = transactionStrategy;
     }
 
     @Override
@@ -182,16 +150,6 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public String getStartSystemVersion() {
-        return startSystemVersion;
-    }
-
-    @Override
-    public String getEndSystemVersion() {
-        return endSystemVersion;
-    }
-
-    @Override
     public String getServiceIdentifier() {
         return serviceIdentifier;
     }
@@ -204,21 +162,6 @@ public class CoreConfiguration implements CoreConfigurable {
     @Override
     public String getDefaultAuthor() {
         return defaultAuthor;
-    }
-
-    @Override
-    public TransactionStrategy getTransactionStrategy() {
-        return transactionStrategy;
-    }
-
-    @Override
-    public void setLegacyMongockChangelogSource(String legacySourceName) {
-        mongockImporterConfiguration.setLegacySourceName(legacySourceName);
-    }
-
-    @Override
-    public String getLegacyMongockChangelogSource() {
-        return mongockImporterConfiguration.getLegacySourceName();
     }
 
     public static class LockConfiguration {

@@ -16,8 +16,6 @@
 
 package io.flamingock.internal.core.builder.core;
 
-import io.flamingock.internal.core.builder.TransactionStrategy;
-
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
 import java.util.Map;
@@ -40,17 +38,11 @@ public interface CoreConfigurable {
 
     void setEnabled(boolean enabled);
 
-    void setStartSystemVersion(String startSystemVersion);
-
-    void setEndSystemVersion(String endSystemVersion);
-
     void setServiceIdentifier(String serviceIdentifier);
 
     void setMetadata(Map<String, Object> metadata);
-    
-    void setDefaultAuthor(String defaultAuthor);
 
-    void setTransactionStrategy(TransactionStrategy transactionStrategy);
+    void setDefaultAuthor(String defaultAuthor);
 
     long getLockAcquiredForMillis();
 
@@ -62,28 +54,10 @@ public interface CoreConfigurable {
 
     boolean isEnabled();
 
-    String getStartSystemVersion();
-
-    String getEndSystemVersion();
-
     String getServiceIdentifier();
 
     Map<String, Object> getMetadata();
-    
+
     String getDefaultAuthor();
-
-    TransactionStrategy getTransactionStrategy();
-
-
-
-
-    //TODO
-    void setLegacyMongockChangelogSource(String legacyMongockChangelogSource);
-
-    String getLegacyMongockChangelogSource();
-
-    default boolean isMongockImporterEnabled() {
-        return getLegacyMongockChangelogSource() != null;
-    }
 
 }

@@ -17,8 +17,6 @@
 package io.flamingock.internal.core.builder.core;
 
 
-import io.flamingock.internal.core.builder.TransactionStrategy;
-
 import java.util.Map;
 
 public interface CoreConfigurator<HOLDER> {
@@ -33,17 +31,11 @@ public interface CoreConfigurator<HOLDER> {
 
     HOLDER setEnabled(boolean enabled);
 
-    HOLDER setStartSystemVersion(String startSystemVersion);
-
-    HOLDER setEndSystemVersion(String endSystemVersion);
-
     HOLDER setServiceIdentifier(String serviceIdentifier);
 
     HOLDER setMetadata(Map<String, Object> metadata);
 
     HOLDER setDefaultAuthor(String defaultMigrationAuthor);
-
-    HOLDER setTransactionStrategy(TransactionStrategy transactionStrategy);
 
     long getLockAcquiredForMillis();
 
@@ -55,21 +47,10 @@ public interface CoreConfigurator<HOLDER> {
 
     boolean isEnabled();
 
-    String getStartSystemVersion();
-
-    String getEndSystemVersion();
-
     String getServiceIdentifier();
 
     Map<String, Object> getMetadata();
 
     String getDefaultAuthor();
-
-    TransactionStrategy getTransactionStrategy();
-
-    HOLDER withImporter(CoreConfiguration.ImporterConfiguration mongockImporterConfiguration);
-
-    CoreConfiguration.ImporterConfiguration getMongockImporterConfiguration();
-
 
 }
