@@ -71,7 +71,7 @@ dependencies {
 dependencies {
     api(project(":core:flamingock-core-commons"))
     api(project(":core:flamingock-processor"))
-    api(project(":core:flamingock-importer"))
+    api(project(":core:importer:flamingock-importer"))
     api(project(":utils:general-util"))
     
     api("javax.inject:javax.inject:1")

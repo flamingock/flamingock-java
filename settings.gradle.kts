@@ -120,14 +120,6 @@ project(":templates:flamingock-mongodb-sync-template").projectDir = file("templa
 
 
 //////////////////////////////////////
-// INTERNAL
-//////////////////////////////////////
-include("core:flamingock-importer")
-project(":core:flamingock-importer").name = "flamingock-importer"
-project(":core:flamingock-importer").projectDir = file("core/flamingock-importer")
-
-
-//////////////////////////////////////
 // UTILS
 //////////////////////////////////////
 include("utils:general-util")
@@ -147,11 +139,26 @@ project(":utils:mongodb-util").projectDir = file("utils/mongodb-util")
 include("utils:dynamodb-util")
 project(":utils:dynamodb-util").name = "dynamodb-util"
 project(":utils:dynamodb-util").projectDir = file("utils/dynamodb-util")
-include("flamingock-importer-mongodb-tests")
+
 
 //////////////////////////////////////
-// IMPORTER TESTS
+// IMPORTER
 //////////////////////////////////////
-include("test:flamingock-importer-mongodb-tests")
-include("test:flamingock-importer-dynamodb-tests")
-include("test:flamingock-importer-couchbase-tests")
+include("core:importer:flamingock-importer")
+project(":core:importer:flamingock-importer").name = "flamingock-importer"
+project(":core:importer:flamingock-importer").projectDir = file("core/importer/flamingock-importer")
+
+include("core:importer:flamingock-importer-mongodb-tests")
+project(":core:importer:flamingock-importer-mongodb-tests").name = "flamingock-importer-mongodb-tests"
+project(":core:importer:flamingock-importer-mongodb-tests").projectDir = file("core/importer/flamingock-importer-mongodb-tests")
+
+
+include("core:importer:flamingock-importer-dynamodb-tests")
+project(":core:importer:flamingock-importer-dynamodb-tests").name = "flamingock-importer-dynamodb-tests"
+project(":core:importer:flamingock-importer-dynamodb-tests").projectDir = file("core/importer/flamingock-importer-dynamodb-tests")
+
+
+include("core:importer:flamingock-importer-couchbase-tests")
+project(":core:importer:flamingock-importer-couchbase-tests").name = "flamingock-importer-couchbase-tests"
+project(":core:importer:flamingock-importer-couchbase-tests").projectDir = file("core/importer/flamingock-importer-couchbase-tests")
+

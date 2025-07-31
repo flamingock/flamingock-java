@@ -2,7 +2,7 @@ dependencies {
 
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 
-    testImplementation(project(":core:flamingock-importer"))
+    testImplementation(project(":core:importer:flamingock-importer"))
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":community:flamingock-ce-dynamodb"))
 
