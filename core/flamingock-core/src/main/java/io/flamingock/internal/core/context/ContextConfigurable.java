@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package io.flamingock.internal.core.builder;
+package io.flamingock.internal.core.context;
 
 
 import io.flamingock.internal.util.Property;
-import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
-import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
-import io.flamingock.internal.core.event.model.IPipelineIgnoredEvent;
-import io.flamingock.internal.core.event.model.IPipelineStartedEvent;
-import io.flamingock.internal.core.event.model.IStageCompletedEvent;
-import io.flamingock.internal.core.event.model.IStageFailedEvent;
-import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
-import io.flamingock.internal.core.event.model.IStageStartedEvent;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -47,9 +39,8 @@ import java.time.ZonedDateTime;
 import java.util.Currency;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.function.Consumer;
 
-public interface ContextConfigurator<HOLDER> {
+public interface ContextConfigurable<HOLDER> {
 
     /**
      * Manually adds a dependency to be used in the change units, which can be retrieved by its own type.
@@ -86,126 +77,6 @@ public interface ContextConfigurator<HOLDER> {
      * @return fluent builder
      */
     HOLDER addDependency(String name, Class<?> type, Object instance);
-
-    /**
-     * Sets the listener to be notified when a pipeline is started.
-     *
-     * @param listener consumer of the pipeline started event
-     * @return fluent builder
-     */
-    HOLDER setPipelineStartedListener(Consumer<IPipelineStartedEvent> listener);
-
-    /**
-     * Sets the listener to be notified when a pipeline is successfully completed.
-     *
-     * @param listener consumer of the pipeline completed event
-     * @return fluent builder
-     */
-    HOLDER setPipelineCompletedListener(Consumer<IPipelineCompletedEvent> listener);
-
-    /**
-     * Sets the listener to be notified when a pipeline is ignored.
-     *
-     * @param listener consumer of the pipeline ignored event
-     * @return fluent builder
-     */
-    HOLDER setPipelineIgnoredListener(Consumer<IPipelineIgnoredEvent> listener);
-
-    /**
-     * Sets the listener to be notified when a pipeline fails.
-     *
-     * @param listener consumer of the pipeline failed event
-     * @return fluent builder
-     */
-    HOLDER setPipelineFailedListener(Consumer<IPipelineFailedEvent> listener);
-
-    /**
-     * Sets the listener to be notified when a stage is started.
-     *
-     * @param listener consumer of the stage started event
-     * @return fluent builder
-     */
-    HOLDER setStageStartedListener(Consumer<IStageStartedEvent> listener);
-
-    /**
-     * Sets the listener to be notified when a stage is successfully completed.
-     *
-     * @param listener consumer of the stage completed event
-     * @return fluent builder
-     */
-    HOLDER setStageCompletedListener(Consumer<IStageCompletedEvent> listener);
-
-    /**
-     * Sets the listener to be notified when a stage is ignored.
-     *
-     * @param listener consumer of the stage ignored event
-     * @return fluent builder
-     */
-    HOLDER setStageIgnoredListener(Consumer<IStageIgnoredEvent> listener);
-
-    /**
-     * Sets the listener to be notified when a stage fails.
-     *
-     * @param listener consumer of the stage failed event
-     * @return fluent builder
-     */
-    HOLDER setStageFailedListener(Consumer<IStageFailedEvent> listener);
-
-    /**
-     * Gets the registered pipeline started listener.
-     *
-     * @return pipeline started event listener
-     */
-    Consumer<IPipelineStartedEvent> getPipelineStartedListener();
-
-    /**
-     * Gets the registered pipeline completed listener.
-     *
-     * @return pipeline completed event listener
-     */
-    Consumer<IPipelineCompletedEvent> getPipelineCompletedListener();
-
-    /**
-     * Gets the registered pipeline ignored listener.
-     *
-     * @return pipeline ignored event listener
-     */
-    Consumer<IPipelineIgnoredEvent> getPipelineIgnoredListener();
-
-    /**
-     * Gets the registered pipeline failed listener.
-     *
-     * @return pipeline failed event listener
-     */
-    Consumer<IPipelineFailedEvent> getPipelineFailureListener();
-
-    /**
-     * Gets the registered stage started listener.
-     *
-     * @return stage started event listener
-     */
-    Consumer<IStageStartedEvent> getStageStartedListener();
-
-    /**
-     * Gets the registered stage completed listener.
-     *
-     * @return stage completed event listener
-     */
-    Consumer<IStageCompletedEvent> getStageCompletedListener();
-
-    /**
-     * Gets the registered stage ignored listener.
-     *
-     * @return stage ignored event listener
-     */
-    Consumer<IStageIgnoredEvent> getStageIgnoredListener();
-
-    /**
-     * Gets the registered stage failed listener.
-     *
-     * @return stage failed event listener
-     */
-    Consumer<IStageFailedEvent> getStageFailureListener();
 
     HOLDER setProperty(Property property);
 
@@ -284,6 +155,5 @@ public interface ContextConfigurator<HOLDER> {
     HOLDER setProperty(String key, Character[] value);
 
     <T extends Enum<T>> HOLDER setProperty(String key, T value);
-
 
 }

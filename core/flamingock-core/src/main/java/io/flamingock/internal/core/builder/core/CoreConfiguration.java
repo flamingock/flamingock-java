@@ -31,7 +31,6 @@ public class CoreConfiguration implements CoreConfigurable {
 
     private final LockConfiguration lockConfiguration = new LockConfiguration();
 
-    private final ImporterConfiguration mongockImporterConfiguration = ImporterConfiguration.getDisabled();
 
     /**
      * If false, will disable Mongock. Default true
@@ -242,32 +241,4 @@ public class CoreConfiguration implements CoreConfigurable {
         }
     }
 
-    public static class ImporterConfiguration {
-
-        private static ImporterConfiguration getDisabled() {
-            return new ImporterConfiguration(null);
-        }
-
-        public static ImporterConfiguration withSource(String sourceName) {
-            return new ImporterConfiguration(sourceName);
-        }
-
-        private String sourceName;
-
-        private ImporterConfiguration(String collectionSourceName) {
-            this.sourceName = collectionSourceName;
-        }
-
-        public String getLegacySourceName() {
-            return sourceName;
-        }
-
-        public void setLegacySourceName(String sourceName) {
-            this.sourceName = sourceName;
-        }
-
-        public boolean isEnabled() {
-            return sourceName != null;
-        }
-    }
 }
