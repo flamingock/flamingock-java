@@ -6,7 +6,7 @@
 <h3 align="center">Auditable, versioned changes across distributed systems.</h3>
 <p align="center">Evolve queues, DBs, APIs, configs, resources and more — governed, auditable, executed at startup in lockstep.</p>
 
-<p align="center"><small><a href="./mongock-migration-explanation.md">Coming from Mongock?</a></small></p>
+<p align="center"><small><a href="https://github.com/flamingock/mongock-legacy?tab=readme-ov-file#%EF%B8%8F-mongock-is-deprecated">Coming from Mongock?</a></small></p>
 <br />
 
 <p align="center">
