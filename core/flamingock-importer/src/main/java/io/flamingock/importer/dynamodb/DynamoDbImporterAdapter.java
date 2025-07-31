@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://oss.flamingock.io)
+ * Copyright 2023 Flamingock (https://oss.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package io.flamingock.importer.dynamodb;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.importer.ImporterAdapter;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class DynamoDbImporterAdapter implements ImporterAdapter {
+
+    private final DynamoDbTable<DynamoDbChangeEntry> sourceTable;
+
+    public DynamoDbImporterAdapter(DynamoDbClient client, String tableName) {
+        DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(client)
+                .build();
+        this.sourceTable = enhancedClient.table(tableName, TableSchema.fromBean(DynamoDbChangeEntry.class));
+    }
+
     @Override
     public List<AuditEntry> getAuditEntries() {
-        return Collections.emptyList();
+        List<DynamoDbChangeEntry> entries = StreamSupport
+                .stream(sourceTable.scan().items().spliterator(), false)
+                .collect(Collectors.toList());
+
+        return entries.stream()
+                .map(DynamoDbChangeEntry::toAuditEntry)
+                .collect(Collectors.toList());
     }
 }

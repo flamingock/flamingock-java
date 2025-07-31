@@ -1,0 +1,7 @@
+id: migration-from-mongock
+order: 0001
+transactional: false
+template: CouchbaseImporterChangeTemplate
+configuration:
+  origin: mongockChangeLogs
+  failOnEmptyOrigin: true

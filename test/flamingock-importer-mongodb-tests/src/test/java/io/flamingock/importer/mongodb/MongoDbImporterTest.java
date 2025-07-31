@@ -48,9 +48,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @EnableFlamingock(
     stages = {
-        @Stage(location = "io.flamingock.importer.mongodb.flamingock.system", type = SYSTEM),
-        @Stage(location = "io.flamingock.importer.mongodb.flamingock.legacy", type = LEGACY),
-        @Stage(location = "io.flamingock.importer.mongodb.flamingock.mongodb")
+        @Stage(location = "io.flamingock.importer.mongodb.system", type = SYSTEM),
+        @Stage(location = "io.flamingock.importer.mongodb.legacy", type = LEGACY),
+        @Stage(location = "io.flamingock.importer.mongodb.mongodb")
     }
 )
 @Testcontainers
@@ -113,27 +113,27 @@ public class MongoDbImporterTest {
 
         //TODO CHECK audits from Mongock
 
-        assertEquals("create-users-collection-with-index", createCollectionAudit.getString("changeId"));
-        assertEquals("EXECUTED", createCollectionAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
+        Assertions.assertEquals("create-users-collection-with-index", createCollectionAudit.getString("changeId"));
+        Assertions.assertEquals("EXECUTED", createCollectionAudit.getString("state"));
+        Assertions.assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
 
         Document seedAudit = auditLog.get(7);
-        assertEquals("seed-users", seedAudit.getString("changeId"));
-        assertEquals("EXECUTED", seedAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
+        Assertions.assertEquals("seed-users", seedAudit.getString("changeId"));
+        Assertions.assertEquals("EXECUTED", seedAudit.getString("state"));
+        Assertions.assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
 
         List<Document> users = mongoDatabase.getCollection("users")
                 .find()
                 .into(new ArrayList<>());
 
         assertEquals(2, users.size());
-        assertEquals("Admin", users.get(0).getString("name"));
-        assertEquals("admin@company.com", users.get(0).getString("email"));
-        assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
+        Assertions.assertEquals("Admin", users.get(0).getString("name"));
+        Assertions.assertEquals("admin@company.com", users.get(0).getString("email"));
+        Assertions.assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
 
-        assertEquals("Backup", users.get(1).getString("name"));
-        assertEquals("backup@company.com", users.get(1).getString("email"));
-        assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
+        Assertions.assertEquals("Backup", users.get(1).getString("name"));
+        Assertions.assertEquals("backup@company.com", users.get(1).getString("email"));
+        Assertions.assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
     }
 
 

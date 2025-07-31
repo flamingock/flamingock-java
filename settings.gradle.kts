@@ -147,3 +147,11 @@ project(":utils:mongodb-util").projectDir = file("utils/mongodb-util")
 include("utils:dynamodb-util")
 project(":utils:dynamodb-util").name = "dynamodb-util"
 project(":utils:dynamodb-util").projectDir = file("utils/dynamodb-util")
+include("flamingock-importer-mongodb-tests")
+
+//////////////////////////////////////
+// IMPORTER TESTS
+//////////////////////////////////////
+include("test:flamingock-importer-mongodb-tests")
+include("test:flamingock-importer-dynamodb-tests")
+include("test:flamingock-importer-couchbase-tests")

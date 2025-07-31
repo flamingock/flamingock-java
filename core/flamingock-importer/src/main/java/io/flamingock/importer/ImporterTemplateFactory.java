@@ -64,9 +64,9 @@ public class ImporterTemplateFactory implements ChangeTemplateFactory {
         if (isMongoDbAdapter()) {
             return Optional.of(MONGO_TEMPLATE_CLASS);
         } else if (isDynamoDbAdapter()) {
-            return Optional.empty();//Optional.of(DYNAMO_TEMPLATE_CLASS);
+            return Optional.of(DYNAMO_TEMPLATE_CLASS);
         } else if (isCouchbaseAdapter()) {
-            return Optional.empty();//Optional.of(COUCHBASE_TEMPLATE_CLASS);
+            return Optional.of(COUCHBASE_TEMPLATE_CLASS);
         } else {
             logger.debug("No compatible database driver detected. Please include a supported database dependency (MongoDB, DynamoDB, or Couchbase) in your project classpath.");
         }
@@ -94,9 +94,13 @@ public class ImporterTemplateFactory implements ChangeTemplateFactory {
     }
 
     private static boolean isCouchbaseAdapter() {
-        //TODO implement
-        logger.warn("Couchbase adapter not implemented, skipping");
-        return false;
+        try {
+            Class.forName("com.couchbase.client.java.Cluster");
+            return true;
+        } catch (ClassNotFoundException e) {
+            logger.warn("Couchbase adapter not found, skipping");
+            return false;
+        }
     }
 
     private static Class<?> loadClass(String className) {

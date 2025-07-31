@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://oss.flamingock.io)
+ * Copyright 2023 Flamingock (https://oss.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-package io.flamingock.importer.mongodb.flamingock.legacy;
+
+package io.flamingock.importer.dynamodb.legacy;
 
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
