@@ -2,7 +2,7 @@
 
 **Document Version**: 1.0  
 **Date**: 2025-01-06  
-**Authors**: Antonio Perez Dieppa
+**Authors**: Antonio Perez Dieppa  
 **Priority**: High  
 **Assignee**: Development Team Lead  
 

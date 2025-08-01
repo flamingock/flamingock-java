@@ -2,6 +2,7 @@
 
 **Document Version**: 1.0  
 **Date**: 2025-01-31  
+**Authors**: Antonio Perez Dieppa  
 **Audience**: New Developers, Architecture Team  
 
 ## Overview

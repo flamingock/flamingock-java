@@ -2,7 +2,7 @@
 
 **Document Version**: 1.0  
 **Date**: 2025-01-06  
-**Authors**: Antonio Perez Dieppa
+**Authors**: Antonio Perez Dieppa  
 **Audience**: Development Team, Architecture Review  
 
 ## Table of Contents
