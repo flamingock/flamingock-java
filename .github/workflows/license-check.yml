@@ -1,0 +1,43 @@
+name: License Header Check
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  push:
+    branches: [ master, main ]
+
+jobs:
+  license-check:
+    runs-on: ubuntu-latest
+    name: Check License Headers
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 8
+      uses: actions/setup-java@v4
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
+
+    - name: Check license headers
+      run: ./gradlew spotlessCheck
+
+    - name: License check results
+      if: failure()
+      run: |
+        echo "❌ License header check failed!"
+        echo ""
+        echo "Some files are missing proper license headers."
+        echo ""
+        echo "To fix this issue:"
+        echo "1. Run './gradlew spotlessApply' to automatically add missing headers"
+        echo "2. Commit the changes"
+        echo "3. Push to update your pull request"
+        echo ""
+        echo "Or check individual files and add the required license header manually."
+        exit 1

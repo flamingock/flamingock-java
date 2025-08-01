@@ -56,7 +56,7 @@ import java.util.Set;
  * Annotation processor for Flamingock that generates metadata files containing information
  * about templated and annotated changes. The processor requires a mandatory {@link EnableFlamingock}
  * annotation to configure the pipeline.
- * <p>
+ *
  * <h2>@Flamingock Annotation Configuration</h2>
  * The processor supports two mutually exclusive configuration modes:
  * <ul>
@@ -71,21 +71,21 @@ import java.util.Set;
  * <h4>Examples:</h4>
  * <pre>{@code
  * // Absolute file path - highest priority
- * @EnableFlamingock(pipelineFile = "/path/to/external/pipeline.yaml")
+ * &#64;EnableFlamingock(pipelineFile = "/path/to/external/pipeline.yaml")
  * // Uses direct file system path
  *
  * // Relative file path - second priority (relative to working directory)
- * @EnableFlamingock(pipelineFile = "config/flamingock-pipeline.yaml")
+ * &#64;EnableFlamingock(pipelineFile = "config/flamingock-pipeline.yaml")
  * // Resolves relative to current working directory, NOT as classpath resource
  *
  * // Classpath resource - fallback if file doesn't exist relative to working directory
- * @EnableFlamingock(pipelineFile = "flamingock/pipeline.yaml")
+ * &#64;EnableFlamingock(pipelineFile = "flamingock/pipeline.yaml")
  * // If "flamingock/pipeline.yaml" doesn't exist in working directory,
  * // then tries: src/main/resources/flamingock/pipeline.yaml
  * // then tries: src/test/resources/flamingock/pipeline.yaml
  *
  * // Resource with explicit "resources/" prefix (automatically stripped)
- * @EnableFlamingock(pipelineFile = "resources/flamingock/pipeline.yaml")
+ * &#64;EnableFlamingock(pipelineFile = "resources/flamingock/pipeline.yaml")
  * // First tries: "resources/flamingock/pipeline.yaml" relative to working directory
  * // If not found, strips "resources/" prefix and tries classpath resolution:
  * // src/main/resources/flamingock/pipeline.yaml or src/test/resources/flamingock/pipeline.yaml
@@ -106,10 +106,10 @@ import java.util.Set;
  *
  * <h3>Annotation-based Configuration</h3>
  * <pre>{@code
- * @EnableFlamingock(stages = {
- *     @Stage(type = StageType.SYSTEM, location = "com.example.system"),
- *     @Stage(type = StageType.LEGACY, location = "com.example.init"),
- *     @Stage(location = "com.example.migrations")
+ * &#64;EnableFlamingock(stages = {
+ *     &#64;Stage(type = StageType.SYSTEM, location = "com.example.system"),
+ *     &#64;Stage(type = StageType.LEGACY, location = "com.example.init"),
+ *     &#64;Stage(location = "com.example.migrations")
  * })
  * }</pre>
  *

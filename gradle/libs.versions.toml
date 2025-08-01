@@ -1,0 +1,32 @@
+[versions]
+kotlin = "1.9.22"
+spotless = "6.25.0"
+jreleaser = "1.15.0"
+slf4j = "2.0.6"
+junit = "5.9.2"
+mockito = "4.11.0"
+json = "20210307"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-junit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
+
+json = { module = "org.json:json", version.ref = "json" }
+
+[bundles]
+junit = ["junit-api", "junit-engine", "junit-params"]
+mockito = ["mockito-core", "mockito-junit", "mockito-inline"]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+jreleaser = { id = "org.jreleaser", version.ref = "jreleaser" }
