@@ -3,7 +3,7 @@
 **Document Version**: 1.0  
 **Date**: 2025-01-06  
 **Authors**: Antonio Perez Dieppa  
-**Audience**: Development Team  
+**Audience**: **Audience**: New Developers, Architecture Team  
 
 ## Table of Contents
 
