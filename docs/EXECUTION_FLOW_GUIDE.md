@@ -27,9 +27,9 @@ graph TB
     subgraph BuilderPhase["🏗️ Builder & Initialization Phase"]
         direction TB
         
-        Entry([Developer calls<br/>Flamingock.builder()]) --> BuilderCreated[Builder Instance Created]
+        Entry((Developer calls<br/>Flamingock.builder)) --> BuilderCreated[Builder Instance Created]
         BuilderCreated --> ConfigBuilder[Developer Configures Builder<br/>• Database connection<br/>• Dependencies<br/>• Event listeners<br/>• Core settings]
-        ConfigBuilder --> BuildCall[Developer calls .build()]
+        ConfigBuilder --> BuildCall[Developer calls .build]
         
         BuildCall --> CriticalOrder{Critical Component<br/>Initialization Order}
         CriticalOrder --> LoadTemplates[1. Load Change Templates]
@@ -46,7 +46,7 @@ graph TB
     subgraph ExecutionPhase["🚀 Pipeline Execution Phase"]
         direction TB
         
-        CreateRunner --> RunnerRun[Developer calls runner.run()]
+        CreateRunner --> RunnerRun[Developer calls runner.run]
         RunnerRun --> PipelineStart[Pipeline Started Event]
         
         PipelineStart --> ExecutionLoop{Main Execution Loop}
