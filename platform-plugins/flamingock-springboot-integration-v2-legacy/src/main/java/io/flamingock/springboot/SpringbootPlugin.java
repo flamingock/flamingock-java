@@ -47,15 +47,15 @@ public class SpringbootPlugin implements Plugin {
     private ApplicationEventPublisher eventPublisher;
 
     @Override
-    public void initialize(ContextResolver dependencyContext) {
-        if(dependencyContext.getDependency(ApplicationContext.class).isPresent()) {
-            applicationContext = (ApplicationContext) dependencyContext
+    public void initialize(ContextResolver baseContext) {
+        if(baseContext.getDependency(ApplicationContext.class).isPresent()) {
+            applicationContext = (ApplicationContext) baseContext
                     .getDependency(ApplicationContext.class)
                     .get()
                     .getInstance();    
         }
-        if(dependencyContext.getDependency(ApplicationEventPublisher.class).isPresent()) {
-            eventPublisher = (ApplicationEventPublisher) dependencyContext
+        if(baseContext.getDependency(ApplicationEventPublisher.class).isPresent()) {
+            eventPublisher = (ApplicationEventPublisher) baseContext
                     .getDependency(ApplicationContext.class)
                     .get()
                     .getInstance();

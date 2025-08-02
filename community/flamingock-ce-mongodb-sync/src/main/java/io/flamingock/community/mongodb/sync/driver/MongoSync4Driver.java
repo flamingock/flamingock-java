@@ -36,14 +36,14 @@ public class MongoSync4Driver implements LocalDriver {
     private MongoDBSync4Configuration driverConfiguration;
 
     @Override
-    public void initialize(ContextResolver contextResolver) {
-        runnerId = contextResolver.getRequiredDependencyValue(RunnerId.class);
-        coreConfiguration = contextResolver.getRequiredDependencyValue(CoreConfigurable.class);
-        communityConfiguration = contextResolver.getRequiredDependencyValue(CommunityConfigurable.class);
-        mongoClient = contextResolver.getRequiredDependencyValue(MongoClient.class);
-        mongoDatabase = contextResolver.getRequiredDependencyValue(MongoDatabase.class);
-        driverConfiguration = contextResolver.getDependencyValue(MongoDBSync4Configuration.class).orElse(new MongoDBSync4Configuration());
-        driverConfiguration.mergeConfig(contextResolver);
+    public void initialize(ContextResolver baseContext) {
+        runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
+        coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
+        mongoClient = baseContext.getRequiredDependencyValue(MongoClient.class);
+        mongoDatabase = baseContext.getRequiredDependencyValue(MongoDatabase.class);
+        driverConfiguration = baseContext.getDependencyValue(MongoDBSync4Configuration.class).orElse(new MongoDBSync4Configuration());
+        driverConfiguration.mergeConfig(baseContext);
     }
 
     @Override

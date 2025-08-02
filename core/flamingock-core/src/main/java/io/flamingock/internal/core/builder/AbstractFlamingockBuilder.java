@@ -22,7 +22,7 @@ import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.core.CoreConfigurator;
-import io.flamingock.internal.core.context.ContextConfigurable;
+import io.flamingock.internal.common.core.context.ContextConfigurable;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.engine.ConnectionEngine;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;

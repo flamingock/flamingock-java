@@ -28,10 +28,10 @@ public class DefaultPluginManager implements PluginManager {
     private List<Plugin> frameworkPlugins;
 
     @Override
-    public void initialize(ContextResolver dependencyContext) {
+    public void initialize(ContextResolver baseContext) {
         frameworkPlugins = StreamSupport
                 .stream(ServiceLoader.load(Plugin.class).spliterator(), false)
-                .peek(frameworkPlugin -> frameworkPlugin.initialize(dependencyContext))
+                .peek(frameworkPlugin -> frameworkPlugin.initialize(baseContext))
                 .collect(Collectors.toList());
     }
 

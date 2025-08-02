@@ -37,17 +37,17 @@ public class DynamoDBDriver implements LocalDriver {
     }
 
     @Override
-    public void initialize(ContextResolver dependencyContext) {
-        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+    public void initialize(ContextResolver baseContext) {
+        runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
 
-        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
-        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+        coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
 
-        this.client = dependencyContext.getRequiredDependencyValue(DynamoDbClient.class);
+        this.client = baseContext.getRequiredDependencyValue(DynamoDbClient.class);
 
-        this.driverConfiguration = dependencyContext.getDependencyValue(DynamoDBConfiguration.class)
+        this.driverConfiguration = baseContext.getDependencyValue(DynamoDBConfiguration.class)
                 .orElse(new DynamoDBConfiguration());
-        this.driverConfiguration.mergeConfig(dependencyContext);
+        this.driverConfiguration.mergeConfig(baseContext);
     }
 
     @Override

@@ -39,18 +39,18 @@ public class CouchbaseDriver implements LocalDriver {
     }
 
     @Override
-    public void initialize(ContextResolver dependencyContext) {
-        runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+    public void initialize(ContextResolver baseContext) {
+        runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
 
-        coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
-        communityConfiguration = dependencyContext.getRequiredDependencyValue(CommunityConfigurable.class);
+        coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
+        communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
 
-        this.cluster = dependencyContext.getRequiredDependencyValue(Cluster.class);
-        this.collection = dependencyContext.getRequiredDependencyValue(Collection.class);
+        this.cluster = baseContext.getRequiredDependencyValue(Cluster.class);
+        this.collection = baseContext.getRequiredDependencyValue(Collection.class);
 
-        this.driverConfiguration = dependencyContext.getDependencyValue(CouchbaseConfiguration.class)
+        this.driverConfiguration = baseContext.getDependencyValue(CouchbaseConfiguration.class)
                 .orElse(new CouchbaseConfiguration());
-        this.driverConfiguration.mergeConfig(dependencyContext);
+        this.driverConfiguration.mergeConfig(baseContext);
     }
 
     @Override

@@ -15,6 +15,6 @@
  */
 package io.flamingock.internal.common.core.context;
 
-public interface ContextInitializable {
-    void initialize(ContextResolver baseContext);
+public interface ContextComposer {
+    Context compose(ContextResolver baseContext);
 }

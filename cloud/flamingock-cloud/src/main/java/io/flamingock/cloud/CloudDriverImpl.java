@@ -51,12 +51,12 @@ public class CloudDriverImpl  implements CloudDriver {
 
 
     @Override
-    public void initialize(ContextResolver dependencyContext) {
-        RunnerId runnerId = dependencyContext.getRequiredDependencyValue(RunnerId.class);
+    public void initialize(ContextResolver baseContext) {
+        RunnerId runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
 
-        CoreConfigurable coreConfiguration = dependencyContext.getRequiredDependencyValue(CoreConfigurable.class);
-        CloudConfigurable cloudConfiguration = dependencyContext.getRequiredDependencyValue(CloudConfigurable.class);
-        CloudTransactioner transactioner = dependencyContext.getDependencyValue(CloudTransactioner.class).orElse(null);
+        CoreConfigurable coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
+        CloudConfigurable cloudConfiguration = baseContext.getRequiredDependencyValue(CloudConfigurable.class);
+        CloudTransactioner transactioner = baseContext.getDependencyValue(CloudTransactioner.class).orElse(null);
 
         Http.RequestBuilderFactory requestBuilderFactory =
                 Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
