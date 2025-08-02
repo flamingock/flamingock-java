@@ -26,7 +26,7 @@ import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4Collection
 import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWrapper;
 import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4TransactionWrapper;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
@@ -91,19 +91,19 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public Set<TaskWithOngoingStatus> getOngoingStatuses() {
+    public Set<OngoingTaskStatus> getAll() {
         return onGoingTasksCollection.find()
                 .map(MongoSync4CloudTransactioner::mapToOnGoingStatus)
                 .into(new HashSet<>());
     }
 
     @Override
-    public void cleanOngoingStatus(String taskId) {
+    public void clean(String taskId) {
         onGoingTasksCollection.deleteMany(Filters.eq(TASK_ID, taskId));
     }
 
     @Override
-    public void saveOngoingStatus(TaskWithOngoingStatus status) {
+    public void register(OngoingTaskStatus status) {
         Document filter = new Document(TASK_ID, status.getTaskId());
 
         // Define the new document to replace or insert
@@ -121,8 +121,8 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
         return transactionWrapper.wrapInTransaction(loadedTask, dependencyInjectable, operation);
     }
 
-    public static TaskWithOngoingStatus mapToOnGoingStatus(Document document) {
+    public static OngoingTaskStatus mapToOnGoingStatus(Document document) {
         OngoingStatus operation = OngoingStatus.valueOf(document.getString(OPERATION));
-        return new TaskWithOngoingStatus(document.getString(TASK_ID), operation);
+        return new OngoingTaskStatus(document.getString(TASK_ID), operation);
     }
 }

@@ -16,7 +16,7 @@
 package io.flamingock.core.cloud.utils;
 
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 
@@ -27,24 +27,24 @@ import java.util.function.Supplier;
 
 public class TestCloudTransactioner implements CloudTransactioner {
 
-    private final HashSet<TaskWithOngoingStatus> ongoingStatuses;
+    private final HashSet<OngoingTaskStatus> ongoingStatuses;
 
-    public TestCloudTransactioner(TaskWithOngoingStatus... statuses) {
+    public TestCloudTransactioner(OngoingTaskStatus... statuses) {
         ongoingStatuses = statuses != null ? new HashSet<>(Arrays.asList(statuses)) : new HashSet<>();
     }
 
     @Override
-    public Set<TaskWithOngoingStatus> getOngoingStatuses() {
+    public Set<OngoingTaskStatus> getAll() {
         return ongoingStatuses;
     }
 
     @Override
-    public void cleanOngoingStatus(String taskId) {
+    public void clean(String taskId) {
         ongoingStatuses.removeIf(status -> taskId.equals(status.getTaskId()));
     }
 
     @Override
-    public void saveOngoingStatus(TaskWithOngoingStatus status) {
+    public void register(OngoingTaskStatus status) {
         ongoingStatuses.add(status);
     }
 

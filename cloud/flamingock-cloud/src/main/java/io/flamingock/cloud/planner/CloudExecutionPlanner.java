@@ -23,10 +23,10 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
 import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
-import io.flamingock.internal.core.cloud.transaction.OngoingStatusRepository;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.execution.ExecutionPlan;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
@@ -56,13 +56,13 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private final ExecutionPlannerClient client;
 
-    private final OngoingStatusRepository ongoingStatusRepository;
+    private final OngoingTaskStatusRepository ongoingStatusRepository;
 
     public CloudExecutionPlanner(RunnerId runnerId,
                                  ExecutionPlannerClient client,
                                  CoreConfigurable coreConfiguration,
                                  CloudLockService lockService,
-                                 OngoingStatusRepository ongoingStatusRepository,
+                                 OngoingTaskStatusRepository ongoingStatusRepository,
                                  TimeService timeService) {
         this.client = client;
         this.runnerId = runnerId;
@@ -133,7 +133,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
         Map<String, OngoingStatus> ongoingStatusesMap = getOngoingStatuses()
                 .stream()
-                .collect(Collectors.toMap(TaskWithOngoingStatus::getTaskId, TaskWithOngoingStatus::getOperation));
+                .collect(Collectors.toMap(OngoingTaskStatus::getTaskId, OngoingTaskStatus::getOperation));
 
         ExecutionPlanRequest requestBody = ExecutionPlanMapper.toRequest(
                 loadedStages,
@@ -145,8 +145,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return responsePlan;
     }
 
-    private Collection<TaskWithOngoingStatus> getOngoingStatuses() {
-        return ongoingStatusRepository != null ? ongoingStatusRepository.getOngoingStatuses() : Collections.emptySet();
+    private Collection<OngoingTaskStatus> getOngoingStatuses() {
+        return ongoingStatusRepository != null ? ongoingStatusRepository.getAll() : Collections.emptySet();
     }
 
     private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {

@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.cloud.transaction.OngoingStatusRepository;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.context.PriorityContext;
 
@@ -51,8 +51,8 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
 
         instance.setRuntimeManager(runtimeManager);
         instance.setTransactionWrapper(transactionWrapper);
-        OngoingStatusRepository ongoingTasksRepository = transactionWrapper != null && CloudTransactioner.class.isAssignableFrom(transactionWrapper.getClass())
-                ? (OngoingStatusRepository) transactionWrapper : null;
+        OngoingTaskStatusRepository ongoingTasksRepository = transactionWrapper != null && CloudTransactioner.class.isAssignableFrom(transactionWrapper.getClass())
+                ? (OngoingTaskStatusRepository) transactionWrapper : null;
         instance.setOngoingTasksRepository(ongoingTasksRepository);
     }
 }

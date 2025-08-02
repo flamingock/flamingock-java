@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.core.cloud.transaction.OngoingStatusRepository;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
@@ -57,7 +57,7 @@ public class StepNavigator {
     private static final String MANUAL_ROLLBACK_DESC = "manual-rollback";
     private static final String AUTO_ROLLBACK_DESC = "auto-rollback";
 
-    private OngoingStatusRepository ongoingTasksRepository;
+    private OngoingTaskStatusRepository ongoingTasksRepository;
 
     private TaskSummarizer summarizer;
 
@@ -71,7 +71,7 @@ public class StepNavigator {
                          TaskSummarizer summarizer,
                          RuntimeManager runtimeManager,
                          TransactionWrapper transactionWrapper,
-                         OngoingStatusRepository ongoingTasksRepository) {
+                         OngoingTaskStatusRepository ongoingTasksRepository) {
         this.auditWriter = auditWriter;
         this.summarizer = summarizer;
         this.runtimeManager = runtimeManager;
@@ -101,7 +101,7 @@ public class StepNavigator {
         this.transactionWrapper = transactionWrapper;
     }
 
-    void setOngoingTasksRepository(OngoingStatusRepository ongoingStatusRepository) {
+    void setOngoingTasksRepository(OngoingTaskStatusRepository ongoingStatusRepository) {
         this.ongoingTasksRepository = ongoingStatusRepository;
     }
 
@@ -142,7 +142,7 @@ public class StepNavigator {
 
         //If it's a cloud transaction, it requires to write the status
         if (ongoingTasksRepository != null) {
-            ongoingTasksRepository.setOngoingExecution(executableStep.getTask());
+            ongoingTasksRepository.registerAsExecuting(executableStep.getTask());
         }
 
         return transactionWrapper.wrapInTransaction(executableStep.getLoadedTask(), dependencyInjectable, () -> {
@@ -152,7 +152,7 @@ public class StepNavigator {
                 if (executionAuditResult instanceof CompletedSuccessStep) {
                     //If it's a cloud transaction, it requires to clean the status
                     if (ongoingTasksRepository != null) {
-                        ongoingTasksRepository.cleanOngoingStatus(executableStep.getLoadedTask().getId());
+                        ongoingTasksRepository.clean(executableStep.getLoadedTask().getId());
                     }
                     return executionAuditResult;
                 }

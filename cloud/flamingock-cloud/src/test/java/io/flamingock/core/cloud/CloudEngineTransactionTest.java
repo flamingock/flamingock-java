@@ -24,7 +24,7 @@ import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
 import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -137,12 +137,12 @@ public class CloudEngineTransactionTest {
         runner.execute();
 
         //THEN
-        verify(cloudTransactioner, new Times(2)).getOngoingStatuses();
-        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new TaskWithOngoingStatus("create-persons-table-from-template", OngoingStatus.EXECUTION));
-        verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template");
+        verify(cloudTransactioner, new Times(2)).getAll();
+        verify(cloudTransactioner, new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template", OngoingStatus.EXECUTION));
+        verify(cloudTransactioner, new Times(1)).clean("create-persons-table-from-template");
 
-        verify(cloudTransactioner, new Times(1)).saveOngoingStatus(new TaskWithOngoingStatus("create-persons-table-from-template-2", OngoingStatus.EXECUTION));
-        verify(cloudTransactioner, new Times(1)).cleanOngoingStatus("create-persons-table-from-template-2");
+        verify(cloudTransactioner, new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template-2", OngoingStatus.EXECUTION));
+        verify(cloudTransactioner, new Times(1)).clean("create-persons-table-from-template-2");
 
 //        //2 execution plans: First to execute and second to continue
 //        verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute(ExecutionPlanResponse.class);

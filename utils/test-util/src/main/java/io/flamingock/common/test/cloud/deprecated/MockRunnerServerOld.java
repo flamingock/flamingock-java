@@ -30,7 +30,7 @@ import io.flamingock.internal.common.cloud.auth.AuthResponse;
 import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
 import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
 import io.flamingock.internal.common.cloud.planner.request.StageRequest; import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
-import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -172,10 +172,10 @@ public final class MockRunnerServerOld {
         return addSimpleStageExecutionPlan(executionId, stageName, auditEntries, Collections.emptyList());
     }
 
-    public MockRunnerServerOld addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryMatcher> auditEntries, List<TaskWithOngoingStatus> ongoingStatuses) {
+    public MockRunnerServerOld addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryMatcher> auditEntries, List<OngoingTaskStatus> ongoingStatuses) {
 
         Map<String, OngoingStatus> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(TaskWithOngoingStatus::getTaskId, TaskWithOngoingStatus::getOperation));
+                .collect(Collectors.toMap(OngoingTaskStatus::getTaskId, OngoingTaskStatus::getOperation));
 
         Set<String> alreadyAddedTasks = new HashSet<>();
         List<TaskRequest> tasks = auditEntries.stream()
@@ -203,10 +203,10 @@ public final class MockRunnerServerOld {
         return addMultipleStageExecutionPlan(executionId, stageNames, auditEntries, Collections.emptyList());
     }
 
-    public MockRunnerServerOld addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries, List<TaskWithOngoingStatus> ongoingStatuses) {
+    public MockRunnerServerOld addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries, List<OngoingTaskStatus> ongoingStatuses) {
 
         Map<String, OngoingStatus> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(TaskWithOngoingStatus::getTaskId, TaskWithOngoingStatus::getOperation));
+                .collect(Collectors.toMap(OngoingTaskStatus::getTaskId, OngoingTaskStatus::getOperation));
 
         Set<String> alreadyAddedTasks = new HashSet<>();
         List<TaskRequest> tasks = auditEntries.stream()

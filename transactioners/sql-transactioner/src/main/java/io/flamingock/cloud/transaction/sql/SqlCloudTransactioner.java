@@ -17,7 +17,7 @@ package io.flamingock.cloud.transaction.sql;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.cloud.transaction.TaskWithOngoingStatus;
+import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
@@ -99,15 +99,15 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public Set<TaskWithOngoingStatus> getOngoingStatuses() {
+    public Set<OngoingTaskStatus> getAll() {
         try (PreparedStatement preparedStatement = connection.prepareStatement(dialect.getSelectIdOngoingTask())) {
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            Set<TaskWithOngoingStatus> ongoingStatuses = new HashSet<>();
+            Set<OngoingTaskStatus> ongoingStatuses = new HashSet<>();
             while (resultSet.next()) {
                 String taskId = resultSet.getString("task_id");
                 AuditContextBundle.Operation operation = AuditContextBundle.Operation.valueOf(resultSet.getString("operation"));
-                ongoingStatuses.add(new TaskWithOngoingStatus(taskId, operation.toOngoingStatusOperation()));
+                ongoingStatuses.add(new OngoingTaskStatus(taskId, operation.toOngoingStatusOperation()));
             }
             return ongoingStatuses;
         } catch (SQLException e) {
@@ -116,7 +116,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public void cleanOngoingStatus(String taskId) {
+    public void clean(String taskId) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(dialect.getDeleteOngoingTask())) {
             preparedStatement.setString(1, taskId);
             int rows = preparedStatement.executeUpdate();
@@ -127,7 +127,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public void saveOngoingStatus(TaskWithOngoingStatus status) {
+    public void register(OngoingTaskStatus status) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(dialect.getUpsertOngoingTask())) {
             preparedStatement.setString(1, status.getTaskId());
             preparedStatement.setString(2, status.getOperation().toString());

@@ -17,14 +17,14 @@ package io.flamingock.internal.core.cloud.transaction;
 
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 
-public class TaskWithOngoingStatus {
+public class OngoingTaskStatus {
 
 
     private final String taskId;
 
     private final OngoingStatus operation;
 
-    public TaskWithOngoingStatus(String taskId, OngoingStatus operation) {
+    public OngoingTaskStatus(String taskId, OngoingStatus operation) {
         this.taskId = taskId;
         this.operation = operation;
     }
@@ -42,7 +42,7 @@ public class TaskWithOngoingStatus {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TaskWithOngoingStatus that = (TaskWithOngoingStatus) o;
+        OngoingTaskStatus that = (OngoingTaskStatus) o;
 
         return taskId.equals(that.taskId);
     }
