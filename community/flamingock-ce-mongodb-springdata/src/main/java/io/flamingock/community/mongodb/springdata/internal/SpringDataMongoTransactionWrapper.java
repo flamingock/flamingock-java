@@ -27,40 +27,38 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.function.Supplier;
 
 public class SpringDataMongoTransactionWrapper implements TransactionWrapper {
 
-    private final MongoTransactionManager txManager;
+    private final TransactionTemplate txTemplate;
 
     SpringDataMongoTransactionWrapper(MongoTemplate mongoTemplate, ReadWriteConfiguration readWriteConfiguration) {
-        this.txManager = new MongoTransactionManager(mongoTemplate.getMongoDatabaseFactory(),
+        MongoTransactionManager txManager = new MongoTransactionManager(
+                mongoTemplate.getMongoDatabaseFactory(),
                 TransactionOptions.builder()
                         .readConcern(readWriteConfiguration.getReadConcern())
                         .readPreference(readWriteConfiguration.getReadPreference())
                         .writeConcern(readWriteConfiguration.getWriteConcern())
-                        .build());
+                        .build()
+        );
+
+        this.txTemplate = new TransactionTemplate(txManager);
+        this.txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        this.txTemplate.setName("flamingock-transaction");
     }
+
 
     @Override
     public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        TransactionStatus txStatus = getTxStatus(txManager);
-        T result = operation.get();
-        if (result instanceof FailedStep) {
-            txManager.rollback(txStatus);
-        } else {
-            txManager.commit(txStatus);
-        }
-        return result;
-    }
-
-    protected TransactionStatus getTxStatus(PlatformTransactionManager txManager) {
-        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        // explicitly setting the transaction name is something that can be done only
-        // programmatically
-        def.setName("flamingock-transaction-spring-data-3");
-        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-        return txManager.getTransaction(def);
+        return txTemplate.execute(status -> {
+            T result = operation.get();
+            if (result instanceof FailedStep) {
+                status.setRollbackOnly();
+            }
+            return result;
+        });
     }
 }
