@@ -29,7 +29,7 @@ import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIEL
 import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
 import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_FIELD;
 
-public class MongoDBLockMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
+public class MongoDBLockMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
 
     private final Supplier<DOCUMENT_WRAPPER> documentckSupplier;
 
@@ -46,7 +46,7 @@ public class MongoDBLockMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
         return document;
     }
 
-    public LockAcquisition fromDocument(DocumentWrapper document) {
+    public LockAcquisition fromDocument(DocumentHelper document) {
         long expiration = TimeUtil.toLocalDateTime(document.get(EXPIRES_AT_FIELD)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long now = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long diffMillis = expiration - now;

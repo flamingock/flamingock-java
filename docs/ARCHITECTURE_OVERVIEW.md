@@ -52,7 +52,7 @@ These modules are designed to be directly imported by end users:
 - `flamingock-sql-template` - SQL template support
 
 #### Transactioners  
-- `mongodb-sync-transactioner` - MongoDB transaction management
+- `mongodb-sync-target-system` - MongoDB transaction management
 - `dynamodb-transactioner` - DynamoDB transaction management
 - `sql-transactioner` - SQL transaction management
 
@@ -130,7 +130,7 @@ graph TB
     %% TRANSACTIONERS
     subgraph Transactioners["Transaction Managers"]
         direction TB
-        mongodb-sync-transactioner[mongodb-sync-transactioner<br/>IBU]:::ibu
+        mongodb-sync-target-system[mongodb-sync-target-system<br/>IBU]:::ibu
         dynamodb-transactioner[dynamodb-transactioner<br/>IBU]:::ibu
         sql-transactioner[sql-transactioner<br/>IBU]:::ibu
     end
@@ -170,7 +170,7 @@ graph TB
     flamingock-ce-commons -->|api| flamingock-core-api
     flamingock-ce-mongodb-sync -->|impl| mongodb-util
     flamingock-ce-mongodb-sync -->|impl| flamingock-core
-    flamingock-ce-mongodb-sync -->|api| mongodb-sync-transactioner
+    flamingock-ce-mongodb-sync -->|api| mongodb-sync-target-system
     flamingock-ce-mongodb-sync -->|api| flamingock-ce-commons
     flamingock-ce-dynamodb -->|impl| dynamodb-util
     flamingock-ce-dynamodb -->|impl| flamingock-core
@@ -183,8 +183,8 @@ graph TB
     flamingock-ce-mongodb-springdata -->|api| flamingock-ce-mongodb-sync
 
     %% TRANSACTIONER DEPENDENCIES
-    mongodb-sync-transactioner -->|api| flamingock-core
-    mongodb-sync-transactioner -->|impl| mongodb-util
+    mongodb-sync-target-system -->|api| flamingock-core
+    mongodb-sync-target-system -->|impl| mongodb-util
     dynamodb-transactioner -->|impl| dynamodb-util
     dynamodb-transactioner -->|api| flamingock-core
 
@@ -309,19 +309,19 @@ graph TB
     
     flamingock-ce-mongodb-sync[flamingock-ce-mongodb-sync<br/>IBU]:::ibu
     flamingock-ce-commons[flamingock-ce-commons<br/>UBU]:::ubu
-    mongodb-sync-transactioner[mongodb-sync-transactioner<br/>IBU]:::ibu
+    mongodb-sync-target-system[mongodb-sync-target-system<br/>IBU]:::ibu
     flamingock-core[flamingock-core<br/>Internal]:::internal
     mongodb-util[mongodb-util<br/>Internal]:::internal
     MongoDriver[MongoDB Driver<br/>4.0.0]:::external
     
     flamingock-ce-mongodb-sync -->|api| flamingock-ce-commons
-    flamingock-ce-mongodb-sync -->|api| mongodb-sync-transactioner
+    flamingock-ce-mongodb-sync -->|api| mongodb-sync-target-system
     flamingock-ce-mongodb-sync -->|impl| flamingock-core
     flamingock-ce-mongodb-sync -->|impl| mongodb-util
     flamingock-ce-mongodb-sync -.->|compileOnly| MongoDriver
-    mongodb-sync-transactioner -->|api| flamingock-core
-    mongodb-sync-transactioner -->|impl| mongodb-util
-    mongodb-sync-transactioner -.->|compileOnly| MongoDriver
+    mongodb-sync-target-system -->|api| flamingock-core
+    mongodb-sync-target-system -->|impl| mongodb-util
+    mongodb-sync-target-system -.->|compileOnly| MongoDriver
 ```
 
 ### Spring Data MongoDB Community Edition

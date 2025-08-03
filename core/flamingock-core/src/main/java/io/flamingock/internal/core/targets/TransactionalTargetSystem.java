@@ -25,11 +25,17 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         extends AbstractTargetSystem<HOLDER>
         implements ContextInitializable {
 
+    protected boolean autoCreate = true;
+
     public TransactionalTargetSystem(String id) {
         super(id);
     }
 
+    public void setAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
+    }
+
     abstract public Optional<OngoingTaskStatusRepository> getOnGoingTaskStatusRepository();
 
-    abstract public TransactionWrapper getTransactionWrapper();
+    abstract public TransactionWrapper getTxWrapper();
 }

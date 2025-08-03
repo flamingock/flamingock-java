@@ -174,7 +174,7 @@ dependencies {
 dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
-    api(project(":transactioners:mongodb-sync-transactioner"))
+    api(project(":core:target-systems:mongodb-sync-target-system"))
     api(project(":community:flamingock-ce-commons"))
     
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
@@ -192,7 +192,7 @@ dependencies {
     implementation(project(":utils:dynamodb-util"))
     implementation(project(":core:flamingock-core"))
     api(project(":community:flamingock-ce-commons"))
-    api(project(":transactioners:dynamodb-transactioner"))
+    api(project(":core:target-systems:dynamodb-transactioner"))
     
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:[2.0.0,3.0.0)")
     
@@ -238,7 +238,7 @@ dependencies {
 
 ### Transactioners
 
-#### `mongodb-sync-transactioner`
+#### `mongodb-sync-target-system`
 ```gradle
 dependencies {
     api(project(":core:flamingock-core"))

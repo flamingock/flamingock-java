@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync.wrapper;
+package io.flamingock.cloud.transaction.mongodb.sync.util;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.IndexOptions;
-import io.flamingock.internal.common.mongodb.CollectionWrapper;
-import io.flamingock.internal.common.mongodb.DocumentWrapper;
+import io.flamingock.internal.common.mongodb.CollectionHelper;
+import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
 
-public class MongoSyncCollectionWrapper implements CollectionWrapper<MongoSyncDocumentWrapper> {
+public class MongoSyncCollectionHelper implements CollectionHelper<MongoSyncDocumentHelper> {
 
     private final MongoCollection<Document> collection;
 
 
-    public MongoSyncCollectionWrapper(MongoCollection<Document> collection) {
+    public MongoSyncCollectionHelper(MongoCollection<Document> collection) {
         this.collection = collection;
     }
 
@@ -37,12 +37,12 @@ public class MongoSyncCollectionWrapper implements CollectionWrapper<MongoSyncDo
     }
 
     @Override
-    public Iterable<DocumentWrapper> listIndexes() {
-        return collection.listIndexes().map(MongoSyncDocumentWrapper::new);
+    public Iterable<DocumentHelper> listIndexes() {
+        return collection.listIndexes().map(MongoSyncDocumentHelper::new);
     }
 
     @Override
-    public String createUniqueIndex(MongoSyncDocumentWrapper uniqueIndexDocument) {
+    public String createUniqueIndex(MongoSyncDocumentHelper uniqueIndexDocument) {
         return collection.createIndex(uniqueIndexDocument.getDocument(), new IndexOptions().unique(true));
     }
 
@@ -52,7 +52,7 @@ public class MongoSyncCollectionWrapper implements CollectionWrapper<MongoSyncDo
     }
 
     @Override
-    public void deleteMany(MongoSyncDocumentWrapper documentWrapper) {
+    public void deleteMany(MongoSyncDocumentHelper documentWrapper) {
         collection.deleteMany(documentWrapper.getDocument());
     }
 

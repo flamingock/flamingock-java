@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync.wrapper;
+package io.flamingock.cloud.transaction.mongodb.sync;
 
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
@@ -28,12 +29,17 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
-public class MongoSyncTransactionWrapper implements TransactionWrapper {
-    private static final Logger logger = LoggerFactory.getLogger(MongoSyncTransactionWrapper.class);
+public class MongoSyncTxWrapper implements TransactionWrapper {
+    private static final Logger logger = LoggerFactory.getLogger(MongoSyncTxWrapper.class);
 
     private final TransactionManager<ClientSession> sessionManager;
 
-    public MongoSyncTransactionWrapper(TransactionManager<ClientSession> sessionManager) {
+    public MongoSyncTxWrapper(MongoClient mongoClient) {
+        sessionManager = new TransactionManager<>(mongoClient::startSession);
+    }
+
+    @Deprecated
+    public MongoSyncTxWrapper(TransactionManager<ClientSession> sessionManager) {
         this.sessionManager = sessionManager;
     }
 

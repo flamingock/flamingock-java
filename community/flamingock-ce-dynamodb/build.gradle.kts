@@ -3,7 +3,7 @@ dependencies {
     implementation(project(":core:flamingock-core"))
     api(project(":community:flamingock-ce-commons"))
 
-    api(project(":transactioners:dynamodb-transactioner"))
+    api(project(":core:target-systems:dynamodb-transactioner"))
 
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 

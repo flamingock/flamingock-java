@@ -23,8 +23,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncCollectionWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncDocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncCollectionHelper;
+import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.community.lock.LocalLockService;
@@ -47,7 +47,7 @@ import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_F
 
 public class MongoSyncLockService implements LocalLockService {
 
-    private final MongoDBLockMapper<MongoSyncDocumentWrapper> mapper = new MongoDBLockMapper<>(() -> new MongoSyncDocumentWrapper(new Document()));
+    private final MongoDBLockMapper<MongoSyncDocumentHelper> mapper = new MongoDBLockMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
 
 
     private final MongoCollection<Document> collection;
@@ -65,9 +65,9 @@ public class MongoSyncLockService implements LocalLockService {
     }
 
     public void initialize(boolean indexCreation) {
-        CollectionInitializator<MongoSyncDocumentWrapper> initializer = new CollectionInitializator<>(
-                new MongoSyncCollectionWrapper(collection),
-                () -> new MongoSyncDocumentWrapper(new Document()),
+        CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
+                new MongoSyncCollectionHelper(collection),
+                () -> new MongoSyncDocumentHelper(new Document()),
                 new String[]{KEY_FIELD}
         );
         if (indexCreation) {
@@ -96,7 +96,7 @@ public class MongoSyncLockService implements LocalLockService {
     public LockAcquisition getLock(LockKey lockKey) {
         Document result = collection.find(new Document().append(KEY_FIELD, lockKey.toString())).first();
         if (result != null) {
-            return mapper.fromDocument(new MongoSyncDocumentWrapper(result));
+            return mapper.fromDocument(new MongoSyncDocumentHelper(result));
         }
         return null;
     }

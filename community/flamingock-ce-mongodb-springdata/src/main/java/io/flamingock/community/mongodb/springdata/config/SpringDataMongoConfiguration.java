@@ -15,7 +15,7 @@
  */
 package io.flamingock.community.mongodb.springdata.config;
 
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
+import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 

@@ -21,8 +21,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncCollectionWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncDocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncCollectionHelper;
+import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.TransactionManager;
@@ -48,7 +48,7 @@ public class MongoSyncAuditor implements LocalAuditor {
     private static final Logger logger = LoggerFactory.getLogger(MongoSyncAuditor.class);
 
     private final MongoCollection<Document> collection;
-    private final MongoDBAuditMapper<MongoSyncDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentWrapper(new Document()));
+    private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
     private final TransactionManager<ClientSession> sessionManager;
 
     MongoSyncAuditor(MongoDatabase database,
@@ -63,9 +63,9 @@ public class MongoSyncAuditor implements LocalAuditor {
     }
 
     protected void initialize(boolean indexCreation) {
-        CollectionInitializator<MongoSyncDocumentWrapper> initializer = new CollectionInitializator<>(
-                new MongoSyncCollectionWrapper(collection),
-                () -> new MongoSyncDocumentWrapper(new Document()),
+        CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
+                new MongoSyncCollectionHelper(collection),
+                () -> new MongoSyncDocumentHelper(new Document()),
                 new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
         );
         if (indexCreation) {
@@ -102,7 +102,7 @@ public class MongoSyncAuditor implements LocalAuditor {
         collection.find()
                 .into(new LinkedList<>())
                 .stream()
-                .map(MongoSyncDocumentWrapper::new)
+                .map(MongoSyncDocumentHelper::new)
                 .map(mapper::fromDocument)
                 .collect(Collectors.toList())
                 .forEach(builder::addEntry);

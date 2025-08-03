@@ -19,8 +19,8 @@ import com.mongodb.ReadConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncTransactionWrapper;
+import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
+import io.flamingock.cloud.transaction.mongodb.sync.MongoSyncTxWrapper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
@@ -64,7 +64,7 @@ public class MongoSyncEngine extends AbstractLocalEngine {
 
         transactionWrapper = localConfiguration.isTransactionDisabled()
                 ? null
-                : new MongoSyncTransactionWrapper(sessionManager);
+                : new MongoSyncTxWrapper(sessionManager);
 
         //Auditor
         auditor = buildAuditor(sessionManager);

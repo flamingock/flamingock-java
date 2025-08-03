@@ -87,20 +87,20 @@ project(":platform-plugins:flamingock-springboot-integration").projectDir =
     file("platform-plugins/flamingock-springboot-integration")
 
 //////////////////////////////////////
-// TRANSACTIONERS
+// TARGET SYSTEMS
 //////////////////////////////////////
 
-include("transactioners:sql-transactioner")
-project(":transactioners:sql-transactioner").projectDir = file("transactioners/sql-transactioner")
-project(":transactioners:sql-transactioner").name = "sql-transactioner"
+include("core:target-systems:sql-transactioner")
+project(":core:target-systems:sql-transactioner").projectDir = file("core/target-systems/sql-transactioner")
+project(":core:target-systems:sql-transactioner").name = "sql-transactioner"
 
-include("transactioners:mongodb-sync-transactioner")
-project(":transactioners:mongodb-sync-transactioner").projectDir = file("transactioners/mongodb-sync-transactioner")
-project(":transactioners:mongodb-sync-transactioner").name = "mongodb-sync-transactioner"
+include("core:target-systems:mongodb-sync-target-system")
+project(":core:target-systems:mongodb-sync-target-system").projectDir = file("core/target-systems/mongodb-sync-target-system")
+project(":core:target-systems:mongodb-sync-target-system").name = "mongodb-sync-target-system"
 
-include("transactioners:dynamodb-transactioner")
-project(":transactioners:dynamodb-transactioner").projectDir = file("transactioners/dynamodb-transactioner")
-project(":transactioners:dynamodb-transactioner").name = "dynamodb-transactioner"
+include("core:target-systems:dynamodb-transactioner")
+project(":core:target-systems:dynamodb-transactioner").projectDir = file("core/target-systems/dynamodb-transactioner")
+project(":core:target-systems:dynamodb-transactioner").name = "dynamodb-transactioner"
 
 
 //////////////////////////////////////

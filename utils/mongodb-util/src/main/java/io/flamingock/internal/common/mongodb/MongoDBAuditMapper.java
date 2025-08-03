@@ -34,7 +34,7 @@ import static io.flamingock.internal.core.community.Constants.KEY_SYSTEM_CHANGE;
 import static io.flamingock.internal.core.community.Constants.KEY_TIMESTAMP;
 import static io.flamingock.internal.core.community.Constants.KEY_TYPE;
 
-public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
+public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
 
     private final Supplier<DOCUMENT_WRAPPER> documentckSupplier;
 
@@ -60,7 +60,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentWrapper> {
         return document;
     }
 
-    public AuditEntry fromDocument(DocumentWrapper entry) {
+    public AuditEntry fromDocument(DocumentHelper entry) {
         return new AuditEntry(
                 entry.getString(KEY_EXECUTION_ID),
                 null,//TODO: add stage name

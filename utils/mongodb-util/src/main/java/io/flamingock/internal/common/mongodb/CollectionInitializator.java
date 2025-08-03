@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentWrapper> {
+public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentHelper> {
 
     private final static Logger logger = LoggerFactory.getLogger(CollectionInitializator.class);
 
@@ -36,9 +36,9 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentWrapper> {
     private final Supplier<DOCUMENT_WRAPPER> documentWrapperSupplier;
     private boolean ensuredCollectionIndex = false;
 
-    private final CollectionWrapper<DOCUMENT_WRAPPER> collectionWrapper;
+    private final CollectionHelper<DOCUMENT_WRAPPER> collectionWrapper;
 
-    public CollectionInitializator(CollectionWrapper<DOCUMENT_WRAPPER> collectionWrapper,
+    public CollectionInitializator(CollectionHelper<DOCUMENT_WRAPPER> collectionWrapper,
                                    Supplier<DOCUMENT_WRAPPER> documentWrapperSupplier,
                                    String[] uniqueFields) {
         this.collectionWrapper = collectionWrapper;
@@ -84,21 +84,21 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentWrapper> {
                 .forEach(this::dropIndex);
     }
 
-    private List<DocumentWrapper> getResidualKeys() {
+    private List<DocumentHelper> getResidualKeys() {
         return StreamSupport.stream(listIndexes().spliterator(), false)
                 .filter(this::doesNeedToBeRemoved)
                 .collect(Collectors.toList());
     }
 
-    private Iterable<DocumentWrapper> listIndexes() {
+    private Iterable<DocumentHelper> listIndexes() {
         return collectionWrapper.listIndexes();
     }
 
-    protected boolean doesNeedToBeRemoved(DocumentWrapper index) {
+    protected boolean doesNeedToBeRemoved(DocumentHelper index) {
         return !isIdIndex(index) && isUniqueIndex(index) && !isRightIndex(index);
     }
 
-    protected boolean isIdIndex(DocumentWrapper index) {
+    protected boolean isIdIndex(DocumentHelper index) {
         return index.getWithWrapper("key").get("_id") != null;
     }
 
@@ -114,14 +114,14 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentWrapper> {
         logger.debug("Index in collection [{}] was recreated", getCollectionName());
     }
 
-    protected boolean isRightIndex(DocumentWrapper index) {
-        final DocumentWrapper key = index.getWithWrapper("key");
+    protected boolean isRightIndex(DocumentHelper index) {
+        final DocumentHelper key = index.getWithWrapper("key");
         boolean keyContainsAllFields = Stream.of(uniqueFields).allMatch(uniqueField -> key.get(uniqueField) != null);
         boolean onlyTheseFields = key.size() == uniqueFields.length;
         return keyContainsAllFields && onlyTheseFields && isUniqueIndex(index);
     }
 
-    protected boolean isUniqueIndex(DocumentWrapper index) {
+    protected boolean isUniqueIndex(DocumentHelper index) {
         return index.getBoolean("unique", false);// checks it'unique
     }
 
@@ -135,7 +135,7 @@ public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentWrapper> {
         return indexDocument;
     }
 
-    protected void dropIndex(DocumentWrapper index) {
+    protected void dropIndex(DocumentHelper index) {
         collectionWrapper.dropIndex(index.get("name").toString());
     }
 

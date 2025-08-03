@@ -15,11 +15,11 @@
  */
 package io.flamingock.internal.common.mongodb;
 
-public interface CollectionWrapper<DOCUMENT extends DocumentWrapper> {
+public interface CollectionHelper<DOCUMENT extends DocumentHelper> {
 
     String getCollectionName();
 
-    Iterable<DocumentWrapper> listIndexes();
+    Iterable<DocumentHelper> listIndexes();
 
     String createUniqueIndex(DOCUMENT uniqueIndexDocument);
 

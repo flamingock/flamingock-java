@@ -17,11 +17,11 @@ package io.flamingock.community.mongodb.springdata.internal.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.IndexOptions;
-import io.flamingock.internal.common.mongodb.CollectionWrapper;
-import io.flamingock.internal.common.mongodb.DocumentWrapper;
+import io.flamingock.internal.common.mongodb.CollectionHelper;
+import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
-public class SpringDataMongoCollectionWrapper implements CollectionWrapper<SpringDataMongoDocumentWrapper> {
+public class SpringDataMongoCollectionWrapper implements CollectionHelper<SpringDataMongoDocumentWrapper> {
 
     private final MongoCollection<Document> collection;
 
@@ -36,7 +36,7 @@ public class SpringDataMongoCollectionWrapper implements CollectionWrapper<Sprin
     }
 
     @Override
-    public Iterable<DocumentWrapper> listIndexes() {
+    public Iterable<DocumentHelper> listIndexes() {
         return collection.listIndexes().map(SpringDataMongoDocumentWrapper::new);
     }
 

@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync.wrapper;
+package io.flamingock.cloud.transaction.mongodb.sync.util;
 
-import io.flamingock.internal.common.mongodb.DocumentWrapper;
+import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
-public class MongoSyncDocumentWrapper implements DocumentWrapper {
+public class MongoSyncDocumentHelper implements DocumentHelper {
 
     private final Document document;
 
-    public MongoSyncDocumentWrapper(Document document) {
+    public MongoSyncDocumentHelper(Document document) {
         this.document = document;
     }
 
@@ -31,7 +31,7 @@ public class MongoSyncDocumentWrapper implements DocumentWrapper {
     }
 
     @Override
-    public DocumentWrapper append(String key, Object value) {
+    public DocumentHelper append(String key, Object value) {
         document.append(key, value);
         return this;
     }
@@ -66,7 +66,7 @@ public class MongoSyncDocumentWrapper implements DocumentWrapper {
     }
 
     @Override
-    public DocumentWrapper getWithWrapper(String key) {
-        return new MongoSyncDocumentWrapper((Document) get(key));
+    public DocumentHelper getWithWrapper(String key) {
+        return new MongoSyncDocumentHelper((Document) get(key));
     }
 }

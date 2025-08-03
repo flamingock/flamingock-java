@@ -21,17 +21,17 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 
-public interface DocumentWrapper {
+public interface DocumentHelper {
 
 
-    DocumentWrapper append(String key, Object value);
+    DocumentHelper append(String key, Object value);
     Object get(String key);
     String getString(String key);
     boolean containsKey(String key);
     Boolean getBoolean(String key);
     boolean getBoolean(Object key, boolean defaultValue);
 
-    DocumentWrapper getWithWrapper(String key);
+    DocumentHelper getWithWrapper(String key);
 
     int size();
 

@@ -22,7 +22,6 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;

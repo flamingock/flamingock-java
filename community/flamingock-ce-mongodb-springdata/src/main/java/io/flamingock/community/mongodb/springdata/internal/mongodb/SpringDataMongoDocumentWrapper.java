@@ -15,10 +15,10 @@
  */
 package io.flamingock.community.mongodb.springdata.internal.mongodb;
 
-import io.flamingock.internal.common.mongodb.DocumentWrapper;
+import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
-public class SpringDataMongoDocumentWrapper implements DocumentWrapper {
+public class SpringDataMongoDocumentWrapper implements DocumentHelper {
 
     private final Document document;
 
@@ -31,7 +31,7 @@ public class SpringDataMongoDocumentWrapper implements DocumentWrapper {
     }
 
     @Override
-    public DocumentWrapper append(String key, Object value) {
+    public DocumentHelper append(String key, Object value) {
         document.append(key, value);
         return this;
     }
@@ -66,7 +66,7 @@ public class SpringDataMongoDocumentWrapper implements DocumentWrapper {
     }
 
     @Override
-    public DocumentWrapper getWithWrapper(String key) {
+    public DocumentHelper getWithWrapper(String key) {
         return new SpringDataMongoDocumentWrapper((Document) get(key));
     }
 }

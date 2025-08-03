@@ -4,7 +4,7 @@ dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
 
-    api(project(":transactioners:mongodb-sync-transactioner"))
+    api(project(":core:target-systems:mongodb-sync-target-system"))
     api(project(":community:flamingock-ce-commons"))
 
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
