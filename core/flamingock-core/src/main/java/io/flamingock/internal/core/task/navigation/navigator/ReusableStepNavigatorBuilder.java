@@ -50,9 +50,9 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
                 .build();
 
         instance.setRuntimeManager(runtimeManager);
-        instance.setTransactionWrapper(transactionWrapper);
-        OngoingTaskStatusRepository ongoingTasksRepository = transactionWrapper != null && CloudTransactioner.class.isAssignableFrom(transactionWrapper.getClass())
-                ? (OngoingTaskStatusRepository) transactionWrapper : null;
+        instance.setTransactionWrapper(auditStoreTxWrapper);
+        OngoingTaskStatusRepository ongoingTasksRepository = auditStoreTxWrapper != null && CloudTransactioner.class.isAssignableFrom(auditStoreTxWrapper.getClass())
+                ? (OngoingTaskStatusRepository) auditStoreTxWrapper : null;
         instance.setOngoingTasksRepository(ongoingTasksRepository);
     }
 }

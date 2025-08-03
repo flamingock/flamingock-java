@@ -61,7 +61,7 @@ public final class PipelineRunnerCreator {
     private static Runner create(RunnerId runnerId,
                                  LoadedPipeline pipeline,
                                  ExecutionAuditWriter auditWriter,
-                                 TransactionWrapper transactionWrapper,
+                                 TransactionWrapper auditStoreTxWrapper,
                                  ExecutionPlanner executionPlanner,
                                  CoreConfigurable coreConfiguration,
                                  EventPublisher eventPublisher,
@@ -70,7 +70,7 @@ public final class PipelineRunnerCreator {
                                  boolean isThrowExceptionIfCannotObtainLock,
                                  Runnable finalizer) {
         //Instantiated here, so we don't wait until Runner.run() and fail fast
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditWriter, transactionWrapper);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditWriter, auditStoreTxWrapper);
         return new PipelineRunner(
                 runnerId,
                 pipeline,

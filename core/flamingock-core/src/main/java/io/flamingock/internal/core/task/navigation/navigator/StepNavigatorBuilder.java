@@ -36,7 +36,7 @@ public interface StepNavigatorBuilder {
 
     StepNavigatorBuilder setNonGuardedTypes(Set<Class<?>> types);
 
-    StepNavigatorBuilder setTransactionWrapper(TransactionWrapper transactionWrapper);
+    StepNavigatorBuilder setAuditStoreTxWrapper(TransactionWrapper auditStoreTxWrapper);
 
     StepNavigator build();
 
@@ -53,7 +53,7 @@ public interface StepNavigatorBuilder {
 
         protected Set<Class<?>> nonGuardedTypes;
 
-        protected TransactionWrapper transactionWrapper = null;
+        protected TransactionWrapper auditStoreTxWrapper = null;
 
         public AbstractStepNavigator() {
         }
@@ -90,8 +90,8 @@ public interface StepNavigatorBuilder {
         }
 
         @Override
-        public StepNavigatorBuilder setTransactionWrapper(TransactionWrapper transactionWrapper) {
-            this.transactionWrapper = transactionWrapper;
+        public StepNavigatorBuilder setAuditStoreTxWrapper(TransactionWrapper auditStoreTxWrapper) {
+            this.auditStoreTxWrapper = auditStoreTxWrapper;
             return this;
         }
 

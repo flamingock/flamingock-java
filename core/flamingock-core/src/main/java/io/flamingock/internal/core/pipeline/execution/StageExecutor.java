@@ -32,18 +32,18 @@ import java.util.stream.Stream;
 public class StageExecutor {
     protected final ExecutionAuditWriter auditWriter;
 
-    protected final TransactionWrapper transactionWrapper;
+    protected final TransactionWrapper auditStoreTxWrapper;
     private final ContextResolver baseDependencyContext;
     private final Set<Class<?>> nonGuardedTypes;
 
     public StageExecutor(ContextResolver dependencyContext,
                          Set<Class<?>> nonGuardedTypes,
                          ExecutionAuditWriter auditWriter,
-                         TransactionWrapper transactionWrapper) {
+                         TransactionWrapper auditStoreTxWrapper) {
         this.baseDependencyContext = dependencyContext;
         this.nonGuardedTypes = nonGuardedTypes;
         this.auditWriter = auditWriter;
-        this.transactionWrapper = transactionWrapper;
+        this.auditStoreTxWrapper = auditStoreTxWrapper;
     }
 
     public Output executeStage(ExecutableStage executableStage,
@@ -67,7 +67,7 @@ public class StageExecutor {
                             .setDependencyContext(dependencyContext)
                             .setLock(lock)
                             .setNonGuardedTypes(nonGuardedTypes)
-                            .setTransactionWrapper(transactionWrapper)
+                            .setAuditStoreTxWrapper(auditStoreTxWrapper)
                             .setSummarizer(new TaskSummarizer(task.getId()))
                             .build()
                             .executeTask(task, executionContext)
