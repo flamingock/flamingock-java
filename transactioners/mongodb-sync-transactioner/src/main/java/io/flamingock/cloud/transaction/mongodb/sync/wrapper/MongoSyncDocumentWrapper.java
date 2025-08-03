@@ -18,11 +18,11 @@ package io.flamingock.cloud.transaction.mongodb.sync.wrapper;
 import io.flamingock.internal.common.mongodb.DocumentWrapper;
 import org.bson.Document;
 
-public class MongoSync4DocumentWrapper implements DocumentWrapper {
+public class MongoSyncDocumentWrapper implements DocumentWrapper {
 
     private final Document document;
 
-    public MongoSync4DocumentWrapper(Document document) {
+    public MongoSyncDocumentWrapper(Document document) {
         this.document = document;
     }
 
@@ -67,6 +67,6 @@ public class MongoSync4DocumentWrapper implements DocumentWrapper {
 
     @Override
     public DocumentWrapper getWithWrapper(String key) {
-        return new MongoSync4DocumentWrapper((Document) get(key));
+        return new MongoSyncDocumentWrapper((Document) get(key));
     }
 }

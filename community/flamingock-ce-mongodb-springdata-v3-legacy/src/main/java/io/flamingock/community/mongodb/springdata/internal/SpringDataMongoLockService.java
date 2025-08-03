@@ -17,10 +17,10 @@ package io.flamingock.community.mongodb.springdata.internal;
 
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.community.mongodb.sync.internal.MongoSync4LockService;
+import io.flamingock.community.mongodb.sync.internal.MongoSyncLockService;
 import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
 
-public class SpringDataMongoLockService extends MongoSync4LockService {
+public class SpringDataMongoLockService extends MongoSyncLockService {
 
     protected SpringDataMongoLockService(MongoDatabase mongoDatabase, String lockCollectionName, ReadWriteConfiguration readWriteConfiguration) {
         super(mongoDatabase, lockCollectionName, readWriteConfiguration, TimeService.getDefault());

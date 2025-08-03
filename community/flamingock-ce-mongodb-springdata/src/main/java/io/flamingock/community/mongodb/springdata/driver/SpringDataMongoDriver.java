@@ -23,11 +23,11 @@ import io.flamingock.internal.core.community.driver.OverridesDrivers;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.mongodb.springdata.config.SpringDataMongoConfiguration;
 import io.flamingock.community.mongodb.springdata.internal.SpringDataMongoEngine;
-import io.flamingock.community.mongodb.sync.driver.MongoSync4Driver;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@OverridesDrivers({MongoSync4Driver.class})
-public class SpringDataMongoDriver extends MongoSync4Driver {
+@OverridesDrivers({MongoSyncDriver.class})
+public class SpringDataMongoDriver extends MongoSyncDriver {
 
     private MongoTemplate mongoTemplate;
     private RunnerId runnerId;

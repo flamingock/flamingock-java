@@ -28,12 +28,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
-public class MongoSync4TransactionWrapper implements TransactionWrapper {
-    private static final Logger logger = LoggerFactory.getLogger(MongoSync4TransactionWrapper.class);
+public class MongoSyncTransactionWrapper implements TransactionWrapper {
+    private static final Logger logger = LoggerFactory.getLogger(MongoSyncTransactionWrapper.class);
 
     private final TransactionManager<ClientSession> sessionManager;
 
-    public MongoSync4TransactionWrapper(TransactionManager<ClientSession> sessionManager) {
+    public MongoSyncTransactionWrapper(TransactionManager<ClientSession> sessionManager) {
         this.sessionManager = sessionManager;
     }
 

@@ -23,8 +23,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4CollectionWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncCollectionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncDocumentWrapper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.community.lock.LocalLockService;
@@ -45,18 +45,18 @@ import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIEL
 import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
 import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_FIELD;
 
-public class MongoSync4LockService implements LocalLockService {
+public class MongoSyncLockService implements LocalLockService {
 
-    private final MongoDBLockMapper<MongoSync4DocumentWrapper> mapper = new MongoDBLockMapper<>(() -> new MongoSync4DocumentWrapper(new Document()));
+    private final MongoDBLockMapper<MongoSyncDocumentWrapper> mapper = new MongoDBLockMapper<>(() -> new MongoSyncDocumentWrapper(new Document()));
 
 
     private final MongoCollection<Document> collection;
     private final TimeService timeService;
 
-    protected MongoSync4LockService(MongoDatabase mongoDatabase,
-                                    String lockCollectionName,
-                                    ReadWriteConfiguration readWriteConfiguration,
-                                    TimeService timeService) {
+    protected MongoSyncLockService(MongoDatabase mongoDatabase,
+                                   String lockCollectionName,
+                                   ReadWriteConfiguration readWriteConfiguration,
+                                   TimeService timeService) {
         this.collection = mongoDatabase.getCollection(lockCollectionName)
                 .withReadConcern(readWriteConfiguration.getReadConcern())
                 .withReadPreference(readWriteConfiguration.getReadPreference())
@@ -65,9 +65,9 @@ public class MongoSync4LockService implements LocalLockService {
     }
 
     public void initialize(boolean indexCreation) {
-        CollectionInitializator<MongoSync4DocumentWrapper> initializer = new CollectionInitializator<>(
-                new MongoSync4CollectionWrapper(collection),
-                () -> new MongoSync4DocumentWrapper(new Document()),
+        CollectionInitializator<MongoSyncDocumentWrapper> initializer = new CollectionInitializator<>(
+                new MongoSyncCollectionWrapper(collection),
+                () -> new MongoSyncDocumentWrapper(new Document()),
                 new String[]{KEY_FIELD}
         );
         if (indexCreation) {
@@ -96,7 +96,7 @@ public class MongoSync4LockService implements LocalLockService {
     public LockAcquisition getLock(LockKey lockKey) {
         Document result = collection.find(new Document().append(KEY_FIELD, lockKey.toString())).first();
         if (result != null) {
-            return mapper.fromDocument(new MongoSync4DocumentWrapper(result));
+            return mapper.fromDocument(new MongoSyncDocumentWrapper(result));
         }
         return null;
     }

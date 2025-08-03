@@ -56,9 +56,9 @@ import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
 
 @Testcontainers
-public class MongoSync4CloudTransactionerTest {
+public class MongoSyncCloudTransactionerTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoSync4CloudTransactionerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoSyncCloudTransactionerTest.class);
 
     private static final String DB_NAME = "test";
     private static final String CLIENTS_COLLECTION = "clientCollection";
@@ -141,7 +141,7 @@ public class MongoSync4CloudTransactionerTest {
 
         //GIVEN
         try (
-                MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME);
+                MongoSyncCloudTransactioner transactioner = new MongoSyncCloudTransactioner(mongoClient, DB_NAME);
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
             mockRunnerServer
@@ -154,7 +154,7 @@ public class MongoSync4CloudTransactionerTest {
                             new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
                     ).start();
 
-            MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
+            MongoSyncCloudTransactioner mongoSyncCloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -163,7 +163,7 @@ public class MongoSync4CloudTransactionerTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
             flamingockBuilder
-                    .setCloudTransactioner(mongoSync4CloudTransactioner)
+                    .setCloudTransactioner(mongoSyncCloudTransactioner)
                     //.addStage(new Stage(stageName)
 //                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath")))
                     .addDependency(testDatabase)
@@ -194,7 +194,7 @@ public class MongoSync4CloudTransactionerTest {
 
         //GIVEN
         try (
-                MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME);
+                MongoSyncCloudTransactioner transactioner = new MongoSyncCloudTransactioner(mongoClient, DB_NAME);
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
             mockRunnerServer
@@ -208,7 +208,7 @@ public class MongoSync4CloudTransactionerTest {
                             new AuditRequestExpectation(executionId, "insert-clients", ROLLED_BACK)
                     ).start();
 
-            MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
+            MongoSyncCloudTransactioner mongoSyncCloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -217,7 +217,7 @@ public class MongoSync4CloudTransactionerTest {
                     new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
             Runner runner = flamingockBuilder
-                    .setCloudTransactioner(mongoSync4CloudTransactioner)
+                    .setCloudTransactioner(mongoSyncCloudTransactioner)
                     //.addStage(new Stage(stageName)
 //                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.unhappypath")))
                     .addDependency(testDatabase)
@@ -251,7 +251,7 @@ public class MongoSync4CloudTransactionerTest {
 
         //GIVEN
         try (
-                MongoSync4CloudTransactioner transactioner = new MongoSync4CloudTransactioner(mongoClient, DB_NAME);
+                MongoSyncCloudTransactioner transactioner = new MongoSyncCloudTransactioner(mongoClient, DB_NAME);
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
 
         ) {
@@ -266,7 +266,7 @@ public class MongoSync4CloudTransactionerTest {
                             new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
                     ).start();
 
-            MongoSync4CloudTransactioner mongoSync4CloudTransactioner = Mockito.spy(transactioner);
+            MongoSyncCloudTransactioner mongoSyncCloudTransactioner = Mockito.spy(transactioner);
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -275,7 +275,7 @@ public class MongoSync4CloudTransactionerTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
             flamingockBuilder
-                    .setCloudTransactioner(mongoSync4CloudTransactioner)
+                    .setCloudTransactioner(mongoSyncCloudTransactioner)
                     //.addStage(new Stage(stageName)
 //                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.mongodb.sync.v4.changes.happypath")))
                     .addDependency(testDatabase)

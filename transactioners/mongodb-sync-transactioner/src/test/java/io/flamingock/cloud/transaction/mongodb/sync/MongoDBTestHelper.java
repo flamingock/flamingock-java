@@ -17,8 +17,8 @@ package io.flamingock.cloud.transaction.mongodb.sync;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4CollectionWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncCollectionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncDocumentWrapper;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
@@ -34,7 +34,7 @@ public class MongoDBTestHelper {
 
     public final MongoDatabase mongoDatabase;
 
-    private final MongoDBAuditMapper<MongoSync4DocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new MongoSync4DocumentWrapper(new Document()));
+    private final MongoDBAuditMapper<MongoSyncDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentWrapper(new Document()));
 
     public MongoDBTestHelper(MongoDatabase mongoDatabase) {
         this.mongoDatabase = mongoDatabase;
@@ -44,9 +44,9 @@ public class MongoDBTestHelper {
 
         MongoCollection<Document> onGoingTasksCollection = mongoDatabase.getCollection("flamingockOnGoingTasks");
 
-        CollectionInitializator<MongoSync4DocumentWrapper> initializer = new CollectionInitializator<>(
-                new MongoSync4CollectionWrapper(onGoingTasksCollection),
-                () -> new MongoSync4DocumentWrapper(new Document()),
+        CollectionInitializator<MongoSyncDocumentWrapper> initializer = new CollectionInitializator<>(
+                new MongoSyncCollectionWrapper(onGoingTasksCollection),
+                () -> new MongoSyncDocumentWrapper(new Document()),
                 new String[]{"taskId"}
         );
         initializer.initialize();
@@ -81,7 +81,7 @@ public class MongoDBTestHelper {
         MongoCollection<Document> onGoingTasksCollection = mongoDatabase.getCollection("flamingockOnGoingTasks");
 
         long result = onGoingTasksCollection.find()
-                .map(MongoSync4CloudTransactioner::mapToOnGoingStatus)
+                .map(MongoSyncCloudTransactioner::mapToOnGoingStatus)
                 .into(new HashSet<>())
                 .size();
 

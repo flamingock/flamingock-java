@@ -21,10 +21,10 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4CollectionWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4TransactionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncCollectionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncDocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncTransactionWrapper;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
@@ -40,45 +40,45 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 
-public class MongoSync4CloudTransactioner implements CloudTransactioner {
+public class MongoSyncCloudTransactioner implements CloudTransactioner {
     public static final String OPERATION = "operation";
     private static final String TASK_ID = "taskId";
     private final MongoClient mongoClient;
     private final MongoDatabase database;
-    private final MongoDBSync4Configuration mongoDBSync4Configuration;
+    private final MongoDBSyncConfiguration mongoDBSyncConfiguration;
 
 
     private TransactionWrapper transactionWrapper;
     private MongoCollection<Document> onGoingTasksCollection;
 
-    public MongoSync4CloudTransactioner(MongoClient mongoClient,
+    public MongoSyncCloudTransactioner(MongoClient mongoClient,
                                         String databaseName,
-                                        MongoDBSync4Configuration mongoDBSync4Configuration) {
+                                        MongoDBSyncConfiguration mongoDBSyncConfiguration) {
         this.mongoClient = mongoClient;
         this.database = mongoClient.getDatabase(databaseName);
-        this.mongoDBSync4Configuration = mongoDBSync4Configuration;
+        this.mongoDBSyncConfiguration = mongoDBSyncConfiguration;
     }
 
-    public MongoSync4CloudTransactioner(MongoClient mongoClient,
+    public MongoSyncCloudTransactioner(MongoClient mongoClient,
                                         String databaseName) {
-        this(mongoClient, databaseName, new MongoDBSync4Configuration());
+        this(mongoClient, databaseName, new MongoDBSyncConfiguration());
     }
 
     @Override
     public void initialize() {
         TransactionManager<ClientSession> sessionManager = new TransactionManager<>(mongoClient::startSession);
-        transactionWrapper = new MongoSync4TransactionWrapper(sessionManager);
+        transactionWrapper = new MongoSyncTransactionWrapper(sessionManager);
         onGoingTasksCollection = database.getCollection("flamingockOnGoingTasks")
-                .withReadConcern(new ReadConcern(mongoDBSync4Configuration.getReadConcern()))
-                .withReadPreference(mongoDBSync4Configuration.getReadPreference().getValue())
-                .withWriteConcern(mongoDBSync4Configuration.getBuiltMongoDBWriteConcern());
+                .withReadConcern(new ReadConcern(mongoDBSyncConfiguration.getReadConcern()))
+                .withReadPreference(mongoDBSyncConfiguration.getReadPreference().getValue())
+                .withWriteConcern(mongoDBSyncConfiguration.getBuiltMongoDBWriteConcern());
 
-        CollectionInitializator<MongoSync4DocumentWrapper> initializer = new CollectionInitializator<>(
-                new MongoSync4CollectionWrapper(onGoingTasksCollection),
-                () -> new MongoSync4DocumentWrapper(new Document()),
+        CollectionInitializator<MongoSyncDocumentWrapper> initializer = new CollectionInitializator<>(
+                new MongoSyncCollectionWrapper(onGoingTasksCollection),
+                () -> new MongoSyncDocumentWrapper(new Document()),
                 new String[]{TASK_ID}
         );
-        if (mongoDBSync4Configuration.isAutoCreate()) {
+        if (mongoDBSyncConfiguration.isAutoCreate()) {
             initializer.initialize();
         } else {
             initializer.justValidateCollection();
@@ -93,7 +93,7 @@ public class MongoSync4CloudTransactioner implements CloudTransactioner {
     @Override
     public Set<OngoingTaskStatus> getAll() {
         return onGoingTasksCollection.find()
-                .map(MongoSync4CloudTransactioner::mapToOnGoingStatus)
+                .map(MongoSyncCloudTransactioner::mapToOnGoingStatus)
                 .into(new HashSet<>());
     }
 

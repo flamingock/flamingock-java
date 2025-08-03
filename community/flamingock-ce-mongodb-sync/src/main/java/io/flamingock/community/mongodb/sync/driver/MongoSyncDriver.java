@@ -17,23 +17,23 @@ package io.flamingock.community.mongodb.sync.driver;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.LocalEngine;
 import io.flamingock.internal.core.community.driver.LocalDriver;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.community.mongodb.sync.internal.MongoSync4Engine;
+import io.flamingock.community.mongodb.sync.internal.MongoSyncEngine;
 
-public class MongoSync4Driver implements LocalDriver {
+public class MongoSyncDriver implements LocalDriver {
 
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
     private RunnerId runnerId;
     private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
-    private MongoDBSync4Configuration driverConfiguration;
+    private MongoDBSyncConfiguration driverConfiguration;
 
     @Override
     public void initialize(ContextResolver baseContext) {
@@ -42,13 +42,13 @@ public class MongoSync4Driver implements LocalDriver {
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         mongoClient = baseContext.getRequiredDependencyValue(MongoClient.class);
         mongoDatabase = baseContext.getRequiredDependencyValue(MongoDatabase.class);
-        driverConfiguration = baseContext.getDependencyValue(MongoDBSync4Configuration.class).orElse(new MongoDBSync4Configuration());
+        driverConfiguration = baseContext.getDependencyValue(MongoDBSyncConfiguration.class).orElse(new MongoDBSyncConfiguration());
         driverConfiguration.mergeConfig(baseContext);
     }
 
     @Override
     public LocalEngine getEngine() {
-        MongoSync4Engine engine = new MongoSync4Engine(
+        MongoSyncEngine engine = new MongoSyncEngine(
                 mongoClient,
                 mongoDatabase,
                 coreConfiguration,

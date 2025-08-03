@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.assertions.Assertions.isTrue;
 
-public class MongoDBSync4Configuration extends MongoDBDriverConfiguration {
+public class MongoDBSyncConfiguration extends MongoDBDriverConfiguration {
     private ReadConcernLevel readConcern = ReadConcernLevel.MAJORITY;
     private WriteConcernLevel writeConcern = WriteConcernLevel.MAJORITY_WITH_JOURNAL;
     private ReadPreferenceLevel readPreference = ReadPreferenceLevel.PRIMARY;

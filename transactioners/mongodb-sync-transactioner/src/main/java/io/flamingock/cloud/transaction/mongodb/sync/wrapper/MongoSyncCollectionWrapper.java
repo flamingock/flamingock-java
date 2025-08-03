@@ -22,12 +22,12 @@ import io.flamingock.internal.common.mongodb.DocumentWrapper;
 import org.bson.Document;
 
 
-public class MongoSync4CollectionWrapper implements CollectionWrapper<MongoSync4DocumentWrapper> {
+public class MongoSyncCollectionWrapper implements CollectionWrapper<MongoSyncDocumentWrapper> {
 
     private final MongoCollection<Document> collection;
 
 
-    public MongoSync4CollectionWrapper(MongoCollection<Document> collection) {
+    public MongoSyncCollectionWrapper(MongoCollection<Document> collection) {
         this.collection = collection;
     }
 
@@ -38,11 +38,11 @@ public class MongoSync4CollectionWrapper implements CollectionWrapper<MongoSync4
 
     @Override
     public Iterable<DocumentWrapper> listIndexes() {
-        return collection.listIndexes().map(MongoSync4DocumentWrapper::new);
+        return collection.listIndexes().map(MongoSyncDocumentWrapper::new);
     }
 
     @Override
-    public String createUniqueIndex(MongoSync4DocumentWrapper uniqueIndexDocument) {
+    public String createUniqueIndex(MongoSyncDocumentWrapper uniqueIndexDocument) {
         return collection.createIndex(uniqueIndexDocument.getDocument(), new IndexOptions().unique(true));
     }
 
@@ -52,7 +52,7 @@ public class MongoSync4CollectionWrapper implements CollectionWrapper<MongoSync4
     }
 
     @Override
-    public void deleteMany(MongoSync4DocumentWrapper documentWrapper) {
+    public void deleteMany(MongoSyncDocumentWrapper documentWrapper) {
         collection.deleteMany(documentWrapper.getDocument());
     }
 

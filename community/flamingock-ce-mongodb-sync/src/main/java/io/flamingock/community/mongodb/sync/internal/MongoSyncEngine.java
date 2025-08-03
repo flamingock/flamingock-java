@@ -19,8 +19,8 @@ import com.mongodb.ReadConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4TransactionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncTransactionWrapper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
@@ -36,21 +36,21 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class MongoSync4Engine extends AbstractLocalEngine {
+public class MongoSyncEngine extends AbstractLocalEngine {
 
     private final MongoDatabase database;
     private final MongoClient mongoClient;
-    private final MongoDBSync4Configuration driverConfiguration;
+    private final MongoDBSyncConfiguration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
-    private MongoSync4Auditor auditor;
+    private MongoSyncAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private TransactionWrapper transactionWrapper;
 
-    public MongoSync4Engine(MongoClient mongoClient,
+    public MongoSyncEngine(MongoClient mongoClient,
                             MongoDatabase database,
                             CoreConfigurable coreConfiguration,
                             CommunityConfigurable localConfiguration,
-                            MongoDBSync4Configuration driverConfiguration) {
+                            MongoDBSyncConfiguration driverConfiguration) {
         super(localConfiguration);
         this.mongoClient = mongoClient;
         this.database = database;
@@ -64,14 +64,14 @@ public class MongoSync4Engine extends AbstractLocalEngine {
 
         transactionWrapper = localConfiguration.isTransactionDisabled()
                 ? null
-                : new MongoSync4TransactionWrapper(sessionManager);
+                : new MongoSyncTransactionWrapper(sessionManager);
 
         //Auditor
         auditor = buildAuditor(sessionManager);
         auditor.initialize(driverConfiguration.isAutoCreate());
 
         //Lock
-        MongoSync4LockService lockService = buildLockService();
+        MongoSyncLockService lockService = buildLockService();
         lockService.initialize(driverConfiguration.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
     }
@@ -98,8 +98,8 @@ public class MongoSync4Engine extends AbstractLocalEngine {
 
 
 
-    private MongoSync4Auditor buildAuditor(TransactionManager<ClientSession> sessionManager) {
-        return new MongoSync4Auditor(
+    private MongoSyncAuditor buildAuditor(TransactionManager<ClientSession> sessionManager) {
+        return new MongoSyncAuditor(
                 database,
                 driverConfiguration.getAuditRepositoryName(),
                 new ReadWriteConfiguration(
@@ -110,8 +110,8 @@ public class MongoSync4Engine extends AbstractLocalEngine {
                 sessionManager);
     }
 
-    private MongoSync4LockService buildLockService() {
-        return new MongoSync4LockService(
+    private MongoSyncLockService buildLockService() {
+        return new MongoSyncLockService(
                 database,
                 driverConfiguration.getLockRepositoryName(),
                 new ReadWriteConfiguration(

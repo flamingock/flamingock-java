@@ -30,7 +30,7 @@ package io.flamingock.community.mongodb.springdata;
 //import io.flamingock.oss.driver.mongodb.springdata.changes._1_create_client_collection_happy;
 //import io.flamingock.oss.driver.mongodb.springdata.changes._2_insert_federico_happy_non_transactional;
 //import io.flamingock.oss.driver.mongodb.springdata.changes._3_insert_jorge_happy_non_transactional;
-//import io.mongock.driver.mongodb.sync.v4.driver.MongoSync4Driver;
+//import io.mongock.driver.mongodb.sync.v4.driver.MongoSyncDriver;
 //import io.mongock.runner.standalone.MongockStandalone;
 //import org.bson.Document;
 //import org.junit.jupiter.api.Assertions;
@@ -87,7 +87,7 @@ class MongoSpringDataImporterTest {
 //    @DisplayName("When standalone runs the driver with mongock importer should run migration")
 //    void shouldRunMongockImporter() {
 //        //Given
-//        MongoSync4Driver mongo3Driver = MongoSync4Driver.withDefaultLock(mongoClient, DB_NAME);
+//        MongoSyncDriver mongo3Driver = MongoSyncDriver.withDefaultLock(mongoClient, DB_NAME);
 //        MongockStandalone.builder()
 //                .setDriver(mongo3Driver)
 //                .addMigrationClass(_0_mongock_create_authors_collection.class)

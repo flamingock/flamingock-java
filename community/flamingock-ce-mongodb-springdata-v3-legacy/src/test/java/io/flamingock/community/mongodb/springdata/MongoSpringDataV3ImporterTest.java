@@ -48,7 +48,7 @@ class MongoSpringDataV3ImporterTest {
 //    @DisplayName("When standalone runs the driver with mongock importer should run migration")
 //    void shouldRunMongockImporter() {
 //        //Given
-//        MongoSync4Driver mongo3Driver = MongoSync4Driver.withDefaultLock(mongoClient, DB_NAME);
+//        MongoSyncDriver mongo3Driver = MongoSyncDriver.withDefaultLock(mongoClient, DB_NAME);
 //        MongockStandalone.builder()
 //                .setDriver(mongo3Driver)
 //                .addMigrationClass(_0_mongock_create_authors_collection.class)

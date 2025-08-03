@@ -15,11 +15,11 @@
  */
 package io.flamingock.community.mongodb.springdata.config;
 
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties("flamingock.mongodb")
-public class SpringDataMongoConfiguration extends MongoDBSync4Configuration {
+public class SpringDataMongoConfiguration extends MongoDBSyncConfiguration {
 }

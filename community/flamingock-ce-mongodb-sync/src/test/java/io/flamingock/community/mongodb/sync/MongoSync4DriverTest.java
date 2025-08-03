@@ -22,7 +22,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSync4Configuration;
+import io.flamingock.cloud.transaction.mongodb.sync.config.MongoDBSyncConfiguration;
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
@@ -63,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
-class MongoSync4DriverTest {
+class MongoSyncDriverTest {
 
     private static final String DB_NAME = "test";
 
@@ -135,7 +135,7 @@ class MongoSync4DriverTest {
     void happyPathWithCustomConfigOptions() {
         //Given-When
 
-        MongoDBSync4Configuration config = new MongoDBSync4Configuration();
+        MongoDBSyncConfiguration config = new MongoDBSyncConfiguration();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -152,7 +152,7 @@ class MongoSync4DriverTest {
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     .setProperty("mongodb.readConcern", "LOCAL")
-                    .setProperty("mongodb.readPreference", MongoDBSync4Configuration.ReadPreferenceLevel.SECONDARY)
+                    .setProperty("mongodb.readPreference", MongoDBSyncConfiguration.ReadPreferenceLevel.SECONDARY)
                     .build()
                     .run();
         }
@@ -165,7 +165,7 @@ class MongoSync4DriverTest {
 //        assertEquals(1, config.getWriteConcern().getW());
 //        assertEquals(false, config.getWriteConcern().isJournal());
 //        assertEquals(Duration.ofSeconds(2), config.getWriteConcern().getwTimeoutMs());
-        assertEquals(MongoDBSync4Configuration.ReadPreferenceLevel.SECONDARY, config.getReadPreference());
+        assertEquals(MongoDBSyncConfiguration.ReadPreferenceLevel.SECONDARY, config.getReadPreference());
 
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_STORE_NAME));
         assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_STORE_NAME));

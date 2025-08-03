@@ -21,8 +21,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4CollectionWrapper;
-import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSync4DocumentWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncCollectionWrapper;
+import io.flamingock.cloud.transaction.mongodb.sync.wrapper.MongoSyncDocumentWrapper;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.TransactionManager;
@@ -43,15 +43,15 @@ import static io.flamingock.internal.core.community.Constants.KEY_CHANGE_ID;
 import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_ID;
 import static io.flamingock.internal.core.community.Constants.KEY_STATE;
 
-public class MongoSync4Auditor implements LocalAuditor {
+public class MongoSyncAuditor implements LocalAuditor {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoSync4Auditor.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoSyncAuditor.class);
 
     private final MongoCollection<Document> collection;
-    private final MongoDBAuditMapper<MongoSync4DocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new MongoSync4DocumentWrapper(new Document()));
+    private final MongoDBAuditMapper<MongoSyncDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentWrapper(new Document()));
     private final TransactionManager<ClientSession> sessionManager;
 
-    MongoSync4Auditor(MongoDatabase database,
+    MongoSyncAuditor(MongoDatabase database,
                       String collectionName,
                       ReadWriteConfiguration readWriteConfiguration,
                       TransactionManager<ClientSession> sessionManager) {
@@ -63,9 +63,9 @@ public class MongoSync4Auditor implements LocalAuditor {
     }
 
     protected void initialize(boolean indexCreation) {
-        CollectionInitializator<MongoSync4DocumentWrapper> initializer = new CollectionInitializator<>(
-                new MongoSync4CollectionWrapper(collection),
-                () -> new MongoSync4DocumentWrapper(new Document()),
+        CollectionInitializator<MongoSyncDocumentWrapper> initializer = new CollectionInitializator<>(
+                new MongoSyncCollectionWrapper(collection),
+                () -> new MongoSyncDocumentWrapper(new Document()),
                 new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
         );
         if (indexCreation) {
@@ -102,7 +102,7 @@ public class MongoSync4Auditor implements LocalAuditor {
         collection.find()
                 .into(new LinkedList<>())
                 .stream()
-                .map(MongoSync4DocumentWrapper::new)
+                .map(MongoSyncDocumentWrapper::new)
                 .map(mapper::fromDocument)
                 .collect(Collectors.toList())
                 .forEach(builder::addEntry);
