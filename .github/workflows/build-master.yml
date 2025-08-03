@@ -1,0 +1,21 @@
+name: Build
+on:
+  push:
+    branches: [ master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
+
+      - name: Unit and Integration tests
+        run: ./gradlew clean build
