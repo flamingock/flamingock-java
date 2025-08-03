@@ -1,4 +1,4 @@
-name: Build
+name: Build Dev
 on: [pull_request]
 jobs:
   build:
