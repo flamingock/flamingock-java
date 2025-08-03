@@ -13,8 +13,8 @@
   <a href="https://central.sonatype.com/search?q=io.flamingock">
     <img src="https://img.shields.io/maven-central/v/io.flamingock/flamingock-core" alt="Maven Version" />
   </a>
-  <a href="https://github.com/flamingock/flamingock-project/actions/workflows/build.yml">
-    <img src="https://github.com/flamingock/flamingock-project/actions/workflows/build.yml/badge.svg" alt="Build" />
+  <a href="https://github.com/flamingock/flamingock-project/actions/workflows/build-master.yml">
+    <img src="https://github.com/flamingock/flamingock-project/actions/workflows/build-master.yml/badge.svg" alt="Build" />
   </a>
   <a href="https://github.com/flamingock/flamingock-project/actions/workflows/release.yml">
     <img src="https://github.com/flamingock/flamingock-project/actions/workflows/release.yml/badge.svg" alt="Release" />
