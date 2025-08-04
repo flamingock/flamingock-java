@@ -15,11 +15,8 @@
  */
 package io.flamingock.internal.core.targets;
 
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
-import io.flamingock.internal.common.core.context.ContextComposer;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
-import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.core.context.PriorityContext;
@@ -49,10 +46,7 @@ import java.util.UUID;
 
 
 public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<HOLDER>>
-        implements
-        TargetSystem,
-        ContextComposer,
-        ContextConfigurable<HOLDER> {
+        implements ContextComposerTargetSystem, ContextConfigurable<HOLDER> {
     private final String id;
 
     protected Context context = new SimpleContext();

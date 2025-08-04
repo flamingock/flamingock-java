@@ -31,8 +31,8 @@ import java.util.Optional;
  */
 public class TargetSystemManager {
 
-    private TargetSystem defaultTargetSystem;
-    private final Map<String, TargetSystem> targetSystemMap = new HashMap<>();
+    private ContextComposerTargetSystem defaultTargetSystem;
+    private final Map<String, ContextComposerTargetSystem> targetSystemMap = new HashMap<>();
 
     /**
      * Registers a new {@link TargetSystem}.
@@ -41,8 +41,7 @@ public class TargetSystemManager {
      * @throws IllegalArgumentException if the target system or its ID is null/blank
      */
     public void add(TargetSystem targetSystem) {
-        validate(targetSystem);
-        targetSystemMap.put(targetSystem.getId(), targetSystem);
+        targetSystemMap.put(targetSystem.getId(), validateAndCast(targetSystem));
     }
 
     /**
@@ -55,7 +54,7 @@ public class TargetSystemManager {
      */
     public void addDefault(TargetSystem defaultTargetSystem) {
         add(defaultTargetSystem);
-        this.defaultTargetSystem = defaultTargetSystem;
+        this.defaultTargetSystem = (ContextComposerTargetSystem) defaultTargetSystem;
     }
 
     /**
@@ -65,12 +64,19 @@ public class TargetSystemManager {
      * @param id the target system ID
      * @return an {@link Optional} with the matching or default target system, or empty if none registered
      */
-    public Optional<TargetSystem> getOrDefault(String id) {
+    public Optional<ContextComposerTargetSystem> getOrDefault(String id) {
         return Optional.ofNullable(getValueOrDefault(id));
     }
 
-    public TargetSystem getValueOrDefault(String id) {
-        return targetSystemMap.getOrDefault(id, defaultTargetSystem);
+    public ContextComposerTargetSystem getValueOrDefault(String id) {
+        //We do it this way(instead of getOrDefault) because although current implementation(HashMap) allows
+        // nulls, we may change in the future(ConcurrentHashMap doesn't allow nulls, for instance)
+        if(id == null || !targetSystemMap.containsKey(id)) {
+            return defaultTargetSystem;
+        } else {
+            return targetSystemMap.getOrDefault(id, defaultTargetSystem);
+        }
+
     }
 
     /**
@@ -79,12 +85,16 @@ public class TargetSystemManager {
      * @param targetSystem the target system to validate
      * @throws IllegalArgumentException if validation fails
      */
-    private void validate(TargetSystem targetSystem) {
+    private ContextComposerTargetSystem validateAndCast(TargetSystem targetSystem) {
         if (targetSystem == null) {
             throw new IllegalArgumentException("Target system null not allowed");
         }
         if (targetSystem.getId() == null || targetSystem.getId().trim().isEmpty()) {
             throw new IllegalArgumentException("TargetSystem ID must not be null or blank");
         }
+        if (!(targetSystem instanceof ContextComposerTargetSystem)) {
+            throw new IllegalArgumentException("TargetSystem must be an instance of ContextComposerTargetSystem");
+        }
+        return (ContextComposerTargetSystem) targetSystem;
     }
 }

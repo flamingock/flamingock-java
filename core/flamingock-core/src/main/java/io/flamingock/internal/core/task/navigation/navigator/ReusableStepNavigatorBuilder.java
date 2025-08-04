@@ -16,8 +16,10 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
+import io.flamingock.internal.core.targets.ContextComposerTargetSystem;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.context.PriorityContext;
@@ -45,19 +47,22 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
         navigator.setExecutionContext(executionContext);
         navigator.setAuditWriter(auditWriter);
 
-        String targetSystemId = changeUnit.getTargetSystem();
-        TargetSystem targetSystem = targetSystemManager.getValueOrDefault(targetSystemId);
+        ContextComposerTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem());
+
         navigator.setTargetSystem(targetSystem);
 
+        Context enhancedContext = targetSystem != null
+                ? targetSystem.compose(staticContext)
+                : new PriorityContext(staticContext);
         RuntimeManager runtimeManager = RuntimeManager.builder()
-                .setDependencyContext(new PriorityContext(staticContext))
+                .setDependencyContext(enhancedContext)
                 .setLock(lock)
                 .setNonGuardedTypes(nonGuardedTypes)
                 .build();
+
         navigator.setRuntimeManager(runtimeManager);
 
         navigator.setSummarizer(new TaskSummarizer(changeUnit.getId()));
-
 
         //THIS WILL BE REMOVED and replaced with TargetSystem
         navigator.setTransactionWrapper(auditStoreTxWrapper);
