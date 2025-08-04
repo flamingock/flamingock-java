@@ -172,7 +172,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
         ChangeTemplateManager.loadTemplates();
 
-        RunnerId runnerId = RunnerId.generate();
+        RunnerId runnerId = RunnerId.generate(getServiceIdentifier());
         logger.info("Generated runner id:  {}", runnerId);
         prepareContext(runnerId);
 
