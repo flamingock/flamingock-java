@@ -114,6 +114,7 @@ class SpringProfileFilterTemplateTaskTest {
                 true,
                 null,
                 null,
+                null,
                 null
         );
 

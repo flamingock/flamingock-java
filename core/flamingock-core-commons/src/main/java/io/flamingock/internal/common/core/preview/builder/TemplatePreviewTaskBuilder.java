@@ -37,6 +37,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private Object configuration;
     private Object execution;
     private Object rollback;
+    private String targetSystem;
 
 
     private TemplatePreviewTaskBuilder() {
@@ -95,6 +96,10 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         this.configuration = configuration;
     }
 
+    public void setTargetSystem(String targetSystem) {
+        this.targetSystem = targetSystem;
+    }
+
     @Override
     public TemplatePreviewChangeUnit build() {
 
@@ -110,7 +115,8 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
                 false,
                 configuration,
                 execution,
-                rollback);
+                rollback,
+                targetSystem);
     }
 
     @NotNull
@@ -135,6 +141,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         setRollback(templateTaskDescriptor.getRollback());
         setTransactional(templateTaskDescriptor.getTransactional() != null ? templateTaskDescriptor.getTransactional() : true);
         setRunAlways(false);
+        setTargetSystem(templateTaskDescriptor.getTargetSystem());
         return this;
     }
 

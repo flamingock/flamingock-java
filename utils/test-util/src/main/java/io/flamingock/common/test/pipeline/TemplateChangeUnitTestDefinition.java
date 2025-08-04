@@ -28,6 +28,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
     private final Object configuration;
     private final Object execution;
     private final Object rollback;
+    private final String targetSystem;
 
 
     public TemplateChangeUnitTestDefinition(String fileName,
@@ -38,12 +39,25 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                             Object configuration,
                                             Object execution,
                                             Object rollback) {
+        this(fileName, id, order, templateName, transactional, configuration, execution, rollback, null);
+    }
+
+    public TemplateChangeUnitTestDefinition(String fileName,
+                                            String id,
+                                            String order,
+                                            String templateName,
+                                            boolean transactional,
+                                            Object configuration,
+                                            Object execution,
+                                            Object rollback,
+                                            String targetSystem) {
         super(id, order, transactional);
         this.fileName = fileName;
         this.templateName = templateName;
         this.configuration = configuration;
         this.execution = execution;
         this.rollback = rollback;
+        this.targetSystem = targetSystem;
     }
 
 
@@ -60,7 +74,8 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 false,
                 configuration,
                 execution,
-                rollback
+                rollback,
+                targetSystem
         );
     }
 

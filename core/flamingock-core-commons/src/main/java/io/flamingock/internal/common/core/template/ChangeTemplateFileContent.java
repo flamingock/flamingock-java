@@ -24,7 +24,7 @@ public class ChangeTemplateFileContent {
     private Object configuration;
     private Object execution;
     private Object rollback;
-
+    private String targetSystem;
 
     public ChangeTemplateFileContent() {
     }
@@ -36,7 +36,8 @@ public class ChangeTemplateFileContent {
                                      Boolean transactional,
                                      Object configuration,
                                      Object execution,
-                                     Object rollback) {
+                                     Object rollback,
+                                     String targetSystem) {
         this.id = id;
         this.order = order;
         this.template = template;
@@ -45,6 +46,7 @@ public class ChangeTemplateFileContent {
         this.configuration = configuration;
         this.execution = execution;
         this.rollback = rollback;
+        this.targetSystem = targetSystem;
     }
 
 
@@ -111,5 +113,13 @@ public class ChangeTemplateFileContent {
 
     public void setRollback(Object rollback) {
         this.rollback = rollback;
+    }
+
+    public String getTargetSystem() {
+        return targetSystem;
+    }
+
+    public void setTargetSystem(String targetSystem) {
+        this.targetSystem = targetSystem;
     }
 }
