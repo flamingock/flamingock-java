@@ -32,18 +32,18 @@ public class NoOpOnGoingTaskStatusRepository implements OngoingTaskStatusReposit
 
     @Override
     public Set<OngoingTaskStatus> getAll() {
-        logger.trace("Ignoring 'getAll' operation: no-op repository for target system '{}'", targetSystemId);
+        logger.debug("Ignoring 'getAll' operation: no-op repository for target system '{}'", targetSystemId);
         return Collections.emptySet();
     }
 
     @Override
     public void clean(String taskId) {
-        logger.trace("Ignoring 'clean' operation for task '{}': no-op repository for target system '{}'", taskId, targetSystemId);
+        logger.debug("Ignoring 'clean' operation for task '{}': no-op repository for target system '{}'", taskId, targetSystemId);
     }
 
     @Override
     public void register(OngoingTaskStatus status) {
-        logger.trace("Ignoring 'register' operation for task '{}': no-op repository for target system '{}'", status.getTaskId(), targetSystemId);
+        logger.debug("Ignoring 'register' operation for task '{}': no-op repository for target system '{}'", status.getTaskId(), targetSystemId);
     }
 }
 
