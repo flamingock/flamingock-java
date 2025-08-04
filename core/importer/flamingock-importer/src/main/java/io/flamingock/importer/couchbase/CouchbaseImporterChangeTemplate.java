@@ -23,15 +23,20 @@ import io.flamingock.importer.AbstractImporterChangeTemplate;
 import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTemplate {
+    private static final Logger logger = LoggerFactory.getLogger("CouchbaseImporterChangeTemplate");
 
     @Execution
     public void execution(Cluster cluster,
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
+        logger.info("Starting audit log migration from Mongock to Flamingock local audit store[Couchbase]");
         CouchbaseImporterAdapter adapter = new CouchbaseImporterAdapter(cluster, configuration.getOrigin());
         ImporterExecutor.runImport(adapter, configuration, auditWriter, pipelineDescriptor);
+        logger.info("Finished audit log migration from Mongock to Flamingock local audit store[Couchbase]");
     }
 
     @RollbackExecution

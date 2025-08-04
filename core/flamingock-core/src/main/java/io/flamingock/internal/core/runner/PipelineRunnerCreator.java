@@ -15,18 +15,16 @@
  */
 package io.flamingock.internal.core.runner;
 
-import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.util.StringUtil;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.ConnectionEngine;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
-import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.util.StringUtil;
+import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.Set;
 
@@ -44,43 +42,21 @@ public final class PipelineRunnerCreator {
                                              Set<Class<?>> nonGuardedTypes,
                                              boolean isThrowExceptionIfCannotObtainLock,
                                              Runnable finalizer) {
-        return create(
-                runnerId,
-                pipeline,
-                engine.getAuditWriter(),
-                engine.getTransactionWrapper().orElse(null),
-                engine.getExecutionPlanner(),
-                coreConfiguration,
-                eventPublisher,
-                dependencyContext,
-                nonGuardedTypes,
-                isThrowExceptionIfCannotObtainLock,
-                finalizer);
-    }
 
-    private static Runner create(RunnerId runnerId,
-                                 LoadedPipeline pipeline,
-                                 ExecutionAuditWriter auditWriter,
-                                 TransactionWrapper auditStoreTxWrapper,
-                                 ExecutionPlanner executionPlanner,
-                                 CoreConfigurable coreConfiguration,
-                                 EventPublisher eventPublisher,
-                                 ContextResolver dependencyContext,
-                                 Set<Class<?>> nonGuardedTypes,
-                                 boolean isThrowExceptionIfCannotObtainLock,
-                                 Runnable finalizer) {
         //Instantiated here, so we don't wait until Runner.run() and fail fast
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, auditWriter, auditStoreTxWrapper);
+        TransactionWrapper auditStoreTxWrapper = engine.getTransactionWrapper().orElse(null);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), auditStoreTxWrapper);
         return new PipelineRunner(
                 runnerId,
                 pipeline,
-                executionPlanner,
+                engine.getExecutionPlanner(),
                 stageExecutor,
                 buildExecutionContext(coreConfiguration),
                 eventPublisher,
                 isThrowExceptionIfCannotObtainLock,
                 finalizer);
     }
+
 
     private static OrphanExecutionContext buildExecutionContext(CoreConfigurable configuration) {
         return new OrphanExecutionContext(StringUtil.hostname(), configuration.getDefaultAuthor(), configuration.getMetadata());

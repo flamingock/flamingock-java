@@ -15,8 +15,6 @@
  */
 package io.flamingock.importer;
 
-
-import io.flamingock.importer.util.ImporterLogger;
 import io.flamingock.importer.util.PipelineHelper;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditWriter;
@@ -34,7 +32,6 @@ import java.util.List;
  * We need to differentiate it, as we can have two steps(Mongock to Flamingock local to Flamingock Cloud)
  */
 public final class ImporterExecutor {
-    private static final ImporterLogger importerLogger = new ImporterLogger("Flamingock Importer");
 
     private ImporterExecutor() {
 
@@ -56,9 +53,6 @@ public final class ImporterExecutor {
                                  AuditWriter auditWriter,
                                  PipelineDescriptor pipelineDescriptor) {
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
-
-        importerLogger.logStart(importerAdapter, auditWriter);
-
         List<AuditEntry> auditEntries = importerAdapter.getAuditEntries();
         if(importConfiguration.isFailOnEmptyOrigin() &&  auditEntries.isEmpty()) {
             throw new FlamingockException(

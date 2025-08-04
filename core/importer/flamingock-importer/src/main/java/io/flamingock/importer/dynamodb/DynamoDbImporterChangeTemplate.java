@@ -22,16 +22,21 @@ import io.flamingock.importer.AbstractImporterChangeTemplate;
 import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDbImporterChangeTemplate extends AbstractImporterChangeTemplate {
+    private static final Logger logger = LoggerFactory.getLogger("DynamoDbImporterChangeTemplate");
 
     @Execution
     public void execution(DynamoDbClient client,
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
+        logger.info("Starting audit log migration from Mongock to Flamingock local audit store[MongoDB]");
         DynamoDbImporterAdapter adapter = new DynamoDbImporterAdapter(client, configuration.getOrigin());
         ImporterExecutor.runImport(adapter, configuration, auditWriter, pipelineDescriptor);
+        logger.info("Finished audit log migration from Mongock to Flamingock local audit store[Couchbase]");
     }
 
     @RollbackExecution
