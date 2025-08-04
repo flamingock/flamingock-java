@@ -49,7 +49,6 @@ public class PreviewStage {
 
     private Collection<? extends AbstractPreviewTask> tasks;
 
-    private boolean parallel;
 
     public PreviewStage() {
     }
@@ -60,15 +59,13 @@ public class PreviewStage {
                         String description,
                         String sourcesPackage,
                         String resourcesDir,
-                        Collection<? extends AbstractPreviewTask> tasks,
-                        boolean parallel) {
+                        Collection<? extends AbstractPreviewTask> tasks) {
         this.name = name;
         this.type = type;
         this.description = description;
         this.sourcesPackage = sourcesPackage;
         this.resourcesDir = resourcesDir;
         this.tasks = tasks;
-        this.parallel = parallel;
     }
 
     public static DefaultBuilder defaultBuilder(StageType type) {
@@ -130,13 +127,6 @@ public class PreviewStage {
         this.tasks = tasks;
     }
 
-    public boolean isParallel() {
-        return parallel;
-    }
-
-    public void setParallel(boolean parallel) {
-        this.parallel = parallel;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -159,7 +149,6 @@ public class PreviewStage {
                 ", sourcesPackage='" + sourcesPackage + '\'' +
                 ", resourcesDir='" + resourcesDir + '\'' +
                 ", tasks=" + tasks +
-                ", parallel=" + parallel +
                 '}';
     }
 
@@ -179,9 +168,8 @@ public class PreviewStage {
                                              String description,
                                              String sourcesPackage,
                                              String resourcesDir,
-                                             Collection<AbstractPreviewTask> allDescriptors,
-                                             boolean parallel) {
-            return new PreviewStage(name, type, description, sourcesPackage, resourcesDir, allDescriptors, parallel);
+                                             Collection<AbstractPreviewTask> allDescriptors) {
+            return new PreviewStage(name, type, description, sourcesPackage, resourcesDir, allDescriptors);
         }
     }
 
@@ -349,7 +337,7 @@ public class PreviewStage {
             Collection<AbstractPreviewTask> allDescriptors = mergeDescriptors(templatedTasksDescriptors, changeUnitClassesList);
 
 
-            return buildInstance(name, description, sourcesPackage, resourcesDir, allDescriptors, parallel);
+            return buildInstance(name, description, sourcesPackage, resourcesDir, allDescriptors);
         }
 
         @NotNull
@@ -357,8 +345,7 @@ public class PreviewStage {
                                            String description,
                                            String sourcesPackage,
                                            String resourcesDir,
-                                           Collection<AbstractPreviewTask> allDescriptors,
-                                           boolean parallel);
+                                           Collection<AbstractPreviewTask> allDescriptors);
 
         /**
          * Merges and returns a single collection of task descriptors from both templated files and provided classes.

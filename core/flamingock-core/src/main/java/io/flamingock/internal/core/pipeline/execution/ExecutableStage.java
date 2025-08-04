@@ -28,12 +28,10 @@ public class ExecutableStage implements StageDescriptor {
 
     protected final List<? extends ExecutableTask> tasks;
     private final String name;
-    private final boolean parallel;
 
-    public ExecutableStage(String name, List<? extends ExecutableTask> tasks, boolean parallel) {
+    public ExecutableStage(String name, List<? extends ExecutableTask> tasks) {
         this.name = name;
         this.tasks = tasks;
-        this.parallel = parallel;
     }
 
     public String getName() {
@@ -43,11 +41,6 @@ public class ExecutableStage implements StageDescriptor {
     @Override
     public Collection<TaskDescriptor> getLoadedTasks() {
         return tasks.stream().map(ExecutableTask::getDescriptor).collect(Collectors.toList());
-    }
-
-
-    public boolean isParallel() {
-        return parallel;
     }
 
     public List<? extends ExecutableTask> getTasks() {

@@ -15,10 +15,13 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
+import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Set;
@@ -26,7 +29,7 @@ import java.util.Set;
 public interface StepNavigatorBuilder {
 
 
-    StepNavigatorBuilder setSummarizer(TaskSummarizer summarizer);
+    StepNavigatorBuilder setChangeUnit(ExecutableTask changeUnit);
 
     StepNavigatorBuilder setAuditWriter(ExecutionAuditWriter auditWriter);
 
@@ -36,6 +39,9 @@ public interface StepNavigatorBuilder {
 
     StepNavigatorBuilder setNonGuardedTypes(Set<Class<?>> types);
 
+    StepNavigatorBuilder setExecutionContext(ExecutionContext executionContext);
+
+    @Deprecated
     StepNavigatorBuilder setAuditStoreTxWrapper(TransactionWrapper auditStoreTxWrapper);
 
     StepNavigator build();
@@ -43,8 +49,8 @@ public interface StepNavigatorBuilder {
 
     abstract class AbstractStepNavigator implements StepNavigatorBuilder {
 
+        protected ExecutableTask changeUnit;
 
-        protected TaskSummarizer summarizer = null;
         protected ExecutionAuditWriter auditWriter = null;
 
         protected Lock lock = null;
@@ -53,14 +59,16 @@ public interface StepNavigatorBuilder {
 
         protected Set<Class<?>> nonGuardedTypes;
 
+        protected ExecutionContext executionContext;
+
         protected TransactionWrapper auditStoreTxWrapper = null;
 
         public AbstractStepNavigator() {
         }
 
         @Override
-        public StepNavigatorBuilder setSummarizer(TaskSummarizer summarizer) {
-            this.summarizer = summarizer;
+        public StepNavigatorBuilder setChangeUnit(ExecutableTask changeUnit) {
+            this.changeUnit = changeUnit;
             return this;
         }
 
@@ -82,10 +90,15 @@ public interface StepNavigatorBuilder {
             return this;
         }
 
-
         @Override
         public StepNavigatorBuilder setLock(Lock lock) {
             this.lock = lock;
+            return this;
+        }
+
+        @Override
+        public StepNavigatorBuilder setExecutionContext(ExecutionContext executionContext) {
+            this.executionContext = executionContext;
             return this;
         }
 

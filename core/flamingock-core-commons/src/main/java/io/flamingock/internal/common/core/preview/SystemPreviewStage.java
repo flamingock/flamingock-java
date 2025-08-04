@@ -36,13 +36,8 @@ public class SystemPreviewStage extends PreviewStage {
                               String description,
                               String sourcesPackage,
                               String resourcesDir,
-                              Collection<? extends AbstractPreviewTask> tasks,
-                              boolean parallel) {
-        super(name,
-                StageType.SYSTEM,
-                description,
-                sourcesPackage,
-                resourcesDir, tasks, parallel);
+                              Collection<? extends AbstractPreviewTask> tasks) {
+        super(name, StageType.SYSTEM, description, sourcesPackage, resourcesDir, tasks);
 
     }
 
@@ -58,9 +53,8 @@ public class SystemPreviewStage extends PreviewStage {
                                              String description,
                                              String sourcesPackage,
                                              String resourcesDir,
-                                             Collection<AbstractPreviewTask> allDescriptors,
-                                             boolean parallel) {
-            return new SystemPreviewStage(name, description, sourcesPackage, resourcesDir, allDescriptors, parallel);
+                                             Collection<AbstractPreviewTask> allDescriptors) {
+            return new SystemPreviewStage(name, description, sourcesPackage, resourcesDir, allDescriptors);
         }
     }
 

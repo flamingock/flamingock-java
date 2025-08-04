@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.builder;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -43,6 +44,7 @@ import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.core.runner.PipelineRunnerCreator;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.core.runner.RunnerBuilder;
+import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
@@ -90,6 +92,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     private final CoreConfiguration coreConfiguration;
 
     private final Driver<?> driver;
+    private final TargetSystemManager targetSystemManager = new TargetSystemManager();
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
     private Consumer<IPipelineCompletedEvent> pipelineCompletedListener;
     private Consumer<IPipelineIgnoredEvent> pipelineIgnoredListener;
@@ -189,10 +192,11 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         LoadedPipeline pipeline = buildPipeline();
         pipeline.contributeToContext(context);
 
-        return PipelineRunnerCreator.createWithFinalizer(
+        return PipelineRunnerCreator.create(
                 runnerId,
                 pipeline,
                 engine,
+                targetSystemManager,
                 coreConfiguration,
                 buildEventPublisher(),
                 hierarchicalContext,
@@ -267,6 +271,11 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     /// ////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public HOLDER addTargetSystem(TargetSystem targetSystem) {
+        targetSystemManager.add(targetSystem);
+        return getSelf();
+    }
 
     @Override
     public HOLDER setLockAcquiredForMillis(long lockAcquiredForMillis) {

@@ -15,44 +15,54 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
+import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.context.PriorityContext;
+import io.flamingock.internal.core.targets.TargetSystemManager;
 
 public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractStepNavigator {
 
-    private final StepNavigator instance = new StepNavigator(null, null, null, null, null);
+    private final StepNavigator navigator = new StepNavigator();
+    private final TargetSystemManager targetSystemManager;
 
-
-    public ReusableStepNavigatorBuilder() {
+    public ReusableStepNavigatorBuilder(TargetSystemManager targetSystemManager) {
+        this.targetSystemManager = targetSystemManager;
     }
 
 
     @Override
     public StepNavigator build() {
-        instance.clean();
-        if (summarizer != null) {
-            summarizer.clear();
-        }
+        navigator.clean();
         setBaseDependencies();
-        return instance;
+        return navigator;
     }
 
     private void setBaseDependencies() {
-        instance.setSummarizer(summarizer);
-        instance.setAuditWriter(auditWriter);
+        navigator.setChangeUnit(changeUnit);
+        navigator.setExecutionContext(executionContext);
+        navigator.setAuditWriter(auditWriter);
+
+        //TODO fix targetSystem.id
+        TargetSystem targetSystem = targetSystemManager.getValueOrDefault("changeUnit.getTargetSystem");
+        navigator.setTargetSystem(targetSystem);
 
         RuntimeManager runtimeManager = RuntimeManager.builder()
                 .setDependencyContext(new PriorityContext(staticContext))
                 .setLock(lock)
                 .setNonGuardedTypes(nonGuardedTypes)
                 .build();
+        navigator.setRuntimeManager(runtimeManager);
 
-        instance.setRuntimeManager(runtimeManager);
-        instance.setTransactionWrapper(auditStoreTxWrapper);
+        navigator.setSummarizer(new TaskSummarizer(changeUnit.getId()));
+
+
+        //THIS WILL BE REMOVED and replaced with TargetSystem
+        navigator.setTransactionWrapper(auditStoreTxWrapper);
         OngoingTaskStatusRepository ongoingTasksRepository = auditStoreTxWrapper != null && CloudTransactioner.class.isAssignableFrom(auditStoreTxWrapper.getClass())
                 ? (OngoingTaskStatusRepository) auditStoreTxWrapper : null;
-        instance.setOngoingTasksRepository(ongoingTasksRepository);
+        navigator.setOngoingTasksRepository(ongoingTasksRepository);
     }
 }

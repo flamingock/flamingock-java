@@ -22,6 +22,7 @@ import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
+import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
@@ -33,19 +34,20 @@ public final class PipelineRunnerCreator {
     private PipelineRunnerCreator() {
     }
 
-    public static Runner createWithFinalizer(RunnerId runnerId,
-                                             LoadedPipeline pipeline,
-                                             ConnectionEngine engine,
-                                             CoreConfigurable coreConfiguration,
-                                             EventPublisher eventPublisher,
-                                             ContextResolver dependencyContext,
-                                             Set<Class<?>> nonGuardedTypes,
-                                             boolean isThrowExceptionIfCannotObtainLock,
-                                             Runnable finalizer) {
+    public static Runner create(RunnerId runnerId,
+                                LoadedPipeline pipeline,
+                                ConnectionEngine engine,
+                                TargetSystemManager targetSystemManager,
+                                CoreConfigurable coreConfiguration,
+                                EventPublisher eventPublisher,
+                                ContextResolver dependencyContext,
+                                Set<Class<?>> nonGuardedTypes,
+                                boolean isThrowExceptionIfCannotObtainLock,
+                                Runnable finalizer) {
 
         //Instantiated here, so we don't wait until Runner.run() and fail fast
         TransactionWrapper auditStoreTxWrapper = engine.getTransactionWrapper().orElse(null);
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), auditStoreTxWrapper);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), targetSystemManager, auditStoreTxWrapper);
         return new PipelineRunner(
                 runnerId,
                 pipeline,

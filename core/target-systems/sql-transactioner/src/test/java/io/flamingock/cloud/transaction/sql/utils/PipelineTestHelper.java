@@ -98,8 +98,7 @@ public class PipelineTestHelper {
                 "some description",
                 null,
                 null,
-                tasks,
-                false
+                tasks
         );
 
         return new PreviewPipeline(Collections.singletonList(stage));

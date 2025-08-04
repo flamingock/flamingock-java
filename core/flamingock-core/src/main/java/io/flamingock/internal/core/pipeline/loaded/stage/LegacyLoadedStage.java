@@ -38,9 +38,8 @@ public class LegacyLoadedStage extends AbstractLoadedStage {
 
     public LegacyLoadedStage(String name,
                              StageType type,
-                             Collection<AbstractLoadedTask> loadedTasks,
-                             boolean parallel) {
-        super(name, type, loadedTasks, parallel, validationContext);
+                             Collection<AbstractLoadedTask> loadedTasks) {
+        super(name, type, loadedTasks, validationContext);
 
     }
 

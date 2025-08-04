@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
@@ -57,21 +58,38 @@ public class StepNavigator {
     private static final String MANUAL_ROLLBACK_DESC = "manual-rollback";
     private static final String AUTO_ROLLBACK_DESC = "auto-rollback";
 
+    private ExecutableTask changeUnit;
+
+    private ExecutionAuditWriter auditWriter;
+
+    private TargetSystem targetSystem;
+
+    private ExecutionContext executionContext;
+
     private OngoingTaskStatusRepository ongoingTasksRepository;
 
     private TaskSummarizer summarizer;
 
-    private ExecutionAuditWriter auditWriter;
 
     private RuntimeManager runtimeManager;
 
     private TransactionWrapper transactionWrapper;
 
-    public StepNavigator(ExecutionAuditWriter auditWriter,
+    public StepNavigator() {
+        this(null, null, null, null, null, null, null, null);
+    }
+
+    public StepNavigator(ExecutableTask changeUnit,
+                         ExecutionContext executionContext,
+                         TargetSystem targetSystem,
+                         ExecutionAuditWriter auditWriter,
                          TaskSummarizer summarizer,
                          RuntimeManager runtimeManager,
                          TransactionWrapper transactionWrapper,
                          OngoingTaskStatusRepository ongoingTasksRepository) {
+        this.changeUnit = changeUnit;
+        this.executionContext = executionContext;
+        this.targetSystem = targetSystem;
         this.auditWriter = auditWriter;
         this.summarizer = summarizer;
         this.runtimeManager = runtimeManager;
@@ -80,9 +98,24 @@ public class StepNavigator {
     }
 
     void clean() {
+        changeUnit = null;
+        executionContext = null;
+        targetSystem = null;
         summarizer = null;
         auditWriter = null;
         runtimeManager = null;
+    }
+
+    void setChangeUnit(ExecutableTask changeUnit) {
+        this.changeUnit = changeUnit;
+    }
+
+    void setExecutionContext(ExecutionContext executionContext) {
+        this.executionContext = executionContext;
+    }
+
+    void setTargetSystem(TargetSystem targetSystem) {
+        this.targetSystem = targetSystem;
     }
 
     void setSummarizer(TaskSummarizer summarizer) {
@@ -105,22 +138,22 @@ public class StepNavigator {
         this.ongoingTasksRepository = ongoingStatusRepository;
     }
 
-    public final TaskSummary executeTask(ExecutableTask task, ExecutionContext executionContext) {
-        if (!task.isAlreadyExecuted()) {
-            logger.info("Starting {}", task.getId());
+    public final TaskSummary execute() {
+        if (!changeUnit.isAlreadyExecuted()) {
+            logger.info("Starting {}", changeUnit.getId());
             // Main execution
             TaskStep executedStep;
-            StartStep startStep = new StartStep(task);
+            StartStep startStep = new StartStep(changeUnit);
 
             //TODO: We can avoid this when, in the cloud, the task is transactional
             ExecutableStep executableStep = auditStartExecution(startStep, executionContext, LocalDateTime.now());
 
-            if (transactionWrapper != null && task.getDescriptor().isTransactional()) {
-                logger.debug("Executing(transactional, cloud={}) task[{}]", ongoingTasksRepository != null, task.getId());
+            if (transactionWrapper != null && changeUnit.getDescriptor().isTransactional()) {
+                logger.debug("Executing(transactional, cloud={}) task[{}]", ongoingTasksRepository != null, changeUnit.getId());
                 executedStep = executeWithinTransaction(executableStep, executionContext, runtimeManager);
             } else {
-                logger.debug("Executing(non-transactional) task[{}]", task.getId());
-                ExecutionStep executionStep = executeTask(executableStep);
+                logger.debug("Executing(non-transactional) task[{}]", changeUnit.getId());
+                ExecutionStep executionStep = execute(executableStep);
                 executedStep = auditExecution(executionStep, executionContext, LocalDateTime.now());
             }
 
@@ -131,7 +164,7 @@ public class StepNavigator {
 
         } else {
             //Task already executed, we
-            summarizer.add(new CompletedAlreadyAppliedStep(task));
+            summarizer.add(new CompletedAlreadyAppliedStep(changeUnit));
             return summarizer.setSuccessful().getSummary();
         }
     }
@@ -146,7 +179,7 @@ public class StepNavigator {
         }
 
         return transactionWrapper.wrapInTransaction(executableStep.getLoadedTask(), dependencyInjectable, () -> {
-            ExecutionStep executed = executeTask(executableStep);
+            ExecutionStep executed = execute(executableStep);
             if (executed instanceof SuccessExecutionStep) {
                 AfterExecutionAuditStep executionAuditResult = auditExecution(executed, executionContext, LocalDateTime.now());
                 if (executionAuditResult instanceof CompletedSuccessStep) {
@@ -166,7 +199,7 @@ public class StepNavigator {
         });
     }
 
-    private ExecutionStep executeTask(ExecutableStep executableStep) {
+    private ExecutionStep execute(ExecutableStep executableStep) {
         ExecutionStep executed = executableStep.execute(runtimeManager);
         summarizer.add(executed);
         String taskId = executed.getTask().getId();

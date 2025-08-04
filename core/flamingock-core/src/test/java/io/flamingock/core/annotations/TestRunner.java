@@ -15,6 +15,10 @@
  */
 package io.flamingock.core.annotations;
 
+import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
+import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
@@ -83,7 +87,7 @@ public class TestRunner {
 
         //AND
         AbstractLoadedTask loadedTask = LoadedTaskBuilder.getCodeBuilderInstance(changeUnitClass).build();
-        List<? extends ExecutableTask> executableTasks = ExecutableTaskBuilder
+        List<? extends ExecutableTask> executableChangeUnits = ExecutableTaskBuilder
                 .getInstance(loadedTask)
                 .setStageName("stage_name")
                 .setInitialState(null)
@@ -98,11 +102,18 @@ public class TestRunner {
             CloudTransactioner.class.isAssignableFrom(transactionWrapper.getClass());
         }
 
-        StepNavigator stepNavigator = new StepNavigator(auditWriterMock, stepSummarizerMock, runtimeManagerMock, transactionWrapper, null);
 
-        executableTasks.forEach(executableTask -> stepNavigator.executeTask(executableTask, stageExecutionContext));
+        executableChangeUnits.forEach(changeUnit -> {
+            TargetSystem targetSystem = null;
+            OngoingTaskStatusRepository ongoingTasksRepository = null;
+            new StepNavigator(changeUnit, stageExecutionContext, targetSystem, auditWriterMock, stepSummarizerMock, runtimeManagerMock, transactionWrapper, ongoingTasksRepository)
+                    .execute();
 
-        Assertions.assertEquals(expectedNumberOfExecutableTasks, executableTasks.size());
+        });
+
+
+
+        Assertions.assertEquals(expectedNumberOfExecutableTasks, executableChangeUnits.size());
         checker.checkOrderStrict(Arrays.asList(executionSteps));
         if(useTransactionWrapper) {
             Assertions.assertTrue(transactionWrapper.isCalled());

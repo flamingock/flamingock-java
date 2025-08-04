@@ -16,6 +16,8 @@
 package io.flamingock.internal.core.builder.core;
 
 
+import io.flamingock.api.targets.TargetSystem;
+
 import java.util.Map;
 
 public interface CoreConfigurator<HOLDER> {
@@ -35,6 +37,8 @@ public interface CoreConfigurator<HOLDER> {
     HOLDER setMetadata(Map<String, Object> metadata);
 
     HOLDER setDefaultAuthor(String defaultMigrationAuthor);
+
+    HOLDER addTargetSystem(TargetSystem targetSystem);
 
     long getLockAcquiredForMillis();
 

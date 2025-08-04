@@ -59,18 +59,13 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
     private final Collection<AbstractLoadedTask> tasks;
 
-    private final boolean parallel;
-
-
     public AbstractLoadedStage(String name,
                                StageType type,
                                Collection<AbstractLoadedTask> tasks,
-                               boolean parallel,
                                StageValidationContext validationContext) {
         this.name = name;
         this.type = type;
         this.tasks = tasks;
-        this.parallel = parallel;
         this.validationContext = validationContext;
     }
 
@@ -85,7 +80,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
                 .flatMap(List::stream)
                 .collect(Collectors.toCollection(LinkedList::new));
 
-        return new ExecutableStage(name, tasks, parallel);
+        return new ExecutableStage(name, tasks);
     }
 
     public String getName() {
@@ -100,9 +95,6 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         return tasks;
     }
 
-    public boolean isParallel() {
-        return parallel;
-    }
 
 
     /**
@@ -150,7 +142,6 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
     public String toString() {
         return "LoadedStage{" + "name='" + name + '\'' +
                 ", loadedTasks=" + tasks +
-                ", parallel=" + parallel +
                 '}';
     }
 
@@ -193,12 +184,12 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
                     .collect(Collectors.toList());
             switch(previewStage.getType()) {
                 case LEGACY:
-                    return new LegacyLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks, previewStage.isParallel());
+                    return new LegacyLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks);
                 case SYSTEM:
-                    return new SystemLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks, previewStage.isParallel());
+                    return new SystemLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks);
                 case DEFAULT:
                 default:
-                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks, previewStage.isParallel());
+                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks);
             }
 
         }
