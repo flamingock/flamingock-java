@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync.changes.unhappypath;
+package io.flamingock.targetsystem.mongodb.sync.changes.unhappypath;
 
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;

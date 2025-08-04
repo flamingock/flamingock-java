@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync;
+package io.flamingock.targetsystem.mongodb.sync;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.changes.happypath.HappyCreateClientsCollectionChange;
-import io.flamingock.cloud.transaction.mongodb.sync.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.cloud.transaction.mongodb.sync.changes.unhappypath.UnhappyCreateClientsCollectionChange;
-import io.flamingock.cloud.transaction.mongodb.sync.changes.unhappypath.UnhappyInsertClientsChange;
+import io.flamingock.targetsystem.mongodb.sync.changes.happypath.HappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.mongodb.sync.changes.happypath.HappyInsertClientsChange;
+import io.flamingock.targetsystem.mongodb.sync.changes.unhappypath.UnhappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.mongodb.sync.changes.unhappypath.UnhappyInsertClientsChange;
 import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
@@ -38,7 +38,7 @@ import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
-import org.junit.Ignore;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;

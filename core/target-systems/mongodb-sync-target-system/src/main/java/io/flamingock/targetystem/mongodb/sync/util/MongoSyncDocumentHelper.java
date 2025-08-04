@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync.util;
+package io.flamingock.targetystem.mongodb.sync.util;
 
 import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync;
+package io.flamingock.targetystem.mongodb.sync;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;

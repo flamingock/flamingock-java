@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync;
+package io.flamingock.targetsystem.mongodb.sync;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncCollectionHelper;
-import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncDocumentHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;

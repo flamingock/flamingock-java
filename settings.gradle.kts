@@ -90,13 +90,17 @@ project(":platform-plugins:flamingock-springboot-integration").projectDir =
 // TARGET SYSTEMS
 //////////////////////////////////////
 
-include("core:target-systems:sql-transactioner")
-project(":core:target-systems:sql-transactioner").projectDir = file("core/target-systems/sql-transactioner")
-project(":core:target-systems:sql-transactioner").name = "sql-transactioner"
-
 include("core:target-systems:mongodb-sync-target-system")
 project(":core:target-systems:mongodb-sync-target-system").projectDir = file("core/target-systems/mongodb-sync-target-system")
 project(":core:target-systems:mongodb-sync-target-system").name = "mongodb-sync-target-system"
+
+include("core:target-systems:mongodb-springdata-target-system")
+project(":core:target-systems:mongodb-springdata-target-system").projectDir = file("core/target-systems/mongodb-springdata-target-system")
+project(":core:target-systems:mongodb-springdata-target-system").name = "mongodb-springdata-target-system"
+
+include("core:target-systems:sql-transactioner")
+project(":core:target-systems:sql-transactioner").projectDir = file("core/target-systems/sql-transactioner")
+project(":core:target-systems:sql-transactioner").name = "sql-transactioner"
 
 include("core:target-systems:dynamodb-transactioner")
 project(":core:target-systems:dynamodb-transactioner").projectDir = file("core/target-systems/dynamodb-transactioner")
@@ -161,4 +165,3 @@ project(":core:importer:flamingock-importer-dynamodb-tests").projectDir = file("
 include("core:importer:flamingock-importer-couchbase-tests")
 project(":core:importer:flamingock-importer-couchbase-tests").name = "flamingock-importer-couchbase-tests"
 project(":core:importer:flamingock-importer-couchbase-tests").projectDir = file("core/importer/flamingock-importer-couchbase-tests")
-

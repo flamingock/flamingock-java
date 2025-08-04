@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync;
+package io.flamingock.targetystem.mongodb.sync;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -21,8 +21,8 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncCollectionHelper;
-import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncDocumentHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.core.targets.OngoingTaskStatus;

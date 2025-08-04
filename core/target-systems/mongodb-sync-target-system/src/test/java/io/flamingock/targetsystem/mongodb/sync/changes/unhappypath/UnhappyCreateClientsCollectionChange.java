@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync.changes.happypath;
+package io.flamingock.targetsystem.mongodb.sync.changes.unhappypath;
 
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.ChangeUnit;
@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.NonLockGuarded;
 
 @ChangeUnit(id = "create-clients-collection", order = "001", transactional = false)
-public class HappyCreateClientsCollectionChange {
+public class UnhappyCreateClientsCollectionChange {
 
     @Execution
     public void execution(@NonLockGuarded MongoDatabase mongoDatabase) {

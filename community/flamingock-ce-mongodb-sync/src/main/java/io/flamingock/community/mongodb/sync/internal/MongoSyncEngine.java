@@ -20,7 +20,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
-import io.flamingock.cloud.transaction.mongodb.sync.MongoSyncTxWrapper;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTxWrapper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;

@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.mongodb.sync.changes.happypath;
+package io.flamingock.targetsystem.mongodb.sync.changes.happypath;
 
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.NonLockGuarded;
-import org.bson.Document;
 
-@ChangeUnit(id = "insert-clients", order = "002")
-public class HappyInsertClientsChange {
+@ChangeUnit(id = "create-clients-collection", order = "001", transactional = false)
+public class HappyCreateClientsCollectionChange {
 
     @Execution
-    public void execution(@NonLockGuarded MongoDatabase mongoDatabase, @NonLockGuarded ClientSession clientSession) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
-        collection.insertOne(clientSession, new Document().append("Name", "Federico"));
+    public void execution(@NonLockGuarded MongoDatabase mongoDatabase) {
+        mongoDatabase.createCollection("clientCollection");
     }
 }
