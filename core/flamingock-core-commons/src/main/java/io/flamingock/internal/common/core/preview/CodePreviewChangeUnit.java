@@ -47,6 +47,24 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
         this.rollbackBeforeExecutionMethodName = rollbackBeforeExecutionMethodPreview;
         this.sourcePackage = sourceClassPath.substring(0, sourceClassPath.lastIndexOf("."));    }
 
+    public CodePreviewChangeUnit(String id,
+                                 String order,
+                                 String sourceClassPath,
+                                 PreviewMethod executionMethodPreview,
+                                 PreviewMethod rollbackMethodPreview,
+                                 PreviewMethod beforeExecutionMethodPreview,
+                                 PreviewMethod rollbackBeforeExecutionMethodPreview,
+                                 boolean runAlways,
+                                 boolean transactional,
+                                 boolean system,
+                                 String targetSystem) {
+        super(id, order, sourceClassPath, runAlways, transactional, system, targetSystem);
+        this.executionMethodName = executionMethodPreview;
+        this.rollbackMethodName = rollbackMethodPreview;
+        this.beforeExecutionMethodName = beforeExecutionMethodPreview;
+        this.rollbackBeforeExecutionMethodName = rollbackBeforeExecutionMethodPreview;
+        this.sourcePackage = sourceClassPath.substring(0, sourceClassPath.lastIndexOf("."));
+    }
 
     public PreviewMethod getExecutionMethodName() {
         return executionMethodName;
@@ -99,6 +117,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +
+                (targetSystem != null ? ", targetSystem='" + targetSystem + '\'' : "") +
                 '}';
     }
 

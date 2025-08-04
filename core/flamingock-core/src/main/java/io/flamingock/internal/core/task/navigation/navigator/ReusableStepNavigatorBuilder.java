@@ -45,8 +45,8 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
         navigator.setExecutionContext(executionContext);
         navigator.setAuditWriter(auditWriter);
 
-        //TODO fix targetSystem.id
-        TargetSystem targetSystem = targetSystemManager.getValueOrDefault("changeUnit.getTargetSystem");
+        String targetSystemId = changeUnit.getTargetSystem();
+        TargetSystem targetSystem = targetSystemManager.getValueOrDefault(targetSystemId);
         navigator.setTargetSystem(targetSystem);
 
         RuntimeManager runtimeManager = RuntimeManager.builder()

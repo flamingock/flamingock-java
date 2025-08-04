@@ -13,26 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.task.executable;
+package io.flamingock.api.annotations;
 
-import io.flamingock.internal.core.runtime.RuntimeManager;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.List;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface TargetSystem {
 
-public interface ExecutableTask extends TaskDescriptor {
-
-    TaskDescriptor getDescriptor();
-
-    String getStageName();
-
-    void execute(RuntimeManager runtimeHelper);
-
-    String getExecutionMethodName();
-
-    boolean isAlreadyExecuted();
-
-    void addRollback(Rollback rollback);
-
-    List<? extends Rollback> getRollbackChain();
+    String id();
 }

@@ -33,6 +33,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     protected boolean system;
 
+    protected String targetSystem;
+
     public AbstractTaskDescriptor(){}
 
     public AbstractTaskDescriptor(String id,
@@ -41,13 +43,25 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                                   boolean runAlways,
                                   boolean transactional,
                                   boolean system) {
+        this(id, order, source, runAlways, transactional, system, null);
+    }
+
+    public AbstractTaskDescriptor(String id,
+                                  String order,
+                                  String source,
+                                  boolean runAlways,
+                                  boolean transactional,
+                                  boolean system,
+                                  String targetSystem) {
         this.id = id;
         this.order = order;
         this.source = source;
         this.runAlways = runAlways;
         this.transactional = transactional;
         this.system = system;
+        this.targetSystem = targetSystem;
     }
+
     @Override
     public String getId() {
         return id;
@@ -78,6 +92,10 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         return system;
     }
 
+    public String getTargetSystem() {
+        return targetSystem;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -100,6 +118,10 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     public void setSystem(boolean system) {
         this.system = system;
+    }
+
+    public void setTargetSystem(String targetSystem) {
+        this.targetSystem = targetSystem;
     }
 
     @Override
@@ -128,6 +150,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                 .add("transactional=" + isTransactional())
                 .add("order=" + getOrder())
                 .add("sortable=" + isSortable())
+                .add("targetSystem='" + getTargetSystem() + "'")
                 .toString();
     }
 

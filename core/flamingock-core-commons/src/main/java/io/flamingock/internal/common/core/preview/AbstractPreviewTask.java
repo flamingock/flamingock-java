@@ -39,5 +39,32 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
         super(id, order, source, runAlways, transactional, system);
     }
 
+    public AbstractPreviewTask(String id,
+                               String order,
+                               String source,
+                               boolean runAlways,
+                               boolean transactional,
+                               boolean system,
+                               String targetSystem) {
+        super(id, order, source, runAlways, transactional, system, targetSystem);
+    }
 
+    @Override
+    public String pretty() {
+        String fromParent = super.pretty();
+        String targetInfo = String.format(", targetSystem='%s'", targetSystem);
+        return fromParent + targetInfo;
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractPreviewTask{" +
+                "id='" + id + '\'' +
+                ", order='" + order + '\'' +
+                ", source='" + source + '\'' +
+                ", runAlways=" + runAlways +
+                ", transactional=" + transactional +
+                ", targetSystem='" + targetSystem +
+                '}';
+    }
 }
