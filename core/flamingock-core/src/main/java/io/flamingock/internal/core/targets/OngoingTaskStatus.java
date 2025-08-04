@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.cloud.transaction;
+package io.flamingock.internal.core.targets;
 
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 

@@ -51,6 +51,7 @@ public class CloudFlamingockBuilder
 
     @Override
     protected void doUpdateContext() {
+        addDependency(FlamingockEdition.CLOUD);
         addDependency(cloudConfiguration);
 
         //TODO get transactioner from ServiceLoader

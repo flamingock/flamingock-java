@@ -16,7 +16,7 @@
 package io.flamingock.core.cloud.utils;
 
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
+import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 

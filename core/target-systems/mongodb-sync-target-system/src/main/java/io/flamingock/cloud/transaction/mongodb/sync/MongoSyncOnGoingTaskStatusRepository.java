@@ -25,8 +25,8 @@ import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncCollectionHelp
 import io.flamingock.cloud.transaction.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.OngoingTaskStatus;
+import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import org.bson.Document;
 
 import java.util.HashSet;

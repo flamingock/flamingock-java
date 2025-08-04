@@ -16,7 +16,6 @@
 package io.flamingock.internal.core.targets;
 
 import io.flamingock.internal.common.core.context.ContextInitializable;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Optional;

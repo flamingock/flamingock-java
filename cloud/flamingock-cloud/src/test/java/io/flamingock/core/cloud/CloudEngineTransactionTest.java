@@ -24,7 +24,7 @@ import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
+import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;

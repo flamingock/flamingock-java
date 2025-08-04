@@ -21,7 +21,9 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
@@ -31,7 +33,7 @@ import java.util.Optional;
 public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "flamingockOnGoingTasks";
 
-    private MongoSyncOnGoingTaskStatusRepository taskStatusRepository;
+    private OngoingTaskStatusRepository taskStatusRepository;
 
     private MongoSyncTxWrapper txWrapper;
 
@@ -66,6 +68,8 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
+                .orElse(FlamingockEdition.CLOUD);
 
         MongoClient mongoClient = context.getDependencyValue(MongoClient.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(MongoClient.class));
@@ -84,7 +88,10 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
 
         txWrapper = new MongoSyncTxWrapper(mongoClient);
 
-        taskStatusRepository = MongoSyncOnGoingTaskStatusRepository.builder(database)
+
+        taskStatusRepository = edition == FlamingockEdition.COMMUNITY
+                ? new NoOpOnGoingTaskStatusRepository(this.getId())
+                : MongoSyncOnGoingTaskStatusRepository.builder(database)
                 .setCollectionName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
                 .withReadConcern(readConcern)

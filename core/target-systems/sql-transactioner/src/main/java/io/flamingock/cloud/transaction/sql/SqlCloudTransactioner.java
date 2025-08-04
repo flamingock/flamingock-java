@@ -17,7 +17,7 @@ package io.flamingock.cloud.transaction.sql;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
+import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.DependencyInjectable;

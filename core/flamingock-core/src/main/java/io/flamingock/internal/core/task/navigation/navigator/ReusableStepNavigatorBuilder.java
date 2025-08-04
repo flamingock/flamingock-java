@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.context.PriorityContext;
 

@@ -56,6 +56,7 @@ public class CommunityFlamingockBuilder
 
     @Override
     protected void doUpdateContext() {
+        addDependency(FlamingockEdition.COMMUNITY);
         addDependency(communityConfiguration);
     }
 

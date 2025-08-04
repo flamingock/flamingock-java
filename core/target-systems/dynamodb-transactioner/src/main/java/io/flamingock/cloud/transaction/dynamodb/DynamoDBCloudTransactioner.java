@@ -17,7 +17,7 @@ package io.flamingock.cloud.transaction.dynamodb;
 
 import io.flamingock.cloud.transaction.dynamodb.wrapper.DynamoDBTransactionWrapper;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatus;
+import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.common.core.context.DependencyInjectable;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.cloud.transaction;
+package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
-
-public interface CloudTransactioner extends OngoingTaskStatusRepository, TransactionWrapper, AutoCloseable {
-
-    /**
-     * Initializes the transactioner's storage in the local infrastructure
-     */
-    void initialize();
-
-    @Override
-    void close();
-
-
+public enum FlamingockEdition {
+    COMMUNITY, CLOUD
 }

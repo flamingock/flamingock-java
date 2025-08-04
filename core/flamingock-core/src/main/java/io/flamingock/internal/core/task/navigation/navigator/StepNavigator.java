@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.core.cloud.transaction.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
