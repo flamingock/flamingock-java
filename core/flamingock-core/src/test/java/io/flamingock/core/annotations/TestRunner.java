@@ -17,6 +17,7 @@ package io.flamingock.core.annotations;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.TargetSystemOperations;
 import io.flamingock.internal.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
 import io.flamingock.internal.util.Result;
@@ -106,7 +107,8 @@ public class TestRunner {
         executableChangeUnits.forEach(changeUnit -> {
             TargetSystem targetSystem = null;
             OngoingTaskStatusRepository ongoingTasksRepository = null;
-            new StepNavigator(changeUnit, stageExecutionContext, targetSystem, auditWriterMock, stepSummarizerMock, runtimeManagerMock, transactionWrapper, ongoingTasksRepository)
+            TargetSystemOperations targetSystemOps = ReusableStepNavigatorBuilder.buildTargetSystemOperations(transactionWrapper, ongoingTasksRepository, runtimeManagerMock);
+            new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, auditWriterMock, stepSummarizerMock, runtimeManagerMock)
                     .execute();
 
         });

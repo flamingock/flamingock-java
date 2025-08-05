@@ -34,7 +34,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         this.autoCreate = autoCreate;
     }
 
-    abstract public Optional<OngoingTaskStatusRepository> getOnGoingTaskStatusRepository();
+    abstract public OngoingTaskStatusRepository getOnGoingTaskStatusRepository();
 
     abstract public TransactionWrapper getTxWrapper();
 }

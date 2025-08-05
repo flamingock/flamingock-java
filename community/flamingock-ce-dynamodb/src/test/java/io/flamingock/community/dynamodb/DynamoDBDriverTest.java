@@ -376,7 +376,6 @@ class DynamoDBDriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
-                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithoutTransactionWithoutRollback"))
                         .addDependency(client)
                         .disableTransaction()
                         .build()

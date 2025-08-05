@@ -96,8 +96,8 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
     }
 
     @Override
-    public Optional<OngoingTaskStatusRepository> getOnGoingTaskStatusRepository() {
-        return Optional.ofNullable(taskStatusRepository);
+    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+        return taskStatusRepository;
     }
 
     @Override

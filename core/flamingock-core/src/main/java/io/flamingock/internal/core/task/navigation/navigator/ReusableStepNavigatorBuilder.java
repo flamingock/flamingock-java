@@ -15,15 +15,19 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.targets.ContextComposerTargetSystem;
+import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.internal.core.targets.TargetSystemOperations;
+import io.flamingock.internal.core.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractStepNavigator {
 
@@ -49,7 +53,6 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
 
         ContextComposerTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem());
 
-        navigator.setTargetSystem(targetSystem);
 
         Context enhancedContext = targetSystem != null
                 ? targetSystem.compose(staticContext)
@@ -65,9 +68,47 @@ public class ReusableStepNavigatorBuilder extends StepNavigatorBuilder.AbstractS
         navigator.setSummarizer(new TaskSummarizer(changeUnit.getId()));
 
         //THIS WILL BE REMOVED and replaced with TargetSystem
-        navigator.setTransactionWrapper(auditStoreTxWrapper);
         OngoingTaskStatusRepository ongoingTasksRepository = auditStoreTxWrapper != null && CloudTransactioner.class.isAssignableFrom(auditStoreTxWrapper.getClass())
                 ? (OngoingTaskStatusRepository) auditStoreTxWrapper : null;
-        navigator.setOngoingTasksRepository(ongoingTasksRepository);
+        navigator.setTargetSystemOps(buildTargetSystemOperations(auditStoreTxWrapper, ongoingTasksRepository, runtimeManager));
+//        navigator.setTargetSystemOps(new TargetSystemOperations(targetSystem));
+    }
+
+
+    //TODO temporal until we have the TargetSystem for Driver
+    public static TargetSystemOperations buildTargetSystemOperations(TransactionWrapper txWrapper, OngoingTaskStatusRepository ongoingTaskStatusRepository, RuntimeManager runtimeManager) {
+        return new TargetSystemOperations(new TempTargetSystem("temporal-target-system", txWrapper, ongoingTaskStatusRepository), runtimeManager);
+    }
+
+    private static class TempTargetSystem extends TransactionalTargetSystem<TempTargetSystem> {
+
+        private final TransactionWrapper txWrapper;
+        private final OngoingTaskStatusRepository onGoingTaskStatusRepository;
+
+        public TempTargetSystem(String id, TransactionWrapper txWrapper, OngoingTaskStatusRepository ongoingTaskStatusRepository) {
+            super(id);
+            this.txWrapper = txWrapper;
+            this.onGoingTaskStatusRepository = ongoingTaskStatusRepository != null ? ongoingTaskStatusRepository : new NoOpOnGoingTaskStatusRepository(id);
+        }
+
+        @Override
+        public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+            return onGoingTaskStatusRepository;
+        }
+
+        @Override
+        public TransactionWrapper getTxWrapper() {
+            return txWrapper;
+        }
+
+        @Override
+        public void initialize(ContextResolver baseContext) {
+
+        }
+
+        @Override
+        protected TempTargetSystem getSelf() {
+            return this;
+        }
     }
 }
