@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.pipeline.execution;
 
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
@@ -24,12 +23,10 @@ import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
-import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
+import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -58,24 +55,15 @@ public class StageExecutor {
                                Lock lock) throws StageExecutionException {
 
         StageSummary summary = new StageSummary(executableStage.getName());
-
-        StepNavigatorBuilder stepNavigatorBuilder = new ReusableStepNavigatorBuilder(targetSystemManager);
-
         PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
+        StepNavigatorBuilder stepNavigatorBuilder = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
 
         try {
             getTasksStream(executableStage)
-                    .map(changeUnit -> stepNavigatorBuilder
-                            .setChangeUnit(changeUnit)
-                            .setExecutionContext(executionContext)
-                            .setAuditWriter(auditWriter)
-                            .setDependencyContext(dependencyContext)
-                            .setLock(lock)
-                            .setNonGuardedTypes(nonGuardedTypes)
-                            .setAuditStoreTxWrapper(auditStoreTxWrapper)
-                            .build()
-                    ).map(StepNavigator::execute)
+                    .map(stepNavigatorBuilder::setChangeUnit)
+                    .map(StepNavigatorBuilder::build)
+                    .map(StepNavigator::start)
                     .peek(summary::addSummary)
                     .filter(TaskSummary::isFailed)
                     .findFirst()
@@ -90,6 +78,16 @@ public class StageExecutor {
         }
 
         return new Output(summary);
+    }
+
+    private StepNavigatorBuilder getStepNavigatorBuilder(ExecutionContext executionContext, Lock lock, ContextResolver contextResolver) {
+        return StepNavigator.builder(targetSystemManager)
+                .setExecutionContext(executionContext)
+                .setAuditWriter(auditWriter)
+                .setDependencyContext(contextResolver)
+                .setLock(lock)
+                .setNonGuardedTypes(nonGuardedTypes)
+                .setAuditStoreTxWrapper(auditStoreTxWrapper);
     }
 
     protected Stream<? extends ExecutableTask> getTasksStream(ExecutableStage executableStage) {

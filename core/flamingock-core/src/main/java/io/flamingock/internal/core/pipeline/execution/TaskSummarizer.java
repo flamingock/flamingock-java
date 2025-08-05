@@ -38,8 +38,8 @@ public class TaskSummarizer implements StepSummarizer<TaskSummarizer> {
 
     private List<StepSummaryLine> lines = new LinkedList<>();
 
-    public TaskSummarizer(String taskId) {
-        this.taskId = taskId;
+    public TaskSummarizer(TaskDescriptor taskDescriptor) {
+        this.taskId = taskDescriptor.getId();
     }
 
     @Override

@@ -17,8 +17,8 @@ package io.flamingock.core.annotations;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
-import io.flamingock.internal.core.targets.TargetSystemOperations;
-import io.flamingock.internal.core.task.navigation.navigator.ReusableStepNavigatorBuilder;
+import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.operations.TargetSystemStepOperations;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
@@ -40,6 +40,7 @@ import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
 import org.junit.jupiter.api.Assertions;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -80,7 +81,10 @@ public class TestRunner {
         when(auditWriterMock.writeExecution(any(ExecutionAuditContextBundle.class))).thenReturn(Result.OK());
         when(auditWriterMock.writeRollback(any(RollbackAuditContextBundle.class))).thenReturn(Result.OK());
 
-        TaskSummarizer stepSummarizerMock = new TaskSummarizer("taskId");
+        ExecutableTask changeUnitMock = Mockito.mock(ExecutableTask.class);
+        when(changeUnitMock.getId()).thenReturn("taskId");
+
+        TaskSummarizer stepSummarizerMock = new TaskSummarizer(changeUnitMock);
         RuntimeManager runtimeManagerMock = RuntimeManager.builder()
                 .setDependencyContext(mock(Context.class))
                 .setLock(mock(Lock.class))
@@ -107,9 +111,9 @@ public class TestRunner {
         executableChangeUnits.forEach(changeUnit -> {
             TargetSystem targetSystem = null;
             OngoingTaskStatusRepository ongoingTasksRepository = null;
-            TargetSystemOperations targetSystemOps = ReusableStepNavigatorBuilder.buildTargetSystemOperations(transactionWrapper, ongoingTasksRepository, runtimeManagerMock);
-            new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, auditWriterMock, stepSummarizerMock, runtimeManagerMock)
-                    .execute();
+            TargetSystemStepOperations targetSystemOps = StepNavigatorBuilder.buildTargetSystemOperations(transactionWrapper, runtimeManagerMock);
+            new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, new AuditStoreStepOperations(auditWriterMock), stepSummarizerMock)
+                    .start();
 
         });
 

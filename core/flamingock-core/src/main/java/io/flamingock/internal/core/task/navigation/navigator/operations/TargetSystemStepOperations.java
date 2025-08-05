@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.targets;
+package io.flamingock.internal.core.task.navigation.navigator.operations;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.TaskStep;
@@ -31,19 +32,18 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Function;
 
-public class TargetSystemOperations {
+public class TargetSystemStepOperations {
     private static final Logger logger = LoggerFactory.getLogger("TargetSystemOperations");
 
     private final TargetSystem targetSystem;
     private final RuntimeManager runtimeManager;
 
-    public TargetSystemOperations(TargetSystem targetSystem, RuntimeManager runtimeManager) {
+    public TargetSystemStepOperations(TargetSystem targetSystem, RuntimeManager runtimeManager) {
         this.targetSystem = targetSystem;
         this.runtimeManager = runtimeManager;
     }
 
     public TaskStep applyChange(ExecutableStep executableStep,
-                                Function<ExecutableStep, ExecutionStep> changeExecutor,
                                 Function<ExecutionStep, AfterExecutionAuditStep> changeAuditor) {
         ExecutableTask changeUnit = executableStep.getTask();
         if (isTransactionalTarget() && isTransactionalChange(changeUnit)) {
@@ -57,7 +57,7 @@ public class TargetSystemOperations {
                     changeUnit,
                     runtimeManager,
                     () -> {
-                        ExecutionStep changeAppliedStep = changeExecutor.apply(executableStep);
+                        ExecutionStep changeAppliedStep = executableStep.execute(runtimeManager);
                         AfterExecutionAuditStep executionAuditResult = changeAuditor.apply(changeAppliedStep);
                         if (executionAuditResult instanceof CompletedSuccessStep) {
                             transactionalTargetSystem.getOnGoingTaskStatusRepository().clean(changeUnit.getId());
@@ -68,15 +68,14 @@ public class TargetSystemOperations {
             );
         } else {
             logger.debug("Executing(non-transactional) task[{}]", changeUnit.getId());
-            ExecutionStep changeAppliedStep = changeExecutor.apply(executableStep);
+            ExecutionStep changeAppliedStep = executableStep.execute(runtimeManager);
             return changeAuditor.apply(changeAppliedStep);
         }
     }
 
 
-    public ManualRolledBackStep rollbackChange(RollableStep rollable,
-                                               Function<RollableStep, ManualRolledBackStep> rollbackExecutor) {
-        return rollbackExecutor.apply(rollable);
+    public ManualRolledBackStep rollbackChange(RollableStep rollable) {
+        return rollable.rollback(runtimeManager);
     }
 
     //TODO temporally until we remove disableTransaction in builder

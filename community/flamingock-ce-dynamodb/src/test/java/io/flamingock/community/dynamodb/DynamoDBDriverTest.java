@@ -204,7 +204,6 @@ class DynamoDBDriverTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
                     .build()
                     .run();
