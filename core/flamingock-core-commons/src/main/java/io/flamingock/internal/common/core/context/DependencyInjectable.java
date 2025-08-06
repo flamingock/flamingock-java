@@ -51,11 +51,5 @@ public interface DependencyInjectable {
      * @param dependency the dependency to add
      */
     void addDependency(Dependency dependency);
-
-    /**
-     * Removes the specified dependency by reference. This operation is idempotent.
-     *
-     * @param dependency the exact dependency instance to be removed
-     */
-    void removeDependencyByRef(Dependency dependency);
 }
+

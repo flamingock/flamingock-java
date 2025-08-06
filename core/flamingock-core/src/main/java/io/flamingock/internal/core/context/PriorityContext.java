@@ -85,17 +85,6 @@ public class PriorityContext extends PriorityContextResolver implements Context 
         priorityContext.addDependency(dependency);
     }
 
-    /**
-     * Removes the specified dependency from the priority (writable) context only.
-     * This operation is idempotent and does not affect the base context.
-     *
-     * @param dependency the dependency to be removed
-     */
-    @Override
-    public void removeDependencyByRef(Dependency dependency) {
-        priorityContext.removeDependencyByRef(dependency);
-    }
-    
     @Override
     public void setProperty(Property value) {
         priorityContext.setProperty(value);

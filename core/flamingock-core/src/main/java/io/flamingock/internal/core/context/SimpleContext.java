@@ -85,23 +85,6 @@ public class SimpleContext extends AbstractContextResolver implements Context {
     }
 
     @Override
-    public void removeDependencyByRef(Dependency dependency) {
-        Dependency currentByType = dependenciesByExactType.get(dependency.getType());
-        if (currentByType != null && currentByType.equals(dependency) &&
-                currentByType.getInstance() == dependency.getInstance()) {
-            dependenciesByExactType.remove(dependency.getType());
-        }
-
-        if (!dependency.isDefaultNamed()) {
-            Dependency currentByName = dependenciesByName.get(dependency.getName());
-            if (currentByName != null && currentByName.equals(dependency) &&
-                    currentByName.getInstance() == dependency.getInstance()) {
-                dependenciesByName.remove(dependency.getName());
-            }
-        }
-    }
-
-    @Override
     public void setProperty(Property value) {
         addDependency(new Dependency(value.getKey(), value.getClass(), value));
     }

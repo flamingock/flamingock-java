@@ -158,8 +158,6 @@ public class SqlCloudTransactioner implements CloudTransactioner {
             return result;
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        } finally {
-            injectableContextProvider.removeDependencyByRef(dependency);
         }
     }
 

@@ -83,11 +83,6 @@ public final class RuntimeManager implements InjectableContextProvider {
         dependencyContext.addDependency(dependency);
     }
 
-    @Override
-    public void removeDependencyByRef(Dependency dependency) {
-        dependencyContext.removeDependencyByRef(dependency);
-    }
-
     public Object getInstance(Constructor<?> constructor) {
         List<Object> signatureParameters = getSignatureParameters(constructor);
         logMethodWithArguments(constructor.getName(), signatureParameters);
