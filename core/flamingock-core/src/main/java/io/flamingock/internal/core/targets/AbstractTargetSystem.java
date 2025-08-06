@@ -46,7 +46,7 @@ import java.util.UUID;
 
 
 public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<HOLDER>>
-        implements ContextComposerTargetSystem, ContextConfigurable<HOLDER> {
+        implements ContextDecoratorTargetSystem, ContextConfigurable<HOLDER> {
     private final String id;
 
     protected Context context = new SimpleContext();
@@ -63,7 +63,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
     abstract protected HOLDER getSelf();
 
     @Override
-    public Context compose(ContextResolver baseContext) {
+    public Context decorateOnTop(ContextResolver baseContext) {
         return new PriorityContext(context, baseContext);
     }
 

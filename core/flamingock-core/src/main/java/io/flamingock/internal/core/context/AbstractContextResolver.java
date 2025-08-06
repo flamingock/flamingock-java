@@ -21,13 +21,13 @@ import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.DependencyBuildable;
 
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public abstract class AbstractContextResolver implements ContextResolver {
 
     @Override
     public Optional<Dependency> getDependency(Class<?> type) {
-        return getDependency(dependency -> type.isAssignableFrom(dependency.getType()));
+        return getDependency(()-> getByType(type));
     }
 
     @Override
@@ -35,12 +35,12 @@ public abstract class AbstractContextResolver implements ContextResolver {
         if (name == null || name.isEmpty() || Dependency.DEFAULT_NAME.equals(name)) {
             throw new IllegalArgumentException("name cannot be null/empty  when retrieving dependency by name");
         }
-        return getDependency(dependency -> name.equals(dependency.getName()));
+        return  getDependency(()-> getByName(name));
     }
 
-    private Optional<Dependency> getDependency(Predicate<Dependency> filter) {
+    private Optional<Dependency> getDependency(Supplier<Optional<Dependency>> supplier) {
 
-        Optional<Dependency> dependencyOptional = getFromStorage(filter);
+        Optional<Dependency> dependencyOptional = supplier.get();
         if (!dependencyOptional.isPresent()) {
             return Optional.empty();
 
@@ -62,6 +62,9 @@ public abstract class AbstractContextResolver implements ContextResolver {
     }
 
 
-    protected abstract Optional<Dependency> getFromStorage(Predicate<Dependency> filter);
+    abstract protected Optional<Dependency> getByName(String name);
+
+
+    abstract protected Optional<Dependency> getByType(Class<?> type);
 
 }

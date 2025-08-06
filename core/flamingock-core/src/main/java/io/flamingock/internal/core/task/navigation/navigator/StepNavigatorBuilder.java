@@ -18,11 +18,12 @@ package io.flamingock.internal.core.task.navigation.navigator;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
+import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.targets.ContextComposerTargetSystem;
+import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.runtime.RuntimeManager;
@@ -93,15 +94,16 @@ public class StepNavigatorBuilder {
     }
 
     public StepNavigator build() {
-        ContextComposerTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem());
+        ContextDecoratorTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem());
 
         //TODO after ensuring DefaultTargetSystem, it will never be null
-        Context enhancedContext = targetSystem != null
-                ? targetSystem.compose(staticContext)
+        ContextResolver contextWithTsContextDecorated = targetSystem != null
+                ? targetSystem.decorateOnTop(staticContext)
                 : new PriorityContext(staticContext);
+        Context changeUnitSessionContext = new PriorityContext(new SimpleContext(), contextWithTsContextDecorated);
 
         RuntimeManager runtimeManager = RuntimeManager.builder()
-                .setDependencyContext(enhancedContext)
+                .setDependencyContext(changeUnitSessionContext)
                 .setLock(lock)
                 .setNonGuardedTypes(nonGuardedTypes)
                 .build();

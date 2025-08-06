@@ -31,8 +31,8 @@ import java.util.Optional;
  */
 public class TargetSystemManager {
 
-    private ContextComposerTargetSystem defaultTargetSystem;
-    private final Map<String, ContextComposerTargetSystem> targetSystemMap = new HashMap<>();
+    private ContextDecoratorTargetSystem defaultTargetSystem;
+    private final Map<String, ContextDecoratorTargetSystem> targetSystemMap = new HashMap<>();
 
     /**
      * Registers a new {@link TargetSystem}.
@@ -54,7 +54,7 @@ public class TargetSystemManager {
      */
     public void addDefault(TargetSystem defaultTargetSystem) {
         add(defaultTargetSystem);
-        this.defaultTargetSystem = (ContextComposerTargetSystem) defaultTargetSystem;
+        this.defaultTargetSystem = (ContextDecoratorTargetSystem) defaultTargetSystem;
     }
 
     /**
@@ -64,11 +64,11 @@ public class TargetSystemManager {
      * @param id the target system ID
      * @return an {@link Optional} with the matching or default target system, or empty if none registered
      */
-    public Optional<ContextComposerTargetSystem> getOrDefault(String id) {
+    public Optional<ContextDecoratorTargetSystem> getOrDefault(String id) {
         return Optional.ofNullable(getValueOrDefault(id));
     }
 
-    public ContextComposerTargetSystem getValueOrDefault(String id) {
+    public ContextDecoratorTargetSystem getValueOrDefault(String id) {
         //We do it this way(instead of getOrDefault) because although current implementation(HashMap) allows
         // nulls, we may change in the future(ConcurrentHashMap doesn't allow nulls, for instance)
         if(id == null || !targetSystemMap.containsKey(id)) {
@@ -85,16 +85,16 @@ public class TargetSystemManager {
      * @param targetSystem the target system to validate
      * @throws IllegalArgumentException if validation fails
      */
-    private ContextComposerTargetSystem validateAndCast(TargetSystem targetSystem) {
+    private ContextDecoratorTargetSystem validateAndCast(TargetSystem targetSystem) {
         if (targetSystem == null) {
             throw new IllegalArgumentException("Target system null not allowed");
         }
         if (targetSystem.getId() == null || targetSystem.getId().trim().isEmpty()) {
             throw new IllegalArgumentException("TargetSystem ID must not be null or blank");
         }
-        if (!(targetSystem instanceof ContextComposerTargetSystem)) {
+        if (!(targetSystem instanceof ContextDecoratorTargetSystem)) {
             throw new IllegalArgumentException("TargetSystem must be an instance of ContextComposerTargetSystem");
         }
-        return (ContextComposerTargetSystem) targetSystem;
+        return (ContextDecoratorTargetSystem) targetSystem;
     }
 }

@@ -15,9 +15,9 @@
  */
 package io.flamingock.internal.core.context;
 
-import io.flamingock.internal.util.Property;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.util.Property;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -38,44 +38,65 @@ import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.Currency;
 import java.util.Date;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 public class SimpleContext extends AbstractContextResolver implements Context {
 
-    private final LinkedHashSet<Dependency> dependencyStore;
+    private final Map<String, Dependency> dependenciesByName;
+    private final Map<Class<?>, Dependency> dependenciesByExactType;
 
     public SimpleContext() {
-        dependencyStore = new LinkedHashSet<>();
+        this.dependenciesByName = new HashMap<>();
+        this.dependenciesByExactType = new HashMap<>();
     }
 
     @Override
-    protected Optional<Dependency> getFromStorage(Predicate<Dependency> filter) {
-        return  dependencyStore.stream().filter(filter)
-                .reduce((dependency1, dependency2) -> !dependency1.isDefaultNamed() && dependency2.isDefaultNamed() ? dependency2 : dependency1);
+    protected Optional<Dependency> getByName(String name) {
+        return Optional.ofNullable(dependenciesByName.get(name));
+    }
+
+    @Override
+    protected Optional<Dependency> getByType(Class<?> type) {
+        Optional<Dependency> dependencyByExactClass = Optional.ofNullable(dependenciesByExactType.get(type));
+        if (dependencyByExactClass.isPresent()) {
+            return dependencyByExactClass;
+        } else {
+            return getFirstAssignableDependency(type);
+        }
+    }
+
+    private Optional<Dependency> getFirstAssignableDependency(Class<?> type) {
+        return dependenciesByExactType.entrySet().stream()
+                .filter(entry -> type.isAssignableFrom(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst();
     }
 
     @Override
     public void addDependency(Dependency dependency) {
-        if (!dependencyStore.add(dependency)) {
-            dependencyStore.remove(dependency);
-            dependencyStore.add(dependency);
+        if (!dependency.isDefaultNamed()) {
+            dependenciesByName.put(dependency.getName(), dependency);
         }
+        dependenciesByExactType.put(dependency.getType(), dependency);
     }
 
     @Override
     public void removeDependencyByRef(Dependency dependency) {
-        if(dependencyStore.contains(dependency)) {
-            boolean isSafeToRemove = dependencyStore.stream()
-                    .filter(dependency::equals)//it only can return one at max
-                    .map(Dependency::getInstance)
-                    .anyMatch(storedRef -> storedRef == dependency.getInstance());//if it's also the same reference
+        Dependency currentByType = dependenciesByExactType.get(dependency.getType());
+        if (currentByType != null && currentByType.equals(dependency) &&
+                currentByType.getInstance() == dependency.getInstance()) {
+            dependenciesByExactType.remove(dependency.getType());
+        }
 
-            if(isSafeToRemove) {
-                dependencyStore.remove(dependency);
+        if (!dependency.isDefaultNamed()) {
+            Dependency currentByName = dependenciesByName.get(dependency.getName());
+            if (currentByName != null && currentByName.equals(dependency) &&
+                    currentByName.getInstance() == dependency.getInstance()) {
+                dependenciesByName.remove(dependency.getName());
             }
         }
     }
