@@ -15,16 +15,19 @@
  */
 package io.flamingock.internal.core.runtime;
 
-import io.flamingock.internal.util.Constants;
-import io.flamingock.internal.util.StringUtil;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.Nullable;
-import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.engine.lock.Lock;
-import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.context.PriorityContext;
+import io.flamingock.internal.core.context.SimpleContext;
+import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
+import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +45,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class RuntimeManager implements DependencyInjectable {
+public final class RuntimeManager implements InjectableContextProvider {
 
     private static final Logger logger = LoggerFactory.getLogger("Flamingock-RuntimeManager");
     private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
@@ -54,9 +57,9 @@ public final class RuntimeManager implements DependencyInjectable {
     private final boolean isNativeImage;
 
     private RuntimeManager(LockGuardProxyFactory proxyFactory,
-                           Context dependencyContext,
+                           Context baseContext,
                            boolean isNativeImage) {
-        this.dependencyContext = dependencyContext;
+        this.dependencyContext = new PriorityContext(new SimpleContext(), baseContext);
         this.proxyFactory = proxyFactory;
         this.isNativeImage = isNativeImage;
     }
@@ -65,22 +68,9 @@ public final class RuntimeManager implements DependencyInjectable {
         return new Builder();
     }
 
-    public static void logMethodWithArguments(String methodName, List<Object> changelogInvocationParameters) {
-        String arguments = changelogInvocationParameters.stream()
-                .map(RuntimeManager::getParameterType)
-                .collect(Collectors.joining(", "));
-        logger.debug("method[{}] with arguments: [{}]", methodName, arguments);
-
-    }
-
-    private static String getParameterType(Object obj) {
-        String className = obj != null ? obj.getClass().getName() : "{null argument}";
-        int mongockProxyPrefixIndex = className.indexOf(Constants.PROXY_MONGOCK_PREFIX);
-        if (mongockProxyPrefixIndex > 0) {
-            return className.substring(0, mongockProxyPrefixIndex);
-        } else {
-            return className;
-        }
+    @Override
+    public ContextResolver getContext() {
+        return dependencyContext;
     }
 
     @Override
@@ -152,8 +142,7 @@ public final class RuntimeManager implements DependencyInjectable {
         boolean lockGuarded = !type.isAnnotationPresent(NonLockGuarded.class)
                 && !parameter.isAnnotationPresent(NonLockGuarded.class)
                 && !nonProxyableTypes.contains(type)
-                && !isNativeImage
-                ;
+                && !isNativeImage;
 
         return dependency.isProxeable() && lockGuarded
                 ? proxyFactory.getRawProxy(dependency.getInstance(), type)
@@ -165,16 +154,40 @@ public final class RuntimeManager implements DependencyInjectable {
         return parameterNameProvider.apply(parameter);
     }
 
+    private static void logMethodWithArguments(String methodName, List<Object> changelogInvocationParameters) {
+        String arguments = changelogInvocationParameters.stream()
+                .map(RuntimeManager::getParameterType)
+                .collect(Collectors.joining(", "));
+        logger.debug("method[{}] with arguments: [{}]", methodName, arguments);
+
+    }
+
+    private static String getParameterType(Object obj) {
+        String className = obj != null ? obj.getClass().getName() : "{null argument}";
+        int mongockProxyPrefixIndex = className.indexOf(Constants.PROXY_MONGOCK_PREFIX);
+        if (mongockProxyPrefixIndex > 0) {
+            return className.substring(0, mongockProxyPrefixIndex);
+        } else {
+            return className;
+        }
+    }
+
     public static final class Builder {
 
 
         private Context dependencyContext;
+        private LockGuardProxyFactory lockProxyFactory;
         private Lock lock;
         private Boolean forceNativeImage = null;
         private Set<Class<?>> nonGuardedTypes;
 
         public Builder setLock(Lock lock) {
             this.lock = lock;
+            return this;
+        }
+
+        public Builder setLockGuardProxyFactory(LockGuardProxyFactory proxyFactory) {
+            this.lockProxyFactory = proxyFactory;
             return this;
         }
 
@@ -194,9 +207,11 @@ public final class RuntimeManager implements DependencyInjectable {
 
 
         public RuntimeManager build() {
-            LockGuardProxyFactory proxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
+            LockGuardProxyFactory proxyFactory = this.lockProxyFactory != null
+                    ? this.lockProxyFactory
+                    : LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
             boolean isNativeImage;
-            if(forceNativeImage != null) {
+            if (forceNativeImage != null) {
                 isNativeImage = forceNativeImage;
             } else {
                 isNativeImage = isRunningInNativeImage();
@@ -205,7 +220,7 @@ public final class RuntimeManager implements DependencyInjectable {
             return new RuntimeManager(proxyFactory, dependencyContext, isNativeImage);
         }
 
-        private static  boolean isRunningInNativeImage() {
+        private static boolean isRunningInNativeImage() {
             try {
                 return "runtime".equals(System.getProperty("org.graalvm.nativeimage.imagecode"));
             } catch (SecurityException exception) {

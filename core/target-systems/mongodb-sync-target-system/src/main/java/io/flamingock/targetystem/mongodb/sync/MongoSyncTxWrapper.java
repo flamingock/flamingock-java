@@ -18,7 +18,9 @@ package io.flamingock.targetystem.mongodb.sync;
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
@@ -27,6 +29,7 @@ import io.flamingock.internal.core.community.TransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class MongoSyncTxWrapper implements TransactionWrapper {
@@ -44,14 +47,14 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
         String sessionId = loadedTask.getId();
-        Dependency clienteSessionDependency = null;
+        Dependency clienteSessionDependency;
         try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
             clienteSessionDependency = new Dependency(clientSession);
             clientSession.startTransaction(TransactionOptions.builder().build());
-            dependencyInjectable.addDependency(clienteSessionDependency);
-            T result = operation.get();
+            injectableContextProvider.addDependency(clienteSessionDependency);
+            T result = operation.apply(injectableContextProvider.getContext());
             if (result instanceof FailedStep) {
                 clientSession.abortTransaction();
             } else {
@@ -59,11 +62,7 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
             }
             return result;
         } finally {
-            //Although the ClientSession itself has been closed, it needs to be removed from the map
             sessionManager.closeSession(sessionId);
-            if(clienteSessionDependency != null) {
-                dependencyInjectable.removeDependencyByRef(clienteSessionDependency);
-            }
         }
     }
 

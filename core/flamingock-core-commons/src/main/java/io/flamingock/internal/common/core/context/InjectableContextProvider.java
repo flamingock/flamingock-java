@@ -13,18 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.transaction;
+package io.flamingock.internal.common.core.context;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
-
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-public interface TransactionWrapper {
-
-    <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation);
-
+/**
+ * Combines the ability to provide a context with the capability to inject dependencies into it.
+ */
+public interface InjectableContextProvider extends ContextProvider, DependencyInjectable {
+    // No additional methods needed; just a marker for combined behavior
 }

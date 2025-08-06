@@ -15,34 +15,37 @@
  */
 package io.flamingock.core.annotations;
 
-import io.flamingock.api.targets.TargetSystem;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
-import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
-import io.flamingock.internal.core.task.navigation.navigator.operations.TargetSystemStepOperations;
-import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
-import io.flamingock.internal.util.Result;
+import io.flamingock.core.utils.EmptyTransactionWrapper;
+import io.flamingock.core.utils.TaskExecutionChecker;
+import io.flamingock.core.utils.TestTaskExecution;
+import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
+import io.flamingock.internal.core.context.PriorityContextResolver;
+import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.lock.Lock;
-import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
-import io.flamingock.core.utils.EmptyTransactionWrapper;
-import io.flamingock.core.utils.TaskExecutionChecker;
-import io.flamingock.core.utils.TestTaskExecution;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.RuntimeManager;
-import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
+import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
+import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.operations.TargetSystemStepOperations;
+import io.flamingock.internal.util.Result;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -53,27 +56,27 @@ import static org.mockito.Mockito.when;
 public class TestRunner {
 
     public static void runTest(Class<?> changeUnitClass,
-                                int expectedNumberOfExecutableTasks,
-                                TaskExecutionChecker checker,
-                                TestTaskExecution... executionSteps
+                               int expectedNumberOfExecutableTasks,
+                               TaskExecutionChecker checker,
+                               TestTaskExecution... executionSteps
     ) {
         runTestInternal(changeUnitClass, expectedNumberOfExecutableTasks, checker, false, executionSteps);
     }
 
     public static void runTestWithTransaction(Class<?> changeUnitClass,
-                               int expectedNumberOfExecutableTasks,
-                               TaskExecutionChecker checker,
-                               TestTaskExecution... executionSteps
+                                              int expectedNumberOfExecutableTasks,
+                                              TaskExecutionChecker checker,
+                                              TestTaskExecution... executionSteps
     ) {
         runTestInternal(changeUnitClass, expectedNumberOfExecutableTasks, checker, true, executionSteps);
     }
 
 
     private static void runTestInternal(Class<?> changeUnitClass,
-                        int expectedNumberOfExecutableTasks,
-                        TaskExecutionChecker checker,
-                        boolean useTransactionWrapper,
-                        TestTaskExecution... executionSteps
+                                        int expectedNumberOfExecutableTasks,
+                                        TaskExecutionChecker checker,
+                                        boolean useTransactionWrapper,
+                                        TestTaskExecution... executionSteps
     ) {
         checker.reset();
         ExecutionAuditWriter auditWriterMock = mock(ExecutionAuditWriter.class);
@@ -102,26 +105,40 @@ public class TestRunner {
                 "executionId", "hostname", "author", new HashMap<>()
         );
 
-        EmptyTransactionWrapper transactionWrapper = useTransactionWrapper ? new EmptyTransactionWrapper(): null;
+        EmptyTransactionWrapper transactionWrapper = useTransactionWrapper ? new EmptyTransactionWrapper() : null;
         if (transactionWrapper != null) {
             CloudTransactioner.class.isAssignableFrom(transactionWrapper.getClass());
         }
 
 
         executableChangeUnits.forEach(changeUnit -> {
-            TargetSystem targetSystem = null;
-            OngoingTaskStatusRepository ongoingTasksRepository = null;
-            TargetSystemStepOperations targetSystemOps = StepNavigatorBuilder.buildTargetSystemOperations(transactionWrapper, runtimeManagerMock);
+            ContextDecoratorTargetSystem targetSystem = new ContextDecoratorTargetSystem() {
+                @Override
+                public String getId() {
+                    return "default-target-system-id";
+                }
+
+                @Override
+                public ContextResolver decorateOnTop(ContextResolver baseContext) {
+                    return new PriorityContextResolver(new SimpleContext(), baseContext);
+                }
+            };
+            
+            TargetSystemStepOperations targetSystemOps = StepNavigatorBuilder.buildTargetSystemOperations(
+                    targetSystem,
+                    transactionWrapper,
+                    new SimpleContext(),
+                    mock(Lock.class),
+                    Collections.emptySet());
             new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, new AuditStoreStepOperations(auditWriterMock), stepSummarizerMock)
                     .start();
 
         });
 
 
-
         Assertions.assertEquals(expectedNumberOfExecutableTasks, executableChangeUnits.size());
         checker.checkOrderStrict(Arrays.asList(executionSteps));
-        if(useTransactionWrapper) {
+        if (useTransactionWrapper) {
             Assertions.assertTrue(transactionWrapper.isCalled());
         }
     }

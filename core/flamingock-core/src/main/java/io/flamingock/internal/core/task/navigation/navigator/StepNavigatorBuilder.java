@@ -23,6 +23,7 @@ import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
+import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
@@ -46,7 +47,7 @@ public class StepNavigatorBuilder {
 
     protected Lock lock = null;
 
-    protected ContextResolver staticContext;
+    protected ContextResolver baseContext;
 
     protected Set<Class<?>> nonGuardedTypes;
 
@@ -69,7 +70,7 @@ public class StepNavigatorBuilder {
     }
 
     public StepNavigatorBuilder setDependencyContext(ContextResolver staticContext) {
-        this.staticContext = staticContext;
+        this.baseContext = staticContext;
         return this;
     }
 
@@ -96,33 +97,34 @@ public class StepNavigatorBuilder {
     public StepNavigator build() {
         ContextDecoratorTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem());
 
-        //TODO after ensuring DefaultTargetSystem, it will never be null
-        ContextResolver contextWithTsContextDecorated = targetSystem != null
-                ? targetSystem.decorateOnTop(staticContext)
-                : new PriorityContext(staticContext);
-        Context changeUnitSessionContext = new PriorityContext(new SimpleContext(), contextWithTsContextDecorated);
-
-        RuntimeManager runtimeManager = RuntimeManager.builder()
-                .setDependencyContext(changeUnitSessionContext)
-                .setLock(lock)
-                .setNonGuardedTypes(nonGuardedTypes)
-                .build();
-
         return new StepNavigator(
                 changeUnit,
                 executionContext,
-                buildTargetSystemOperations(auditStoreTxWrapper, runtimeManager),//TODO new TargetSystemOperations(targetSystem, runtimeManager)
+                buildTargetSystemOperations(targetSystem, auditStoreTxWrapper, baseContext, lock, nonGuardedTypes),//TODO new TargetSystemOperations(targetSystem, runtimeManager)
                 new AuditStoreStepOperations(auditWriter),
                 new TaskSummarizer(changeUnit));
     }
 
 
     //TODO temporal until we have the TargetSystem for Driver
-    public static TargetSystemStepOperations buildTargetSystemOperations(TransactionWrapper txWrapper, RuntimeManager runtimeManager) {
+    public static TargetSystemStepOperations buildTargetSystemOperations(ContextDecoratorTargetSystem targetSystem,
+                                                                         TransactionWrapper txWrapper,
+                                                                         ContextResolver staticContext,
+                                                                         Lock lock,
+                                                                         Set<Class<?>> nonGuardedTypes) {
 
         OngoingTaskStatusRepository ongoingTasksRepository = txWrapper != null && CloudTransactioner.class.isAssignableFrom(txWrapper.getClass())
                 ? (OngoingTaskStatusRepository) txWrapper : null;
-        return new TargetSystemStepOperations(new TempTargetSystem("temporal-target-system", txWrapper, ongoingTasksRepository), runtimeManager);
+        //TODO after ensuring DefaultTargetSystem, it will never be null
+
+        ContextResolver contextWithTargetSystemLayer = targetSystem != null
+                ? targetSystem.decorateOnTop(staticContext)
+                : new PriorityContext(staticContext);
+
+        LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
+
+
+        return new TargetSystemStepOperations(new TempTargetSystem("temporal-target-system", txWrapper, ongoingTasksRepository), lockGuardProxyFactory, contextWithTargetSystemLayer);
     }
 
     private static class TempTargetSystem extends TransactionalTargetSystem<TempTargetSystem> {

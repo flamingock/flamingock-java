@@ -1,8 +1,8 @@
 # Flamingock Context Architecture Guide
 
 **Document Version**: 1.0  
-**Date**: 2025-08-05  
-**Authors**: Claude Code Assistant  
+**Date**: 2025-08-06  
+**Authors**: Antonio Perez Dieppa  
 **Audience**: New Developers, Architecture Team  
 
 ## Overview
@@ -32,31 +32,31 @@ graph TB
     classDef concreteClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
 
     %% Core Read-Only Interfaces
-    DependencyResolver["🔍 DependencyResolver<br/>Core dependency lookup<br/>• getDependency(Class&lt;?&gt;)<br/>• getDependency(String)<br/>• getDependencyValue&lt;T&gt;()"]:::readInterface
-    PropertyResolver["📋 PropertyResolver<br/>Property access<br/>• getProperty(String)<br/>• getPropertyAs&lt;T&gt;()"]:::readInterface
+    DependencyResolver["DependencyResolver<br/>Core dependency lookup<br/>getDependency Class<br/>getDependency String<br/>getDependencyValue T"]:::readInterface
+    PropertyResolver["PropertyResolver<br/>Property access<br/>getProperty String<br/>getPropertyAs T"]:::readInterface
     
     %% Core Write-Only Interfaces  
-    DependencyInjectable["💉 DependencyInjectable<br/>Dependency injection<br/>• addDependency(Dependency)<br/>• removeDependencyByRef()"]:::writeInterface
-    PropertyInjectable["📝 PropertyInjectable<br/>Property injection<br/>• setProperty(String, T)<br/>• Type-safe setters"]:::writeInterface
+    DependencyInjectable["DependencyInjectable<br/>Dependency injection<br/>addDependency<br/>removeDependencyByRef"]:::writeInterface
+    PropertyInjectable["PropertyInjectable<br/>Property injection<br/>setProperty String T<br/>Type-safe setters"]:::writeInterface
     
     %% Combined Interfaces
-    ContextResolver["🔎 ContextResolver<br/>Combined read access"]:::combinedInterface
-    ContextInjectable["💾 ContextInjectable<br/>Combined write access"]:::combinedInterface
-    Context["🏛️ Context<br/>Full read/write access"]:::combinedInterface
+    ContextResolver["ContextResolver<br/>Combined read access"]:::combinedInterface
+    ContextInjectable["ContextInjectable<br/>Combined write access"]:::combinedInterface
+    Context["Context<br/>Full read/write access"]:::combinedInterface
     
     %% Specialized Interfaces
-    ContextContributor["🤝 ContextContributor<br/>Contributes dependencies<br/>• contributeToContext()"]:::specialInterface
-    ContextDecorator["🎨 ContextDecorator<br/>Context decoration<br/>• decorateOnTop()"]:::specialInterface
-    ContextConfigurable["⚙️ ContextConfigurable&lt;T&gt;<br/>Fluent configuration<br/>• Builder pattern support"]:::specialInterface
+    ContextContributor["ContextContributor<br/>Contributes dependencies<br/>contributeToContext"]:::specialInterface
+    ContextDecorator["ContextDecorator<br/>Context decoration<br/>decorateOnTop"]:::specialInterface
+    ContextConfigurable["ContextConfigurable T<br/>Fluent configuration<br/>Builder pattern support"]:::specialInterface
     
     %% Concrete Implementations
-    SimpleContext["📦 SimpleContext<br/>High-performance context<br/>• HashMap-based storage<br/>• O(1) lookups + smart fallback"]:::concreteClass
-    PriorityContext["🔝 PriorityContext<br/>Hierarchical context<br/>• Priority + Base contexts<br/>• Layered resolution"]:::concreteClass
-    PriorityContextResolver["👁️ PriorityContextResolver<br/>Read-only hierarchy<br/>• Priority-based lookup<br/>• Fallback resolution"]:::concreteClass
+    SimpleContext["SimpleContext<br/>High-performance context<br/>HashMap-based storage<br/>O1 lookups + smart fallback"]:::concreteClass
+    PriorityContext["PriorityContext<br/>Hierarchical context<br/>Priority + Base contexts<br/>Layered resolution"]:::concreteClass
+    PriorityContextResolver["PriorityContextResolver<br/>Read-only hierarchy<br/>Priority-based lookup<br/>Fallback resolution"]:::concreteClass
     
     %% Advanced Dependency Types
-    Dependency["📋 Dependency<br/>Standard dependency<br/>• Name, type, instance<br/>• Direct access"]:::concreteClass
-    DependencyBuildable["🔧 DependencyBuildable<br/>Lazy dependency<br/>• Decorator function<br/>• Lazy resolution<br/>• Circular dep support"]:::concreteClass
+    Dependency["Dependency<br/>Standard dependency<br/>Name type instance<br/>Direct access"]:::concreteClass
+    DependencyBuildable["DependencyBuildable<br/>Lazy dependency<br/>Decorator function<br/>Lazy resolution<br/>Circular dep support"]:::concreteClass
     
     %% Inheritance relationships
     DependencyResolver --> ContextResolver
@@ -93,25 +93,25 @@ graph TD
     Start --> PriorityCheck{Is this a<br/>PriorityContext?}:::decisionClass
     
     %% Priority Context Path
-    PriorityCheck -->|Yes| SearchPriority[Search in Priority Context<br/>• Plugin contexts<br/>• Framework contexts<br/>• User-added dependencies]:::processClass
+    PriorityCheck -->|Yes| SearchPriority[Search in Priority Context<br/>Plugin contexts<br/>Framework contexts<br/>User-added dependencies]:::processClass
     SearchPriority --> PriorityFound{Found in<br/>Priority Context?}:::decisionClass
-    PriorityFound -->|Yes| ReturnPriority[Return Priority Result<br/>🏆 Highest precedence]:::resultClass
-    PriorityFound -->|No| SearchBase[Search in Base Context<br/>• Core system dependencies<br/>• Default configurations<br/>• Built-in components]:::processClass
+    PriorityFound -->|Yes| ReturnPriority[Return Priority Result<br/>Highest precedence]:::resultClass
+    PriorityFound -->|No| SearchBase[Search in Base Context<br/>Core system dependencies<br/>Default configurations<br/>Built-in components]:::processClass
     SearchBase --> BaseFound{Found in<br/>Base Context?}:::decisionClass
-    BaseFound -->|Yes| ReturnBase[Return Base Result<br/>📦 Fallback resolution]:::resultClass
-    BaseFound -->|No| ReturnEmpty[Return Optional.empty<br/>❌ Not found]:::resultClass
+    BaseFound -->|Yes| ReturnBase[Return Base Result<br/>Fallback resolution]:::resultClass
+    BaseFound -->|No| ReturnEmpty[Return Optional.empty<br/>Not found]:::resultClass
     
     %% Simple Context Path
-    PriorityCheck -->|No| SearchSimple[Search in SimpleContext<br/>• LinkedHashSet storage<br/>• Name/Type matching<br/>• Priority by registration order]:::processClass
+    PriorityCheck -->|No| SearchSimple[Search in SimpleContext<br/>HashMap dual-index storage<br/>O1 name/type lookups<br/>Smart assignable fallback]:::processClass
     SearchSimple --> SimpleFound{Found?}:::decisionClass
     SimpleFound -->|Yes| ReturnSimple[Return Result<br/>✅ Direct match]:::resultClass
     SimpleFound -->|No| ReturnEmpty
     
     %% Type Resolution Details
-    subgraph TypeResolution["🔍 Resolution Strategy"]
-        ByType[By Type:<br/>context.getDependency with DatabaseConnection.class]
-        ByName[By Name:<br/>context.getDependency with primaryDataSource]
-        ByValue[Typed Value:<br/>context.getDependencyValue with timeout Integer.class]
+    subgraph TypeResolution["Resolution Strategy"]
+        ByType[By Type<br/>getDependency with DatabaseConnection class]
+        ByName[By Name<br/>getDependency with primaryDataSource]
+        ByValue[Typed Value<br/>getDependencyValue with timeout Integer class]
     end
 ```
 
@@ -128,35 +128,32 @@ graph TD
     classDef validationClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
 
     %% Injection Sources
-    subgraph Sources["📥 Injection Sources"]
-        UserCode[User Code<br/>• Manual dependencies<br/>• Configuration objects<br/>• Business services]:::sourceClass
-        Plugins[Plugins<br/>• Spring Boot integration<br/>• Framework contexts<br/>• Third-party extensions]:::sourceClass
-        Templates[Templates<br/>• Change templates<br/>• Template factories<br/>• Pipeline components]:::sourceClass
-        System[System Components<br/>• Core services<br/>• Built-in dependencies<br/>• Internal utilities]:::sourceClass
+    subgraph Sources["Injection Sources"]
+        UserCode[User Code<br/>Manual dependencies<br/>Configuration objects<br/>Business services]:::sourceClass
+        Plugins[Plugins<br/>Spring Boot integration<br/>Framework contexts<br/>Third-party extensions]:::sourceClass
+        System[System Components<br/>Core services<br/>Built-in dependencies<br/>Internal utilities]:::sourceClass
     end
     
     %% Injection Process
     UserCode --> AddDependency[addDependency with Object]:::processClass
     Plugins --> ContributeContext[contributeToContext with ContextInjectable]:::processClass
-    Templates --> TemplateRegistration[Template SPI Registration]:::processClass
     System --> SystemInjection[System Component Registration]:::processClass
     
     AddDependency --> Validation{Validation}:::validationClass
     ContributeContext --> Validation
-    TemplateRegistration --> Validation
     SystemInjection --> Validation
     
-    Validation --> TypeCheck[• Type checking<br/>• Null validation<br/>• Name uniqueness]:::processClass
-    TypeCheck --> WrapDependency[Wrap in Dependency<br/>• Auto-type detection<br/>• Name assignment<br/>• Proxy support]:::processClass
+    Validation --> TypeCheck[Type checking<br/>Null validation<br/>Name uniqueness]:::processClass
+    TypeCheck --> WrapDependency[Wrap in Dependency<br/>Auto-type detection<br/>Name assignment<br/>Proxy support]:::processClass
     
     WrapDependency --> TargetSelection{Select Target Context}:::validationClass
-    TargetSelection -->|Priority Context| PriorityStorage[Store in Priority Context<br/>• Overrides base context<br/>• Available immediately<br/>• Highest precedence]:::targetClass
-    TargetSelection -->|Simple Context| SimpleStorage[Store in SimpleContext<br/>• LinkedHashSet storage<br/>• Registration order priority<br/>• Direct access]:::targetClass
+    TargetSelection -->|Priority Context| PriorityStorage[Store in Priority Context<br/>Overrides base context<br/>Available immediately<br/>Highest precedence]:::targetClass
+    TargetSelection -->|Simple Context| SimpleStorage[Store in SimpleContext<br/>HashMap dual-index storage<br/>O1 name and type lookups<br/>Memory efficient access]:::targetClass
     
     %% Property Injection
-    subgraph PropertyFlow["📝 Property Injection"]
+    subgraph PropertyFlow["Property Injection"]
         PropSet[setProperty with key and value]
-        PropValidate[Validate key/value]
+        PropValidate[Validate key and value]
         PropWrap[Wrap as typed Dependency]
         PropStore[Store with name equals key]
         PropSet --> PropValidate --> PropWrap --> PropStore
@@ -279,23 +276,25 @@ Generic interface for fluent builder pattern support. Provides chainable methods
 ### SimpleContext
 **Location**: `core/flamingock-core/src/main/java/io/flamingock/internal/core/context/SimpleContext.java:47`
 
-Basic context implementation with `LinkedHashSet` storage and priority resolution.
+High-performance context implementation with HashMap-based dual indexing for optimal lookup performance.
 
 **Key Features:**
-- **Storage**: `LinkedHashSet<Dependency>` maintains insertion order
-- **Resolution Strategy**: Prefers named dependencies over default-named ones
+- **Storage**: Dual HashMap indexes for O(1) name and type lookups
+- **Resolution Strategy**: Exact type matching with assignable fallback
+- **Performance**: O(1) for common cases, O(n) only for rare polymorphic lookups
 - **Thread Safety**: Not thread-safe (external synchronization required)
-- **Use Cases**: Single-layer contexts, testing, simple scenarios
+- **Use Cases**: High-performance contexts, production deployments, large dependency sets
 
 **Implementation Details:**
 ```java
 public class SimpleContext extends AbstractContextResolver implements Context {
-    private final LinkedHashSet<Dependency> dependencyStore;
+    private final Map<String, Dependency> dependenciesByName;      // O(1) name lookups
+    private final Map<Class<?>, Dependency> dependenciesByExactType; // O(1) type lookups
     
-    // Priority resolution: named dependencies override default-named
-    protected Optional<Dependency> getFromStorage(Predicate<Dependency> filter) {
-        return dependencyStore.stream().filter(filter)
-            .reduce((dep1, dep2) -> !dep1.isDefaultNamed() && dep2.isDefaultNamed() ? dep2 : dep1);
+    // Smart hybrid resolution: exact first, assignable fallback
+    protected Optional<Dependency> getByType(Class<?> type) {
+        Optional<Dependency> exact = Optional.ofNullable(dependenciesByExactType.get(type));
+        return exact.isPresent() ? exact : getFirstAssignableDependency(type);
     }
 }
 ```

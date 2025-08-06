@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.transaction;
+package io.flamingock.internal.common.core.context;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+/**
+ * Interface for components capable of providing a {@link ContextResolver}.
+ * <p>
+ * This abstraction allows decoupling the creation or resolution of context objects
+ * from their consumers, enabling better modularity and testability.
+ */
+public interface ContextProvider {
 
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-public interface TransactionWrapper {
-
-    <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation);
-
+    /**
+     * Returns the {@link ContextResolver} instance associated with this provider.
+     *
+     * @return a {@link ContextResolver}, never {@code null}
+     */
+    ContextResolver getContext();
 }

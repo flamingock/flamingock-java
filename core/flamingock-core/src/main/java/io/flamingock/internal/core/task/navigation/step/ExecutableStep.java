@@ -27,10 +27,10 @@ public class ExecutableStep extends AbstractTaskStep {
         super(step.getTask());
     }
 
-    public ExecutionStep execute(RuntimeManager runtimeHelper) {
+    public ExecutionStep execute(RuntimeManager runtimeManager) {
         StopWatch stopWatch = StopWatch.startAndGet();
         try {
-            task.execute(runtimeHelper);
+            task.execute(runtimeManager);
             return SuccessExecutionStep.instance(this, stopWatch.getElapsed());
         } catch (Throwable throwable) {
             return FailedExecutionStep.instance(this, stopWatch.getElapsed(), throwable);

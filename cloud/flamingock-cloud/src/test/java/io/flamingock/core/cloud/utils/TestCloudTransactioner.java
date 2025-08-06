@@ -15,6 +15,8 @@
  */
 package io.flamingock.core.cloud.utils;
 
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
@@ -23,6 +25,7 @@ import io.flamingock.internal.common.core.task.TaskDescriptor;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class TestCloudTransactioner implements CloudTransactioner {
@@ -39,7 +42,7 @@ public class TestCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public void clean(String taskId) {
+    public void clean(String taskId, ContextResolver contextResolver) {
         ongoingStatuses.removeIf(status -> taskId.equals(status.getTaskId()));
     }
 
@@ -49,8 +52,8 @@ public class TestCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        return operation.get();
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
+        return operation.apply(injectableContextProvider.getContext());
     }
 
     @Override

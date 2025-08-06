@@ -27,11 +27,13 @@ import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.Times;
 
@@ -39,6 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 public class CloudEngineTransactionTest {
@@ -140,10 +143,14 @@ public class CloudEngineTransactionTest {
         //THEN
         verify(cloudTransactioner, new Times(2)).getAll();
         verify(cloudTransactioner, new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template", OngoingStatus.EXECUTION));
-        verify(cloudTransactioner, new Times(1)).clean("create-persons-table-from-template");
 
+        ArgumentCaptor<String> changeUnitIdValuesCaptor = ArgumentCaptor.forClass(String.class);
         verify(cloudTransactioner, new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template-2", OngoingStatus.EXECUTION));
-        verify(cloudTransactioner, new Times(1)).clean("create-persons-table-from-template-2");
+        verify(cloudTransactioner, new Times(2)).clean(changeUnitIdValuesCaptor.capture(), any());
+        List<String> allValues = changeUnitIdValuesCaptor.getAllValues();
+
+        Assertions.assertEquals("create-persons-table-from-template", allValues.get(0));
+        Assertions.assertEquals("create-persons-table-from-template-2", allValues.get(1));
 
 //        //2 execution plans: First to execute and second to continue
 //        verify(cloudMockBuilder.getRequestWithBody(), new Times(2)).execute(ExecutionPlanResponse.class);

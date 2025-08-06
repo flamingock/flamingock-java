@@ -16,6 +16,8 @@
 package io.flamingock.cloud.transaction.dynamodb;
 
 import io.flamingock.cloud.transaction.dynamodb.wrapper.DynamoDBTransactionWrapper;
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.core.targets.OngoingTaskStatus;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
@@ -34,6 +36,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -85,7 +88,7 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public void clean(String taskId) {
+    public void clean(String taskId, ContextResolver contextResolver) {
 
         table.deleteItem(
                 Key.builder()
@@ -109,8 +112,8 @@ public class DynamoDBCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
-        return transactionWrapper.wrapInTransaction(loadedTask, dependencyInjectable, operation);
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
+        return transactionWrapper.wrapInTransaction(loadedTask, injectableContextProvider, operation);
     }
 
     @Override

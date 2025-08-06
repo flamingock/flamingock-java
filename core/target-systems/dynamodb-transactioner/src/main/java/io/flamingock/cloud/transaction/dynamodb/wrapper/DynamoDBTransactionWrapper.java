@@ -15,6 +15,8 @@
  */
 package io.flamingock.cloud.transaction.dynamodb.wrapper;
 
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.common.core.context.Dependency;
@@ -28,6 +30,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class DynamoDBTransactionWrapper implements TransactionWrapper {
@@ -43,13 +46,13 @@ public class DynamoDBTransactionWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
         String sessionId = loadedTask.getId();
         TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
         Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
         try {
-            dependencyInjectable.addDependency(writeRequestBuilderDependency);
-            T result = operation.get();
+            injectableContextProvider.addDependency(writeRequestBuilderDependency);
+            T result = operation.apply(injectableContextProvider.getContext());
             if (!(result instanceof FailedStep)) {
                 try {
                     dynamoDBUtil.getEnhancedClient().transactWriteItems(writeRequestBuilder.build());
@@ -61,7 +64,6 @@ public class DynamoDBTransactionWrapper implements TransactionWrapper {
             return result;
         } finally {
             transactionManager.closeSession(sessionId);
-            dependencyInjectable.removeDependencyByRef(writeRequestBuilderDependency);
         }
     }
 

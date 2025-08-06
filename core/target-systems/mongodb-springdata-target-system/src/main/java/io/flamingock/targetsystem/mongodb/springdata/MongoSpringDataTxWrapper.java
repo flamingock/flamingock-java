@@ -21,8 +21,10 @@ import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
@@ -35,6 +37,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class MongoSpringDataTxWrapper implements TransactionWrapper {
@@ -50,9 +53,9 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
 
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
         return txTemplate.execute(status -> {
-            T result = operation.get();
+            T result = operation.apply(injectableContextProvider.getContext());
             if (result instanceof FailedStep) {
                 status.setRollbackOnly();
             }

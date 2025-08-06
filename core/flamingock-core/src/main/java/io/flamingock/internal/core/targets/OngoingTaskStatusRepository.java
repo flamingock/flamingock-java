@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.targets;
 
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import java.util.Set;
 
@@ -40,13 +41,15 @@ public interface OngoingTaskStatusRepository {
 
     /**
      * Removes the ongoing status associated with the given task ID.
+     * This operation needs to participate in the ongoing transaction
      * <p>
      * This operation is idempotent: if no status exists for the given task ID, nothing happens.
      *
      * @param taskId the ID of the task to clean
+     * @param contextResolver the context to retrieve the transactional session
      * @throws RuntimeException if the operation fails (e.g., storage unavailable)
      */
-    void clean(String taskId);
+    void clean(String taskId, ContextResolver contextResolver);
 
     /**
      * Registers an ongoing task status by upserting it into the local database.

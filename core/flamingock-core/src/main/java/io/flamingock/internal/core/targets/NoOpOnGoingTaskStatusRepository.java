@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.targets;
 
+import io.flamingock.internal.common.core.context.ContextResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,7 @@ public class NoOpOnGoingTaskStatusRepository implements OngoingTaskStatusReposit
     }
 
     @Override
-    public void clean(String taskId) {
+    public void clean(String taskId, ContextResolver contextResolver) {
         logger.debug("Ignoring 'clean' operation for task '{}': no-op repository for target system '{}'", taskId, targetSystemId);
     }
 

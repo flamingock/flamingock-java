@@ -15,6 +15,8 @@
  */
 package io.flamingock.cloud.transaction.sql;
 
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.targets.OngoingTaskStatus;
@@ -35,6 +37,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class SqlCloudTransactioner implements CloudTransactioner {
@@ -116,7 +119,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
     }
 
     @Override
-    public void clean(String taskId) {
+    public void clean(String taskId, ContextResolver contextResolver) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(dialect.getDeleteOngoingTask())) {
             preparedStatement.setString(1, taskId);
             int rows = preparedStatement.executeUpdate();
@@ -141,12 +144,12 @@ public class SqlCloudTransactioner implements CloudTransactioner {
 
     @Override
     public <T> T wrapInTransaction(TaskDescriptor loadedTask,
-                                   DependencyInjectable dependencyInjectable,
-                                   Supplier<T> operation) {
+                                   InjectableContextProvider injectableContextProvider,
+                                   Function<ContextResolver, T> operation) {
         Dependency dependency = new Dependency(Connection.class, connection);
         try {
-            dependencyInjectable.addDependency(dependency);
-            T result = operation.get();
+            injectableContextProvider.addDependency(dependency);
+            T result = operation.apply(injectableContextProvider.getContext());
             if (result instanceof FailedStep) {
                 connection.rollback();
             } else {
@@ -156,7 +159,7 @@ public class SqlCloudTransactioner implements CloudTransactioner {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            dependencyInjectable.removeDependencyByRef(dependency);
+            injectableContextProvider.removeDependencyByRef(dependency);
         }
     }
 

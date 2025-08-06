@@ -17,7 +17,9 @@ package io.flamingock.community.mongodb.springdata.internal;
 
 import com.mongodb.TransactionOptions;
 import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
+import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
@@ -26,13 +28,16 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class SpringDataMongoTransactionWrapper implements TransactionWrapper {
 
+    private final MongoTemplate mongoTemplate;
     private final TransactionTemplate txTemplate;
 
     SpringDataMongoTransactionWrapper(MongoTemplate mongoTemplate, ReadWriteConfiguration readWriteConfiguration) {
+        this.mongoTemplate = mongoTemplate;
         MongoTransactionManager txManager = new MongoTransactionManager(
                 mongoTemplate.getMongoDatabaseFactory(),
                 TransactionOptions.builder()
@@ -49,9 +54,10 @@ public class SpringDataMongoTransactionWrapper implements TransactionWrapper {
 
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, DependencyInjectable dependencyInjectable, Supplier<T> operation) {
+    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
+        injectableContextProvider.addDependency(mongoTemplate);
         return txTemplate.execute(status -> {
-            T result = operation.get();
+            T result = operation.apply(injectableContextProvider.getContext());
             if (result instanceof FailedStep) {
                 status.setRollbackOnly();
             }
