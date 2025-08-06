@@ -108,7 +108,7 @@ public final class RuntimeContext {
             duration = 0L;
             methodExecutor = taskStep.getTask().getExecutionMethodName();
             stageName = taskStep.getTask().getStageName();
-            setFailure(taskStep);
+            setResult(taskStep);
             return this;
         }
 
@@ -116,7 +116,7 @@ public final class RuntimeContext {
             duration = taskStep.getDuration();
             methodExecutor = taskStep.getTask().getExecutionMethodName();
             stageName = taskStep.getTask().getStageName();
-            setFailure(taskStep);
+            setResult(taskStep);
             return this;
         }
 
@@ -124,7 +124,7 @@ public final class RuntimeContext {
             duration = rolledBackStep.getDuration();
             methodExecutor = rolledBackStep.getRollback().getRollbackMethodName();
             stageName = rolledBackStep.getTask().getStageName();
-            setFailure(rolledBackStep);
+            setResult(rolledBackStep);
             return this;
         }
 
@@ -132,11 +132,11 @@ public final class RuntimeContext {
             duration = 0L;
             methodExecutor = "native_db_engine";
             stageName = rolledBackStep.getTask().getStageName();
-            setFailure(rolledBackStep);
+            setResult(rolledBackStep);
             return this;
         }
 
-        private void setFailure(TaskStep taskStep) {
+        private void setResult(TaskStep taskStep) {
             if (taskStep instanceof FailedWithErrorStep) {
                 executionResult = ExecutionResult.FAILED;
                 error = ((FailedWithErrorStep) taskStep).getError();
