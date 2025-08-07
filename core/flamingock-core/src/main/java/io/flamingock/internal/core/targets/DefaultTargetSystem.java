@@ -15,6 +15,11 @@
  */
 package io.flamingock.internal.core.targets;
 
+import io.flamingock.internal.common.core.context.ContextInjectable;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
+
+import java.util.function.Supplier;
+
 public class DefaultTargetSystem extends AbstractTargetSystem<DefaultTargetSystem> {
 
 
@@ -25,6 +30,11 @@ public class DefaultTargetSystem extends AbstractTargetSystem<DefaultTargetSyste
     @Override
     protected DefaultTargetSystem getSelf() {
         return this;
+    }
+
+    @Override
+    public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
+        return changeApplier.get();
     }
 
 }

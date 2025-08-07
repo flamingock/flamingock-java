@@ -17,6 +17,7 @@ package io.flamingock.community.dynamodb.changes;
 
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.community.dynamodb.changes.common.DynamoDBUtil;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -30,7 +31,7 @@ public class _001_create_client_collection_happy {
     private final DynamoDBUtil dynamoDBUtil = new DynamoDBUtil();
 
     @Execution
-    public void execution(DynamoDbClient client) {
+    public void execution(@NonLockGuarded DynamoDbClient client) {
 
         dynamoDBUtil.createTable(
                 client,

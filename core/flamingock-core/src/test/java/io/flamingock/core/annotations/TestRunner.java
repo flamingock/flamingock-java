@@ -18,10 +18,9 @@ package io.flamingock.core.annotations;
 import io.flamingock.core.utils.EmptyTransactionWrapper;
 import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
-import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.context.PriorityContextResolver;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
@@ -30,9 +29,7 @@ import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContex
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
-import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
@@ -53,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -109,45 +107,12 @@ public class TestRunner {
         EmptyTransactionWrapper transactionWrapper = useTransactionWrapper ? new EmptyTransactionWrapper() : null;
 
 
-
         executableChangeUnits.forEach(changeUnit -> {
 
-            ContextDecoratorTargetSystem targetSystem;
-            if(transactionWrapper != null) {
-                targetSystem = new TransactionalTargetSystem("default-target-system-id") {
-                    @Override
-                    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
-                        return new NoOpOnGoingTaskStatusRepository("default-target-system-id");
-                    }
+            AbstractTargetSystem<?> targetSystem = transactionWrapper != null
+                    ? new TestTransactionTargetSystem("default-target-system-id", transactionWrapper)
+                    : new TestTargetSystem("default-target-system-id");
 
-                    @Override
-                    public TransactionWrapper getTxWrapper() {
-                        return transactionWrapper;
-                    }
-
-                    @Override
-                    public void initialize(ContextResolver baseContext) {
-
-                    }
-
-                    @Override
-                    protected AbstractTargetSystem getSelf() {
-                        return this;
-                    }
-                };
-            } else {
-                targetSystem = new ContextDecoratorTargetSystem() {
-                    @Override
-                    public String getId() {
-                        return "default-target-system-id";
-                    }
-
-                    @Override
-                    public ContextResolver decorateOnTop(ContextResolver baseContext) {
-                        return new PriorityContextResolver(new SimpleContext(), baseContext);
-                    }
-                };
-            }
 
             TargetSystemStepOperations targetSystemOps = StepNavigatorBuilder.buildTargetSystemOperations(
                     targetSystem,
@@ -155,7 +120,7 @@ public class TestRunner {
                     new SimpleContext(),
                     mock(Lock.class),
                     Collections.emptySet());
-            
+
 
             new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, new AuditStoreStepOperations(auditWriterMock), stepSummarizerMock)
                     .start();
@@ -167,6 +132,58 @@ public class TestRunner {
         checker.checkOrderStrict(Arrays.asList(executionSteps));
         if (useTransactionWrapper) {
             Assertions.assertTrue(transactionWrapper.isCalled());
+        }
+    }
+
+    private static class TestTransactionTargetSystem extends TransactionalTargetSystem<TestTransactionTargetSystem> {
+
+        private final TransactionWrapper txWrapper;
+
+        public TestTransactionTargetSystem(String id, TransactionWrapper txWrapper) {
+            super(id);
+            this.txWrapper = txWrapper;
+        }
+
+        @Override
+        public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+            return new NoOpOnGoingTaskStatusRepository("default-target-system-id");
+        }
+
+        @Override
+        public TransactionWrapper getTxWrapper() {
+            return txWrapper;
+        }
+
+        @Override
+        protected TestTransactionTargetSystem getSelf() {
+            return this;
+        }
+
+        @Override
+        public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
+            return changeApplier.get();
+        }
+
+        @Override
+        public void initialize(ContextResolver baseContext) {
+
+        }
+    }
+
+    private static class TestTargetSystem extends AbstractTargetSystem<TestTargetSystem> {
+
+        public TestTargetSystem(String id) {
+            super(id);
+        }
+
+        @Override
+        protected TestTargetSystem getSelf() {
+            return this;
+        }
+
+        @Override
+        public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
+            return changeApplier.get();
         }
     }
 }

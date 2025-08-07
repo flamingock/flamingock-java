@@ -36,8 +36,8 @@ import java.util.Optional;
 public class TargetSystemManager implements ContextInitializable {
 
     private boolean initialized = false;
-    private ContextDecoratorTargetSystem defaultTargetSystem;
-    private final Map<String, ContextDecoratorTargetSystem> targetSystemMap = new HashMap<>();
+    private AbstractTargetSystem<?> defaultTargetSystem;
+    private final Map<String, AbstractTargetSystem<?>> targetSystemMap = new HashMap<>();
 
     @Override
     public void initialize(ContextResolver contextResolver) {
@@ -70,7 +70,7 @@ public class TargetSystemManager implements ContextInitializable {
      */
     public void addDefault(TargetSystem defaultTargetSystem) {
         add(defaultTargetSystem);
-        this.defaultTargetSystem = (ContextDecoratorTargetSystem) defaultTargetSystem;
+        this.defaultTargetSystem = (AbstractTargetSystem<?>) defaultTargetSystem;
     }
 
 
@@ -86,7 +86,7 @@ public class TargetSystemManager implements ContextInitializable {
         return Optional.ofNullable(getValueOrDefault(id));
     }
 
-    public ContextDecoratorTargetSystem getValueOrDefault(String id) {
+    public AbstractTargetSystem<?> getValueOrDefault(String id) {
         //We do it this way(instead of getOrDefault) because although current implementation(HashMap) allows
         // nulls, we may change in the future(ConcurrentHashMap doesn't allow nulls, for instance)
         if(id == null || !targetSystemMap.containsKey(id)) {
@@ -103,20 +103,20 @@ public class TargetSystemManager implements ContextInitializable {
      * @param targetSystem the target system to validate
      * @throws IllegalArgumentException if validation fails
      */
-    private ContextDecoratorTargetSystem validateAndCast(TargetSystem targetSystem) {
+    private AbstractTargetSystem<?> validateAndCast(TargetSystem targetSystem) {
         if (targetSystem == null) {
             throw new IllegalArgumentException("Target system null not allowed");
         }
         if (targetSystem.getId() == null || targetSystem.getId().trim().isEmpty()) {
             throw new IllegalArgumentException("TargetSystem ID must not be null or blank");
         }
-        if (!(targetSystem instanceof ContextDecoratorTargetSystem)) {
-            throw new IllegalArgumentException("TargetSystem must be an instance of ContextComposerTargetSystem");
+        if (!(targetSystem instanceof AbstractTargetSystem)) {
+            throw new IllegalArgumentException("TargetSystem must be an instance of AbstractTargetSystem");
         }
         if(initialized) {
             String message = String.format("Target system with id[%s] cannot be added after TargetSystemManager is initialized", targetSystem.getId());
             throw new IllegalArgumentException(message);
         }
-        return (ContextDecoratorTargetSystem) targetSystem;
+        return (AbstractTargetSystem<?>) targetSystem;
     }
 }

@@ -17,8 +17,10 @@ package io.flamingock.internal.core.targets;
 
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
+import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.util.Property;
@@ -43,6 +45,7 @@ import java.time.ZonedDateTime;
 import java.util.Currency;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 
 public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<HOLDER>>
@@ -66,6 +69,8 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
     public Context decorateOnTop(ContextResolver baseContext) {
         return new PriorityContext(context, baseContext);
     }
+
+    abstract public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable);
 
     @Override
     public HOLDER addDependency(String name, Class<?> type, Object instance) {

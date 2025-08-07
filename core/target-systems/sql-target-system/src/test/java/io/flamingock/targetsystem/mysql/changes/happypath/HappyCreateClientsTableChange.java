@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.sql.changes.unhappypath;
+package io.flamingock.targetsystem.mysql.changes.happypath;
 
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@ChangeUnit(id = "unhappy-create-table-clients", order = "001", transactional = false)
-public class _001_create_clients2_table_happy {
+@TargetSystem( id = "mysql-ts")
+@ChangeUnit(id = "create-clients-table", order = "001", transactional = false)
+public class HappyCreateClientsTableChange {
 
     @Execution
     public void execution(Connection connection) throws SQLException {
-
-        try(Statement statement = connection.createStatement()) {
-            statement.executeUpdate("CREATE TABLE CLIENTS_2 (" +
-                    "id INTEGER not NULL, " +
-                    " name VARCHAR(255), " +
-                    " PRIMARY KEY ( id )" +
-                    ")");
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(
+                    "CREATE TABLE client_table (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "name VARCHAR(255) NOT NULL, " +
+                            "email VARCHAR(255) UNIQUE NOT NULL" +
+                            ")"
+            );
         }
     }
-
-
-
 }

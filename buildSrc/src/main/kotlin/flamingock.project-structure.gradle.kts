@@ -34,7 +34,7 @@ val pluginProjects = setOf(
 )
 
 val transactionerProjects = setOf(
-    "sql-transactioner",
+    "sql-target-system",
     "mongodb-sync-target-system",
     "dynamodb-transactioner"
 )

@@ -98,9 +98,9 @@ include("core:target-systems:mongodb-springdata-target-system")
 project(":core:target-systems:mongodb-springdata-target-system").projectDir = file("core/target-systems/mongodb-springdata-target-system")
 project(":core:target-systems:mongodb-springdata-target-system").name = "mongodb-springdata-target-system"
 
-include("core:target-systems:sql-transactioner")
-project(":core:target-systems:sql-transactioner").projectDir = file("core/target-systems/sql-transactioner")
-project(":core:target-systems:sql-transactioner").name = "sql-transactioner"
+include("core:target-systems:sql-target-system")
+project(":core:target-systems:sql-target-system").projectDir = file("core/target-systems/sql-target-system")
+project(":core:target-systems:sql-target-system").name = "sql-target-system"
 
 include("core:target-systems:dynamodb-transactioner")
 project(":core:target-systems:dynamodb-transactioner").projectDir = file("core/target-systems/dynamodb-transactioner")

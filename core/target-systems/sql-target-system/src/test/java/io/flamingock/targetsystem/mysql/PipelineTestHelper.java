@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.sql.utils;
+package io.flamingock.targetsystem.mysql;
 
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.TargetSystem;

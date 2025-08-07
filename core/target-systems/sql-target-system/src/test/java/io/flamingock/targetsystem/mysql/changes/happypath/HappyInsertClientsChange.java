@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.sql.changes.unhappypath;
+package io.flamingock.targetsystem.mysql.changes.happypath;
 
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@ChangeUnit(id = "unhappy-insert-clients", order = "002")
-public class _002_insert_client_unhappy {
+@TargetSystem( id = "mysql-ts")
+@ChangeUnit(id = "insert-clients", order = "002")
+public class HappyInsertClientsChange {
 
     @Execution
     public void execution(Connection connection) throws SQLException {
-        try(PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO CLIENTS_2(id, name) values(?, ?)")) {
-            preparedStatement.setInt(1, 1);
-            preparedStatement.setString(2, "Should_have_been_rolled_back");
-            int rows = preparedStatement.executeUpdate();
+        String sql = "INSERT INTO client_table (name, email) VALUES (?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "John Doe");
+            stmt.setString(2, "john.doe@example.com");
+            stmt.executeUpdate();
         }
-        throw new RuntimeException("Intended exception");
-
     }
 }

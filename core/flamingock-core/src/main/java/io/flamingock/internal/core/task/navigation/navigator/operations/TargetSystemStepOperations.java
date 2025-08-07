@@ -22,6 +22,8 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.RuntimeManager;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
+import io.flamingock.internal.core.targets.AbstractTargetSystem;
+import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
@@ -49,12 +51,12 @@ import java.util.function.Function;
 public class TargetSystemStepOperations {
     private static final Logger logger = LoggerFactory.getLogger("TargetSystemOperations");
 
-    private final TargetSystem targetSystem;
+    private final AbstractTargetSystem<?> targetSystem;
     private final ContextResolver baseContext;
     private final LockGuardProxyFactory lockProxyFactory;
 
 
-    public TargetSystemStepOperations(TargetSystem targetSystem,
+    public TargetSystemStepOperations(AbstractTargetSystem<?> targetSystem,
                                       LockGuardProxyFactory proxyFactory,
                                       ContextResolver baseContext) {
         this.targetSystem = targetSystem;
@@ -90,15 +92,17 @@ public class TargetSystemStepOperations {
             );
         } else {
             logger.debug("Executing(non-transactional) task[{}]", changeUnit.getId());
-            ExecutionStep changeAppliedStep = executableStep.execute(buildRuntimeManager());
+            RuntimeManager runtimeManager = buildRuntimeManager();
+            ExecutionStep changeAppliedStep = targetSystem.applyChange(() -> executableStep.execute(runtimeManager), runtimeManager);
             return changeAuditor.apply(changeAppliedStep);
         }
     }
 
     @NotNull
     private RuntimeManager buildRuntimeManager() {
+        Context changeUnitSessionContext = new PriorityContext(new SimpleContext(), baseContext);
         return RuntimeManager.builder()
-                .setDependencyContext(new PriorityContext(new SimpleContext(), baseContext))
+                .setDependencyContext(changeUnitSessionContext)
                 .setLockGuardProxyFactory(lockProxyFactory)
                 .build();
     }

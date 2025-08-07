@@ -15,21 +15,18 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
-import io.flamingock.api.targets.TargetSystem;
-import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.core.context.SimpleContext;
+import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
-import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
+import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
-import io.flamingock.internal.core.runtime.RuntimeManager;
-import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
@@ -38,6 +35,7 @@ import io.flamingock.internal.core.task.navigation.navigator.operations.TargetSy
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class StepNavigatorBuilder {
     private final TargetSystemManager targetSystemManager;
@@ -96,7 +94,7 @@ public class StepNavigatorBuilder {
     }
 
     public StepNavigator build() {
-        ContextDecoratorTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem() != null ? changeUnit.getTargetSystem().getId() : null);
+        AbstractTargetSystem<?> targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem() != null ? changeUnit.getTargetSystem().getId() : null);
 
         return new StepNavigator(
                 changeUnit,
@@ -108,7 +106,7 @@ public class StepNavigatorBuilder {
 
 
     //TODO temporal until we have the TargetSystem for Driver
-    public static TargetSystemStepOperations buildTargetSystemOperations(ContextDecoratorTargetSystem targetSystem,
+    public static TargetSystemStepOperations buildTargetSystemOperations(AbstractTargetSystem<?> targetSystem,
                                                                          TransactionWrapper txWrapper,
                                                                          ContextResolver staticContext,
                                                                          Lock lock,
@@ -125,9 +123,9 @@ public class StepNavigatorBuilder {
         LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
 
 
-        TargetSystem targetSystemOrDefault = targetSystem != null
-        ? targetSystem
-        : new TempTargetSystem("temporal-target-system", txWrapper, ongoingTasksRepository);
+        AbstractTargetSystem<?> targetSystemOrDefault = targetSystem != null
+                ? targetSystem
+                : new TempTargetSystem("temporal-target-system", txWrapper, ongoingTasksRepository);
         return new TargetSystemStepOperations(targetSystemOrDefault, lockGuardProxyFactory, contextWithTargetSystemLayer);
     }
 
@@ -160,6 +158,11 @@ public class StepNavigatorBuilder {
         @Override
         protected TempTargetSystem getSelf() {
             return this;
+        }
+
+        @Override
+        public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
+            return changeApplier.get();
         }
     }
 }
