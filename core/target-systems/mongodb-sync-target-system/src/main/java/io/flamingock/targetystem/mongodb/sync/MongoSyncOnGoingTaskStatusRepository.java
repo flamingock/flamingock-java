@@ -121,9 +121,10 @@ public class MongoSyncOnGoingTaskStatusRepository implements OngoingTaskStatusRe
 
         public MongoSyncOnGoingTaskStatusRepository build() {
             MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName)
-                    .withReadConcern(readConcern)
-                    .withReadPreference(readPreference)
-                    .withWriteConcern(writeConcern);
+//                    .withReadConcern(readConcern)
+//                    .withReadPreference(readPreference)
+//                    .withWriteConcern(writeConcern)
+                    ;
 
             CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
                     new MongoSyncCollectionHelper(collection),

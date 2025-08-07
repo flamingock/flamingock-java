@@ -192,6 +192,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         LoadedPipeline pipeline = buildPipeline();
         pipeline.contributeToContext(context);
 
+        targetSystemManager.initialize(hierarchicalContext);
+
         return PipelineRunnerCreator.create(
                 runnerId,
                 pipeline,

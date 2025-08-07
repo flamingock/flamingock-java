@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
@@ -124,7 +125,10 @@ public class StepNavigatorBuilder {
         LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
 
 
-        return new TargetSystemStepOperations(new TempTargetSystem("temporal-target-system", txWrapper, ongoingTasksRepository), lockGuardProxyFactory, contextWithTargetSystemLayer);
+        TargetSystem targetSystemOrDefault = targetSystem != null
+        ? targetSystem
+        : new TempTargetSystem("temporal-target-system", txWrapper, ongoingTasksRepository);
+        return new TargetSystemStepOperations(targetSystemOrDefault, lockGuardProxyFactory, contextWithTargetSystemLayer);
     }
 
     private static class TempTargetSystem extends TransactionalTargetSystem<TempTargetSystem> {

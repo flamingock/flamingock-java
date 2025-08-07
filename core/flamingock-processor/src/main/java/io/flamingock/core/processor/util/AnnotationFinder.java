@@ -80,17 +80,7 @@ public final class AnnotationFinder {
 
     private CodePreviewChangeUnit buildCodePreviewChangeUnit(TypeElement typeElement) {
         return Optional.ofNullable(PreviewTaskBuilder.getCodeBuilder(typeElement).build())
-                .filter(obj -> true)
                 .map(CodePreviewChangeUnit.class::cast)
-                .map(changeUnit -> {
-                    extractTargetSystemId(typeElement).ifPresent(changeUnit::setTargetSystem);
-                    return changeUnit;
-                })
                 .orElse(null);
-    }
-
-    private Optional<String> extractTargetSystemId(TypeElement typeElement) {
-        return Optional.ofNullable(typeElement.getAnnotation(TargetSystem.class))
-                .map(TargetSystem::id);
     }
 }

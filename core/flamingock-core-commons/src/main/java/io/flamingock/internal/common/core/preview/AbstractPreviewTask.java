@@ -35,15 +35,6 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                                String source,
                                boolean runAlways,
                                boolean transactional,
-                               boolean system) {
-        super(id, order, source, runAlways, transactional, system);
-    }
-
-    public AbstractPreviewTask(String id,
-                               String order,
-                               String source,
-                               boolean runAlways,
-                               boolean transactional,
                                boolean system,
                                String targetSystem) {
         super(id, order, source, runAlways, transactional, system, targetSystem);

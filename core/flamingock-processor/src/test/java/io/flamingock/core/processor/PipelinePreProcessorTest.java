@@ -517,7 +517,7 @@ public class PipelinePreProcessorTest {
     private Map<String, List<AbstractPreviewTask>> createMockChangeUnitsMap() {
         Map<String, List<AbstractPreviewTask>> map = new HashMap<>();
         // Create mock tasks for each package so stages can be built
-        AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-source", false, true, false) {};
+        AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-source", false, true, false, null) {};
         
         map.put("com.example.system", Collections.singletonList(mockTask));
         map.put("com.example.system1", Collections.singletonList(mockTask));

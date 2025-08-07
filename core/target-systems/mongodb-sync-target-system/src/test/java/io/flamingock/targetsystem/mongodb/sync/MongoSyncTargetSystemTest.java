@@ -20,6 +20,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.targetsystem.mongodb.sync.changes.happypath.HappyCreateClientsCollectionChange;
 import io.flamingock.targetsystem.mongodb.sync.changes.happypath.HappyInsertClientsChange;
 import io.flamingock.targetsystem.mongodb.sync.changes.unhappypath.UnhappyCreateClientsCollectionChange;
@@ -57,7 +58,6 @@ import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
 
 @Testcontainers
-@Disabled("Until TargetSystem is fixed")
 public class MongoSyncTargetSystemTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoSyncTargetSystemTest.class);
@@ -143,7 +143,6 @@ public class MongoSyncTargetSystemTest {
 
         //GIVEN
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            MongoSyncTargetSystem mongoTargetSystem = new MongoSyncTargetSystem("mongodb-ts").withMongoClient(mongoClient).withDatabase(testDatabase);
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
@@ -154,7 +153,6 @@ public class MongoSyncTargetSystemTest {
                             new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
                     ).start();
 
-            MongoSyncTargetSystem mongoSyncCloudTransactioner = Mockito.spy(mongoTargetSystem);
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -162,9 +160,14 @@ public class MongoSyncTargetSystemTest {
                     new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
+
+
+            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts")
+                    .withMongoClient(mongoClient)
+                    .withDatabase(testDatabase);
             flamingockBuilder
-//                    .setCloudTransactioner(mongoSyncCloudTransactioner)
                     .addDependency(testDatabase)
+                    .addTargetSystem(mongoDBTargetSystem)
                     .build()
                     .execute();
 
@@ -215,9 +218,13 @@ public class MongoSyncTargetSystemTest {
                     new Trio<>(UnhappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
+
+            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts")
+                    .withMongoClient(mongoClient)
+                    .withDatabase(testDatabase);
             Runner runner = flamingockBuilder
-//                    .setCloudTransactioner(mongoSyncCloudTransactioner)
                     .addDependency(testDatabase)
+                    .addTargetSystem(mongoDBTargetSystem)
                     .build();
 
             //THEN
@@ -235,6 +242,7 @@ public class MongoSyncTargetSystemTest {
 
     //TODO verify the server is called with the right parameters. among other, it sends the ongoing status
     @Test
+    @Disabled("adapt when adding cloud support")
     @DisplayName("Should send ongoing task in execution when is present in local database")
     void shouldSendOngoingTaskInExecutionPlan() {
         String executionId = "execution-1";
@@ -264,7 +272,6 @@ public class MongoSyncTargetSystemTest {
                             new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
                     ).start();
 
-            MongoSyncTargetSystem mongoSyncCloudTransactioner = Mockito.spy(mongoTargetSystem);
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -272,9 +279,12 @@ public class MongoSyncTargetSystemTest {
                     new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
+            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts")
+                    .withMongoClient(mongoClient)
+                    .withDatabase(testDatabase);
             flamingockBuilder
-//                    .setCloudTransactioner(mongoSyncCloudTransactioner)
                     .addDependency(testDatabase)
+                    .addTargetSystem(mongoDBTargetSystem)
                     .build()
                     .execute();
 

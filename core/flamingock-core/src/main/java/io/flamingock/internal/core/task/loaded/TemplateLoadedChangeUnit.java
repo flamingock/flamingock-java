@@ -42,8 +42,9 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
                              boolean systemTask,
                              Object configuration,
                              Object execution,
-                             Object rollback) {
-        super(changeUnitFileName, id, order, templateClass, runAlways, transactional, systemTask);
+                             Object rollback,
+                             String targetSystem) {
+        super(changeUnitFileName, id, order, templateClass, runAlways, transactional, systemTask, targetSystem);
         this.profiles = profiles;
         this.transactional = transactional;
         this.configuration = configuration;

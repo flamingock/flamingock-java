@@ -95,8 +95,9 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
                                         Class<?> implementationClass,
                                         boolean runAlways,
                                         boolean transactional,
-                                        boolean system) {
-        super(id, order, implementationClass.getName(), runAlways, transactional, system);
+                                        boolean system,
+                                        String targetSystem) {
+        super(id, order, implementationClass.getName(), runAlways, transactional, system, targetSystem);
         this.fileName = fileName;
         this.implementationClass = implementationClass;
     }

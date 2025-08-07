@@ -42,15 +42,6 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                                   String source,
                                   boolean runAlways,
                                   boolean transactional,
-                                  boolean system) {
-        this(id, order, source, runAlways, transactional, system, null);
-    }
-
-    public AbstractTaskDescriptor(String id,
-                                  String order,
-                                  String source,
-                                  boolean runAlways,
-                                  boolean transactional,
                                   boolean system,
                                   String targetSystem) {
         this.id = id;

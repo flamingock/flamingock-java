@@ -39,26 +39,6 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                                      boolean system,
                                      Object configuration,
                                      Object execution,
-                                     Object rollback
-                                     ) {
-        super(id, order, templateName, runAlways, transactional, system);
-        this.fileName = fileName;
-        this.profiles = profiles;
-        this.configuration = configuration;
-        this.execution = execution;
-        this.rollback = rollback;
-    }
-
-    public TemplatePreviewChangeUnit(String fileName,
-                                     String id,
-                                     String order,
-                                     String templateName,
-                                     List<String> profiles,
-                                     boolean transactional,
-                                     boolean runAlways,
-                                     boolean system,
-                                     Object configuration,
-                                     Object execution,
                                      Object rollback,
                                      String targetSystem) {
         super(id, order, templateName, runAlways, transactional, system, targetSystem);

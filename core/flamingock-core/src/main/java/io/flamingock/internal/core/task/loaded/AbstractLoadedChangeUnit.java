@@ -55,8 +55,9 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
                                        Class<?> implementationClass,
                                        boolean runAlways,
                                        boolean transactional,
-                                       boolean systemTask) {
-        super(fileName, id, order, implementationClass, runAlways, transactional, systemTask);
+                                       boolean system,
+                                       String targetSystem) {
+        super(fileName, id, order, implementationClass, runAlways, transactional, system, targetSystem);
 
         this.categories = ReflectionUtil.findAllAnnotations(implementationClass, Categories.class).stream()
                 .map(Categories::value)

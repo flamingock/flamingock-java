@@ -18,6 +18,7 @@ package io.flamingock.internal.common.core.preview.builder;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.mongock.api.annotations.BeforeExecution;
@@ -39,8 +40,6 @@ import java.util.Optional;
 //TODO how to set transactional and runAlways
 public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewChangeUnit> {
 
-    private TypeElement typeElement;
-
     private String id;
     private String order;
     private String sourceClassPath;
@@ -51,6 +50,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private boolean runAlways;
     private boolean transactional;
     private boolean system;
+    private String targetSystemId;
 
     private CodePreviewTaskBuilder() {
     }
@@ -65,6 +65,11 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
 
     public CodePreviewTaskBuilder setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public CodePreviewTaskBuilder setTargetSystemId(String targetSystemId) {
+        this.targetSystemId = targetSystemId;
         return this;
     }
 
@@ -113,29 +118,29 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
 
     CodePreviewTaskBuilder setTypeElement(TypeElement typeElement) {
         ChangeUnit changeUnitAnnotation = typeElement.getAnnotation(ChangeUnit.class);
-        if (changeUnitAnnotation != null) {
-            setFieldsFromChange(typeElement, changeUnitAnnotation);
+        TargetSystem targetSystemAnnotation = typeElement.getAnnotation(TargetSystem.class);
+        if(changeUnitAnnotation != null) {
+            setId(changeUnitAnnotation.id());
+            setOrder(changeUnitAnnotation.order());
+            setSourceClassPath(typeElement.getQualifiedName().toString());
+            setExecutionMethod(getAnnotatedMethodInfo(typeElement, Execution.class).orElse(null));
+            setRollbackMethod(getAnnotatedMethodInfo(typeElement, RollbackExecution.class).orElse(null));
+            setBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, BeforeExecution.class).orElse(null));
+            setRollbackBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, RollbackBeforeExecution.class).orElse(null));
+            setTransactional(changeUnitAnnotation.transactional());
+            setRunAlways(changeUnitAnnotation.runAlways());
+            setSystem(false);
+        }
+        if(targetSystemAnnotation != null) {
+            setTargetSystemId(targetSystemAnnotation.id());
         }
         return this;
     }
 
 
+
     @Override
     public CodePreviewChangeUnit build() {
-        return getCodePreviewChange();
-    }
-
-    private CodePreviewChangeUnit setFieldsFromChange(TypeElement typeElement, ChangeUnit annotation) {
-        setId(annotation.id());
-        setOrder(annotation.order());
-        setSourceClassPath(typeElement.getQualifiedName().toString());
-        setExecutionMethod(getAnnotatedMethodInfo(typeElement, Execution.class).orElse(null));
-        setRollbackMethod(getAnnotatedMethodInfo(typeElement, RollbackExecution.class).orElse(null));
-        setBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, BeforeExecution.class).orElse(null));
-        setRollbackBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, RollbackBeforeExecution.class).orElse(null));
-        setTransactional(annotation.transactional());
-        setRunAlways(annotation.runAlways());
-        setSystem(false);
         return getCodePreviewChange();
     }
 
@@ -151,7 +156,8 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
                 rollbackBeforeExecutionMethod,
                 runAlways,
                 transactional,
-                system);
+                system,
+                targetSystemId);
     }
 
     private Optional<PreviewMethod> getAnnotatedMethodInfo(TypeElement typeElement,

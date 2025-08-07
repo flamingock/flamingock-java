@@ -15,6 +15,7 @@
  */
 package io.flamingock.common.test.pipeline;
 
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
@@ -27,6 +28,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
 
     private final String className;
+    private final String targetSystem;
 
     private final List<Class<?>> executionParameters;
     private final List<Class<?>> rollbackParameters;
@@ -36,6 +38,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                         List<Class<?>> rollbackParameters) {
         this(
                 changeUnitClass.getAnnotation(ChangeUnit.class),
+                changeUnitClass.getAnnotation(TargetSystem.class),
                 changeUnitClass.getName(),
                 executionParameters,
                 rollbackParameters
@@ -46,26 +49,36 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                         List<Class<?>> executionParameters) {
         this(
                 changeUnitClass.getAnnotation(ChangeUnit.class),
+                changeUnitClass.getAnnotation(TargetSystem.class),
                 changeUnitClass.getName(),
                 executionParameters,
                 null
         );
     }
 
-    private CodeChangeUnitTestDefinition(ChangeUnit ann,
+    private CodeChangeUnitTestDefinition(ChangeUnit changeUnitAnn,
+                                         TargetSystem targetSystemAnn,
                                          String className,
                                          List<Class<?>> executionParameters,
                                          List<Class<?>> rollbackParameters) {
-        this(ann.id(), ann.order(), className, ann.transactional(), executionParameters, rollbackParameters);
+        this(changeUnitAnn.id(),
+                changeUnitAnn.order(),
+                className,
+                targetSystemAnn != null ? targetSystemAnn.id() : null,
+                changeUnitAnn.transactional(),
+                executionParameters,
+                rollbackParameters);
     }
 
     public CodeChangeUnitTestDefinition(String id,
                                         String order,
                                         String className,
+                                        String targetSystem,
                                         boolean transactional,
                                         List<Class<?>> executionParameters,
                                         List<Class<?>> rollbackParameters) {
         super(id, order, transactional);
+        this.targetSystem = targetSystem;
         this.className = className;
         this.executionParameters = executionParameters;
         this.rollbackParameters = rollbackParameters;
@@ -93,7 +106,8 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 rollbackBeforeExecution,
                 false,
                 isTransactional(),
-                false
+                false,
+                targetSystem
         );
     }
 

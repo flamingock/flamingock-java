@@ -38,6 +38,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     private Object configuration;
     private Object execution;
     private Object rollback;
+    private String targetSystem;
 
     private TemplateLoadedTaskBuilder() {
     }
@@ -56,6 +57,11 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
 
     public TemplateLoadedTaskBuilder setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public TemplateLoadedTaskBuilder setTargetSystem(String targetSystem) {
+        this.targetSystem = targetSystem;
         return this;
     }
 
@@ -127,7 +133,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
                 system,
                 configuration,
                 execution,
-                rollback);
+                rollback,
+                targetSystem);
 
     }
 
@@ -143,6 +150,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
         setConfiguration(preview.getConfiguration());
         setExecution(preview.getExecution());
         setRollback(preview.getRollback());
+        setTargetSystem(preview.getTargetSystem());
         return this;
     }
 

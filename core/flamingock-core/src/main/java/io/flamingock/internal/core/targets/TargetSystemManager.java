@@ -16,7 +16,10 @@
 package io.flamingock.internal.core.targets;
 
 import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.internal.common.core.context.ContextInitializable;
+import io.flamingock.internal.common.core.context.ContextResolver;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,10 +32,22 @@ import java.util.Optional;
  * <p>
  * Used internally by Flamingock to manage runtime access to registered targets.
  */
-public class TargetSystemManager {
+@NotThreadSafe
+public class TargetSystemManager implements ContextInitializable {
 
+    private boolean initialized = false;
     private ContextDecoratorTargetSystem defaultTargetSystem;
     private final Map<String, ContextDecoratorTargetSystem> targetSystemMap = new HashMap<>();
+
+    @Override
+    public void initialize(ContextResolver contextResolver) {
+        initialized = true;
+        targetSystemMap.values()
+                .stream()
+                .filter(targetSystem -> targetSystem instanceof ContextInitializable)
+                .map(targetSystem -> (ContextInitializable)targetSystem)
+                .forEach(targetSystem -> targetSystem.initialize(contextResolver));
+    }
 
     /**
      * Registers a new {@link TargetSystem}.
@@ -43,6 +58,7 @@ public class TargetSystemManager {
     public void add(TargetSystem targetSystem) {
         targetSystemMap.put(targetSystem.getId(), validateAndCast(targetSystem));
     }
+
 
     /**
      * Registers the default {@link TargetSystem} to be returned when a specific ID is not found.
@@ -56,6 +72,8 @@ public class TargetSystemManager {
         add(defaultTargetSystem);
         this.defaultTargetSystem = (ContextDecoratorTargetSystem) defaultTargetSystem;
     }
+
+
 
     /**
      * Returns the {@link TargetSystem} associated with the given ID,
@@ -94,6 +112,10 @@ public class TargetSystemManager {
         }
         if (!(targetSystem instanceof ContextDecoratorTargetSystem)) {
             throw new IllegalArgumentException("TargetSystem must be an instance of ContextComposerTargetSystem");
+        }
+        if(initialized) {
+            String message = String.format("Target system with id[%s] cannot be added after TargetSystemManager is initialized", targetSystem.getId());
+            throw new IllegalArgumentException(message);
         }
         return (ContextDecoratorTargetSystem) targetSystem;
     }

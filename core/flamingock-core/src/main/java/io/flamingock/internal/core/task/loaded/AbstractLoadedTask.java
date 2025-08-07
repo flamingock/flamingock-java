@@ -34,8 +34,9 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
                               String implementationSourceName,
                               boolean runAlways,
                               boolean transactional,
-                              boolean system) {
-        super(id, order, implementationSourceName, runAlways, transactional, system);
+                              boolean system,
+                              String targetSystem) {
+        super(id, order, implementationSourceName, runAlways, transactional, system, targetSystem);
     }
 
     public abstract Constructor<?> getConstructor();

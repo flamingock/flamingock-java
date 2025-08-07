@@ -19,7 +19,9 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.TargetSystem;
 
+@TargetSystem( id = "mongodb-ts")
 @ChangeUnit(id = "create-clients-collection", order = "001", transactional = false)
 public class HappyCreateClientsCollectionChange {
 

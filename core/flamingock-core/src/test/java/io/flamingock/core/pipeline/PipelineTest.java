@@ -113,7 +113,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         CodePreviewChangeUnit taskWithInvalidOrder2 = new CodePreviewChangeUnit(
                 "task-with-invalid-order-3",
@@ -125,7 +126,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
@@ -161,7 +163,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         CodePreviewChangeUnit taskWithValidOrder2 = new CodePreviewChangeUnit(
                 "task-with-valid-order-2",
@@ -173,7 +176,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         CodePreviewChangeUnit taskWithValidOrder3 = new CodePreviewChangeUnit(
                 "task-with-valid-order-3",
@@ -185,7 +189,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         CodePreviewChangeUnit taskWithValidOrder4 = new CodePreviewChangeUnit(
                 "task-with-valid-order-4",
@@ -197,7 +202,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
@@ -231,7 +237,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         CodePreviewChangeUnit task2 = new CodePreviewChangeUnit(
                 "unique-id",
@@ -243,7 +250,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         CodePreviewChangeUnit task3 = new CodePreviewChangeUnit(
                 "duplicate-id",
@@ -255,7 +263,8 @@ public class PipelineTest {
                 null,
                 false,
                 true,
-                false);
+                false,
+                null);
 
         PreviewStage stage1 = Mockito.mock(PreviewStage.class);
         Mockito.when(stage1.getType()).thenReturn(StageType.DEFAULT);

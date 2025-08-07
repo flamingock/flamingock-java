@@ -28,6 +28,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private boolean isRunAlways;
     private boolean isTransactional;
     private boolean isSystem;
+    private String targetSystem;
     private boolean isBeforeExecution;//only for old change units
 
     private CodeLoadedTaskBuilder() {
@@ -62,6 +63,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setRunAlways(preview.isRunAlways());
         setTransactional(preview.isTransactional());
         setSystem(preview.isSystem());
+        setTargetSystem(preview.getTargetSystem());
         return this;
     }
 
@@ -81,6 +83,11 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
     public CodeLoadedTaskBuilder setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public CodeLoadedTaskBuilder setTargetSystem(String targetSystem) {
+        this.targetSystem = targetSystem;
         return this;
     }
 
@@ -126,7 +133,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
                     Class.forName(changeUnitClass),
                     isRunAlways,
                     isTransactional,
-                    isSystem
+                    isSystem,
+                    targetSystem
             );
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);

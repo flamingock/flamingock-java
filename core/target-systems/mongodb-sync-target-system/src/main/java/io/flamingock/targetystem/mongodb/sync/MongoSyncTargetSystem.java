@@ -77,14 +77,14 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
         MongoDatabase database = context.getDependencyValue(MongoDatabase.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(MongoDatabase.class));
 
-        ReadConcern readConcern = context.getDependencyValue(ReadConcern.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(ReadConcern.class));
-
-        ReadPreference readPreference = context.getDependencyValue(ReadPreference.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(ReadPreference.class));
-
-        WriteConcern writeConcern = context.getDependencyValue(WriteConcern.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(WriteConcern.class));
+//        ReadConcern readConcern = context.getDependencyValue(ReadConcern.class)
+//                .orElseGet(() -> baseContext.getRequiredDependencyValue(ReadConcern.class));
+//
+//        ReadPreference readPreference = context.getDependencyValue(ReadPreference.class)
+//                .orElseGet(() -> baseContext.getRequiredDependencyValue(ReadPreference.class));
+//
+//        WriteConcern writeConcern = context.getDependencyValue(WriteConcern.class)
+//                .orElseGet(() -> baseContext.getRequiredDependencyValue(WriteConcern.class));
 
         txWrapper = new MongoSyncTxWrapper(mongoClient);
 
@@ -94,9 +94,9 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
                 : MongoSyncOnGoingTaskStatusRepository.builder(database)
                 .setCollectionName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
-                .withReadConcern(readConcern)
-                .withReadPreference(readPreference)
-                .withWriteConcern(writeConcern)
+//                .withReadConcern(readConcern)
+//                .withReadPreference(readPreference)
+//                .withWriteConcern(writeConcern)
                 .build();
     }
 

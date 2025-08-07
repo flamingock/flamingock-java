@@ -19,6 +19,7 @@ import java.util.function.Function;
 import com.mongodb.client.MongoDatabase;
 
 import io.flamingock.api.StageType;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.api.annotations.ChangeUnit;
@@ -49,9 +50,11 @@ public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;
     private final MongoDBAuditMapper<SpringDataMongoDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new SpringDataMongoDocumentWrapper(new Document()));
 
-    private static final Function<Class<?>, Trio<String, String, Boolean>> infoExtractor = c-> {
+    private static final Function<Class<?>, ChangeInfo> infoExtractor = c -> {
         ChangeUnit ann = c.getAnnotation(ChangeUnit.class);
-        return new Trio<>(ann.id(), ann.order(), ann.transactional());
+        TargetSystem targetSystemAnn = c.getAnnotation(TargetSystem.class);
+        String targetSystemId = targetSystemAnn != null ? targetSystemAnn.id() : null;
+        return new ChangeInfo(ann.id(), ann.order(), targetSystemId, ann.transactional());
     };
 
     public MongoDBTestHelper(MongoDatabase mongoDatabase) {
@@ -100,8 +103,8 @@ public class MongoDBTestHelper {
 
         List<CodePreviewChangeUnit> tasks = Arrays.stream(changeDefinitions)
                 .map(trio -> {
-                    Function<Class<?>, Trio<String, String, Boolean>> extractor = infoExtractor;
-                    Trio<String, String, Boolean> changeInfo = extractor.apply(trio.getFirst());
+                    Function<Class<?>, ChangeInfo> extractor = infoExtractor;
+                    ChangeInfo changeInfo = extractor.apply(trio.getFirst());
                     PreviewMethod rollback = null;
                     PreviewMethod rollbackBeforeExecution = null;
                     if (trio.getThird() != null) {
@@ -111,16 +114,17 @@ public class MongoDBTestHelper {
 
                     List<CodePreviewChangeUnit> changes = new ArrayList<>();
                     changes.add(new CodePreviewChangeUnit(
-                            changeInfo.getFirst(),
-                            changeInfo.getSecond(),
+                            changeInfo.changeId,
+                            changeInfo.order,
                             trio.getFirst().getName(),
                             new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
                             rollback,
                             new PreviewMethod("beforeExecution", getParameterTypes(trio.getSecond())),
                             rollbackBeforeExecution,
                             false,
-                            changeInfo.getThird(),
-                            false
+                            changeInfo.transactional,
+                            false,
+                            changeInfo.targetSystem
                     ));
                     return changes;
                 })
@@ -147,4 +151,33 @@ public class MongoDBTestHelper {
                 .collect(Collectors.toList());
     }
 
+    static class ChangeInfo {
+        private final String changeId;
+        private final String order;
+        private final String targetSystem;
+        private final boolean transactional;
+
+        public ChangeInfo(String changeId, String order, String targetSystem, boolean transactional) {
+            this.changeId = changeId;
+            this.order = order;
+            this.targetSystem = targetSystem;
+            this.transactional = transactional;
+        }
+
+        public String getChangeId() {
+            return changeId;
+        }
+
+        public String getOrder() {
+            return order;
+        }
+
+        public String getTargetSystem() {
+            return targetSystem;
+        }
+
+        public boolean isTransactional() {
+            return transactional;
+        }
+    }
 }
