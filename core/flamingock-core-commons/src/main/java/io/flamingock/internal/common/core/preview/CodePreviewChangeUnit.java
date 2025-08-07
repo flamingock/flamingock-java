@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.beans.Transient;
 
@@ -40,7 +41,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
                                  boolean runAlways,
                                  boolean transactional,
                                  boolean system,
-                                 String targetSystem) {
+                                 TargetSystemDescriptor targetSystem) {
         super(id, order, sourceClassPath, runAlways, transactional, system, targetSystem);
         this.executionMethodName = executionMethodPreview;
         this.rollbackMethodName = rollbackMethodPreview;
@@ -100,7 +101,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +
-                (targetSystem != null ? ", targetSystem='" + targetSystem + '\'' : "") +
+                (getTargetSystem() != null ? ", targetSystem='" + getTargetSystem().getId() + '\'' : "") +
                 '}';
     }
 

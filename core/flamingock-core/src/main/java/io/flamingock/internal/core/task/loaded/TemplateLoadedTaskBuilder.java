@@ -20,6 +20,7 @@ import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     private Object configuration;
     private Object execution;
     private Object rollback;
-    private String targetSystem;
+    private TargetSystemDescriptor targetSystem;
 
     private TemplateLoadedTaskBuilder() {
     }
@@ -60,7 +61,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
         return this;
     }
 
-    public TemplateLoadedTaskBuilder setTargetSystem(String targetSystem) {
+    @Override
+    public TemplateLoadedTaskBuilder setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
         return this;
     }

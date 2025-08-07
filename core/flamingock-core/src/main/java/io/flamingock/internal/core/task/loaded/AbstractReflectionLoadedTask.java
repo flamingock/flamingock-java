@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import java.util.Optional;
 
 /**
@@ -96,7 +97,7 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
                                         boolean runAlways,
                                         boolean transactional,
                                         boolean system,
-                                        String targetSystem) {
+                                        TargetSystemDescriptor targetSystem) {
         super(id, order, implementationClass.getName(), runAlways, transactional, system, targetSystem);
         this.fileName = fileName;
         this.implementationClass = implementationClass;

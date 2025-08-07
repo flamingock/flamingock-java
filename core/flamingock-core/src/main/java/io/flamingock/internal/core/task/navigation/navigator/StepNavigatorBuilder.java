@@ -96,7 +96,7 @@ public class StepNavigatorBuilder {
     }
 
     public StepNavigator build() {
-        ContextDecoratorTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem());
+        ContextDecoratorTargetSystem targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem() != null ? changeUnit.getTargetSystem().getId() : null);
 
         return new StepNavigator(
                 changeUnit,

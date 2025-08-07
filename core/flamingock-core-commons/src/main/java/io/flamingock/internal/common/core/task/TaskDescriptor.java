@@ -32,7 +32,7 @@ public interface TaskDescriptor extends Comparable<TaskDescriptor> {
 
     Optional<String> getOrder();
 
-    String getTargetSystem();
+    TargetSystemDescriptor getTargetSystem();
 
     default String pretty() {
         if (getOrder().isPresent()) {

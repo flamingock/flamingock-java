@@ -21,6 +21,7 @@ import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.List;
 
@@ -107,7 +108,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 false,
                 isTransactional(),
                 false,
-                targetSystem
+                TargetSystemDescriptor.fromId(targetSystem)
         );
     }
 

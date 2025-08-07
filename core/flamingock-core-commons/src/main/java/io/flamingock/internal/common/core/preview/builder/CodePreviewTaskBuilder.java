@@ -21,6 +21,7 @@ import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +51,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private boolean runAlways;
     private boolean transactional;
     private boolean system;
-    private String targetSystemId;
+    private TargetSystemDescriptor targetSystem;
 
     private CodePreviewTaskBuilder() {
     }
@@ -68,8 +69,8 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         return this;
     }
 
-    public CodePreviewTaskBuilder setTargetSystemId(String targetSystemId) {
-        this.targetSystemId = targetSystemId;
+    public CodePreviewTaskBuilder setTargetSystem(TargetSystemDescriptor targetSystem) {
+        this.targetSystem = targetSystem;
         return this;
     }
 
@@ -132,7 +133,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
             setSystem(false);
         }
         if(targetSystemAnnotation != null) {
-            setTargetSystemId(targetSystemAnnotation.id());
+            setTargetSystem(TargetSystemDescriptor.fromId(targetSystemAnnotation.id()));
         }
         return this;
     }
@@ -157,7 +158,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
                 runAlways,
                 transactional,
                 system,
-                targetSystemId);
+                targetSystem);
     }
 
     private Optional<PreviewMethod> getAnnotatedMethodInfo(TypeElement typeElement,

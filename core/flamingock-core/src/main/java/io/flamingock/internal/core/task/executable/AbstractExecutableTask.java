@@ -17,6 +17,7 @@ package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -80,7 +81,7 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
     }
 
     @Override
-    public String getTargetSystem() {
+    public TargetSystemDescriptor getTargetSystem() {
         return descriptor.getTargetSystem();
     }
 
@@ -107,7 +108,7 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
         return "ReflectionExecutableTask{" +
                 ", id='" + descriptor + '\'' +
                 ", state=" + alreadyExecuted +
-                ", targetSystem='" + getTargetSystem() +
+                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) +
                 "} ";
     }
 }

@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+
 import java.util.List;
 
 public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
@@ -40,7 +42,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                                      Object configuration,
                                      Object execution,
                                      Object rollback,
-                                     String targetSystem) {
+                                     TargetSystemDescriptor targetSystem) {
         super(id, order, templateName, runAlways, transactional, system, targetSystem);
         this.fileName = fileName;
         this.profiles = profiles;
@@ -105,7 +107,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +
                 ", system=" + system +
-                ", targetSystem='" + targetSystem +
+                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) +
                 '}';
     }
 }

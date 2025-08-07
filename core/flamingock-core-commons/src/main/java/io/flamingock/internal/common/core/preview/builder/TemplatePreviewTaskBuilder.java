@@ -17,6 +17,7 @@ package io.flamingock.internal.common.core.preview.builder;
 
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -37,7 +38,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private Object configuration;
     private Object execution;
     private Object rollback;
-    private String targetSystem;
+    private TargetSystemDescriptor targetSystem;
 
 
     private TemplatePreviewTaskBuilder() {
@@ -96,7 +97,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         this.configuration = configuration;
     }
 
-    public void setTargetSystem(String targetSystem) {
+    public void setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
     }
 

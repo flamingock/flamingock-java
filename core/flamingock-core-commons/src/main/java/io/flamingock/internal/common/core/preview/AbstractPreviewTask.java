@@ -18,6 +18,7 @@ package io.flamingock.internal.common.core.preview;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
@@ -36,14 +37,14 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                                boolean runAlways,
                                boolean transactional,
                                boolean system,
-                               String targetSystem) {
+                               TargetSystemDescriptor targetSystem) {
         super(id, order, source, runAlways, transactional, system, targetSystem);
     }
 
     @Override
     public String pretty() {
         String fromParent = super.pretty();
-        String targetInfo = String.format(", targetSystem='%s'", targetSystem);
+        String targetInfo = String.format(", targetSystem='%s'", getTargetSystem().getId());
         return fromParent + targetInfo;
     }
 
@@ -55,7 +56,7 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +
-                ", targetSystem='" + targetSystem +
+                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) +
                 '}';
     }
 }

@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 public interface LoadedTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
@@ -47,7 +48,7 @@ public interface LoadedTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
     LoadedTaskBuilder<LOADED_TASK> setId(String id);
 
-    LoadedTaskBuilder<LOADED_TASK>  setTargetSystem(String targetSystem);
+    LoadedTaskBuilder<LOADED_TASK> setTargetSystem(TargetSystemDescriptor targetSystem);
 
     LoadedTaskBuilder<LOADED_TASK> setOrderInContent(String order);
 

@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import io.flamingock.internal.util.ReflectionUtil;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
                                        boolean runAlways,
                                        boolean transactional,
                                        boolean system,
-                                       String targetSystem) {
+                                       TargetSystemDescriptor targetSystem) {
         super(fileName, id, order, implementationClass, runAlways, transactional, system, targetSystem);
 
         this.categories = ReflectionUtil.findAllAnnotations(implementationClass, Categories.class).stream()

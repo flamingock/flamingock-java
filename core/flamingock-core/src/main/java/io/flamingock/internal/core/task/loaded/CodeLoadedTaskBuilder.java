@@ -19,6 +19,7 @@ import io.flamingock.internal.util.StringUtil;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChangeUnit> {
 
@@ -28,7 +29,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private boolean isRunAlways;
     private boolean isTransactional;
     private boolean isSystem;
-    private String targetSystem;
+    private TargetSystemDescriptor targetSystem;
     private boolean isBeforeExecution;//only for old change units
 
     private CodeLoadedTaskBuilder() {
@@ -86,7 +87,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setTargetSystem(String targetSystem) {
+    @Override
+    public CodeLoadedTaskBuilder setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
         return this;
     }

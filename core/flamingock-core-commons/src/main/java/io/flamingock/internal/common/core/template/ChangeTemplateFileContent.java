@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.common.core.template;
 
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+
 public class ChangeTemplateFileContent {
     private String id;
     private String order;
@@ -24,7 +26,7 @@ public class ChangeTemplateFileContent {
     private Object configuration;
     private Object execution;
     private Object rollback;
-    private String targetSystem;
+    private TargetSystemDescriptor targetSystem;
 
     public ChangeTemplateFileContent() {
     }
@@ -37,7 +39,7 @@ public class ChangeTemplateFileContent {
                                      Object configuration,
                                      Object execution,
                                      Object rollback,
-                                     String targetSystem) {
+                                     TargetSystemDescriptor targetSystem) {
         this.id = id;
         this.order = order;
         this.template = template;
@@ -115,11 +117,11 @@ public class ChangeTemplateFileContent {
         this.rollback = rollback;
     }
 
-    public String getTargetSystem() {
+    public TargetSystemDescriptor getTargetSystem() {
         return targetSystem;
     }
 
-    public void setTargetSystem(String targetSystem) {
+    public void setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
     }
 }

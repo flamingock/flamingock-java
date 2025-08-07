@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.util.ReflectionUtil;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -43,7 +44,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
                              Object configuration,
                              Object execution,
                              Object rollback,
-                             String targetSystem) {
+                             TargetSystemDescriptor targetSystem) {
         super(changeUnitFileName, id, order, templateClass, runAlways, transactional, systemTask, targetSystem);
         this.profiles = profiles;
         this.transactional = transactional;

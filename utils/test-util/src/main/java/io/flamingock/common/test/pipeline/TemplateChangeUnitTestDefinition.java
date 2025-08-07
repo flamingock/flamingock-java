@@ -17,6 +17,7 @@ package io.flamingock.common.test.pipeline;
 
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.Collections;
 
@@ -75,7 +76,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 configuration,
                 execution,
                 rollback,
-                targetSystem
+                TargetSystemDescriptor.fromId(targetSystem)
         );
     }
 

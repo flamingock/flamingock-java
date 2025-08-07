@@ -17,6 +17,7 @@ package io.flamingock.cloud.transaction.sql.utils;
 
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.api.annotations.ChangeUnit;
@@ -117,13 +118,13 @@ public class PipelineTestHelper {
     static class ChangeInfo {
         private final String changeId;
         private final String order;
-        private final String targetSystem;
+        private final TargetSystemDescriptor targetSystem;
         private final boolean transactional;
 
-        public ChangeInfo(String changeId, String order, String targetSystem, boolean transactional) {
+        public ChangeInfo(String changeId, String order, String targetSystemId, boolean transactional) {
             this.changeId = changeId;
             this.order = order;
-            this.targetSystem = targetSystem;
+            this.targetSystem = new TargetSystemDescriptor(targetSystemId);
             this.transactional = transactional;
         }
 
@@ -135,7 +136,7 @@ public class PipelineTestHelper {
             return order;
         }
 
-        public String getTargetSystem() {
+        public TargetSystemDescriptor getTargetSystem() {
             return targetSystem;
         }
 
