@@ -15,17 +15,17 @@
  */
 package io.flamingock.community.couchbase.changes.failedWithRollback;
 
-import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.Collection;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 
 import java.util.Arrays;
 
 @ChangeUnit(id = "create-index", order = "001")
-public class ACreateIndex {
+public class _001_create_index {
 
 	@Execution
-	public void execution(Cluster cluster) {
-		cluster.queryIndexes().createIndex("bucket", "idx_standalone_index", Arrays.asList("field1, field2"));
+	public void execution(Collection collection) {
+		collection.queryIndexes().createIndex("idx_standalone_index", Arrays.asList("field1", "field2"));
 	}
 }

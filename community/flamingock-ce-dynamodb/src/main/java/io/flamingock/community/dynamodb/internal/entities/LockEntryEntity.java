@@ -15,11 +15,11 @@
  */
 package io.flamingock.community.dynamodb.internal.entities;
 
-import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.community.lock.LockEntry;
 import io.flamingock.internal.core.community.lock.LockEntryField;
 import io.flamingock.internal.core.engine.lock.LockAcquisition;
 import io.flamingock.internal.core.engine.lock.LockStatus;
+import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
@@ -52,7 +52,7 @@ public class LockEntryEntity {
     }
 
     @DynamoDbPartitionKey
-    @DynamoDbAttribute(Constants.LOCK_PK)
+    @DynamoDbAttribute(DynamoDBConstants.LOCK_PK)
     public String getPartitionKey() {
         return partitionKey;
     }
@@ -79,7 +79,7 @@ public class LockEntryEntity {
         this.status = status;
     }
 
-    @DynamoDbAttribute(Constants.LOCK_OWNER)
+    @DynamoDbAttribute(DynamoDBConstants.LOCK_OWNER)
     public String getLockOwner() {
         return lockOwner;
     }

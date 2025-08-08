@@ -15,12 +15,17 @@
  */
 package io.flamingock.community.couchbase;
 
+import com.couchbase.client.core.io.CollectionIdentifier;
+import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.community.driver.DriverConfigurable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 
 public class CouchbaseConfiguration implements DriverConfigurable {
 
     private boolean autoCreate = true;
+    private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
+    private String auditRepositoryName = Constants.DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = Constants.DEFAULT_LOCK_STORE_NAME;
 
     public boolean isAutoCreate() {
         return autoCreate;
@@ -30,8 +35,38 @@ public class CouchbaseConfiguration implements DriverConfigurable {
         this.autoCreate = autoCreate;
     }
 
+    public String getScopeName() {
+        return scopeName;
+    }
+
+    public void setScopeName(String scopeName) {
+        this.scopeName = scopeName;
+    }
+
+    public String getAuditRepositoryName() {
+        return auditRepositoryName;
+    }
+
+    public void setAuditRepositoryName(String auditRepositoryName) {
+        this.auditRepositoryName = auditRepositoryName;
+    }
+
+    public String getLockRepositoryName() {
+        return lockRepositoryName;
+    }
+
+    public void setLockRepositoryName(String lockRepositoryName) {
+        this.lockRepositoryName = lockRepositoryName;
+    }
+
     public void mergeConfig(ContextResolver dependencyContext) {
-        dependencyContext.getPropertyAs("couchbase.autoCreate", boolean.class)
+        dependencyContext.getPropertyAs("couchbase.autoCreate", Boolean.class)
                 .ifPresent(this::setAutoCreate);
+        dependencyContext.getPropertyAs("couchbase.scopeName", String.class)
+                .ifPresent(this::setScopeName);
+        dependencyContext.getPropertyAs("couchbase.auditRepositoryName", String.class)
+                .ifPresent(this::setAuditRepositoryName);
+        dependencyContext.getPropertyAs("couchbase.lockRepositoryName", String.class)
+                .ifPresent(this::setLockRepositoryName);
     }
 }

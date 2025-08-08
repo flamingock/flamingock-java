@@ -6,6 +6,7 @@ dependencies {
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":community:flamingock-ce-dynamodb"))
 
+
     testImplementation(project(":utils:test-util"))
 
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")

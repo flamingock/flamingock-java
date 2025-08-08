@@ -144,6 +144,9 @@ include("utils:dynamodb-util")
 project(":utils:dynamodb-util").name = "dynamodb-util"
 project(":utils:dynamodb-util").projectDir = file("utils/dynamodb-util")
 
+include("utils:couchbase-util")
+project(":utils:couchbase-util").name = "couchbase-util"
+project(":utils:couchbase-util").projectDir = file("utils/couchbase-util")
 
 //////////////////////////////////////
 // IMPORTER

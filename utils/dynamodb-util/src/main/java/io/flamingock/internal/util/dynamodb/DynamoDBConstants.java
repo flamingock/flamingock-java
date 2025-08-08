@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.changes.failedWithRollback;
+package io.flamingock.internal.util.dynamodb;
 
-import com.couchbase.client.java.Collection;
-import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+public final class DynamoDBConstants {
 
-@ChangeUnit( id="insert-document" , order = "002")
-public class BInsertDocument {
+    public static final String AUDIT_LOG_PK = "partitionKey";
 
-    @Execution
-    public void execution(Collection collection) {
-        collection.insert("test-client-Federico", JsonObject.create().put("name", "Federico"));
+    public static final String LOCK_PK = "partitionKey";
+    public static final String LOCK_OWNER = "lockOwner";
+
+    private DynamoDBConstants() {
     }
 }

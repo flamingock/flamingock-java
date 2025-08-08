@@ -16,12 +16,14 @@
 package io.flamingock.community.couchbase.internal;
 
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
-import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.kv.GetResult;
 import com.couchbase.client.java.kv.RemoveOptions;
 import com.couchbase.client.java.kv.ReplaceOptions;
+import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
+import io.flamingock.internal.common.couchbase.CouchbaseLockMapper;
 import io.flamingock.internal.core.community.lock.LocalLockService;
 import io.flamingock.internal.core.engine.lock.LockAcquisition;
 import io.flamingock.internal.core.community.lock.LockEntry;
@@ -30,59 +32,47 @@ import io.flamingock.internal.core.engine.lock.LockServiceException;
 import io.flamingock.internal.core.engine.lock.LockStatus;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.TimeUtil;
-import io.flamingock.community.couchbase.internal.util.CouchBaseUtil;
-import io.flamingock.community.couchbase.internal.util.LockEntryKeyGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Set;
-
-import static io.flamingock.internal.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_FIELD;
-import static io.flamingock.community.couchbase.internal.CouchbaseConstants.DOCUMENT_TYPE_KEY;
-import static io.flamingock.community.couchbase.internal.CouchbaseConstants.DOCUMENT_TYPE_LOCK_ENTRY;
 
 public class CouchbaseLockService implements LocalLockService {
 
     private static final Logger logger = LoggerFactory.getLogger(CouchbaseLockService.class);
 
-    private static final Set<String> QUERY_FIELDS = Collections.emptySet();
-
-    protected final Collection collection;
     protected final Cluster cluster;
-    protected final CouchbaseGenericRepository couchbaseGenericRepository;
+    protected final Bucket bucket;
+    protected Collection collection;
+    protected CouchbaseCollectionInitializator collectionInitializator;
 
-    private final LockEntryKeyGenerator keyGenerator = new LockEntryKeyGenerator();
+    private final CouchbaseLockMapper mapper = new CouchbaseLockMapper();
     private final TimeService timeService;
 
-    protected CouchbaseLockService(Cluster cluster, Collection collection, TimeService timeService) {
+    protected CouchbaseLockService(Cluster cluster, Bucket bucket, TimeService timeService) {
         this.cluster = cluster;
-        this.collection = collection;
-        this.couchbaseGenericRepository = new CouchbaseGenericRepository(cluster, collection, QUERY_FIELDS);
+        this.bucket = bucket;
         this.timeService = timeService;
     }
 
-    protected void initialize(boolean indexCreation) {
-        this.couchbaseGenericRepository.initialize(indexCreation);
+    protected void initialize(boolean autoCreate, String scopeName, String collectionName) {
+        this.collectionInitializator = new CouchbaseCollectionInitializator(cluster, bucket, scopeName, collectionName);
+        this.collectionInitializator.initialize(autoCreate);
+        this.collection = this.bucket.scope(scopeName).collection(collectionName);
     }
 
     @Override
     public LockAcquisition upsert(LockKey key, RunnerId owner, long leaseMillis) {
         LockEntry newLock = new LockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
-        String keyId = keyGenerator.toKey(newLock);
+        String keyId = toKey(newLock);
         try {
             GetResult result = collection.get(keyId);
-            LockEntry existingLock = CouchBaseUtil.lockEntryFromEntity(result.contentAsObject());
+            LockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
             if (newLock.getOwner().equals(existingLock.getOwner()) ||
                     LocalDateTime.now().isAfter(existingLock.getExpiresAt())) {
                 logger.debug("Lock with key {} already owned by us or is expired, so trying to perform a lock.",
                         existingLock.getKey());
-                collection.replace(keyId, toEntity(newLock), ReplaceOptions.replaceOptions().cas(result.cas()));
+                collection.replace(keyId, mapper.toDocument(newLock), ReplaceOptions.replaceOptions().cas(result.cas()));
                 logger.debug("Lock with key {} updated", keyId);
             } else if (LocalDateTime.now().isBefore(existingLock.getExpiresAt())) {
                 logger.debug("Already locked by {}, will expire at {}", existingLock.getOwner(),
@@ -92,33 +82,23 @@ public class CouchbaseLockService implements LocalLockService {
             }
         } catch (DocumentNotFoundException documentNotFoundException) {
             logger.debug("Lock with key {} does not exist, so trying to perform a lock.", newLock.getKey());
-            collection.insert(keyId, toEntity(newLock));
+            collection.insert(keyId, mapper.toDocument(newLock));
             logger.debug("Lock with key {} created", keyId);
         }
         return new LockAcquisition(owner, leaseMillis);
     }
 
-    private JsonObject toEntity(LockEntry lockEntry) {
-        JsonObject document = JsonObject.create();
-        this.couchbaseGenericRepository.addField(document, KEY_FIELD, lockEntry.getKey());
-        this.couchbaseGenericRepository.addField(document, OWNER_FIELD, lockEntry.getOwner());
-        this.couchbaseGenericRepository.addField(document, STATUS_FIELD, lockEntry.getStatus().name());
-        this.couchbaseGenericRepository.addField(document, EXPIRES_AT_FIELD, TimeUtil.toDate(lockEntry.getExpiresAt()));
-        this.couchbaseGenericRepository.addField(document, DOCUMENT_TYPE_KEY, DOCUMENT_TYPE_LOCK_ENTRY);
-        return document;
-    }
-
     @Override
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
         LockEntry newLock = new LockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
-        String keyId = keyGenerator.toKey(newLock);
+        String keyId = toKey(newLock);
         try {
             GetResult result = collection.get(keyId);
-            LockEntry existingLock = CouchBaseUtil.lockEntryFromEntity(result.contentAsObject());
+            LockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
             if (newLock.getOwner().equals(existingLock.getOwner())) {
                 logger.debug("Lock with key {} already owned by us, so trying to perform a lock.",
                         existingLock.getKey());
-                collection.replace(keyId, toEntity(newLock), ReplaceOptions.replaceOptions().cas(result.cas()));
+                collection.replace(keyId, mapper.toDocument(newLock), ReplaceOptions.replaceOptions().cas(result.cas()));
                 logger.debug("Lock with key {} updated", keyId);
             } else {
                 logger.debug("Already locked by {}, will expire at {}", existingLock.getOwner(),
@@ -135,10 +115,10 @@ public class CouchbaseLockService implements LocalLockService {
 
     @Override
     public LockAcquisition getLock(LockKey lockKey) {
-        String key = keyGenerator.toKey(lockKey.toString());
+        String key = toKey(lockKey);
         try {
             GetResult result = collection.get(key);
-            return CouchBaseUtil.lockAcquisitionFromEntity(result.contentAsObject());
+            return mapper.lockAcquisitionFromDocument(result.contentAsObject());
         } catch (DocumentNotFoundException documentNotFoundException) {
             logger.debug("Lock for key {} was not found.", key);
             return null;
@@ -147,10 +127,10 @@ public class CouchbaseLockService implements LocalLockService {
 
     @Override
     public void releaseLock(LockKey lockKey, RunnerId owner) {
-        String key = keyGenerator.toKey(lockKey.toString());
+        String key = toKey(lockKey);
         try {
             GetResult result = collection.get(key);
-            LockEntry existingLock = CouchBaseUtil.lockEntryFromEntity(result.contentAsObject());
+            LockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
             if (owner.equals(RunnerId.fromString(existingLock.getOwner()))) {
                 logger.debug("Lock for key {} belongs to us, so removing.", key);
                 collection.remove(key, RemoveOptions.removeOptions().cas(result.cas()));
@@ -160,5 +140,13 @@ public class CouchbaseLockService implements LocalLockService {
         } catch (DocumentNotFoundException documentNotFoundException) {
             logger.debug("Lock for key {} is not found, nothing to do", key);
         }
+    }
+
+    private String toKey(LockEntry lockEntry) {
+        return lockEntry.getKey();
+    }
+
+    private String toKey(LockKey lockKey) {
+        return lockKey.toString();
     }
 }

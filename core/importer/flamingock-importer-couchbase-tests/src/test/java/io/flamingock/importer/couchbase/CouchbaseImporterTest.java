@@ -15,7 +15,7 @@
  */
 package io.flamingock.importer.couchbase;
 
-import com.couchbase.client.java.Bucket;
+import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
@@ -23,9 +23,11 @@ import com.couchbase.client.java.manager.bucket.BucketManager;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -34,12 +36,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.flamingock.api.StageType.LEGACY;
 import static io.flamingock.api.StageType.SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @EnableFlamingock(
         stages = {
@@ -51,17 +53,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Testcontainers
 public class CouchbaseImporterTest {
 
-    public static final String MONGOCK_CHANGE_LOGS = "mongockChangeLogs";
-    private static final String DB_NAME = "test";
+    public static final String FLAMINGOCK_BUCKET_NAME = "test";
+    public static final String FLAMINGOCK_SCOPE_NAME = "flamingock";
+    public static final String FLAMINGOCK_COLLECTION_NAME = Constants.DEFAULT_AUDIT_STORE_NAME;
+
+    public static final String MONGOCK_BUCKET_NAME = "test";
+    public static final String MONGOCK_SCOPE_NAME = CollectionIdentifier.DEFAULT_SCOPE;
+    public static final String MONGOCK_COLLECTION_NAME = CollectionIdentifier.DEFAULT_COLLECTION;
 
 
     @Container
-    static final CouchbaseContainer couchbaseContainer = new CouchbaseContainer("couchbase/server:7.2.2")
-            .withBucket(new org.testcontainers.couchbase.BucketDefinition(DB_NAME));
+    static final CouchbaseContainer couchbaseContainer = new CouchbaseContainer("couchbase/server:7.2.4")
+            .withBucket(new org.testcontainers.couchbase.BucketDefinition(FLAMINGOCK_BUCKET_NAME));
 
     private static Cluster cluster;
-    private static Bucket bucket;
-    private static Collection collection;
 
     @BeforeAll
     static void setupAll() {
@@ -71,31 +76,32 @@ public class CouchbaseImporterTest {
                 couchbaseContainer.getUsername(),
                 couchbaseContainer.getPassword()
         );
+        cluster.bucket(FLAMINGOCK_BUCKET_NAME).waitUntilReady(Duration.ofSeconds(10));
 
-        bucket = cluster.bucket(DB_NAME);
-        collection = cluster.bucket(DB_NAME).defaultCollection();
-
+        // Setup Mongock Bucket, Scope and Collection
         BucketManager bucketManager = cluster.buckets();
 
         int ramQuotaMB = 100;
 
-        if (!bucketManager.getAllBuckets().containsKey(MONGOCK_CHANGE_LOGS)) {
-            bucketManager.createBucket(BucketSettings.create(MONGOCK_CHANGE_LOGS).ramQuotaMB(ramQuotaMB));
-            cluster.bucket(MONGOCK_CHANGE_LOGS).waitUntilReady(Duration.ofSeconds(10));
+        if (!bucketManager.getAllBuckets().containsKey(MONGOCK_BUCKET_NAME)) {
+            bucketManager.createBucket(BucketSettings.create(MONGOCK_BUCKET_NAME).ramQuotaMB(ramQuotaMB));
+            cluster.bucket(MONGOCK_BUCKET_NAME).waitUntilReady(Duration.ofSeconds(10));
         }
 
-        cluster.query("CREATE PRIMARY INDEX IF NOT EXISTS ON `" + MONGOCK_CHANGE_LOGS + "`");
+        CouchbaseCollectionHelper.createScopeIfNotExists(cluster, MONGOCK_BUCKET_NAME, MONGOCK_SCOPE_NAME);
+        CouchbaseCollectionHelper.createCollectionIfNotExists(cluster, MONGOCK_BUCKET_NAME, MONGOCK_SCOPE_NAME, MONGOCK_COLLECTION_NAME);
+        CouchbaseCollectionHelper.createPrimaryIndexIfNotExists(cluster, MONGOCK_BUCKET_NAME, MONGOCK_SCOPE_NAME, MONGOCK_COLLECTION_NAME);
     }
 
-    @BeforeEach
+    @AfterEach
     void cleanUp() {
-        cluster.query("DELETE FROM `" + MONGOCK_CHANGE_LOGS + "`");
-        cluster.query("DELETE FROM `" + DB_NAME + "`");
+        CouchbaseCollectionHelper.deleteAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME);
+        CouchbaseCollectionHelper.deleteAllDocuments(cluster, MONGOCK_BUCKET_NAME, MONGOCK_SCOPE_NAME, MONGOCK_COLLECTION_NAME);
     }
 
     @Test
     void testImporterIntegration() {
-        Collection originCollection = cluster.bucket(MONGOCK_CHANGE_LOGS).defaultCollection();
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
         JsonObject doc = JsonObject.create()
                 .put("executionId", "exec-1")
                 .put("changeId", "change-1")
@@ -109,27 +115,23 @@ public class CouchbaseImporterTest {
                 .put("executionMillis", 123L)
                 .put("executionHostName", "host1")
                 .putNull("errorTrace")
-                .put("systemChange", true);
+                .put("systemChange", true)
+                .put("_doctype", "mongockChangeEntry");
         originCollection.upsert("change-1", doc);
 
         Runner flamingock = io.flamingock.community.Flamingock.builder()
                 .addDependency(cluster)
-                .addDependency(collection)
-                .addDependency(bucket)
+                .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
+                .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
+                .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
                 .disableTransaction()
                 .build();
 
         flamingock.run();
 
-        List<JsonObject> auditLog = cluster.query(
-                        "SELECT * FROM `" + DB_NAME + "`"
-                )
-                .rowsAsObject()
-                .stream()
-                .map(row -> row.getObject(DB_NAME))
-                .collect(Collectors.toList());
+        List<JsonObject> auditLog = CouchbaseCollectionHelper.selectAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME);
 
-        assertTrue(auditLog.size() > 0, "Audit log should not be empty");
+        assertFalse(auditLog.isEmpty(), "Audit log should not be empty");
 
         JsonObject entry = auditLog.stream()
                 .filter(e -> "change-1".equals(e.getString("changeId")))
@@ -147,8 +149,9 @@ public class CouchbaseImporterTest {
     void failIfEmptyOrigin() {
         Runner flamingock = io.flamingock.community.Flamingock.builder()
                 .addDependency(cluster)
-                .addDependency(collection)
-                .addDependency(bucket)
+                .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
+                .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
+                .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
                 .disableTransaction()
                 .build();
 

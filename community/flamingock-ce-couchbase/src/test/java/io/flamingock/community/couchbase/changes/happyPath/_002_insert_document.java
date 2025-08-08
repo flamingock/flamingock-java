@@ -20,11 +20,11 @@ import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 
-@ChangeUnit( id="insert-another-document" , order = "003")
-public class CInsertAnotherDocument {
+@ChangeUnit( id="insert-document" , order = "002")
+public class _002_insert_document {
 
     @Execution
     public void execution(Collection collection) {
-        collection.insert("test-client-Jorge", JsonObject.create().put("name", "Jorge"));
+        collection.insert("test-client-Federico", JsonObject.create().put("name", "Federico"));
     }
 }

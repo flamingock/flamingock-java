@@ -16,7 +16,7 @@
 package io.flamingock.community.couchbase.internal;
 
 import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.Collection;
+import com.couchbase.client.java.Bucket;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
@@ -30,8 +30,8 @@ import java.util.Optional;
 
 public class CouchbaseEngine extends AbstractLocalEngine {
 
-    private final Collection collection;
     private final Cluster cluster;
+    private final Bucket bucket;
 
     private CouchbaseAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
@@ -40,23 +40,23 @@ public class CouchbaseEngine extends AbstractLocalEngine {
 
 
     public CouchbaseEngine(Cluster cluster,
-                           Collection collection,
+                           Bucket bucket,
                            CoreConfigurable coreConfiguration,
                            CommunityConfigurable localConfiguration,
                            CouchbaseConfiguration driverConfiguration) {
         super(localConfiguration);
         this.cluster = cluster;
-        this.collection = collection;
+        this.bucket = bucket;
         this.driverConfiguration = driverConfiguration;
         this.coreConfiguration = coreConfiguration;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        auditor = new CouchbaseAuditor(cluster, collection);
-        auditor.initialize(driverConfiguration.isAutoCreate());
-        CouchbaseLockService lockService = new CouchbaseLockService(cluster, collection, TimeService.getDefault());
-        lockService.initialize(driverConfiguration.isAutoCreate());
+        auditor = new CouchbaseAuditor(cluster, bucket);
+        auditor.initialize(driverConfiguration.isAutoCreate(), driverConfiguration.getScopeName(), driverConfiguration.getAuditRepositoryName());
+        CouchbaseLockService lockService = new CouchbaseLockService(cluster, bucket, TimeService.getDefault());
+        lockService.initialize(driverConfiguration.isAutoCreate(), driverConfiguration.getScopeName(), driverConfiguration.getLockRepositoryName());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
     }
 

@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.changes.failedWithoutRollback;
+package io.flamingock.community.couchbase.changes.happyPath;
 
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 
-@ChangeUnit( id="execution-with-exception" , order = "003")
-public class CExecutionWithException {
+@ChangeUnit( id="insert-another-document" , order = "003")
+public class _003_insert_another_document {
 
     @Execution
     public void execution(Collection collection) {
         collection.insert("test-client-Jorge", JsonObject.create().put("name", "Jorge"));
-        throw new RuntimeException("test");
     }
 }

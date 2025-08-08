@@ -16,7 +16,9 @@
 package io.flamingock.importer.couchbase;
 
 import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
+import com.couchbase.client.java.query.QueryScanConsistency;
 import io.flamingock.importer.ImporterAdapter;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
@@ -27,19 +29,25 @@ public class CouchbaseImporterAdapter implements ImporterAdapter {
 
     private final Cluster cluster;
     private final String bucketName;
+    private final String scopeName;
+    private final String collectionName;
 
-    public CouchbaseImporterAdapter(Cluster cluster, String bucketName) {
+    public CouchbaseImporterAdapter(Cluster cluster, String bucketName, String scopeName, String collectionName) {
         this.cluster = cluster;
         this.bucketName = bucketName;
+        this.scopeName = scopeName;
+        this.collectionName = collectionName;
     }
 
     @Override
     public List<AuditEntry> getAuditEntries() {
         QueryResult result = cluster.query(
-                "SELECT `" + bucketName + "`.* FROM `" + bucketName + "`"
+                String.format("SELECT `%s`.* FROM `%s`.`%s`.`%s`", collectionName, bucketName, scopeName, collectionName),
+                QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS)
         );
 
         return result.rowsAsObject().stream()
+                .filter(d -> d.getString("_doctype") != null && d.getString("_doctype").equals("mongockChangeEntry"))
                 .map(CouchbaseChangeEntry::fromJson)
                 .map(CouchbaseChangeEntry::toAuditEntry)
                 .collect(Collectors.toList());

@@ -121,7 +121,7 @@ dependencies {
     
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:[2.0.0,3.0.0)")
-    compileOnly("com.couchbase.client:java-client:3.4.3")
+    compileOnly("com.couchbase.client:java-client:3.6.0")
     
     // Test dependencies...
 }
@@ -209,7 +209,7 @@ dependencies {
     implementation(project(":core:flamingock-core"))
     api(project(":community:flamingock-ce-commons"))
     
-    compileOnly("com.couchbase.client:java-client:3.4.3")
+    compileOnly("com.couchbase.client:java-client:3.6.0")
     
     // Test dependencies...
 }

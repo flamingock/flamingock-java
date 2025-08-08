@@ -13,22 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.internal.util;
+package io.flamingock.community.couchbase.changes.happyPath;
 
-import io.flamingock.internal.core.community.lock.LockEntry;
-import io.flamingock.community.couchbase.internal.CouchbaseConstants;
+import com.couchbase.client.java.Collection;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
 
-public class LockEntryKeyGenerator {
-  
-  public String toKey(LockEntry lockEntry) {
-    return toKey(lockEntry.getKey());
-  }
-  
-  public String toKey(String key) {
-    return new StringBuilder()
-        .append(CouchbaseConstants.DOCUMENT_TYPE_LOCK_ENTRY)
-        .append('-')
-        .append(key)
-        .toString();
-  }
+import java.util.Arrays;
+
+@ChangeUnit(id = "create-index", order = "001")
+public class _001_create_index {
+
+	@Execution
+	public void execution(Collection collection) {
+		collection.queryIndexes().createIndex("idx_standalone_index", Arrays.asList("field1", "field2"));
+	}
 }

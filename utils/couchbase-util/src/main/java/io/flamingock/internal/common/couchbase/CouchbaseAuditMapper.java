@@ -1,0 +1,74 @@
+/*
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.internal.common.couchbase;
+
+import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.util.TimeUtil;
+
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_AUTHOR;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGEUNIT_CLASS;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_INVOKED_METHOD;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ERROR_TRACE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TYPE;
+
+public class CouchbaseAuditMapper {
+
+    public JsonObject toDocument(AuditEntry auditEntry) {
+        JsonObject document = JsonObject.create();
+        CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_ID, auditEntry.getExecutionId());
+        CouchbaseUtils.addFieldToDocument(document, KEY_STAGE_ID, auditEntry.getStageId());
+        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_ID, auditEntry.getTaskId());
+        CouchbaseUtils.addFieldToDocument(document, KEY_AUTHOR, auditEntry.getAuthor());
+        CouchbaseUtils.addFieldToDocument(document, KEY_TIMESTAMP, TimeUtil.toDate(auditEntry.getCreatedAt()));
+        CouchbaseUtils.addFieldToDocument(document, KEY_STATE, auditEntry.getState().name());
+        CouchbaseUtils.addFieldToDocument(document, KEY_TYPE, auditEntry.getType().name());
+        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGEUNIT_CLASS, auditEntry.getClassName());
+        CouchbaseUtils.addFieldToDocument(document, KEY_INVOKED_METHOD, auditEntry.getMethodName());
+        CouchbaseUtils.addFieldToDocument(document, KEY_METADATA, auditEntry.getMetadata());
+        CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_MILLIS, auditEntry.getExecutionMillis());
+        CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
+        CouchbaseUtils.addFieldToDocument(document, KEY_ERROR_TRACE, auditEntry.getErrorTrace());
+        CouchbaseUtils.addFieldToDocument(document, KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
+        return document;
+    }
+
+    public AuditEntry fromDocument(JsonObject jsonObject) {
+        return new AuditEntry(jsonObject.getString(KEY_EXECUTION_ID),
+                jsonObject.getString(KEY_STAGE_ID),
+                jsonObject.getString(KEY_CHANGE_ID),
+                jsonObject.getString(KEY_AUTHOR),
+                jsonObject.get(KEY_TIMESTAMP) != null ? TimeUtil.toLocalDateTime(jsonObject.getLong(KEY_TIMESTAMP)) : null,
+                jsonObject.get(KEY_STATE) != null ? AuditEntry.Status.valueOf(jsonObject.getString(KEY_STATE)) : null,
+                jsonObject.get(KEY_TYPE) != null ? AuditEntry.ExecutionType.valueOf(jsonObject.getString(KEY_TYPE)) : null,
+                jsonObject.getString(KEY_CHANGEUNIT_CLASS),
+                jsonObject.getString(KEY_INVOKED_METHOD),
+                jsonObject.getLong(KEY_EXECUTION_MILLIS),
+                jsonObject.getString(KEY_EXECUTION_HOSTNAME),
+                jsonObject.get(KEY_METADATA) != null ? jsonObject.getObject(KEY_METADATA).toMap() : null,
+                jsonObject.getBoolean(KEY_SYSTEM_CHANGE),
+                jsonObject.getString(KEY_ERROR_TRACE));
+    }
+}

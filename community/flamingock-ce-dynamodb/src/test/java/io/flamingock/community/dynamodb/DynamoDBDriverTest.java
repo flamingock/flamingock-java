@@ -32,6 +32,7 @@ import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
+import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,16 +140,16 @@ class DynamoDBDriverTest {
 
         DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);
         dynamoDBUtil.createTable(
-                dynamoDBUtil.getAttributeDefinitions(Constants.AUDIT_LOG_PK, null),
-                dynamoDBUtil.getKeySchemas(Constants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getKeySchemas(DynamoDBConstants.AUDIT_LOG_PK, null),
                 dynamoDBUtil.getProvisionedThroughput(1L, 2L),
                 CUSTOM_AUDIT_REPOSITORY_NAME,
                 emptyList(),
                 emptyList()
         );
         dynamoDBUtil.createTable(
-                dynamoDBUtil.getAttributeDefinitions(Constants.LOCK_PK, null),
-                dynamoDBUtil.getKeySchemas(Constants.LOCK_PK, null),
+                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
+                dynamoDBUtil.getKeySchemas(DynamoDBConstants.LOCK_PK, null),
                 dynamoDBUtil.getProvisionedThroughput(1L, 2L),
                 CUSTOM_LOCK_REPOSITORY_NAME,
                 emptyList(),

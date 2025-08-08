@@ -21,6 +21,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
+import io.flamingock.internal.common.core.audit.AuditEntryField;
 import io.flamingock.internal.core.community.Constants;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeAll;
@@ -89,12 +90,12 @@ class MongoChangeTemplateTest {
 
         assertEquals("create-users-collection-with-index", createCollectionAudit.getString("changeId"));
         assertEquals("EXECUTED", createCollectionAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
+        assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
 
         Document seedAudit = auditLog.get(1);
         assertEquals("seed-users", seedAudit.getString("changeId"));
         assertEquals("EXECUTED", seedAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
+        assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
 
         List<Document> users = mongoDatabase.getCollection("users")
                 .find()

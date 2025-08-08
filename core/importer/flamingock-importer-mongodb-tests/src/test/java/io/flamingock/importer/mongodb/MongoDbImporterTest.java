@@ -23,6 +23,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.internal.common.core.audit.AuditEntryField;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.Runner;
@@ -114,12 +115,12 @@ public class MongoDbImporterTest {
 
         Assertions.assertEquals("create-users-collection-with-index", createCollectionAudit.getString("changeId"));
         Assertions.assertEquals("EXECUTED", createCollectionAudit.getString("state"));
-        Assertions.assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
+        Assertions.assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
 
         Document seedAudit = auditLog.get(7);
         Assertions.assertEquals("seed-users", seedAudit.getString("changeId"));
         Assertions.assertEquals("EXECUTED", seedAudit.getString("state"));
-        Assertions.assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(Constants.KEY_CHANGEUNIT_CLASS));
+        Assertions.assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
 
         List<Document> users = mongoDatabase.getCollection("users")
                 .find()

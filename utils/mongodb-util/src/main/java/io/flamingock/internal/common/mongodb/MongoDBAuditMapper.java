@@ -20,19 +20,20 @@ import io.flamingock.internal.util.TimeUtil;
 
 import java.util.function.Supplier;
 
-import static io.flamingock.internal.core.community.Constants.KEY_AUTHOR;
-import static io.flamingock.internal.core.community.Constants.KEY_CHANGEUNIT_CLASS;
-import static io.flamingock.internal.core.community.Constants.KEY_INVOKED_METHOD;
-import static io.flamingock.internal.core.community.Constants.KEY_CHANGE_ID;
-import static io.flamingock.internal.core.community.Constants.KEY_ERROR_TRACE;
-import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_HOSTNAME;
-import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_ID;
-import static io.flamingock.internal.core.community.Constants.KEY_EXECUTION_MILLIS;
-import static io.flamingock.internal.core.community.Constants.KEY_METADATA;
-import static io.flamingock.internal.core.community.Constants.KEY_STATE;
-import static io.flamingock.internal.core.community.Constants.KEY_SYSTEM_CHANGE;
-import static io.flamingock.internal.core.community.Constants.KEY_TIMESTAMP;
-import static io.flamingock.internal.core.community.Constants.KEY_TYPE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_AUTHOR;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGEUNIT_CLASS;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_INVOKED_METHOD;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ERROR_TRACE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TYPE;
 
 public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
 
@@ -45,6 +46,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
     public DOCUMENT_WRAPPER toDocument(AuditEntry auditEntry) {
         DOCUMENT_WRAPPER document = documentckSupplier.get();
         document.append(KEY_EXECUTION_ID, auditEntry.getExecutionId());
+        document.append(KEY_STAGE_ID, auditEntry.getStageId());
         document.append(KEY_CHANGE_ID, auditEntry.getTaskId());
         document.append(KEY_AUTHOR, auditEntry.getAuthor());
         document.append(KEY_TIMESTAMP, TimeUtil.toDate(auditEntry.getCreatedAt()));
@@ -63,7 +65,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
     public AuditEntry fromDocument(DocumentHelper entry) {
         return new AuditEntry(
                 entry.getString(KEY_EXECUTION_ID),
-                null,//TODO: add stage name
+                entry.getString(KEY_STAGE_ID),
                 entry.getString(KEY_CHANGE_ID),
                 entry.getString(KEY_AUTHOR),
                 TimeUtil.toLocalDateTime(entry.get(KEY_TIMESTAMP)),

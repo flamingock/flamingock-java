@@ -16,7 +16,8 @@
 package io.flamingock.community.dynamodb.internal.entities;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.community.Constants;
+import io.flamingock.internal.common.core.audit.AuditEntryField;
+import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -70,7 +71,7 @@ public class AuditEntryEntity {
     }
 
     @DynamoDbPartitionKey
-    @DynamoDbAttribute(Constants.AUDIT_LOG_PK)
+    @DynamoDbAttribute(DynamoDBConstants.AUDIT_LOG_PK)
     public String getPartitionKey() {
         return partitionKey;
     }
@@ -79,7 +80,7 @@ public class AuditEntryEntity {
         this.partitionKey = partitionKey;
     }
 
-    @DynamoDbAttribute(Constants.KEY_CHANGE_ID)
+    @DynamoDbAttribute(AuditEntryField.KEY_CHANGE_ID)
     public String getTaskId() {
         return taskId;
     }
@@ -88,7 +89,7 @@ public class AuditEntryEntity {
         this.taskId = taskId;
     }
 
-    @DynamoDbAttribute(Constants.AUDIT_LOG_STAGE_ID)
+    @DynamoDbAttribute(AuditEntryField.KEY_STAGE_ID)
     public String getStageId() {
         return stageId;
     }
@@ -97,7 +98,7 @@ public class AuditEntryEntity {
         this.stageId = stageId;
     }
 
-    @DynamoDbAttribute(Constants.KEY_EXECUTION_ID)
+    @DynamoDbAttribute(AuditEntryField.KEY_EXECUTION_ID)
     public String getExecutionId() {
         return executionId;
     }
@@ -106,7 +107,7 @@ public class AuditEntryEntity {
         this.executionId = executionId;
     }
 
-    @DynamoDbAttribute(Constants.KEY_AUTHOR)
+    @DynamoDbAttribute(AuditEntryField.KEY_AUTHOR)
     public String getAuthor() {
         return author;
     }
@@ -115,7 +116,7 @@ public class AuditEntryEntity {
         this.author = author;
     }
 
-    @DynamoDbAttribute(Constants.KEY_TIMESTAMP)
+    @DynamoDbAttribute(AuditEntryField.KEY_TIMESTAMP)
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -124,7 +125,7 @@ public class AuditEntryEntity {
         this.createdAt = createdAt;
     }
 
-    @DynamoDbAttribute(Constants.KEY_STATE)
+    @DynamoDbAttribute(AuditEntryField.KEY_STATE)
     public String getState() {
         return state.name();
     }
@@ -133,7 +134,7 @@ public class AuditEntryEntity {
         this.state = AuditEntry.Status.valueOf(state);
     }
 
-    @DynamoDbAttribute(Constants.KEY_CHANGEUNIT_CLASS)
+    @DynamoDbAttribute(AuditEntryField.KEY_CHANGEUNIT_CLASS)
     public String getClassName() {
         return className;
     }
@@ -142,7 +143,7 @@ public class AuditEntryEntity {
         this.className = className;
     }
 
-    @DynamoDbAttribute(Constants.KEY_INVOKED_METHOD)
+    @DynamoDbAttribute(AuditEntryField.KEY_INVOKED_METHOD)
     public String getMethodName() {
         return methodName;
     }
@@ -151,7 +152,7 @@ public class AuditEntryEntity {
         this.methodName = methodName;
     }
 
-    @DynamoDbAttribute(Constants.KEY_METADATA)
+    @DynamoDbAttribute(AuditEntryField.KEY_METADATA)
     public String getMetadata() {
         return metadata.toString();
     }
@@ -160,7 +161,7 @@ public class AuditEntryEntity {
         this.metadata = metadata;
     }
 
-    @DynamoDbAttribute(Constants.KEY_EXECUTION_MILLIS)
+    @DynamoDbAttribute(AuditEntryField.KEY_EXECUTION_MILLIS)
     public Long getExecutionMillis() {
         return executionMillis;
     }
@@ -169,7 +170,7 @@ public class AuditEntryEntity {
         this.executionMillis = executionMillis;
     }
 
-    @DynamoDbAttribute(Constants.KEY_EXECUTION_HOSTNAME)
+    @DynamoDbAttribute(AuditEntryField.KEY_EXECUTION_HOSTNAME)
     public String getExecutionHostname() {
         return executionHostname;
     }
@@ -178,7 +179,7 @@ public class AuditEntryEntity {
         this.executionHostname = executionHostname;
     }
 
-    @DynamoDbAttribute(Constants.KEY_ERROR_TRACE)
+    @DynamoDbAttribute(AuditEntryField.KEY_ERROR_TRACE)
     public String getErrorTrace() {
         return errorTrace.toString();
     }
@@ -187,7 +188,7 @@ public class AuditEntryEntity {
         this.errorTrace = errorTrace;
     }
 
-    @DynamoDbAttribute(Constants.KEY_TYPE)
+    @DynamoDbAttribute(AuditEntryField.KEY_TYPE)
     public String getType() {
         return type.name();
     }
@@ -196,7 +197,7 @@ public class AuditEntryEntity {
         this.type = AuditEntry.ExecutionType.valueOf(type);
     }
 
-    @DynamoDbAttribute(Constants.KEY_SYSTEM_CHANGE)
+    @DynamoDbAttribute(AuditEntryField.KEY_SYSTEM_CHANGE)
     public Boolean getSystemChange() {
         return systemChange;
     }

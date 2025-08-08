@@ -3,5 +3,5 @@ order: 0001
 transactional: false
 template: CouchbaseImporterChangeTemplate
 configuration:
-  origin: mongockChangeLogs
+  origin: _default
   failOnEmptyOrigin: true

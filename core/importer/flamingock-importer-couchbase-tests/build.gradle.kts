@@ -10,14 +10,15 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.couchbase.client:java-client:3.5.0")
+    compileOnly("com.couchbase.client:java-client:3.6.0")
     testImplementation(project(":core:importer:flamingock-importer"))
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":community:flamingock-ce-couchbase"))
+    testImplementation(project(":utils:couchbase-util"))
     testImplementation(project(":utils:test-util"))
 
-    testImplementation("org.testcontainers:couchbase:1.19.7")
-    testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+    testImplementation("org.testcontainers:couchbase:1.21.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
     testImplementation("org.mockito:mockito-inline:4.11.0")
 }
 

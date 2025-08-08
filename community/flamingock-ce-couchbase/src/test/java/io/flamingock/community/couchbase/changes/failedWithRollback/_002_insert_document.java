@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.internal;
+package io.flamingock.community.couchbase.changes.failedWithRollback;
 
-public final class CouchbaseConstants {
-    public static final String INDEX_NAME = "idx_mongock_keys";
-    public static final String DOCUMENT_TYPE_KEY = "_doctype";
-    public static final String DOCUMENT_TYPE_AUDIT_ENTRY = "mongockChangeEntry";
-    public static final  String DOCUMENT_TYPE_LOCK_ENTRY = "mongockLockEntry";
+import com.couchbase.client.java.Collection;
+import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+
+@ChangeUnit( id="insert-document" , order = "002")
+public class _002_insert_document {
+
+    @Execution
+    public void execution(Collection collection) {
+        collection.insert("test-client-Federico", JsonObject.create().put("name", "Federico"));
+    }
 }

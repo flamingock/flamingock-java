@@ -13,18 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.changes.failedWithoutRollback;
+package io.flamingock.community.couchbase.changes.failedWithRollback;
 
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.RollbackExecution;
 
-@ChangeUnit( id="insert-document" , order = "002")
-public class BInsertDocument {
+@ChangeUnit( id="execution-with-exception" , order = "003")
+public class _003_execution_with_exception {
 
     @Execution
     public void execution(Collection collection) {
-        collection.insert("test-client-Federico", JsonObject.create().put("name", "Federico"));
+        collection.insert("test-client-Jorge", JsonObject.create().put("name", "Jorge"));
+        throw new RuntimeException("test");
+    }
+
+    @RollbackExecution
+    public void rollbackExecution(Collection collection) {
+        collection.remove("test-client-Jorge");
     }
 }

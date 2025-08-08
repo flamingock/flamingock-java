@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.changes.happyPath;
+package io.flamingock.community.couchbase.changes.failedWithoutRollback;
 
 import com.couchbase.client.java.Collection;
-import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 
-@ChangeUnit( id="insert-document" , order = "002")
-public class BInsertDocument {
+import java.util.Arrays;
 
-    @Execution
-    public void execution(Collection collection) {
-        collection.insert("test-client-Federico", JsonObject.create().put("name", "Federico"));
-    }
+@ChangeUnit(id = "create-index", order = "001")
+public class _001_create_index {
+
+	@Execution
+	public void execution(Collection collection) {
+		collection.queryIndexes().createIndex( "idx_standalone_index", Arrays.asList("field1", "field2"));
+	}
 }

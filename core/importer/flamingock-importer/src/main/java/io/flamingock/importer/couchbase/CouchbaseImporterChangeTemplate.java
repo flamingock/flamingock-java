@@ -15,6 +15,8 @@
  */
 package io.flamingock.importer.couchbase;
 
+import com.couchbase.client.core.io.CollectionIdentifier;
+import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.NonLockGuarded;
@@ -31,10 +33,12 @@ public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTempl
 
     @Execution
     public void execution(Cluster cluster,
+                          Bucket bucket, //TODO this is the main bucket, we need to provide a way to get a custom bucket (target system)
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
         logger.info("Starting audit log migration from Mongock to Flamingock local audit store[Couchbase]");
-        CouchbaseImporterAdapter adapter = new CouchbaseImporterAdapter(cluster, configuration.getOrigin());
+        //TODO get the scope from configuration
+        CouchbaseImporterAdapter adapter = new CouchbaseImporterAdapter(cluster, bucket.name(), CollectionIdentifier.DEFAULT_SCOPE, configuration.getOrigin());
         ImporterExecutor.runImport(adapter, configuration, auditWriter, pipelineDescriptor);
         logger.info("Finished audit log migration from Mongock to Flamingock local audit store[Couchbase]");
     }

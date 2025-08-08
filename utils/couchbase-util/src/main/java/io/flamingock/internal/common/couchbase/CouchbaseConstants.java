@@ -13,21 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.internal.util;
+package io.flamingock.internal.common.couchbase;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.community.couchbase.internal.CouchbaseConstants;
-
-public class AuditEntryKeyGenerator {
-
-  public String toKey(AuditEntry auditEntry) {
-    return new StringBuilder()
-        .append(CouchbaseConstants.DOCUMENT_TYPE_AUDIT_ENTRY)
-        .append('-')
-        .append(auditEntry.getExecutionId())
-        .append('-')
-        .append(auditEntry.getAuthor())
-        .append('-')
-        .append(auditEntry.getTaskId()).toString();
-  }
+public final class CouchbaseConstants {
+    public static final String INDEX_NAME = "idx_flamingock_keys";
 }

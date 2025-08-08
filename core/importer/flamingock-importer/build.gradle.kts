@@ -4,7 +4,7 @@ dependencies {
 
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
-    compileOnly("com.couchbase.client:java-client:3.0.0")
+    compileOnly("com.couchbase.client:java-client:3.6.0")
 
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
@@ -18,7 +18,7 @@ dependencies {
     testImplementation("org.testcontainers:localstack:1.19.7")
     testImplementation("software.amazon.awssdk:dynamodb:2.25.61")
 
-    testImplementation("com.couchbase.client:java-client:3.0.0")
+    testImplementation("com.couchbase.client:java-client:3.6.0")
 }
 
 
