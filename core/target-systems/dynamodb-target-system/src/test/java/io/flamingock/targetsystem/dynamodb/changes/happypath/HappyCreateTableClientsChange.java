@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.dynamodb.changes.unhappypath;
+package io.flamingock.targetsystem.dynamodb.changes.happypath;
 
-import io.flamingock.cloud.transaction.dynamodb.changes.common.UserEntity;
+
+import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.targetsystem.dynamodb.changes.common.UserEntity;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.NonLockGuarded;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 
 import static java.util.Collections.emptyList;
 
-@ChangeUnit(id = "unhappy-create-table-clients", order = "001", transactional = false)
-public class UnhappyCreateTableClientsChange {
+@TargetSystem( id = "dynamodb-ts")
+@ChangeUnit(id = "create-table-clients", order = "001", transactional = false)
+public class HappyCreateTableClientsChange {
 
     @Execution
     public void execution(@NonLockGuarded DynamoDbClient client) {

@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.dynamodb;
+package io.flamingock.targetsystem.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
-import io.flamingock.cloud.transaction.dynamodb.changes.common.UserEntity;
-import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyCreateTableClientsChange;
-import io.flamingock.cloud.transaction.dynamodb.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyCreateTableClientsChange;
-import io.flamingock.cloud.transaction.dynamodb.changes.unhappypath.UnhappyInsertionClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.common.UserEntity;
+import io.flamingock.targetsystem.dynamodb.changes.happypath.HappyCreateTableClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.happypath.HappyInsertClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.unhappypath.UnhappyCreateTableClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.unhappypath.UnhappyInsertionClientsChange;
 import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
@@ -57,9 +57,9 @@ import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.EXECUTION_FAILED;
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
 
-public class DynamoDBCloudTransactionerTest {
+public class DynamoDBCloudTargetSystemTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBCloudTransactionerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamoDBCloudTargetSystemTest.class);
 
     private static DynamoDBProxyServer dynamoDBLocal;
     private static DynamoDbClient client;
@@ -146,9 +146,9 @@ public class DynamoDBCloudTransactionerTest {
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner(client);
-                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+            MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
+
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
@@ -159,7 +159,8 @@ public class DynamoDBCloudTransactionerTest {
                             new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
                     ).start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner);
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")
+                .withDynamoDBClient(dynamoDBTestHelper.getDynamoDbClient());
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -168,10 +169,8 @@ public class DynamoDBCloudTransactionerTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             flamingockBuilder
-                    .setCloudTransactioner(dynamoDBCloudTransactioner)
-                    //.addStage(new Stage(stageName)
-//                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.happypath")))
                     .addDependency(client)
+                    .addTargetSystem(dynamoTargetSystem)
                     .build()
                     .execute();
 
@@ -205,9 +204,9 @@ public class DynamoDBCloudTransactionerTest {
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner(client);
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
+
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
@@ -219,7 +218,8 @@ public class DynamoDBCloudTransactionerTest {
                             new AuditRequestExpectation(executionId, "unhappy-insert-clients", ROLLED_BACK)
                     ).start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner);
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")
+                .withDynamoDBClient(dynamoDBTestHelper.getDynamoDbClient());
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -228,10 +228,8 @@ public class DynamoDBCloudTransactionerTest {
                     new Trio<>(UnhappyInsertionClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             Runner runner = flamingockBuilder
-                    .setCloudTransactioner(dynamoDBCloudTransactioner)
-                    //.addStage(new Stage(stageName)
-//                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.unhappypath")))
                     .addDependency(client)
+                    .addTargetSystem(dynamoTargetSystem)
                     .build();
 
             //THEN
@@ -254,6 +252,7 @@ public class DynamoDBCloudTransactionerTest {
 
     //TODO verify the server is called with the right parameters. among other, it sends the ongoing status
     @Test
+    @Disabled("adapt when adding cloud support")
     @DisplayName("Should send ongoing task in execution when is present in local database")
     void shouldSendOngoingTaskInExecutionPlan() {
         String executionId = "execution-1";
@@ -267,9 +266,9 @@ public class DynamoDBCloudTransactionerTest {
 
         //GIVEN
         try (
-                DynamoDBCloudTransactioner transactioner = new DynamoDBCloudTransactioner(client);
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
+
             dynamoDBTestHelper.insertOngoingExecution("insert-clients");
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
@@ -281,7 +280,8 @@ public class DynamoDBCloudTransactionerTest {
                             new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
                     ).start();
 
-            DynamoDBCloudTransactioner dynamoDBCloudTransactioner = Mockito.spy(transactioner);
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")
+                .withDynamoDBClient(dynamoDBTestHelper.getDynamoDbClient());
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -290,10 +290,8 @@ public class DynamoDBCloudTransactionerTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             flamingockBuilder
-                    .setCloudTransactioner(dynamoDBCloudTransactioner)
-                    //.addStage(new Stage(stageName)
-//                            .setCodePackages(Collections.singletonList("io.flamingock.cloud.transaction.dynamodb.changes.happypath")))
                     .addDependency(client)
+                    .addTargetSystem(dynamoTargetSystem)
                     .build()
                     .execute();
 

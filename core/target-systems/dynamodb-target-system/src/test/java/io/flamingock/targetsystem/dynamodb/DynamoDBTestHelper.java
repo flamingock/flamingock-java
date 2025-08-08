@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.dynamodb;
+package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DynamoDBTestHelper {
     public final DynamoDBUtil dynamoDBUtil;
+    public final String tableName = "flamingockOnGoingTasks";
 
     public DynamoDBTestHelper(DynamoDbClient client) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
@@ -49,12 +50,12 @@ public class DynamoDBTestHelper {
                 dynamoDBUtil.getAttributeDefinitions("taskId", null),
                 dynamoDBUtil.getKeySchemas("taskId", null),
                 dynamoDBUtil.getProvisionedThroughput(5L, 5L),
-                OngoingTaskEntity.tableName,
+                tableName,
                 emptyList(),
                 emptyList()
         );
 
-        DynamoDbTable<OngoingTaskEntity> table = dynamoDBUtil.getEnhancedClient().table(OngoingTaskEntity.tableName, TableSchema.fromBean(OngoingTaskEntity.class));
+        DynamoDbTable<OngoingTaskEntity> table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(OngoingTaskEntity.class));
         table.putItem(
                 PutItemEnhancedRequest.builder(OngoingTaskEntity.class)
                         .item(new OngoingTaskEntity(taskId, AuditContextBundle.Operation.EXECUTION.toString()))
@@ -80,7 +81,7 @@ public class DynamoDBTestHelper {
     }
 
     public void checkOngoingTask(Predicate<Long> predicate) {
-        DynamoDbTable<OngoingTaskEntity> table = dynamoDBUtil.getEnhancedClient().table(OngoingTaskEntity.tableName, TableSchema.fromBean(OngoingTaskEntity.class));
+        DynamoDbTable<OngoingTaskEntity> table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(OngoingTaskEntity.class));
         long result = table
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.dynamodb;
+package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.TargetSystem;

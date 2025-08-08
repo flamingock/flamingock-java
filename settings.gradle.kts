@@ -102,9 +102,9 @@ include("core:target-systems:sql-target-system")
 project(":core:target-systems:sql-target-system").projectDir = file("core/target-systems/sql-target-system")
 project(":core:target-systems:sql-target-system").name = "sql-target-system"
 
-include("core:target-systems:dynamodb-transactioner")
-project(":core:target-systems:dynamodb-transactioner").projectDir = file("core/target-systems/dynamodb-transactioner")
-project(":core:target-systems:dynamodb-transactioner").name = "dynamodb-transactioner"
+include("core:target-systems:dynamodb-target-system")
+project(":core:target-systems:dynamodb-target-system").projectDir = file("core/target-systems/dynamodb-target-system")
+project(":core:target-systems:dynamodb-target-system").name = "dynamodb-target-system"
 
 
 //////////////////////////////////////

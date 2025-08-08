@@ -1,0 +1,85 @@
+/*
+ * Copyright 2023 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.targetsystem.dynamodb;
+
+import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.transaction.TransactionWrapper;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+import java.util.function.Supplier;
+
+
+public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> {
+    private static final String FLAMINGOCK_ON_GOING_TASKS = "flamingockOnGoingTasks";
+
+    private OngoingTaskStatusRepository taskStatusRepository;
+
+    private DynamoDBTxWrapper txWrapper;
+
+    public DynamoDBTargetSystem(String id) {
+        super(id);
+    }
+
+    public DynamoDBTargetSystem withDynamoDBClient(DynamoDbClient dynamoDbClient) {
+        context.addDependency(dynamoDbClient);
+        return this;
+    }
+
+    @Override
+    public void initialize(ContextResolver baseContext) {
+        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
+                .orElse(FlamingockEdition.CLOUD);
+
+        DynamoDbClient dynamoDbClient = context.getDependencyValue(DynamoDbClient.class)
+                .orElseGet(() -> baseContext.getRequiredDependencyValue(DynamoDbClient.class));
+
+        txWrapper = new DynamoDBTxWrapper(dynamoDbClient);
+
+
+        taskStatusRepository = edition == FlamingockEdition.COMMUNITY
+                ? new NoOpOnGoingTaskStatusRepository(this.getId())
+                : DynamoDBOnGoingTaskStatusRepository.builder(dynamoDbClient)
+                .setTableName(FLAMINGOCK_ON_GOING_TASKS)
+                .withAutoCreate(autoCreate)
+                .build();
+    }
+
+    @Override
+    protected DynamoDBTargetSystem getSelf() {
+        return this;
+    }
+
+    @Override
+    public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
+        return changeApplier.get();
+    }
+
+    @Override
+    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+        return taskStatusRepository;
+    }
+
+    @Override
+    public TransactionWrapper getTxWrapper() {
+        return txWrapper;
+    }
+
+}

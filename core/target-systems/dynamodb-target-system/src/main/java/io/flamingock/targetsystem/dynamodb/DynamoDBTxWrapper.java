@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.dynamodb.wrapper;
+package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.InjectableContextProvider;
@@ -33,14 +33,19 @@ import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledExcepti
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class DynamoDBTransactionWrapper implements TransactionWrapper {
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBTransactionWrapper.class);
+public class DynamoDBTxWrapper implements TransactionWrapper {
+    private static final Logger logger = LoggerFactory.getLogger(DynamoDBTxWrapper.class);
 
     private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager;
     private final DynamoDBUtil dynamoDBUtil;
 
+    public DynamoDBTxWrapper(DynamoDbClient client) {
+        this.dynamoDBUtil = new DynamoDBUtil(client);
+        transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
+    }
 
-    public DynamoDBTransactionWrapper(DynamoDbClient client, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager) {
+    @Deprecated
+    public DynamoDBTxWrapper(DynamoDbClient client, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
         this.transactionManager = transactionManager;
     }

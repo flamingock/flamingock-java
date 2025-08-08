@@ -15,7 +15,7 @@
  */
 package io.flamingock.community.dynamodb.internal;
 
-import io.flamingock.cloud.transaction.dynamodb.wrapper.DynamoDBTransactionWrapper;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTxWrapper;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
@@ -56,7 +56,7 @@ public class DynamoDBEngine extends AbstractLocalEngine {
     @Override
     protected void doInitialize(RunnerId runnerId) {
         TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
-        transactionWrapper = localConfiguration.isTransactionDisabled() ? null : new DynamoDBTransactionWrapper(client, transactionManager);
+        transactionWrapper = localConfiguration.isTransactionDisabled() ? null : new DynamoDBTxWrapper(client, transactionManager);
         auditor = new DynamoDBAuditor(client, transactionManager);
         auditor.initialize(
                 driverConfiguration.isAutoCreate(),

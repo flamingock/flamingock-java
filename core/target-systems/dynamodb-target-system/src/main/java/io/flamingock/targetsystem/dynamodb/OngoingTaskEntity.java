@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.transaction.dynamodb;
+package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.cloud.vo.OngoingStatus;
 import io.flamingock.internal.core.targets.OngoingTaskStatus;
@@ -24,8 +24,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 
 @DynamoDbBean
 public class OngoingTaskEntity {
-
-    final static String tableName = "OngoingTasks";
 
     private String taskId;
     private String operation;
