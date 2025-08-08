@@ -36,7 +36,8 @@ import io.flamingock.internal.util.Result;
 
 import java.time.LocalDateTime;
 
-public class StepNavigator {
+@Deprecated
+public class StepNavigator implements ChangeProcessStrategy {
 
     private static final StepNavigatorLogger stepLogger = new StepNavigatorLogger();
 
@@ -68,7 +69,8 @@ public class StepNavigator {
     }
 
 
-    public final TaskSummary start() {
+    @Override
+    public final TaskSummary applyChange() {
         if (!changeUnit.isAlreadyExecuted()) {
             stepLogger.logExecutionStart(changeUnit);
 

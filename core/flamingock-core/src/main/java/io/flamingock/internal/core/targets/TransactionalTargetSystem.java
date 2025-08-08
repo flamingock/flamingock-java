@@ -35,6 +35,11 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         this.autoCreate = autoCreate;
     }
 
+    public boolean inSyncWithAuditStore() {
+        OngoingTaskStatusRepository onGoingTaskStatusRepository = getOnGoingTaskStatusRepository();
+        return onGoingTaskStatusRepository != null && !(onGoingTaskStatusRepository instanceof NoOpOnGoingTaskStatusRepository);
+    }
+
     public <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
         return getTxWrapper().wrapInTransaction(executionRuntime, changeApplier);
     }

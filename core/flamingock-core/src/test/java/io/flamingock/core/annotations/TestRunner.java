@@ -28,6 +28,7 @@ import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
@@ -48,6 +49,7 @@ import org.mockito.Mockito;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 
@@ -112,17 +114,17 @@ public class TestRunner {
                     ? new TestTransactionTargetSystem("default-target-system-id", transactionWrapper)
                     : new TestTargetSystem("default-target-system-id");
 
+            LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(mock(Lock.class), new HashSet<>());
 
             TargetSystemStepOperations targetSystemOps = StepNavigatorBuilder.buildTargetSystemOperations(
                     targetSystem,
                     null,
                     new SimpleContext(),
-                    mock(Lock.class),
-                    Collections.emptySet());
+                    lockGuardProxyFactory);
 
 
             new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, new AuditStoreStepOperations(auditWriterMock), stepSummarizerMock)
-                    .start();
+                    .applyChange();
 
         });
 

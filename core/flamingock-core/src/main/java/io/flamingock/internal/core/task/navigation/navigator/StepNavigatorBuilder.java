@@ -93,39 +93,66 @@ public class StepNavigatorBuilder {
         return this;
     }
 
-    public StepNavigator build() {
+
+    //TODO CLEAN ALL THIS
+    public ChangeProcessStrategy build() {
         AbstractTargetSystem<?> targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem() != null ? changeUnit.getTargetSystem().getId() : null);
 
-        return new StepNavigator(
+        OngoingTaskStatusRepository ongoingTasksRepository = auditStoreTxWrapper != null && CloudTransactioner.class.isAssignableFrom(auditStoreTxWrapper.getClass())
+                ? (OngoingTaskStatusRepository) auditStoreTxWrapper : null;
+
+
+        AbstractTargetSystem<?> targetSystemOrDefault = targetSystem != null
+                ? targetSystem
+                : new TempTargetSystem("temporal-target-system", auditStoreTxWrapper, ongoingTasksRepository);
+
+        LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
+
+        ContextResolver contextWithTargetSystemLayer = targetSystemOrDefault != null
+                ? targetSystemOrDefault.decorateOnTop(baseContext)
+                : new PriorityContext(baseContext);
+
+        //TODO new TargetSystemOperations(targetSystem, runtimeManager)
+        TargetSystemStepOperations targetSystemOps = buildTargetSystemOperations(
+                targetSystemOrDefault,
+                auditStoreTxWrapper,
+                contextWithTargetSystemLayer,
+                lockGuardProxyFactory);
+
+
+
+        return ChangeProcessStrategyFactory.getStrategy(
                 changeUnit,
-                executionContext,
-                buildTargetSystemOperations(targetSystem, auditStoreTxWrapper, baseContext, lock, nonGuardedTypes),//TODO new TargetSystemOperations(targetSystem, executionRuntime)
+                targetSystemOrDefault,
                 new AuditStoreStepOperations(auditWriter),
-                new TaskSummarizer(changeUnit));
+                baseContext,
+                executionContext,
+                new TaskSummarizer(changeUnit),
+                lockGuardProxyFactory,
+                targetSystemOps
+        );
+
     }
 
 
     //TODO temporal until we have the TargetSystem for Driver
     public static TargetSystemStepOperations buildTargetSystemOperations(AbstractTargetSystem<?> targetSystem,
                                                                          TransactionWrapper txWrapper,
-                                                                         ContextResolver staticContext,
-                                                                         Lock lock,
-                                                                         Set<Class<?>> nonGuardedTypes) {
+                                                                         ContextResolver contextWithTargetSystemLayer,
+                                                                         LockGuardProxyFactory lockGuardProxyFactory) {
 
         OngoingTaskStatusRepository ongoingTasksRepository = txWrapper != null && CloudTransactioner.class.isAssignableFrom(txWrapper.getClass())
                 ? (OngoingTaskStatusRepository) txWrapper : null;
         //TODO after ensuring DefaultTargetSystem, it will never be null
 
-        ContextResolver contextWithTargetSystemLayer = targetSystem != null
-                ? targetSystem.decorateOnTop(staticContext)
-                : new PriorityContext(staticContext);
 
-        LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
+
 
 
         AbstractTargetSystem<?> targetSystemOrDefault = targetSystem != null
                 ? targetSystem
                 : new TempTargetSystem("temporal-target-system", txWrapper, ongoingTasksRepository);
+
         return new TargetSystemStepOperations(targetSystemOrDefault, lockGuardProxyFactory, contextWithTargetSystemLayer);
     }
 

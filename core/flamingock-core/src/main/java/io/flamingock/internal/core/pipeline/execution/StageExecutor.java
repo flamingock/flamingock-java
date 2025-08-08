@@ -23,6 +23,7 @@ import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
@@ -63,7 +64,7 @@ public class StageExecutor {
             getTasksStream(executableStage)
                     .map(stepNavigatorBuilder::setChangeUnit)
                     .map(StepNavigatorBuilder::build)
-                    .map(StepNavigator::start)
+                    .map(ChangeProcessStrategy::applyChange)
                     .peek(summary::addSummary)
                     .filter(TaskSummary::isFailed)
                     .findFirst()
