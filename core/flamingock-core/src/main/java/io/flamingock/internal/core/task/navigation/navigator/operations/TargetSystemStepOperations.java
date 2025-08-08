@@ -20,10 +20,9 @@ import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
-import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
-import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
@@ -44,7 +43,7 @@ import java.util.function.Function;
  * Handles the execution and rollback of {@link ExecutableStep}s over a {@link TargetSystem},
  * coordinating the use of isolated runtime contexts and transactional boundaries when applicable.
  * <p>
- * Each step execution occurs within a fresh, isolated {@link RuntimeManager} instance,
+ * Each step execution occurs within a fresh, isolated {@link ExecutionRuntime} instance,
  * ensuring clean context layering and safe, scoped dependency injection—regardless of whether
  * the execution is transactional or not.
  */
@@ -74,43 +73,46 @@ public class TargetSystemStepOperations {
 
             transactionalTargetSystem.getOnGoingTaskStatusRepository().registerAsExecuting(changeUnit);
 
-            // Fresh runtimeManager with isolated context layer to ensure clean, per-execution dependency resolution
-            RuntimeManager runtimeManager = buildRuntimeManager();
+            // Fresh executionRuntime with isolated context layer to ensure clean, per-execution dependency resolution
 
-            return transactionalTargetSystem.getTxWrapper().wrapInTransaction(
-                    changeUnit,
-                    runtimeManager,
-                    contextResolver -> {
-                        ExecutionStep changeAppliedStep = executableStep.execute(runtimeManager);
+            ExecutionRuntime executionRuntime = buildExecutionRuntime(changeUnit.getId());
+
+            return transactionalTargetSystem.applyChangeTransactional(
+                    rm -> {
+                        ExecutionStep changeAppliedStep = executableStep.execute(rm);
                         AfterExecutionAuditStep executionAuditResult = changeAuditor.apply(changeAppliedStep);
-                        if (executionAuditResult instanceof CompletedSuccessStep) {
-                            transactionalTargetSystem.getOnGoingTaskStatusRepository().clean(changeUnit.getId(), contextResolver);
-                            return executionAuditResult;
-                        }
-                        return new CompleteAutoRolledBackStep(changeUnit, true);
-                    }
+                        transactionalTargetSystem.getOnGoingTaskStatusRepository().clean(changeUnit.getId(), rm.getContext());
+                        return executionAuditResult instanceof CompletedSuccessStep
+                                ? executionAuditResult
+                                : new CompleteAutoRolledBackStep(changeUnit, true);
+                    },
+                    executionRuntime
             );
         } else {
             logger.debug("Executing(non-transactional) task[{}]", changeUnit.getId());
-            RuntimeManager runtimeManager = buildRuntimeManager();
-            ExecutionStep changeAppliedStep = targetSystem.applyChange(() -> executableStep.execute(runtimeManager), runtimeManager);
+            ExecutionRuntime executionRuntime = buildExecutionRuntime(changeUnit.getId());
+            ExecutionStep changeAppliedStep = targetSystem.applyChange(executableStep::execute, executionRuntime);
             return changeAuditor.apply(changeAppliedStep);
         }
     }
 
+
+    public ManualRolledBackStep rollbackChange(RollableStep rollable) {
+        ExecutionRuntime runtimeHelper = buildExecutionRuntime(rollable.getTask().getId());
+        return targetSystem.applyChange(rollable::rollback, runtimeHelper);
+    }
+
+
     @NotNull
-    private RuntimeManager buildRuntimeManager() {
+    private ExecutionRuntime buildExecutionRuntime(String sessionId) {
         Context changeUnitSessionContext = new PriorityContext(new SimpleContext(), baseContext);
-        return RuntimeManager.builder()
+        return ExecutionRuntime.builder()
+                .setSessionId(sessionId)
                 .setDependencyContext(changeUnitSessionContext)
                 .setLockGuardProxyFactory(lockProxyFactory)
                 .build();
     }
 
-
-    public ManualRolledBackStep rollbackChange(RollableStep rollable) {
-        return rollable.rollback(buildRuntimeManager());
-    }
 
     //TODO temporally until we remove disableTransaction in builder
     private boolean isTransactionalTarget() {

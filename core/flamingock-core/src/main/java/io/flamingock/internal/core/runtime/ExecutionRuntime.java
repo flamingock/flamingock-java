@@ -42,23 +42,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class RuntimeManager implements InjectableContextProvider {
+public final class ExecutionRuntime implements InjectableContextProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger("Flamingock-RuntimeManager");
+    private static final Logger logger = LoggerFactory.getLogger("Flamingock-ExecutionRuntime");
     private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
             ? parameter.getAnnotation(Named.class).value()
             : null;
+    private String sessionId;
     private final Set<Class<?>> nonProxyableTypes = Collections.emptySet();
     private final Context dependencyContext;
     private final LockGuardProxyFactory proxyFactory;
     private final boolean isNativeImage;
 
-    private RuntimeManager(LockGuardProxyFactory proxyFactory,
-                           Context baseContext,
-                           boolean isNativeImage) {
+    private ExecutionRuntime(String sessionId,
+                             LockGuardProxyFactory proxyFactory,
+                             Context baseContext,
+                             boolean isNativeImage) {
+        this.sessionId = sessionId;
         this.dependencyContext = new PriorityContext(new SimpleContext(), baseContext);
         this.proxyFactory = proxyFactory;
         this.isNativeImage = isNativeImage;
@@ -71,6 +75,10 @@ public final class RuntimeManager implements InjectableContextProvider {
     @Override
     public ContextResolver getContext() {
         return dependencyContext;
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 
     @Override
@@ -151,7 +159,7 @@ public final class RuntimeManager implements InjectableContextProvider {
 
     private static void logMethodWithArguments(String methodName, List<Object> changelogInvocationParameters) {
         String arguments = changelogInvocationParameters.stream()
-                .map(RuntimeManager::getParameterType)
+                .map(ExecutionRuntime::getParameterType)
                 .collect(Collectors.joining(", "));
         logger.debug("method[{}] with arguments: [{}]", methodName, arguments);
 
@@ -168,13 +176,17 @@ public final class RuntimeManager implements InjectableContextProvider {
     }
 
     public static final class Builder {
-
-
+        private String sessionId;
         private Context dependencyContext;
         private LockGuardProxyFactory lockProxyFactory;
         private Lock lock;
         private Boolean forceNativeImage = null;
         private Set<Class<?>> nonGuardedTypes;
+
+        public Builder setSessionId(String sessionId) {
+            this.sessionId = sessionId;
+            return this;
+        }
 
         public Builder setLock(Lock lock) {
             this.lock = lock;
@@ -201,7 +213,7 @@ public final class RuntimeManager implements InjectableContextProvider {
         }
 
 
-        public RuntimeManager build() {
+        public ExecutionRuntime build() {
             LockGuardProxyFactory proxyFactory = this.lockProxyFactory != null
                     ? this.lockProxyFactory
                     : LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
@@ -211,8 +223,9 @@ public final class RuntimeManager implements InjectableContextProvider {
             } else {
                 isNativeImage = isRunningInNativeImage();
             }
+            sessionId = sessionId != null ? sessionId : UUID.randomUUID().toString();
             logger.info("Running on native image: {}", isNativeImage);
-            return new RuntimeManager(proxyFactory, dependencyContext, isNativeImage);
+            return new ExecutionRuntime(sessionId, proxyFactory, dependencyContext, isNativeImage);
         }
 
         private static boolean isRunningInNativeImage() {

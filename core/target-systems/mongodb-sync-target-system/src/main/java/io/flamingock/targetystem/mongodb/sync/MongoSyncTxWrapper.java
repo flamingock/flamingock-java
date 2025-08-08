@@ -18,19 +18,15 @@ package io.flamingock.targetystem.mongodb.sync;
 import com.mongodb.TransactionOptions;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
-import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.core.community.TransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class MongoSyncTxWrapper implements TransactionWrapper {
     private static final Logger logger = LoggerFactory.getLogger(MongoSyncTxWrapper.class);
@@ -47,14 +43,14 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
-        String sessionId = loadedTask.getId();
+    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
+        String sessionId = executionRuntime.getSessionId();
         Dependency clienteSessionDependency;
         try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
             clienteSessionDependency = new Dependency(clientSession);
             clientSession.startTransaction(TransactionOptions.builder().build());
-            injectableContextProvider.addDependency(clienteSessionDependency);
-            T result = operation.apply(injectableContextProvider.getContext());
+            executionRuntime.addDependency(clienteSessionDependency);
+            T result = operation.apply(executionRuntime);
             if (result instanceof FailedStep) {
                 clientSession.abortTransaction();
             } else {

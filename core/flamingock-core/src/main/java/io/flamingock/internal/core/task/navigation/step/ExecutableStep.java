@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.navigation.step;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.execution.FailedExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.execution.SuccessExecutionStep;
-import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.StopWatch;
 
 public class ExecutableStep extends AbstractTaskStep {
@@ -27,10 +27,10 @@ public class ExecutableStep extends AbstractTaskStep {
         super(step.getTask());
     }
 
-    public ExecutionStep execute(RuntimeManager runtimeManager) {
+    public ExecutionStep execute(ExecutionRuntime executionRuntime) {
         StopWatch stopWatch = StopWatch.startAndGet();
         try {
-            task.execute(runtimeManager);
+            task.execute(executionRuntime);
             return SuccessExecutionStep.instance(this, stopWatch.getElapsed());
         } catch (Throwable throwable) {
             return FailedExecutionStep.instance(this, stopWatch.getElapsed(), throwable);

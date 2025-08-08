@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 
 import java.lang.reflect.Method;
@@ -67,14 +67,14 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
     }
 
     @Override
-    public void execute(RuntimeManager runtimeManager) {
-        executeInternal(runtimeManager, executionMethod);
+    public void execute(ExecutionRuntime executionRuntime) {
+        executeInternal(executionRuntime, executionMethod);
 
     }
 
-    protected void executeInternal(RuntimeManager runtimeManager, Method method ) {
-        Object instance = runtimeManager.getInstance(descriptor.getConstructor());
-        runtimeManager.executeMethodWithInjectedDependencies(instance, method);
+    protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
+        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
+        executionRuntime.executeMethodWithInjectedDependencies(instance, method);
     }
 
     @Override
@@ -90,8 +90,8 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
             }
 
             @Override
-            public void rollback(RuntimeManager runtimeManager) {
-                executeInternal(runtimeManager, rollbackMethod);
+            public void rollback(ExecutionRuntime executionRuntime) {
+                executeInternal(executionRuntime, rollbackMethod);
             }
 
             @Override

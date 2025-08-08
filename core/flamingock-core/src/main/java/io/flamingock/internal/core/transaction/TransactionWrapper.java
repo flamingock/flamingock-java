@@ -15,16 +15,12 @@
  */
 package io.flamingock.internal.core.transaction;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public interface TransactionWrapper {
 
-    <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation);
+    <T> T wrapInTransaction(ExecutionRuntime injectableContextProvider, Function<ExecutionRuntime, T> operation);
 
 }

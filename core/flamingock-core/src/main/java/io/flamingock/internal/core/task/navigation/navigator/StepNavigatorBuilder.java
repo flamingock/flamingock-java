@@ -16,13 +16,13 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
@@ -35,7 +35,7 @@ import io.flamingock.internal.core.task.navigation.navigator.operations.TargetSy
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 public class StepNavigatorBuilder {
     private final TargetSystemManager targetSystemManager;
@@ -99,7 +99,7 @@ public class StepNavigatorBuilder {
         return new StepNavigator(
                 changeUnit,
                 executionContext,
-                buildTargetSystemOperations(targetSystem, auditStoreTxWrapper, baseContext, lock, nonGuardedTypes),//TODO new TargetSystemOperations(targetSystem, runtimeManager)
+                buildTargetSystemOperations(targetSystem, auditStoreTxWrapper, baseContext, lock, nonGuardedTypes),//TODO new TargetSystemOperations(targetSystem, executionRuntime)
                 new AuditStoreStepOperations(auditWriter),
                 new TaskSummarizer(changeUnit));
     }
@@ -161,8 +161,8 @@ public class StepNavigatorBuilder {
         }
 
         @Override
-        public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
-            return changeApplier.get();
+        public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+            return changeApplier.apply(executionRuntime);
         }
     }
 }

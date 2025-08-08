@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
 import io.flamingock.internal.util.FileUtil;
 import org.slf4j.Logger;
@@ -37,20 +37,20 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
     }
 
     @Override
-    protected void executeInternal(RuntimeManager runtimeManager, Method method ) {
+    protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
         logger.debug("Starting execution of changeUnit[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
         logger.debug("changeUnit[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
-        Object instance = runtimeManager.getInstance(descriptor.getConstructor());
+        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
         ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
         changeTemplateInstance.setTransactional(descriptor.isTransactional());
-        setExecutionData(runtimeManager, changeTemplateInstance, "Configuration");
-        setExecutionData(runtimeManager, changeTemplateInstance, "Execution");
-        setExecutionData(runtimeManager, changeTemplateInstance, "Rollback");
-        runtimeManager.executeMethodWithInjectedDependencies(instance, method);
+        setExecutionData(executionRuntime, changeTemplateInstance, "Configuration");
+        setExecutionData(executionRuntime, changeTemplateInstance, "Execution");
+        setExecutionData(executionRuntime, changeTemplateInstance, "Rollback");
+        executionRuntime.executeMethodWithInjectedDependencies(instance, method);
     }
 
 
-    private void setExecutionData(RuntimeManager runtimeManager,
+    private void setExecutionData(ExecutionRuntime executionRuntime,
                                   ChangeTemplate<?, ?, ?> instance,
                                   String setterName) {
         Class<?> parameterClass;
@@ -74,7 +74,7 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
         Method setConfigurationMethod = getSetterMethod(instance.getClass(), "set" + setterName);
 
         if(data != null && Void.class != parameterClass) {
-            runtimeManager.executeMethodWithParameters(
+            executionRuntime.executeMethodWithParameters(
                     instance,
                     setConfigurationMethod,
                     FileUtil.getFromMap(parameterClass, data));

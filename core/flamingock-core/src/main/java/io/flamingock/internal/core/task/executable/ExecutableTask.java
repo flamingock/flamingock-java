@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public interface ExecutableTask extends TaskDescriptor {
 
     String getStageName();
 
-    void execute(RuntimeManager runtimeHelper);
+    void execute(ExecutionRuntime runtimeHelper);
 
     String getExecutionMethodName();
 

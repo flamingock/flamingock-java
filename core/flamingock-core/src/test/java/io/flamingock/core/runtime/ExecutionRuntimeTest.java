@@ -19,7 +19,7 @@ package io.flamingock.core.runtime;
 import io.flamingock.api.annotations.Nullable;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.MissingInjectedParameterException;
-import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,19 +28,19 @@ import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RuntimeManagerTest {
+public class ExecutionRuntimeTest {
 
     @Test
     @DisplayName("should throw exception when executing method if no dependency and not annotated with @Nullable")
     void shouldThrowExceptionIfNoNullableAnnotation() throws NoSuchMethodException {
 
-        RuntimeManager runtimeManager = RuntimeManager.builder()
+        ExecutionRuntime executionRuntime = ExecutionRuntime.builder()
                 .setDependencyContext(new SimpleContext())
                 .setLock(null)
                 .build();
 
-        Method methodWithNoNullable = RuntimeManagerTest.class.getMethod("methodWithNoNullable", ParameterClass.class);
-        MissingInjectedParameterException ex = Assertions.assertThrows(MissingInjectedParameterException.class, () -> runtimeManager.executeMethodWithInjectedDependencies(new RuntimeManagerTest(), methodWithNoNullable));
+        Method methodWithNoNullable = ExecutionRuntimeTest.class.getMethod("methodWithNoNullable", ParameterClass.class);
+        MissingInjectedParameterException ex = Assertions.assertThrows(MissingInjectedParameterException.class, () -> executionRuntime.executeMethodWithInjectedDependencies(new ExecutionRuntimeTest(), methodWithNoNullable));
         assertEquals(ParameterClass.class, ex.getWrongParameter());
     }
 
@@ -48,14 +48,14 @@ public class RuntimeManagerTest {
     @DisplayName("should not throw exception when executing method if no dependency and parameter is annotated with @Nullable")
     void shouldNotThrowExceptionIfNullableAnnotation() throws NoSuchMethodException {
 
-        RuntimeManager runtimeManager = RuntimeManager.builder()
+        ExecutionRuntime executionRuntime = ExecutionRuntime.builder()
                 .setDependencyContext(new SimpleContext())
                 .setLock(null)
                 .build();
 
-        runtimeManager.executeMethodWithInjectedDependencies
-                (new RuntimeManagerTest(),
-                        RuntimeManagerTest.class.getMethod("methodWithNullable", ParameterClass.class));
+        executionRuntime.executeMethodWithInjectedDependencies
+                (new ExecutionRuntimeTest(),
+                        ExecutionRuntimeTest.class.getMethod("methodWithNullable", ParameterClass.class));
     }
 
     public void methodWithNoNullable(ParameterClass parameterClass) {

@@ -15,13 +15,10 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
@@ -31,7 +28,6 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class DynamoDBTxWrapper implements TransactionWrapper {
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBTxWrapper.class);
@@ -51,13 +47,13 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
-        String sessionId = loadedTask.getId();
+    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
+        String sessionId = executionRuntime.getSessionId();
         TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
         Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
         try {
-            injectableContextProvider.addDependency(writeRequestBuilderDependency);
-            T result = operation.apply(injectableContextProvider.getContext());
+            executionRuntime.addDependency(writeRequestBuilderDependency);
+            T result = operation.apply(executionRuntime);
             if (!(result instanceof FailedStep)) {
                 try {
                     dynamoDBUtil.getEnhancedClient().transactWriteItems(writeRequestBuilder.build());

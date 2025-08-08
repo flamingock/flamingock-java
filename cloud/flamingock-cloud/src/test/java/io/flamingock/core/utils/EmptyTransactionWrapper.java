@@ -15,22 +15,19 @@
  */
 package io.flamingock.core.utils;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class EmptyTransactionWrapper implements TransactionWrapper {
 
     private boolean called = false;
+
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
+    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
         called = true;
-        return operation.apply(injectableContextProvider.getContext());
+        return operation.apply(executionRuntime);
     }
 
     public boolean isCalled() {

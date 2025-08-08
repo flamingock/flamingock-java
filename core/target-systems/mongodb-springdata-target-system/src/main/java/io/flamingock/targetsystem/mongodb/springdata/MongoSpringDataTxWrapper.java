@@ -19,18 +19,9 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoClient;
-import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -38,7 +29,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class MongoSpringDataTxWrapper implements TransactionWrapper {
     private final TransactionTemplate txTemplate;
@@ -53,9 +43,9 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
 
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor loadedTask, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
+    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
         return txTemplate.execute(status -> {
-            T result = operation.apply(injectableContextProvider.getContext());
+            T result = operation.apply(executionRuntime);
             if (result instanceof FailedStep) {
                 status.setRollbackOnly();
             }

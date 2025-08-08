@@ -16,9 +16,10 @@
 package io.flamingock.internal.core.targets;
 
 import io.flamingock.internal.common.core.context.ContextInitializable;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
-import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTargetSystem<HOLDER>>
         extends AbstractTargetSystem<HOLDER>
@@ -32,6 +33,10 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
 
     public void setAutoCreate(boolean autoCreate) {
         this.autoCreate = autoCreate;
+    }
+
+    public <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+        return getTxWrapper().wrapInTransaction(executionRuntime, changeApplier);
     }
 
     abstract public OngoingTaskStatusRepository getOnGoingTaskStatusRepository();

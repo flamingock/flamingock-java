@@ -15,13 +15,13 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.internal.core.runtime.RuntimeManager;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 
 public interface Rollback {
 
     ExecutableTask getTask();
 
-    void rollback(RuntimeManager runtimeHelper);
+    void rollback(ExecutionRuntime runtimeHelper);
 
     String getRollbackMethodName();
 }

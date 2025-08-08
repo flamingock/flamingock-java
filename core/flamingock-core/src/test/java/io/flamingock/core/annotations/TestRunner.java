@@ -18,9 +18,7 @@ package io.flamingock.core.annotations;
 import io.flamingock.core.utils.EmptyTransactionWrapper;
 import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
-import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
@@ -29,6 +27,7 @@ import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContex
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
@@ -50,7 +49,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -160,8 +159,8 @@ public class TestRunner {
         }
 
         @Override
-        public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
-            return changeApplier.get();
+        public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+            return changeApplier.apply(executionRuntime);
         }
 
         @Override
@@ -182,8 +181,8 @@ public class TestRunner {
         }
 
         @Override
-        public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
-            return changeApplier.get();
+        public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+            return changeApplier.apply(executionRuntime);
         }
     }
 }

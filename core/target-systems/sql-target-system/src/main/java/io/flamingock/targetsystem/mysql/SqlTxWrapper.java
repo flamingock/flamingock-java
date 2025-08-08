@@ -15,11 +15,9 @@
  */
 package io.flamingock.targetsystem.mysql;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.slf4j.Logger;
@@ -40,14 +38,14 @@ public class SqlTxWrapper implements TransactionWrapper {
     }
 
     @Override
-    public <T> T wrapInTransaction(TaskDescriptor taskDescriptor, InjectableContextProvider injectableContextProvider, Function<ContextResolver, T> operation) {
+    public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
 
         try (Connection connection = dataSource.getConnection()) {
             boolean originalAutoCommit = connection.getAutoCommit();
             try {
                 connection.setAutoCommit(false);
-                injectableContextProvider.addDependency(new Dependency(connection));
-                T result = operation.apply(injectableContextProvider.getContext());
+                executionRuntime.addDependency(new Dependency(connection));
+                T result = operation.apply(executionRuntime);
                 if (result instanceof FailedStep) {
                     connection.rollback();
                 } else {

@@ -16,15 +16,15 @@
 package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 
 public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> {
@@ -68,8 +68,8 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     }
 
     @Override
-    public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
-        return changeApplier.get();
+    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+        return changeApplier.apply(executionRuntime);
     }
 
     @Override

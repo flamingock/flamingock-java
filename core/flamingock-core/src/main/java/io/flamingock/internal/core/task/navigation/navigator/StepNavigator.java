@@ -101,9 +101,9 @@ public class StepNavigator {
         }
         rollableFailedStep.getRollbackSteps().forEach(rollableStep -> {
             ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep);
+            auditAndLogManualRollback(rolledBack, executionContext, LocalDateTime.now());
             stepLogger.logManualRollbackResult(rolledBack);
             summarizer.add(rolledBack);
-            auditAndLogManualRollback(rolledBack, executionContext, LocalDateTime.now());
         });
 
         return summarizer.setFailed().getSummary();

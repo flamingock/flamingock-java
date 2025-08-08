@@ -15,20 +15,18 @@
  */
 package io.flamingock.targetsystem.mysql;
 
-import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "FLAMINGOCK_ONGOING_TASKS";
@@ -70,13 +68,13 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     }
 
     @Override
-    public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
+    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
         try {
-            contextInjectable.addDependency(dataSource.getConnection());
+            executionRuntime.addDependency(dataSource.getConnection());
         } catch (SQLException e) {
             throw new FlamingockException(e);
         }
-        return changeApplier.get();
+        return changeApplier.apply(executionRuntime);
     }
 
     @Override

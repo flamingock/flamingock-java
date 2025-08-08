@@ -15,10 +15,9 @@
  */
 package io.flamingock.internal.core.targets;
 
-import io.flamingock.internal.common.core.context.ContextInjectable;
-import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 public class DefaultTargetSystem extends AbstractTargetSystem<DefaultTargetSystem> {
 
@@ -33,8 +32,8 @@ public class DefaultTargetSystem extends AbstractTargetSystem<DefaultTargetSyste
     }
 
     @Override
-    public <T> T applyChange(Supplier<T> changeApplier, DependencyInjectable contextInjectable) {
-        return changeApplier.get();
+    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+        return changeApplier.apply(executionRuntime);
     }
 
 }
