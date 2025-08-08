@@ -2,16 +2,27 @@
 
 set -e
 
+# EXAMPLES
+# ./infra/squash-against-master.sh "feat: add new feature" (uses default branch)
+# ./infra/squash-against-master.sh "fix: resolve bug" "main" (squashes against "main")
+
+
+
+# Default target branch
+DEFAULT_BRANCH="develop"
+
 # Conventional Commit pattern regular expression
 CC_REGEX="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\([\w\-]+\))?: .{1,}$"
 
 # Check message argument
 if [ -z "$1" ]; then
-  echo "❌ Usage: $0 \"<conventional commit message>\""
+  echo "❌ Usage: $0 \"<conventional commit message>\" [target_branch]"
+  echo "   Default target branch: $DEFAULT_BRANCH"
   exit 1
 fi
 
 COMMIT_MSG="$1"
+TARGET_BRANCH="${2:-$DEFAULT_BRANCH}"
 
 # Validate against Conventional Commit pattern
 if ! [[ "$COMMIT_MSG" =~ $CC_REGEX ]]; then
@@ -28,17 +39,17 @@ if [ "$CURRENT_BRANCH" = "HEAD" ]; then
   exit 1
 fi
 
-# Fetch master
-echo "🔄 Fetching origin/master..."
-git fetch origin master
+# Fetch target branch
+echo "🔄 Fetching origin/$TARGET_BRANCH..."
+git fetch origin "$TARGET_BRANCH"
 
 # Find merge-base
-MERGE_BASE=$(git merge-base origin/master HEAD)
+MERGE_BASE=$(git merge-base "origin/$TARGET_BRANCH" HEAD)
 
 # Check if there are commits to squash
 COMMITS_TO_SQUASH=$(git rev-list --count ${MERGE_BASE}..HEAD)
 if [ "$COMMITS_TO_SQUASH" -eq "0" ]; then
-  echo "✅ No commits to squash. Branch is already aligned with master."
+  echo "✅ No commits to squash. Branch is already aligned with $TARGET_BRANCH."
   exit 0
 fi
 
@@ -49,7 +60,7 @@ echo "🚧 Rewriting history..."
 git reset --soft "$MERGE_BASE"
 git commit -m "$COMMIT_MSG"
 
-echo "✅ Done. Your branch '$CURRENT_BRANCH' is now squashed on top of origin/master with message:"
+echo "✅ Done. Your branch '$CURRENT_BRANCH' is now squashed on top of origin/$TARGET_BRANCH with message:"
 echo
 echo "   \"$COMMIT_MSG\""
 echo
