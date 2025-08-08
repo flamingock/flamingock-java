@@ -19,20 +19,19 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.internal.util.Result;
-import io.flamingock.internal.core.community.LocalAuditor;
-import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
-import io.flamingock.internal.common.mongodb.CollectionInitializator;
-import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.community.mongodb.springdata.internal.mongodb.SpringDataMongoCollectionWrapper;
 import io.flamingock.community.mongodb.springdata.internal.mongodb.SpringDataMongoDocumentWrapper;
-import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.mongodb.CollectionInitializator;
+import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.internal.core.community.LocalAuditor;
+import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
+import io.flamingock.internal.util.Result;
+import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.LinkedList;
 import java.util.stream.Collectors;
@@ -49,13 +48,11 @@ public class SpringDataMongoAuditor implements LocalAuditor {
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<SpringDataMongoDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new SpringDataMongoDocumentWrapper(new Document()));
 
-    SpringDataMongoAuditor(MongoTemplate mongoTemplate,
-                           String collectionName,
-                           ReadWriteConfiguration readWriteConfiguration) {
-        this.collection = mongoTemplate.getCollection(collectionName)
-                .withReadConcern(readWriteConfiguration.getReadConcern())
-                .withReadPreference(readWriteConfiguration.getReadPreference())
-                .withWriteConcern(readWriteConfiguration.getWriteConcern());
+    SpringDataMongoAuditor(MongoSpringDataTargetSystem targetSystem, String collectionName) {
+        this.collection = targetSystem.getMongoTemplate().getCollection(collectionName)
+                .withReadConcern(targetSystem.getReadConcern())
+                .withReadPreference(targetSystem.getReadPreference())
+                .withWriteConcern(targetSystem.getWriteConcern());
     }
 
     protected void initialize(boolean indexCreation) {

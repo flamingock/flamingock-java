@@ -42,6 +42,10 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
         this.sessionManager = sessionManager;
     }
 
+    public TransactionManager<ClientSession> getTxManager() {
+        return sessionManager;
+    }
+
     @Override
     public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
         String sessionId = executionRuntime.getSessionId();

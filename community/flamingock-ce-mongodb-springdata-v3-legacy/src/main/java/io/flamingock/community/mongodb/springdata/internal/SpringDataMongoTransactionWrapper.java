@@ -60,6 +60,4 @@ public class SpringDataMongoTransactionWrapper implements TransactionWrapper {
             return result;
         });
     }
-
-
 }

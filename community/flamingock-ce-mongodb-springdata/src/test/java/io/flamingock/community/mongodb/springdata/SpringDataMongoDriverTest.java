@@ -133,7 +133,6 @@ class SpringDataMongoDriverTest {
             FlamingockFactory.getCommunityBuilder()
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .build()
                     .run();
@@ -158,51 +157,10 @@ class SpringDataMongoDriverTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .build()
                     .run();
         }
-
-        //Then
-        //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(3, auditLog.size());
-        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
-
-        //Checking clients collection
-        Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
-                .find()
-                .map(document -> document.getString("name"))
-                .into(new HashSet<>());
-        assertEquals(2, clients.size());
-        assertTrue(clients.contains("Federico"));
-        assertTrue(clients.contains("Jorge"));
-    }
-
-    @Test
-    @DisplayName("When standalone runs the driver with transactions disabled should persist the audit logs and the user's collection updated")
-    void happyPathWithoutTransaction() {
-        //Given-When
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_003_insert_jorge_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)))
-            );
-            FlamingockFactory.getCommunityBuilder()
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.happyPathWithoutTransaction"))
-                    .addDependency(mongoTemplate)
-                    .disableTransaction()
-                    .build()
-                    .run();
-        }
-
 
         //Then
         //Checking auditLog
@@ -261,91 +219,5 @@ class SpringDataMongoDriverTest {
                 .into(new HashSet<>());
         assertEquals(1, clients.size());
         assertTrue(clients.contains("Federico"));
-    }
-
-    @Test
-    @DisplayName("When standalone runs the driver with transactions disabled and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
-    void failedWithoutTransactionWithRollback() {
-        //Given-When
-
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_003_insert_jorge_failed_non_transactional_rollback.class, Collections.singletonList(MongoTemplate.class), Collections.singletonList(MongoTemplate.class)))
-            );
-
-            assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockFactory.getCommunityBuilder()
-                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.failedWithoutTransactionWithRollback"))
-                        .addDependency(mongoTemplate)
-                        .disableTransaction()
-                        .build()
-                        .run();
-            });
-        }
-
-
-        //Then
-        //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(3, auditLog.size());
-        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(2).getState());
-
-        //Checking clients collection
-        Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
-                .find()
-                .map(document -> document.getString("name"))
-                .into(new HashSet<>());
-        assertEquals(1, clients.size());
-        assertTrue(clients.contains("Federico"));
-    }
-
-    @Test
-    @DisplayName("When standalone runs the driver with transactions disabled and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
-    void failedWithoutTransactionWithoutRollback() {
-        //Given-When
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(MongoDBTestHelper.getPreviewPipeline(
-                    new Trio<>(_001_create_client_collection_happy.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoTemplate.class)),
-                    new Trio<>(_003_insert_jorge_failed_non_transactional_non_rollback.class, Collections.singletonList(MongoTemplate.class), Collections.singletonList(MongoTemplate.class)))
-            );
-
-            assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockFactory.getCommunityBuilder()
-                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.failedWithoutTransactionWithoutRollback"))
-                        .addDependency(mongoTemplate)
-                        .disableTransaction()
-                        .build()
-                        .run();
-            });
-        }
-
-
-        //Then
-        //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(3, auditLog.size());
-        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditLog.get(2).getState());
-
-        //Checking clients collection
-        Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
-                .find()
-                .map(document -> document.getString("name"))
-                .into(new HashSet<>());
-        assertEquals(2, clients.size());
-        assertTrue(clients.contains("Federico"));
-        assertTrue(clients.contains("Jorge"));
     }
 }

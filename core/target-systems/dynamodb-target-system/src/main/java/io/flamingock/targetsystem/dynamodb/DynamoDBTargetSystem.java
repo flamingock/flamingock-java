@@ -39,7 +39,7 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     }
 
     public DynamoDBTargetSystem withDynamoDBClient(DynamoDbClient dynamoDbClient) {
-        context.addDependency(dynamoDbClient);
+        targetSystemContext.addDependency(dynamoDbClient);
         return this;
     }
 
@@ -48,7 +48,7 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
-        DynamoDbClient dynamoDbClient = context.getDependencyValue(DynamoDbClient.class)
+        DynamoDbClient dynamoDbClient = targetSystemContext.getDependencyValue(DynamoDbClient.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(DynamoDbClient.class));
 
         txWrapper = new DynamoDBTxWrapper(dynamoDbClient);

@@ -24,7 +24,9 @@ import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.core.CoreConfigurator;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
+import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
+import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.engine.ConnectionEngine;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
@@ -181,18 +183,24 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
         pluginManager.initialize(context);
 
-        ContextResolver hierarchicalContext = buildHierarchicalContext();
+        PriorityContext hierarchicalContext = buildHierarchicalContext();
 
         driver.initialize(hierarchicalContext);
 
-        ConnectionEngine engine = driver.getEngine();
-        context.addDependency(new Dependency(ExecutionAuditWriter.class, engine.getAuditWriter()));
-
-
-        LoadedPipeline pipeline = buildPipeline();
-        pipeline.contributeToContext(context);
+        //TODO REPLACE WHEN ALL THE DRIVER's targetSystems done
+//        targetSystemManager.addDefault(driver.getTargetSystem());
+        targetSystemManager.add(driver.getTargetSystem());
 
         targetSystemManager.initialize(hierarchicalContext);
+
+        ConnectionEngine engine = driver.getEngine();
+
+        LoadedPipeline pipeline = buildPipeline();
+
+        //This contribution to the context is fine after components initialization as it's only used
+        pipeline.contributeToContext(hierarchicalContext);
+        hierarchicalContext.addDependency(new Dependency(ExecutionAuditWriter.class, engine.getAuditWriter()));
+
 
         return PipelineRunnerCreator.create(
                 runnerId,
@@ -228,7 +236,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         doUpdateContext();
     }
 
-    private ContextResolver buildHierarchicalContext() {
+    private PriorityContext buildHierarchicalContext() {
         List<ContextResolver> dependencyContextsFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getDependencyContext)
@@ -238,8 +246,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
                 .stream()
                 .filter(Objects::nonNull)
                 .reduce((previous, current) -> new PriorityContextResolver(current, previous))
-                .<ContextResolver>map(accumulated -> new PriorityContextResolver(context, accumulated))
-                .orElse(context);
+                .map(accumulated -> new PriorityContext(context, accumulated))
+                .orElse(new PriorityContext(new SimpleContext(), context));
     }
 
 

@@ -31,8 +31,13 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         super(id);
     }
 
-    public void setAutoCreate(boolean autoCreate) {
+    public HOLDER withAutoCreate(boolean autoCreate) {
         this.autoCreate = autoCreate;
+        return getSelf();
+    }
+
+    public boolean isAutoCreate() {
+        return autoCreate;
     }
 
     public boolean inSyncWithAuditStore() {

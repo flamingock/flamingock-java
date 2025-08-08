@@ -40,7 +40,7 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
 
     public SqlTargetSystem withDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
-        context.addDependency(dataSource);
+        targetSystemContext.addDependency(dataSource);
         return this;
     }
 
@@ -49,7 +49,7 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
-        DataSource dataSource = context.getDependencyValue(DataSource.class)
+        DataSource dataSource = targetSystemContext.getDependencyValue(DataSource.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(DataSource.class));
 
         txWrapper = new SqlTxWrapper(dataSource);

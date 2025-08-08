@@ -8,8 +8,8 @@ val versions = mapOf(
 dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
+    implementation(project(":core:target-systems:mongodb-springdata-target-system"))
     api(project(":community:flamingock-ce-mongodb-sync"))
-    api(project(":core:target-systems:mongodb-sync-target-system"))
 
     compileOnly("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")//this filters the broader range in flamingock-ce-mongodb-sync
     compileOnly("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")

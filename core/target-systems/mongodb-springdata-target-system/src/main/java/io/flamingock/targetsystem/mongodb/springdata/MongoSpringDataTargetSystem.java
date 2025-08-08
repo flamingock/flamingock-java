@@ -32,51 +32,76 @@ import java.util.function.Function;
 
 public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<MongoSpringDataTargetSystem> {
 
+    private final WriteConcern DEFAULT_WRITE_CONCERN = WriteConcern.MAJORITY.withJournal(true);
+    private final ReadConcern DEFAULT_READ_CONCERN = ReadConcern.MAJORITY;
+    private final ReadPreference DEFAULT_READ_PREFERENCE = ReadPreference.primary();
+
     private OngoingTaskStatusRepository taskStatusRepository;
 
     private MongoSpringDataTxWrapper txWrapper;
+    private MongoTemplate mongoTemplate;
+    private WriteConcern writeConcern = null;
+    private ReadConcern readConcern = null;
+    private ReadPreference readPreference = null;
 
     public MongoSpringDataTargetSystem(String id) {
         super(id);
     }
 
     public MongoSpringDataTargetSystem withMongoTemplate(MongoTemplate mongoTemplate) {
-        context.addDependency(mongoTemplate);
+        targetSystemContext.addDependency(mongoTemplate);
         return this;
     }
     
     public MongoSpringDataTargetSystem withReadConcern(ReadConcern readConcern) {
-        context.addDependency(readConcern);
+        targetSystemContext.addDependency(readConcern);
         return this;
     }
 
     public MongoSpringDataTargetSystem withReadPreference(ReadPreference readPreference) {
-        context.addDependency(readPreference);
+        targetSystemContext.addDependency(readPreference);
         return this;
     }
 
     public MongoSpringDataTargetSystem withWriteConcern(WriteConcern writeConcern) {
-        context.addDependency(writeConcern);
+        targetSystemContext.addDependency(writeConcern);
         return this;
+    }
+
+    public MongoTemplate getMongoTemplate() {
+        return mongoTemplate;
+    }
+
+    public WriteConcern getWriteConcern() {
+        return writeConcern;
+    }
+
+    public ReadConcern getReadConcern() {
+        return readConcern;
+    }
+
+    public ReadPreference getReadPreference() {
+        return readPreference;
     }
 
     @Override
     public void initialize(ContextResolver baseContext) {
 
-        MongoTemplate mongoTemplate = context.getDependencyValue(MongoTemplate.class)
+        mongoTemplate = targetSystemContext.getDependencyValue(MongoTemplate.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(MongoTemplate.class));
 
-        MongoDatabase database = context.getDependencyValue(MongoDatabase.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(MongoDatabase.class));
 
-        ReadConcern readConcern = context.getDependencyValue(ReadConcern.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(ReadConcern.class));
+        readConcern = targetSystemContext.getDependencyValue(ReadConcern.class)
+                .orElseGet(() -> baseContext.getDependencyValue(ReadConcern.class)
+                        .orElse(DEFAULT_READ_CONCERN));
 
-        ReadPreference readPreference = context.getDependencyValue(ReadPreference.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(ReadPreference.class));
+        readPreference = targetSystemContext.getDependencyValue(ReadPreference.class)
+                .orElseGet(() -> baseContext.getDependencyValue(ReadPreference.class)
+                        .orElse(DEFAULT_READ_PREFERENCE));
 
-        WriteConcern writeConcern = context.getDependencyValue(WriteConcern.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(WriteConcern.class));
+        writeConcern = targetSystemContext.getDependencyValue(WriteConcern.class)
+                .orElseGet(() -> baseContext.getDependencyValue(WriteConcern.class)
+                        .orElseGet(() -> DEFAULT_WRITE_CONCERN));
 
         txWrapper = MongoSpringDataTxWrapper.builder()
                 .mongoTemplate(mongoTemplate)

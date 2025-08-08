@@ -28,6 +28,7 @@ import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.community.mongodb.springdata.internal.mongodb.SpringDataMongoCollectionWrapper;
 import io.flamingock.community.mongodb.springdata.internal.mongodb.SpringDataMongoDocumentWrapper;
 import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
+import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_AUTHOR;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
@@ -48,13 +50,11 @@ public class SpringDataMongoAuditor implements LocalAuditor {
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<SpringDataMongoDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new SpringDataMongoDocumentWrapper(new Document()));
 
-    SpringDataMongoAuditor(MongoTemplate mongoTemplate,
-                           String collectionName,
-                           ReadWriteConfiguration readWriteConfiguration) {
-        this.collection = mongoTemplate.getCollection(collectionName)
-                .withReadConcern(readWriteConfiguration.getReadConcern())
-                .withReadPreference(readWriteConfiguration.getReadPreference())
-                .withWriteConcern(readWriteConfiguration.getWriteConcern());
+    SpringDataMongoAuditor(MongoSpringDataTargetSystem targetSystem, String collectionName) {
+        this.collection = targetSystem.getMongoTemplate().getCollection(collectionName)
+                .withReadConcern(targetSystem.getReadConcern())
+                .withReadPreference(targetSystem.getReadPreference())
+                .withWriteConcern(targetSystem.getWriteConcern());
     }
 
     protected void initialize(boolean indexCreation) {
@@ -98,7 +98,7 @@ public class SpringDataMongoAuditor implements LocalAuditor {
                 .stream()
                 .map(SpringDataMongoDocumentWrapper::new)
                 .map(mapper::fromDocument)
-                .toList()
+                .collect(Collectors.toList())
                 .forEach(builder::addEntry);
         return builder.build();
 

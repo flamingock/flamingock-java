@@ -15,8 +15,10 @@
  */
 package io.flamingock.internal.core.engine;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
+import io.flamingock.internal.core.targets.DefaultTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Collections;
@@ -24,9 +26,11 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface ConnectionEngine {
+
     ExecutionAuditWriter getAuditWriter();
 
     ExecutionPlanner getExecutionPlanner();
+
 
     Optional<? extends TransactionWrapper> getTransactionWrapper();
 
@@ -36,6 +40,7 @@ public interface ConnectionEngine {
         };
     }
 
+    //TODO move this to TargetSystem
     default Set<Class<?>> getNonGuardedTypes() {
         return Collections.emptySet();
     }

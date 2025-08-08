@@ -17,12 +17,8 @@ package io.flamingock.community.mongodb.sync.internal;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoDatabase;
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
-import io.flamingock.targetystem.mongodb.sync.MongoSyncTxWrapper;
-import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
@@ -30,6 +26,9 @@ import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -38,41 +37,37 @@ import java.util.Set;
 
 public class MongoSyncEngine extends AbstractLocalEngine {
 
-    private final MongoDatabase database;
-    private final MongoClient mongoClient;
-    private final MongoDBSyncConfiguration driverConfiguration;
-    private final CoreConfigurable coreConfiguration;
     private MongoSyncAuditor auditor;
+    private MongoSyncTargetSystem targetSystem;
+    private final String lockCollectionName;
+    private final String auditCollectionName;
     private LocalExecutionPlanner executionPlanner;
-    private TransactionWrapper transactionWrapper;
+    private final CoreConfigurable coreConfiguration;
 
-    public MongoSyncEngine(MongoClient mongoClient,
-                            MongoDatabase database,
-                            CoreConfigurable coreConfiguration,
-                            CommunityConfigurable localConfiguration,
-                            MongoDBSyncConfiguration driverConfiguration) {
+
+    public MongoSyncEngine(MongoSyncTargetSystem targetSystem,
+                           String auditCollectionName,
+                           String lockCollectionName,
+                           CoreConfigurable coreConfiguration,
+                           CommunityConfigurable localConfiguration) {
         super(localConfiguration);
-        this.mongoClient = mongoClient;
-        this.database = database;
-        this.driverConfiguration = driverConfiguration;
+        this.targetSystem = targetSystem;
+        this.auditCollectionName = auditCollectionName;
+        this.lockCollectionName = lockCollectionName;
         this.coreConfiguration = coreConfiguration;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        TransactionManager<ClientSession> sessionManager = new TransactionManager<>(mongoClient::startSession);
 
-        transactionWrapper = localConfiguration.isTransactionDisabled()
-                ? null
-                : new MongoSyncTxWrapper(sessionManager);
 
         //Auditor
-        auditor = buildAuditor(sessionManager);
-        auditor.initialize(driverConfiguration.isAutoCreate());
+        auditor = buildAuditor();
+        auditor.initialize(targetSystem.isAutoCreate());
 
         //Lock
         MongoSyncLockService lockService = buildLockService();
-        lockService.initialize(driverConfiguration.isAutoCreate());
+        lockService.initialize(targetSystem.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
     }
 
@@ -86,39 +81,30 @@ public class MongoSyncEngine extends AbstractLocalEngine {
         return executionPlanner;
     }
 
+    @Deprecated
     @Override
     public Set<Class<?>> getNonGuardedTypes() {
         return new HashSet<>(Collections.singletonList(ClientSession.class));
     }
 
+    //TODO remove
     @Override
+    @Deprecated
     public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.ofNullable(transactionWrapper);
+        return localConfiguration.isTransactionDisabled()
+        ? Optional.empty()
+        : Optional.of(targetSystem.getTxWrapper());
     }
 
 
-
-    private MongoSyncAuditor buildAuditor(TransactionManager<ClientSession> sessionManager) {
-        return new MongoSyncAuditor(
-                database,
-                driverConfiguration.getAuditRepositoryName(),
-                new ReadWriteConfiguration(
-                        driverConfiguration.getBuiltMongoDBWriteConcern(),
-                        new ReadConcern(driverConfiguration.getReadConcern()),
-                        driverConfiguration.getReadPreference().getValue()
-                ),
-                sessionManager);
+    private MongoSyncAuditor buildAuditor() {
+        return new MongoSyncAuditor(targetSystem, auditCollectionName);
     }
 
     private MongoSyncLockService buildLockService() {
         return new MongoSyncLockService(
-                database,
-                driverConfiguration.getLockRepositoryName(),
-                new ReadWriteConfiguration(
-                        driverConfiguration.getBuiltMongoDBWriteConcern(),
-                        new ReadConcern(driverConfiguration.getReadConcern()),
-                        driverConfiguration.getReadPreference().getValue()
-                ),
+                targetSystem,
+                lockCollectionName,
                 TimeService.getDefault());
     }
 

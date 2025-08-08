@@ -51,7 +51,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
         implements ContextDecoratorTargetSystem, ContextConfigurable<HOLDER> {
     private final String id;
 
-    protected Context context = new SimpleContext();
+    protected Context targetSystemContext = new SimpleContext();
 
     public AbstractTargetSystem(String id) {
         this.id = id;
@@ -66,21 +66,21 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
 
     @Override
     public Context decorateOnTop(ContextResolver baseContext) {
-        return new PriorityContext(context, baseContext);
+        return new PriorityContext(targetSystemContext, baseContext);
     }
 
     abstract public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime);
 
     @Override
     public HOLDER addDependency(String name, Class<?> type, Object instance) {
-        context.addDependency(new Dependency(name, type, instance));
+        targetSystemContext.addDependency(new Dependency(name, type, instance));
         return getSelf();
     }
 
     @Override
     public HOLDER addDependency(Object instance) {
         if (instance instanceof Dependency) {
-            context.addDependency(instance);
+            targetSystemContext.addDependency(instance);
             return getSelf();
         } else {
             return addDependency(Dependency.DEFAULT_NAME, instance.getClass(), instance);
@@ -100,235 +100,235 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
 
     @Override
     public HOLDER setProperty(Property property) {
-        context.setProperty(property);
+        targetSystemContext.setProperty(property);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, String value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Boolean value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Integer value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Float value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Long value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Double value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, UUID value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Currency value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Locale value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Charset value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, File value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Path value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, InetAddress value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, URL value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, URI value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Duration value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Period value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Instant value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, LocalDate value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, LocalTime value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, LocalDateTime value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, ZonedDateTime value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, OffsetDateTime value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, OffsetTime value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, java.util.Date value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, java.sql.Date value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Time value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Timestamp value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, String[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Integer[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Long[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Double[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Float[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Boolean[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Byte[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Short[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public HOLDER setProperty(String key, Character[] value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 
     @Override
     public <T extends Enum<T>> HOLDER setProperty(String key, T value) {
-        context.setProperty(key, value);
+        targetSystemContext.setProperty(key, value);
         return getSelf();
     }
 

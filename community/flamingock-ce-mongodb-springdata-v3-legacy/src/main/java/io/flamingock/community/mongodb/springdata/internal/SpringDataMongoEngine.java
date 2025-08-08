@@ -15,59 +15,48 @@
  */
 package io.flamingock.community.mongodb.springdata.internal;
 
-import com.mongodb.ReadConcern;
-import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.community.mongodb.springdata.config.SpringDataMongoConfiguration;
-import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 
 import java.util.Optional;
 
 public class SpringDataMongoEngine extends AbstractLocalEngine {
 
-    private final MongoTemplate mongoTemplate;
-    private final SpringDataMongoConfiguration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
+    private final MongoSpringDataTargetSystem targetSystem;
+    private final String auditCollectionName;
+    private final String lockCollectionName;
     private SpringDataMongoAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
-    private TransactionWrapper transactionWrapper;
 
 
-    public SpringDataMongoEngine(MongoTemplate mongoTemplate,
+    public SpringDataMongoEngine(MongoSpringDataTargetSystem targetSystem,
+                                 String auditCollectionName,
+                                 String lockCollectionName,
                                  CoreConfigurable coreConfiguration,
-                                 CommunityConfigurable localConfiguration,
-                                 SpringDataMongoConfiguration driverConfiguration) {
+                                 CommunityConfigurable localConfiguration) {
         super(localConfiguration);
-        this.mongoTemplate = mongoTemplate;
-        this.driverConfiguration = driverConfiguration;
+        this.targetSystem = targetSystem;
+        this.auditCollectionName = auditCollectionName;
+        this.lockCollectionName = lockCollectionName;
         this.coreConfiguration = coreConfiguration;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        ReadWriteConfiguration readWriteConfiguration = new ReadWriteConfiguration(driverConfiguration.getBuiltMongoDBWriteConcern(),
-                new ReadConcern(driverConfiguration.getReadConcern()),
-                driverConfiguration.getReadPreference().getValue());
-        transactionWrapper = localConfiguration.isTransactionDisabled()
-                ? null
-                : new SpringDataMongoTransactionWrapper(mongoTemplate, readWriteConfiguration);
 
-        auditor = new SpringDataMongoAuditor(
-                mongoTemplate,
-                driverConfiguration.getAuditRepositoryName(),
-                readWriteConfiguration);
-        auditor.initialize(driverConfiguration.isAutoCreate());
-        SpringDataMongoLockService lockService = new SpringDataMongoLockService(
-                mongoTemplate.getDb(),
-                driverConfiguration.getLockRepositoryName(),
-                readWriteConfiguration);
-        lockService.initialize(driverConfiguration.isAutoCreate());
+        auditor = new SpringDataMongoAuditor(targetSystem, auditCollectionName);
+
+        auditor.initialize(targetSystem.isAutoCreate());
+
+        SpringDataMongoLockService lockService = new SpringDataMongoLockService(targetSystem, lockCollectionName);
+        lockService.initialize(targetSystem.isAutoCreate());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
     }
 
@@ -81,9 +70,13 @@ public class SpringDataMongoEngine extends AbstractLocalEngine {
         return executionPlanner;
     }
 
-
+    //TODO remove
     @Override
+    @Deprecated
     public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.ofNullable(transactionWrapper);
+        return localConfiguration.isTransactionDisabled()
+                ? Optional.empty()
+                : Optional.of(targetSystem.getTxWrapper());
     }
+
 }

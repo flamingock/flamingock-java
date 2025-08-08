@@ -15,14 +15,18 @@
  */
 package io.flamingock.community.mongodb.springdata.internal;
 
-import com.mongodb.client.MongoDatabase;
-import io.flamingock.internal.util.TimeService;
 import io.flamingock.community.mongodb.sync.internal.MongoSyncLockService;
-import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
+import io.flamingock.internal.util.TimeService;
+import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 
 public class SpringDataMongoLockService extends MongoSyncLockService {
 
-    protected SpringDataMongoLockService(MongoDatabase mongoDatabase, String lockCollectionName, ReadWriteConfiguration readWriteConfiguration) {
-        super(mongoDatabase, lockCollectionName, readWriteConfiguration, TimeService.getDefault());
+    protected SpringDataMongoLockService(MongoSpringDataTargetSystem targetSystem,
+                                         String collectionName) {
+        super(targetSystem.getMongoTemplate().getCollection(collectionName),
+                targetSystem.getReadConcern(),
+                targetSystem.getReadPreference(),
+                targetSystem.getWriteConcern(),
+                TimeService.getDefault());
     }
 }

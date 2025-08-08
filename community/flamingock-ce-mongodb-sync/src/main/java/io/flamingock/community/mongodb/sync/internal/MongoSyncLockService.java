@@ -18,11 +18,15 @@ package io.flamingock.community.mongodb.sync.internal;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoWriteException;
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.util.id.RunnerId;
@@ -53,14 +57,25 @@ public class MongoSyncLockService implements LocalLockService {
     private final MongoCollection<Document> collection;
     private final TimeService timeService;
 
-    protected MongoSyncLockService(MongoDatabase mongoDatabase,
-                                   String lockCollectionName,
-                                   ReadWriteConfiguration readWriteConfiguration,
+    protected MongoSyncLockService(MongoSyncTargetSystem targetSystem,
+                                   String collectionName,
                                    TimeService timeService) {
-        this.collection = mongoDatabase.getCollection(lockCollectionName)
-                .withReadConcern(readWriteConfiguration.getReadConcern())
-                .withReadPreference(readWriteConfiguration.getReadPreference())
-                .withWriteConcern(readWriteConfiguration.getWriteConcern());
+        this(targetSystem.getDatabase().getCollection(collectionName),
+                targetSystem.getReadConcern(),
+                targetSystem.getReadPreference(),
+                targetSystem.getWriteConcern(),
+                timeService);
+    }
+
+    protected MongoSyncLockService(MongoCollection<Document> collection,
+                                   ReadConcern readConcern,
+                                   ReadPreference readPreference,
+                                   WriteConcern writeConcern,
+                                   TimeService timeService) {
+        this.collection = collection
+                .withReadConcern(readConcern)
+                .withReadPreference(readPreference)
+                .withWriteConcern(writeConcern);
         this.timeService = timeService;
     }
 

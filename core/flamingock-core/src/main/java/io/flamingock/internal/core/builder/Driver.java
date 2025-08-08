@@ -15,21 +15,29 @@
  */
 package io.flamingock.internal.core.builder;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.cloud.CloudDriver;
 import io.flamingock.internal.core.community.driver.LocalDriver;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.core.engine.ConnectionEngine;
+import io.flamingock.internal.core.targets.DefaultTargetSystem;
 
 import java.util.Optional;
 
 public interface Driver<ENGINE extends ConnectionEngine> extends ContextInitializable {
+    String DEFAULT_AUDIT_STORE_TARGET_SYSTEM = "default-audit-store-target-system";
 
     default boolean isCloud() {
         return false;
     }
 
     ENGINE getEngine();
+
+    default TargetSystem getTargetSystem() {
+        return new DefaultTargetSystem(DEFAULT_AUDIT_STORE_TARGET_SYSTEM);
+    }
+
 
     static Driver<?> getDriver() {
         Optional<CloudDriver> cloudDriver = CloudDriver.getDriver();

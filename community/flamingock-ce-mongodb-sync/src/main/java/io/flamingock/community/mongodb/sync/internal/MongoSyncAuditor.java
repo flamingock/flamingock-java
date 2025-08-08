@@ -17,10 +17,10 @@ package io.flamingock.community.mongodb.sync.internal;
 
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.util.Result;
@@ -49,17 +49,14 @@ public class MongoSyncAuditor implements LocalAuditor {
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
-    private final TransactionManager<ClientSession> sessionManager;
+    private final TransactionManager<ClientSession> txSessionManager;
 
-    MongoSyncAuditor(MongoDatabase database,
-                      String collectionName,
-                      ReadWriteConfiguration readWriteConfiguration,
-                      TransactionManager<ClientSession> sessionManager) {
-        this.collection = database.getCollection(collectionName)
-                .withReadConcern(readWriteConfiguration.getReadConcern())
-                .withReadPreference(readWriteConfiguration.getReadPreference())
-                .withWriteConcern(readWriteConfiguration.getWriteConcern());
-        this.sessionManager = sessionManager;
+    MongoSyncAuditor(MongoSyncTargetSystem targetSystem, String collectionName) {
+        this.collection = targetSystem.getDatabase().getCollection(collectionName)
+                .withReadConcern(targetSystem.getReadConcern())
+                .withReadPreference(targetSystem.getReadPreference())
+                .withWriteConcern(targetSystem.getWriteConcern());
+        this.txSessionManager = targetSystem.getTxManager();
     }
 
     protected void initialize(boolean indexCreation) {
@@ -86,7 +83,7 @@ public class MongoSyncAuditor implements LocalAuditor {
 
         Document entryDocument = mapper.toDocument(auditEntry).getDocument();
 
-        UpdateResult result = sessionManager.getSession(auditEntry.getTaskId())
+        UpdateResult result = txSessionManager.getSession(auditEntry.getTaskId())
                 .map(clientSession -> collection.replaceOne(clientSession, filter, entryDocument, new ReplaceOptions().upsert(true)))
                 .orElseGet(() -> collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true)));
         logger.debug("SaveOrUpdate[{}] with result" +
