@@ -187,9 +187,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
         driver.initialize(hierarchicalContext);
 
-        //TODO REPLACE WHEN ALL THE DRIVER's targetSystems done
-//        targetSystemManager.addDefault(driver.getTargetSystem());
-        targetSystemManager.add(driver.getTargetSystem());
+        targetSystemManager.setAuditStoreTargetSystem(driver.getTargetSystem());
+
 
         targetSystemManager.initialize(hierarchicalContext);
 

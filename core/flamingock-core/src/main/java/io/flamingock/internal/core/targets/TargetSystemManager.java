@@ -18,6 +18,10 @@ package io.flamingock.internal.core.targets;
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.core.targets.operations.TargetSystemOps;
+import io.flamingock.internal.core.targets.operations.TargetSystemOpsImpl;
+import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOpsImpl;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.HashMap;
@@ -36,16 +40,19 @@ import java.util.Optional;
 public class TargetSystemManager implements ContextInitializable {
 
     private boolean initialized = false;
-    private AbstractTargetSystem<?> defaultTargetSystem;
+    private AbstractTargetSystem<?> auditStoreTargetSystem;
     private final Map<String, AbstractTargetSystem<?>> targetSystemMap = new HashMap<>();
 
     @Override
     public void initialize(ContextResolver contextResolver) {
+        if (auditStoreTargetSystem == null) {
+            throw new IllegalArgumentException("Trying to initialize TargetSystemManager without AuditStore TargetSystem");
+        }
         initialized = true;
         targetSystemMap.values()
                 .stream()
                 .filter(targetSystem -> targetSystem instanceof ContextInitializable)
-                .map(targetSystem -> (ContextInitializable)targetSystem)
+                .map(targetSystem -> (ContextInitializable) targetSystem)
                 .forEach(targetSystem -> targetSystem.initialize(contextResolver));
     }
 
@@ -68,12 +75,19 @@ public class TargetSystemManager implements ContextInitializable {
      * @param defaultTargetSystem the default target system
      * @throws IllegalArgumentException if the target system or its ID is null/blank
      */
-    public void addDefault(TargetSystem defaultTargetSystem) {
+    public void setAuditStoreTargetSystem(TargetSystem defaultTargetSystem) {
         add(defaultTargetSystem);
-        this.defaultTargetSystem = (AbstractTargetSystem<?>) defaultTargetSystem;
+        this.auditStoreTargetSystem = (AbstractTargetSystem<?>) defaultTargetSystem;
     }
 
 
+    public Optional<TargetSystemOps> getOrDefault(TargetSystemDescriptor tsd) {
+        return Optional.ofNullable(getValueOrDefault(tsd));
+    }
+
+    public TargetSystemOps getValueOrDefault(TargetSystemDescriptor tsd) {
+        return getValueOrDefault(tsd != null ? tsd.getId() : null);
+    }
 
     /**
      * Returns the {@link TargetSystem} associated with the given ID,
@@ -82,20 +96,21 @@ public class TargetSystemManager implements ContextInitializable {
      * @param id the target system ID
      * @return an {@link Optional} with the matching or default target system, or empty if none registered
      */
-    public Optional<ContextDecoratorTargetSystem> getOrDefault(String id) {
+    public Optional<TargetSystemOps> getOrDefault(String id) {
         return Optional.ofNullable(getValueOrDefault(id));
     }
 
-    public AbstractTargetSystem<?> getValueOrDefault(String id) {
+    public TargetSystemOps getValueOrDefault(String id) {
         //We do it this way(instead of getOrDefault) because although current implementation(HashMap) allows
         // nulls, we may change in the future(ConcurrentHashMap doesn't allow nulls, for instance)
-        if(id == null || !targetSystemMap.containsKey(id)) {
-            return defaultTargetSystem;
+        if (id == null || !targetSystemMap.containsKey(id)) {
+            return toDecorator(auditStoreTargetSystem);
         } else {
-            return targetSystemMap.getOrDefault(id, defaultTargetSystem);
+            AbstractTargetSystem<?> targetSystem = targetSystemMap.getOrDefault(id, auditStoreTargetSystem);
+            return toDecorator(targetSystem);
         }
-
     }
+
 
     /**
      * Validates that the target system is non-null and has a valid ID.
@@ -113,10 +128,22 @@ public class TargetSystemManager implements ContextInitializable {
         if (!(targetSystem instanceof AbstractTargetSystem)) {
             throw new IllegalArgumentException("TargetSystem must be an instance of AbstractTargetSystem");
         }
-        if(initialized) {
+        if (initialized) {
             String message = String.format("Target system with id[%s] cannot be added after TargetSystemManager is initialized", targetSystem.getId());
             throw new IllegalArgumentException(message);
         }
         return (AbstractTargetSystem<?>) targetSystem;
+    }
+
+    private TargetSystemOps toDecorator(AbstractTargetSystem<?> instance) {
+        if (instance instanceof TransactionalTargetSystem) {
+            TransactionalTargetSystem<?> txInstance = (TransactionalTargetSystem<?>) instance;
+            boolean isAuditStoreTransactionResource = auditStoreTargetSystem instanceof TransactionalTargetSystem
+                    && ((TransactionalTargetSystem<?>) auditStoreTargetSystem).isSameTxResourceAs(txInstance);
+
+            return new TransactionalTargetSystemOpsImpl(txInstance, isAuditStoreTransactionResource);
+        } else {
+            return new TargetSystemOpsImpl(instance);
+        }
     }
 }

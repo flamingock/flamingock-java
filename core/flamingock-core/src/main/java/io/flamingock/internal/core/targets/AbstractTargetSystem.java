@@ -48,7 +48,9 @@ import java.util.function.Function;
 
 
 public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<HOLDER>>
-        implements ContextDecoratorTargetSystem, ContextConfigurable<HOLDER> {
+        implements
+        ContextDecoratorTargetSystem,
+        ContextConfigurable<HOLDER> {
     private final String id;
 
     protected Context targetSystemContext = new SimpleContext();
@@ -64,12 +66,15 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
 
     abstract protected HOLDER getSelf();
 
+
+    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+        return changeApplier.apply(executionRuntime);
+    }
+
     @Override
     public Context decorateOnTop(ContextResolver baseContext) {
         return new PriorityContext(targetSystemContext, baseContext);
     }
-
-    abstract public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime);
 
     @Override
     public HOLDER addDependency(String name, Class<?> type, Object instance) {

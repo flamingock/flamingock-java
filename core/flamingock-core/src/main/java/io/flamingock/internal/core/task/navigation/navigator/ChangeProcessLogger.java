@@ -26,7 +26,7 @@ import io.flamingock.internal.util.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StepNavigatorLogger {
+public class ChangeProcessLogger {
     private static final Logger logger = LoggerFactory.getLogger("Flamingock-Navigator");
 
     private static final String START_DESC = "start";

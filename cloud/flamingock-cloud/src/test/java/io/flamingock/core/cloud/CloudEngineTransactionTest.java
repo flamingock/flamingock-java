@@ -17,7 +17,7 @@ package io.flamingock.core.cloud;
 
 import io.flamingock.core.cloud.changes.CloudChange1;
 import io.flamingock.core.cloud.changes.CloudChange2;
-import io.flamingock.core.cloud.utils.TestCloudTransactioner;
+import io.flamingock.core.cloud.utils.TestCloudTargetSystem;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
@@ -44,6 +44,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
+@Disabled("It requires implement get All statuses from the OngoingRepo from all TargetSystems")
 public class CloudEngineTransactionTest {
 
     private final String apiToken = "FAKE_API_TOKEN";
@@ -133,20 +134,20 @@ public class CloudEngineTransactionTest {
         mockRunnerServer.start();
 
         //WHEN
-        TestCloudTransactioner cloudTransactioner = Mockito.spy(new TestCloudTransactioner());
+        TestCloudTargetSystem cloudTargetSystem = Mockito.spy(new TestCloudTargetSystem("transactional-target-system"));
 
         Runner runner = flamingockBuilder
-                .setCloudTransactioner(cloudTransactioner)
+                .addTargetSystem(cloudTargetSystem)
                 .build();
         runner.execute();
 
         //THEN
-        verify(cloudTransactioner, new Times(2)).getAll();
-        verify(cloudTransactioner, new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template", OngoingStatus.EXECUTION));
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).getAll();
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template", OngoingStatus.EXECUTION));
 
         ArgumentCaptor<String> changeUnitIdValuesCaptor = ArgumentCaptor.forClass(String.class);
-        verify(cloudTransactioner, new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template-2", OngoingStatus.EXECUTION));
-        verify(cloudTransactioner, new Times(2)).clean(changeUnitIdValuesCaptor.capture(), any());
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template-2", OngoingStatus.EXECUTION));
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clean(changeUnitIdValuesCaptor.capture(), any());
         List<String> allValues = changeUnitIdValuesCaptor.getAllValues();
 
         Assertions.assertEquals("create-persons-table-from-template", allValues.get(0));

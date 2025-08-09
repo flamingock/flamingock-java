@@ -27,31 +27,30 @@ import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContex
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.targets.operations.TargetSystemOps;
+import io.flamingock.internal.core.targets.operations.TargetSystemOpsImpl;
+import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOpsImpl;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
-import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
 import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
-import io.flamingock.internal.core.task.navigation.navigator.operations.TargetSystemStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.operations.LegacyTargetSystemStepOperations;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.Result;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.function.Function;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -110,18 +109,12 @@ public class TestRunner {
 
         executableChangeUnits.forEach(changeUnit -> {
 
-            AbstractTargetSystem<?> targetSystem = transactionWrapper != null
-                    ? new TestTransactionTargetSystem("default-target-system-id", transactionWrapper)
-                    : new TestTargetSystem("default-target-system-id");
+            TargetSystemOps targetSystem = transactionWrapper != null
+                    ? new TransactionalTargetSystemOpsImpl( new TestTransactionTargetSystem("default-target-system-id", transactionWrapper), true)
+                    : new TargetSystemOpsImpl(new TestTargetSystem("default-target-system-id"));
 
             LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(mock(Lock.class), new HashSet<>());
-
-            TargetSystemStepOperations targetSystemOps = StepNavigatorBuilder.buildTargetSystemOperations(
-                    targetSystem,
-                    null,
-                    new SimpleContext(),
-                    lockGuardProxyFactory);
-
+            LegacyTargetSystemStepOperations targetSystemOps = new LegacyTargetSystemStepOperations(targetSystem, lockGuardProxyFactory, new SimpleContext());
 
             new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, new AuditStoreStepOperations(auditWriterMock), stepSummarizerMock)
                     .applyChange();
@@ -156,13 +149,13 @@ public class TestRunner {
         }
 
         @Override
-        protected TestTransactionTargetSystem getSelf() {
-            return this;
+        public boolean isSameTxResourceAs(TransactionalTargetSystem<?> txInstance) {
+            return true;
         }
 
         @Override
-        public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-            return changeApplier.apply(executionRuntime);
+        protected TestTransactionTargetSystem getSelf() {
+            return this;
         }
 
         @Override
@@ -182,9 +175,5 @@ public class TestRunner {
             return this;
         }
 
-        @Override
-        public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-            return changeApplier.apply(executionRuntime);
-        }
     }
 }

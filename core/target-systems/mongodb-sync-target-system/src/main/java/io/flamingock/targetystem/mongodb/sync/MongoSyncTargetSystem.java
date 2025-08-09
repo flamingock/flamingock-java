@@ -44,6 +44,7 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     private OngoingTaskStatusRepository taskStatusRepository;
 
     private MongoSyncTxWrapper txWrapper;
+    private MongoClient mongoClient;
     private MongoDatabase database;
     private WriteConcern writeConcern = null;
     private ReadConcern readConcern = null;
@@ -103,7 +104,7 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
-        MongoClient mongoClient = targetSystemContext.getDependencyValue(MongoClient.class)
+        mongoClient = targetSystemContext.getDependencyValue(MongoClient.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(MongoClient.class));
 
         database = targetSystemContext.getDependencyValue(MongoDatabase.class)
@@ -141,11 +142,6 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     }
 
     @Override
-    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-        return changeApplier.apply(executionRuntime);
-    }
-
-    @Override
     public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
         return taskStatusRepository;
     }
@@ -153,6 +149,18 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     @Override
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
+    }
+
+    @Override
+    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
+        if(!(other instanceof MongoSyncTargetSystem)) {
+            return false;
+        }
+        MongoClient otherClient = ((MongoSyncTargetSystem) other).mongoClient;
+        if(otherClient == null) {
+            return false;
+        }
+        return otherClient.equals(this.mongoClient);
     }
 
 }

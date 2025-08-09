@@ -13,22 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.targets;
+package io.flamingock.internal.core.targets.operations;
 
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
-
-import java.util.function.Function;
-
-public class DefaultTargetSystem extends AbstractTargetSystem<DefaultTargetSystem> {
-
-
-    public DefaultTargetSystem(String id) {
-        super(id);
-    }
-
-    @Override
-    protected DefaultTargetSystem getSelf() {
-        return this;
-    }
-
+public enum OperationType {
+    SIMPLE,
+    TX_AUDIT_STORE_SHARED,
+    TX_AUDIT_STORE_SYNC,
+    TX_NONSYNC
 }

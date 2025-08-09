@@ -24,10 +24,10 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
-import io.flamingock.internal.core.targets.AbstractTargetSystem;
+import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
-import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorLogger;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessLogger;
 import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
@@ -42,11 +42,11 @@ import io.flamingock.internal.util.Result;
 import java.time.LocalDateTime;
 
 public abstract class AbstractChangeProcessStrategy implements ChangeProcessStrategy {
-    protected static final StepNavigatorLogger stepLogger = new StepNavigatorLogger();
+    protected static final ChangeProcessLogger stepLogger = new ChangeProcessLogger();
 
     protected final ExecutableTask changeUnit;
 
-    protected final AbstractTargetSystem<?> targetSystem;
+    protected final TargetSystemOps targetSystem;
 
     protected final ExecutionContext executionContext;
 
@@ -60,7 +60,7 @@ public abstract class AbstractChangeProcessStrategy implements ChangeProcessStra
 
     protected AbstractChangeProcessStrategy(ExecutableTask changeUnit,
                                             ExecutionContext executionContext,
-                                            AbstractTargetSystem<?> targetSystem,
+                                            TargetSystemOps targetSystem,
                                             AuditStoreStepOperations auditStoreOperations,
                                             TaskSummarizer summarizer,
                                             LockGuardProxyFactory proxyFactory,

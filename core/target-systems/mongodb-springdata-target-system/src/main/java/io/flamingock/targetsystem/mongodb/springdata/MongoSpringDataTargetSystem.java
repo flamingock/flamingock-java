@@ -18,6 +18,7 @@ package io.flamingock.targetsystem.mongodb.springdata;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
@@ -120,11 +121,6 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
     }
 
     @Override
-    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-        return changeApplier.apply(executionRuntime);
-    }
-
-    @Override
     public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
         return taskStatusRepository;
     }
@@ -132,6 +128,18 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
     @Override
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
+    }
+
+    @Override
+    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
+        if(!(other instanceof MongoSpringDataTargetSystem)) {
+            return false;
+        }
+        MongoTemplate otherMongoTemplate = ((MongoSpringDataTargetSystem) other).mongoTemplate;
+        if(otherMongoTemplate == null) {
+            return false;
+        }
+        return otherMongoTemplate.equals(this.mongoTemplate);
     }
 
 }

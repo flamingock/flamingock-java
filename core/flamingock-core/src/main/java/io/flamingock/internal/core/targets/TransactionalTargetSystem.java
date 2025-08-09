@@ -52,4 +52,6 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
     abstract public OngoingTaskStatusRepository getOnGoingTaskStatusRepository();
 
     abstract public TransactionWrapper getTxWrapper();
+
+    abstract public boolean isSameTxResourceAs(TransactionalTargetSystem<?> txInstance);
 }

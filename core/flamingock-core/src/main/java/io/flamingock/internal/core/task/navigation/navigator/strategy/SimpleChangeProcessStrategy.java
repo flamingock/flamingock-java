@@ -19,9 +19,8 @@ import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.pipeline.execution.TaskSummary;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
-import io.flamingock.internal.core.targets.AbstractTargetSystem;
+import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
@@ -35,17 +34,17 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 
-public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy {
+public class SimpleChangeProcessStrategy extends AbstractChangeProcessStrategy {
     private static final Logger logger = LoggerFactory.getLogger("NonTxChangeStrategy");
 
 
-    public NonTxChangeProcessStrategy(ExecutableTask changeUnit,
-                                      ExecutionContext executionContext,
-                                      AbstractTargetSystem<?> targetSystem,
-                                      AuditStoreStepOperations auditStoreOperations,
-                                      TaskSummarizer summarizer,
-                                      LockGuardProxyFactory proxyFactory,
-                                      ContextResolver baseContext) {
+    public SimpleChangeProcessStrategy(ExecutableTask changeUnit,
+                                       ExecutionContext executionContext,
+                                       TargetSystemOps targetSystem,
+                                       AuditStoreStepOperations auditStoreOperations,
+                                       TaskSummarizer summarizer,
+                                       LockGuardProxyFactory proxyFactory,
+                                       ContextResolver baseContext) {
         super(changeUnit, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext);
     }
 

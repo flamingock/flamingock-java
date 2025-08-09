@@ -21,7 +21,7 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
-import io.flamingock.internal.core.task.navigation.navigator.operations.TargetSystemStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.operations.LegacyTargetSystemStepOperations;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
@@ -39,11 +39,11 @@ import java.time.LocalDateTime;
 @Deprecated
 public class StepNavigator implements ChangeProcessStrategy {
 
-    private static final StepNavigatorLogger stepLogger = new StepNavigatorLogger();
+    private static final ChangeProcessLogger stepLogger = new ChangeProcessLogger();
 
     private final ExecutableTask changeUnit;
 
-    private final TargetSystemStepOperations targetSystemOps;
+    private final LegacyTargetSystemStepOperations targetSystemOps;
 
     private final ExecutionContext executionContext;
 
@@ -51,14 +51,14 @@ public class StepNavigator implements ChangeProcessStrategy {
 
     private final AuditStoreStepOperations auditStoreOperations;
 
-    public static StepNavigatorBuilder builder(TargetSystemManager targetSystemManager) {
-        return new StepNavigatorBuilder(targetSystemManager);
+    public static ChangeProcessStrategyFactory builder(TargetSystemManager targetSystemManager) {
+        return new ChangeProcessStrategyFactory(targetSystemManager);
     }
 
 
     public StepNavigator(ExecutableTask changeUnit,
                          ExecutionContext executionContext,
-                         TargetSystemStepOperations targetSystemOps,
+                         LegacyTargetSystemStepOperations targetSystemOps,
                          AuditStoreStepOperations auditStoreOperations,
                          TaskSummarizer summarizer) {
         this.changeUnit = changeUnit;

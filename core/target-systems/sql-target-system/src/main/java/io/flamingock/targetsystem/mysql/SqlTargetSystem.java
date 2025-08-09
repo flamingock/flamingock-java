@@ -86,4 +86,16 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
     }
+
+    @Override
+    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
+        if(!(other instanceof SqlTargetSystem)) {
+            return false;
+        }
+        DataSource otherDataSource = ((SqlTargetSystem) other).dataSource;
+        if(otherDataSource == null) {
+            return false;
+        }
+        return otherDataSource.equals(this.dataSource);
+    }
 }

@@ -24,7 +24,7 @@ import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
-import io.flamingock.internal.core.task.navigation.navigator.StepNavigatorBuilder;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
@@ -58,12 +58,12 @@ public class StageExecutor {
         StageSummary summary = new StageSummary(executableStage.getName());
         PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
-        StepNavigatorBuilder stepNavigatorBuilder = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
+        ChangeProcessStrategyFactory stepNavigatorBuilder = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
 
         try {
             getTasksStream(executableStage)
                     .map(stepNavigatorBuilder::setChangeUnit)
-                    .map(StepNavigatorBuilder::build)
+                    .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
                     .peek(summary::addSummary)
                     .filter(TaskSummary::isFailed)
@@ -81,14 +81,13 @@ public class StageExecutor {
         return new Output(summary);
     }
 
-    private StepNavigatorBuilder getStepNavigatorBuilder(ExecutionContext executionContext, Lock lock, ContextResolver contextResolver) {
+    private ChangeProcessStrategyFactory getStepNavigatorBuilder(ExecutionContext executionContext, Lock lock, ContextResolver contextResolver) {
         return StepNavigator.builder(targetSystemManager)
                 .setExecutionContext(executionContext)
                 .setAuditWriter(auditWriter)
                 .setDependencyContext(contextResolver)
                 .setLock(lock)
-                .setNonGuardedTypes(nonGuardedTypes)
-                .setAuditStoreTxWrapper(auditStoreTxWrapper);
+                .setNonGuardedTypes(nonGuardedTypes);
     }
 
     protected Stream<? extends ExecutableTask> getTasksStream(ExecutableStage executableStage) {

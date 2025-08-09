@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.targets;
+package io.flamingock.internal.core.targets.operations;
 
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 
 import java.util.function.Function;
 
-public class DefaultTargetSystem extends AbstractTargetSystem<DefaultTargetSystem> {
+public interface TransactionalTargetSystemOps extends TargetSystemOps, OngoingTaskStatusRepository {
 
-
-    public DefaultTargetSystem(String id) {
-        super(id);
-    }
-
-    @Override
-    protected DefaultTargetSystem getSelf() {
-        return this;
-    }
+    <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime);
 
 }

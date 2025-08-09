@@ -79,11 +79,6 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     }
 
     @Override
-    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-        return changeApplier.apply(executionRuntime);
-    }
-
-    @Override
     public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
         return taskStatusRepository;
     }
@@ -91,6 +86,18 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     @Override
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
+    }
+
+    @Override
+    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
+        if(!(other instanceof DynamoDBTargetSystem)) {
+            return false;
+        }
+        DynamoDbClient otherClient = ((DynamoDBTargetSystem) other).client;
+        if(otherClient == null) {
+            return false;
+        }
+        return otherClient.equals(this.client);
     }
 
 }

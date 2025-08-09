@@ -22,8 +22,8 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
-import io.flamingock.internal.core.targets.AbstractTargetSystem;
-import io.flamingock.internal.core.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.targets.operations.TargetSystemOps;
+import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.TaskStep;
@@ -47,17 +47,18 @@ import java.util.function.Function;
  * ensuring clean context layering and safe, scoped dependency injection—regardless of whether
  * the execution is transactional or not.
  */
-public class TargetSystemStepOperations {
+@Deprecated
+public class LegacyTargetSystemStepOperations {
     private static final Logger logger = LoggerFactory.getLogger("TargetSystemOperations");
 
-    private final AbstractTargetSystem<?> targetSystem;
+    private final TargetSystemOps targetSystem;
     private final ContextResolver baseContext;
     private final LockGuardProxyFactory lockProxyFactory;
 
 
-    public TargetSystemStepOperations(AbstractTargetSystem<?> targetSystem,
-                                      LockGuardProxyFactory proxyFactory,
-                                      ContextResolver baseContext) {
+    public LegacyTargetSystemStepOperations(TargetSystemOps targetSystem,
+                                            LockGuardProxyFactory proxyFactory,
+                                            ContextResolver baseContext) {
         this.targetSystem = targetSystem;
         this.baseContext = baseContext;
         this.lockProxyFactory = proxyFactory;
@@ -69,9 +70,9 @@ public class TargetSystemStepOperations {
         if (isTransactionalTarget() && isTransactionalChange(changeUnit)) {
             logger.debug("Executing(transactional) task[{}]", changeUnit.getId());
 
-            final TransactionalTargetSystem<?> transactionalTargetSystem = (TransactionalTargetSystem<?>) targetSystem;
+            final TransactionalTargetSystemOps transactionalTargetSystem = (TransactionalTargetSystemOps) targetSystem;
 
-            transactionalTargetSystem.getOnGoingTaskStatusRepository().registerAsExecuting(changeUnit);
+            transactionalTargetSystem.registerAsExecuting(changeUnit);
 
             // Fresh executionRuntime with isolated context layer to ensure clean, per-execution dependency resolution
 
@@ -81,7 +82,7 @@ public class TargetSystemStepOperations {
                     rm -> {
                         ExecutionStep changeAppliedStep = executableStep.execute(rm);
                         AfterExecutionAuditStep executionAuditResult = changeAuditor.apply(changeAppliedStep);
-                        transactionalTargetSystem.getOnGoingTaskStatusRepository().clean(changeUnit.getId(), rm.getContext());
+                        transactionalTargetSystem.clean(changeUnit.getId(), rm.getContext());
                         return executionAuditResult instanceof CompletedSuccessStep
                                 ? executionAuditResult
                                 : new CompleteAutoRolledBackStep(changeUnit, true);
@@ -116,8 +117,7 @@ public class TargetSystemStepOperations {
 
     //TODO temporally until we remove disableTransaction in builder
     private boolean isTransactionalTarget() {
-        return targetSystem instanceof TransactionalTargetSystem
-                && ((TransactionalTargetSystem<?>) targetSystem).getTxWrapper() != null;
+        return targetSystem instanceof TransactionalTargetSystemOps;
     }
 
     private boolean isTransactionalChange(ExecutableTask changeUnit) {
