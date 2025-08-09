@@ -17,11 +17,13 @@ package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.function.Function;
@@ -33,6 +35,7 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     private OngoingTaskStatusRepository taskStatusRepository;
 
     private DynamoDBTxWrapper txWrapper;
+    private DynamoDbClient client;
 
     public DynamoDBTargetSystem(String id) {
         super(id);
@@ -43,20 +46,28 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
         return this;
     }
 
+    public DynamoDbClient getClient() {
+        return client;
+    }
+
+    public TransactionManager<TransactWriteItemsEnhancedRequest.Builder> getTxManager() {
+        return txWrapper.getTxManager();
+    }
+
     @Override
     public void initialize(ContextResolver baseContext) {
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
-        DynamoDbClient dynamoDbClient = targetSystemContext.getDependencyValue(DynamoDbClient.class)
+        client = targetSystemContext.getDependencyValue(DynamoDbClient.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(DynamoDbClient.class));
 
-        txWrapper = new DynamoDBTxWrapper(dynamoDbClient);
+        txWrapper = new DynamoDBTxWrapper(client);
 
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
                 ? new NoOpOnGoingTaskStatusRepository(this.getId())
-                : DynamoDBOnGoingTaskStatusRepository.builder(dynamoDbClient)
+                : DynamoDBOnGoingTaskStatusRepository.builder(client)
                 .setTableName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
                 .build();

@@ -42,7 +42,7 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
         this.sessionManager = sessionManager;
     }
 
-    public TransactionManager<ClientSession> getTxManager() {
+    TransactionManager<ClientSession> getTxManager() {
         return sessionManager;
     }
 

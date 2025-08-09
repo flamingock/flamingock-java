@@ -15,63 +15,67 @@
  */
 package io.flamingock.community.dynamodb.internal;
 
-import io.flamingock.targetsystem.dynamodb.DynamoDBTxWrapper;
-import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.community.dynamodb.DynamoDBConfiguration;
+import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTxWrapper;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.Optional;
 
 public class DynamoDBEngine extends AbstractLocalEngine {
 
-    private final DynamoDbClient client;
-    private final DynamoDBUtil dynamoDBUtil;
-    private final DynamoDBConfiguration driverConfiguration;
+    private final DynamoDBTargetSystem targetSystem;
+    private final String lockTableName;
+    private final String auditTableName;
+    private final long readCapacityUnits;
+    private final long writeCapacityUnits;
+
     private final CoreConfigurable coreConfiguration;
     private DynamoDBAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
-    private TransactionWrapper transactionWrapper;
 
 
-    public DynamoDBEngine(DynamoDbClient client,
+    public DynamoDBEngine(DynamoDBTargetSystem targetSystem,
+                          String auditTableName,
+                          String lockTableName,
+                          long readCapacityUnits,
+                          long writeCapacityUnits,
                           CoreConfigurable coreConfiguration,
-                          CommunityConfigurable localConfiguration,
-                          DynamoDBConfiguration driverConfiguration) {
+                          CommunityConfigurable localConfiguration) {
         super(localConfiguration);
-        this.client = client;
-        this.dynamoDBUtil = new DynamoDBUtil(client);
-        this.driverConfiguration = driverConfiguration;
+        this.targetSystem = targetSystem;
+        this.auditTableName = auditTableName;
+        this.lockTableName = lockTableName;
+        this.readCapacityUnits = readCapacityUnits;
+        this.writeCapacityUnits = writeCapacityUnits;
         this.coreConfiguration = coreConfiguration;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
         TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
-        transactionWrapper = localConfiguration.isTransactionDisabled() ? null : new DynamoDBTxWrapper(client, transactionManager);
-        auditor = new DynamoDBAuditor(client, transactionManager);
+        auditor = new DynamoDBAuditor(targetSystem);
         auditor.initialize(
-                driverConfiguration.isAutoCreate(),
-                driverConfiguration.getAuditRepositoryName(),
-                driverConfiguration.getReadCapacityUnits(),
-                driverConfiguration.getWriteCapacityUnits());
-        DynamoDBLockService lockService = new DynamoDBLockService(client, TimeService.getDefault());
-        lockService.initialize(
-                driverConfiguration.isAutoCreate(),
-                driverConfiguration.getLockRepositoryName(),
-                driverConfiguration.getReadCapacityUnits(),
-                driverConfiguration.getWriteCapacityUnits());
-        executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
-        //Mongock importer
+                targetSystem.isAutoCreate(),
+                auditTableName,
+                readCapacityUnits,
+                writeCapacityUnits);
 
+        DynamoDBLockService lockService = new DynamoDBLockService(targetSystem, TimeService.getDefault());
+        lockService.initialize(
+                targetSystem.isAutoCreate(),
+                lockTableName,
+                readCapacityUnits,
+                writeCapacityUnits);
+        executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
     }
 
     @Override
@@ -84,10 +88,12 @@ public class DynamoDBEngine extends AbstractLocalEngine {
         return executionPlanner;
     }
 
-
+    //TODO remove
     @Override
+    @Deprecated
     public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.ofNullable(transactionWrapper);
+        return localConfiguration.isTransactionDisabled()
+                ? Optional.empty()
+                : Optional.of(targetSystem.getTxWrapper());
     }
-
 }

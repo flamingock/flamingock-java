@@ -40,7 +40,6 @@ public class SpringDataMongoDriver extends MongoSyncDriver {
     private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
     private MongoDBSyncConfiguration driverConfiguration;
-    private boolean isTransactionDisabled;
 
     public static SpringDataMongoDriver fromTargetSystem(MongoSpringDataTargetSystem syncTargetSystem) {
         return new SpringDataMongoDriver(syncTargetSystem);
@@ -63,7 +62,6 @@ public class SpringDataMongoDriver extends MongoSyncDriver {
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         driverConfiguration = baseContext.getDependencyValue(SpringDataMongoConfiguration.class)
                 .orElse(new SpringDataMongoConfiguration());
-        isTransactionDisabled = communityConfiguration.isTransactionDisabled();
 
         if(targetSystem == null) {
 
@@ -101,10 +99,7 @@ public class SpringDataMongoDriver extends MongoSyncDriver {
 
     @Override
     public TargetSystem getTargetSystem() {
-        //TODO this is temporal to avoid failing test for transactionDisabled
-        return isTransactionDisabled
-                ? super.getTargetSystem()
-                : targetSystem;
+        return targetSystem;
     }
 
 }

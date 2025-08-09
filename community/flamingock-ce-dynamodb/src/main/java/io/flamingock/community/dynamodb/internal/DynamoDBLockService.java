@@ -27,6 +27,7 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -52,10 +53,17 @@ public class DynamoDBLockService implements LocalLockService {
     private final TimeService timeService;
     protected DynamoDbTable<LockEntryEntity> table;
 
-    protected DynamoDBLockService(DynamoDbClient client, TimeService timeService) {
+    protected DynamoDBLockService(DynamoDBTargetSystem targetSystem,
+                                  TimeService timeService) {
+        this(targetSystem.getClient(), timeService);
+    }
+
+    public DynamoDBLockService(DynamoDbClient client,
+                                  TimeService timeService) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
         this.timeService = timeService;
     }
+
 
     protected void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
         if (autoCreate) {

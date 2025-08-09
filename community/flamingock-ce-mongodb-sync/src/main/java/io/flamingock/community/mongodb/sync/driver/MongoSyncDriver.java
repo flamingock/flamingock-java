@@ -99,10 +99,7 @@ public class MongoSyncDriver implements LocalDriver {
 
     @Override
     public TargetSystem getTargetSystem() {
-        //TODO this is temporal to avoid failing test for transactionDisabled
-        return isTransactionDisabled
-                ? new DefaultTargetSystem(DEFAULT_AUDIT_STORE_TARGET_SYSTEM)
-                : targetSystem;
+        return targetSystem;
     }
 
 

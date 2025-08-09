@@ -24,6 +24,7 @@ import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -46,10 +47,9 @@ public class DynamoDBAuditor implements LocalAuditor {
     protected DynamoDbTable<AuditEntryEntity> table;
     protected final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager;
 
-    protected DynamoDBAuditor(DynamoDbClient client,
-                              TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager) {
-        this.dynamoDBUtil = new DynamoDBUtil(client);
-        this.transactionManager = transactionManager;
+    protected DynamoDBAuditor(DynamoDBTargetSystem targetSystem) {
+        this.dynamoDBUtil = new DynamoDBUtil(targetSystem.getClient());
+        this.transactionManager = targetSystem.getTxManager();
     }
 
     protected void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {

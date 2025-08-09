@@ -32,24 +32,30 @@ import java.util.function.Function;
 public class DynamoDBTxWrapper implements TransactionWrapper {
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBTxWrapper.class);
 
-    private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager;
+    private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
     private final DynamoDBUtil dynamoDBUtil;
 
     public DynamoDBTxWrapper(DynamoDbClient client) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
-        transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
+        txManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
     }
 
     @Deprecated
-    public DynamoDBTxWrapper(DynamoDbClient client, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager) {
+    public DynamoDBTxWrapper(DynamoDbClient client,
+                             TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
         this.dynamoDBUtil = new DynamoDBUtil(client);
-        this.transactionManager = transactionManager;
+        this.txManager = txManager;
     }
+
+    public TransactionManager<TransactWriteItemsEnhancedRequest.Builder> getTxManager() {
+        return txManager;
+    }
+
 
     @Override
     public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
         String sessionId = executionRuntime.getSessionId();
-        TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = transactionManager.startSession(sessionId);
+        TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = txManager.startSession(sessionId);
         Dependency writeRequestBuilderDependency = new Dependency(writeRequestBuilder);
         try {
             executionRuntime.addDependency(writeRequestBuilderDependency);
@@ -64,7 +70,7 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
 
             return result;
         } finally {
-            transactionManager.closeSession(sessionId);
+            txManager.closeSession(sessionId);
         }
     }
 
