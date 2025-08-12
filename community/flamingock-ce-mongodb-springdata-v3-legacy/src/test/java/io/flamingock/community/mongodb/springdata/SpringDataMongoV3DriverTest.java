@@ -108,6 +108,7 @@ class SpringDataMongoV3DriverTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoTemplate)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -136,6 +137,7 @@ class SpringDataMongoV3DriverTest {
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -161,6 +163,7 @@ class SpringDataMongoV3DriverTest {
             FlamingockFactory.getCommunityBuilder()
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -201,6 +204,7 @@ class SpringDataMongoV3DriverTest {
                 FlamingockFactory.getCommunityBuilder()
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.failedWithTransaction"))
                         .addDependency(mongoTemplate)
+                        .setRelaxTargetSystemValidation(true)
                         .build()
                         .run();
             });

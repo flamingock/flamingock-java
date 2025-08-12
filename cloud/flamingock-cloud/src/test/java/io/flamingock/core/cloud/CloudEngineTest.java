@@ -115,6 +115,7 @@ public class CloudEngineTest {
                 .setHost("http://localhost:" + runnerServerPort)
                 .setService(serviceName)
                 .setEnvironment(environmentName)
+                .setRelaxTargetSystemValidation(true)
                 //.addStage(new Stage("changes")
 //                        .setCodePackages(Collections.singletonList("io.flamingock.core.cloud.changes")))
         ;

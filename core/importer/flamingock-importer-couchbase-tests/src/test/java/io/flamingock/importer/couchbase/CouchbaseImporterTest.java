@@ -125,6 +125,7 @@ public class CouchbaseImporterTest {
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
                 .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
                 .disableTransaction()
+                .setRelaxTargetSystemValidation(true)
                 .build();
 
         flamingock.run();
@@ -153,6 +154,7 @@ public class CouchbaseImporterTest {
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
                 .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
                 .disableTransaction()
+                .setRelaxTargetSystemValidation(true)
                 .build();
 
         org.junit.jupiter.api.Assertions.assertThrows(

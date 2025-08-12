@@ -118,6 +118,7 @@ class MongoSyncDriverTest {
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
                     .addDependency(mongoDatabase)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -152,6 +153,7 @@ class MongoSyncDriverTest {
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     .setProperty("mongodb.readConcern", "LOCAL")
                     .setProperty("mongodb.readPreference", MongoDBSyncConfiguration.ReadPreferenceLevel.SECONDARY)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -187,6 +189,7 @@ class MongoSyncDriverTest {
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoClient)
                     .addDependency(mongoDatabase)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -228,6 +231,7 @@ class MongoSyncDriverTest {
                 FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoClient)
                         .addDependency(mongoDatabase)
+                        .setRelaxTargetSystemValidation(true)
                         .build()
                         .run();
             });

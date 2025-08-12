@@ -120,6 +120,7 @@ class DynamoDBDriverTest {
             FlamingockFactory.getCommunityBuilder()
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -174,6 +175,7 @@ class DynamoDBDriverTest {
                     .setProperty("dynamodb.writeCapacityUnits", 2L)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -206,6 +208,7 @@ class DynamoDBDriverTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(client)
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }

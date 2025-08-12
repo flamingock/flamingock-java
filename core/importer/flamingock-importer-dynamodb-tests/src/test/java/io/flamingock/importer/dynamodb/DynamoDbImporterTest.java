@@ -113,6 +113,7 @@ public class DynamoDbImporterTest {
 
         Runner flamingock = Flamingock.builder()
                 .addDependency(client)
+                .setRelaxTargetSystemValidation(true)
                 .build();
 
         flamingock.run();
@@ -141,6 +142,7 @@ public class DynamoDbImporterTest {
     void failIfEmptyOrigin() {
         Runner flamingock = io.flamingock.community.Flamingock.builder()
                 .addDependency(client)
+                .setRelaxTargetSystemValidation(true)
                 .build();
 
         Assertions.assertThrows(FlamingockException.class, flamingock::run);

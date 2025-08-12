@@ -95,6 +95,7 @@ class CouchbaseDriverTest {
                     .addDependency(bucket)
                     .addDependency(testCollection) // for test purpose only
                     .disableTransaction()
+                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -143,6 +144,7 @@ class CouchbaseDriverTest {
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only
                         .disableTransaction()
+                        .setRelaxTargetSystemValidation(true)
                         .build()
                         .run();
             });
@@ -189,6 +191,7 @@ class CouchbaseDriverTest {
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only
                         .disableTransaction()
+                        .setRelaxTargetSystemValidation(true)
                         .build()
                         .run();
             });

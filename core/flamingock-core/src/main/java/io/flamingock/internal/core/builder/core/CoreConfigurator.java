@@ -40,6 +40,8 @@ public interface CoreConfigurator<HOLDER> {
 
     HOLDER addTargetSystem(TargetSystem targetSystem);
 
+    HOLDER setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation);
+
     long getLockAcquiredForMillis();
 
     Long getLockQuitTryingAfterMillis();
@@ -55,5 +57,7 @@ public interface CoreConfigurator<HOLDER> {
     Map<String, Object> getMetadata();
 
     String getDefaultAuthor();
+
+    boolean isRelaxTargetSystemValidation();
 
 }

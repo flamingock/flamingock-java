@@ -65,6 +65,8 @@ public class ChangeProcessStrategyFactory {
 
     protected ExecutionContext executionContext;
 
+    protected boolean relaxTargetSystemValidation = true;
+
 
     public ChangeProcessStrategyFactory(TargetSystemManager targetSystemManager) {
         this.targetSystemManager = targetSystemManager;
@@ -100,9 +102,14 @@ public class ChangeProcessStrategyFactory {
         return this;
     }
 
+    public ChangeProcessStrategyFactory setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
+        this.relaxTargetSystemValidation = relaxTargetSystemValidation;
+        return this;
+    }
+
 
     public ChangeProcessStrategy build() {
-        TargetSystemOps targetSystem = targetSystemManager.getValueOrDefault(changeUnit.getTargetSystem());
+        TargetSystemOps targetSystem = targetSystemManager.getTargetSystem(changeUnit.getTargetSystem(), relaxTargetSystemValidation);
 
         LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
 

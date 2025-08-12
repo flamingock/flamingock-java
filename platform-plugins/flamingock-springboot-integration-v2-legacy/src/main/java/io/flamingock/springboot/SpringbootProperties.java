@@ -111,6 +111,11 @@ public class SpringbootProperties
     }
 
     @Override
+    public void setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
+        coreConfiguration.setRelaxTargetSystemValidation(relaxTargetSystemValidation);
+    }
+
+    @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguration.getLockAcquiredForMillis();
     }
@@ -148,6 +153,11 @@ public class SpringbootProperties
     @Override
     public String getDefaultAuthor() {
         return coreConfiguration.getDefaultAuthor();
+    }
+
+    @Override
+    public boolean isRelaxTargetSystemValidation() {
+        return coreConfiguration.isRelaxTargetSystemValidation();
     }
 
     public SpringRunnerType getRunnerType() {

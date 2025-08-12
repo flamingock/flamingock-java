@@ -43,11 +43,12 @@ public final class PipelineRunnerCreator {
                                 ContextResolver dependencyContext,
                                 Set<Class<?>> nonGuardedTypes,
                                 boolean isThrowExceptionIfCannotObtainLock,
+                                boolean relaxTargetSystemValidation,
                                 Runnable finalizer) {
 
         //Instantiated here, so we don't wait until Runner.run() and fail fast
         TransactionWrapper auditStoreTxWrapper = engine.getTransactionWrapper().orElse(null);
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), targetSystemManager, auditStoreTxWrapper);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), targetSystemManager, auditStoreTxWrapper, relaxTargetSystemValidation);
         return new PipelineRunner(
                 runnerId,
                 pipeline,

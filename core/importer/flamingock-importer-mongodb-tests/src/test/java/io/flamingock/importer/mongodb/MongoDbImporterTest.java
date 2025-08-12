@@ -100,6 +100,7 @@ public class MongoDbImporterTest {
         Runner flamingock = io.flamingock.community.Flamingock.builder()
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
+                .setRelaxTargetSystemValidation(true)
                 .build();
 
         flamingock.run();
@@ -144,6 +145,7 @@ public class MongoDbImporterTest {
         Runner flamingock = io.flamingock.community.Flamingock.builder()
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
+                .setRelaxTargetSystemValidation(true)
                 .build();
 
         //TODO should check error message, but currently it return the summary text

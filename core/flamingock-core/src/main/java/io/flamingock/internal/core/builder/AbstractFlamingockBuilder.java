@@ -211,6 +211,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
                 hierarchicalContext,
                 engine.getNonGuardedTypes(),
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
+                coreConfiguration.isRelaxTargetSystemValidation(),
                 engine.getCloser()
         );
     }
@@ -335,6 +336,12 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     }
 
     @Override
+    public HOLDER setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
+        coreConfiguration.setRelaxTargetSystemValidation(relaxTargetSystemValidation);
+        return getSelf();
+    }
+
+    @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguration.getLockAcquiredForMillis();
     }
@@ -372,6 +379,11 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     @Override
     public String getDefaultAuthor() {
         return coreConfiguration.getDefaultAuthor();
+    }
+
+    @Override
+    public boolean isRelaxTargetSystemValidation() {
+        return coreConfiguration.isRelaxTargetSystemValidation();
     }
 
 

@@ -77,6 +77,7 @@ class MongoChangeTemplateTest {
         io.flamingock.community.Flamingock.builder()
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
+                .setRelaxTargetSystemValidation(true)
                 .build()
                 .run();
 

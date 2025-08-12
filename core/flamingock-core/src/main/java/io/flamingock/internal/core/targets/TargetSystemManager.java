@@ -18,10 +18,13 @@ package io.flamingock.internal.core.targets;
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.targets.operations.TargetSystemOpsImpl;
 import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOpsImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.HashMap;
@@ -38,6 +41,8 @@ import java.util.Optional;
  */
 @NotThreadSafe
 public class TargetSystemManager implements ContextInitializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(TargetSystemManager.class);
 
     private boolean initialized = false;
     private AbstractTargetSystem<?> auditStoreTargetSystem;
@@ -107,6 +112,51 @@ public class TargetSystemManager implements ContextInitializable {
             return toDecorator(auditStoreTargetSystem);
         } else {
             AbstractTargetSystem<?> targetSystem = targetSystemMap.getOrDefault(id, auditStoreTargetSystem);
+            return toDecorator(targetSystem);
+        }
+    }
+
+    /**
+     * Returns the {@link TargetSystem} associated with the given descriptor.
+     * 
+     * @param tsd the target system descriptor
+     * @param relaxed if true, falls back to audit store target system when not found; if false, throws exception
+     * @return the target system operations
+     * @throws FlamingockException if relaxed is false and target system is not found
+     */
+    public TargetSystemOps getTargetSystem(TargetSystemDescriptor tsd, boolean relaxed) {
+        String targetSystemId = tsd != null ? tsd.getId() : null;
+        return getTargetSystem(targetSystemId, relaxed);
+    }
+
+    /**
+     * Returns the {@link TargetSystem} associated with the given ID.
+     * 
+     * @param id the target system ID
+     * @param relaxed if true, falls back to audit store target system when not found; if false, throws exception
+     * @return the target system operations
+     * @throws FlamingockException if relaxed is false and target system is not found
+     */
+    public TargetSystemOps getTargetSystem(String id, boolean relaxed) {
+        logger.debug("Resolving target system with id: [{}], relaxed: [{}]", id, relaxed);
+        
+        if (id == null || !targetSystemMap.containsKey(id)) {
+            if (relaxed) {
+                logger.warn("Target system with id [{}] not found, falling back to audit store target system [{}]", 
+                           id, auditStoreTargetSystem.getId());
+                return toDecorator(auditStoreTargetSystem);
+            } else {
+                String availableTargetSystems = String.join(", ", targetSystemMap.keySet());
+                String message = String.format(
+                    "ChangeUnit requires a valid targetSystem. Found: [%s]. Available target systems: [%s]",
+                    id, availableTargetSystems
+                );
+                logger.error(message);
+                throw new FlamingockException(message);
+            }
+        } else {
+            AbstractTargetSystem<?> targetSystem = targetSystemMap.get(id);
+            logger.debug("Successfully resolved target system with id: [{}]", id);
             return toDecorator(targetSystem);
         }
     }

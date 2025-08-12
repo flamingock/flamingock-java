@@ -61,6 +61,13 @@ public class CoreConfiguration implements CoreConfigurable {
      */
     private String defaultAuthor = DEFAULT_MIGRATION_AUTHOR;
 
+    /**
+     * If true, allows fallback to audit store target system when changeUnit target system is not found.
+     * If false, throws exception when target system is missing or invalid.
+     * Default false (strict validation).
+     */
+    private boolean relaxTargetSystemValidation = false;
+
     public LockConfiguration getLockConfiguration() {
         return lockConfiguration;
     }
@@ -123,6 +130,11 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
+    public void setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
+        this.relaxTargetSystemValidation = relaxTargetSystemValidation;
+    }
+
+    @Override
     public long getLockAcquiredForMillis() {
         return lockConfiguration.getLockAcquiredForMillis();
     }
@@ -160,6 +172,11 @@ public class CoreConfiguration implements CoreConfigurable {
     @Override
     public String getDefaultAuthor() {
         return defaultAuthor;
+    }
+
+    @Override
+    public boolean isRelaxTargetSystemValidation() {
+        return relaxTargetSystemValidation;
     }
 
     public static class LockConfiguration {
