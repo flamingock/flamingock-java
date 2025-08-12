@@ -22,14 +22,14 @@ import io.flamingock.internal.core.engine.lock.LockException;
 import io.flamingock.internal.core.engine.lock.LockServiceException;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 
 public class LocalLock extends Lock {
 
-    private static final Logger logger = LoggerFactory.getLogger("Flamingock-Lock");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
 
 
     public static Lock getLock(long leaseMillis,
@@ -69,7 +69,7 @@ public class LocalLock extends Lock {
         boolean keepLooping = true;
         do {
             try {
-                logger.info("Flamingock trying to acquire the lock");
+                logger.info("Attempting to acquire process lock [timeout={}s]", stopTryingAfterMillis / 1000);
                 LockAcquisition lockAcquisition = getLockService().upsert(lockKey, owner, leaseMillis);
                 updateLease(lockAcquisition.getAcquiredForMillis());
                 keepLooping = false;
@@ -78,7 +78,7 @@ public class LocalLock extends Lock {
             }
 
         } while (keepLooping);
-        logger.info("Flamingock acquired the lock until: {}", expiresAt());
+        logger.info("Process lock acquired successfully [expires_at={}]", expiresAt());
     }
 
 }

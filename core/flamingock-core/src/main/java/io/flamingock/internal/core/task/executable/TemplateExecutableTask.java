@@ -19,14 +19,14 @@ import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
 import io.flamingock.internal.util.FileUtil;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoadedChangeUnit> {
-    private final Logger logger = LoggerFactory.getLogger("Flamingock-TemplateExecutableTask");
+    private final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
 
     public TemplateExecutableTask(String stageName,
                                   TemplateLoadedChangeUnit descriptor,

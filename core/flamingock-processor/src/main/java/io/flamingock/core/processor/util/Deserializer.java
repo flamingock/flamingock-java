@@ -19,8 +19,8 @@ import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +28,7 @@ import java.util.Optional;
 
 public final class Deserializer {
 
-    private static final Logger logger = LoggerFactory.getLogger(Deserializer.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Deserializer");
 
     private static final ClassLoader CLASS_LOADER = PreviewPipeline.class.getClassLoader();
 

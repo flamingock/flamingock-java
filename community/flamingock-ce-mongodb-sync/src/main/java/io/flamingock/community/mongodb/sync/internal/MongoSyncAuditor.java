@@ -32,8 +32,8 @@ import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.stream.Collectors;
@@ -45,7 +45,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE
 
 public class MongoSyncAuditor implements LocalAuditor {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoSyncAuditor.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoSyncAuditor");
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));

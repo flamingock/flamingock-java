@@ -15,14 +15,14 @@
  */
 package io.flamingock.internal.core.targets.mark;
 
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Set;
 
 public class NoOpTargetSystemAuditMarker implements TargetSystemAuditMarker {
-    private static final Logger logger = LoggerFactory.getLogger(NoOpTargetSystemAuditMarker.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("NoOpAuditMarker");
 
     private final String targetSystemId;
 

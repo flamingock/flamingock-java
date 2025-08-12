@@ -27,13 +27,11 @@ import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.community.mongodb.springdata.internal.mongodb.SpringDataMongoCollectionWrapper;
 import io.flamingock.community.mongodb.springdata.internal.mongodb.SpringDataMongoDocumentWrapper;
-import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
 import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.LinkedList;
 import java.util.stream.Collectors;
@@ -45,7 +43,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE
 
 public class SpringDataMongoAuditor implements LocalAuditor {
 
-    private static final Logger logger = LoggerFactory.getLogger(SpringDataMongoAuditor.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("SpringMongoAuditor");
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<SpringDataMongoDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new SpringDataMongoDocumentWrapper(new Document()));

@@ -18,8 +18,8 @@ package io.flamingock.internal.core.event;
 
 import io.flamingock.internal.core.event.model.Event;
 import io.flamingock.internal.util.Pair;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 
 public class SimpleEventPublisher implements EventPublisher, EventListener {
 
-    private static final Logger logger = LoggerFactory.getLogger("SimpleEventPublisher");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("EventPublisher");
 
     private final List<Pair<Class<? extends Event>, Consumer<? extends Event>>> listeners = new ArrayList<>();
 

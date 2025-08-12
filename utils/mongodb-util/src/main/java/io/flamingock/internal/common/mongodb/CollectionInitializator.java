@@ -16,8 +16,8 @@
 package io.flamingock.internal.common.mongodb;
 
 
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -27,7 +27,7 @@ import java.util.stream.StreamSupport;
 
 public class CollectionInitializator<DOCUMENT_WRAPPER extends DocumentHelper> {
 
-    private final static Logger logger = LoggerFactory.getLogger(CollectionInitializator.class);
+    private final static Logger logger = FlamingockLoggerFactory.getLogger("CollectionInit");
 
 
     private final static int INDEX_ENSURE_MAX_TRIES = 3;

@@ -52,8 +52,8 @@ import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;
 import org.jetbrains.annotations.NotNull;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -87,7 +87,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         EventLifecycleConfigurator<HOLDER>,
         ContextConfigurable<HOLDER>,
         RunnerBuilder {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractFlamingockBuilder.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Builder");
 
     private final PluginManager pluginManager;
     private final Context context;

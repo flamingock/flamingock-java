@@ -28,8 +28,8 @@ import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.StringUtil;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.lang.reflect.Constructor;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 
 public final class ExecutionRuntime implements InjectableContextProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger("Flamingock-ExecutionRuntime");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Runtime");
     private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
             ? parameter.getAnnotation(Named.class).value()
             : null;
@@ -224,7 +224,7 @@ public final class ExecutionRuntime implements InjectableContextProvider {
                 isNativeImage = isRunningInNativeImage();
             }
             sessionId = sessionId != null ? sessionId : UUID.randomUUID().toString();
-            logger.info("Running on native image: {}", isNativeImage);
+            logger.debug("Running on native image: {}", isNativeImage);
             return new ExecutionRuntime(sessionId, proxyFactory, dependencyContext, isNativeImage);
         }
 

@@ -19,8 +19,8 @@ import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -36,7 +36,7 @@ import static java.util.Collections.emptyList;
 
 
 public class DynamoDbTargetSystemAuditMarker implements TargetSystemAuditMarker {
-    protected static final Logger logger = LoggerFactory.getLogger(DynamoDbTargetSystemAuditMarker.class);
+    protected static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditMarker");
 
     public static final String OPERATION = "operation";
     private static final String TASK_ID = "taskId";

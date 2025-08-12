@@ -31,8 +31,8 @@ import io.flamingock.internal.core.task.navigation.step.complete.CompletedSucces
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 
@@ -77,7 +77,7 @@ import java.time.LocalDateTime;
  * by providing clear indication of whether the change was successfully applied to the target system.</p>
  */
 public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy<TransactionalTargetSystemOps> {
-    private static final Logger logger = LoggerFactory.getLogger(SimpleTxChangeProcessStrategy.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("SimpleTxStrategy");
 
 
     public SimpleTxChangeProcessStrategy(ExecutableTask changeUnit,

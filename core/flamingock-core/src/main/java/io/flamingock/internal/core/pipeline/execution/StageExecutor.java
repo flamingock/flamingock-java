@@ -26,11 +26,17 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Stream;
 
 public class StageExecutor {
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("StageExecutor");
+    
     protected final ExecutionAuditWriter auditWriter;
 
     private final ContextResolver baseDependencyContext;
@@ -56,27 +62,57 @@ public class StageExecutor {
     public Output executeStage(ExecutableStage executableStage,
                                ExecutionContext executionContext,
                                Lock lock) throws StageExecutionException {
+        LocalDateTime stageStart = LocalDateTime.now();
+        String stageName = executableStage.getName();
+        long taskCount = getTasksStream(executableStage).count();
+        
+        logger.info("Starting stage execution [stage={} tasks={} execution_id={}]", 
+                   stageName, taskCount, executionContext.getExecutionId());
 
-        StageSummary summary = new StageSummary(executableStage.getName());
+        StageSummary summary = new StageSummary(stageName);
         PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
         ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
 
         try {
+            logger.debug("Processing change units [stage={} context={}]", stageName, executionContext.getExecutionId());
+            
             getTasksStream(executableStage)
                     .map(changeProcessFactory::setChangeUnit)
                     .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
-                    .peek(summary::addSummary)
+                    .peek(taskSummary -> {
+                        summary.addSummary(taskSummary);
+                        if (taskSummary.isFailed()) {
+                            logger.error("Change unit failed [change={} stage={}]", 
+                                       taskSummary.getId(), stageName);
+                        } else {
+                            logger.debug("Change unit completed successfully [change={} stage={}]", 
+                                       taskSummary.getId(), stageName);
+                        }
+                    })
                     .filter(TaskSummary::isFailed)
                     .findFirst()
                     .ifPresent(failed -> {
+                        Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
+                        logger.error("Stage execution failed [stage={} duration={} failed_change={}]", 
+                                   stageName, formatDuration(stageDuration), failed.getId());
                         throw new StageExecutionException(summary);
                     });
 
+            Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
+            logger.info("Stage execution completed successfully [stage={} duration={} tasks={}]", 
+                       stageName, formatDuration(stageDuration), taskCount);
+
         } catch (StageExecutionException stageExecutionException) {
+            Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
+            logger.error("Stage execution failed [stage={} duration={}]", 
+                       stageName, formatDuration(stageDuration));
             throw stageExecutionException;
         } catch (Throwable throwable) {
+            Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
+            logger.error("Stage execution failed with unexpected error [stage={} duration={} error={}]", 
+                       stageName, formatDuration(stageDuration), throwable.getMessage(), throwable);
             throw new StageExecutionException(throwable, summary);
         }
 
@@ -107,6 +143,17 @@ public class StageExecutor {
 
         public StageSummary getSummary() {
             return summary;
+        }
+    }
+    
+    private String formatDuration(Duration duration) {
+        long millis = duration.toMillis();
+        if (millis < 1000) {
+            return millis + "ms";
+        } else if (millis < 60000) {
+            return String.format("%.1fs", millis / 1000.0);
+        } else {
+            return String.format("%.1fm", millis / 60000.0);
         }
     }
 }

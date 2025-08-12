@@ -40,13 +40,13 @@ import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import org.apache.http.impl.client.HttpClients;
 import org.jetbrains.annotations.NotNull;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class CloudDriverImpl  implements CloudDriver {
-    private static final Logger logger = LoggerFactory.getLogger(CloudDriverImpl.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudDriver");
     private CloudEngineImpl engine;
 
 

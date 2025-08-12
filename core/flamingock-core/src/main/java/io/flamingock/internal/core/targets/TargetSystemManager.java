@@ -23,8 +23,8 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.targets.operations.TargetSystemOpsImpl;
 import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOpsImpl;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.HashMap;
@@ -42,7 +42,7 @@ import java.util.Optional;
 @NotThreadSafe
 public class TargetSystemManager implements ContextInitializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(TargetSystemManager.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("TargetSystem");
 
     private boolean initialized = false;
     private AbstractTargetSystem<?> auditStoreTargetSystem;

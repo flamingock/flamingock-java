@@ -17,8 +17,8 @@ package io.flamingock.internal.common.core.template;
 
 import io.flamingock.api.template.ChangeTemplate;
 import org.jetbrains.annotations.TestOnly;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,7 +56,7 @@ import java.util.ServiceLoader;
 
 public final class ChangeTemplateManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(ChangeTemplateManager.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("TemplateManager");
 
     private static final Map<String, Class<? extends ChangeTemplate<?, ?, ?>>> templates = new HashMap<>();
 

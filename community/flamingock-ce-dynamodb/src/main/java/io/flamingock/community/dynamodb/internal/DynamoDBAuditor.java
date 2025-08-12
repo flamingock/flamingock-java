@@ -17,7 +17,6 @@ package io.flamingock.community.dynamodb.internal;
 
 import io.flamingock.community.dynamodb.internal.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
@@ -25,14 +24,13 @@ import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.util.stream.Collectors;
@@ -41,7 +39,7 @@ import static java.util.Collections.emptyList;
 
 public class DynamoDBAuditor implements LocalAuditor {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBAuditor.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditor");
 
     private final DynamoDBUtil dynamoDBUtil;
     protected DynamoDbTable<AuditEntryEntity> table;

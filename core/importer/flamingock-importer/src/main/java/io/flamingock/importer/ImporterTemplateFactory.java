@@ -18,8 +18,8 @@ package io.flamingock.importer;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.template.ChangeTemplateFactory;
 import org.jetbrains.annotations.NotNull;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -28,7 +28,7 @@ import java.util.Optional;
 
 public class ImporterTemplateFactory implements ChangeTemplateFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger("ImporterAdapterFactory");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("ImporterFactory");
 
     private static final String MONGO_TEMPLATE_CLASS = "io.flamingock.importer.mongodb.MongoDbImporterChangeTemplate";
     private static final String DYNAMO_TEMPLATE_CLASS = "io.flamingock.importer.dynamodb.DynamoDbImporterChangeTemplate";

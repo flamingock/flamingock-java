@@ -33,8 +33,8 @@ import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.engine.lock.LockException;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 
 public class CloudExecutionPlanner extends ExecutionPlanner {
 
-    private static final Logger logger = LoggerFactory.getLogger(CloudExecutionPlanner.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudExecution");
 
     private final CoreConfigurable coreConfiguration;
 

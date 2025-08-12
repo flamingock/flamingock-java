@@ -23,15 +23,15 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.http.Http;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 public class HtttpAuditWriter implements CloudAuditWriter {
 
-    private static final Logger logger = LoggerFactory.getLogger(HtttpAuditWriter.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudAudit");
 
 
     private final Http.RequestBuilder requestBuilder;

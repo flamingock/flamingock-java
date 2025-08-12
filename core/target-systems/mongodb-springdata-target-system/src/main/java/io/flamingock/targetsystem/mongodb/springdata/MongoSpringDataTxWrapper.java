@@ -19,18 +19,25 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
+import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.function.Function;
 
 public class MongoSpringDataTxWrapper implements TransactionWrapper {
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("SpringMongoTx");
+    
     private final TransactionTemplate txTemplate;
 
     private MongoSpringDataTxWrapper(MongoDatabaseFactory mongoDatabaseFactory, TransactionOptions txOptions) {
@@ -44,13 +51,65 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
 
     @Override
     public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
-        return txTemplate.execute(status -> {
-            T result = operation.apply(executionRuntime);
-            if (result instanceof FailedStep) {
-                status.setRollbackOnly();
+        LocalDateTime transactionStart = LocalDateTime.now();
+        
+        try {
+            logger.debug("Starting MongoDB Spring Data transaction");
+            
+            return txTemplate.execute(status -> {
+                try {
+                    T result = operation.apply(executionRuntime);
+                    Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
+                    
+                    if (result instanceof FailedStep) {
+                        logger.info("Rolling back MongoDB Spring Data transaction due to failed step [duration={}]", formatDuration(transactionDuration));
+                        status.setRollbackOnly();
+                        logger.debug("MongoDB Spring Data transaction marked for rollback [duration={}]", formatDuration(transactionDuration));
+                    } else {
+                        logger.debug("Committing successful MongoDB Spring Data transaction [duration={}]", formatDuration(transactionDuration));
+                    }
+                    return result;
+                    
+                } catch (Exception e) {
+                    Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
+                    logger.error("MongoDB Spring Data transaction failed, marking for rollback [duration={} error={}]", 
+                               formatDuration(failureDuration), e.getMessage());
+                    status.setRollbackOnly();
+                    
+                    throw new DatabaseTransactionException(
+                        "MongoDB Spring Data transaction failed during operation execution",
+                        DatabaseTransactionException.TransactionState.FAILED,
+                        null, // isolation level not applicable to MongoDB
+                        null, // timeout not available
+                        failureDuration,
+                        DatabaseTransactionException.RollbackStatus.SUCCESS, // Spring handles rollback
+                        null, // specific operation not available at this level
+                        "Spring Data MongoDB",
+                        e
+                    );
+                }
+            });
+            
+        } catch (Exception e) {
+            Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
+            
+            // If it's already our exception, re-throw it
+            if (e instanceof DatabaseTransactionException) {
+                throw e;
             }
-            return result;
-        });
+            
+            throw new DatabaseTransactionException(
+                "MongoDB Spring Data transaction failed to start or commit",
+                DatabaseTransactionException.TransactionState.FAILED,
+                null,
+                null,
+                failureDuration,
+                DatabaseTransactionException.RollbackStatus.SUCCESS, // Spring handles rollback
+                null,
+                "Spring Data MongoDB",
+                e
+            );
+        }
     }
 
     public static Builder builder() {
@@ -98,6 +157,17 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
                     .build();
 
             return new MongoSpringDataTxWrapper(mongoTemplate.getMongoDatabaseFactory(),txOptions);
+        }
+    }
+    
+    private String formatDuration(Duration duration) {
+        long millis = duration.toMillis();
+        if (millis < 1000) {
+            return millis + "ms";
+        } else if (millis < 60000) {
+            return String.format("%.1fs", millis / 1000.0);
+        } else {
+            return String.format("%.1fm", millis / 60000.0);
         }
     }
 

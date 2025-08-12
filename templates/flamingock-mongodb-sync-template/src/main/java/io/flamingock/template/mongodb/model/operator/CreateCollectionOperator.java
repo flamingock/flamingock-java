@@ -18,11 +18,11 @@ package io.flamingock.template.mongodb.model.operator;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.template.mongodb.model.MongoOperation;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CreateCollectionOperator extends MongoOperator {
-    protected static final Logger logger = LoggerFactory.getLogger("Flamingock-MongoDB-Template");
+    protected static final Logger logger = FlamingockLoggerFactory.getLogger("CreateCollection");
 
 
     public CreateCollectionOperator(MongoDatabase mongoDatabase, MongoOperation operation) {

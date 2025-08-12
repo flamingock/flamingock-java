@@ -19,8 +19,8 @@ package io.flamingock.internal.core.engine.lock;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.TimeUtil;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -30,7 +30,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 
 public class Lock {
 
-    private static final Logger logger = LoggerFactory.getLogger("Flamingock-Lock");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
 
     public static final String LOG_EXPIRED_TEMPLATE = "Lock[{}] not refreshed at[{}] because the it's canceled/expired[{}]";
 

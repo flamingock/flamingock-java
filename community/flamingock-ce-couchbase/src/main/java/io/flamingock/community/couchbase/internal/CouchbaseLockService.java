@@ -32,14 +32,14 @@ import io.flamingock.internal.core.engine.lock.LockServiceException;
 import io.flamingock.internal.core.engine.lock.LockStatus;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 
 public class CouchbaseLockService implements LocalLockService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CouchbaseLockService.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("CouchbaseLock");
 
     protected final Cluster cluster;
     protected final Bucket bucket;

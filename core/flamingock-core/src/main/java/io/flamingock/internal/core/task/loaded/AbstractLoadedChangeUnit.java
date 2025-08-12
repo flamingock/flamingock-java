@@ -24,8 +24,8 @@ import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import org.jetbrains.annotations.NotNull;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedTask {
 
-    private static final Logger logger = LoggerFactory.getLogger("Flamingock-LoadedChangeUnit");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("ChangeUnit");
     /**
      * Regex pattern for validating the order field in ChangeUnits.
      * The pattern matches strings like "001", "999", "0010", "9999".

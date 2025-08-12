@@ -16,7 +16,6 @@
 package io.flamingock.community.dynamodb.internal;
 
 import io.flamingock.community.dynamodb.internal.entities.LockEntryEntity;
-import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.community.lock.LocalLockService;
 import io.flamingock.internal.core.community.lock.LockEntry;
 import io.flamingock.internal.core.engine.lock.LockAcquisition;
@@ -28,8 +27,8 @@ import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -46,7 +45,7 @@ import static java.util.Collections.emptyList;
 
 public class DynamoDBLockService implements LocalLockService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBLockService.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoLockService");
 
     private final DynamoDBUtil dynamoDBUtil;
 

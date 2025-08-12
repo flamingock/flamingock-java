@@ -29,8 +29,8 @@ import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 
@@ -69,7 +69,7 @@ import java.time.LocalDateTime;
  * cleanup, but manual intervention may be required for complete system consistency.</p>
  */
 public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<TargetSystemOps> {
-    private static final Logger logger = LoggerFactory.getLogger("NonTxChangeStrategy");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("NonTxStrategy");
 
 
     public NonTxChangeProcessStrategy(ExecutableTask changeUnit,

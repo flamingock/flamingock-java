@@ -30,8 +30,8 @@ import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.util.Result;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 public class CouchbaseAuditor implements LocalAuditor {
 
-    private static final Logger logger = LoggerFactory.getLogger(CouchbaseAuditor.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("CouchbaseAuditor");
 
     protected final Cluster cluster;
     protected final Bucket bucket;

@@ -30,8 +30,8 @@ import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +40,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class LocalExecutionPlanner extends ExecutionPlanner {
-    private static final Logger logger = LoggerFactory.getLogger(LocalExecutionPlanner.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("LocalExecution");
 
     private final AuditReader auditReader;
     private final LocalLockService lockService;

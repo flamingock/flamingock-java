@@ -32,8 +32,8 @@ import io.flamingock.internal.core.task.navigation.step.complete.failed.Complete
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.util.Wrapper;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 
@@ -75,7 +75,7 @@ import java.time.LocalDateTime;
  */
 public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy<TransactionalTargetSystemOps> {
     private static final Void UNUSED = null;
-    private static final Logger logger = LoggerFactory.getLogger(SharedTxChangeProcessStrategy.class);
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("SharedTxStrategy");
 
     public SharedTxChangeProcessStrategy(ExecutableTask changeUnit,
                                          ExecutionContext executionContext,

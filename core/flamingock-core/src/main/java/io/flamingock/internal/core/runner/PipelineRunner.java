@@ -37,8 +37,8 @@ import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.execution.StageSummary;
 import org.jetbrains.annotations.NotNull;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +47,7 @@ import static io.flamingock.internal.util.ObjectUtils.requireNonNull;
 
 public class PipelineRunner implements Runner {
 
-    private static final Logger logger = LoggerFactory.getLogger("Flamingock-PipelineRunner");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("PipelineRunner");
 
     private final RunnerId runnerId;
 
@@ -108,11 +108,10 @@ public class PipelineRunner implements Runner {
                 eventPublisher.publish(new StageFailedEvent(exception));
                 eventPublisher.publish(new PipelineFailedEvent(exception));
                 if (throwExceptionIfCannotObtainLock) {
-                    logger.error("Required process lock not acquired. ABORTED OPERATION", exception);
+                    logger.error("Required process lock not acquired - ABORTING OPERATION", exception);
                     throw exception;
-
                 } else {
-                    logger.warn("Process lock not acquired and `throwExceptionIfCannotObtainLock == false`.\n" + "If the application should abort, make `throwExceptionIfCannotObtainLock == true`\n" + "CONTINUING THE APPLICATION WITHOUT FINISHING THE PROCESS", exception);
+                    logger.warn("Process lock not acquired but throwExceptionIfCannotObtainLock=false - CONTINUING WITHOUT LOCK", exception);
                 }
                 break;
             } catch (StageExecutionException e) {

@@ -17,12 +17,12 @@ package io.flamingock.internal.core.engine.lock;
 
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.TimeUtil;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LockRefreshDaemon extends Thread {
 
-    private static final Logger logger = LoggerFactory.getLogger("Flamingock-LockRefreshDaemon");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("LockDaemon");
 
     private final Lock lock;
 
@@ -36,20 +36,20 @@ public class LockRefreshDaemon extends Thread {
 
     @Override
     public void run() {
-        logger.info("Starting Flamingock lock daemon...");
+        logger.debug("Starting lock refresh daemon [lock_key={}]", lock.lockKey);
         boolean keepRefreshing = true;
         do {
             try {
-                logger.debug("Flamingock(daemon) refreshing lock");
+                logger.trace("Lock daemon refreshing lock [lock_key={}]", lock.lockKey);
                 keepRefreshing = lock.extend();
             } catch (LockException e) {
-                logger.warn("Flamingock(daemon)Error refreshing lock: {}", e.getMessage());
+                logger.warn("Lock daemon refresh failed [lock_key={} error={}]", lock.lockKey, e.getMessage());
             } catch (Exception e) {
-                logger.warn("Flamingock(daemon)Generic error from daemon: {}", e.getMessage());
+                logger.warn("Lock daemon encountered unexpected error [lock_key={} error={}]", lock.lockKey, e.getMessage());
             }
             reposeIfRequired();
         } while (keepRefreshing);
-        logger.info("Cancelled Flamingock lock daemon");
+        logger.debug("Lock refresh daemon stopped [lock_key={}]", lock.lockKey);
     }
 
     private void reposeIfRequired() {
@@ -65,13 +65,14 @@ public class LockRefreshDaemon extends Thread {
                 logger.warn("Interrupted exception ignored");
             }
         } else {
-            logger.debug("Lock is canceled/expired[{}]", lock.expiresAt());
+            logger.trace("Lock daemon detected expired lock [expires_at={} lock_key={}]", lock.expiresAt(), lock.lockKey);
         }
 
     }
 
     private void logAcquisitionUntil(long sleepingTime) {
-        logger.info("Lock acquired until[{}]. Lock daemon sleeping until[{}]...for {}ms",
+        logger.trace("Lock daemon sleeping [lock_key={} expires_at={} sleep_until={} sleep_duration={}ms]",
+                lock.lockKey,
                 lock.expiresAt(),
                 timeService.currentDatePlusMillis(sleepingTime),
                 sleepingTime);
