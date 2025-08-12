@@ -89,9 +89,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
     @Override
     protected TaskSummary doApplyChange() {
-        logger.debug("Executing(shared-transactional) task[{}]", changeUnit.getId());
-
-        stepLogger.logExecutionStart(changeUnit);
+        logger.debug("Executing shared-transactional task [change={}]", changeUnit.getId());
 
         Wrapper<ExecutionStep> executionStep = new Wrapper<>(null);
         // Execute change and audit within single transaction

@@ -28,6 +28,8 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.NonTxChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.SharedTxChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.SimpleTxChangeProcessStrategy;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 
 import java.util.Set;
 
@@ -51,6 +53,8 @@ import java.util.Set;
  * strategy creation, ensuring all dependencies are properly configured.
  */
 public class ChangeProcessStrategyFactory {
+    private static final ChangeProcessLogger changeLogger = new ChangeProcessLogger();
+
     private final TargetSystemManager targetSystemManager;
 
     protected ExecutableTask changeUnit;
@@ -109,13 +113,18 @@ public class ChangeProcessStrategyFactory {
 
 
     public ChangeProcessStrategy build() {
+
+        changeLogger.logChangeExecutionStart(changeUnit.getId());
+        
         TargetSystemOps targetSystem = targetSystemManager.getTargetSystem(changeUnit.getTargetSystem(), relaxTargetSystemValidation);
+        
+        // Log target system resolution
+        changeLogger.logTargetSystemResolved(changeUnit.getId(), changeUnit.getTargetSystem());
 
         LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
 
-        // Legacy wrapper - will be removed when all strategies are fully implemented
-
-        return getStrategy(
+        // Create strategy and log which one is being used
+        ChangeProcessStrategy strategy = getStrategy(
                 changeUnit,
                 targetSystem,
                 new AuditStoreStepOperations(auditWriter),
@@ -124,7 +133,12 @@ public class ChangeProcessStrategyFactory {
                 new TaskSummarizer(changeUnit),
                 lockGuardProxyFactory
         );
-
+        
+        // Log strategy application
+        String strategyName = getStrategyName(changeUnit, targetSystem);
+        changeLogger.logStrategyApplication(changeUnit.getId(), strategyName);
+        
+        return strategy;
     }
 
     /**
@@ -165,6 +179,26 @@ public class ChangeProcessStrategyFactory {
             default:
                 TransactionalTargetSystemOps sharedTxTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
                 return new SharedTxChangeProcessStrategy(changeUnit, executionContext, sharedTxTargetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+        }
+    }
+
+    /**
+     * Returns a human-readable name for the strategy that would be selected.
+     */
+    private String getStrategyName(ExecutableTask changeUnit, TargetSystemOps targetSystemOps) {
+        if (!changeUnit.isTransactional()) {
+            return "NonTx";
+        }
+        switch (targetSystemOps.getOperationType()) {
+            case NON_TX:
+                return "NonTx";
+            case TX_NON_SYNC:
+                return "SimpleTx";
+            case TX_AUDIT_STORE_SYNC:
+                return "SimpleTx";
+            case TX_AUDIT_STORE_SHARED:
+            default:
+                return "SharedTx";
         }
     }
 

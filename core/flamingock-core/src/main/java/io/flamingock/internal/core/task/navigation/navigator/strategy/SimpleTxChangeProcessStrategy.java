@@ -92,9 +92,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
     @Override
     protected TaskSummary doApplyChange() {
-        logger.debug("Executing(transactional) task[{}]", changeUnit.getId());
-
-        stepLogger.logExecutionStart(changeUnit);
+        logger.debug("Executing transactional task [change={}]", changeUnit.getId());
 
         StartStep startStep = new StartStep(changeUnit);
 

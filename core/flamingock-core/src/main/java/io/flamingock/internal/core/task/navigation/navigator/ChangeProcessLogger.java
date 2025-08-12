@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
+import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
@@ -34,8 +36,17 @@ public class ChangeProcessLogger {
     private static final String MANUAL_ROLLBACK_DESC = "manual-rollback";
     private static final String AUTO_ROLLBACK_DESC = "auto-rollback";
 
-    public void logExecutionStart(ExecutableTask executableChangeUnit) {
-        logger.info("Starting change execution [change={}]", executableChangeUnit.getId());
+    public void logChangeExecutionStart(String changeId) {
+        logger.info("Starting change execution [change={}]", changeId);
+    }
+    
+    public void logTargetSystemResolved(String changeId, TargetSystemDescriptor targetSystem) {
+        String targetSystemId = targetSystem != null ? targetSystem.getId() : null;
+        logger.debug("Target system resolved [change={}, targetSystem={}]", changeId, targetSystemId);
+    }
+    
+    public void logStrategyApplication(String changeId, String strategyType) {
+        logger.info("Applying change with strategy [change={}, strategy={}]", changeId, strategyType);
     }
 
     public void logExecutionResult(ExecutionStep executionStep) {
@@ -43,10 +54,10 @@ public class ChangeProcessLogger {
         String duration = formatDuration(executionStep.getDuration());
         
         if (executionStep instanceof SuccessExecutionStep) {
-            logger.info("Change execution completed successfully [change={} duration={}]", taskId, duration);
+            logger.info("Change execution completed successfully [change={}, duration={}]", taskId, duration);
         } else if (executionStep instanceof FailedExecutionStep) {
             FailedExecutionStep failed = (FailedExecutionStep) executionStep;
-            logger.error("Change execution failed [change={} duration={} error={}]", 
+            logger.error("Change execution failed [change={}, duration={}, error={}]", 
                         taskId, duration, failed.getError().getMessage(), failed.getError());
         }
     }
@@ -61,19 +72,19 @@ public class ChangeProcessLogger {
         
         if (rolledBack instanceof FailedManualRolledBackStep) {
             FailedManualRolledBackStep failed = (FailedManualRolledBackStep) rolledBack;
-            logger.error("Change manual rollback failed [change={} duration={} error={}]", 
+            logger.error("Change manual rollback failed [change={}, duration={}, error={}]", 
                         taskId, duration, failed.getError().getMessage(), failed.getError());
         } else {
-            logger.info("Change manual rollback completed successfully [change={} duration={}]", taskId, duration);
+            logger.info("Change manual rollback completed successfully [change={}, duration={}]", taskId, duration);
         }
     }
 
     public void logAuditResult(Result auditResult, String id, String description) {
         if (auditResult instanceof Result.Error) {
-            logger.error("Audit operation failed [change={} operation={} error={}]", 
+            logger.error("Audit operation failed [change={}, operation={}, error={}]", 
                         id, description, ((Result.Error) auditResult).getError().getMessage());
         } else {
-            logger.debug("Audit operation completed successfully [change={} operation={}]", id, description);
+            logger.debug("Audit operation completed successfully [change={}, operation={}]", id, description);
         }
     }
 

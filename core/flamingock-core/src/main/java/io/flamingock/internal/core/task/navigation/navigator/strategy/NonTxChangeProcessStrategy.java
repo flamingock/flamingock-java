@@ -84,13 +84,11 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
 
     @Override
     protected TaskSummary doApplyChange() {
-        stepLogger.logExecutionStart(changeUnit);
-
         StartStep startStep = new StartStep(changeUnit);
 
         ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext, LocalDateTime.now());
 
-        logger.debug("Executing(non-transactional) task[{}]", changeUnit.getId());
+        logger.debug("Executing non-transactional task [change={}]", changeUnit.getId());
         
         ExecutionStep changeAppliedStep = targetSystemOps.applyChange(executableStep::execute, buildExecutionRuntime());
 
