@@ -16,11 +16,11 @@
 package io.flamingock.internal.core.targets.operations;
 
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 
 import java.util.function.Function;
 
-public interface TransactionalTargetSystemOps extends TargetSystemOps, OngoingTaskStatusRepository {
+public interface TransactionalTargetSystemOps extends TargetSystemOps, TargetSystemAuditMarker {
 
     <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime);
 

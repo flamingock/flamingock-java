@@ -28,7 +28,7 @@ import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessLogger;
-import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.AuditStoreStepOperations;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
@@ -41,12 +41,45 @@ import io.flamingock.internal.util.Result;
 
 import java.time.LocalDateTime;
 
-public abstract class AbstractChangeProcessStrategy implements ChangeProcessStrategy {
+/**
+ * Abstract base class for change process strategies implementing common audit and execution patterns.
+ * 
+ * <p>This class provides the foundational infrastructure for executing changes across different
+ * target system types while maintaining consistent audit trails and execution summaries.
+ * Concrete implementations define the specific transaction handling and execution flow patterns
+ * appropriate for their target system characteristics.
+ * 
+ * <h3>Common Execution Pattern</h3>
+ * <ol>
+ * <li>Check if change is already executed (skip if so)</li>
+ * <li>Audit change start in audit store</li>
+ * <li>Execute change using strategy-specific approach</li>
+ * <li>Audit execution result</li>
+ * <li>Handle rollbacks and cleanup as needed</li>
+ * <li>Return execution summary</li>
+ * </ol>
+ * 
+ * <h3>Audit Operations</h3>
+ * <p>All strategies use consistent audit operations provided by this base class:
+ * <ul>
+ * <li>{@code auditAndLogStartExecution} - Records change initiation</li>
+ * <li>{@code auditAndLogExecution} - Records execution results</li>
+ * <li>{@code auditAndLogManualRollback} - Records manual rollback operations</li>
+ * <li>{@code auditAndLogAutoRollback} - Records automatic transaction rollbacks</li>
+ * </ul>
+ * 
+ * <h3>Execution Runtime</h3>
+ * <p>The execution runtime provides dependency injection and security context for change execution,
+ * ensuring changes have access to required dependencies while maintaining proper lock management.</p>
+ * 
+ * @param <TS_OPS> The type of target system operations supported by this strategy
+ */
+public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemOps> implements ChangeProcessStrategy {
     protected static final ChangeProcessLogger stepLogger = new ChangeProcessLogger();
 
     protected final ExecutableTask changeUnit;
 
-    protected final TargetSystemOps targetSystem;
+    protected final TS_OPS targetSystemOps;
 
     protected final ExecutionContext executionContext;
 
@@ -60,14 +93,14 @@ public abstract class AbstractChangeProcessStrategy implements ChangeProcessStra
 
     protected AbstractChangeProcessStrategy(ExecutableTask changeUnit,
                                             ExecutionContext executionContext,
-                                            TargetSystemOps targetSystem,
+                                            TS_OPS targetSystemOps,
                                             AuditStoreStepOperations auditStoreOperations,
                                             TaskSummarizer summarizer,
                                             LockGuardProxyFactory proxyFactory,
                                             ContextResolver baseContext) {
         this.changeUnit = changeUnit;
         this.executionContext = executionContext;
-        this.targetSystem = targetSystem;
+        this.targetSystemOps = targetSystemOps;
         this.summarizer = summarizer;
         this.auditStoreOperations = auditStoreOperations;
         this.lockProxyFactory = proxyFactory;
@@ -86,8 +119,24 @@ public abstract class AbstractChangeProcessStrategy implements ChangeProcessStra
         }
     }
 
+    /**
+     * Strategy-specific implementation of change application.
+     * 
+     * <p>Concrete strategies must implement this method to define their specific
+     * transaction handling, execution flow, and error recovery patterns.
+     * 
+     * @return Task execution summary with success/failure status and step details
+     */
     abstract protected TaskSummary doApplyChange();
 
+    /**
+     * Audits and logs the start of change execution.
+     * 
+     * @param startStep The initial step for the change
+     * @param executionContext The execution context
+     * @param executedAt The execution timestamp
+     * @return The executable step ready for execution
+     */
     protected ExecutableStep auditAndLogStartExecution(StartStep startStep,
                                                        ExecutionContext executionContext,
                                                        LocalDateTime executedAt) {
@@ -98,15 +147,18 @@ public abstract class AbstractChangeProcessStrategy implements ChangeProcessStra
         return executableStep;
     }
 
+    /**
+     * Audits and logs the execution result of a change.
+     * 
+     * @param executionStep The execution step with results
+     * @return The after-execution audit step
+     */
     protected AfterExecutionAuditStep auditAndLogExecution(ExecutionStep executionStep) {
-        //adds to the summarizer and logs the execution
         summarizer.add(executionStep);
         stepLogger.logExecutionResult(executionStep);
 
-        //writes execution result to audit store
         Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, LocalDateTime.now());
 
-        //adds to the summarizer and logs the audit result
         stepLogger.logAuditExecutionResult(auditResult, executionStep.getLoadedTask());
         AfterExecutionAuditStep afterExecutionAudit = executionStep.applyAuditResult(auditResult);
         summarizer.add(afterExecutionAudit);
@@ -128,9 +180,18 @@ public abstract class AbstractChangeProcessStrategy implements ChangeProcessStra
     }
 
 
+    /**
+     * Builds the execution runtime for change execution.
+     * 
+     * <p>The runtime provides dependency injection context and security proxies
+     * needed for safe change execution with proper lock management.
+     * 
+     * @return Configured execution runtime
+     */
     protected ExecutionRuntime buildExecutionRuntime() {
         Context changeUnitSessionContext = new PriorityContext(new SimpleContext(), baseContext);
         return ExecutionRuntime.builder()
+                .setSessionId(changeUnit.getId())
                 .setDependencyContext(changeUnitSessionContext)
                 .setLockGuardProxyFactory(lockProxyFactory)
                 .build();

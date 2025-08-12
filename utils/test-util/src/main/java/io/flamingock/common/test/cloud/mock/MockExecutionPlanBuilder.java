@@ -28,7 +28,7 @@ import io.flamingock.internal.common.cloud.planner.response.LockResponse;
 import io.flamingock.internal.common.cloud.planner.response.StageResponse;
 import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
 import io.flamingock.internal.common.cloud.vo.ActionResponse;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 
 import java.util.List;
 import java.util.Optional;
@@ -104,7 +104,7 @@ public class MockExecutionPlanBuilder {
                 .map(prototypeTask -> {
                             Optional<MockRequestResponseTask> requestResponseTask = requestResponse.getTaskById(prototypeTask.getTaskId());
                             return prototypeTask.toExecutionPlanTaskRequest(
-                                    requestResponseTask.map(MockRequestResponseTask::getOngoingStatus).orElse(OngoingStatus.NONE));
+                                    requestResponseTask.map(MockRequestResponseTask::getOngoingStatus).orElse(TargetSystemAuditMarkType.NONE));
                         }
                 ).collect(Collectors.toList());
     }

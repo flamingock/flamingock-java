@@ -19,7 +19,7 @@ import io.flamingock.internal.common.cloud.planner.response.LockResponse;
 import io.flamingock.internal.common.cloud.planner.response.StageResponse;
 import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
 import io.flamingock.internal.common.cloud.vo.ActionResponse;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
@@ -30,7 +30,7 @@ import io.flamingock.internal.common.cloud.auth.AuthResponse;
 import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
 import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
 import io.flamingock.internal.common.cloud.planner.request.StageRequest; import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -172,20 +172,20 @@ public final class MockRunnerServerOld {
         return addSimpleStageExecutionPlan(executionId, stageName, auditEntries, Collections.emptyList());
     }
 
-    public MockRunnerServerOld addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryMatcher> auditEntries, List<OngoingTaskStatus> ongoingStatuses) {
+    public MockRunnerServerOld addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
 
-        Map<String, OngoingStatus> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(OngoingTaskStatus::getTaskId, OngoingTaskStatus::getOperation));
+        Map<String, TargetSystemAuditMarkType> ongoingOperationByTask = ongoingStatuses.stream()
+                .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
 
         Set<String> alreadyAddedTasks = new HashSet<>();
         List<TaskRequest> tasks = auditEntries.stream()
                 .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
                 .map(auditEntryExpectation -> {
                     alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
-                    OngoingStatus operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
+                    TargetSystemAuditMarkType operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
                     if (operation == null) {
                         return TaskRequest.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else if (operation == OngoingStatus.ROLLBACK) {
+                    } else if (operation == TargetSystemAuditMarkType.ROLLBACK) {
                         return TaskRequest.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
                     } else {
                         return TaskRequest.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
@@ -203,20 +203,20 @@ public final class MockRunnerServerOld {
         return addMultipleStageExecutionPlan(executionId, stageNames, auditEntries, Collections.emptyList());
     }
 
-    public MockRunnerServerOld addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries, List<OngoingTaskStatus> ongoingStatuses) {
+    public MockRunnerServerOld addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
 
-        Map<String, OngoingStatus> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(OngoingTaskStatus::getTaskId, OngoingTaskStatus::getOperation));
+        Map<String, TargetSystemAuditMarkType> ongoingOperationByTask = ongoingStatuses.stream()
+                .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
 
         Set<String> alreadyAddedTasks = new HashSet<>();
         List<TaskRequest> tasks = auditEntries.stream()
                 .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
                 .map(auditEntryExpectation -> {
                     alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
-                    OngoingStatus operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
+                    TargetSystemAuditMarkType operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
                     if (operation == null) {
                         return TaskRequest.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else if (operation == OngoingStatus.ROLLBACK) {
+                    } else if (operation == TargetSystemAuditMarkType.ROLLBACK) {
                         return TaskRequest.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
                     } else {
                         return TaskRequest.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());

@@ -18,19 +18,21 @@ package io.flamingock.targetsystem.mysql;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.function.Function;
 
 public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "FLAMINGOCK_ONGOING_TASKS";
-    private OngoingTaskStatusRepository taskStatusRepository;
+    private TargetSystemAuditMarker taskStatusRepository;
     private DataSource dataSource;
     private SqlTxWrapper txWrapper;
 
@@ -52,11 +54,19 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         DataSource dataSource = targetSystemContext.getDependencyValue(DataSource.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(DataSource.class));
 
-        txWrapper = new SqlTxWrapper(dataSource);
+        TransactionManager<Connection> txManager = new TransactionManager<>(() -> {
+            try {
+                return dataSource.getConnection();
+            }catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        txWrapper = new SqlTxWrapper(txManager);
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
-                ? new NoOpOnGoingTaskStatusRepository(this.getId())
-                : SqlOnGoingTaskStatusRepository.builder(dataSource)
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                : SqlTargetSystemAuditMarker.builder(dataSource, txManager)
                 .withTableName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
                 .build();
@@ -78,7 +88,7 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     }
 
     @Override
-    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
         return taskStatusRepository;
     }
 

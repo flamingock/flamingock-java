@@ -15,8 +15,8 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -55,8 +55,8 @@ public class OngoingTaskEntity {
         this.operation = operation;
     }
 
-    public OngoingTaskStatus toOngoingStatus() {
-        return new OngoingTaskStatus(this.taskId, OngoingStatus.valueOf(this.operation));
+    public TargetSystemAuditMark toOngoingStatus() {
+        return new TargetSystemAuditMark(this.taskId, TargetSystemAuditMarkType.valueOf(this.operation));
     }
 
 }

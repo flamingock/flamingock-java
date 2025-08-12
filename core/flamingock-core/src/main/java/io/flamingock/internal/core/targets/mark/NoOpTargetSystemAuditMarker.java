@@ -13,38 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.targets;
+package io.flamingock.internal.core.targets.mark;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Set;
 
-public class NoOpOnGoingTaskStatusRepository implements OngoingTaskStatusRepository {
-    private static final Logger logger = LoggerFactory.getLogger(NoOpOnGoingTaskStatusRepository.class);
+public class NoOpTargetSystemAuditMarker implements TargetSystemAuditMarker {
+    private static final Logger logger = LoggerFactory.getLogger(NoOpTargetSystemAuditMarker.class);
 
     private final String targetSystemId;
 
-    public NoOpOnGoingTaskStatusRepository(String targetSystemId) {
+    public NoOpTargetSystemAuditMarker(String targetSystemId) {
         this.targetSystemId = targetSystemId;
     }
 
     @Override
-    public Set<OngoingTaskStatus> getAll() {
+    public Set<TargetSystemAuditMark> listAll() {
         logger.debug("Ignoring 'getAll' operation: no-op repository for target system '{}'", targetSystemId);
         return Collections.emptySet();
     }
 
     @Override
-    public void clean(String taskId, ContextResolver contextResolver) {
-        logger.debug("Ignoring 'clean' operation for task '{}': no-op repository for target system '{}'", taskId, targetSystemId);
+    public void clear(String changeId) {
+        logger.debug("Ignoring 'clean' operation for task '{}': no-op repository for target system '{}'", changeId, targetSystemId);
     }
 
     @Override
-    public void register(OngoingTaskStatus status) {
-        logger.debug("Ignoring 'register' operation for task '{}': no-op repository for target system '{}'", status.getTaskId(), targetSystemId);
+    public void mark(TargetSystemAuditMark auditMark) {
+        logger.debug("Ignoring 'register' operation for task '{}': no-op repository for target system '{}'", auditMark.getTaskId(), targetSystemId);
     }
 }
 

@@ -15,10 +15,10 @@
  */
 package io.flamingock.internal.core.cloud.transaction;
 
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-
-public interface CloudTransactioner extends OngoingTaskStatusRepository, TransactionWrapper, AutoCloseable {
+@Deprecated
+public interface CloudTransactioner extends TargetSystemAuditMarker, TransactionWrapper, AutoCloseable {
 
     /**
      * Initializes the transactioner's storage in the local infrastructure

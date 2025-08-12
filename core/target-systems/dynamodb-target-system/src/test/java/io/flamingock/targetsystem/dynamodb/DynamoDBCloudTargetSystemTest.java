@@ -30,7 +30,7 @@ import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.core.processor.util.Deserializer;
@@ -245,7 +245,7 @@ public class DynamoDBCloudTargetSystemTest {
                             .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
                     0);
             // check ongoing status
-            dynamoDBTestHelper.checkAtLeastOneOngoingTask();
+            dynamoDBTestHelper.checkEmptyTargetSystemAudiMarker();
         }
     }
 
@@ -273,7 +273,7 @@ public class DynamoDBCloudTargetSystemTest {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
-                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", OngoingStatus.EXECUTION)),
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", TargetSystemAuditMarkType.APPLIED)),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
                             new AuditRequestExpectation(executionId, "create-table-clients", EXECUTED),

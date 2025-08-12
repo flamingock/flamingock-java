@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.navigation.step.execution;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
-import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedExecutionOrAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.util.Result;
 
@@ -41,7 +41,7 @@ public final class FailedExecutionStep extends ExecutionStep implements FailedWi
 
     @Override
     public AfterExecutionAuditStep applyAuditResult(Result auditResult) {
-        return FailedExecutionOrAuditStep.instance(task, auditResult);
+        return FailedAfterExecutionAuditStep.instance(task, auditResult);
     }
 
 }

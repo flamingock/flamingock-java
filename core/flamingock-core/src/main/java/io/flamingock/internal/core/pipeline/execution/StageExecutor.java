@@ -25,7 +25,6 @@ import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
-import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.Set;
@@ -58,11 +57,11 @@ public class StageExecutor {
         StageSummary summary = new StageSummary(executableStage.getName());
         PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
-        ChangeProcessStrategyFactory stepNavigatorBuilder = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
+        ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
 
         try {
             getTasksStream(executableStage)
-                    .map(stepNavigatorBuilder::setChangeUnit)
+                    .map(changeProcessFactory::setChangeUnit)
                     .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
                     .peek(summary::addSummary)
@@ -82,7 +81,7 @@ public class StageExecutor {
     }
 
     private ChangeProcessStrategyFactory getStepNavigatorBuilder(ExecutionContext executionContext, Lock lock, ContextResolver contextResolver) {
-        return StepNavigator.builder(targetSystemManager)
+        return new ChangeProcessStrategyFactory(targetSystemManager)
                 .setExecutionContext(executionContext)
                 .setAuditWriter(auditWriter)
                 .setDependencyContext(contextResolver)

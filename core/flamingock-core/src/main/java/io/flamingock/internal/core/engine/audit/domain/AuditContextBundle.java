@@ -17,7 +17,7 @@ package io.flamingock.internal.core.engine.audit.domain;
 
 import io.flamingock.internal.util.ThrowableUtil;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 
@@ -28,11 +28,11 @@ public abstract class AuditContextBundle {
 
         START_EXECUTION, EXECUTION, ROLLBACK;
 
-        public OngoingStatus toOngoingStatusOperation() {
-            return OngoingStatus.valueOf(this.name());
+        public TargetSystemAuditMarkType toOngoingStatusOperation() {
+            return TargetSystemAuditMarkType.valueOf(this.name());
         }
 
-        public static AuditContextBundle.Operation fromOngoingStatusOperation(OngoingStatus ongoingOperation) {
+        public static AuditContextBundle.Operation fromOngoingStatusOperation(TargetSystemAuditMarkType ongoingOperation) {
             return AuditContextBundle.Operation.valueOf(ongoingOperation.name());
         }
 

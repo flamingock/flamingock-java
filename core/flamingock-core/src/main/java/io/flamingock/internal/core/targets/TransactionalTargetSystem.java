@@ -17,6 +17,8 @@ package io.flamingock.internal.core.targets;
 
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import java.util.function.Function;
@@ -41,15 +43,15 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
     }
 
     public boolean inSyncWithAuditStore() {
-        OngoingTaskStatusRepository onGoingTaskStatusRepository = getOnGoingTaskStatusRepository();
-        return onGoingTaskStatusRepository != null && !(onGoingTaskStatusRepository instanceof NoOpOnGoingTaskStatusRepository);
+        TargetSystemAuditMarker onGoingTaskStatusRepository = getOnGoingTaskStatusRepository();
+        return onGoingTaskStatusRepository != null && !(onGoingTaskStatusRepository instanceof NoOpTargetSystemAuditMarker);
     }
 
     public <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
         return getTxWrapper().wrapInTransaction(executionRuntime, changeApplier);
     }
 
-    abstract public OngoingTaskStatusRepository getOnGoingTaskStatusRepository();
+    abstract public TargetSystemAuditMarker getOnGoingTaskStatusRepository();
 
     abstract public TransactionWrapper getTxWrapper();
 

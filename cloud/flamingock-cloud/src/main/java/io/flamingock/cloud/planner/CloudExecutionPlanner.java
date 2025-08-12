@@ -22,11 +22,11 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
 import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.execution.ExecutionPlan;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
@@ -56,13 +56,13 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private final ExecutionPlannerClient client;
 
-    private final OngoingTaskStatusRepository ongoingStatusRepository;
+    private final TargetSystemAuditMarker ongoingStatusRepository;
 
     public CloudExecutionPlanner(RunnerId runnerId,
                                  ExecutionPlannerClient client,
                                  CoreConfigurable coreConfiguration,
                                  CloudLockService lockService,
-                                 OngoingTaskStatusRepository ongoingStatusRepository,
+                                 TargetSystemAuditMarker ongoingStatusRepository,
                                  TimeService timeService) {
         this.client = client;
         this.runnerId = runnerId;
@@ -131,9 +131,9 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
 
-        Map<String, OngoingStatus> ongoingStatusesMap = getOngoingStatuses()
+        Map<String, TargetSystemAuditMarkType> ongoingStatusesMap = getOngoingStatuses()
                 .stream()
-                .collect(Collectors.toMap(OngoingTaskStatus::getTaskId, OngoingTaskStatus::getOperation));
+                .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
 
         ExecutionPlanRequest requestBody = ExecutionPlanMapper.toRequest(
                 loadedStages,
@@ -145,8 +145,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return responsePlan;
     }
 
-    private Collection<OngoingTaskStatus> getOngoingStatuses() {
-        return ongoingStatusRepository != null ? ongoingStatusRepository.getAll() : Collections.emptySet();
+    private Collection<TargetSystemAuditMark> getOngoingStatuses() {
+        return ongoingStatusRepository != null ? ongoingStatusRepository.listAll() : Collections.emptySet();
     }
 
     private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {

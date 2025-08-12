@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.core.community;
 
+import io.flamingock.internal.common.core.error.FlamingockException;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -48,5 +50,10 @@ public class TransactionManager<CLIENT_SESSION> {
 
     public Optional<CLIENT_SESSION> getSession(String sessionId) {
         return Optional.ofNullable(sessionMap.get(sessionId));
+    }
+
+
+    public CLIENT_SESSION getSessionOrThrow(String sessionId) {
+        return Optional.ofNullable(sessionMap.get(sessionId)).orElseThrow(() -> new FlamingockException("Transaction session not found: " + sessionId));
     }
 }

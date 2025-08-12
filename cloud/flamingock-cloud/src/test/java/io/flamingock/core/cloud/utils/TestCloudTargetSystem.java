@@ -17,8 +17,8 @@ package io.flamingock.core.cloud.utils;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.mockito.Mockito;
@@ -31,16 +31,16 @@ import java.util.function.Function;
 public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTargetSystem> {
 
 
-    private final TestCloudOngoingStatusRepo ongoignRepo;
+    private final TestTargetSystemAuditMarker ongoignRepo;
     private final TestCloudTxWrapper txWrapper;
 
-    public TestCloudTargetSystem(String id, OngoingTaskStatus... statuses) {
+    public TestCloudTargetSystem(String id, TargetSystemAuditMark... statuses) {
         super(id);
-        this.ongoignRepo = Mockito.spy(new TestCloudOngoingStatusRepo(statuses));
+        this.ongoignRepo = Mockito.spy(new TestTargetSystemAuditMarker(statuses));
         this.txWrapper = Mockito.spy(new TestCloudTxWrapper());
     }
 
-    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
         return ongoignRepo;
     }
 
@@ -73,28 +73,28 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
     }
 
 
-    public static class TestCloudOngoingStatusRepo implements OngoingTaskStatusRepository {
-        private final HashSet<OngoingTaskStatus> ongoingStatuses;
+    public static class TestTargetSystemAuditMarker implements TargetSystemAuditMarker {
+        private final HashSet<TargetSystemAuditMark> ongoingStatuses;
 
-        private TestCloudOngoingStatusRepo(OngoingTaskStatus... statuses) {
+        private TestTargetSystemAuditMarker(TargetSystemAuditMark... statuses) {
             ongoingStatuses = statuses != null ? new HashSet<>(Arrays.asList(statuses)) : new HashSet<>();
 
         }
 
 
         @Override
-        public Set<OngoingTaskStatus> getAll() {
+        public Set<TargetSystemAuditMark> listAll() {
             return ongoingStatuses;
         }
 
         @Override
-        public void clean(String taskId, ContextResolver contextResolver) {
-            ongoingStatuses.removeIf(status -> taskId.equals(status.getTaskId()));
+        public void clear(String changeId) {
+            ongoingStatuses.removeIf(status -> changeId.equals(status.getTaskId()));
         }
 
         @Override
-        public void register(OngoingTaskStatus status) {
-            ongoingStatuses.add(status);
+        public void mark(TargetSystemAuditMark auditMark) {
+            ongoingStatuses.add(auditMark);
         }
 
     }

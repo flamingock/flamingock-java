@@ -18,17 +18,12 @@ package io.flamingock.targetsystem.mongodb.springdata;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.springframework.data.mongodb.core.MongoTemplate;
-
-import java.util.function.Function;
 
 
 public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<MongoSpringDataTargetSystem> {
@@ -37,7 +32,7 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
     private final ReadConcern DEFAULT_READ_CONCERN = ReadConcern.MAJORITY;
     private final ReadPreference DEFAULT_READ_PREFERENCE = ReadPreference.primary();
 
-    private OngoingTaskStatusRepository taskStatusRepository;
+    private TargetSystemAuditMarker taskStatusRepository;
 
     private MongoSpringDataTxWrapper txWrapper;
     private MongoTemplate mongoTemplate;
@@ -112,7 +107,7 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
                 .build();
 
         //TODO create MongoSpringDataOnGoingTaskStatusRepository for cloud edition
-        taskStatusRepository = new NoOpOnGoingTaskStatusRepository(this.getId());
+        taskStatusRepository = new NoOpTargetSystemAuditMarker(this.getId());
     }
 
     @Override
@@ -121,7 +116,7 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
     }
 
     @Override
-    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
         return taskStatusRepository;
     }
 

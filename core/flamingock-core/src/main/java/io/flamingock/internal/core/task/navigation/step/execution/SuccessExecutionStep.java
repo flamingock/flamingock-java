@@ -17,7 +17,7 @@ package io.flamingock.internal.core.task.navigation.step.execution;
 
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
-import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedExecutionOrAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.complete.CompletedSuccessStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.util.Result;
@@ -35,6 +35,6 @@ public final class SuccessExecutionStep extends ExecutionStep {
     public AfterExecutionAuditStep applyAuditResult(Result auditResult) {
         return auditResult.isOk()
                 ? CompletedSuccessStep.fromSuccessExecution(this)
-                : FailedExecutionOrAuditStep.instance(task, auditResult);
+                : FailedAfterExecutionAuditStep.instance(task, auditResult);
     }
 }

@@ -17,7 +17,7 @@ package io.flamingock.internal.core.task.navigation.step.afteraudit;
 
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 
-public final class FailedExecutionSuccessAuditStep extends FailedExecutionOrAuditStep {
+public final class FailedExecutionSuccessAuditStep extends FailedAfterExecutionAuditStep {
     FailedExecutionSuccessAuditStep(ExecutableTask task) {
         super(task, true);
     }

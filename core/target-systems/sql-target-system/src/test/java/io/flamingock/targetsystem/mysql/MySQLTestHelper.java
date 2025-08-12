@@ -99,8 +99,8 @@ public class MySQLTestHelper {
         }
     }
 
-    public void checkAtLeastOneOngoingTask() {
-        checkOngoingTask(ongoingCount -> ongoingCount > 0);
+    public void checkEmptyTargetSystemAudiMarker() {
+        checkOngoingTask(ongoingCount -> ongoingCount == 0);
     }
 
     private void createOngoingTasksTableIfNotExists(Connection connection) throws SQLException {

@@ -20,7 +20,7 @@ import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
 import io.flamingock.internal.common.cloud.planner.response.RequiredActionTask;
 import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 
 public class PrototypeTask {
     private final String taskId;
@@ -47,10 +47,10 @@ public class PrototypeTask {
         return transactional;
     }
 
-    public TaskRequest toExecutionPlanTaskRequest(OngoingStatus ongoingStatus) {
+    public TaskRequest toExecutionPlanTaskRequest(TargetSystemAuditMarkType ongoingStatus) {
         return new TaskRequest(
                 taskId,
-                ongoingStatus != null ? ongoingStatus : OngoingStatus.NONE,
+                ongoingStatus != null ? ongoingStatus : TargetSystemAuditMarkType.NONE,
                 transactional
         );
     }
@@ -58,7 +58,7 @@ public class PrototypeTask {
     public TaskRequest toExecutionPlanTaskRequest() {
         return new TaskRequest(
                 taskId,
-                OngoingStatus.NONE,
+                TargetSystemAuditMarkType.NONE,
                 transactional
         );
     }

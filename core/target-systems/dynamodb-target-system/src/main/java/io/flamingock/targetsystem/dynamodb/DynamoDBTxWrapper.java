@@ -35,12 +35,6 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
     private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
     private final DynamoDBUtil dynamoDBUtil;
 
-    public DynamoDBTxWrapper(DynamoDbClient client) {
-        this.dynamoDBUtil = new DynamoDBUtil(client);
-        txManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
-    }
-
-    @Deprecated
     public DynamoDBTxWrapper(DynamoDbClient client,
                              TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
         this.dynamoDBUtil = new DynamoDBUtil(client);

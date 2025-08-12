@@ -16,26 +16,26 @@
 package io.flamingock.common.test.cloud.mock;
 
 import io.flamingock.internal.common.cloud.planner.response.RequiredActionTask;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 
 public class MockRequestResponseTask {
     private final String taskId;
-    private final OngoingStatus ongoingStatus;
+    private final TargetSystemAuditMarkType ongoingStatus;
     private final RequiredActionTask requiredAction;
 
 
     public MockRequestResponseTask(String taskId,
-                                   OngoingStatus ongoingStatus) {
+                                   TargetSystemAuditMarkType ongoingStatus) {
         this(taskId, ongoingStatus,  RequiredActionTask.PENDING_EXECUTION);
     }
 
     public MockRequestResponseTask(String taskId,
                                    RequiredActionTask requiredAction) {
-        this(taskId, OngoingStatus.NONE, requiredAction);
+        this(taskId, TargetSystemAuditMarkType.NONE, requiredAction);
     }
 
     public MockRequestResponseTask(String taskId,
-                                   OngoingStatus ongoingStatus,
+                                   TargetSystemAuditMarkType ongoingStatus,
                                    RequiredActionTask requiredAction) {
         this.taskId = taskId;
         this.ongoingStatus = ongoingStatus;
@@ -46,7 +46,7 @@ public class MockRequestResponseTask {
         return taskId;
     }
 
-    public OngoingStatus getOngoingStatus() {
+    public TargetSystemAuditMarkType getOngoingStatus() {
         return ongoingStatus;
     }
 

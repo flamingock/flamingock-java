@@ -15,6 +15,7 @@
  */
 package io.flamingock.core.annotations;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.core.utils.EmptyTransactionWrapper;
 import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
@@ -29,8 +30,9 @@ import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
-import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.targets.operations.TargetSystemOpsImpl;
@@ -39,9 +41,7 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
-import io.flamingock.internal.core.task.navigation.navigator.StepNavigator;
-import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
-import io.flamingock.internal.core.task.navigation.navigator.operations.LegacyTargetSystemStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.Result;
 import org.junit.jupiter.api.Assertions;
@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -109,16 +110,23 @@ public class TestRunner {
 
         executableChangeUnits.forEach(changeUnit -> {
 
-            TargetSystemOps targetSystem = transactionWrapper != null
-                    ? new TransactionalTargetSystemOpsImpl( new TestTransactionTargetSystem("default-target-system-id", transactionWrapper), true)
-                    : new TargetSystemOpsImpl(new TestTargetSystem("default-target-system-id"));
+            String targetSystemId = "default-target-system-id";
+            TargetSystem targetSystem = transactionWrapper != null
+                    ? new TestTransactionTargetSystem(targetSystemId, transactionWrapper)
+                    : new TestTargetSystem(targetSystemId);
+            TargetSystemManager targetSystemManager = new TargetSystemManager();
+            targetSystemManager.add(targetSystem);
+            targetSystemManager.setAuditStoreTargetSystem(targetSystem);
 
-            LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(mock(Lock.class), new HashSet<>());
-            LegacyTargetSystemStepOperations targetSystemOps = new LegacyTargetSystemStepOperations(targetSystem, lockGuardProxyFactory, new SimpleContext());
-
-            new StepNavigator(changeUnit, stageExecutionContext, targetSystemOps, new AuditStoreStepOperations(auditWriterMock), stepSummarizerMock)
+            new ChangeProcessStrategyFactory(targetSystemManager)
+                    .setExecutionContext(stageExecutionContext)
+                    .setAuditWriter(auditWriterMock)
+                    .setDependencyContext(new SimpleContext())
+                    .setLock(mock(Lock.class))
+                    .setNonGuardedTypes(new HashSet<>())
+                    .setChangeUnit(changeUnit)
+                    .build()
                     .applyChange();
-
         });
 
 
@@ -139,8 +147,8 @@ public class TestRunner {
         }
 
         @Override
-        public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
-            return new NoOpOnGoingTaskStatusRepository("default-target-system-id");
+        public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
+            return new NoOpTargetSystemAuditMarker("default-target-system-id");
         }
 
         @Override

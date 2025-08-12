@@ -15,6 +15,6 @@
  */
 package io.flamingock.internal.common.cloud.vo;
 
-public enum OngoingStatus {
-    NONE, EXECUTION, ROLLBACK
+public enum TargetSystemAuditMarkType {
+    NONE, APPLIED, ROLLBACK
 }

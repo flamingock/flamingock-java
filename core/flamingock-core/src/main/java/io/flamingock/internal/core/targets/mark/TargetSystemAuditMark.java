@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.targets;
+package io.flamingock.internal.core.targets.mark;
 
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 
-public class OngoingTaskStatus {
+public class TargetSystemAuditMark {
 
 
     private final String taskId;
 
-    private final OngoingStatus operation;
+    private final TargetSystemAuditMarkType operation;
 
-    public OngoingTaskStatus(String taskId, OngoingStatus operation) {
+    public TargetSystemAuditMark(String taskId, TargetSystemAuditMarkType operation) {
         this.taskId = taskId;
         this.operation = operation;
     }
@@ -33,7 +33,7 @@ public class OngoingTaskStatus {
         return taskId;
     }
 
-    public OngoingStatus getOperation() {
+    public TargetSystemAuditMarkType getOperation() {
         return operation;
     }
 
@@ -42,7 +42,7 @@ public class OngoingTaskStatus {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        OngoingTaskStatus that = (OngoingTaskStatus) o;
+        TargetSystemAuditMark that = (TargetSystemAuditMark) o;
 
         return taskId.equals(that.taskId);
     }

@@ -19,8 +19,8 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
@@ -64,7 +64,7 @@ public class MongoDBTestHelper {
                 new Document("$set", newDocument),
                 new com.mongodb.client.model.UpdateOptions().upsert(true));
 
-        checkAtLeastOneOngoingTask();
+        checkEmptyTargetSystemAudiMarker();
     }
 
     public <T> void checkCount(MongoCollection<Document> collection, int count) {
@@ -75,8 +75,8 @@ public class MongoDBTestHelper {
         assertEquals(count, (int) result);
     }
 
-    public void checkAtLeastOneOngoingTask() {
-        checkOngoingTask(result -> result >= 1);
+    public void checkEmptyTargetSystemAudiMarker() {
+        checkOngoingTask(result -> result == 0);
     }
 
     public void checkOngoingTask(Predicate<Long> predicate) {
@@ -90,9 +90,9 @@ public class MongoDBTestHelper {
         assertTrue(predicate.test(result));
     }
 
-    public static OngoingTaskStatus mapToOnGoingStatus(Document document) {
-        OngoingStatus operation = OngoingStatus.valueOf(document.getString("operation"));
-        return new OngoingTaskStatus(document.getString("taskId"), operation);
+    public static TargetSystemAuditMark mapToOnGoingStatus(Document document) {
+        TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(document.getString("operation"));
+        return new TargetSystemAuditMark(document.getString("taskId"), operation);
     }
 
 

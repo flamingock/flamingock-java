@@ -21,7 +21,7 @@ import io.flamingock.internal.core.targets.AbstractTargetSystem;
 
 import java.util.function.Function;
 
-import static io.flamingock.internal.core.targets.operations.OperationType.SIMPLE;
+import static io.flamingock.internal.core.targets.operations.OperationType.NON_TX;
 
 public class TargetSystemOpsImpl implements TargetSystemOps {
 
@@ -34,7 +34,7 @@ public class TargetSystemOpsImpl implements TargetSystemOps {
 
     @Override
     public OperationType getOperationType() {
-        return SIMPLE;
+        return NON_TX;
     }
 
     @Override

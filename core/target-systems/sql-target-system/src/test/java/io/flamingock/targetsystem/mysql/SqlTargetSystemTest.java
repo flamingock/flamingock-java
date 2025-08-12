@@ -29,7 +29,7 @@ import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.core.processor.util.Deserializer;
@@ -38,8 +38,6 @@ import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -219,7 +217,7 @@ public class SqlTargetSystemTest {
 
             mysqlTestHelper.checkTableExists(CLIENTS_TABLE);
             mysqlTestHelper.checkCount(CLIENTS_TABLE, 0);
-            mysqlTestHelper.checkAtLeastOneOngoingTask();
+            mysqlTestHelper.checkEmptyTargetSystemAudiMarker();
         }
     }
 
@@ -242,7 +240,7 @@ public class SqlTargetSystemTest {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
-                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", OngoingStatus.EXECUTION)),
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", TargetSystemAuditMarkType.APPLIED)),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
                             new AuditRequestExpectation(executionId, "create-clients-table", EXECUTED),

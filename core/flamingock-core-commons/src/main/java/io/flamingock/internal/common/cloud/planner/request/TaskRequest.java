@@ -16,29 +16,29 @@
 package io.flamingock.internal.common.cloud.planner.request;
 
 
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 
 public class TaskRequest {
 
     private final String id;
 
-    private final OngoingStatus ongoingStatus;
+    private final TargetSystemAuditMarkType ongoingStatus;
 
     private final boolean transactional;
 
     public static TaskRequest task(String id, boolean transactional) {
-        return new TaskRequest(id, OngoingStatus.NONE, transactional);
+        return new TaskRequest(id, TargetSystemAuditMarkType.NONE, transactional);
     }
 
     public static TaskRequest ongoingExecution(String id, boolean transactional) {
-        return new TaskRequest(id, OngoingStatus.EXECUTION, transactional);
+        return new TaskRequest(id, TargetSystemAuditMarkType.APPLIED, transactional);
     }
 
     public static TaskRequest ongoingRollback(String id, boolean transactional) {
-        return new TaskRequest(id, OngoingStatus.ROLLBACK, transactional);
+        return new TaskRequest(id, TargetSystemAuditMarkType.ROLLBACK, transactional);
     }
 
-    public TaskRequest(String id, OngoingStatus ongoingStatus, boolean transactional) {
+    public TaskRequest(String id, TargetSystemAuditMarkType ongoingStatus, boolean transactional) {
         this.id = id;
         this.ongoingStatus = ongoingStatus;
         this.transactional = transactional;
@@ -48,7 +48,7 @@ public class TaskRequest {
         return id;
     }
 
-    public OngoingStatus getOngoingStatus() {
+    public TargetSystemAuditMarkType getOngoingStatus() {
         return ongoingStatus;
     }
 

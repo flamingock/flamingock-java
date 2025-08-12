@@ -23,13 +23,33 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.targets.operations.TargetSystemOps;
+import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.navigation.navigator.operations.AuditStoreStepOperations;
-import io.flamingock.internal.core.task.navigation.navigator.operations.LegacyTargetSystemStepOperations;
-import io.flamingock.internal.core.task.navigation.navigator.strategy.SimpleChangeProcessStrategy;
+import io.flamingock.internal.core.task.navigation.navigator.strategy.NonTxChangeProcessStrategy;
+import io.flamingock.internal.core.task.navigation.navigator.strategy.SharedTxChangeProcessStrategy;
+import io.flamingock.internal.core.task.navigation.navigator.strategy.SimpleTxChangeProcessStrategy;
 
 import java.util.Set;
 
+/**
+ * Factory for creating appropriate change process strategies based on target system characteristics.
+ *
+ * <p>This factory determines the optimal execution strategy by analyzing the target system's
+ * transactional capabilities and relationship to the audit store. The strategy selection
+ * ensures optimal consistency guarantees and performance characteristics for each scenario.
+ *
+ * <h3>Strategy Selection Logic</h3>
+ * <ul>
+ * <li><strong>Non-transactional changes:</strong> Always use {@link NonTxChangeProcessStrategy}</li>
+ * <li><strong>NON_TX operation type:</strong> Use {@link NonTxChangeProcessStrategy}</li>
+ * <li><strong>TX_NON_SYNC or TX_AUDIT_STORE_SYNC:</strong> Use {@link SimpleTxChangeProcessStrategy}</li>
+ * <li><strong>TX_AUDIT_STORE_SHARED:</strong> Use {@link SharedTxChangeProcessStrategy}</li>
+ * </ul>
+ *
+ * <h3>Builder Pattern</h3>
+ * <p>The factory uses a builder pattern to collect all necessary components before
+ * strategy creation, ensuring all dependencies are properly configured.
+ */
 public class ChangeProcessStrategyFactory {
     private final TargetSystemManager targetSystemManager;
 
@@ -46,7 +66,7 @@ public class ChangeProcessStrategyFactory {
     protected ExecutionContext executionContext;
 
 
-    ChangeProcessStrategyFactory(TargetSystemManager targetSystemManager) {
+    public ChangeProcessStrategyFactory(TargetSystemManager targetSystemManager) {
         this.targetSystemManager = targetSystemManager;
     }
 
@@ -86,9 +106,7 @@ public class ChangeProcessStrategyFactory {
 
         LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
 
-        //TODO will be removed when all strategy implemented and not TargetSystemStepOperations not needed
-        LegacyTargetSystemStepOperations targetSystemOps = new LegacyTargetSystemStepOperations(targetSystem, lockGuardProxyFactory, targetSystem.decorateOnTop(baseContext));
-
+        // Legacy wrapper - will be removed when all strategies are fully implemented
 
         return getStrategy(
                 changeUnit,
@@ -97,36 +115,51 @@ public class ChangeProcessStrategyFactory {
                 baseContext,
                 executionContext,
                 new TaskSummarizer(changeUnit),
-                lockGuardProxyFactory,
-                targetSystemOps
+                lockGuardProxyFactory
         );
 
     }
 
+    /**
+     * Creates the appropriate change process strategy based on target system characteristics.
+     *
+     * <p>Strategy selection considers both the change unit's transactional requirements
+     * and the target system's operation type to ensure optimal execution patterns.
+     *
+     * @param changeUnit           The change to be executed
+     * @param targetSystemOps      Target system operations interface
+     * @param auditStoreOperations Audit store operations interface
+     * @param baseContext          Base dependency resolution context
+     * @param executionContext     Execution context for the change
+     * @param summarizer           Task summarizer for execution tracking
+     * @param proxyFactory         Lock guard proxy factory
+     * @return Configured strategy instance appropriate for the target system
+     */
     public static ChangeProcessStrategy getStrategy(ExecutableTask changeUnit,
-                                                    TargetSystemOps targetSystem,
+                                                    TargetSystemOps targetSystemOps,
                                                     AuditStoreStepOperations auditStoreOperations,
                                                     ContextResolver baseContext,
                                                     ExecutionContext executionContext,
                                                     TaskSummarizer summarizer,
-                                                    LockGuardProxyFactory proxyFactory,
-                                                    //THIS WILL BE REMOVED
-                                                    LegacyTargetSystemStepOperations targetSystemOps) {
+                                                    LockGuardProxyFactory proxyFactory) {
         if (!changeUnit.isTransactional()) {
-            return new SimpleChangeProcessStrategy(changeUnit, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext);
+            return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
         }
-        switch (targetSystem.getOperationType()) {
-            case SIMPLE:
-                return new SimpleChangeProcessStrategy(changeUnit, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext);
-            case TX_AUDIT_STORE_SHARED:
+        switch (targetSystemOps.getOperationType()) {
+            case NON_TX:
+                return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+
+            case TX_NON_SYNC:
             case TX_AUDIT_STORE_SYNC:
-            case TX_NONSYNC:
+                TransactionalTargetSystemOps txTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
+                return new SimpleTxChangeProcessStrategy(changeUnit, executionContext, txTargetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+
+            case TX_AUDIT_STORE_SHARED:
             default:
-                return new StepNavigator(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer);
+                TransactionalTargetSystemOps sharedTxTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
+                return new SharedTxChangeProcessStrategy(changeUnit, executionContext, sharedTxTargetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
         }
     }
-
-
 
 
 }

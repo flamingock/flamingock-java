@@ -23,11 +23,11 @@ import io.flamingock.internal.util.Result;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class FailedExecutionOrAuditStep extends AfterExecutionAuditStep
+public abstract class FailedAfterExecutionAuditStep extends AfterExecutionAuditStep
         implements SuccessableStep, RollableFailedStep {
 
 
-    public static FailedExecutionOrAuditStep instance(ExecutableTask task, Result auditResult) {
+    public static FailedAfterExecutionAuditStep instance(ExecutableTask task, Result auditResult) {
         if (auditResult instanceof Result.Error) {
             Result.Error errorResult = (Result.Error) auditResult;
             return new FailedAuditExecutionStep(task, errorResult.getError());
@@ -36,7 +36,7 @@ public abstract class FailedExecutionOrAuditStep extends AfterExecutionAuditStep
         }
     }
 
-    protected FailedExecutionOrAuditStep(ExecutableTask task, boolean successExecutionAudit) {
+    protected FailedAfterExecutionAuditStep(ExecutableTask task, boolean successExecutionAudit) {
         super(task, successExecutionAudit);
     }
 

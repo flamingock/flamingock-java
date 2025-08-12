@@ -15,11 +15,11 @@
  */
 package io.flamingock.targetsystem.mysql;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -32,22 +32,26 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class SqlOnGoingTaskStatusRepository implements OngoingTaskStatusRepository {
+public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
 
-    private final DataSource dataSource;
     private final String tableName;
+    private final DataSource dataSource;
+    private final TransactionManager<Connection> txManager;
 
-    public static Builder builder(DataSource dataSource) {
-        return new Builder(dataSource);
+    public static Builder builder(DataSource dataSource, TransactionManager<Connection> txManager) {
+        return new Builder(dataSource, txManager);
     }
 
-    public SqlOnGoingTaskStatusRepository(DataSource dataSource, String tableName) {
+    public SqlTargetSystemAuditMarker(DataSource dataSource,
+                                      String tableName,
+                                      TransactionManager<Connection> txManager) {
         this.dataSource = dataSource;
         this.tableName = tableName;
+        this.txManager = txManager;
     }
 
     @Override
-    public Set<OngoingTaskStatus> getAll() {
+    public Set<TargetSystemAuditMark> listAll() {
         String sql = String.format("SELECT task_id, operation FROM %s", tableName);
 
         try (Connection connection = dataSource.getConnection();
@@ -55,11 +59,11 @@ public class SqlOnGoingTaskStatusRepository implements OngoingTaskStatusReposito
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            Set<OngoingTaskStatus> ongoingStatuses = new HashSet<>();
+            Set<TargetSystemAuditMark> ongoingStatuses = new HashSet<>();
             while (resultSet.next()) {
                 String taskId = resultSet.getString("task_id");
                 AuditContextBundle.Operation operation = AuditContextBundle.Operation.valueOf(resultSet.getString("operation"));
-                ongoingStatuses.add(new OngoingTaskStatus(taskId, operation.toOngoingStatusOperation()));
+                ongoingStatuses.add(new TargetSystemAuditMark(taskId, operation.toOngoingStatusOperation()));
             }
             return ongoingStatuses;
         } catch (SQLException ex) {
@@ -68,11 +72,11 @@ public class SqlOnGoingTaskStatusRepository implements OngoingTaskStatusReposito
     }
 
     @Override
-    public void clean(String taskId, ContextResolver contextResolver) {
-        Connection connection = contextResolver.getRequiredDependencyValue(Connection.class);
+    public void clear(String changeId) {
         String sql = String.format("DELETE FROM %s WHERE task_id = ?", tableName);
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, taskId);
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, changeId);
             preparedStatement.executeUpdate();
         } catch (SQLException ex) {
             throw new FlamingockException(ex);
@@ -80,16 +84,14 @@ public class SqlOnGoingTaskStatusRepository implements OngoingTaskStatusReposito
     }
 
     @Override
-    public void register(OngoingTaskStatus status) {
+    public void mark(TargetSystemAuditMark auditMark) {
         String sql = String.format(
                 "INSERT INTO %s (task_id, operation) VALUES (?, ?) " +
                         "ON DUPLICATE KEY UPDATE operation = VALUES(operation)", tableName);
-
-        try (
-                Connection connection = dataSource.getConnection();
-                PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, status.getTaskId());
-            preparedStatement.setString(2, status.getOperation().toString());
+        Connection connection = txManager.getSessionOrThrow(auditMark.getTaskId());
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, auditMark.getTaskId());
+            preparedStatement.setString(2, auditMark.getOperation().toString());
             preparedStatement.executeUpdate();
             if(!connection.getAutoCommit())  {
                 connection.commit();
@@ -101,11 +103,13 @@ public class SqlOnGoingTaskStatusRepository implements OngoingTaskStatusReposito
 
     public static class Builder {
         private final DataSource dataSource;
+        private final TransactionManager<Connection> txManager;
         private String tableName = "FLAMINGOCK_ONGOING_TASKS";
         private boolean autoCreate = true;
 
-        public Builder(DataSource dataSource) {
+        public Builder(DataSource dataSource, TransactionManager<Connection> txManager) {
             this.dataSource = dataSource;
+            this.txManager = txManager;
         }
 
         public Builder withTableName(String tableName) {
@@ -118,11 +122,11 @@ public class SqlOnGoingTaskStatusRepository implements OngoingTaskStatusReposito
             return this;
         }
 
-        public SqlOnGoingTaskStatusRepository build() {
+        public SqlTargetSystemAuditMarker build() {
             if (autoCreate) {
                 createTableIfNotExists();
             }
-            return new SqlOnGoingTaskStatusRepository(dataSource, tableName);
+            return new SqlTargetSystemAuditMarker(dataSource, tableName, txManager);
         }
 
         private void createTableIfNotExists() {

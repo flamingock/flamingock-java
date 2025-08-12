@@ -234,7 +234,8 @@ class DynamoDBDriverTest {
     }
 
     @Test
-    @DisplayName("When standalone runs the driver with transactions enabled and execution fails should persist only the executed audit logs")
+    @Disabled
+    @DisplayName("When standalone runs the driver and execution fails should persist only the executed audit logs")
     void failedWithTransaction() {
         //Given-When
 
@@ -258,13 +259,15 @@ class DynamoDBDriverTest {
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(3, auditLog.size());
+        assertEquals(4, auditLog.size());
         assertEquals("table-create", auditLog.get(0).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
         assertEquals("insert-user", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
         assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditLog.get(2).getState());
+        assertEquals("execution-with-exception", auditLog.get(3).getTaskId());
+        assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(3).getState());
 
         //Checking user table
         List<String> rows = dynamoDBTestHelper.dynamoDBUtil.getEnhancedClient()

@@ -24,7 +24,7 @@ import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
 import io.flamingock.internal.common.cloud.planner.response.StageResponse;
 import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
 import io.flamingock.internal.common.cloud.planner.response.RequiredActionTask;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
@@ -48,7 +48,7 @@ public final class ExecutionPlanMapper {
 
     public static ExecutionPlanRequest toRequest(List<AbstractLoadedStage> loadedStages,
                                                  long lockAcquiredForMillis,
-                                                 Map<String, OngoingStatus> ongoingStatusesMap) {
+                                                 Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
 
         List<StageRequest> requestStages = new ArrayList<>(loadedStages.size());
         for (int i = 0; i < loadedStages.size(); i++) {
@@ -65,9 +65,9 @@ public final class ExecutionPlanMapper {
     }
 
     private static TaskRequest mapToTaskRequest(TaskDescriptor descriptor,
-                                                Map<String, OngoingStatus> ongoingStatusesMap) {
+                                                Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
         if (ongoingStatusesMap.containsKey(descriptor.getId())) {
-            if (ongoingStatusesMap.get(descriptor.getId()) == OngoingStatus.ROLLBACK) {
+            if (ongoingStatusesMap.get(descriptor.getId()) == TargetSystemAuditMarkType.ROLLBACK) {
                 return TaskRequest.ongoingRollback(descriptor.getId(), descriptor.isTransactional());
             } else {
                 return TaskRequest.ongoingExecution(descriptor.getId(), descriptor.isTransactional());

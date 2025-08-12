@@ -16,8 +16,8 @@
 package io.flamingock.internal.core.targets.operations;
 
 public enum OperationType {
-    SIMPLE,
+    NON_TX,
     TX_AUDIT_STORE_SHARED,
     TX_AUDIT_STORE_SYNC,
-    TX_NONSYNC
+    TX_NON_SYNC
 }

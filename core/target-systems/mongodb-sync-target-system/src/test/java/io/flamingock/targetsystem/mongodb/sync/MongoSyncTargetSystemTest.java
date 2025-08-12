@@ -33,7 +33,7 @@ import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.core.processor.util.Deserializer;
@@ -130,7 +130,7 @@ public class MongoSyncTargetSystemTest {
     }
 
     @Test
-    @DisplayName("Should follow the transactioner lifecycle")
+    @DisplayName("Should follow the targetSystem lifecycle")
     void happyPath() {
         String executionId = "execution-1";
         String stageName = "stage-1";
@@ -235,7 +235,7 @@ public class MongoSyncTargetSystemTest {
             // check clients changes
             mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 0);
             // check ongoing status
-            mongoDBTestHelper.checkAtLeastOneOngoingTask();
+            mongoDBTestHelper.checkEmptyTargetSystemAudiMarker();
         }
     }
 
@@ -265,7 +265,7 @@ public class MongoSyncTargetSystemTest {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
-                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", OngoingStatus.EXECUTION)),
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", TargetSystemAuditMarkType.APPLIED)),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
                             new AuditRequestExpectation(executionId, "create-clients-collection", EXECUTED),

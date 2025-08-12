@@ -17,7 +17,7 @@ package io.flamingock.internal.core.targets.operations;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 
 import java.util.Set;
@@ -63,18 +63,18 @@ public class TransactionalTargetSystemOpsImpl
     }
 
     @Override
-    public Set<OngoingTaskStatus> getAll() {
-        return transactionalTargetSystem.getOnGoingTaskStatusRepository().getAll();
+    public Set<TargetSystemAuditMark> listAll() {
+        return transactionalTargetSystem.getOnGoingTaskStatusRepository().listAll();
     }
 
     @Override
-    public void clean(String changeId, ContextResolver contextResolver) {
-        transactionalTargetSystem.getOnGoingTaskStatusRepository().clean(changeId, contextResolver);
+    public void clear(String changeId) {
+        transactionalTargetSystem.getOnGoingTaskStatusRepository().clear(changeId);
     }
 
     @Override
-    public void register(OngoingTaskStatus status) {
-        transactionalTargetSystem.getOnGoingTaskStatusRepository().register(status);
+    public void mark(TargetSystemAuditMark auditMark) {
+        transactionalTargetSystem.getOnGoingTaskStatusRepository().mark(auditMark);
     }
 
     private OperationType internalGetOperationType(boolean sameAuditStoreTxResource) {
@@ -83,7 +83,7 @@ public class TransactionalTargetSystemOpsImpl
         } else if (transactionalTargetSystem.inSyncWithAuditStore()) {
             return OperationType.TX_AUDIT_STORE_SYNC;
         } else {
-            return OperationType.TX_NONSYNC;
+            return OperationType.TX_NON_SYNC;
         }
     }
 }

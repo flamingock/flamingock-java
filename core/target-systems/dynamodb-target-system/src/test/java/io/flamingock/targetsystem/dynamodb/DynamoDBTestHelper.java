@@ -61,7 +61,7 @@ public class DynamoDBTestHelper {
                         .item(new OngoingTaskEntity(taskId, AuditContextBundle.Operation.EXECUTION.toString()))
                         .build()
         );
-        checkAtLeastOneOngoingTask();
+        checkEmptyTargetSystemAudiMarker();
     }
 
     public <T> void checkCount(DynamoDbTable<T> table, int count) {
@@ -76,8 +76,8 @@ public class DynamoDBTestHelper {
         assertEquals(count, (int) result);
     }
 
-    public void checkAtLeastOneOngoingTask() {
-        checkOngoingTask(result -> result >= 1);
+    public void checkEmptyTargetSystemAudiMarker() {
+        checkOngoingTask(result -> result == 0);
     }
 
     public void checkOngoingTask(Predicate<Long> predicate) {

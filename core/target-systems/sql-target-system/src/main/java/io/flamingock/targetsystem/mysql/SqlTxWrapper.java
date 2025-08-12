@@ -17,6 +17,7 @@ package io.flamingock.targetsystem.mysql;
 
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
@@ -31,16 +32,16 @@ import java.util.function.Function;
 public class SqlTxWrapper implements TransactionWrapper {
     private static final Logger logger = LoggerFactory.getLogger("SqlTxWrapper");
 
-    private final DataSource dataSource;
+    private final TransactionManager<Connection> txManager;
 
-    public SqlTxWrapper(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public SqlTxWrapper(TransactionManager<Connection> txManager) {
+        this.txManager = txManager;
     }
 
     @Override
     public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
 
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = txManager.startSession(executionRuntime.getSessionId())) {
             boolean originalAutoCommit = connection.getAutoCommit();
             try {
                 connection.setAutoCommit(false);

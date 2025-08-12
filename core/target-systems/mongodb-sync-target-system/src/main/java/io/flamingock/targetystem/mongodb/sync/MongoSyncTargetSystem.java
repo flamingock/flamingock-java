@@ -24,13 +24,10 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-
-import java.util.function.Function;
 
 
 public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTargetSystem> {
@@ -41,7 +38,7 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     private final ReadPreference DEFAULT_READ_PREFERENCE = ReadPreference.primary();
 
 
-    private OngoingTaskStatusRepository taskStatusRepository;
+    private TargetSystemAuditMarker taskStatusRepository;
 
     private MongoSyncTxWrapper txWrapper;
     private MongoClient mongoClient;
@@ -122,12 +119,14 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
                 .orElseGet(() -> baseContext.getDependencyValue(WriteConcern.class)
                         .orElseGet(() -> DEFAULT_WRITE_CONCERN));
 
-        txWrapper = new MongoSyncTxWrapper(mongoClient);
+
+        TransactionManager<ClientSession> txManager = new TransactionManager<>(mongoClient::startSession);
+        txWrapper = new MongoSyncTxWrapper(txManager);
 
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
-                ? new NoOpOnGoingTaskStatusRepository(this.getId())
-                : MongoSyncOnGoingTaskStatusRepository.builder(database)
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                : MongoSyncTargetSystemAuditMarker.builder(database, txManager)
                 .setCollectionName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
                 .withReadConcern(readConcern)
@@ -142,7 +141,7 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     }
 
     @Override
-    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
         return taskStatusRepository;
     }
 
@@ -153,11 +152,11 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
 
     @Override
     public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
-        if(!(other instanceof MongoSyncTargetSystem)) {
+        if (!(other instanceof MongoSyncTargetSystem)) {
             return false;
         }
         MongoClient otherClient = ((MongoSyncTargetSystem) other).mongoClient;
-        if(otherClient == null) {
+        if (otherClient == null) {
             return false;
         }
         return otherClient.equals(this.mongoClient);

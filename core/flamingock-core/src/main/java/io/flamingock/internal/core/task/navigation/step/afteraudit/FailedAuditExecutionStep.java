@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.navigation.step.afteraudit;
 import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 
-public final class FailedAuditExecutionStep extends FailedExecutionOrAuditStep implements FailedWithErrorStep {
+public final class FailedAuditExecutionStep extends FailedAfterExecutionAuditStep implements FailedWithErrorStep {
 
     private final Throwable error;
 

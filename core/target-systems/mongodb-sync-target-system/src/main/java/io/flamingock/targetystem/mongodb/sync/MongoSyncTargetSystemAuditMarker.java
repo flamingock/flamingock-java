@@ -22,76 +22,83 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.community.TransactionManager;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import org.bson.Document;
 
 import java.util.HashSet;
 import java.util.Set;
 
 
-public class MongoSyncOnGoingTaskStatusRepository implements OngoingTaskStatusRepository {
+public class MongoSyncTargetSystemAuditMarker implements TargetSystemAuditMarker {
     public static final String OPERATION = "operation";
     private static final String TASK_ID = "taskId";
     private final MongoCollection<Document> onGoingTaskStatusCollection;
+    private final TransactionManager<ClientSession> txManager;
 
-    public static Builder builder(MongoDatabase mongoDatabase) {
-        return new Builder(mongoDatabase);
+    public static Builder builder(MongoDatabase mongoDatabase, TransactionManager<ClientSession> txManager) {
+        return new Builder(mongoDatabase, txManager);
     }
 
-    public MongoSyncOnGoingTaskStatusRepository(MongoCollection<Document> onGoingTaskStatusCollection) {
+    public MongoSyncTargetSystemAuditMarker(MongoCollection<Document> onGoingTaskStatusCollection,
+                                            TransactionManager<ClientSession> txManager) {
         this.onGoingTaskStatusCollection = onGoingTaskStatusCollection;
+        this.txManager = txManager;
     }
 
     @Override
-    public Set<OngoingTaskStatus> getAll() {
+    public Set<TargetSystemAuditMark> listAll() {
         return onGoingTaskStatusCollection.find()
-                .map(MongoSyncOnGoingTaskStatusRepository::mapToOnGoingStatus)
+                .map(MongoSyncTargetSystemAuditMarker::mapToOnGoingStatus)
                 .into(new HashSet<>());
     }
 
     @Override
-    public void clean(String taskId, ContextResolver contextResolver) {
-        ClientSession clientSession = contextResolver.getRequiredDependencyValue(ClientSession.class);
-        onGoingTaskStatusCollection.deleteMany(clientSession, Filters.eq(TASK_ID, taskId));
+    public void clear(String changeId) {
+        onGoingTaskStatusCollection.deleteMany(Filters.eq(TASK_ID, changeId));
     }
 
     @Override
-    public void register(OngoingTaskStatus status) {
-        Document filter = new Document(TASK_ID, status.getTaskId());
+    public void mark(TargetSystemAuditMark auditMark) {
+
+        Document filter = new Document(TASK_ID, auditMark.getTaskId());
 
         // Define the new document to replace or insert
-        Document newDocument = new Document(TASK_ID, status.getTaskId())
-                .append(OPERATION, status.getOperation().name());
+        Document newDocument = new Document(TASK_ID, auditMark.getTaskId())
+                .append(OPERATION, auditMark.getOperation().name());
 
+        ClientSession clientSession = txManager.getSessionOrThrow(auditMark.getTaskId());
         onGoingTaskStatusCollection.updateOne(
+                clientSession,
                 filter,
                 new Document("$set", newDocument),
                 new com.mongodb.client.model.UpdateOptions().upsert(true));
     }
 
-    public static OngoingTaskStatus mapToOnGoingStatus(Document document) {
-        OngoingStatus operation = OngoingStatus.valueOf(document.getString(OPERATION));
-        return new OngoingTaskStatus(document.getString(TASK_ID), operation);
+    public static TargetSystemAuditMark mapToOnGoingStatus(Document document) {
+        TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(document.getString(OPERATION));
+        return new TargetSystemAuditMark(document.getString(TASK_ID), operation);
     }
 
 
     public static class Builder {
 
         private final MongoDatabase mongoDatabase;
+        private final TransactionManager<ClientSession> txManager;
         private boolean autoCreate = true;
         private String collectionName = "flamingockOnGoingTasks";
         private ReadConcern readConcern;
         private ReadPreference readPreference;
         private WriteConcern writeConcern;
 
-        public Builder(MongoDatabase mongoDatabase) {
+        public Builder(MongoDatabase mongoDatabase, TransactionManager<ClientSession> txManager) {
             this.mongoDatabase = mongoDatabase;
+            this.txManager = txManager;
         }
 
         public Builder setCollectionName(String collectionName) {
@@ -119,7 +126,7 @@ public class MongoSyncOnGoingTaskStatusRepository implements OngoingTaskStatusRe
             return this;
         }
 
-        public MongoSyncOnGoingTaskStatusRepository build() {
+        public MongoSyncTargetSystemAuditMarker build() {
             MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName)
 //                    .withReadConcern(readConcern)
 //                    .withReadPreference(readPreference)
@@ -136,7 +143,7 @@ public class MongoSyncOnGoingTaskStatusRepository implements OngoingTaskStatusRe
             } else {
                 initializer.justValidateCollection();
             }
-            return new MongoSyncOnGoingTaskStatusRepository(collection);
+            return new MongoSyncTargetSystemAuditMarker(collection, txManager);
         }
     }
 }

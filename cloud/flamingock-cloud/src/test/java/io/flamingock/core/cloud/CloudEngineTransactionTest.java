@@ -23,8 +23,8 @@ import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
-import io.flamingock.internal.common.cloud.vo.OngoingStatus;
-import io.flamingock.internal.core.targets.OngoingTaskStatus;
+import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -142,12 +142,12 @@ public class CloudEngineTransactionTest {
         runner.execute();
 
         //THEN
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).getAll();
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template", OngoingStatus.EXECUTION));
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).listAll();
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template", TargetSystemAuditMarkType.APPLIED));
 
         ArgumentCaptor<String> changeUnitIdValuesCaptor = ArgumentCaptor.forClass(String.class);
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).register(new OngoingTaskStatus("create-persons-table-from-template-2", OngoingStatus.EXECUTION));
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clean(changeUnitIdValuesCaptor.capture(), any());
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template-2", TargetSystemAuditMarkType.APPLIED));
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clear(changeUnitIdValuesCaptor.capture());
         List<String> allValues = changeUnitIdValuesCaptor.getAllValues();
 
         Assertions.assertEquals("create-persons-table-from-template", allValues.get(0));

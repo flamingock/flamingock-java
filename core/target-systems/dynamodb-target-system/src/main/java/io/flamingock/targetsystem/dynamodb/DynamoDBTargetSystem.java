@@ -18,21 +18,18 @@ package io.flamingock.targetsystem.dynamodb;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.NoOpOnGoingTaskStatusRepository;
-import io.flamingock.internal.core.targets.OngoingTaskStatusRepository;
+import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-import java.util.function.Function;
-
 
 public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "flamingockOnGoingTasks";
 
-    private OngoingTaskStatusRepository taskStatusRepository;
+    private TargetSystemAuditMarker taskStatusRepository;
 
     private DynamoDBTxWrapper txWrapper;
     private DynamoDbClient client;
@@ -62,12 +59,13 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
         client = targetSystemContext.getDependencyValue(DynamoDbClient.class)
                 .orElseGet(() -> baseContext.getRequiredDependencyValue(DynamoDbClient.class));
 
-        txWrapper = new DynamoDBTxWrapper(client);
+        TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
+        txWrapper = new DynamoDBTxWrapper(client, txManager);
 
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
-                ? new NoOpOnGoingTaskStatusRepository(this.getId())
-                : DynamoDBOnGoingTaskStatusRepository.builder(client)
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                : DynamoDbTargetSystemAuditMarker.builder(client, txManager)
                 .setTableName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
                 .build();
@@ -79,7 +77,7 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     }
 
     @Override
-    public OngoingTaskStatusRepository getOnGoingTaskStatusRepository() {
+    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
         return taskStatusRepository;
     }
 

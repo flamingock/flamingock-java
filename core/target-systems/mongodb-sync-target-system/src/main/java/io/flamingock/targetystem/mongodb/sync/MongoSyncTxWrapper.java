@@ -33,12 +33,7 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
 
     private final TransactionManager<ClientSession> sessionManager;
 
-    public MongoSyncTxWrapper(MongoClient mongoClient) {
-        sessionManager = new TransactionManager<>(mongoClient::startSession);
-    }
-
-    @Deprecated
-    public MongoSyncTxWrapper(TransactionManager<ClientSession> sessionManager) {
+   public MongoSyncTxWrapper(TransactionManager<ClientSession> sessionManager) {
         this.sessionManager = sessionManager;
     }
 
