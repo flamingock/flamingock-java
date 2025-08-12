@@ -16,7 +16,7 @@ Flamingock uses a strategy pattern to handle change execution across different t
 - Changes cannot be atomically rolled back
 - Separate audit store operations
 - Best-effort rollback chain execution
-- Manual intervention may be required for full consistency
+- **Recovery capability**: Manual intervention if rollback not successfully executed
 
 #### Execution Flow
 
@@ -37,14 +37,14 @@ flowchart TD
 
 #### State Outcomes
 
-| Scenario | Target System State | Audit Store State |
-|----------|-------------------|------------------|
-| Full success | Change applied | STARTED → EXECUTED |
-| Change execution failure | Unchanged, rollback attempted | STARTED → FAILED → ROLLED_BACK |
-| Change success, audit EXECUTED failure | Change applied | STARTED |
-| Change execution failure, audit FAILED failure | Unchanged, rollback attempted | STARTED |
-| Change execution failure, audit ROLLED_BACK failure | Unchanged, rollback attempted | STARTED → FAILED |
-| Process interruption | Potentially inconsistent | STARTED |
+| Scenario                                            | Target System State           | Audit Store State              |
+|-----------------------------------------------------|-------------------------------|--------------------------------|
+| Full success                                        | Change applied                | STARTED → EXECUTED             |
+| Change execution failure                            | Unchanged, rollback attempted | STARTED → FAILED → ROLLED_BACK |
+| Change success, audit EXECUTED failure              | Change applied                | STARTED                        |
+| Change execution failure, audit FAILED failure      | Unchanged, rollback attempted | STARTED                        |
+| Change execution failure, audit ROLLED_BACK failure | Unchanged, rollback attempted | STARTED → FAILED               |
+| Process interruption                                | Potentially inconsistent      | STARTED                        |
 
 ### 2. SimpleTxChangeProcessStrategy  
 
@@ -55,6 +55,9 @@ flowchart TD
 - Separate audit store (different database or cloud)
 - Optional marker support for enhanced recovery
 - Automatic transaction rollback on failure
+- **Recovery capability**:
+  - **With Marker**: Near-automatic recovery using marker status
+  - **Without Marker**: Semi-automatic recovery using audit trail
 
 #### Execution Flow
 
@@ -80,12 +83,12 @@ flowchart TD
 
 #### State Outcomes
 
-| Scenario | Target System State | Audit Store State | Marker State |
-|----------|-------------------|------------------|--------------|
-| Full success | Change committed | STARTED → EXECUTED | Cleared |
-| Execution failure | Transaction rolled back | STARTED → FAILED → ROLLED_BACK | None |
-| Audit failure after success | Change committed | STARTED → FAILED | Remains |
-| Process interruption | Potentially inconsistent | STARTED | May remain |
+| Scenario                    | Target System State      | Audit Store State              | Marker State |
+|-----------------------------|--------------------------|--------------------------------|--------------|
+| Full success                | Change committed         | STARTED → EXECUTED             | Cleared      |
+| Execution failure           | Transaction rolled back  | STARTED → FAILED → ROLLED_BACK | None         |
+| Audit failure after success | Change committed         | STARTED → FAILED               | Remains      |
+| Process interruption        | Potentially inconsistent | STARTED                        | May remain   |
 
 #### Marker Behavior
 
@@ -102,6 +105,7 @@ flowchart TD
 - Atomic commit of both change and audit
 - Separate failure audit transaction
 - Safe retry semantics
+- **Recovery capability**: Automatic recovery - failed changes are safe to retry
 
 #### Execution Flow
 
@@ -148,69 +152,3 @@ flowchart TD
     D -->|TX_AUDIT_STORE_SHARED| F[SharedTxChangeProcessStrategy]
 ```
 
-### Operation Types
-
-- **NON_TX**: Non-transactional operations
-- **TX_NON_SYNC**: Transactional with non-synchronized audit
-- **TX_AUDIT_STORE_SYNC**: Transactional with synchronized but separate audit  
-- **TX_AUDIT_STORE_SHARED**: Transactional with shared database audit
-
-## Consistency Guarantees
-
-### Strongest to Weakest Consistency
-
-1. **SharedTxChangeProcessStrategy**: Atomic change + audit
-2. **SimpleTxChangeProcessStrategy with Marker**: Transactional change + recovery marker
-3. **SimpleTxChangeProcessStrategy without Marker**: Transactional change only
-4. **NonTxChangeProcessStrategy**: Best-effort consistency
-
-### Recovery Capabilities
-
-- **SharedTx**: Automatic recovery - failed changes are safe to retry
-- **SimpleTx with Marker**: Near-automatic recovery using marker status
-- **SimpleTx without Marker**: Semi-automatic recovery using audit trail
-- **NonTx**: Manual intervention often required
-
-## Best Practices
-
-### Strategy Selection
-
-1. **Use SharedTx when possible** - provides strongest guarantees
-2. **Enable markers in SimpleTx** - improves recovery automation  
-3. **Design rollback chains carefully** - critical for NonTx strategy
-4. **Monitor audit trail completeness** - key for all recovery scenarios
-
-### Error Handling
-
-1. **Log execution details** - all strategies provide comprehensive logging
-2. **Design idempotent changes** - enables safe retry operations
-3. **Test rollback scenarios** - especially important for NonTx systems
-4. **Monitor partial execution states** - watch for interrupted processes
-
-### Performance Considerations  
-
-1. **SharedTx**: Highest consistency, potential for lock contention
-2. **SimpleTx**: Good balance of consistency and performance
-3. **NonTx**: Highest performance, lowest consistency guarantees
-
-## Implementation Notes
-
-### Common Audit Operations
-
-All strategies use consistent audit operations:
-- `auditAndLogStartExecution` - Records change initiation
-- `auditAndLogExecution` - Records execution results  
-- `auditAndLogManualRollback` - Records manual rollback operations
-- `auditAndLogAutoRollback` - Records automatic transaction rollbacks
-
-### Execution Runtime
-
-The execution runtime provides:
-- Dependency injection context
-- Lock management proxies
-- Security context propagation
-- Session-scoped resource management
-
-### Legacy Support
-
-Current implementation includes legacy target system operations that will be removed as all strategies are fully implemented. This ensures backward compatibility during the transition period.
