@@ -17,10 +17,11 @@ package io.flamingock.internal.core.engine.audit.domain;
 
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.targets.operations.OperationType;
 
 public class RollbackAuditContextBundle extends AuditContextBundle {
 
-    public RollbackAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext) {
-        super(Operation.ROLLBACK, loadedTask, executionContext, runtimeContext);
+    public RollbackAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext, OperationType operationType) {
+        super(Operation.ROLLBACK, loadedTask, executionContext, runtimeContext, operationType);
     }
 }

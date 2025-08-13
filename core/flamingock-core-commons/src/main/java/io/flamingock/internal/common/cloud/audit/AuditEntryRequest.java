@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.common.cloud.audit;
 
+import io.flamingock.internal.common.core.targets.operations.OperationType;
+
 public class AuditEntryRequest {
 
     public enum ExecutionType {EXECUTION, BEFORE_EXECUTION}
@@ -47,6 +49,8 @@ public class AuditEntryRequest {
 
     private final ExecutionType type;
 
+    private final OperationType operationType;
+
     protected Boolean systemChange;//TODO not in server
 
     public AuditEntryRequest(String stageId,
@@ -61,7 +65,8 @@ public class AuditEntryRequest {
                              String executionHostname,
                              Object metadata,
                              boolean systemChange,
-                             String errorTrace) {
+                             String errorTrace,
+                             OperationType operationType) {
         this.stageId = stageId;
         this.taskId = taskId;
         this.author = author;
@@ -74,6 +79,7 @@ public class AuditEntryRequest {
         this.executionHostname = executionHostname;
         this.errorTrace = errorTrace;
         this.type = type;
+        this.operationType = operationType;
 
         this.systemChange = systemChange;
     }
@@ -128,6 +134,10 @@ public class AuditEntryRequest {
 
     public ExecutionType getType() {
         return type;
+    }
+
+    public OperationType getOperationType() {
+        return operationType;
     }
 
 

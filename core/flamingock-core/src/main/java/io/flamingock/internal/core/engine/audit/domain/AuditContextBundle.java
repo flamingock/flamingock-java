@@ -20,6 +20,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.targets.operations.OperationType;
 
 public abstract class AuditContextBundle {
 
@@ -42,15 +43,18 @@ public abstract class AuditContextBundle {
     private final TaskDescriptor loadedTask;
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
+    private final OperationType operationType;
 
     public AuditContextBundle(Operation operation,
                               TaskDescriptor loadedTask,
                               ExecutionContext executionContext,
-                              RuntimeContext runtimeContext) {
+                              RuntimeContext runtimeContext,
+                              OperationType operationType) {
         this.operation = operation;
         this.loadedTask = loadedTask;
         this.executionContext = executionContext;
         this.runtimeContext = runtimeContext;
+        this.operationType = operationType;
     }
 
     public Operation getOperation() {
@@ -67,6 +71,10 @@ public abstract class AuditContextBundle {
 
     public RuntimeContext getRuntimeContext() {
         return runtimeContext;
+    }
+
+    public OperationType getOperationType() {
+        return operationType;
     }
 
 
@@ -90,7 +98,8 @@ public abstract class AuditContextBundle {
                 stageExecutionContext.getHostname(),
                 stageExecutionContext.getMetadata(),
                 getSystemChange(),
-                ThrowableUtil.serialize(runtimeContext.getError().orElse(null))
+                ThrowableUtil.serialize(runtimeContext.getError().orElse(null)),
+                getOperationType()
         );
     }
 

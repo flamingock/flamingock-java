@@ -15,9 +15,28 @@
  */
 package io.flamingock.internal.core.targets.operations;
 
+/**
+ * @deprecated Use {@link io.flamingock.internal.common.core.targets.operations.OperationType} instead.
+ * This enum will be removed in a future version.
+ */
+@Deprecated
 public enum OperationType {
     NON_TX,
     TX_AUDIT_STORE_SHARED,
     TX_AUDIT_STORE_SYNC,
-    TX_NON_SYNC
+    TX_NON_SYNC;
+
+    /**
+     * Convert to the commons equivalent.
+     */
+    public io.flamingock.internal.common.core.targets.operations.OperationType toCommons() {
+        return io.flamingock.internal.common.core.targets.operations.OperationType.valueOf(this.name());
+    }
+
+    /**
+     * Convert from the commons equivalent.
+     */
+    public static OperationType fromCommons(io.flamingock.internal.common.core.targets.operations.OperationType commons) {
+        return OperationType.valueOf(commons.name());
+    }
 }

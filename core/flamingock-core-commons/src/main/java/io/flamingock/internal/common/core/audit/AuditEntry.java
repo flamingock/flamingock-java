@@ -17,6 +17,7 @@ package io.flamingock.internal.common.core.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.internal.common.core.targets.operations.OperationType;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -51,6 +52,7 @@ public class AuditEntry {
     private final String executionHostname;
     private final String errorTrace;
     private final ExecutionType type;
+    private final OperationType operationType;
 
     public AuditEntry(String executionId,
                       String stageId,
@@ -65,7 +67,8 @@ public class AuditEntry {
                       String executionHostname,
                       Object metadata,
                       boolean systemChange,
-                      String errorTrace) {
+                      String errorTrace,
+                      OperationType operationType) {
         this.executionId = executionId;
         this.stageId = stageId;
         this.taskId = taskId;
@@ -79,8 +82,32 @@ public class AuditEntry {
         this.executionHostname = executionHostname;
         this.errorTrace = errorTrace;
         this.type = type;
+        this.operationType = operationType;
 
         this.systemChange = systemChange;
+    }
+
+    /**
+     * Backward compatible constructor without OperationType.
+     * @deprecated Use constructor with OperationType parameter instead.
+     */
+    @Deprecated
+    public AuditEntry(String executionId,
+                      String stageId,
+                      String taskId,
+                      String author,
+                      LocalDateTime timestamp,
+                      Status state,
+                      ExecutionType type,
+                      String className,
+                      String methodName,
+                      long executionMillis,
+                      String executionHostname,
+                      Object metadata,
+                      boolean systemChange,
+                      String errorTrace) {
+        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, null);
     }
 
     public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
@@ -150,6 +177,10 @@ public class AuditEntry {
         return type;
     }
 
+    public OperationType getOperationType() {
+        return operationType;
+    }
+
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
         return RELEVANT_STATES.contains(newEntry.state) && newEntry.getCreatedAt().isAfter(this.getCreatedAt());
     }
@@ -169,7 +200,8 @@ public class AuditEntry {
                 getExecutionHostname(),
                 getMetadata(),
                 getSystemChange(),
-                getErrorTrace()
+                getErrorTrace(),
+                getOperationType()
         );
     }
 

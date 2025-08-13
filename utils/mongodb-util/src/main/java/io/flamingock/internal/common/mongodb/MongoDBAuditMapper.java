@@ -16,6 +16,7 @@
 package io.flamingock.internal.common.mongodb;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.targets.operations.OperationType;
 import io.flamingock.internal.util.TimeUtil;
 
 import java.util.function.Supplier;
@@ -29,6 +30,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECU
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_OPERATION_TYPE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
@@ -59,10 +61,22 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
         document.append(KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         document.append(KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
+        document.append(KEY_OPERATION_TYPE, auditEntry.getOperationType() != null ? auditEntry.getOperationType().name() : null);
         return document;
     }
 
     public AuditEntry fromDocument(DocumentHelper entry) {
+        // Parse OperationType with null safety for backward compatibility
+        OperationType operationType = null;
+        if (entry.containsKey(KEY_OPERATION_TYPE) && entry.getString(KEY_OPERATION_TYPE) != null) {
+            try {
+                operationType = OperationType.valueOf(entry.getString(KEY_OPERATION_TYPE));
+            } catch (IllegalArgumentException e) {
+                // Handle case where stored value is invalid - default to null
+                operationType = null;
+            }
+        }
+        
         return new AuditEntry(
                 entry.getString(KEY_EXECUTION_ID),
                 entry.getString(KEY_STAGE_ID),
@@ -78,7 +92,8 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.getString(KEY_EXECUTION_HOSTNAME),
                 entry.get(KEY_METADATA),
                 entry.getBoolean(KEY_SYSTEM_CHANGE) != null && entry.getBoolean(KEY_SYSTEM_CHANGE),
-                entry.getString(KEY_ERROR_TRACE));
+                entry.getString(KEY_ERROR_TRACE),
+                operationType);
 
     }
 }

@@ -17,10 +17,11 @@ package io.flamingock.internal.core.engine.audit.domain;
 
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.targets.operations.OperationType;
 
 public class ExecutionAuditContextBundle extends AuditContextBundle {
 
-    public ExecutionAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext) {
-        super(Operation.EXECUTION, loadedTask, executionContext, runtimeContext);
+    public ExecutionAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext, OperationType operationType) {
+        super(Operation.EXECUTION, loadedTask, executionContext, runtimeContext, operationType);
     }
 }

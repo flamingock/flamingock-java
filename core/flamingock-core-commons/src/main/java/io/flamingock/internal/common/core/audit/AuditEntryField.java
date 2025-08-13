@@ -30,4 +30,5 @@ public class AuditEntryField {
     public static final String KEY_EXECUTION_HOSTNAME = "executionHostname";
     public static final String KEY_ERROR_TRACE = "errorTrace";
     public static final String KEY_SYSTEM_CHANGE = "systemChange";
+    public static final String KEY_OPERATION_TYPE = "operationType";
 }

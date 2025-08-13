@@ -127,7 +127,7 @@ public class ChangeProcessStrategyFactory {
         ChangeProcessStrategy strategy = getStrategy(
                 changeUnit,
                 targetSystem,
-                new AuditStoreStepOperations(auditWriter),
+                new AuditStoreStepOperations(auditWriter, targetSystem.getOperationType()),
                 baseContext,
                 executionContext,
                 new TaskSummarizer(changeUnit),
