@@ -16,7 +16,8 @@
 package io.flamingock.community.dynamodb.internal.entities;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.targets.operations.OperationType;
+import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.targets.OperationType;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -29,14 +30,14 @@ class AuditEntryEntityTest {
     @Test
     void shouldConvertToAndFromAuditEntryWithOperationType() {
         // Given
-        AuditEntry original = createTestAuditEntry(OperationType.TX_NON_SYNC);
+        AuditEntry original = createTestAuditEntry(AuditTxType.TX_NON_SYNC);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);
         AuditEntry converted = entity.toAuditEntry();
 
         // Then
-        assertEquals(OperationType.TX_NON_SYNC, converted.getOperationType());
+        assertEquals(AuditTxType.TX_NON_SYNC, converted.getTxType());
         assertEquals(original.getExecutionId(), converted.getExecutionId());
         assertEquals(original.getTaskId(), converted.getTaskId());
         assertEquals(original.getAuthor(), converted.getAuthor());
@@ -44,7 +45,7 @@ class AuditEntryEntityTest {
     }
 
     @Test
-    void shouldHandleNullOperationType() {
+    void shouldReturnNonTxWhenNull() {
         // Given
         AuditEntry original = createTestAuditEntry(null);
 
@@ -53,7 +54,7 @@ class AuditEntryEntityTest {
         AuditEntry converted = entity.toAuditEntry();
 
         // Then
-        assertNull(converted.getOperationType());
+        assertEquals(AuditTxType.NON_TX, converted.getTxType());
     }
 
     @Test
@@ -62,41 +63,41 @@ class AuditEntryEntityTest {
         AuditEntryEntity entity = new AuditEntryEntity();
 
         // When - set valid operation type
-        entity.setOperationType(OperationType.TX_AUDIT_STORE_SYNC.name());
+        entity.setTxType(OperationType.TX_AUDIT_STORE_SYNC.name());
 
         // Then
-        assertEquals(OperationType.TX_AUDIT_STORE_SYNC.name(), entity.getOperationType());
+        assertEquals(OperationType.TX_AUDIT_STORE_SYNC.name(), entity.getTxType());
     }
 
     @Test
-    void shouldHandleNullOperationTypeSetterAndGetter() {
+    void shouldReturnNonTxTypeSetterAndGetter() {
         // Given
         AuditEntryEntity entity = new AuditEntryEntity();
 
         // When - set null operation type
-        entity.setOperationType(null);
+        entity.setTxType(null);
 
         // Then
-        assertNull(entity.getOperationType());
+        assertEquals(AuditTxType.NON_TX.name(), entity.getTxType());
     }
 
     @Test
-    void shouldHandleAllOperationTypes() {
-        for (OperationType operationType : OperationType.values()) {
+    void shouldHandleAllTxTypes() {
+        for (AuditTxType txType : AuditTxType.values()) {
             // Given
-            AuditEntry original = createTestAuditEntry(operationType);
+            AuditEntry original = createTestAuditEntry(txType);
 
             // When
             AuditEntryEntity entity = new AuditEntryEntity(original);
             AuditEntry converted = entity.toAuditEntry();
 
             // Then
-            assertEquals(operationType, converted.getOperationType(), 
-                "Failed for OperationType: " + operationType);
+            assertEquals(txType, converted.getTxType(),
+                "Failed for TxType: " + txType);
         }
     }
 
-    private AuditEntry createTestAuditEntry(OperationType operationType) {
+    private AuditEntry createTestAuditEntry(AuditTxType txType) {
         return new AuditEntry(
                 "test-execution",
                 "test-stage", 
@@ -112,7 +113,7 @@ class AuditEntryEntityTest {
                 new HashMap<>(),
                 false,
                 null,
-                operationType
+                txType
         );
     }
 }

@@ -16,12 +16,11 @@
 package io.flamingock.internal.core.targets.operations;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
 
 import java.util.function.Function;
-
-import static io.flamingock.internal.core.targets.operations.OperationType.NON_TX;
 
 public class TargetSystemOpsImpl implements TargetSystemOps {
 
@@ -34,7 +33,7 @@ public class TargetSystemOpsImpl implements TargetSystemOps {
 
     @Override
     public OperationType getOperationType() {
-        return NON_TX;
+        return OperationType.NON_TX;
     }
 
     @Override

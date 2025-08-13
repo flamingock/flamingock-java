@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
@@ -25,7 +26,6 @@ import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
-import io.flamingock.internal.core.targets.operations.OperationType;
 import io.flamingock.internal.util.Result;
 
 import java.time.LocalDateTime;
@@ -33,31 +33,31 @@ import java.time.LocalDateTime;
 public class AuditStoreStepOperations {
 
     private final ExecutionAuditWriter auditWriter;
-    private final io.flamingock.internal.common.core.targets.operations.OperationType operationType;
+    private final AuditTxType auditTxType;
 
-    public AuditStoreStepOperations(ExecutionAuditWriter auditWriter, OperationType operationType) {
+    public AuditStoreStepOperations(ExecutionAuditWriter auditWriter, AuditTxType auditTxType) {
         this.auditWriter = auditWriter;
-        this.operationType = operationType.toCommons();
+        this.auditTxType = auditTxType;
     }
 
     public Result auditStartExecution(StartStep startStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setStartStep(startStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeStartExecution(new StartExecutionAuditContextBundle(startStep.getLoadedTask(), executionContext, runtimeContext, operationType));
+        return auditWriter.writeStartExecution(new StartExecutionAuditContextBundle(startStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
     }
 
     public Result auditExecution(ExecutionStep executionStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setExecutionStep(executionStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeExecution(new ExecutionAuditContextBundle(executionStep.getLoadedTask(), executionContext, runtimeContext, operationType));
+        return auditWriter.writeExecution(new ExecutionAuditContextBundle(executionStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
     }
 
     public Result auditManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setManualRollbackStep(rolledBackStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, operationType));
+        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
     }
 
     public Result auditAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setAutoRollbackStep(rolledBackStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, operationType));
+        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
     }
 
 }

@@ -17,7 +17,7 @@ package io.flamingock.community.dynamodb.internal.entities;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditEntryField;
-import io.flamingock.internal.common.core.targets.operations.OperationType;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
@@ -45,7 +45,7 @@ public class AuditEntryEntity {
     private String executionHostname;
     private Object errorTrace;
     private AuditEntry.ExecutionType type;
-    private OperationType operationType;
+    private AuditTxType txType;
 
     public AuditEntryEntity(AuditEntry auditEntry) {
         this.partitionKey = partitionKey(auditEntry.getExecutionId(), auditEntry.getTaskId(), auditEntry.getState());
@@ -62,7 +62,7 @@ public class AuditEntryEntity {
         this.executionHostname = auditEntry.getExecutionHostname();
         this.errorTrace = auditEntry.getErrorTrace();
         this.type = auditEntry.getType();
-        this.operationType = auditEntry.getOperationType();
+        this.txType = auditEntry.getTxType();
         this.systemChange = auditEntry.getSystemChange();
     }
 
@@ -209,13 +209,13 @@ public class AuditEntryEntity {
         this.systemChange = systemChange;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_OPERATION_TYPE)
-    public String getOperationType() {
-        return operationType != null ? operationType.name() : null;
+    @DynamoDbAttribute(AuditEntryField.KEY_TX_TYPE)
+    public String getTxType() {
+        return AuditTxType.safeString(txType);
     }
 
-    public void setOperationType(String operationType) {
-        this.operationType = operationType != null ? OperationType.valueOf(operationType) : null;
+    public void setTxType(String txType) {
+        this.txType = AuditTxType.fromString(txType);
     }
 
     public AuditEntry toAuditEntry() {
@@ -234,7 +234,7 @@ public class AuditEntryEntity {
                 metadata,
                 systemChange,
                 Objects.toString(errorTrace, ""),
-                operationType
+                txType
         );
     }
 }

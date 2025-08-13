@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.lock.Lock;
@@ -28,8 +29,6 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.NonTxChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.SharedTxChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.SimpleTxChangeProcessStrategy;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
-import org.slf4j.Logger;
 
 import java.util.Set;
 
@@ -116,29 +115,26 @@ public class ChangeProcessStrategyFactory {
 
         changeLogger.logChangeExecutionStart(changeUnit.getId());
         
-        TargetSystemOps targetSystem = targetSystemManager.getTargetSystem(changeUnit.getTargetSystem(), relaxTargetSystemValidation);
+        TargetSystemOps targetSystemOps = targetSystemManager.getTargetSystem(changeUnit.getTargetSystem(), relaxTargetSystemValidation);
         
         // Log target system resolution
         changeLogger.logTargetSystemResolved(changeUnit.getId(), changeUnit.getTargetSystem());
 
         LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
 
-        // Create strategy and log which one is being used
-        ChangeProcessStrategy strategy = getStrategy(
+        AuditTxType auditTxType = getAuditTxStrategy(changeUnit, targetSystemOps);
+
+        AuditStoreStepOperations auditStoreOps = new AuditStoreStepOperations(auditWriter, auditTxType);
+
+        return getStrategy(
                 changeUnit,
-                targetSystem,
-                new AuditStoreStepOperations(auditWriter, targetSystem.getOperationType()),
+                targetSystemOps,
+                auditStoreOps,
                 baseContext,
                 executionContext,
                 new TaskSummarizer(changeUnit),
                 lockGuardProxyFactory
         );
-        
-        // Log strategy application
-        String strategyName = getStrategyName(changeUnit, targetSystem);
-        changeLogger.logStrategyApplication(changeUnit.getId(), strategyName);
-        
-        return strategy;
     }
 
     /**
@@ -149,7 +145,7 @@ public class ChangeProcessStrategyFactory {
      *
      * @param changeUnit           The change to be executed
      * @param targetSystemOps      Target system operations interface
-     * @param auditStoreOperations Audit store operations interface
+     * @param auditStoreOps        AuditStoreOperations interface
      * @param baseContext          Base dependency resolution context
      * @param executionContext     Execution context for the change
      * @param summarizer           Task summarizer for execution tracking
@@ -158,47 +154,47 @@ public class ChangeProcessStrategyFactory {
      */
     public static ChangeProcessStrategy getStrategy(ExecutableTask changeUnit,
                                                     TargetSystemOps targetSystemOps,
-                                                    AuditStoreStepOperations auditStoreOperations,
+                                                    AuditStoreStepOperations auditStoreOps,
                                                     ContextResolver baseContext,
                                                     ExecutionContext executionContext,
                                                     TaskSummarizer summarizer,
                                                     LockGuardProxyFactory proxyFactory) {
-        if (!changeUnit.isTransactional()) {
-            return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+
+
+        if(!changeUnit.isTransactional()) {
+            changeLogger.logStrategyApplication(changeUnit.getId(), "NonTx");
+            return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
         }
+
         switch (targetSystemOps.getOperationType()) {
             case NON_TX:
-                return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+                changeLogger.logStrategyApplication(changeUnit.getId(), "NonTx");
+                return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
 
             case TX_NON_SYNC:
             case TX_AUDIT_STORE_SYNC:
+                changeLogger.logStrategyApplication(changeUnit.getId(), "SimpleTx");
                 TransactionalTargetSystemOps txTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
-                return new SimpleTxChangeProcessStrategy(changeUnit, executionContext, txTargetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+                return new SimpleTxChangeProcessStrategy(changeUnit, executionContext, txTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
 
             case TX_AUDIT_STORE_SHARED:
             default:
+                changeLogger.logStrategyApplication(changeUnit.getId(), "SharedTx");
                 TransactionalTargetSystemOps sharedTxTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
-                return new SharedTxChangeProcessStrategy(changeUnit, executionContext, sharedTxTargetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+                return new SharedTxChangeProcessStrategy(changeUnit, executionContext, sharedTxTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
         }
     }
 
-    /**
-     * Returns a human-readable name for the strategy that would be selected.
-     */
-    private String getStrategyName(ExecutableTask changeUnit, TargetSystemOps targetSystemOps) {
-        if (!changeUnit.isTransactional()) {
-            return "NonTx";
+    private static AuditTxType getAuditTxStrategy(ExecutableTask changeUnit, TargetSystemOps targetSystem) {
+        if(!changeUnit.isTransactional()) {
+            return AuditTxType.NON_TX;
         }
-        switch (targetSystemOps.getOperationType()) {
+        switch (targetSystem.getOperationType()) {
+            case TX_AUDIT_STORE_SHARED: return AuditTxType.TX_AUDIT_STORE_SHARED;
+            case TX_AUDIT_STORE_SYNC: return AuditTxType.TX_AUDIT_STORE_SYNC;
+            case TX_NON_SYNC: return AuditTxType.TX_NON_SYNC;
             case NON_TX:
-                return "NonTx";
-            case TX_NON_SYNC:
-                return "SimpleTx";
-            case TX_AUDIT_STORE_SYNC:
-                return "SimpleTx";
-            case TX_AUDIT_STORE_SHARED:
-            default:
-                return "SharedTx";
+            default: return AuditTxType.NON_TX;
         }
     }
 

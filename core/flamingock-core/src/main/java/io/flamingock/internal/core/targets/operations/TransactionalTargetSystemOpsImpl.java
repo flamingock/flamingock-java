@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.targets.operations;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;

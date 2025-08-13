@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.common.cloud.audit;
 
-import io.flamingock.internal.common.core.targets.operations.OperationType;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 
 public class AuditEntryRequest {
 
@@ -49,7 +49,7 @@ public class AuditEntryRequest {
 
     private final ExecutionType type;
 
-    private final OperationType operationType;
+    private final AuditTxType txType;
 
     protected Boolean systemChange;//TODO not in server
 
@@ -66,7 +66,7 @@ public class AuditEntryRequest {
                              Object metadata,
                              boolean systemChange,
                              String errorTrace,
-                             OperationType operationType) {
+                             AuditTxType txType) {
         this.stageId = stageId;
         this.taskId = taskId;
         this.author = author;
@@ -79,7 +79,7 @@ public class AuditEntryRequest {
         this.executionHostname = executionHostname;
         this.errorTrace = errorTrace;
         this.type = type;
-        this.operationType = operationType;
+        this.txType = txType;
 
         this.systemChange = systemChange;
     }
@@ -136,8 +136,8 @@ public class AuditEntryRequest {
         return type;
     }
 
-    public OperationType getOperationType() {
-        return operationType;
+    public AuditTxType getTxType() {
+        return txType;
     }
 
 

@@ -15,12 +15,12 @@
  */
 package io.flamingock.internal.core.engine.audit.domain;
 
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.ThrowableUtil;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.common.core.targets.operations.OperationType;
 
 public abstract class AuditContextBundle {
 
@@ -43,18 +43,18 @@ public abstract class AuditContextBundle {
     private final TaskDescriptor loadedTask;
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
-    private final OperationType operationType;
+    private final AuditTxType operationType;
 
     public AuditContextBundle(Operation operation,
                               TaskDescriptor loadedTask,
                               ExecutionContext executionContext,
                               RuntimeContext runtimeContext,
-                              OperationType operationType) {
+                              AuditTxType auditTxType) {
         this.operation = operation;
         this.loadedTask = loadedTask;
         this.executionContext = executionContext;
         this.runtimeContext = runtimeContext;
-        this.operationType = operationType;
+        this.operationType = auditTxType;
     }
 
     public Operation getOperation() {
@@ -73,7 +73,7 @@ public abstract class AuditContextBundle {
         return runtimeContext;
     }
 
-    public OperationType getOperationType() {
+    public AuditTxType getAuditTxType() {
         return operationType;
     }
 
@@ -99,7 +99,7 @@ public abstract class AuditContextBundle {
                 stageExecutionContext.getMetadata(),
                 getSystemChange(),
                 ThrowableUtil.serialize(runtimeContext.getError().orElse(null)),
-                getOperationType()
+                getAuditTxType()
         );
     }
 

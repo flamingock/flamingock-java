@@ -17,7 +17,8 @@ package io.flamingock.cloud.audit;
 
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.targets.operations.OperationType;
+import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.targets.OperationType;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -30,7 +31,7 @@ class HtttpAuditWriterTest {
     @Test
     void shouldIncludeOperationTypeInRequest() {
         // Given
-        AuditEntry auditEntry = createTestAuditEntry(OperationType.TX_AUDIT_STORE_SHARED);
+        AuditEntry auditEntry = createTestAuditEntry(AuditTxType.TX_AUDIT_STORE_SHARED);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -47,11 +48,11 @@ class HtttpAuditWriterTest {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange(),
                 auditEntry.getErrorTrace(),
-                auditEntry.getOperationType()
+                auditEntry.getTxType()
         );
 
         // Then
-        assertEquals(OperationType.TX_AUDIT_STORE_SHARED, request.getOperationType());
+        assertEquals(AuditTxType.TX_AUDIT_STORE_SHARED, request.getTxType());
     }
 
     @Test
@@ -74,15 +75,15 @@ class HtttpAuditWriterTest {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange(),
                 auditEntry.getErrorTrace(),
-                auditEntry.getOperationType()
+                auditEntry.getTxType()
         );
 
         // Then
-        assertNull(request.getOperationType());
+        assertEquals(AuditTxType.NON_TX, request.getTxType());
     }
 
 
-    private AuditEntry createTestAuditEntry(OperationType operationType) {
+    private AuditEntry createTestAuditEntry(AuditTxType txType) {
         return new AuditEntry(
                 "test-execution",
                 "test-stage", 
@@ -98,7 +99,7 @@ class HtttpAuditWriterTest {
                 new HashMap<>(),
                 false,
                 null,
-                operationType
+                txType
         );
     }
 }

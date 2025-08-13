@@ -16,13 +16,12 @@
 package io.flamingock.internal.common.mongodb;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.targets.operations.OperationType;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,14 +33,14 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeOperationType() {
         // Given
-        AuditEntry original = createTestAuditEntry(OperationType.TX_AUDIT_STORE_SHARED);
+        AuditEntry original = createTestAuditEntry(AuditTxType.TX_AUDIT_STORE_SHARED);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
         AuditEntry deserialized = mapper.fromDocument(document);
 
         // Then
-        assertEquals(OperationType.TX_AUDIT_STORE_SHARED, deserialized.getOperationType());
+        assertEquals(AuditTxType.TX_AUDIT_STORE_SHARED, deserialized.getTxType());
     }
 
     @Test
@@ -54,7 +53,7 @@ class MongoDBAuditMapperTest {
         AuditEntry deserialized = mapper.fromDocument(document);
 
         // Then
-        assertNull(deserialized.getOperationType());
+        assertEquals(AuditTxType.NON_TX, deserialized.getTxType());
     }
 
     @Test
@@ -73,10 +72,10 @@ class MongoDBAuditMapperTest {
         AuditEntry deserialized = mapper.fromDocument(document);
 
         // Then
-        assertNull(deserialized.getOperationType());
+        assertEquals(AuditTxType.NON_TX, deserialized.getTxType());
     }
 
-    private AuditEntry createTestAuditEntry(OperationType operationType) {
+    private AuditEntry createTestAuditEntry(AuditTxType operationType) {
         return new AuditEntry(
                 "test-execution",
                 "test-stage", 

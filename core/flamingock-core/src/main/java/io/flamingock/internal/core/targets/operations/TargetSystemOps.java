@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.targets.operations;
 
+import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 

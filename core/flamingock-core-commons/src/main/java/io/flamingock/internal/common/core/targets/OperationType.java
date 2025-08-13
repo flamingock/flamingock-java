@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.targets.operations;
+package io.flamingock.internal.common.core.targets;
 
 public enum OperationType {
     NON_TX,

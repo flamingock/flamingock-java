@@ -17,7 +17,6 @@ package io.flamingock.internal.common.core.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
-import io.flamingock.internal.common.core.targets.operations.OperationType;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -52,7 +51,7 @@ public class AuditEntry {
     private final String executionHostname;
     private final String errorTrace;
     private final ExecutionType type;
-    private final OperationType operationType;
+    private final AuditTxType txType;
 
     public AuditEntry(String executionId,
                       String stageId,
@@ -68,7 +67,7 @@ public class AuditEntry {
                       Object metadata,
                       boolean systemChange,
                       String errorTrace,
-                      OperationType operationType) {
+                      AuditTxType txType) {
         this.executionId = executionId;
         this.stageId = stageId;
         this.taskId = taskId;
@@ -82,8 +81,7 @@ public class AuditEntry {
         this.executionHostname = executionHostname;
         this.errorTrace = errorTrace;
         this.type = type;
-        this.operationType = operationType;
-
+        this.txType = txType != null ? txType : AuditTxType.NON_TX;
         this.systemChange = systemChange;
     }
 
@@ -177,8 +175,8 @@ public class AuditEntry {
         return type;
     }
 
-    public OperationType getOperationType() {
-        return operationType;
+    public AuditTxType getTxType() {
+        return txType;
     }
 
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
@@ -201,7 +199,7 @@ public class AuditEntry {
                 getMetadata(),
                 getSystemChange(),
                 getErrorTrace(),
-                getOperationType()
+                getTxType()
         );
     }
 

@@ -17,7 +17,7 @@ package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.targets.operations.OperationType;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.TimeUtil;
 
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
@@ -30,7 +30,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECU
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_OPERATION_TYPE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TX_TYPE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
@@ -54,19 +54,19 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
         CouchbaseUtils.addFieldToDocument(document, KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         CouchbaseUtils.addFieldToDocument(document, KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
-        CouchbaseUtils.addFieldToDocument(document, KEY_OPERATION_TYPE, auditEntry.getOperationType() != null ? auditEntry.getOperationType().name() : null);
+        CouchbaseUtils.addFieldToDocument(document, KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
         return document;
     }
 
     public AuditEntry fromDocument(JsonObject jsonObject) {
         // Parse OperationType with null safety for backward compatibility
-        OperationType operationType = null;
-        if (jsonObject.get(KEY_OPERATION_TYPE) != null && jsonObject.getString(KEY_OPERATION_TYPE) != null) {
+        AuditTxType txType = null;
+        if (jsonObject.get(KEY_TX_TYPE) != null && jsonObject.getString(KEY_TX_TYPE) != null) {
             try {
-                operationType = OperationType.valueOf(jsonObject.getString(KEY_OPERATION_TYPE));
+                txType = AuditTxType.fromString(jsonObject.getString(KEY_TX_TYPE));
             } catch (IllegalArgumentException e) {
                 // Handle case where stored value is invalid - default to null
-                operationType = null;
+                txType = AuditTxType.NON_TX;
             }
         }
 
@@ -84,6 +84,6 @@ public class CouchbaseAuditMapper {
                 jsonObject.get(KEY_METADATA) != null ? jsonObject.getObject(KEY_METADATA).toMap() : null,
                 jsonObject.getBoolean(KEY_SYSTEM_CHANGE),
                 jsonObject.getString(KEY_ERROR_TRACE),
-                operationType);
+                txType);
     }
 }
