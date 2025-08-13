@@ -31,7 +31,7 @@ class MongoDBAuditMapperTest {
         new MongoDBAuditMapper<>(TestDocumentWrapper::new);
 
     @Test
-    void shouldSerializeAndDeserializeOperationType() {
+    void shouldSerializeAndDeserializeTxType() {
         // Given
         AuditEntry original = createTestAuditEntry(AuditTxType.TX_AUDIT_STORE_SHARED);
 
@@ -44,7 +44,7 @@ class MongoDBAuditMapperTest {
     }
 
     @Test
-    void shouldHandleNullOperationType() {
+    void shouldHandleNullTxType() {
         // Given
         AuditEntry original = createTestAuditEntry(null);
 
@@ -57,7 +57,7 @@ class MongoDBAuditMapperTest {
     }
 
     @Test
-    void shouldHandleInvalidOperationTypeInDocument() {
+    void shouldHandleInvalidTxTypeInDocument() {
         // Given
         TestDocumentWrapper document = new TestDocumentWrapper();
         document.append("executionId", "test-execution");
@@ -66,7 +66,7 @@ class MongoDBAuditMapperTest {
         document.append("author", "test-author");
         document.append("state", AuditEntry.Status.EXECUTED.name());
         document.append("type", AuditEntry.ExecutionType.EXECUTION.name());
-        document.append("operationType", "INVALID_OPERATION_TYPE");
+        document.append("txType", "INVALID_OPERATION_TYPE");
 
         // When
         AuditEntry deserialized = mapper.fromDocument(document);
@@ -75,7 +75,7 @@ class MongoDBAuditMapperTest {
         assertEquals(AuditTxType.NON_TX, deserialized.getTxType());
     }
 
-    private AuditEntry createTestAuditEntry(AuditTxType operationType) {
+    private AuditEntry createTestAuditEntry(AuditTxType txType) {
         return new AuditEntry(
                 "test-execution",
                 "test-stage", 
@@ -91,7 +91,7 @@ class MongoDBAuditMapperTest {
                 new HashMap<>(),
                 false,
                 null,
-                operationType
+                txType
         );
     }
 

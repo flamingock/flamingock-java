@@ -18,7 +18,6 @@ package io.flamingock.cloud.audit;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.common.core.targets.OperationType;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -29,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class HtttpAuditWriterTest {
 
     @Test
-    void shouldIncludeOperationTypeInRequest() {
+    void shouldIncludeTxTypeInRequest() {
         // Given
         AuditEntry auditEntry = createTestAuditEntry(AuditTxType.TX_AUDIT_STORE_SHARED);
 
@@ -56,7 +55,7 @@ class HtttpAuditWriterTest {
     }
 
     @Test
-    void shouldHandleNullOperationType() {
+    void shouldHandleNullTxType() {
         // Given
         AuditEntry auditEntry = createTestAuditEntry(null);
 
