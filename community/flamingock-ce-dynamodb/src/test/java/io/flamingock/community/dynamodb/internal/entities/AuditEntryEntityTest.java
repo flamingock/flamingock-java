@@ -28,16 +28,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuditEntryEntityTest {
 
     @Test
-    void shouldConvertToAndFromAuditEntryWithOperationType() {
+    void shouldConvertToAndFromAuditEntryWithTxType() {
         // Given
-        AuditEntry original = createTestAuditEntry(AuditTxType.TX_NON_SYNC);
+        AuditEntry original = createTestAuditEntry(AuditTxType.TX_SEPARATE_NO_MARKER);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);
         AuditEntry converted = entity.toAuditEntry();
 
         // Then
-        assertEquals(AuditTxType.TX_NON_SYNC, converted.getTxType());
+        assertEquals(AuditTxType.TX_SEPARATE_NO_MARKER, converted.getTxType());
         assertEquals(original.getExecutionId(), converted.getExecutionId());
         assertEquals(original.getTaskId(), converted.getTaskId());
         assertEquals(original.getAuthor(), converted.getAuthor());
@@ -58,15 +58,15 @@ class AuditEntryEntityTest {
     }
 
     @Test
-    void shouldHandleOperationTypeSetterAndGetter() {
+    void shouldHandleTxTypeSetterAndGetter() {
         // Given
         AuditEntryEntity entity = new AuditEntryEntity();
 
         // When - set valid operation type
-        entity.setTxType(OperationType.TX_AUDIT_STORE_SYNC.name());
+        entity.setTxType(AuditTxType.TX_SEPARATE_WITH_MARKER.name());
 
         // Then
-        assertEquals(OperationType.TX_AUDIT_STORE_SYNC.name(), entity.getTxType());
+        assertEquals(AuditTxType.TX_SEPARATE_WITH_MARKER.name(), entity.getTxType());
     }
 
     @Test

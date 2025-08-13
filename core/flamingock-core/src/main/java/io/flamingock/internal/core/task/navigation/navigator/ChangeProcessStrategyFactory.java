@@ -190,9 +190,9 @@ public class ChangeProcessStrategyFactory {
             return AuditTxType.NON_TX;
         }
         switch (targetSystem.getOperationType()) {
-            case TX_AUDIT_STORE_SHARED: return AuditTxType.TX_AUDIT_STORE_SHARED;
-            case TX_AUDIT_STORE_SYNC: return AuditTxType.TX_AUDIT_STORE_SYNC;
-            case TX_NON_SYNC: return AuditTxType.TX_NON_SYNC;
+            case TX_AUDIT_STORE_SHARED: return AuditTxType.TX_SHARED;
+            case TX_AUDIT_STORE_SYNC: return AuditTxType.TX_SEPARATE_WITH_MARKER;
+            case TX_NON_SYNC: return AuditTxType.TX_SEPARATE_NO_MARKER;
             case NON_TX:
             default: return AuditTxType.NON_TX;
         }

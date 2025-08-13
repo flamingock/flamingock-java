@@ -17,21 +17,22 @@ package io.flamingock.internal.common.core.audit;
 
 public enum AuditTxType {
     NON_TX,
-    TX_AUDIT_STORE_SHARED,
-    TX_AUDIT_STORE_SYNC,
-    TX_NON_SYNC;
+    TX_SHARED,                  // SharedTx (Target system the same as the audit store)
+    TX_SEPARATE_WITH_MARKER,    // SimpleTx (Target system is not the audit store). With marker
+    TX_SEPARATE_NO_MARKER;      // SimpleTx (Target system is not the audit store). Without marker
+
 
     public static AuditTxType fromString(String strategyString) {
         if(strategyString == null) {
             return NON_TX;
         }
         String formattedString = strategyString.toUpperCase();
-        if(TX_AUDIT_STORE_SHARED.name().equals(formattedString)) {
-            return TX_AUDIT_STORE_SHARED;
-        } else if(TX_AUDIT_STORE_SYNC.name().equals(formattedString)) {
-            return TX_AUDIT_STORE_SYNC;
-        } else if(TX_NON_SYNC.name().equals(formattedString)) {
-            return TX_NON_SYNC;
+        if(TX_SHARED.name().equals(formattedString)) {
+            return TX_SHARED;
+        } else if(TX_SEPARATE_WITH_MARKER.name().equals(formattedString)) {
+            return TX_SEPARATE_WITH_MARKER;
+        } else if(TX_SEPARATE_NO_MARKER.name().equals(formattedString)) {
+            return TX_SEPARATE_NO_MARKER;
         } else {
             return NON_TX;
         }

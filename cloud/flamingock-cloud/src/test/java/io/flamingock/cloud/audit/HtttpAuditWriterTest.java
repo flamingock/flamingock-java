@@ -30,7 +30,7 @@ class HtttpAuditWriterTest {
     @Test
     void shouldIncludeTxTypeInRequest() {
         // Given
-        AuditEntry auditEntry = createTestAuditEntry(AuditTxType.TX_AUDIT_STORE_SHARED);
+        AuditEntry auditEntry = createTestAuditEntry(AuditTxType.TX_SHARED);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -51,7 +51,7 @@ class HtttpAuditWriterTest {
         );
 
         // Then
-        assertEquals(AuditTxType.TX_AUDIT_STORE_SHARED, request.getTxType());
+        assertEquals(AuditTxType.TX_SHARED, request.getTxType());
     }
 
     @Test

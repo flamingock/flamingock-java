@@ -33,14 +33,14 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeTxType() {
         // Given
-        AuditEntry original = createTestAuditEntry(AuditTxType.TX_AUDIT_STORE_SHARED);
+        AuditEntry original = createTestAuditEntry(AuditTxType.TX_SHARED);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
         AuditEntry deserialized = mapper.fromDocument(document);
 
         // Then
-        assertEquals(AuditTxType.TX_AUDIT_STORE_SHARED, deserialized.getTxType());
+        assertEquals(AuditTxType.TX_SHARED, deserialized.getTxType());
     }
 
     @Test
