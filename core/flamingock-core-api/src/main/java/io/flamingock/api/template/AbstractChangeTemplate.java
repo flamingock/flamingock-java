@@ -43,7 +43,7 @@ public abstract class AbstractChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK>
         reflectiveClasses = new HashSet<>(Arrays.asList(additionalReflectiveClass));
 
         try {
-            Class<?>[] typeArgs = ReflectionUtil.getActualTypeArguments(this.getClass());
+            Class<?>[] typeArgs = ReflectionUtil.resolveTypeArgumentsAsClasses(this.getClass(), AbstractChangeTemplate.class);
 
             if (typeArgs.length < 3) {
                 throw new IllegalStateException("Expected 3 generic type arguments for a Template, but found " + typeArgs.length);

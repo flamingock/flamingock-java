@@ -15,17 +15,19 @@
  */
 package io.flamingock.importer;
 
-public class ImportConfiguration extends AbstractImportConfiguration<String> {
+public abstract class AbstractImportConfiguration<ORIGIN> {
 
-    private String origin = "mongockChangeLog";
+    private boolean failOnEmptyOrigin = true;
 
-    @Override
-    public String getOrigin() {
-        return origin;
+    public abstract ORIGIN getOrigin();
+
+    public abstract void setOrigin(ORIGIN origin);
+
+    public boolean isFailOnEmptyOrigin() {
+        return failOnEmptyOrigin;
     }
 
-    @Override
-    public void setOrigin(String origin) {
-        this.origin = origin;
+    public void setFailOnEmptyOrigin(boolean failOnEmptyOrigin) {
+        this.failOnEmptyOrigin = failOnEmptyOrigin;
     }
 }

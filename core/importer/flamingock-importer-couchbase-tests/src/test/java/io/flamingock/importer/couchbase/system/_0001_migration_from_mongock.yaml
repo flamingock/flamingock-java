@@ -3,5 +3,7 @@ order: 0001
 transactional: false
 template: CouchbaseImporterChangeTemplate
 configuration:
-  origin: _default
+  origin:
+    scopeName: _default
+    collectionName: _default
   failOnEmptyOrigin: true

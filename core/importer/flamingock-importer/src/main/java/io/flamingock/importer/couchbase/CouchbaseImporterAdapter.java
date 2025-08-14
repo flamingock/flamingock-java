@@ -16,6 +16,7 @@
 package io.flamingock.importer.couchbase;
 
 import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
 import com.couchbase.client.java.query.QueryScanConsistency;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class CouchbaseImporterAdapter implements ImporterAdapter {
+
+    private static final String MONGOCK_CHANGE_ENTRY_DOCTYPE = "mongockChangeEntry";
 
     private final Cluster cluster;
     private final String bucketName;
@@ -42,12 +45,16 @@ public class CouchbaseImporterAdapter implements ImporterAdapter {
     @Override
     public List<AuditEntry> getAuditEntries() {
         QueryResult result = cluster.query(
-                String.format("SELECT `%s`.* FROM `%s`.`%s`.`%s`", collectionName, bucketName, scopeName, collectionName),
-                QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS)
+                String.format(
+                        "SELECT `%s`.* FROM `%s`.`%s`.`%s` WHERE `_doctype` = $p1",
+                        collectionName, bucketName, scopeName, collectionName
+                ),
+                QueryOptions.queryOptions()
+                        .scanConsistency(QueryScanConsistency.REQUEST_PLUS)
+                        .parameters(JsonObject.create().put("p1", MONGOCK_CHANGE_ENTRY_DOCTYPE))
         );
 
         return result.rowsAsObject().stream()
-                .filter(d -> d.getString("_doctype") != null && d.getString("_doctype").equals("mongockChangeEntry"))
                 .map(CouchbaseChangeEntry::fromJson)
                 .map(CouchbaseChangeEntry::toAuditEntry)
                 .collect(Collectors.toList());

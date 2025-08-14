@@ -18,16 +18,23 @@ package io.flamingock.internal.util;
 import org.reflections.Reflections;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -93,6 +100,138 @@ public final class ReflectionUtil {
         }
 
         throw new IllegalStateException("Unable to determine generic type arguments from class hierarchy");
+    }
+
+    /**
+     * Resolves the type arguments that {@code concreteClass} supplies for the generic superclass or interface {@code targetGeneric}.
+     *
+     * @throws IllegalArgumentException if {@code targetGeneric} is not in the hierarchy of {@code concreteClass}.
+     */
+    public static Type[] resolveTypeArguments(Class<?> concreteClass, Class<?> targetGeneric) {
+        Objects.requireNonNull(concreteClass, "concreteClass");
+        Objects.requireNonNull(targetGeneric, "targetGeneric");
+        Map<TypeVariable<?>, Type> assigns = new HashMap<>();
+        Type[] result = resolveUpwards(concreteClass, targetGeneric, assigns);
+        if (result == null) {
+            throw new IllegalArgumentException(
+                    "The target type " + targetGeneric.getName() + " is not in the hierarchy of " + concreteClass.getName());
+        }
+        return result;
+    }
+
+    /** Convenience overload: uses the runtime class of the given instance. */
+    public static Type[] resolveTypeArguments(Object instance, Class<?> targetGeneric) {
+        return resolveTypeArguments(instance.getClass(), targetGeneric);
+    }
+
+    /** Variant returning raw classes (defaults to Object.class if resolution fails). */
+    public static Class<?>[] resolveTypeArgumentsAsClasses(Class<?> concreteClass, Class<?> targetGeneric) {
+        Type[] types = resolveTypeArguments(concreteClass, targetGeneric);
+        Class<?>[] classes = new Class<?>[types.length];
+        for (int i = 0; i < types.length; i++) {
+            classes[i] = toClass(types[i]);
+            if (classes[i] == null) classes[i] = Object.class;
+        }
+        return classes;
+    }
+
+    /**
+     * Searches the hierarchy (both classes and interfaces) for a path to {@code targetGeneric}.
+     * At each step, binds the type variables of the raw supertype to the actual arguments in the current context.
+     * Returns the final Types corresponding to the type parameters of {@code targetGeneric}, or null if no path exists.
+     */
+    private static Type[] resolveUpwards(Class<?> current, Class<?> targetGeneric,
+                                         Map<TypeVariable<?>, Type> assigns) {
+        if (current == null || current == Object.class) return null;
+
+        if (current == targetGeneric) {
+            // We are exactly at the target generic class/interface: resolve its own type parameters
+            TypeVariable<?>[] params = current.getTypeParameters();
+            Type[] out = new Type[params.length];
+            for (int i = 0; i < params.length; i++) {
+                out[i] = resolve(params[i], assigns);
+            }
+            return out;
+        }
+
+        // 1) Check generic superclass
+        Type superType = current.getGenericSuperclass();
+        Type[] viaSuper = tryAscend(superType, targetGeneric, assigns);
+        if (viaSuper != null) return viaSuper;
+
+        // 2) Check generic interfaces
+        for (Type itf : current.getGenericInterfaces()) {
+            Type[] viaItf = tryAscend(itf, targetGeneric, assigns);
+            if (viaItf != null) return viaItf;
+        }
+
+        // 3) Continue via raw superclass (if non-parameterised) so as not to lose the path
+        Class<?> rawSuper = current.getSuperclass();
+        return resolveUpwards(rawSuper, targetGeneric, assigns);
+    }
+
+    /** Attempts to ascend one step (superclass or interface), extending {@code assigns}, and continues the search. */
+    private static Type[] tryAscend(Type superType, Class<?> targetGeneric, Map<TypeVariable<?>, Type> assigns) {
+        if (superType == null) return null;
+
+        if (superType instanceof ParameterizedType) {
+            ParameterizedType p = (ParameterizedType)superType;
+            Class<?> raw = (Class<?>) p.getRawType();
+            Map<TypeVariable<?>, Type> next = new HashMap<>(assigns);
+            TypeVariable<?>[] params = raw.getTypeParameters();
+            Type[] actualTypeArguments = p.getActualTypeArguments();
+            for (int i = 0; i < params.length; i++) {
+                next.put(params[i], resolve(actualTypeArguments[i], assigns));
+            }
+            return resolveUpwards(raw, targetGeneric, next);
+        } else if (superType instanceof Class<?>) {
+            // No type parameters at this step
+            Class<?> c = (Class<?>)superType;
+            return resolveUpwards(c, targetGeneric, assigns);
+        }
+        return null;
+    }
+
+    /** Recursively resolves a {@link Type} using the accumulated assignments. */
+    private static Type resolve(Type t, Map<TypeVariable<?>, Type> assigns) {
+        while (t instanceof TypeVariable<?>) {
+            TypeVariable<?> tv = (TypeVariable<?>)t;
+            Type mapped = assigns.get(tv);
+            if (mapped == null) return tv; // Not yet resolved
+            t = mapped;
+        }
+        if (t instanceof WildcardType) {
+            WildcardType w = (WildcardType)t;
+            Type[] upper = w.getUpperBounds();
+            return upper.length > 0 ? resolve(upper[0], assigns) : Object.class;
+        }
+        if (t instanceof ParameterizedType) {
+            // Keep the ParameterizedType — caller can access its raw type or arguments
+            return t;
+        }
+        if (t instanceof GenericArrayType) {
+            GenericArrayType ga = (GenericArrayType)t;
+            Type comp = resolve(ga.getGenericComponentType(), assigns);
+            Class<?> compClass = toClass(comp);
+            if (compClass != null) {
+                return Array.newInstance(compClass, 0).getClass();
+            }
+            return ga; // Return generic array type if class cannot be materialised
+        }
+        return t; // Already a Class<?> or other usable type
+    }
+
+    /** Converts a {@link Type} to a {@link Class} where possible; if ParameterizedType, returns its raw type. */
+    private static Class<?> toClass(Type t) {
+        if (t instanceof Class<?>) return (Class<?>)t;
+        if (t instanceof ParameterizedType) return (Class<?>) ((ParameterizedType)t).getRawType();
+        if (t instanceof GenericArrayType) {
+            GenericArrayType ga = (GenericArrayType)t;
+            Class<?> comp = toClass(ga.getGenericComponentType());
+            return comp != null ? Array.newInstance(comp, 0).getClass() : null;
+        }
+        if (t instanceof TypeVariable<?> || t instanceof WildcardType) return Object.class;
+        return null;
     }
 
 

@@ -49,7 +49,7 @@ public final class ImporterExecutor {
      * @param pipelineDescriptor Structure containing all information about the changes and tasks to execute.
      */
     public static void runImport(ImporterAdapter importerAdapter,
-                                 ImportConfiguration importConfiguration,
+                                 AbstractImportConfiguration<?> importConfiguration,
                                  AuditWriter auditWriter,
                                  PipelineDescriptor pipelineDescriptor) {
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);

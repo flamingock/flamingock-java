@@ -24,12 +24,18 @@ import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.importer.AbstractImporterChangeTemplate;
 import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.internal.common.core.audit.AuditWriter;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
+import io.flamingock.internal.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTemplate {
+public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTemplate<CouchbaseImportConfiguration> {
     private static final Logger logger = LoggerFactory.getLogger("CouchbaseImporterChangeTemplate");
+
+    public CouchbaseImporterChangeTemplate() {
+        super(CouchbaseImportConfiguration.class);
+    }
 
     @Execution
     public void execution(Cluster cluster,
@@ -37,8 +43,8 @@ public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTempl
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
         logger.info("Starting audit log migration from Mongock to Flamingock local audit store[Couchbase]");
-        //TODO get the scope from configuration
-        CouchbaseImporterAdapter adapter = new CouchbaseImporterAdapter(cluster, bucket.name(), CollectionIdentifier.DEFAULT_SCOPE, configuration.getOrigin());
+        this.validateConfiguration();
+        CouchbaseImporterAdapter adapter = new CouchbaseImporterAdapter(cluster, bucket.name(), configuration.getOrigin().getScopeName(), configuration.getOrigin().getCollectionName());
         ImporterExecutor.runImport(adapter, configuration, auditWriter, pipelineDescriptor);
         logger.info("Finished audit log migration from Mongock to Flamingock local audit store[Couchbase]");
     }
@@ -46,5 +52,13 @@ public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTempl
     @RollbackExecution
     public void rollback() {
         // TODO: Implement rollback logic if needed
+    }
+
+    private void validateConfiguration() {
+        if (this.configuration.getOrigin() == null
+                || StringUtil.isEmpty(this.configuration.getOrigin().getScopeName())
+                || StringUtil.isEmpty(this.configuration.getOrigin().getCollectionName())) {
+            throw new FlamingockException("No valid origin found in the configuration. Please ensure that both ‘scopeName’ and ‘collectionName’ are set.");
+        }
     }
 }

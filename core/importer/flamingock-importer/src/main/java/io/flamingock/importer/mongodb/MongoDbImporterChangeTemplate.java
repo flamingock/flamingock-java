@@ -20,15 +20,20 @@ import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.importer.AbstractImporterChangeTemplate;
+import io.flamingock.importer.ImportConfiguration;
 import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MongoDbImporterChangeTemplate extends AbstractImporterChangeTemplate {
+public class MongoDbImporterChangeTemplate extends AbstractImporterChangeTemplate<ImportConfiguration> {
 
     private static final Logger logger = LoggerFactory.getLogger("MongoDbImporterChangeTemplate");
+
+    public MongoDbImporterChangeTemplate() {
+        super(ImportConfiguration.class);
+    }
 
     @Execution
     public void execution(MongoDatabase db,

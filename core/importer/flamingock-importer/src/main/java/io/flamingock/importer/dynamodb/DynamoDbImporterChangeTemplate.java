@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.importer.AbstractImporterChangeTemplate;
+import io.flamingock.importer.ImportConfiguration;
 import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
@@ -26,8 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDbImporterChangeTemplate extends AbstractImporterChangeTemplate {
+public class DynamoDbImporterChangeTemplate extends AbstractImporterChangeTemplate<ImportConfiguration> {
     private static final Logger logger = LoggerFactory.getLogger("DynamoDbImporterChangeTemplate");
+
+    public DynamoDbImporterChangeTemplate() {
+        super(ImportConfiguration.class);
+    }
 
     @Execution
     public void execution(DynamoDbClient client,

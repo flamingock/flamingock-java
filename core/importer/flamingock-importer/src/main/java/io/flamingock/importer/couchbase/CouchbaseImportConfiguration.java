@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer;
+package io.flamingock.importer.couchbase;
 
-public class ImportConfiguration extends AbstractImportConfiguration<String> {
+import io.flamingock.importer.AbstractImportConfiguration;
 
-    private String origin = "mongockChangeLog";
+public class CouchbaseImportConfiguration extends AbstractImportConfiguration<CouchbaseOrigin> {
 
-    @Override
-    public String getOrigin() {
+    private CouchbaseOrigin origin = new CouchbaseOrigin();
+
+    public CouchbaseOrigin getOrigin() {
         return origin;
     }
 
-    @Override
-    public void setOrigin(String origin) {
+    public void setOrigin(CouchbaseOrigin origin) {
         this.origin = origin;
     }
 }

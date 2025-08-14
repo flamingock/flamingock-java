@@ -21,10 +21,10 @@ import io.flamingock.api.template.AbstractChangeTemplate;
 
 
 @Categories(ChangeCategory.IMPORT)
-public class AbstractImporterChangeTemplate extends AbstractChangeTemplate<ImportConfiguration, Void, Void> {
+public abstract class AbstractImporterChangeTemplate<CONFIGURATION extends AbstractImportConfiguration<?>> extends AbstractChangeTemplate<CONFIGURATION, Void, Void> {
 
-    public AbstractImporterChangeTemplate() {
-        super(ImportConfiguration.class);
+    public AbstractImporterChangeTemplate(Class<CONFIGURATION> configurationClass) {
+        super(configurationClass);
     }
 
 }
