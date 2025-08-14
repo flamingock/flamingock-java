@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.cloud.planner.response.RequiredActionTask.PENDING_EXECUTION;
+import static io.flamingock.internal.common.cloud.planner.response.CloudChangeAction.APPLY;
 
 public class MockExecutionPlanBuilder {
 
@@ -115,7 +115,7 @@ public class MockExecutionPlanBuilder {
                 .map(prototypeTask -> {
                             Optional<MockRequestResponseTask> requestResponseTask = responseExecutionPlan.getTaskById(prototypeTask.getTaskId());
                             return prototypeTask.toExecutionPlanTaskResponse(
-                                    requestResponseTask.map(MockRequestResponseTask::getRequiredAction).orElse(PENDING_EXECUTION));
+                                    requestResponseTask.map(MockRequestResponseTask::getRequiredAction).orElse(APPLY));
                         }
                 ).collect(Collectors.toList());
     }

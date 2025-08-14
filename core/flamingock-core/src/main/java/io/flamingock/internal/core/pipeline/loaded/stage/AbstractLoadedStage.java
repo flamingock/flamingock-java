@@ -19,11 +19,11 @@ package io.flamingock.internal.core.pipeline.loaded.stage;
 import io.flamingock.internal.common.core.error.validation.Validatable;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.api.StageType;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
+import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;
@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -70,14 +69,24 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
     }
 
 
-    public ExecutableStage applyState(AuditStageStatus state) {
 
-        Map<String, AuditEntry.Status> statesMap = state.getEntryStatesMap();
-
+    /**
+     * Applies the specified action plan to this stage, creating an ExecutableStage
+     * with tasks configured according to their assigned actions.
+     * This method provides a unified interface for both community (audit-based)
+     * and cloud (orchestrator-based) execution planning.
+     * 
+     * @param actionPlan the action plan specifying what action to take for each change
+     * @return an ExecutableStage ready for execution
+     */
+    public ExecutableStage applyActions(ChangeActionMap actionPlan) {
         List<ExecutableTask> tasks = this.tasks
                 .stream()
-                .map(loadedTask -> ExecutableTaskBuilder.build(loadedTask, name, statesMap.get(loadedTask.getId())))
-                .flatMap(List::stream)
+                .map(loadedTask -> {
+                    ChangeAction action = actionPlan.getActionFor(loadedTask.getId());
+                    return ExecutableTaskBuilder.build(loadedTask, name, action);
+                })
+                .flatMap(Collection::stream)
                 .collect(Collectors.toCollection(LinkedList::new));
 
         return new ExecutableStage(name, tasks);
@@ -102,6 +111,9 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
      * <p>
      * It is assumed that task IDs within a stage are unique,
      * so the returned {@code Set} will not contain duplicates.
+     * </p>
+     * 
+     * @return a set of task IDs in this stage
      */
     public Set<String> getTaskIds() {
         return getTasks().stream()

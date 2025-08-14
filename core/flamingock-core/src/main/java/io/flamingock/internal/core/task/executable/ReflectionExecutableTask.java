@@ -17,6 +17,7 @@ package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 
 import java.lang.reflect.Method;
 import java.util.LinkedList;
@@ -44,10 +45,10 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
 
     public ReflectionExecutableTask(String stageName,
                                     REFLECTION_TASK_DESCRIPTOR descriptor,
-                                    boolean requiredExecution,
+                                    ChangeAction action,
                                     Method executionMethod,
                                     Method rollbackMethod) {
-        super(stageName, descriptor, requiredExecution);
+        super(stageName, descriptor, action);
         this.executionMethod = executionMethod;
         rollbackChain = new LinkedList<>();
         if(rollbackMethod != null) {

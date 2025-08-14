@@ -18,7 +18,7 @@ package io.flamingock.common.test.cloud.prototype;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
-import io.flamingock.internal.common.cloud.planner.response.RequiredActionTask;
+import io.flamingock.internal.common.cloud.planner.response.CloudChangeAction;
 import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 
@@ -63,12 +63,12 @@ public class PrototypeTask {
         );
     }
 
-    public TaskResponse toExecutionPlanTaskResponse(RequiredActionTask state) {
-        return new TaskResponse(taskId, state != null ? state: RequiredActionTask.PENDING_EXECUTION);
+    public TaskResponse toExecutionPlanTaskResponse(CloudChangeAction state) {
+        return new TaskResponse(taskId, state != null ? state: CloudChangeAction.APPLY);
     }
 
     public TaskResponse toResponse() {
-        return new TaskResponse(taskId, RequiredActionTask.PENDING_EXECUTION);
+        return new TaskResponse(taskId, CloudChangeAction.APPLY);
     }
 
     public AuditEntryMatcher toAuditExpectation(AuditEntryRequest.Status status) {

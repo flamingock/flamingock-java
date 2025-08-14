@@ -23,11 +23,12 @@ import io.flamingock.internal.common.cloud.planner.request.StageRequest;
 import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
 import io.flamingock.internal.common.cloud.planner.response.StageResponse;
 import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
-import io.flamingock.internal.common.cloud.planner.response.RequiredActionTask;
+import io.flamingock.internal.common.cloud.planner.response.CloudChangeAction;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
+import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.engine.lock.LockKey;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
@@ -36,13 +37,13 @@ import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTED;
 
 public final class ExecutionPlanMapper {
 
@@ -95,22 +96,38 @@ public final class ExecutionPlanMapper {
     }
 
     private static ExecutableStage mapToExecutable(AbstractLoadedStage loadedStage, StageResponse stageResponse) {
-
-        Map<String, RequiredActionTask> taskStateMap = stageResponse.getTasks()
+        Map<String, CloudChangeAction> taskStateMap = stageResponse.getTasks()
                 .stream()
                 .collect(Collectors.toMap(TaskResponse::getId, TaskResponse::getState));
 
-        AuditStageStatus.StatusBuilder builder = AuditStageStatus.statusBuilder();
-
-        //We assume that if the taskId is not in the response is already successfully executed
-        loadedStage
-                .getTasks()
-                .stream()
-                .map(TaskDescriptor::getId)
-                .filter(taskId -> taskStateMap.get(taskId) != RequiredActionTask.PENDING_EXECUTION)
-                .forEach(taskId -> builder.addState(taskId, EXECUTED));
-
-        return loadedStage.applyState(builder.build());
+        // Build action map using anti-corruption layer
+        Map<String, ChangeAction> actionMap = new HashMap<>();
+        
+        for (TaskDescriptor task : loadedStage.getTasks()) {
+            String taskId = task.getId();
+            CloudChangeAction cloudAction = taskStateMap.get(taskId);
+            
+            // If task not in response, assume it's already executed (cloud orchestrator decision)
+            if (cloudAction == null) {
+                actionMap.put(taskId, ChangeAction.SKIP);
+            } else {
+                // Use anti-corruption layer to map cloud domain to internal domain
+                actionMap.put(taskId, mapCloudActionToChangeAction(cloudAction));
+            }
+        }
+        
+        ChangeActionMap actionPlan = new ChangeActionMap(actionMap);
+        return loadedStage.applyActions(actionPlan);
+    }
+    
+    /**
+     * Anti-corruption layer: Maps cloud domain CloudChangeAction to internal ChangeAction.
+     * Since both enums now have aligned values, we can use direct enum name mapping.
+     * This preserves domain boundaries while enabling the new action-based architecture.
+     */
+    private static ChangeAction mapCloudActionToChangeAction(CloudChangeAction cloudAction) {
+        // Direct mapping since enum values are now aligned
+        return ChangeAction.valueOf(cloudAction.name());
     }
 
     public static Lock extractLockFromResponse(ExecutionPlanResponse response,

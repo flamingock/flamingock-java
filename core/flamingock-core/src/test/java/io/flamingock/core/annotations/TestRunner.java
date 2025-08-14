@@ -26,6 +26,7 @@ import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBund
 import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.core.engine.lock.Lock;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
@@ -98,7 +99,7 @@ public class TestRunner {
         List<? extends ExecutableTask> executableChangeUnits = ExecutableTaskBuilder
                 .getInstance(loadedTask)
                 .setStageName("stage_name")
-                .setInitialState(null)
+                .setChangeAction(ChangeAction.APPLY)
                 .build();
 
         ExecutionContext stageExecutionContext = new ExecutionContext(

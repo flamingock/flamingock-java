@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable.builder;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
@@ -35,7 +36,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
 
     private static final TemplateExecutableTaskBuilder instance = new TemplateExecutableTaskBuilder();
     private String stageName;
-    private AuditEntry.Status initialState;
+    private ChangeAction changeAction;
     private TemplateLoadedChangeUnit loadedTask;
 
     static TemplateExecutableTaskBuilder getInstance() {
@@ -64,19 +65,30 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
     }
 
     @Override
-    public TemplateExecutableTaskBuilder setInitialState(AuditEntry.Status initialState) {
-        this.initialState = initialState;
+    public TemplateExecutableTaskBuilder setChangeAction(ChangeAction action) {
+        this.changeAction = action;
         return this;
     }
 
+
     @Override
     public List<TemplateExecutableTask> build() {
-        return Collections.singletonList(getTasksFromReflection(stageName, loadedTask, initialState));
+        return Collections.singletonList(getTasksFromReflection(stageName, loadedTask, changeAction));
     }
 
+
+    /**
+     * New ChangeAction-based method for building tasks.
+     */
     private TemplateExecutableTask getTasksFromReflection(String stageName,
                                                           TemplateLoadedChangeUnit loadedTask,
-                                                          AuditEntry.Status initialState) {
+                                                          ChangeAction action) {
+        return buildTask(stageName, loadedTask, action);
+    }
+
+    private TemplateExecutableTask buildTask(String stageName,
+                                           TemplateLoadedChangeUnit loadedTask,
+                                           ChangeAction action) {
         Method rollbackMethod = null;
         if (loadedTask.getRollback() != null) {
             rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
@@ -99,11 +111,10 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
         return new TemplateExecutableTask(
                 stageName,
                 loadedTask,
-                AuditEntry.Status.isRequiredExecution(initialState),
+                action,
                 loadedTask.getExecutionMethod(),
                 rollbackMethod
         );
 
     }
-    
 }

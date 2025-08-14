@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.executable;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -28,17 +29,20 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
 
     protected final DESCRIPTOR descriptor;
 
-    protected final boolean alreadyExecuted;
+    protected final ChangeAction action;
 
     public AbstractExecutableTask(String stageName,
                                   DESCRIPTOR descriptor,
-                                  boolean executionRequired) {
+                                  ChangeAction action) {
         if (descriptor == null) {
             throw new IllegalArgumentException("task descriptor cannot be null");
         }
+        if (action == null) {
+            throw new IllegalArgumentException("change action cannot be null");
+        }
         this.stageName = stageName;
         this.descriptor = descriptor;
-        this.alreadyExecuted = !executionRequired;
+        this.action = action;
     }
     @Override
     public String getId() {
@@ -87,7 +91,12 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
 
     @Override
     public boolean isAlreadyExecuted() {
-        return alreadyExecuted;
+        return action == ChangeAction.SKIP;
+    }
+
+    @Override
+    public ChangeAction getAction() {
+        return action;
     }
 
     @Override
@@ -105,10 +114,10 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
 
     @Override
     public String toString() {
-        return "ReflectionExecutableTask{" +
-                ", id='" + descriptor + '\'' +
-                ", state=" + alreadyExecuted +
-                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) +
+        return "ExecutableTask{" +
+                "id='" + descriptor.getId() + '\'' +
+                ", action=" + action +
+                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
                 "} ";
     }
 }

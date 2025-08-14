@@ -23,6 +23,7 @@ import io.flamingock.internal.core.engine.audit.AuditReader;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.core.engine.execution.ExecutionPlan;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
+import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.engine.lock.LockException;
 import io.flamingock.internal.core.engine.lock.LockRefreshDaemon;
@@ -50,9 +51,10 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
 
 
     /**
-     * @param lockService    lockService to persist the lock
-     * @param auditReader
-     * @param coreConfiguration
+     * @param instanceId the runner instance identifier
+     * @param lockService lockService to persist the lock
+     * @param auditReader audit reader to get current audit state
+     * @param coreConfiguration core configuration settings
      */
     public LocalExecutionPlanner(RunnerId instanceId,
                                  LocalLockService lockService,
@@ -68,9 +70,14 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
     public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
         AuditStageStatus currentAuditStageStatus = auditReader.getAuditStageStatus();
         logger.debug("Pulled remote state:\n{}", currentAuditStageStatus);
+        
         List<ExecutableStage> executableStages = loadedStages
                 .stream()
-                .map(loadedStage -> loadedStage.applyState(currentAuditStageStatus))
+                .map(loadedStage -> {
+                    // Convert audit status to action plan using the new action-based architecture
+                    ChangeActionMap changeActionMap = LocalChangeActionBuilder.build(currentAuditStageStatus);
+                    return loadedStage.applyActions(changeActionMap);
+                })
                 .collect(Collectors.toList());
 
         Optional<ExecutableStage> nextStageOpt = executableStages.stream()

@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable.builder;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.task.executable.ReflectionExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
@@ -35,7 +36,7 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
     private static final CodeExecutableTaskBuilder instance = new CodeExecutableTaskBuilder();
 
     private String stageName;
-    private AuditEntry.Status initialState;
+    private ChangeAction changeAction;
     private CodeLoadedChangeUnit loadedTask;
 
     static CodeExecutableTaskBuilder getInstance() {
@@ -65,38 +66,45 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
     }
 
     @Override
-    public CodeExecutableTaskBuilder setInitialState(AuditEntry.Status initialState) {
-        this.initialState = initialState;
+    public CodeExecutableTaskBuilder setChangeAction(ChangeAction action) {
+        this.changeAction = action;
         return this;
     }
 
     @Override
     public List<ReflectionExecutableTask<AbstractReflectionLoadedTask>> build() {
-        return getTasksFromReflection(stageName, loadedTask, initialState);
+        return getTasksFromReflection(stageName, loadedTask, changeAction);
     }
 
+    /**
+     * New ChangeAction-based method for building tasks.
+     */
     private List<ReflectionExecutableTask<AbstractReflectionLoadedTask>> getTasksFromReflection(String stageName,
                                                                                                 CodeLoadedChangeUnit loadedTask,
-                                                                                                AuditEntry.Status initialState) {
+                                                                                                ChangeAction action) {
+        return buildTasksInternal(stageName, loadedTask, action);
+    }
 
+    private List<ReflectionExecutableTask<AbstractReflectionLoadedTask>> buildTasksInternal(String stageName,
+                                                                                            CodeLoadedChangeUnit loadedTask,
+                                                                                            ChangeAction action) {
         Method executionMethod = loadedTask.getExecutionMethod();
 
         Optional<Method> rollbackMethodOpt = loadedTask.getRollbackMethod();
         ReflectionExecutableTask<AbstractReflectionLoadedTask> task = new ReflectionExecutableTask<>(
                 stageName,
                 loadedTask,
-                AuditEntry.Status.isRequiredExecution(initialState),
+                action,
                 executionMethod,
                 rollbackMethodOpt.orElse(null));
 
-
-            /*
-            If there is any rollback dependency(@BeforeExecution in ChangeUnits, legacy ChangeSet, etc.) they are added as normal task
-            before the main task and, if it also provides @BeforeExecutionRollback, it's also added to the main task's rollbackChain,
-            so they  are rolled back in case the main task fails.
-             */
+        /*
+        If there is any rollback dependency(@BeforeExecution in ChangeUnits, legacy ChangeSet, etc.) they are added as normal task
+        before the main task and, if it also provides @BeforeExecutionRollback, it's also added to the main task's rollbackChain,
+        so they  are rolled back in case the main task fails.
+         */
         List<ReflectionExecutableTask<AbstractReflectionLoadedTask>> tasks = new LinkedList<>();
-        getBeforeExecutionOptional(stageName, task, initialState).ifPresent(beforeExecutionTask -> {
+        getBeforeExecutionOptional(stageName, task, action).ifPresent(beforeExecutionTask -> {
             tasks.add(beforeExecutionTask);
             beforeExecutionTask.getRollbackChain().forEach(task::addRollback);
         });
@@ -106,7 +114,7 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
 
     private Optional<ReflectionExecutableTask<AbstractReflectionLoadedTask>> getBeforeExecutionOptional(String stageName,
                                                                                                         ReflectionExecutableTask<AbstractReflectionLoadedTask> baseTask,
-                                                                                                        AuditEntry.Status initialState) {
+                                                                                                        ChangeAction action) {
         //Creates a new LoadedTask, based on the main one, but with the "beforeExecution id, also based on the main one"
         CodeLoadedChangeUnit loadedTask = LoadedTaskBuilder
                 .getCodeBuilderInstance(baseTask.getDescriptor().getImplementationClass())
@@ -124,11 +132,9 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
         return Optional.of(new ReflectionExecutableTask<>(
                 stageName,
                 loadedTask,
-                AuditEntry.Status.isRequiredExecution(initialState),
+                action,
                 beforeExecutionMethod,
                 rollbackBeforeExecution.orElse(null)));
 
     }
-
-
 }

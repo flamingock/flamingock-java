@@ -19,8 +19,13 @@ import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.engine.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
+import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
+import io.flamingock.internal.core.engine.audit.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.core.engine.audit.recovery.RecoveryIssue;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class ExecutionPlan implements AutoCloseable {
 
@@ -63,6 +68,40 @@ public class ExecutionPlan implements AutoCloseable {
         if (isExecutionRequired()) {
             pipeline.getExecutableStages()
                     .forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
+        }
+    }
+
+    /**
+     * Validates the execution plan for manual intervention requirements.
+     * This method analyzes all executable stages and their tasks to identify
+     * any that require manual intervention, throwing an exception if found.
+     * <p>
+     * This centralized validation follows DDD principles by keeping validation
+     * logic at the appropriate architectural layer (ExecutionPlan domain).
+     * </p>
+     * 
+     * @throws ManualInterventionRequiredException if any tasks require manual intervention
+     */
+    public void validate() {
+        List<RecoveryIssue> recoveryIssues = new ArrayList<>();
+        String firstStageName = "unknown";
+        boolean hasStages = false;
+        
+        for (ExecutableStage stage : pipeline.getExecutableStages()) {
+            if (!hasStages) {
+                firstStageName = stage.getName();
+                hasStages = true;
+            }
+            
+            for (ExecutableTask task : stage.getTasks()) {
+                if (task.getAction() == ChangeAction.MANUAL_INTERVENTION) {
+                    recoveryIssues.add(new RecoveryIssue(task.getId()));
+                }
+            }
+        }
+        
+        if (!recoveryIssues.isEmpty()) {
+            throw new ManualInterventionRequiredException(recoveryIssues, firstStageName);
         }
     }
 

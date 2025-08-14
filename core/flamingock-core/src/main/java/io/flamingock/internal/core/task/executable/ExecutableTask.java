@@ -17,6 +17,7 @@ package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 
 import java.util.List;
 
@@ -31,6 +32,8 @@ public interface ExecutableTask extends TaskDescriptor {
     String getExecutionMethodName();
 
     boolean isAlreadyExecuted();
+
+    ChangeAction getAction();
 
     void addRollback(Rollback rollback);
 

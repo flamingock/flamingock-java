@@ -36,7 +36,6 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.execution.StageSummary;
-import org.jetbrains.annotations.NotNull;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -89,8 +88,12 @@ public class PipelineRunner implements Runner {
         eventPublisher.publish(new PipelineStartedEvent());
         PipelineSummary pipelineSummary = null;
         do {
-            List<AbstractLoadedStage> stages = validateAndGetStages(pipeline);
+            List<AbstractLoadedStage> stages = validateAndGetExecutableStages(pipeline);
             try (ExecutionPlan execution = executionPlanner.getNextExecution(stages)) {
+                // Validate execution plan for manual intervention requirements
+                // This centralized validation ensures both community and cloud paths are validated
+                execution.validate();
+                
                 if (pipelineSummary == null) {
                     pipelineSummary = new PipelineSummary(execution.getPipeline());
                 }
@@ -128,8 +131,7 @@ public class PipelineRunner implements Runner {
         eventPublisher.publish(new PipelineCompletedEvent());
     }
 
-    @NotNull
-    private static List<AbstractLoadedStage> validateAndGetStages(LoadedPipeline pipeline) {
+    private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
         pipeline.validate();
         List<AbstractLoadedStage> stages = new ArrayList<>();
         if(pipeline.getSystemStage().isPresent()) {

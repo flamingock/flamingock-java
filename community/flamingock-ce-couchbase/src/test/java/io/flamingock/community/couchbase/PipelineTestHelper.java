@@ -69,8 +69,7 @@ public class PipelineTestHelper {
 
         List<CodePreviewChangeUnit> tasks = Arrays.stream(changeDefinitions)
                 .map(trio -> {
-                    Function<Class<?>, ChangeInfo> extractor = infoExtractor;
-                    ChangeInfo changeInfo = extractor.apply(trio.getFirst());
+                    ChangeInfo changeInfo = infoExtractor.apply(trio.getFirst());
                     PreviewMethod rollback = null;
                     PreviewMethod rollbackBeforeExecution = null;
                     if (trio.getThird() != null) {

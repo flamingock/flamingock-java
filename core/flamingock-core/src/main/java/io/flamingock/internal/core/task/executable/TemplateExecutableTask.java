@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.executable;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -30,10 +31,10 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
 
     public TemplateExecutableTask(String stageName,
                                   TemplateLoadedChangeUnit descriptor,
-                                  boolean requiredExecution,
+                                  ChangeAction action,
                                   Method executionMethod,
                                   Method rollbackMethod) {
-        super(stageName, descriptor, requiredExecution, executionMethod, rollbackMethod);
+        super(stageName, descriptor, action, executionMethod, rollbackMethod);
     }
 
     @Override

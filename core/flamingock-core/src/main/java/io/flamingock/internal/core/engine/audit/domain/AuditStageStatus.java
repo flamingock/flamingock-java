@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.engine.audit.domain;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,18 +27,15 @@ public class AuditStageStatus {
     public static EntryBuilder entryBuilder() {
         return new EntryBuilder();
     }
-    public static StatusBuilder statusBuilder() {
-        return new StatusBuilder();
+
+    private final Map<String, AuditEntryInfo> entryInfoMap;
+
+    private AuditStageStatus(Map<String, AuditEntryInfo> entryInfoMap) {
+        this.entryInfoMap = entryInfoMap;
     }
 
-    private final Map<String, AuditEntry.Status> entryStatesMap;
-
-    private AuditStageStatus(Map<String, AuditEntry.Status> entryStatesMap) {
-        this.entryStatesMap = entryStatesMap;
-    }
-
-    public Map<String, AuditEntry.Status> getEntryStatesMap() {
-        return entryStatesMap;
+    public Map<String, AuditEntryInfo> getEntryInfoMap() {
+        return entryInfoMap;
     }
 
     public static class EntryBuilder {
@@ -52,24 +50,16 @@ public class AuditStageStatus {
         }
 
         public AuditStageStatus build() {
-            Map<String, AuditEntry.Status> statesMap = entryMap.values().stream()
-                    .collect(Collectors.toMap(AuditEntry::getTaskId, AuditEntry::getState));
-            return new AuditStageStatus(statesMap);
+            Map<String, AuditEntryInfo> infoMap = entryMap.values().stream()
+                    .collect(Collectors.toMap(
+                            AuditEntry::getTaskId,
+                            entry -> new AuditEntryInfo(entry.getTaskId(), entry.getState(), entry.getTxType())
+                    ));
+            
+            return new AuditStageStatus(infoMap);
         }
 
     }
 
-    public static class StatusBuilder {
 
-        private final Map<String, AuditEntry.Status> statesMap = new HashMap<>();
-
-        public void addState(String taskId, AuditEntry.Status status) {
-            statesMap.put(taskId, status);
-        }
-
-        public AuditStageStatus build() {
-            return new AuditStageStatus(statesMap);
-        }
-
-    }
 }

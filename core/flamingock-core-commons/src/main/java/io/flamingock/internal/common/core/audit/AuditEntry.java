@@ -28,10 +28,12 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTE
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTION_FAILED;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLBACK_FAILED;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_BACK;
+import static io.flamingock.internal.common.core.audit.AuditEntry.Status.STARTED;
 
 public class AuditEntry {
 
     public static final Set<Status> RELEVANT_STATES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            STARTED,
             EXECUTED,
             ROLLED_BACK,
             EXECUTION_FAILED,

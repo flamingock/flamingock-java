@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.flamingock.common.test.cloud.utils.JsonMapper.toJson;
-import static io.flamingock.internal.common.cloud.planner.response.RequiredActionTask.PENDING_EXECUTION;
+import static io.flamingock.internal.common.cloud.planner.response.CloudChangeAction.APPLY;
 
 @Deprecated
 public final class MockRunnerServerOld {
@@ -454,7 +454,7 @@ public final class MockRunnerServerOld {
         StageResponse stage = new StageResponse();
         stage.setName(stageRequest.getName());
         stage.setTasks(stageRequest.getTasks().stream()
-                .map(onGoingTask -> new TaskResponse(onGoingTask.getId(), PENDING_EXECUTION))
+                .map(onGoingTask -> new TaskResponse(onGoingTask.getId(), APPLY))
                 .collect(Collectors.toList()));
         return stage;
     }
