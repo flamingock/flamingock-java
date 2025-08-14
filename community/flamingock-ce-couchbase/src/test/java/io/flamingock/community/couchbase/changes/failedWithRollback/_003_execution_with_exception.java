@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
 
-@ChangeUnit( id="execution-with-exception" , order = "003")
+@ChangeUnit( id="execution-with-exception" , order = "003", transactional = false)
 public class _003_execution_with_exception {
 
     @Execution

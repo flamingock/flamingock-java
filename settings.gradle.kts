@@ -106,6 +106,9 @@ include("core:target-systems:dynamodb-target-system")
 project(":core:target-systems:dynamodb-target-system").projectDir = file("core/target-systems/dynamodb-target-system")
 project(":core:target-systems:dynamodb-target-system").name = "dynamodb-target-system"
 
+include("core:target-systems:couchbase-target-system")
+project(":core:target-systems:couchbase-target-system").projectDir = file("core/target-systems/couchbase-target-system")
+project(":core:target-systems:couchbase-target-system").name = "couchbase-target-system"
 
 //////////////////////////////////////
 // TEMPLATES

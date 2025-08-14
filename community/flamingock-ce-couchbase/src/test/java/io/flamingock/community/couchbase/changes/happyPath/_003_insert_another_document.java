@@ -17,14 +17,16 @@ package io.flamingock.community.couchbase.changes.happyPath;
 
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
+import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.NonLockGuarded;
 
 @ChangeUnit( id="insert-another-document" , order = "003")
 public class _003_insert_another_document {
 
     @Execution
-    public void execution(Collection collection) {
-        collection.insert("test-client-Jorge", JsonObject.create().put("name", "Jorge"));
+    public void execution(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
+        ctx.insert(collection,"test-client-Jorge", JsonObject.create().put("name", "Jorge"));
     }
 }

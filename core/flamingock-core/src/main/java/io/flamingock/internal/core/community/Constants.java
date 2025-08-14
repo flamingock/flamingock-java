@@ -19,6 +19,7 @@ public final class Constants {
 
     public static final String DEFAULT_AUDIT_STORE_NAME = "flamingockAuditLogs";
     public static final String DEFAULT_LOCK_STORE_NAME = "flamingockLocks";
+    public static final String DEFAULT_ON_GOING_TASKS_STORE_NAME = "flamingockOnGoingTasks";
 
     private Constants() {
     }

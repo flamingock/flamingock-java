@@ -44,6 +44,19 @@ public class TransactionManager<CLIENT_SESSION> {
         );
     }
 
+    /**
+     * Starts a session, if not already created or is closed. Otherwise, it returns the existing one.
+     *
+     * @param sessionId ClientSession identifier. Will be the taskId most of the time(if not always)
+     * @param clientSession ClientSession instance
+     * @return ClientSession
+     */
+    public CLIENT_SESSION startSession(String sessionId, CLIENT_SESSION clientSession) {
+        return sessionMap.compute(sessionId, (k, currentSession) ->
+                currentSession == null ? clientSession : currentSession
+        );
+    }
+
     public void closeSession(String sessionId) {
         sessionMap.remove(sessionId);
     }

@@ -25,37 +25,34 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.community.couchbase.CouchbaseConfiguration;
+import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
 import java.util.Optional;
 
 public class CouchbaseEngine extends AbstractLocalEngine {
 
-    private final Cluster cluster;
-    private final Bucket bucket;
-
+    private final CouchbaseTargetSystem targetSystem;
     private CouchbaseAuditor auditor;
     private LocalExecutionPlanner executionPlanner;
     private final CouchbaseConfiguration driverConfiguration;
     private final CoreConfigurable coreConfiguration;
 
 
-    public CouchbaseEngine(Cluster cluster,
-                           Bucket bucket,
+    public CouchbaseEngine(CouchbaseTargetSystem targetSystem,
                            CoreConfigurable coreConfiguration,
                            CommunityConfigurable localConfiguration,
                            CouchbaseConfiguration driverConfiguration) {
         super(localConfiguration);
-        this.cluster = cluster;
-        this.bucket = bucket;
-        this.driverConfiguration = driverConfiguration;
+        this.targetSystem = targetSystem;
         this.coreConfiguration = coreConfiguration;
+        this.driverConfiguration = driverConfiguration;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        auditor = new CouchbaseAuditor(cluster, bucket);
-        auditor.initialize(driverConfiguration.isAutoCreate(), driverConfiguration.getScopeName(), driverConfiguration.getAuditRepositoryName());
-        CouchbaseLockService lockService = new CouchbaseLockService(cluster, bucket, TimeService.getDefault());
+        auditor = new CouchbaseAuditor(targetSystem);
+        auditor.initialize(targetSystem.isAutoCreate(), driverConfiguration.getScopeName(), driverConfiguration.getAuditRepositoryName());
+        CouchbaseLockService lockService = new CouchbaseLockService(targetSystem, TimeService.getDefault());
         lockService.initialize(driverConfiguration.isAutoCreate(), driverConfiguration.getScopeName(), driverConfiguration.getLockRepositoryName());
         executionPlanner = new LocalExecutionPlanner(runnerId, lockService, auditor, coreConfiguration);
     }
@@ -70,9 +67,12 @@ public class CouchbaseEngine extends AbstractLocalEngine {
         return executionPlanner;
     }
 
-
+    //TODO remove
     @Override
+    @Deprecated
     public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.empty();
+        return localConfiguration.isTransactionDisabled()
+                ? Optional.empty()
+                : Optional.of(targetSystem.getTxWrapper());
     }
 }

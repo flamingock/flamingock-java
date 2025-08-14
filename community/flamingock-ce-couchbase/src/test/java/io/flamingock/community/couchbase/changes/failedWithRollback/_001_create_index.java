@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.Execution;
 
 import java.util.Arrays;
 
-@ChangeUnit(id = "create-index", order = "001")
+@ChangeUnit(id = "create-index", order = "001", transactional = false)
 public class _001_create_index {
 
 	@Execution

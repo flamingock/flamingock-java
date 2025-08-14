@@ -124,7 +124,6 @@ public class CouchbaseImporterTest {
                 .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
                 .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
-                .disableTransaction()
                 .setRelaxTargetSystemValidation(true)
                 .build();
 
@@ -153,7 +152,6 @@ public class CouchbaseImporterTest {
                 .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
                 .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
-                .disableTransaction()
                 .setRelaxTargetSystemValidation(true)
                 .build();
 

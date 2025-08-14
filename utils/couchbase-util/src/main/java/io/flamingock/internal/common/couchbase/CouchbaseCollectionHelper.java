@@ -23,6 +23,7 @@ import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.manager.collection.CollectionManager;
 import com.couchbase.client.java.manager.collection.CreateCollectionSettings;
 import com.couchbase.client.java.manager.collection.CreateScopeOptions;
+import com.couchbase.client.java.manager.collection.DropCollectionOptions;
 import com.couchbase.client.java.manager.query.QueryIndex;
 import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryScanConsistency;
@@ -108,6 +109,17 @@ public final class CouchbaseCollectionHelper {
                 waitForQueryableCollection(cluster, bucketName, scopeName, collectionName, 20, Duration.ofMillis(250));
             }
         } catch (CollectionExistsException ignored) {
+            // Do nothing
+        }
+    }
+
+    public static void dropCollectionIfExists(Cluster cluster, String bucketName, String scopeName, String collectionName) {
+        try {
+            if (!isDefaultCollection(scopeName, collectionName)) {
+                CollectionManager cm = cluster.bucket(bucketName).collections();
+                cm.dropCollection(scopeName, collectionName, DropCollectionOptions.dropCollectionOptions());
+            }
+        } catch (CollectionNotFoundException ignored) {
             // Do nothing
         }
     }

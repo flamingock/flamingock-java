@@ -13,20 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.couchbase.changes.failedWithoutRollback;
+package io.flamingock.targetsystem.couchbase.changes.unhappypath;
 
+import com.couchbase.client.core.io.CollectionIdentifier;
+import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.TargetSystem;
 
-@ChangeUnit( id="insert-document" , order = "002")
-public class _002_insert_document {
+@TargetSystem( id = "couchbase-ts")
+@ChangeUnit(id = "insert-clients", order = "002")
+public class UnhappyInsertClientsChange {
 
     @Execution
-    public void execution(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
-        ctx.insert(collection,"test-client-Federico", JsonObject.create().put("name", "Federico"));
+    public void execution(@NonLockGuarded Bucket bucket, @NonLockGuarded TransactionAttemptContext ctx) {
+        Collection collection = bucket
+                .scope(CollectionIdentifier.DEFAULT_SCOPE)
+                .collection("clientCollection");
+        ctx.insert(collection, "test-client-Federico", JsonObject.create().put("name", "Should Have Been Rolled Back"));
+        throw new RuntimeException("Intended exception");
     }
 }

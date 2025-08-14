@@ -1,13 +1,19 @@
+import org.jetbrains.kotlin.gradle.utils.extendsFrom
+
 dependencies {
+    //Flamingock
     api(project(":core:flamingock-core"))
-    api(project(":community:flamingock-ce-commons"))
-    api(project(":core:target-systems:couchbase-target-system"))
     implementation(project(":utils:couchbase-util"))
-    
+
+    //General
     compileOnly("com.couchbase.client:java-client:3.6.0")
 
+    //Test
     testImplementation("org.testcontainers:couchbase:1.21.3")
     testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+
+    testImplementation(project(":cloud:flamingock-cloud"))
+    testImplementation(project(":utils:test-util"))
 }
 
 description = "${project.name}'s description"

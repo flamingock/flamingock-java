@@ -94,7 +94,6 @@ class CouchbaseDriverTest {
                     .addDependency(cluster)
                     .addDependency(bucket)
                     .addDependency(testCollection) // for test purpose only
-                    .disableTransaction()
                     .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
@@ -143,7 +142,6 @@ class CouchbaseDriverTest {
                         .addDependency(cluster)
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only
-                        .disableTransaction()
                         .setRelaxTargetSystemValidation(true)
                         .build()
                         .run();
@@ -190,7 +188,6 @@ class CouchbaseDriverTest {
                         .addDependency(cluster)
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only
-                        .disableTransaction()
                         .setRelaxTargetSystemValidation(true)
                         .build()
                         .run();
@@ -207,7 +204,7 @@ class CouchbaseDriverTest {
         assertEquals("insert-document", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
         assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(2).getState());
 
         //Checking created index and documents
         assertTrue(CouchbaseCollectionHelper.indexExists(cluster, testCollection.bucketName(), testCollection.scopeName(), testCollection.name(), "idx_standalone_index"));
@@ -215,8 +212,6 @@ class CouchbaseDriverTest {
         jsonObject = testCollection.get("test-client-Federico").contentAsObject();
         assertNotNull(jsonObject);
         assertEquals("Federico", jsonObject.get("name"));
-        jsonObject = testCollection.get("test-client-Jorge").contentAsObject();
-        assertNotNull(jsonObject);
-        assertEquals("Jorge", jsonObject.get("name"));
+        assertFalse(testCollection.exists("test-client-Jorge").exists());
     }
 }
