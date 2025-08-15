@@ -112,6 +112,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         if (!changeUnit.isAlreadyExecuted()) {
             return doApplyChange();
         } else {
+            stepLogger.logSkippedExecution(changeUnit.getId());
             return summarizer
                     .add(new CompletedAlreadyAppliedStep(changeUnit))
                     .setSuccessful()

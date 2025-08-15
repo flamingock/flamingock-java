@@ -211,6 +211,12 @@ class DynamoDBDriverTest {
                     .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
+
+            FlamingockFactory.getCommunityBuilder()
+                    .addDependency(client)
+                    .setRelaxTargetSystemValidation(true)
+                    .build()
+                    .run();
         }
 
         //Then

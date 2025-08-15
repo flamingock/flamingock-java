@@ -162,24 +162,24 @@ public class ChangeProcessStrategyFactory {
 
 
         if(!changeUnit.isTransactional()) {
-            changeLogger.logStrategyApplication(changeUnit.getId(), "NonTx");
+            changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "NON_TX");
             return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
         }
 
         switch (targetSystemOps.getOperationType()) {
             case NON_TX:
-                changeLogger.logStrategyApplication(changeUnit.getId(), "NonTx");
+                changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "NON_TX");
                 return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
 
             case TX_NON_SYNC:
             case TX_AUDIT_STORE_SYNC:
-                changeLogger.logStrategyApplication(changeUnit.getId(), "SimpleTx");
+                changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "TX");
                 TransactionalTargetSystemOps txTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
                 return new SimpleTxChangeProcessStrategy(changeUnit, executionContext, txTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
 
             case TX_AUDIT_STORE_SHARED:
             default:
-                changeLogger.logStrategyApplication(changeUnit.getId(), "SharedTx");
+                changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "TX");
                 TransactionalTargetSystemOps sharedTxTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
                 return new SharedTxChangeProcessStrategy(changeUnit, executionContext, sharedTxTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
         }

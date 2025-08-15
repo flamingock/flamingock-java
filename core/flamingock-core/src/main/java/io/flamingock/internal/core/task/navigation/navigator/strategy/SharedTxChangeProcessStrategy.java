@@ -145,7 +145,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
 
     protected void auditAndLogAutoRollback() {
-        stepLogger.logAutoRollback(changeUnit);
+        stepLogger.logAutoRollback(changeUnit, 0);
         CompleteAutoRolledBackStep rolledBackStep = new CompleteAutoRolledBackStep(changeUnit, true);
         auditAndLogAutoRollback(rolledBackStep, executionContext, LocalDateTime.now());
     }
