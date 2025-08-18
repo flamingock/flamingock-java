@@ -21,6 +21,9 @@ import io.flamingock.internal.core.engine.audit.domain.AuditEntryInfo;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
+import io.flamingock.internal.util.FlamingockLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +35,8 @@ import java.util.Map;
  * and transaction type.
  */
 public class LocalChangeActionBuilder {
+
+    private static final Logger log = FlamingockLoggerFactory.getLogger(LocalChangeActionBuilder.class);
 
     /**
      * Builds a stage action plan from audit stage status and validates for execution readiness.
@@ -113,6 +118,9 @@ public class LocalChangeActionBuilder {
             case STARTED:
                 // Process was interrupted during execution - ambiguous state
                 // Always requires manual intervention regardless of txType
+                if(txType == AuditTxType.TX_SEPARATE_WITH_MARKER) {
+                    log.warn("Marker not supporter in community edition");
+                }
                 return ChangeAction.MANUAL_INTERVENTION;
                 
             case EXECUTION_FAILED:
