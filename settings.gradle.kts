@@ -171,3 +171,10 @@ project(":core:importer:flamingock-importer-dynamodb-tests").projectDir = file("
 include("core:importer:flamingock-importer-couchbase-tests")
 project(":core:importer:flamingock-importer-couchbase-tests").name = "flamingock-importer-couchbase-tests"
 project(":core:importer:flamingock-importer-couchbase-tests").projectDir = file("core/importer/flamingock-importer-couchbase-tests")
+
+//////////////////////////////////////
+// E2E TESTS
+//////////////////////////////////////
+include("e2e:core-e2e")
+project(":e2e:core-e2e").name = "core-e2e"
+project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")

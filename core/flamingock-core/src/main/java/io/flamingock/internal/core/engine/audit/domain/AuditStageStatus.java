@@ -43,10 +43,13 @@ public class AuditStageStatus {
         private final Map<String, AuditEntry> entryMap = new HashMap<>();
 
         public void addEntry(AuditEntry newEntry) {
-            entryMap.compute(
-                    newEntry.getTaskId(),
-                    (changeId, currentEntry) -> AuditEntry.getMostRelevant(currentEntry, newEntry)
-            );
+            if(!entryMap.containsKey(newEntry.getTaskId())) {
+                entryMap.put(newEntry.getTaskId(), newEntry);
+            } else {
+                AuditEntry currentEntry = entryMap.get(newEntry.getTaskId());
+                AuditEntry winner = AuditEntry.getMostRelevant(currentEntry, newEntry);
+                entryMap.put(newEntry.getTaskId(), winner);
+            }
         }
 
         public AuditStageStatus build() {

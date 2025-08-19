@@ -21,7 +21,10 @@ import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTED;
@@ -32,12 +35,12 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.STARTED
 
 public class AuditEntry {
 
-    public static final Set<Status> RELEVANT_STATES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            STARTED,
-            EXECUTED,
-            ROLLED_BACK,
-            EXECUTION_FAILED,
-            ROLLBACK_FAILED)));
+
+    private static final List<Status> STATUS_ORDER = Arrays.asList(
+            ROLLBACK_FAILED, ROLLED_BACK, EXECUTION_FAILED, EXECUTED, STARTED
+
+    );
+
     protected final Boolean systemChange;
     private final String executionId;
     private final String stageId;
@@ -181,8 +184,17 @@ public class AuditEntry {
         return txType;
     }
 
+
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
-        return RELEVANT_STATES.contains(newEntry.state) && newEntry.getCreatedAt().isAfter(this.getCreatedAt());
+        if(this.getState().equals(newEntry.getState())) {
+            return newEntry.getCreatedAt().isAfter(this.createdAt);
+        }
+
+        if(!newEntry.getCreatedAt().equals(createdAt)) {
+            return newEntry.getCreatedAt().isAfter(this.createdAt);
+        } else {
+            return newEntry.getState().hasHigherPriorityThan(this.state);
+        }
     }
 
     public AuditEntry copyWithNewIdAndStageId(String id, String stageId) {
@@ -206,7 +218,23 @@ public class AuditEntry {
     }
 
     public enum Status {
-        STARTED, EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
+        STARTED(1), EXECUTED(2), EXECUTION_FAILED(3), ROLLED_BACK(4), ROLLBACK_FAILED(5);
+
+        private final int priority;
+
+        Status(int priority) {
+            this.priority = priority;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public boolean hasHigherPriorityThan(Status other) {
+            return this.priority > other.priority;
+        }
+
+
 
         public static boolean isRequiredExecution(Status entryStatus) {
             return entryStatus == null || entryStatus == EXECUTION_FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;
