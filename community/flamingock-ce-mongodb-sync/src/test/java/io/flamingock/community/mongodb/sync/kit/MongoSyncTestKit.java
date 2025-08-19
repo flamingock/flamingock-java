@@ -89,7 +89,12 @@ public class MongoSyncTestKit implements TestKit {
             .withDatabase(database);
         
         MongoSyncDriver driver = MongoSyncDriver.fromTargetSystem(targetSystem);
-        return createBuilderWithDriver(driver);
+        
+        // Create builder and add MongoDB dependencies for change injection
+        TestFlamingockBuilder builder = createBuilderWithDriver(driver);
+        builder.addDependency(mongoClient);
+        builder.addDependency(database);
+        return builder;
     }
     
     @Override

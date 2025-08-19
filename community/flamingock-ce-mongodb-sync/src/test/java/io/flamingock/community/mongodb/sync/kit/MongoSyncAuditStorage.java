@@ -19,13 +19,15 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import org.bson.Document;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 
 /**
  * MongoDB implementation of AuditStorage for real database testing.
@@ -34,57 +36,45 @@ import java.util.List;
  */
 public class MongoSyncAuditStorage implements AuditStorage {
     
-    private static final String AUDIT_COLLECTION_NAME = "flamingockAuditEntries";
+    private static final String AUDIT_COLLECTION_NAME = "flamingockAuditLogs";
     
     private final MongoDatabase database;
     private final MongoCollection<Document> auditCollection;
+    private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper;
     
     public MongoSyncAuditStorage(MongoDatabase database) {
         this.database = database;
         this.auditCollection = database.getCollection(AUDIT_COLLECTION_NAME);
+        this.mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
     }
     
     @Override
     public void addAuditEntry(AuditEntry auditEntry) {
-        Document doc = new Document()
-                .append("executionId", auditEntry.getExecutionId())
-                .append("stageId", auditEntry.getStageId())
-                .append("taskId", auditEntry.getTaskId())
-                .append("author", auditEntry.getAuthor())
-                .append("createdAt", Date.from(auditEntry.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()))
-                .append("state", auditEntry.getState().toString())
-                .append("type", auditEntry.getType().toString())
-                .append("className", auditEntry.getClassName())
-                .append("methodName", auditEntry.getMethodName())
-                .append("executionMillis", auditEntry.getExecutionMillis())
-                .append("executionHostname", auditEntry.getExecutionHostname())
-                .append("errorTrace", auditEntry.getErrorTrace())
-                .append("systemChange", auditEntry.getSystemChange())
-                .append("metadata", auditEntry.getMetadata())
-                .append("auditTxType", auditEntry.getTxType().toString());
-        
-        auditCollection.insertOne(doc);
+        // Use the existing mapper to convert AuditEntry to MongoDB document
+        MongoSyncDocumentHelper documentHelper = mapper.toDocument(auditEntry);
+        auditCollection.insertOne(documentHelper.getDocument());
     }
     
     @Override
     public List<AuditEntry> getAuditEntries() {
         List<AuditEntry> entries = new ArrayList<>();
         for (Document doc : auditCollection.find()) {
-            entries.add(documentToAuditEntry(doc));
+            entries.add(mapper.fromDocument(new MongoSyncDocumentHelper(doc)));
         }
         return entries;
     }
     
     @Override
     public List<AuditEntry> getAuditEntriesForChange(String changeId) {
-        return auditCollection.find(new Document("taskId", changeId))
-                .map(this::documentToAuditEntry)
+        return auditCollection.find(new Document(KEY_CHANGE_ID, changeId))
+                .map(doc -> mapper.fromDocument(new MongoSyncDocumentHelper(doc)))
                 .into(new ArrayList<>());
     }
     
     @Override
     public long countAuditEntriesWithStatus(AuditEntry.Status status) {
-        return auditCollection.countDocuments(new Document("state", status.toString()));
+        // Use the correct field name from AuditEntryField constants
+        return auditCollection.countDocuments(new Document(KEY_STATE, status.toString()));
     }
     
     @Override
@@ -95,28 +85,5 @@ public class MongoSyncAuditStorage implements AuditStorage {
     @Override
     public void clear() {
         auditCollection.deleteMany(new Document());
-    }
-    
-    private AuditEntry documentToAuditEntry(Document doc) {
-        Date createdAtDate = doc.getDate("createdAt");
-        LocalDateTime createdAt = createdAtDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-        
-        return new AuditEntry(
-                doc.getString("executionId"),
-                doc.getString("stageId"),
-                doc.getString("taskId"),
-                doc.getString("author"),
-                createdAt,
-                AuditEntry.Status.valueOf(doc.getString("state")),
-                AuditEntry.ExecutionType.valueOf(doc.getString("type")),
-                doc.getString("className"),
-                doc.getString("methodName"),
-                doc.getLong("executionMillis"),
-                doc.getString("executionHostname"),
-                doc.getString("errorTrace"),
-                doc.getBoolean("systemChange", false),
-                doc.getString("metadata"),
-                io.flamingock.internal.common.core.audit.AuditTxType.valueOf(doc.getString("auditTxType"))
-        );
     }
 }
