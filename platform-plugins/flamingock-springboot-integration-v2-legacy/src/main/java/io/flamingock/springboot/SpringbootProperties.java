@@ -212,14 +212,4 @@ public class SpringbootProperties
     public boolean isCloudConfigurationEmpty() {
         return cloudConfiguration.getApiToken() == null;
     }
-
-    @Override
-    public void setTransactionDisabled(boolean transactionDisabled) {
-        localConfiguration.setTransactionDisabled(transactionDisabled);
-    }
-
-    @Override
-    public boolean isTransactionDisabled() {
-        return localConfiguration.isTransactionDisabled();
-    }
 }

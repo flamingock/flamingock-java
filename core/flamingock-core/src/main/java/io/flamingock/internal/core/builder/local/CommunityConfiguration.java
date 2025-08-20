@@ -16,16 +16,4 @@
 package io.flamingock.internal.core.builder.local;
 
 public class CommunityConfiguration implements CommunityConfigurable {
-
-    private boolean transactionDisabled = false;
-
-    @Override
-    public void setTransactionDisabled(boolean transactionDisabled) {
-        this.transactionDisabled = transactionDisabled;
-    }
-
-    @Override
-    public boolean isTransactionDisabled() {
-        return transactionDisabled;
-    }
 }

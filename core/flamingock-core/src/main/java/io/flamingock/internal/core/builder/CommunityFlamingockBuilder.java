@@ -39,17 +39,6 @@ public class CommunityFlamingockBuilder
     }
 
     @Override
-    public CommunityFlamingockBuilder disableTransaction() {
-        communityConfiguration.setTransactionDisabled(true);
-        return this;
-    }
-
-    @Override
-    public boolean isTransactionDisabled() {
-        return communityConfiguration.isTransactionDisabled();
-    }
-
-    @Override
     protected CommunityFlamingockBuilder getSelf() {
         return this;
     }

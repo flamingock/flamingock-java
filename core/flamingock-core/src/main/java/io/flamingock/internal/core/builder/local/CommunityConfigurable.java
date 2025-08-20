@@ -22,8 +22,4 @@ package io.flamingock.internal.core.builder.local;
  */
 public interface CommunityConfigurable {
 
-    void setTransactionDisabled(boolean transactionDisabled);
-
-    boolean isTransactionDisabled();
-
 }

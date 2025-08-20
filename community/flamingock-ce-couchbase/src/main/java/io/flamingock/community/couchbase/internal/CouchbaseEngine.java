@@ -71,8 +71,6 @@ public class CouchbaseEngine extends AbstractLocalEngine {
     @Override
     @Deprecated
     public Optional<TransactionWrapper> getTransactionWrapper() {
-        return localConfiguration.isTransactionDisabled()
-                ? Optional.empty()
-                : Optional.of(targetSystem.getTxWrapper());
+        return Optional.of(targetSystem.getTxWrapper());
     }
 }

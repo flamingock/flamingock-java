@@ -17,8 +17,4 @@ package io.flamingock.internal.core.builder.local;
 
 public interface CommunityConfigurator<HOLDER> {
 
-
-    HOLDER disableTransaction();
-
-    boolean isTransactionDisabled();
 }

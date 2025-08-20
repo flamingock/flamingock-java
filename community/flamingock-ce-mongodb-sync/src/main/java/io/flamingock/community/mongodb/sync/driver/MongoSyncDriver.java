@@ -61,8 +61,6 @@ public class MongoSyncDriver implements LocalDriver {
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         driverConfiguration = baseContext.getDependencyValue(MongoDBSyncConfiguration.class).orElse(new MongoDBSyncConfiguration());
 
-        isTransactionDisabled = communityConfiguration.isTransactionDisabled();
-
         if (targetSystem == null) {
             MongoClient mongoClient = baseContext.getRequiredDependencyValue(MongoClient.class);
             MongoDatabase mongoDatabase = baseContext.getRequiredDependencyValue(MongoDatabase.class);
