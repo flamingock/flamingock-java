@@ -26,6 +26,7 @@ import io.flamingock.core.e2e.changes.SecondRunNonTransactionalChange;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.core.kit.audit.AuditExpectation;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import org.junit.jupiter.api.DisplayName;
@@ -132,18 +133,12 @@ class CoreStrategiesE2ETest {
                 .run();
         }
         
-        // Then - Verify both changes executed successfully using audit helper
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(4, auditEntries.size(), "Expected 2 changes × 2 audit entries each = 4 total");
-        
-        // Verify each change has complete audit sequence
-        auditHelper.verifySuccessfulChangeExecution("test3-multi-non-tx-change");
-        auditHelper.verifySuccessfulChangeExecution("test3-multi-tx-change");
-        
-        // Verify total counts
-        assertEquals(2, auditHelper.getStartedAuditCount());
-        assertEquals(2, auditHelper.getExecutedAuditCount());
-        assertEquals(0, auditHelper.getFailedAuditCount());
+        auditHelper.verifyAuditSequenceStrict(
+                AuditExpectation.STARTED("test3-multi-non-tx-change"),
+                AuditExpectation.EXECUTED("test3-multi-non-tx-change"),
+                AuditExpectation.STARTED("test3-multi-tx-change"),
+                AuditExpectation.EXECUTED("test3-multi-tx-change")
+        );
     }
     
     @Test
@@ -169,20 +164,12 @@ class CoreStrategiesE2ETest {
             });
         }
         
-        // Then - Verify failure audit sequence using audit helper
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        
-        // Should have: STARTED + EXECUTION_FAILED + ROLLED_BACK
-        assertEquals(3, auditEntries.size());
-        
-        assertEquals("test4-failing-tx-change", auditEntries.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.STARTED, auditEntries.get(0).getState());
-        
-        assertEquals("test4-failing-tx-change", auditEntries.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditEntries.get(1).getState());
-        
-        assertEquals("test4-failing-tx-change", auditEntries.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.ROLLED_BACK, auditEntries.get(2).getState());
+        // Then - Verify failure audit sequence using new concise API
+        auditHelper.verifyAuditSequenceStrict(
+                AuditExpectation.STARTED("test4-failing-tx-change"),
+                AuditExpectation.EXECUTION_FAILED("test4-failing-tx-change"),
+                AuditExpectation.ROLLED_BACK("test4-failing-tx-change")
+        );
         
         // Verify audit counts
         assertEquals(1, auditHelper.getStartedAuditCount());

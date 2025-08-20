@@ -118,7 +118,6 @@ class DynamoDBDriverTest {
 
 
             FlamingockFactory.getCommunityBuilder()
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
                     .setRelaxTargetSystemValidation(true)
                     .build()
@@ -173,7 +172,6 @@ class DynamoDBDriverTest {
                     .setProperty("dynamodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     .setProperty("dynamodb.readCapacityUnits", 1L)
                     .setProperty("dynamodb.writeCapacityUnits", 2L)
-                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.happyPathWithTransaction"))
                     .addDependency(client)
                     .setRelaxTargetSystemValidation(true)
                     .build()
@@ -222,13 +220,21 @@ class DynamoDBDriverTest {
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(3, auditLog.size());
+        assertEquals(6, auditLog.size());
         assertEquals("table-create", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-user", auditLog.get(1).getTaskId());
+        assertEquals(AuditEntry.Status.STARTED, auditLog.get(0).getState());
+        assertEquals("table-create", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("insert-another-user", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
+
+        assertEquals("insert-user", auditLog.get(2).getTaskId());
+        assertEquals(AuditEntry.Status.STARTED, auditLog.get(2).getState());
+        assertEquals("insert-user", auditLog.get(3).getTaskId());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(3).getState());
+
+        assertEquals("insert-another-user", auditLog.get(4).getTaskId());
+        assertEquals(AuditEntry.Status.STARTED, auditLog.get(4).getState());
+        assertEquals("insert-another-user", auditLog.get(5).getTaskId());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(5).getState());
 
         //Checking user table
         List<String> rows = dynamoDBTestHelper.dynamoDBUtil.getEnhancedClient()

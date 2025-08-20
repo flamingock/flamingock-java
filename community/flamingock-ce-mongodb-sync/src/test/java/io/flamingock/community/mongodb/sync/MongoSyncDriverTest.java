@@ -15,8 +15,6 @@
  */
 package io.flamingock.community.mongodb.sync;
 
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadConcernLevel;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
@@ -24,20 +22,20 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.core.processor.util.Deserializer;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.community.mongodb.sync.changes._001_create_client_collection_happy;
-import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
-import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_non_rollback;
-import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_transactional;
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_non_transactional;
-import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_non_transactional;
+import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_transactional_non_rollback;
-import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_rollback;
+import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_transactional;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.audit.AuditExpectation;
+import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.mongodb.kit.MongoSyncTestKit;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,8 +52,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.flamingock.internal.core.community.Constants.DEFAULT_LOCK_STORE_NAME;
+import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditExpectation.ROLLED_BACK;
+import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.internal.core.community.Constants.DEFAULT_LOCK_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -73,41 +75,41 @@ class MongoSyncDriverTest {
 
     private static MongoClient mongoClient;
 
-    private static MongoDatabase mongoDatabase;
+    private static MongoDatabase database;
 
+    @Deprecated
     private static MongoDBTestHelper mongoDBTestHelper;
 
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"))
+            .withReuse(true);
+    private TestKit testKit;
+    private AuditTestHelper auditHelper;
 
-    @BeforeAll
-    static void beforeAll() {
-        mongoClient = MongoClients.create(MongoClientSettings
-                .builder()
-                .applyConnectionString(new ConnectionString(mongoDBContainer.getConnectionString()))
-                .build());
-        mongoDatabase = mongoClient.getDatabase(DB_NAME);
-        mongoDBTestHelper = new MongoDBTestHelper(mongoDatabase);
-    }
 
     @BeforeEach
     void setupEach() {
-        mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
-        mongoDatabase.getCollection(DEFAULT_LOCK_STORE_NAME).drop();
-        mongoDatabase.getCollection(CUSTOM_AUDIT_REPOSITORY_NAME).drop();
-        mongoDatabase.getCollection(CUSTOM_LOCK_REPOSITORY_NAME).drop();
+        mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
+        database = mongoClient.getDatabase("test");
+        testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
+        auditHelper = testKit.getAuditHelper();
+
+        mongoDBTestHelper = new MongoDBTestHelper(database);
+
     }
 
     @AfterEach
-    void tearDownEach() {
-        mongoDatabase.getCollection(CLIENTS_COLLECTION).drop();
+    void tearDown() {
+        database.drop(); // Clean between tests
+        mongoClient.close();
     }
 
     @Test
     @DisplayName("When standalone runs the driver with DEFAULT repository names related collections should exists")
     void happyPathWithDefaultRepositoryNames() {
         //Given-When
+
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
@@ -115,10 +117,10 @@ class MongoSyncDriverTest {
                     new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            FlamingockFactory.getCommunityBuilder()
-                    .addDependency(mongoClient)
-                    .addDependency(mongoDatabase)
+            testKit.createBuilder()
                     .setRelaxTargetSystemValidation(true)
+                    .addDependency(mongoClient)
+                    .addDependency(database)
                     .build()
                     .run();
         }
@@ -144,16 +146,16 @@ class MongoSyncDriverTest {
                     new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            FlamingockFactory.getCommunityBuilder()
-                    .addDependency(config)
+            testKit.createBuilder()
+                    .setRelaxTargetSystemValidation(true)
                     .addDependency(mongoClient)
-                    .addDependency(mongoDatabase)
+                    .addDependency(database)
+                    .addDependency(config)
                     .setProperty("mongodb.indexCreation", true)
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     .setProperty("mongodb.readConcern", "LOCAL")
                     .setProperty("mongodb.readPreference", MongoDBSyncConfiguration.ReadPreferenceLevel.SECONDARY)
-                    .setRelaxTargetSystemValidation(true)
                     .build()
                     .run();
         }
@@ -186,28 +188,28 @@ class MongoSyncDriverTest {
                     new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)))
             );
 
-            FlamingockFactory.getCommunityBuilder()
-                    .addDependency(mongoClient)
-                    .addDependency(mongoDatabase)
+            testKit.createBuilder()
                     .setRelaxTargetSystemValidation(true)
+                    .addDependency(mongoClient)
+                    .addDependency(database)
                     .build()
                     .run();
         }
 
-
         //Then
-        //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(3, auditLog.size());
-        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("create-client-collection"),
+                EXECUTED("create-client-collection"),
+
+                STARTED("insert-federico-document"),
+                EXECUTED("insert-federico-document"),
+
+                STARTED("insert-jorge-document"),
+                EXECUTED("insert-jorge-document")
+        );
 
         //Checking clients collection
-        Set<String> clients = mongoDatabase.getCollection(CLIENTS_COLLECTION)
+        Set<String> clients = database.getCollection(CLIENTS_COLLECTION)
                 .find()
                 .map(document -> document.getString("name"))
                 .into(new HashSet<>());
@@ -228,26 +230,31 @@ class MongoSyncDriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .addDependency(mongoClient)
-                        .addDependency(mongoDatabase)
+                testKit.createBuilder()
                         .setRelaxTargetSystemValidation(true)
+                        .addDependency(mongoClient)
+                        .addDependency(database)
                         .build()
                         .run();
             });
         }
 
         //Then
-        //Checking auditLog
-        List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(3, auditLog.size());
-        assertEquals("create-client-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
+
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("create-client-collection"),
+                EXECUTED("create-client-collection"),
+
+                STARTED("insert-federico-document"),
+                EXECUTED("insert-federico-document"),
+
+                STARTED("insert-jorge-document"),
+                EXECUTION_FAILED("insert-jorge-document"),
+                ROLLED_BACK("insert-jorge-document")
+        );
 
         //Checking clients collection
-        Set<String> clients = mongoDatabase.getCollection(CLIENTS_COLLECTION)
+        Set<String> clients = database.getCollection(CLIENTS_COLLECTION)
                 .find()
                 .map(document -> document.getString("name"))
                 .into(new HashSet<>());

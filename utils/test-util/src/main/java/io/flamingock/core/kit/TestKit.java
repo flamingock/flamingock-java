@@ -15,7 +15,9 @@
  */
 package io.flamingock.core.kit;
 
+import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.core.kit.lock.LockTestHelper;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
@@ -65,6 +67,19 @@ public interface TestKit {
      * @return lock helper backed by this kit's storage implementation
      */
     LockTestHelper getLockHelper();
+
+    /**
+     * Creates a generic TestKit with custom storage implementations and driver.
+     * This is the preferred method for creating TestKits with real databases.
+     * 
+     * @param auditStorage storage implementation for audit operations
+     * @param lockStorage storage implementation for lock operations  
+     * @param driver driver for the specific database/storage technology
+     * @return generic TestKit instance
+     */
+    static TestKit create(AuditStorage auditStorage, LockStorage lockStorage, LocalDriver driver) {
+        return new GenericTestKit(auditStorage, lockStorage, driver);
+    }
 
     default TestFlamingockBuilder createBuilderWithDriver(LocalDriver driver) {
         return new TestFlamingockBuilder(

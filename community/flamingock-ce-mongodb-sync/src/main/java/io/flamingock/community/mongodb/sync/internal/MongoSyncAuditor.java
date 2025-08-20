@@ -78,7 +78,7 @@ public class MongoSyncAuditor implements LocalAuditor {
         Bson filter = Filters.and(
                 Filters.eq(KEY_EXECUTION_ID, auditEntry.getExecutionId()),
                 Filters.eq(KEY_CHANGE_ID, auditEntry.getTaskId()),
-                Filters.eq(KEY_AUTHOR, auditEntry.getAuthor())
+                Filters.eq(KEY_STATE, auditEntry.getState().name())
         );
 
         Document entryDocument = mapper.toDocument(auditEntry).getDocument();

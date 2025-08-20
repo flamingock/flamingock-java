@@ -21,6 +21,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
+import io.flamingock.community.Flamingock;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditEntryField;
 import io.flamingock.internal.core.community.Constants;
 import org.bson.Document;
@@ -74,7 +76,7 @@ class MongoChangeTemplateTest {
     @DisplayName("WHEN mongodb template THEN runs fine IF Flamingock mongodb sync ce")
     void happyPath() {
 
-        io.flamingock.community.Flamingock.builder()
+        Flamingock.builder()
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setRelaxTargetSystemValidation(true)
@@ -86,17 +88,17 @@ class MongoChangeTemplateTest {
                 .find()
                 .into(new ArrayList<>());
 
-        assertEquals(2, auditLog.size());
-        Document createCollectionAudit = auditLog.get(0);
+        assertEquals(4, auditLog.size());
 
-        assertEquals("create-users-collection-with-index", createCollectionAudit.getString("changeId"));
-        assertEquals("EXECUTED", createCollectionAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
+        assertEquals("create-users-collection-with-index", auditLog.get(0).getString("changeId"));
+        assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(0).getString("state"));
+        assertEquals("create-users-collection-with-index", auditLog.get(1).getString("changeId"));
+        assertEquals(AuditEntry.Status.EXECUTED.name(), auditLog.get(1).getString("state"));
 
-        Document seedAudit = auditLog.get(1);
-        assertEquals("seed-users", seedAudit.getString("changeId"));
-        assertEquals("EXECUTED", seedAudit.getString("state"));
-        assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
+        assertEquals("seed-users", auditLog.get(2).getString("changeId"));
+        assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(2).getString("state"));
+        assertEquals("seed-users", auditLog.get(3).getString("changeId"));
+        assertEquals(AuditEntry.Status.EXECUTED.name(), auditLog.get(3).getString("state"));
 
         List<Document> users = mongoDatabase.getCollection("users")
                 .find()

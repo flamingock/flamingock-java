@@ -1,0 +1,76 @@
+/*
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.mongodb.kit;
+
+import io.flamingock.internal.common.mongodb.DocumentHelper;
+import org.bson.Document;
+
+/**
+ * Simple DocumentHelper implementation for MongoDB TestKit storage.
+ * Only depends on MongoDB driver and core Flamingock classes.
+ */
+public class SimpleMongoDocumentHelper implements DocumentHelper {
+
+    private final Document document;
+
+    public SimpleMongoDocumentHelper(Document document) {
+        this.document = document;
+    }
+
+    public Document getDocument() {
+        return document;
+    }
+
+    @Override
+    public DocumentHelper append(String key, Object value) {
+        document.append(key, value);
+        return this;
+    }
+
+    @Override
+    public Object get(String key) {
+        return document.get(key);
+    }
+
+    @Override
+    public String getString(String key) {
+        return document.getString(key);
+    }
+
+    @Override
+    public boolean containsKey(String key) {
+        return document.containsKey(key);
+    }
+
+    @Override
+    public Boolean getBoolean(String key) {
+        return document.getBoolean(key);
+    }
+
+    public boolean getBoolean(Object key, boolean defaultValue) {
+        return document.getBoolean(key, defaultValue);
+    }
+
+    @Override
+    public int size() {
+        return document.size();
+    }
+
+    @Override
+    public DocumentHelper getWithWrapper(String key) {
+        return new SimpleMongoDocumentHelper((Document) get(key));
+    }
+}

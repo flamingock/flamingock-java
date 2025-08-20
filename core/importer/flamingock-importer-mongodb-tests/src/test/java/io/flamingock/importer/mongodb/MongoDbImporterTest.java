@@ -19,18 +19,18 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.internal.common.core.audit.AuditEntryField;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.Runner;
-import io.flamingock.template.mongodb.MongoChangeTemplate;
+import io.flamingock.mongodb.kit.MongoSyncTestKit;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.audit.AuditTestHelper;
 import org.bson.Document;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MongoDBContainer;
@@ -43,7 +43,8 @@ import java.util.List;
 
 import static io.flamingock.api.StageType.LEGACY;
 import static io.flamingock.api.StageType.SYSTEM;
-import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @EnableFlamingock(
@@ -63,67 +64,72 @@ public class MongoDbImporterTest {
     public static final String MONGOCK_CHANGE_LOGS = "mongockChangeLogs";
 
     private static MongoClient mongoClient;
-    private static MongoDatabase mongoDatabase;
-    private MongoCollection<Document> changeLogCollection;
+    private static MongoDatabase database;
     private MongoDbMongockTestHelper mongockTestHelper;
+    private TestKit testKit;
+    private AuditTestHelper auditHelper;
 
 
-    @BeforeAll
-    static void beforeAll() {
+    @BeforeEach
+    void setUp() {
         mongoClient = MongoClients.create(MongoClientSettings
                 .builder()
                 .applyConnectionString(new ConnectionString(mongoDBContainer.getConnectionString()))
                 .build());
-        mongoDatabase = mongoClient.getDatabase(DB_NAME);
-    }
+        database = mongoClient.getDatabase(DB_NAME);
 
-    @BeforeEach
-    void setUp() {
-        System.out.println("Setting up test environment...");
-        mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
-        mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
-        mongoDatabase.getCollection(MONGOCK_CHANGE_LOGS).drop();
-
-        changeLogCollection = mongoDatabase.getCollection(MONGOCK_CHANGE_LOGS);
-        mongockTestHelper = new MongoDbMongockTestHelper(changeLogCollection);
+        mongockTestHelper = new MongoDbMongockTestHelper(database.getCollection(MONGOCK_CHANGE_LOGS));
         
-        // Print available templates for debugging
-        System.out.println("MongoDbImporterChangeTemplate class: " + 
-            io.flamingock.importer.mongodb.MongoDbImporterChangeTemplate.class.getName());
+        // Initialize TestKit for unified testing
+        testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
+        auditHelper = testKit.getAuditHelper();
+
     }
-    
+
+    @AfterEach
+    void tearDown() {
+        database.drop(); // Clean between tests
+        mongoClient.close();
+    }
+
     @Test
     void testImportMongockChangeLogs() {
         //adds the Mongock
         mongockTestHelper.setupBasicScenario();
 
-        Runner flamingock = io.flamingock.community.Flamingock.builder()
-                .addDependency(mongoClient)
-                .addDependency(mongoClient.getDatabase(DB_NAME))
+        Runner flamingock = testKit.createBuilder()
                 .setRelaxTargetSystemValidation(true)
+                .addDependency(mongoClient)
+                .addDependency(database)
                 .build();
 
         flamingock.run();
 
-        List<Document> auditLog = mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME)
-                .find()
-                .into(new ArrayList<>());
+        // Verify audit sequence: 11 total entries as shown in actual execution
+        // Legacy imports only show EXECUTED (imported from Mongock), new changes show STARTED+EXECUTED
+        auditHelper.verifyAuditSequenceStrict(
+            // Legacy imports from Mongock (EXECUTED only - no STARTED for imported changes)
+            EXECUTED("system-change-00001_before"),
+            EXECUTED("system-change-00001"),
+            EXECUTED("client-initializer_before"),
+            EXECUTED("client-initializer"),
+            EXECUTED("client-updater"),
+            
+            // System stage - actual system importer change
+            STARTED("migration-from-mongock"),
+            EXECUTED("migration-from-mongock"),
+            
+            // Application stage - new changes created by templates
+            STARTED("create-users-collection-with-index"),
+            EXECUTED("create-users-collection-with-index"),
+            STARTED("seed-users"),
+            EXECUTED("seed-users")
+        );
+        
 
-        assertEquals(8, auditLog.size());
-        Document createCollectionAudit = auditLog.get(6);
 
-        //TODO CHECK audits from Mongock
-
-        Assertions.assertEquals("create-users-collection-with-index", createCollectionAudit.getString("changeId"));
-        Assertions.assertEquals("EXECUTED", createCollectionAudit.getString("state"));
-        Assertions.assertEquals(MongoChangeTemplate.class.getName(), createCollectionAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
-
-        Document seedAudit = auditLog.get(7);
-        Assertions.assertEquals("seed-users", seedAudit.getString("changeId"));
-        Assertions.assertEquals("EXECUTED", seedAudit.getString("state"));
-        Assertions.assertEquals(MongoChangeTemplate.class.getName(), seedAudit.getString(AuditEntryField.KEY_CHANGEUNIT_CLASS));
-
-        List<Document> users = mongoDatabase.getCollection("users")
+        // Validate actual change
+        List<Document> users = database.getCollection("users")
                 .find()
                 .into(new ArrayList<>());
 
@@ -142,10 +148,10 @@ public class MongoDbImporterTest {
     void failIfEmptyOrigin() {
         //adds the Mongock
 
-        Runner flamingock = io.flamingock.community.Flamingock.builder()
-                .addDependency(mongoClient)
-                .addDependency(mongoClient.getDatabase(DB_NAME))
+        Runner flamingock = testKit.createBuilder()
                 .setRelaxTargetSystemValidation(true)
+                .addDependency(mongoClient)
+                .addDependency(database)
                 .build();
 
         //TODO should check error message, but currently it return the summary text

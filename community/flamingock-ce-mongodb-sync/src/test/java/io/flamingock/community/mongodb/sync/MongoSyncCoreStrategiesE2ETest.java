@@ -24,7 +24,10 @@ import io.flamingock.community.mongodb.sync.changes._001_create_client_collectio
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_non_transactional;
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_rollback;
-import io.flamingock.community.mongodb.sync.kit.MongoSyncTestKit;
+import io.flamingock.core.kit.audit.AuditExpectation;
+import io.flamingock.mongodb.kit.MongoSyncTestKit;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -32,7 +35,6 @@ import io.flamingock.internal.core.runner.PipelineExecutionException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -45,6 +47,11 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.Collections;
 import java.util.List;
 
+import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditExpectation.ROLLBACK_FAILED;
+import static io.flamingock.core.kit.audit.AuditExpectation.ROLLED_BACK;
+import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -57,7 +64,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * design works identically across storage implementations.</p>
  */
 @Testcontainers
-@Disabled("Until we add the STARTED state")
 class MongoSyncCoreStrategiesE2ETest {
 
     @Container
@@ -88,7 +94,7 @@ class MongoSyncCoreStrategiesE2ETest {
     @DisplayName("Should execute non-transactional change using NonTx strategy with complete audit flow in MongoDB")
     void testNonTransactionalChangeExecution() {
         // Given - Create MongoDB test kit with real database storage
-        MongoSyncTestKit testKit = MongoSyncTestKit.create(mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -102,30 +108,26 @@ class MongoSyncCoreStrategiesE2ETest {
             // When - Execute using MongoDB-backed test builder
             testKit.createBuilder()
                     .setRelaxTargetSystemValidation(true)
+                    .addDependency(mongoClient)
+                    .addDependency(database)
                     .build()
                     .run();
         }
 
         // Then - Verify complete audit flow using MongoDB storage
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(4, auditEntries.size(), "Expected 2 EXECUTED audit entries in MongoDB");
-
-        // Verify both changes executed successfully with MongoDB persistence
-        auditHelper.verifySuccessfulChangeExecution("create-client-collection");
-        auditHelper.verifySuccessfulChangeExecution("insert-federico-document");
-
-        // Verify audit counts using MongoDB storage
-        assertEquals(0, auditHelper.getStartedAuditCount()); // STARTED entries not written by default
-        assertEquals(2, auditHelper.getExecutedAuditCount());
-        assertEquals(0, auditHelper.getFailedAuditCount());
-        assertEquals(0, auditHelper.getRolledBackAuditCount());
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("create-client-collection"),
+                EXECUTED("create-client-collection"),
+                STARTED("insert-federico-document"),
+                EXECUTED("insert-federico-document")
+        );
     }
 
     @Test
     @DisplayName("Should execute transactional change using SimpleTx/SharedTx strategy with complete audit flow in MongoDB")
     void testTransactionalChangeExecution() {
         // Given - Create MongoDB test kit with real database storage
-        MongoSyncTestKit testKit = MongoSyncTestKit.create(mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -139,28 +141,26 @@ class MongoSyncCoreStrategiesE2ETest {
             // When - Execute transactional change with MongoDB
             testKit.createBuilder()
                     .setRelaxTargetSystemValidation(true)
+                    .addDependency(mongoClient)
+                    .addDependency(database)
                     .build()
                     .run();
         }
 
         // Then - Verify complete audit flow for transactional change in MongoDB
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(4, auditEntries.size(), "Expected 2 changes × 2 audit entries each = 4 total in MongoDB");
-
-        auditHelper.verifySuccessfulChangeExecution("create-client-collection");
-        auditHelper.verifySuccessfulChangeExecution("insert-federico-document");
-
-        assertEquals(2, auditHelper.getStartedAuditCount());
-        assertEquals(2, auditHelper.getExecutedAuditCount());
-        assertEquals(0, auditHelper.getFailedAuditCount());
-        assertEquals(0, auditHelper.getRolledBackAuditCount());
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("create-client-collection"),
+                EXECUTED("create-client-collection"),
+                STARTED("insert-federico-document"),
+                EXECUTED("insert-federico-document")
+        );
     }
 
     @Test
     @DisplayName("Should execute multiple changes with correct audit sequence in MongoDB")
     void testMultipleChangesExecution() {
         // Given - Create MongoDB test kit with real database storage
-        MongoSyncTestKit testKit = MongoSyncTestKit.create(mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -174,29 +174,27 @@ class MongoSyncCoreStrategiesE2ETest {
             // When - Execute multiple changes with MongoDB persistence
             testKit.createBuilder()
                     .setRelaxTargetSystemValidation(true)
+                    .addDependency(mongoClient)
+                    .addDependency(database)
                     .build()
                     .run();
         }
 
-        // Then - Verify multiple changes executed successfully with MongoDB storage
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(4, auditEntries.size(), "Expected 2 changes × 2 audit entries each = 4 total in MongoDB");
+        // Then - Verify multiple changes executed successfully with MongoDB storage using new concise API
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("create-client-collection"),
+                EXECUTED("create-client-collection"),
+                STARTED("insert-federico-document"),
+                EXECUTED("insert-federico-document")
+        );
 
-        // Verify each change has complete audit sequence in MongoDB
-        auditHelper.verifySuccessfulChangeExecution("create-client-collection");
-        auditHelper.verifySuccessfulChangeExecution("insert-federico-document");
-
-        // Verify total counts with MongoDB persistence
-        assertEquals(2, auditHelper.getStartedAuditCount());
-        assertEquals(2, auditHelper.getExecutedAuditCount());
-        assertEquals(0, auditHelper.getFailedAuditCount());
     }
 
     @Test
     @DisplayName("Should handle failing transactional change with proper audit and rollback in MongoDB")
     void testFailingTransactionalChangeWithRollback() {
         // Given - Create MongoDB test kit with real database storage
-        MongoSyncTestKit testKit = MongoSyncTestKit.create(mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -211,43 +209,29 @@ class MongoSyncCoreStrategiesE2ETest {
             assertThrows(PipelineExecutionException.class, () -> {
                 testKit.createBuilder()
                         .setRelaxTargetSystemValidation(true)
+                        .addDependency(mongoClient)
+                        .addDependency(database)
                         .build()
                         .run();
             });
         }
 
         // Then - Verify failure audit sequence using MongoDB storage
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
 
-        // Should have: collection creation (STARTED + EXECUTED) + failed insert (STARTED + EXECUTION_FAILED + ROLLED_BACK) = 5 total
-        assertEquals(5, auditEntries.size());
-
-        // First change (collection creation) should succeed
-        assertEquals("create-client-collection", auditEntries.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.STARTED, auditEntries.get(0).getState());
-        assertEquals("create-client-collection", auditEntries.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditEntries.get(1).getState());
-
-        // Second change (jorge insert) should fail and rollback
-        assertEquals("insert-jorge-document", auditEntries.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.STARTED, auditEntries.get(2).getState());
-        assertEquals("insert-jorge-document", auditEntries.get(3).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditEntries.get(3).getState());
-        assertEquals("insert-jorge-document", auditEntries.get(4).getTaskId());
-        assertEquals(AuditEntry.Status.ROLLED_BACK, auditEntries.get(4).getState());
-
-        // Verify audit counts with MongoDB persistence
-        assertEquals(2, auditHelper.getStartedAuditCount());
-        assertEquals(1, auditHelper.getExecutedAuditCount());
-        assertEquals(1, auditHelper.getFailedAuditCount());
-        assertEquals(1, auditHelper.getRolledBackAuditCount());
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("create-client-collection"),
+                EXECUTED("create-client-collection"),
+                STARTED("insert-jorge-document"),
+                EXECUTION_FAILED("insert-jorge-document"),
+                ROLLED_BACK("insert-jorge-document")
+        );
     }
 
     @Test
     @DisplayName("Should handle already-executed changes correctly on second run with MongoDB persistence")
     void testAlreadyExecutedChangesSkipping() {
         // Given - Create MongoDB test kit with persistent storage
-        MongoSyncTestKit testKit = MongoSyncTestKit.create(mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -260,6 +244,8 @@ class MongoSyncCoreStrategiesE2ETest {
             // First execution with MongoDB persistence
             testKit.createBuilder()
                     .setRelaxTargetSystemValidation(true)
+                    .addDependency(mongoClient)
+                    .addDependency(database)
                     .build()
                     .run();
 
@@ -268,19 +254,20 @@ class MongoSyncCoreStrategiesE2ETest {
 
             // Second execution - create new kit using SAME MongoDB database to simulate persistence
             // The audit entries should persist across kit instances when using same database
-            MongoSyncTestKit secondRunKit = MongoSyncTestKit.create(mongoClient, database);
+            TestKit secondRunKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
 
             secondRunKit.createBuilder()
                     .setRelaxTargetSystemValidation(true)
+                    .addDependency(mongoClient)
+                    .addDependency(database)
                     .build()
                     .run();
         }
 
         // Then - Should still have only original 2 audit entries in MongoDB (no additional executions)
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(2, auditEntries.size(), "Should not have additional audit entries for already-executed change in MongoDB");
-
-        // Original change should still show as successfully executed in MongoDB
-        auditHelper.verifySuccessfulChangeExecution("_001_create_client_collection_happy");
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("create-client-collection"),
+                EXECUTED("create-client-collection")
+        );
     }
 }

@@ -26,7 +26,7 @@ import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContex
 public interface LocalAuditor extends ExecutionAuditWriter, AuditReader {
 
     default Result writeStartExecution(StartExecutionAuditContextBundle auditContextBundle) {
-        return Result.OK();
+        return writeEntry(auditContextBundle.toAuditEntry());
     }
 
     default Result writeExecution(ExecutionAuditContextBundle auditContextBundle) {

@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.mongodb.sync.kit;
+package io.flamingock.mongodb.kit;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -31,8 +30,8 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE
 
 /**
  * MongoDB implementation of AuditStorage for real database testing.
- * Stores audit entries in a MongoDB collection and provides 
- * operations for testing audit behavior with actual MongoDB storage.
+ * Only depends on MongoDB client/database and core Flamingock classes.
+ * Does not depend on MongoDB-specific Flamingock components like MongoSyncTargetSystem.
  */
 public class MongoSyncAuditStorage implements AuditStorage {
     
@@ -40,18 +39,18 @@ public class MongoSyncAuditStorage implements AuditStorage {
     
     private final MongoDatabase database;
     private final MongoCollection<Document> auditCollection;
-    private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper;
+    private final MongoDBAuditMapper<SimpleMongoDocumentHelper> mapper;
     
     public MongoSyncAuditStorage(MongoDatabase database) {
         this.database = database;
         this.auditCollection = database.getCollection(AUDIT_COLLECTION_NAME);
-        this.mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
+        this.mapper = new MongoDBAuditMapper<>(() -> new SimpleMongoDocumentHelper(new Document()));
     }
     
     @Override
     public void addAuditEntry(AuditEntry auditEntry) {
         // Use the existing mapper to convert AuditEntry to MongoDB document
-        MongoSyncDocumentHelper documentHelper = mapper.toDocument(auditEntry);
+        SimpleMongoDocumentHelper documentHelper = mapper.toDocument(auditEntry);
         auditCollection.insertOne(documentHelper.getDocument());
     }
     
@@ -59,7 +58,7 @@ public class MongoSyncAuditStorage implements AuditStorage {
     public List<AuditEntry> getAuditEntries() {
         List<AuditEntry> entries = new ArrayList<>();
         for (Document doc : auditCollection.find()) {
-            entries.add(mapper.fromDocument(new MongoSyncDocumentHelper(doc)));
+            entries.add(mapper.fromDocument(new SimpleMongoDocumentHelper(doc)));
         }
         return entries;
     }
@@ -67,7 +66,7 @@ public class MongoSyncAuditStorage implements AuditStorage {
     @Override
     public List<AuditEntry> getAuditEntriesForChange(String changeId) {
         return auditCollection.find(new Document(KEY_CHANGE_ID, changeId))
-                .map(doc -> mapper.fromDocument(new MongoSyncDocumentHelper(doc)))
+                .map(doc -> mapper.fromDocument(new SimpleMongoDocumentHelper(doc)))
                 .into(new ArrayList<>());
     }
     

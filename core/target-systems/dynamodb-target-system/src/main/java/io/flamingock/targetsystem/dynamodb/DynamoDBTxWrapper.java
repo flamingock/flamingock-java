@@ -97,7 +97,7 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
                                formatDuration(transactionDuration), ex.getMessage());
                     
                     throw new DatabaseTransactionException(
-                        "DynamoDB transaction failed during commit",
+                        ex.getMessage(),
                         DatabaseTransactionException.TransactionState.FAILED,
                         null,
                         null,

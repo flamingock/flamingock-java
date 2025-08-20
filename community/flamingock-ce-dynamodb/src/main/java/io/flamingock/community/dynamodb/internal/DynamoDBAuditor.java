@@ -74,6 +74,7 @@ public class DynamoDBAuditor implements LocalAuditor {
                 .orElse(null);
 
         if (transactionBuilder != null) {
+            logger.debug("Adding PUT item to transaction for key {}", entity.getPartitionKey());
             transactionBuilder.addPutItem(table, entity);
         } else {
             try {

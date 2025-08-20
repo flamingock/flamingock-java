@@ -61,7 +61,6 @@ public class DynamoDBEngine extends AbstractLocalEngine {
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
         auditor = new DynamoDBAuditor(targetSystem);
         auditor.initialize(
                 targetSystem.isAutoCreate(),

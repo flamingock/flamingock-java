@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.mongodb.sync.kit;
+package io.flamingock.mongodb.kit;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -29,8 +29,8 @@ import java.util.Map;
 
 /**
  * MongoDB implementation of LockStorage for real database testing.
- * Stores lock acquisitions in a MongoDB collection and provides
- * operations for testing lock behavior with actual MongoDB storage.
+ * Only depends on MongoDB client/database and core Flamingock classes.
+ * Does not depend on MongoDB-specific Flamingock components like MongoSyncTargetSystem.
  */
 public class MongoSyncLockStorage implements LockStorage {
     
