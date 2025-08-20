@@ -35,14 +35,7 @@ public class CoreConfiguration implements CoreConfigurable {
      * If false, will disable Mongock. Default true
      */
     private boolean enabled = true;
-    /**
-     * System version to start with. Default '0'
-     */
-    private String startSystemVersion = "0";
-    /**
-     * System version to end with. Default Integer.MAX_VALUE
-     */
-    private String endSystemVersion = String.valueOf(Integer.MAX_VALUE);
+    
     /**
      * Service identifier.
      */

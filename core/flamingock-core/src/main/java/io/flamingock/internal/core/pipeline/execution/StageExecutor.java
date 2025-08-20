@@ -42,7 +42,7 @@ public class StageExecutor {
     private final ContextResolver baseDependencyContext;
     private final Set<Class<?>> nonGuardedTypes;
     private final TargetSystemManager targetSystemManager;
-    protected final TransactionWrapper auditStoreTxWrapper;
+    protected final TransactionWrapper auditStoreTxWrapper2;
     private final boolean relaxTargetSystemValidation;
 
     public StageExecutor(ContextResolver dependencyContext,
