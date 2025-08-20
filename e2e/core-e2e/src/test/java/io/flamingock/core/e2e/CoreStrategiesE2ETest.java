@@ -28,6 +28,7 @@ import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditExpectation;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,8 @@ import org.mockito.Mockito;
 import java.util.Collections;
 import java.util.List;
 
+import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -65,17 +68,14 @@ class CoreStrategiesE2ETest {
         }
 
         // Then - Verify complete audit flow using audit-specific helper
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(2, auditEntries.size(), "Expected STARTED + EXECUTED audit entries");
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("test1-non-tx-change"),
+                EXECUTED("test1-non-tx-change")
+        );
 
-        // Verify STARTED → EXECUTED sequence
-        auditHelper.verifySuccessfulChangeExecution("test1-non-tx-change");
-
-        // Verify audit counts using domain-specific methods
-        assertEquals(1, auditHelper.getStartedAuditCount());
-        assertEquals(1, auditHelper.getExecutedAuditCount());
-        assertEquals(0, auditHelper.getFailedAuditCount());
-        assertEquals(0, auditHelper.getRolledBackAuditCount());
+        List<AuditEntry> auditEntriesSorted = auditHelper.getAuditEntriesSorted();
+        AuditEntry auditEntry = auditEntriesSorted.get(0);
+        assertEquals(AuditTxType.NON_TX, auditEntry.getTxType());
     }
     
     @Test
@@ -100,15 +100,11 @@ class CoreStrategiesE2ETest {
         }
         
         // Then - Verify complete audit flow for transactional change
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(2, auditEntries.size(), "Expected STARTED + EXECUTED audit entries");
-        
-        auditHelper.verifySuccessfulChangeExecution("test2-tx-change");
-        
-        assertEquals(1, auditHelper.getStartedAuditCount());
-        assertEquals(1, auditHelper.getExecutedAuditCount());
-        assertEquals(0, auditHelper.getFailedAuditCount());
-        assertEquals(0, auditHelper.getRolledBackAuditCount());
+
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("test2-tx-change"),
+                EXECUTED("test2-tx-change")
+        );
     }
     
     @Test
@@ -170,12 +166,6 @@ class CoreStrategiesE2ETest {
                 AuditExpectation.EXECUTION_FAILED("test4-failing-tx-change"),
                 AuditExpectation.ROLLED_BACK("test4-failing-tx-change")
         );
-        
-        // Verify audit counts
-        assertEquals(1, auditHelper.getStartedAuditCount());
-        assertEquals(0, auditHelper.getExecutedAuditCount());
-        assertEquals(1, auditHelper.getFailedAuditCount());
-        assertEquals(1, auditHelper.getRolledBackAuditCount());
     }
     
     @Test
@@ -199,7 +189,11 @@ class CoreStrategiesE2ETest {
                 .run();
                 
             // Verify first execution
-            assertEquals(2, auditHelper.getAuditEntriesSorted().size());
+            auditHelper.verifyAuditSequenceStrict(
+                    STARTED("test5-second-run-change"),
+                    EXECUTED("test5-second-run-change")
+            );
+
             
             // Second execution - create new kit using SAME storage to simulate persistence
             // but avoid potential builder state issues
@@ -215,10 +209,9 @@ class CoreStrategiesE2ETest {
         }
         
         // Then - Should still have only original 2 audit entries (no additional executions)
-        List<AuditEntry> auditEntries = auditHelper.getAuditEntriesSorted();
-        assertEquals(2, auditEntries.size(), "Should not have additional audit entries for already-executed change");
-        
-        // Original change should still show as successfully executed
-        auditHelper.verifySuccessfulChangeExecution("test5-second-run-change");
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("test5-second-run-change"),
+                EXECUTED("test5-second-run-change")
+        );
     }
 }

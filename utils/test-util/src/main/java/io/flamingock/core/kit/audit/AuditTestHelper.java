@@ -138,30 +138,6 @@ public class AuditTestHelper {
         return auditStorage.getAuditEntries().size() == expectedCount;
     }
 
-    /**
-     * Verifies that the audit entries match the expected sequence exactly.
-     * 
-     * <p>This method performs strict verification of audit entries in chronological order:
-     * <ul>
-     * <li>The number of actual entries must match the expected count exactly</li>
-     * <li>Each entry's changeId and state must match the expected values</li>
-     * <li>The order must match the chronological sequence</li>
-     * </ul>
-     * 
-     * <p><strong>Usage:</strong></p>
-     * <pre>{@code
-     * auditHelper.verifyAuditSequence(
-     *     AuditExpectation.started("change-1"),
-     *     AuditExpectation.executed("change-1"),
-     *     AuditExpectation.started("change-2"),
-     *     AuditExpectation.failed("change-2"),
-     *     AuditExpectation.rolledBack("change-2")
-     * );
-     * }</pre>
-     * 
-     * @param expectedAudits the expected audit sequence
-     * @throws AssertionError if the actual audit sequence doesn't match expectations
-     */
     public void verifyAuditSequenceStrict(AuditExpectation... expectedAudits) {
         List<AuditEntry> actualEntries = getAuditEntriesSorted();
         
