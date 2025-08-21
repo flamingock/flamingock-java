@@ -57,6 +57,7 @@ public class AuditEntry {
     private final String errorTrace;
     private final ExecutionType type;
     private final AuditTxType txType;
+    private final String targetSystemId;
 
     public AuditEntry(String executionId,
                       String stageId,
@@ -72,7 +73,8 @@ public class AuditEntry {
                       Object metadata,
                       boolean systemChange,
                       String errorTrace,
-                      AuditTxType txType) {
+                      AuditTxType txType,
+                      String targetSystemId) {
         this.executionId = executionId;
         this.stageId = stageId;
         this.taskId = taskId;
@@ -87,12 +89,37 @@ public class AuditEntry {
         this.errorTrace = errorTrace;
         this.type = type;
         this.txType = txType != null ? txType : AuditTxType.NON_TX;
+        this.targetSystemId = targetSystemId;
         this.systemChange = systemChange;
     }
 
     /**
-     * Backward compatible constructor without OperationType.
-     * @deprecated Use constructor with OperationType parameter instead.
+     * Backward compatible constructor without targetSystemId.
+     * @deprecated Use constructor with targetSystemId parameter instead.
+     */
+    @Deprecated
+    public AuditEntry(String executionId,
+                      String stageId,
+                      String taskId,
+                      String author,
+                      LocalDateTime timestamp,
+                      Status state,
+                      ExecutionType type,
+                      String className,
+                      String methodName,
+                      long executionMillis,
+                      String executionHostname,
+                      Object metadata,
+                      boolean systemChange,
+                      String errorTrace,
+                      AuditTxType txType) {
+        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null);
+    }
+
+    /**
+     * Backward compatible constructor without OperationType and targetSystemId.
+     * @deprecated Use constructor with OperationType and targetSystemId parameters instead.
      */
     @Deprecated
     public AuditEntry(String executionId,
@@ -110,7 +137,7 @@ public class AuditEntry {
                       boolean systemChange,
                       String errorTrace) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, null);
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null);
     }
 
     public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
@@ -184,6 +211,10 @@ public class AuditEntry {
         return txType;
     }
 
+    public String getTargetSystemId() {
+        return targetSystemId;
+    }
+
 
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
         if(this.getState().equals(newEntry.getState())) {
@@ -213,7 +244,8 @@ public class AuditEntry {
                 getMetadata(),
                 getSystemChange(),
                 getErrorTrace(),
-                getTxType()
+                getTxType(),
+                getTargetSystemId()
         );
     }
 

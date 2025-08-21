@@ -21,7 +21,7 @@ import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 public class RollbackAuditContextBundle extends AuditContextBundle {
 
-    public RollbackAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext, AuditTxType auditTxType) {
-        super(Operation.ROLLBACK, loadedTask, executionContext, runtimeContext, auditTxType);
+    public RollbackAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext, AuditTxType auditTxType, String targetSystemId) {
+        super(Operation.ROLLBACK, loadedTask, executionContext, runtimeContext, auditTxType, targetSystemId);
     }
 }

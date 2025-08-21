@@ -21,7 +21,7 @@ import io.flamingock.internal.common.core.task.TaskDescriptor;
 
 public class StartExecutionAuditContextBundle extends AuditContextBundle {
 
-    public StartExecutionAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext, AuditTxType auditTxType) {
-        super(Operation.START_EXECUTION, loadedTask, executionContext, runtimeContext, auditTxType);
+    public StartExecutionAuditContextBundle(TaskDescriptor loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext, AuditTxType auditTxType, String targetSystemId) {
+        super(Operation.START_EXECUTION, loadedTask, executionContext, runtimeContext, auditTxType, targetSystemId);
     }
 }

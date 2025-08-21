@@ -15,6 +15,7 @@
  */
 package io.flamingock.community.dynamodb.internal.entities;
 
+import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.targets.OperationType;
@@ -30,7 +31,7 @@ class AuditEntryEntityTest {
     @Test
     void shouldConvertToAndFromAuditEntryWithTxType() {
         // Given
-        AuditEntry original = createTestAuditEntry(AuditTxType.TX_SEPARATE_NO_MARKER);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SEPARATE_NO_MARKER);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);
@@ -47,7 +48,7 @@ class AuditEntryEntityTest {
     @Test
     void shouldReturnNonTxWhenNull() {
         // Given
-        AuditEntry original = createTestAuditEntry(null);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);
@@ -85,7 +86,7 @@ class AuditEntryEntityTest {
     void shouldHandleAllTxTypes() {
         for (AuditTxType txType : AuditTxType.values()) {
             // Given
-            AuditEntry original = createTestAuditEntry(txType);
+            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, txType);
 
             // When
             AuditEntryEntity entity = new AuditEntryEntity(original);
@@ -97,23 +98,34 @@ class AuditEntryEntityTest {
         }
     }
 
-    private AuditEntry createTestAuditEntry(AuditTxType txType) {
-        return new AuditEntry(
-                "test-execution",
-                "test-stage", 
-                "test-task",
-                "test-author",
-                LocalDateTime.now(),
-                AuditEntry.Status.EXECUTED,
-                AuditEntry.ExecutionType.EXECUTION,
-                "TestClass",
-                "testMethod",
-                100L,
-                "localhost",
-                new HashMap<>(),
-                false,
-                null,
-                txType
-        );
+    @Test
+    void shouldConvertToAndFromAuditEntryWithTargetSystemId() {
+        // Given
+        String expectedTargetSystemId = "custom-target-system";
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId);
+
+        // When
+        AuditEntryEntity entity = new AuditEntryEntity(original);
+        AuditEntry converted = entity.toAuditEntry();
+
+        // Then
+        assertEquals(expectedTargetSystemId, converted.getTargetSystemId());
+        assertEquals(original.getExecutionId(), converted.getExecutionId());
+        assertEquals(original.getTaskId(), converted.getTaskId());
+        assertEquals(original.getAuthor(), converted.getAuthor());
+        assertEquals(original.getState(), converted.getState());
+    }
+
+    @Test
+    void shouldHandleNullTargetSystemId() {
+        // Given
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null);
+
+        // When
+        AuditEntryEntity entity = new AuditEntryEntity(original);
+        AuditEntry converted = entity.toAuditEntry();
+
+        // Then
+        assertNull(converted.getTargetSystemId());
     }
 }

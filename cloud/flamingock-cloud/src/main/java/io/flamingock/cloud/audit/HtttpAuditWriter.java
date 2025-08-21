@@ -103,7 +103,8 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange(),
                 auditEntry.getErrorTrace(),
-                auditEntry.getTxType()
+                auditEntry.getTxType(),
+                auditEntry.getTargetSystemId()
         );
     }
 

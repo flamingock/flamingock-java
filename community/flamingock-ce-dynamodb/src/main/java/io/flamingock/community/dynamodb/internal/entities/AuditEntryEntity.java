@@ -46,6 +46,7 @@ public class AuditEntryEntity {
     private Object errorTrace;
     private AuditEntry.ExecutionType type;
     private AuditTxType txType;
+    private String targetSystemId;
 
     public AuditEntryEntity(AuditEntry auditEntry) {
         this.partitionKey = partitionKey(auditEntry.getExecutionId(), auditEntry.getTaskId(), auditEntry.getState());
@@ -63,6 +64,7 @@ public class AuditEntryEntity {
         this.errorTrace = auditEntry.getErrorTrace();
         this.type = auditEntry.getType();
         this.txType = auditEntry.getTxType();
+        this.targetSystemId = auditEntry.getTargetSystemId();
         this.systemChange = auditEntry.getSystemChange();
     }
 
@@ -218,6 +220,15 @@ public class AuditEntryEntity {
         this.txType = AuditTxType.fromString(txType);
     }
 
+    @DynamoDbAttribute(AuditEntryField.KEY_TARGET_SYSTEM_ID)
+    public String getTargetSystemId() {
+        return targetSystemId;
+    }
+
+    public void setTargetSystemId(String targetSystemId) {
+        this.targetSystemId = targetSystemId;
+    }
+
     public AuditEntry toAuditEntry() {
         return new AuditEntry(
                 executionId,
@@ -234,7 +245,8 @@ public class AuditEntryEntity {
                 metadata,
                 systemChange,
                 Objects.toString(errorTrace, ""),
-                txType
+                txType,
+                targetSystemId
         );
     }
 }

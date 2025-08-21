@@ -20,17 +20,16 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
+import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class HtttpAuditWriterTest {
+class HttpAuditWriterMapperTest {
 
     @Test
     void shouldIncludeTxTypeInRequest() {
         // Given
-        AuditEntry auditEntry = createTestAuditEntry(AuditTxType.TX_SHARED);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -47,7 +46,8 @@ class HtttpAuditWriterTest {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange(),
                 auditEntry.getErrorTrace(),
-                auditEntry.getTxType()
+                auditEntry.getTxType(),
+                auditEntry.getTargetSystemId()
         );
 
         // Then
@@ -57,7 +57,7 @@ class HtttpAuditWriterTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry auditEntry = createTestAuditEntry(null);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -74,31 +74,11 @@ class HtttpAuditWriterTest {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange(),
                 auditEntry.getErrorTrace(),
-                auditEntry.getTxType()
+                auditEntry.getTxType(),
+                auditEntry.getTargetSystemId()
         );
 
         // Then
         assertEquals(AuditTxType.NON_TX, request.getTxType());
-    }
-
-
-    private AuditEntry createTestAuditEntry(AuditTxType txType) {
-        return new AuditEntry(
-                "test-execution",
-                "test-stage", 
-                "test-task",
-                "test-author",
-                LocalDateTime.now(),
-                AuditEntry.Status.EXECUTED,
-                AuditEntry.ExecutionType.EXECUTION,
-                "TestClass",
-                "testMethod",
-                100L,
-                "localhost",
-                new HashMap<>(),
-                false,
-                null,
-                txType
-        );
     }
 }

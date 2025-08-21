@@ -124,7 +124,7 @@ public class ChangeProcessStrategyFactory {
 
         AuditTxType auditTxType = getAuditTxStrategy(changeUnit, targetSystemOps);
 
-        AuditStoreStepOperations auditStoreOps = new AuditStoreStepOperations(auditWriter, auditTxType);
+        AuditStoreStepOperations auditStoreOps = new AuditStoreStepOperations(auditWriter, auditTxType, targetSystemOps.getId());
 
         return getStrategy(
                 changeUnit,

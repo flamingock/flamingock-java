@@ -51,6 +51,8 @@ public class AuditEntryRequest {
 
     private final AuditTxType txType;
 
+    private final String targetSystemId;
+
     protected Boolean systemChange;//TODO not in server
 
     public AuditEntryRequest(String stageId,
@@ -66,7 +68,8 @@ public class AuditEntryRequest {
                              Object metadata,
                              boolean systemChange,
                              String errorTrace,
-                             AuditTxType txType) {
+                             AuditTxType txType,
+                             String targetSystemId) {
         this.stageId = stageId;
         this.taskId = taskId;
         this.author = author;
@@ -80,6 +83,7 @@ public class AuditEntryRequest {
         this.errorTrace = errorTrace;
         this.type = type;
         this.txType = txType;
+        this.targetSystemId = targetSystemId;
 
         this.systemChange = systemChange;
     }
@@ -138,6 +142,10 @@ public class AuditEntryRequest {
 
     public AuditTxType getTxType() {
         return txType;
+    }
+
+    public String getTargetSystemId() {
+        return targetSystemId;
     }
 
 

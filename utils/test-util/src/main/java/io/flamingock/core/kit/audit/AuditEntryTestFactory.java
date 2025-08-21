@@ -70,7 +70,8 @@ public class AuditEntryTestFactory {
             null,                         // metadata
             false,                        // systemChange
             null,                         // errorTrace
-            txType                        // txType
+            txType,                       // txType
+            "test-target-system"          // targetSystemId
         );
     }
 
@@ -114,5 +115,39 @@ public class AuditEntryTestFactory {
      */
     public static AuditEntry createSeparateTxWithMarkerTestAuditEntry(String changeId, AuditEntry.Status status) {
         return createTestAuditEntry(changeId, status, AuditTxType.TX_SEPARATE_WITH_MARKER);
+    }
+
+    /**
+     * Creates a test audit entry with specific state, transaction type, and target system ID.
+     * 
+     * <p>This method provides full control over all key parameters including the
+     * target system ID, useful for testing scenarios where specific target systems
+     * need to be verified in audit logs.</p>
+     * 
+     * @param changeId the change ID for the audit entry (typically the @ChangeUnit id)
+     * @param status the audit status (STARTED, EXECUTED, EXECUTION_FAILED, etc.)
+     * @param txType the transaction type (NON_TX, TX_SHARED, etc.)
+     * @param targetSystemId the target system identifier
+     * @return a properly configured AuditEntry for testing with specified target system
+     */
+    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txType, String targetSystemId) {
+        return new AuditEntry(
+            UUID.randomUUID().toString(),  // executionId
+            "test-stage",                  // stageId
+            changeId,                      // taskId
+            "test-author",                 // author
+            LocalDateTime.now(),           // timestamp
+            status,                        // state
+            AuditEntry.ExecutionType.EXECUTION,  // type
+            "TestChangeClass",             // className
+            "testMethod",                  // methodName
+            0L,                           // executionMillis
+            "localhost",                  // executionHostname
+            null,                         // metadata
+            false,                        // systemChange
+            null,                         // errorTrace
+            txType,                       // txType
+            targetSystemId                // targetSystemId
+        );
     }
 }

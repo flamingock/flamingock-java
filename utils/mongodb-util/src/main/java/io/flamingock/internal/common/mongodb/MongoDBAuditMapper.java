@@ -34,6 +34,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TX_TY
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TARGET_SYSTEM_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TYPE;
 
@@ -62,6 +63,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         document.append(KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
         document.append(KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
+        document.append(KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         return document;
     }
 
@@ -93,7 +95,8 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.get(KEY_METADATA),
                 entry.getBoolean(KEY_SYSTEM_CHANGE) != null && entry.getBoolean(KEY_SYSTEM_CHANGE),
                 entry.getString(KEY_ERROR_TRACE),
-                txType);
+                txType,
+                entry.getString(KEY_TARGET_SYSTEM_ID));
 
     }
 }

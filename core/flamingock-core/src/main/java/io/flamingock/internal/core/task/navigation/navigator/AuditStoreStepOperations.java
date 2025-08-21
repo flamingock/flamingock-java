@@ -34,30 +34,32 @@ public class AuditStoreStepOperations {
 
     private final ExecutionAuditWriter auditWriter;
     private final AuditTxType auditTxType;
+    private final String targetSystemId;
 
-    public AuditStoreStepOperations(ExecutionAuditWriter auditWriter, AuditTxType auditTxType) {
+    public AuditStoreStepOperations(ExecutionAuditWriter auditWriter, AuditTxType auditTxType, String targetSystemId) {
         this.auditWriter = auditWriter;
         this.auditTxType = auditTxType;
+        this.targetSystemId = targetSystemId;
     }
 
     public Result auditStartExecution(StartStep startStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setStartStep(startStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeStartExecution(new StartExecutionAuditContextBundle(startStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
+        return auditWriter.writeStartExecution(new StartExecutionAuditContextBundle(startStep.getLoadedTask(), executionContext, runtimeContext, auditTxType, targetSystemId));
     }
 
     public Result auditExecution(ExecutionStep executionStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setExecutionStep(executionStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeExecution(new ExecutionAuditContextBundle(executionStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
+        return auditWriter.writeExecution(new ExecutionAuditContextBundle(executionStep.getLoadedTask(), executionContext, runtimeContext, auditTxType, targetSystemId));
     }
 
     public Result auditManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setManualRollbackStep(rolledBackStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
+        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, auditTxType, targetSystemId));
     }
 
     public Result auditAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
         RuntimeContext runtimeContext = RuntimeContext.builder().setAutoRollbackStep(rolledBackStep).setExecutedAt(executedAt).build();
-        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, auditTxType));
+        return auditWriter.writeRollback(new RollbackAuditContextBundle(rolledBackStep.getLoadedTask(), executionContext, runtimeContext, auditTxType, targetSystemId));
     }
 
 }

@@ -44,17 +44,20 @@ public abstract class AuditContextBundle {
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
     private final AuditTxType operationType;
+    private final String targetSystemId;
 
     public AuditContextBundle(Operation operation,
                               TaskDescriptor loadedTask,
                               ExecutionContext executionContext,
                               RuntimeContext runtimeContext,
-                              AuditTxType auditTxType) {
+                              AuditTxType auditTxType,
+                              String targetSystemId) {
         this.operation = operation;
         this.loadedTask = loadedTask;
         this.executionContext = executionContext;
         this.runtimeContext = runtimeContext;
         this.operationType = auditTxType;
+        this.targetSystemId = targetSystemId;
     }
 
     public Operation getOperation() {
@@ -77,7 +80,9 @@ public abstract class AuditContextBundle {
         return operationType;
     }
 
-
+    public String getTargetSystemId() {
+        return targetSystemId;
+    }
 
 
     public AuditEntry toAuditEntry() {
@@ -99,7 +104,8 @@ public abstract class AuditContextBundle {
                 stageExecutionContext.getMetadata(),
                 getSystemChange(),
                 ThrowableUtil.serialize(runtimeContext.getError().orElse(null)),
-                getAuditTxType()
+                getAuditTxType(),
+                getTargetSystemId()
         );
     }
 

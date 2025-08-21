@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.mongodb;
 
+import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeTxType() {
         // Given
-        AuditEntry original = createTestAuditEntry(AuditTxType.TX_SHARED);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -46,7 +47,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry original = createTestAuditEntry(null);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -75,24 +76,31 @@ class MongoDBAuditMapperTest {
         assertEquals(AuditTxType.NON_TX, deserialized.getTxType());
     }
 
-    private AuditEntry createTestAuditEntry(AuditTxType txType) {
-        return new AuditEntry(
-                "test-execution",
-                "test-stage", 
-                "test-task",
-                "test-author",
-                LocalDateTime.now(),
-                AuditEntry.Status.EXECUTED,
-                AuditEntry.ExecutionType.EXECUTION,
-                "TestClass",
-                "testMethod",
-                100L,
-                "localhost",
-                new HashMap<>(),
-                false,
-                null,
-                txType
-        );
+    @Test
+    void shouldSerializeAndDeserializeTargetSystemId() {
+        // Given
+        String expectedTargetSystemId = "custom-target-system";
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId);
+
+        // When
+        TestDocumentWrapper document = mapper.toDocument(original);
+        AuditEntry deserialized = mapper.fromDocument(document);
+
+        // Then
+        assertEquals(expectedTargetSystemId, deserialized.getTargetSystemId());
+    }
+
+    @Test
+    void shouldHandleNullTargetSystemId() {
+        // Given
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null);
+
+        // When
+        TestDocumentWrapper document = mapper.toDocument(original);
+        AuditEntry deserialized = mapper.fromDocument(document);
+
+        // Then
+        assertNull(deserialized.getTargetSystemId());
     }
 
     // Simple test implementation of DocumentHelper

@@ -33,6 +33,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METAD
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TX_TYPE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TARGET_SYSTEM_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TYPE;
 
@@ -55,6 +56,7 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         CouchbaseUtils.addFieldToDocument(document, KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
         CouchbaseUtils.addFieldToDocument(document, KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
+        CouchbaseUtils.addFieldToDocument(document, KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         return document;
     }
 
@@ -84,6 +86,7 @@ public class CouchbaseAuditMapper {
                 jsonObject.get(KEY_METADATA) != null ? jsonObject.getObject(KEY_METADATA).toMap() : null,
                 jsonObject.getBoolean(KEY_SYSTEM_CHANGE),
                 jsonObject.getString(KEY_ERROR_TRACE),
-                txType);
+                txType,
+                jsonObject.getString(KEY_TARGET_SYSTEM_ID));
     }
 }
