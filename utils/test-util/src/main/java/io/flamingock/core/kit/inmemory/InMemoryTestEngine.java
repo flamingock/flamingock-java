@@ -24,11 +24,7 @@ import io.flamingock.internal.core.community.LocalEngine;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.id.RunnerId;
-
-import java.util.Optional;
-
 
 public class InMemoryTestEngine implements LocalEngine {
     
@@ -57,10 +53,4 @@ public class InMemoryTestEngine implements LocalEngine {
     public ExecutionPlanner getExecutionPlanner() {
         return executionPlanner;
     }
-    
-    @Override
-    public Optional<? extends TransactionWrapper> getTransactionWrapper() {
-        return Optional.empty();
-    }
-    
 }

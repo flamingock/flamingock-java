@@ -81,11 +81,6 @@ public final class CloudEngineImpl implements CloudEngine, ContextContributor {
     }
 
     @Override
-    public Optional<CloudTransactioner> getTransactionWrapper() {
-        return Optional.ofNullable(cloudTransactioner);
-    }
-
-    @Override
     public void contributeToContext(ContextInjectable contextInjectable) {
         contextInjectable.setProperty(JwtProperty.fromString(jwt));
         contextInjectable.setProperty(environmentId);

@@ -19,16 +19,9 @@ import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
-import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
-import io.flamingock.targetsystem.dynamodb.DynamoDBTxWrapper;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
-
-import java.util.Optional;
 
 public class DynamoDBEngine extends AbstractLocalEngine {
 
@@ -85,12 +78,5 @@ public class DynamoDBEngine extends AbstractLocalEngine {
     @Override
     public LocalExecutionPlanner getExecutionPlanner() {
         return executionPlanner;
-    }
-
-    //TODO remove
-    @Override
-    @Deprecated
-    public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.of(targetSystem.getTxWrapper());
     }
 }

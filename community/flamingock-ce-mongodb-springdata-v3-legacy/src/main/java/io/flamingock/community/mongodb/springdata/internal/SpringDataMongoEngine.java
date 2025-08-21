@@ -20,11 +20,8 @@ import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
-
-import java.util.Optional;
 
 public class SpringDataMongoEngine extends AbstractLocalEngine {
 
@@ -69,12 +66,4 @@ public class SpringDataMongoEngine extends AbstractLocalEngine {
     public LocalExecutionPlanner getExecutionPlanner() {
         return executionPlanner;
     }
-
-    //TODO remove
-    @Override
-    @Deprecated
-    public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.of(targetSystem.getTxWrapper());
-    }
-
 }

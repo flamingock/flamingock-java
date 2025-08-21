@@ -46,9 +46,7 @@ public final class PipelineRunnerCreator {
                                 boolean relaxTargetSystemValidation,
                                 Runnable finalizer) {
 
-        //Instantiated here, so we don't wait until Runner.run() and fail fast
-        TransactionWrapper auditStoreTxWrapper = engine.getTransactionWrapper().orElse(null);
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), targetSystemManager, auditStoreTxWrapper, relaxTargetSystemValidation);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), targetSystemManager, null, relaxTargetSystemValidation);
         return new PipelineRunner(
                 runnerId,
                 pipeline,

@@ -15,19 +15,14 @@
  */
 package io.flamingock.community.couchbase.internal;
 
-import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.Bucket;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.community.couchbase.CouchbaseConfiguration;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
-
-import java.util.Optional;
 
 public class CouchbaseEngine extends AbstractLocalEngine {
 
@@ -65,12 +60,5 @@ public class CouchbaseEngine extends AbstractLocalEngine {
     @Override
     public LocalExecutionPlanner getExecutionPlanner() {
         return executionPlanner;
-    }
-
-    //TODO remove
-    @Override
-    @Deprecated
-    public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.of(targetSystem.getTxWrapper());
     }
 }

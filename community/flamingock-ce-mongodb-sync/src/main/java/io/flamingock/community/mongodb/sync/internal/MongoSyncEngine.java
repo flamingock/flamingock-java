@@ -15,24 +15,18 @@
  */
 package io.flamingock.community.mongodb.sync.internal;
 
-import com.mongodb.ReadConcern;
 import com.mongodb.client.ClientSession;
-import io.flamingock.api.targets.TargetSystem;
-import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
 import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
-import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 public class MongoSyncEngine extends AbstractLocalEngine {
@@ -87,13 +81,6 @@ public class MongoSyncEngine extends AbstractLocalEngine {
         return new HashSet<>(Collections.singletonList(ClientSession.class));
     }
 
-    //TODO remove
-    @Override
-    @Deprecated
-    public Optional<TransactionWrapper> getTransactionWrapper() {
-        return Optional.of(targetSystem.getTxWrapper());
-    }
-
 
     private MongoSyncAuditor buildAuditor() {
         return new MongoSyncAuditor(targetSystem, auditCollectionName);
@@ -105,5 +92,4 @@ public class MongoSyncEngine extends AbstractLocalEngine {
                 lockCollectionName,
                 TimeService.getDefault());
     }
-
 }

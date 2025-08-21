@@ -29,10 +29,6 @@ public interface ConnectionEngine {
 
     ExecutionPlanner getExecutionPlanner();
 
-
-    Optional<? extends TransactionWrapper> getTransactionWrapper();
-
-
     default Runnable getCloser() {
         return () -> {
         };
