@@ -19,8 +19,6 @@ import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
 import io.flamingock.internal.core.builder.cloud.CloudConfigurator;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.cloud.CloudDriver;
-import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.plugin.PluginManager;
 
@@ -30,9 +28,6 @@ public class CloudFlamingockBuilder
 
 
     private final CloudConfiguration cloudConfiguration;
-
-    private CloudTransactioner cloudTransactioner;
-
 
     protected CloudFlamingockBuilder(CoreConfiguration coreConfiguration,
                                      CloudConfiguration cloudConfiguration,
@@ -53,12 +48,6 @@ public class CloudFlamingockBuilder
     protected void doUpdateContext() {
         addDependency(FlamingockEdition.CLOUD);
         addDependency(cloudConfiguration);
-
-        //TODO get transactioner from ServiceLoader
-        // currently injecting it into the context for the driver to pick it up
-        if (cloudTransactioner != null) {
-            addDependency(new Dependency(CloudTransactioner.class, cloudTransactioner));
-        }
     }
 
     @Override
@@ -84,12 +73,4 @@ public class CloudFlamingockBuilder
         cloudConfiguration.setApiToken(clientSecret);
         return this;
     }
-
-    @Override
-    public CloudFlamingockBuilder setCloudTransactioner(CloudTransactioner cloudTransactioner) {
-        this.cloudTransactioner = cloudTransactioner;
-        return this;
-    }
-
-
 }

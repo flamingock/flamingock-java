@@ -19,21 +19,16 @@ import io.flamingock.internal.common.core.context.ContextContributor;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.JwtProperty;
 import io.flamingock.internal.util.id.ServiceId;
-import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.cloud.CloudEngine;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
-
-import java.util.Optional;
 
 public final class CloudEngineImpl implements CloudEngine, ContextContributor {
 
     private final EnvironmentId environmentId;
 
     private final ServiceId serviceId;
-
-    private final CloudTransactioner cloudTransactioner;
 
     private final ExecutionAuditWriter auditWriter;
 
@@ -45,14 +40,12 @@ public final class CloudEngineImpl implements CloudEngine, ContextContributor {
                     String jwt,
                     ExecutionAuditWriter auditWriter,
                     ExecutionPlanner executionPlanner,
-                    CloudTransactioner cloudTransactioner,
                     Runnable closer) {
         this.environmentId =environmentId;
         this.serviceId = serviceId;
         this.jwt = jwt;
         this.auditWriter = auditWriter;
         this.executionPlanner = executionPlanner;
-        this.cloudTransactioner = cloudTransactioner;
     }
 
     @Override

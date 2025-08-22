@@ -34,7 +34,6 @@ import io.flamingock.cloud.lock.client.LockServiceClient;
 import io.flamingock.cloud.planner.CloudExecutionPlanner;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.cloud.planner.client.HttpExecutionPlannerClient;
-import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
 import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -56,7 +55,6 @@ public class CloudDriverImpl  implements CloudDriver {
 
         CoreConfigurable coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
         CloudConfigurable cloudConfiguration = baseContext.getRequiredDependencyValue(CloudConfigurable.class);
-        CloudTransactioner transactioner = baseContext.getDependencyValue(CloudTransactioner.class).orElse(null);
 
         Http.RequestBuilderFactory requestBuilderFactory =
                 Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
@@ -66,7 +64,6 @@ public class CloudDriverImpl  implements CloudDriver {
                     runnerId,
                     coreConfiguration,
                     cloudConfiguration,
-                    transactioner,
                     requestBuilderFactory
             );
         }
@@ -81,7 +78,6 @@ public class CloudDriverImpl  implements CloudDriver {
     private CloudEngineImpl buildEngine(RunnerId runnerId,
                                         CoreConfigurable coreConfiguration,
                                         CloudConfigurable cloudConfiguration,
-                                        CloudTransactioner transactioner,
                                         Http.RequestBuilderFactory requestBuilderFactory) {
         AuthManager authManager = new AuthManager(
                 cloudConfiguration.getApiToken(),
@@ -103,16 +99,11 @@ public class CloudDriverImpl  implements CloudDriver {
                 authManager
         );
 
-        if (transactioner != null) {
-            transactioner.initialize();
-        }
-
         ExecutionPlanner executionPlanner = getExecutionPlanner(
                 runnerId,
                 coreConfiguration,
                 cloudConfiguration,
                 requestBuilderFactory,
-                transactioner,
                 authManager,
                 environmentId,
                 serviceId);
@@ -123,8 +114,7 @@ public class CloudDriverImpl  implements CloudDriver {
                 authResponse.getJwt(),
                 auditWriter,
                 executionPlanner,
-                transactioner,
-                getCloser(requestBuilderFactory, transactioner)
+                getCloser(requestBuilderFactory)
         );
     }
 
@@ -142,7 +132,6 @@ public class CloudDriverImpl  implements CloudDriver {
                                                  CoreConfigurable coreConfiguration,
                                                  CloudConfigurable cloudConfiguration,
                                                  Http.RequestBuilderFactory requestBuilderFactory,
-                                                 CloudTransactioner transactioner,
                                                  AuthManager authManager,
                                                  EnvironmentId environmentId,
                                                  ServiceId serviceId) {
@@ -168,28 +157,19 @@ public class CloudDriverImpl  implements CloudDriver {
                 executionPlannerClient,
                 coreConfiguration,
                 new CloudLockService(lockClient),
-                transactioner,
+                null,
                 TimeService.getDefault()
         );
     }
 
     @NotNull
-    private Runnable getCloser(Http.RequestBuilderFactory requestBuilderFactory,
-                               CloudTransactioner transactioner) {
+    private Runnable getCloser(Http.RequestBuilderFactory requestBuilderFactory) {
         return () -> {
             if (requestBuilderFactory != null) {
                 try {
                     requestBuilderFactory.close();
                 } catch (IOException ex) {
                     logger.warn("Error closing request builder factory", ex);
-                }
-            }
-            if (transactioner != null) {
-                try {
-                    transactioner.close();
-                } catch (Exception ex) {
-                    logger.warn("Error closing transactioner", ex);
-
                 }
             }
         };

@@ -16,8 +16,6 @@
 package io.flamingock.internal.core.builder.cloud;
 
 
-import io.flamingock.internal.core.cloud.transaction.CloudTransactioner;
-
 public interface CloudConfigurator<HOLDER> {
 
     HOLDER setHost(String host);
@@ -27,9 +25,4 @@ public interface CloudConfigurator<HOLDER> {
     HOLDER setEnvironment(String environment);
 
     HOLDER setApiToken(String clientSecret);
-
-    //TODO remove this method and load with ServiceLoader
-    HOLDER setCloudTransactioner(CloudTransactioner cloudTransactioner);
-
-
 }
