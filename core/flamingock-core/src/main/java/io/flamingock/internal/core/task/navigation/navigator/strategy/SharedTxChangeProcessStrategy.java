@@ -84,7 +84,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                                          TaskSummarizer summarizer,
                                          LockGuardProxyFactory proxyFactory,
                                          ContextResolver baseContext) {
-        super(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+        super(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
     }
 
     @Override
@@ -94,7 +94,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         Wrapper<ExecutionStep> executionStep = new Wrapper<>(null);
         // Execute change and audit within single transaction
         AfterExecutionAuditStep changeExecutionAndAudit = targetSystemOps.applyChangeTransactional(executionRuntime -> {
-            ExecutableStep executableStep = auditAndLogStartExecution(new StartStep(changeUnit), executionContext, LocalDateTime.now());
+            ExecutableStep executableStep = auditAndLogStartExecution(new StartStep(changeUnit), executionContext);
             executionStep.setValue(executableStep.execute(executionRuntime));
             return auditAndLogExecution(executionStep.getValue());
         }, buildExecutionRuntime());
@@ -123,7 +123,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         if(!changeExecution.isSuccessStep()) {
             summarizer.clear();
             targetSystemOps.<Void>applyChangeTransactional(executionRuntime -> {
-                auditAndLogStartExecution(new StartStep(changeUnit), executionContext, LocalDateTime.now());
+                auditAndLogStartExecution(new StartStep(changeUnit), executionContext);
                 auditAndLogExecution(changeExecution);
                 auditAndLogAutoRollback();
                 return UNUSED;
@@ -139,7 +139,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                     ManualRolledBackStep rolledBack = rollableStep.rollback(buildExecutionRuntime());
                     stepLogger.logManualRollbackResult(rolledBack);
                     summarizer.add(rolledBack);
-                    auditAndLogManualRollback(rolledBack, executionContext, LocalDateTime.now());
+                    auditAndLogManualRollback(rolledBack, executionContext);
                 });
     }
 
@@ -147,6 +147,6 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
     protected void auditAndLogAutoRollback() {
         stepLogger.logAutoRollback(changeUnit, 0);
         CompleteAutoRolledBackStep rolledBackStep = new CompleteAutoRolledBackStep(changeUnit, true);
-        auditAndLogAutoRollback(rolledBackStep, executionContext, LocalDateTime.now());
+        auditAndLogAutoRollback(rolledBackStep, executionContext);
     }
 }

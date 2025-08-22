@@ -147,7 +147,7 @@ public class CloudEngineTransactionTest {
 
         ArgumentCaptor<String> changeUnitIdValuesCaptor = ArgumentCaptor.forClass(String.class);
         verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template-2", TargetSystemAuditMarkType.APPLIED));
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clear(changeUnitIdValuesCaptor.capture());
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clearMark(changeUnitIdValuesCaptor.capture());
         List<String> allValues = changeUnitIdValuesCaptor.getAllValues();
 
         Assertions.assertEquals("create-persons-table-from-template", allValues.get(0));

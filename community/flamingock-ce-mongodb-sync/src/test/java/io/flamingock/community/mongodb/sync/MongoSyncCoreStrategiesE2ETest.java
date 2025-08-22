@@ -24,7 +24,7 @@ import io.flamingock.community.mongodb.sync.changes._001_create_client_collectio
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_non_transactional;
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_rollback;
-import io.flamingock.core.kit.audit.AuditExpectation;
+import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.mongodb.kit.MongoSyncTestKit;
 import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
 import io.flamingock.core.kit.TestKit;
@@ -47,11 +47,11 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTION_FAILED;
-import static io.flamingock.core.kit.audit.AuditExpectation.ROLLBACK_FAILED;
-import static io.flamingock.core.kit.audit.AuditExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLBACK_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

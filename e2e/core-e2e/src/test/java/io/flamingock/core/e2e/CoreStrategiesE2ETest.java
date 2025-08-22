@@ -23,10 +23,10 @@ import io.flamingock.core.e2e.changes.FailingTransactionalChange;
 import io.flamingock.core.e2e.changes.MultiTest1NonTransactionalChange;
 import io.flamingock.core.e2e.changes.MultiTest2TransactionalChange;
 import io.flamingock.core.e2e.changes.SecondRunNonTransactionalChange;
+import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
-import io.flamingock.core.kit.audit.AuditExpectation;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
@@ -38,8 +38,10 @@ import org.mockito.Mockito;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -130,10 +132,10 @@ class CoreStrategiesE2ETest {
         }
         
         auditHelper.verifyAuditSequenceStrict(
-                AuditExpectation.STARTED("test3-multi-non-tx-change"),
-                AuditExpectation.EXECUTED("test3-multi-non-tx-change"),
-                AuditExpectation.STARTED("test3-multi-tx-change"),
-                AuditExpectation.EXECUTED("test3-multi-tx-change")
+                STARTED("test3-multi-non-tx-change"),
+                EXECUTED("test3-multi-non-tx-change"),
+                STARTED("test3-multi-tx-change"),
+                EXECUTED("test3-multi-tx-change")
         );
     }
     
@@ -162,9 +164,9 @@ class CoreStrategiesE2ETest {
         
         // Then - Verify failure audit sequence using new concise API
         auditHelper.verifyAuditSequenceStrict(
-                AuditExpectation.STARTED("test4-failing-tx-change"),
-                AuditExpectation.EXECUTION_FAILED("test4-failing-tx-change"),
-                AuditExpectation.ROLLED_BACK("test4-failing-tx-change")
+                STARTED("test4-failing-tx-change"),
+                EXECUTION_FAILED("test4-failing-tx-change"),
+                ROLLED_BACK("test4-failing-tx-change")
         );
     }
     

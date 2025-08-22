@@ -90,6 +90,8 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
     private final ContextResolver baseContext;
     private final LockGuardProxyFactory lockProxyFactory;
 
+    protected final LocalDateTime auditTime;
+
 
     protected AbstractChangeProcessStrategy(ExecutableTask changeUnit,
                                             ExecutionContext executionContext,
@@ -97,7 +99,8 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
                                             AuditStoreStepOperations auditStoreOperations,
                                             TaskSummarizer summarizer,
                                             LockGuardProxyFactory proxyFactory,
-                                            ContextResolver baseContext) {
+                                            ContextResolver baseContext,
+                                            LocalDateTime auditTime) {
         this.changeUnit = changeUnit;
         this.executionContext = executionContext;
         this.targetSystemOps = targetSystemOps;
@@ -105,6 +108,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         this.auditStoreOperations = auditStoreOperations;
         this.lockProxyFactory = proxyFactory;
         this.baseContext = baseContext;
+        this.auditTime = auditTime;
     }
 
 
@@ -135,13 +139,11 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
      * 
      * @param startStep The initial step for the change
      * @param executionContext The execution context
-     * @param executedAt The execution timestamp
      * @return The executable step ready for execution
      */
     protected ExecutableStep auditAndLogStartExecution(StartStep startStep,
-                                                       ExecutionContext executionContext,
-                                                       LocalDateTime executedAt) {
-        Result auditResult = auditStoreOperations.auditStartExecution(startStep, executionContext, executedAt);
+                                                       ExecutionContext executionContext) {
+        Result auditResult = auditStoreOperations.auditStartExecution(startStep, executionContext, auditTime);
         stepLogger.logAuditStartResult(auditResult, startStep.getLoadedTask().getId());
         ExecutableStep executableStep = startStep.start();
         summarizer.add(executableStep);
@@ -158,7 +160,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         summarizer.add(executionStep);
         stepLogger.logExecutionResult(executionStep);
 
-        Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, LocalDateTime.now());
+        Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, auditTime);
 
         stepLogger.logAuditExecutionResult(auditResult, executionStep.getLoadedTask());
         AfterExecutionAuditStep afterExecutionAudit = executionStep.applyAuditResult(auditResult);
@@ -167,15 +169,15 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
     }
 
 
-    protected void auditAndLogManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
-        Result auditResult = auditStoreOperations.auditManualRollback(rolledBackStep, executionContext, executedAt);
+    protected void auditAndLogManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext) {
+        Result auditResult = auditStoreOperations.auditManualRollback(rolledBackStep, executionContext, auditTime);
         stepLogger.logAuditManualRollbackResult(auditResult, rolledBackStep.getLoadedTask());
         CompletedFailedManualRollback failedStep = rolledBackStep.applyAuditResult(auditResult);
         summarizer.add(failedStep);
     }
 
-    protected void auditAndLogAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext, LocalDateTime executedAt) {
-        Result auditResult = auditStoreOperations.auditAutoRollback(rolledBackStep, executionContext, executedAt);
+    protected void auditAndLogAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext) {
+        Result auditResult = auditStoreOperations.auditAutoRollback(rolledBackStep, executionContext, auditTime);
         stepLogger.logAuditAutoRollbackResult(auditResult, rolledBackStep.getLoadedTask());
         summarizer.add(rolledBackStep);
     }

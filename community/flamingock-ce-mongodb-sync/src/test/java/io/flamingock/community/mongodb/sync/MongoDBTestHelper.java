@@ -59,6 +59,7 @@ public class MongoDBTestHelper {
                 .stream()
                 .map(MongoSyncDocumentHelper::new)
                 .map(mapper::fromDocument)
+                .sorted()
                 .collect(Collectors.toList());
     }
 

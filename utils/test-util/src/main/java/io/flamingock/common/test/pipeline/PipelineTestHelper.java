@@ -50,6 +50,7 @@ public class PipelineTestHelper {
      *   <li>The third item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @RollbackExecution}</li>
      * </ul>
      *
+     * @param stageName the name of the stage to create
      * @param changeDefinitions varargs of pairs containing change classes and their execution method parameters
      * @return a {@link PreviewPipeline} ready for preview or testing
      */

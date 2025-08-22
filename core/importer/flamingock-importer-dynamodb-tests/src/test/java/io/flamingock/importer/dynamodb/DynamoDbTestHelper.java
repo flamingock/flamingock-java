@@ -100,8 +100,8 @@ public class DynamoDbTestHelper {
         List<DynamoDbChangeEntry> entries = new ArrayList<>();
         table.scan().items().forEach(entries::add);
         return entries.stream()
-                .sorted(Comparator.comparing(DynamoDbChangeEntry::getChangeId))
                 .map(DynamoDbChangeEntry::toAuditEntry)
+                .sorted()
                 .collect(Collectors.toList());
     }
 }

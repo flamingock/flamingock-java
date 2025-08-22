@@ -82,6 +82,7 @@ public class MongoDBTestHelper {
                 .stream()
                 .map(SpringDataMongoDocumentWrapper::new)
                 .map(mapper::fromDocument)
+                .sorted()
                 .collect(Collectors.toList());
     }
 

@@ -15,15 +15,10 @@
  */
 package io.flamingock.community.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
-import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.flamingock.community.dynamodb.changes._001_create_client_collection_happy;
 import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_non_transactional;
 import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_transactional;
-import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_non_transactional_non_rollback;
-import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_non_transactional_rollback;
 import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_transactional_non_rollback;
-import io.flamingock.community.dynamodb.changes._004_insert_jorge_happy_non_transactional;
 import io.flamingock.community.dynamodb.changes._004_insert_jorge_happy_transactional;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import io.flamingock.core.processor.util.Deserializer;
@@ -36,21 +31,19 @@ import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -62,46 +55,48 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Testcontainers
 class DynamoDBDriverTest {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBDriverTest.class);
 
-    private static DynamoDBProxyServer dynamoDBLocal;
-    private static DynamoDbClient client;
+    @Container
+    static final GenericContainer<?> dynamoDBContainer = DynamoDBTestContainer.createContainer();
 
+    private static DynamoDbClient client;
     private static final String CUSTOM_AUDIT_REPOSITORY_NAME = "testFlamingockAudit";
     private static final String CUSTOM_LOCK_REPOSITORY_NAME = "testFlamingockLock";
-
     private static DynamoDBTestHelper dynamoDBTestHelper;
 
     @BeforeEach
-    void beforeEach() throws Exception {
-        logger.info("Starting DynamoDB Local...");
-        dynamoDBLocal = ServerRunner.createServerFromCommandLineArgs(
-                new String[]{
-                        "-inMemory",
-                        "-port",
-                        "8000"
-                }
-        );
-        dynamoDBLocal.start();
+    void beforeEach() {
+        logger.info("Setting up DynamoDB client for container...");
+        client = DynamoDBTestContainer.createClient(dynamoDBContainer);
+        dynamoDBTestHelper = DynamoDBTestContainer.createTestHelper(client);
 
-        client = DynamoDbClient.builder()
-                .region(Region.EU_WEST_1)
-                .endpointOverride(new URI("http://localhost:8000"))
-                .credentialsProvider(
-                        StaticCredentialsProvider.create(
-                                AwsBasicCredentials.create("dummye", "dummye")
-                        )
-                )
-                .build();
-        dynamoDBTestHelper = new DynamoDBTestHelper(client);
+        // Clean up any existing tables to ensure test isolation
+        cleanupTables();
+    }
+
+    private void cleanupTables() {
+        try {
+            // List and delete all tables to ensure clean state for each test
+            List<String> tableNames = client.listTables().tableNames();
+            for (String tableName : tableNames) {
+                client.deleteTable(builder -> builder.tableName(tableName));
+                // Wait for table deletion to complete
+                client.waiter().waitUntilTableNotExists(builder -> builder.tableName(tableName));
+            }
+        } catch (Exception e) {
+            logger.warn("Error cleaning up tables: {}", e.getMessage());
+        }
     }
 
     @AfterEach
-    void AfterEach() throws Exception {
-        logger.info("Stopping DynamoDB Local...");
-        dynamoDBLocal.stop();
+    void afterEach() {
+        if (client != null) {
+            client.close();
+        }
     }
 
 
@@ -249,7 +244,6 @@ class DynamoDBDriverTest {
     }
 
     @Test
-    @Disabled
     @DisplayName("When standalone runs the driver and execution fails should persist only the executed audit logs")
     void failedWithTransaction() {
         //Given-When
@@ -265,6 +259,7 @@ class DynamoDBDriverTest {
                 FlamingockFactory.getCommunityBuilder()
                         //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.dynamodb.changes.failedWithTransaction"))
                         .addDependency(client)
+                        .setRelaxTargetSystemValidation(true)
                         .build()
                         .run();
             });
@@ -274,15 +269,24 @@ class DynamoDBDriverTest {
         //Then
         //Checking auditLog
         List<AuditEntry> auditLog = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(4, auditLog.size());
+        assertEquals(7, auditLog.size());
+        auditLog.stream().forEach(c -> System.out.println("id: " + c.getTaskId() +", time: " + c.getCreatedAt() +", State: " + c.getState()));
         assertEquals("table-create", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
-        assertEquals("insert-user", auditLog.get(1).getTaskId());
+        assertEquals(AuditEntry.Status.STARTED, auditLog.get(0).getState());
+        assertEquals("table-create", auditLog.get(1).getTaskId());
         assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
-        assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditLog.get(2).getState());
-        assertEquals("execution-with-exception", auditLog.get(3).getTaskId());
-        assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(3).getState());
+
+        assertEquals("insert-user", auditLog.get(2).getTaskId());
+        assertEquals(AuditEntry.Status.STARTED, auditLog.get(2).getState());
+        assertEquals("insert-user", auditLog.get(3).getTaskId());
+        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(3).getState());
+
+        assertEquals("execution-with-exception", auditLog.get(4).getTaskId());
+        assertEquals(AuditEntry.Status.STARTED, auditLog.get(4).getState());
+        assertEquals("execution-with-exception", auditLog.get(5).getTaskId());
+        assertEquals(AuditEntry.Status.EXECUTION_FAILED, auditLog.get(5).getState());
+        assertEquals("execution-with-exception", auditLog.get(6).getTaskId());
+        assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(6).getState());
 
         //Checking user table
         List<String> rows = dynamoDBTestHelper.dynamoDBUtil.getEnhancedClient()

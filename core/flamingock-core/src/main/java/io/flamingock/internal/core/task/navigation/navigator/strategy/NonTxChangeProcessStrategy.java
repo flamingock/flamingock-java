@@ -79,14 +79,14 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
                                       TaskSummarizer summarizer,
                                       LockGuardProxyFactory proxyFactory,
                                       ContextResolver baseContext) {
-        super(changeUnit, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext);
+        super(changeUnit, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
     }
 
     @Override
     protected TaskSummary doApplyChange() {
         StartStep startStep = new StartStep(changeUnit);
 
-        ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext, LocalDateTime.now());
+        ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext);
 
         logger.debug("Executing non-transactional task [change={}]", changeUnit.getId());
         
@@ -107,7 +107,7 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
             ManualRolledBackStep rolledBack = rollableStep.rollback(buildExecutionRuntime());
             stepLogger.logManualRollbackResult(rolledBack);
             summarizer.add(rolledBack);
-            auditAndLogManualRollback(rolledBack, executionContext, LocalDateTime.now());
+            auditAndLogManualRollback(rolledBack, executionContext);
         });
     }
 }

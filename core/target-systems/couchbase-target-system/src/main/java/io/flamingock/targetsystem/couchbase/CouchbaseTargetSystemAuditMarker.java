@@ -70,7 +70,7 @@ public class CouchbaseTargetSystemAuditMarker implements TargetSystemAuditMarker
     }
 
     @Override
-    public void clear(String changeId) {
+    public void clearMark(String changeId) {
         cluster.query(
                 String.format(
                         "DELETE FROM `%s`.`%s`.`%s` WHERE `%s`= $p1",

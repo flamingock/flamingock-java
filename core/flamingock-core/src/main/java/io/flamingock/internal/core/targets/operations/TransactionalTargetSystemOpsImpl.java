@@ -18,6 +18,7 @@ package io.flamingock.internal.core.targets.operations;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 
@@ -28,14 +29,14 @@ public class TransactionalTargetSystemOpsImpl
         extends TargetSystemOpsImpl
         implements TransactionalTargetSystemOps {
 
-    private final TransactionalTargetSystem<?> transactionalTargetSystem;
+    private final TransactionalTargetSystem<?> targetSystem;
     private final OperationType operationType;
 
-    public TransactionalTargetSystemOpsImpl(TransactionalTargetSystem<?> transactionalTargetSystem,
-                                            boolean sameAuditStoreTxResource) {
-        super(transactionalTargetSystem);
-        this.transactionalTargetSystem = transactionalTargetSystem;
-        this.operationType = internalGetOperationType(sameAuditStoreTxResource);
+    public TransactionalTargetSystemOpsImpl(TransactionalTargetSystem<?> targetSystem,
+                                            AbstractTargetSystem<?> auditStoreTargetSystem) {
+        super(targetSystem);
+        this.targetSystem = targetSystem;
+        this.operationType = internalGetOperationType(auditStoreTargetSystem);
     }
 
     @Override
@@ -45,43 +46,43 @@ public class TransactionalTargetSystemOpsImpl
 
     @Override
     public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-        return transactionalTargetSystem.applyChange(changeApplier, executionRuntime);
+        return targetSystem.applyChange(changeApplier, executionRuntime);
     }
 
     @Override
     public <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
-        return transactionalTargetSystem.applyChangeTransactional(changeApplier, executionRuntime);
+        return targetSystem.applyChangeTransactional(changeApplier, executionRuntime);
     }
 
     @Override
     public String getId() {
-        return transactionalTargetSystem.getId();
+        return targetSystem.getId();
     }
 
     @Override
     public ContextResolver decorateOnTop(ContextResolver baseContext) {
-        return transactionalTargetSystem.decorateOnTop(baseContext);
+        return targetSystem.decorateOnTop(baseContext);
     }
 
     @Override
     public Set<TargetSystemAuditMark> listAll() {
-        return transactionalTargetSystem.getOnGoingTaskStatusRepository().listAll();
+        return targetSystem.getOnGoingTaskStatusRepository().listAll();
     }
 
     @Override
-    public void clear(String changeId) {
-        transactionalTargetSystem.getOnGoingTaskStatusRepository().clear(changeId);
+    public void clearMark(String changeId) {
+        targetSystem.getOnGoingTaskStatusRepository().clearMark(changeId);
     }
 
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
-        transactionalTargetSystem.getOnGoingTaskStatusRepository().mark(auditMark);
+        targetSystem.getOnGoingTaskStatusRepository().mark(auditMark);
     }
 
-    private OperationType internalGetOperationType(boolean sameAuditStoreTxResource) {
-        if (sameAuditStoreTxResource) {
+    private OperationType internalGetOperationType(AbstractTargetSystem<?> auditStoreTargetSystem) {
+        if (this.targetSystem.equals(auditStoreTargetSystem)) {
             return OperationType.TX_AUDIT_STORE_SHARED;
-        } else if (transactionalTargetSystem.inSyncWithAuditStore()) {
+        } else if (this.targetSystem.hasMarker()) {
             return OperationType.TX_AUDIT_STORE_SYNC;
         } else {
             return OperationType.TX_NON_SYNC;

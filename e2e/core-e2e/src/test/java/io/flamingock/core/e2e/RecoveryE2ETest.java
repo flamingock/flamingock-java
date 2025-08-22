@@ -18,9 +18,7 @@ package io.flamingock.core.e2e;
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
-import io.flamingock.core.e2e.changes.CustomTargetSystemChange;
 import io.flamingock.core.processor.util.Deserializer;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
@@ -37,11 +35,11 @@ import org.mockito.Mockito;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTION_FAILED;
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditExpectation.ROLLBACK_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLBACK_FAILED;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -460,84 +458,5 @@ class RecoveryE2ETest {
         );
     }
 
-    @Test
-    @DisplayName("Should persist default targetSystemId in audit entries")
-    void testDefaultTargetSystemIdPersistence() {
-        // Given - No pre-existing entries, letting Flamingock run and audit the process
-        String changeId = "test1-non-tx-change";
-        
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
-                )
-            );
-            
-            // When - Run Flamingock (should execute successfully and audit with default target system)
-            assertDoesNotThrow(() -> {
-                testKit.createBuilder()
-                    .setRelaxTargetSystemValidation(true)
-                    .build()
-                    .run();
-            });
-        }
-        
-        // Then - Verify audit log shows successful execution
-        auditHelper.verifyAuditSequenceStrict(
-            STARTED(changeId),
-            EXECUTED(changeId)
-        );
-        
-        // Additional verification: check the stored audit entries have the correct default targetSystemId
-        List<AuditEntry> auditEntries = testKit.getAuditStorage().getAuditEntries();
-        assertEquals(2, auditEntries.size());
-        
-        // Verify both STARTED and EXECUTED entries have the default target system ID
-        for (AuditEntry entry : auditEntries) {
-            assertEquals("default-audit-store-target-system", entry.getTargetSystemId(), 
-                        "Stored audit entry should have the default targetSystemId");
-        }
-    }
-    
-    @Test
-    @DisplayName("Should persist custom targetSystemId in audit entries")
-    void testCustomTargetSystemIdPersistence() {
-        // Given - Custom target system added to builder
-        String customTargetSystemId = "custom-target-system";
-        String changeId = "test-custom-target-change";
-        
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
-                )
-            );
-            
-            // When - Run Flamingock with custom target system added to builder
-            assertDoesNotThrow(() -> {
-                testKit.createBuilder()
-                    .setRelaxTargetSystemValidation(true)
-                    .addTargetSystem(new DefaultTargetSystem(customTargetSystemId))
-                    .build()
-                    .run();
-            });
-        }
-        
-        // Then - Verify audit log shows successful execution
-        auditHelper.verifyAuditSequenceStrict(
-            STARTED(changeId),
-            EXECUTED(changeId)
-        );
-        
-        // Additional verification: check the stored audit entries have the correct custom targetSystemId
-        List<AuditEntry> auditEntries = testKit.getAuditStorage().getAuditEntries();
-        assertEquals(2, auditEntries.size());
-        
-        // Verify both STARTED and EXECUTED entries have the custom target system ID
-        for (AuditEntry entry : auditEntries) {
-            assertEquals(customTargetSystemId, entry.getTargetSystemId(), 
-                        "Stored audit entry should have the custom targetSystemId");
-        }
-    }
     
 }

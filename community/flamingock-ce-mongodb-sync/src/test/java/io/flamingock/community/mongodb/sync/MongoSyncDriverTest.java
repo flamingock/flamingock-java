@@ -29,7 +29,7 @@ import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_tra
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_transactional;
 import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
 import io.flamingock.core.kit.TestKit;
-import io.flamingock.core.kit.audit.AuditExpectation;
+import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -52,10 +52,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTION_FAILED;
-import static io.flamingock.core.kit.audit.AuditExpectation.ROLLED_BACK;
-import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_LOCK_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;

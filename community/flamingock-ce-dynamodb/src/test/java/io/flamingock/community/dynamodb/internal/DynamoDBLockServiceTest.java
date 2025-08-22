@@ -16,8 +16,10 @@
 package io.flamingock.community.dynamodb.internal;
 
 
-import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
-import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
+import io.flamingock.community.dynamodb.DynamoDBTestContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.engine.lock.LockAcquisition;
 import io.flamingock.internal.core.engine.lock.LockKey;
@@ -28,38 +30,50 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
-import java.net.URI;
-
+@Testcontainers
 class DynamoDBLockServiceTest {
 
     private static final LockKey lockKey = LockKey.fromString("lockKey1");
 
-    private static DynamoDBProxyServer dynamoDBLocal;
-    private static DynamoDbClient client;
+    @Container
+    static final GenericContainer<?> dynamoDBContainer = DynamoDBTestContainer.createContainer();
 
-    DynamoDBLockService lockService;
+    private DynamoDbClient client;
+    private DynamoDBLockService lockService;
 
     @BeforeEach
-    void beforeEach() throws Exception {
-        dynamoDBLocal = ServerRunner.createServerFromCommandLineArgs(new String[]{"-inMemory", "-port", "8000"});
-        dynamoDBLocal.start();
-
-        client = DynamoDbClient.builder().region(Region.EU_WEST_1).endpointOverride(new URI("http://localhost:8000")).credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("dummye", "dummye"))).build();
-
+    void beforeEach() {
+        client = DynamoDBTestContainer.createClient(dynamoDBContainer);
+        
+        // Clean up any existing tables to ensure test isolation
+        cleanupTables();
+        
         lockService = new DynamoDBLockService(client, new TimeService());
         lockService.initialize(true, Constants.DEFAULT_LOCK_STORE_NAME, 5L, 5L);
-
+    }
+    
+    private void cleanupTables() {
+        try {
+            // List and delete all tables to ensure clean state for each test
+            java.util.List<String> tableNames = client.listTables().tableNames();
+            for (String tableName : tableNames) {
+                client.deleteTable(builder -> builder.tableName(tableName));
+                // Wait for table deletion to complete
+                client.waiter().waitUntilTableNotExists(builder -> builder.tableName(tableName));
+            }
+        } catch (Exception e) {
+            // Ignore cleanup errors
+        }
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
-        dynamoDBLocal.stop();
+    public void tearDown() {
+        if (client != null) {
+            client.close();
+        }
     }
 
     @Test

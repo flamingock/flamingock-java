@@ -187,11 +187,7 @@ public class TargetSystemManager implements ContextInitializable {
 
     private TargetSystemOps toDecorator(AbstractTargetSystem<?> instance) {
         if (instance instanceof TransactionalTargetSystem) {
-            TransactionalTargetSystem<?> txInstance = (TransactionalTargetSystem<?>) instance;
-            boolean isAuditStoreTransactionResource = auditStoreTargetSystem instanceof TransactionalTargetSystem
-                    && ((TransactionalTargetSystem<?>) auditStoreTargetSystem).isSameTxResourceAs(txInstance);
-
-            return new TransactionalTargetSystemOpsImpl(txInstance, isAuditStoreTransactionResource);
+            return new TransactionalTargetSystemOpsImpl((TransactionalTargetSystem<?>) instance, auditStoreTargetSystem);
         } else {
             return new TargetSystemOpsImpl(instance);
         }

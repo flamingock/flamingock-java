@@ -87,7 +87,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                                          TaskSummarizer summarizer,
                                          LockGuardProxyFactory proxyFactory,
                                          ContextResolver baseContext) {
-        super(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext);
+        super(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
     }
 
     @Override
@@ -96,7 +96,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
         StartStep startStep = new StartStep(changeUnit);
 
-        ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext, LocalDateTime.now());
+        ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext);
         
         // Apply change within target system transaction, create marker if supported
         ExecutionStep changeResult = targetSystemOps.applyChangeTransactional(executionRuntime -> {
@@ -111,7 +111,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         if(changeResult.isSuccessStep()) {
             if(afterAudit instanceof CompletedSuccessStep) {
                 // Success: change applied and audited, clear marker
-                targetSystemOps.clear(changeUnit.getId());
+                targetSystemOps.clearMark(changeUnit.getId());
                 return summarizer.setSuccessful().getSummary();
             } else {
                 // Change applied but audit failed - leave marker for recovery
@@ -133,7 +133,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                     ManualRolledBackStep rolledBack = rollableStep.rollback(buildExecutionRuntime());
                     stepLogger.logManualRollbackResult(rolledBack);
                     summarizer.add(rolledBack);
-                    auditAndLogManualRollback(rolledBack, executionContext, LocalDateTime.now());
+                    auditAndLogManualRollback(rolledBack, executionContext);
                 });
     }
 
@@ -141,6 +141,6 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
     protected void auditAndLogAutoRollback() {
         stepLogger.logAutoRollback(changeUnit, 0);
         CompleteAutoRolledBackStep rolledBackStep = new CompleteAutoRolledBackStep(changeUnit, true);
-        auditAndLogAutoRollback(rolledBackStep, executionContext, LocalDateTime.now());
+        auditAndLogAutoRollback(rolledBackStep, executionContext);
     }
 }

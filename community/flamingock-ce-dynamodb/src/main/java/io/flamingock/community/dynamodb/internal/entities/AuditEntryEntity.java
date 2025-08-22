@@ -28,7 +28,7 @@ import java.util.Objects;
 
 
 @DynamoDbBean
-public class AuditEntryEntity {
+public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
 
     protected Boolean systemChange;
     private String partitionKey;
@@ -47,6 +47,7 @@ public class AuditEntryEntity {
     private AuditEntry.ExecutionType type;
     private AuditTxType txType;
     private String targetSystemId;
+    private String order;
 
     public AuditEntryEntity(AuditEntry auditEntry) {
         this.partitionKey = partitionKey(auditEntry.getExecutionId(), auditEntry.getTaskId(), auditEntry.getState());
@@ -65,6 +66,7 @@ public class AuditEntryEntity {
         this.type = auditEntry.getType();
         this.txType = auditEntry.getTxType();
         this.targetSystemId = auditEntry.getTargetSystemId();
+        this.order = auditEntry.getOrder();
         this.systemChange = auditEntry.getSystemChange();
     }
 
@@ -229,6 +231,39 @@ public class AuditEntryEntity {
         this.targetSystemId = targetSystemId;
     }
 
+    @DynamoDbAttribute(AuditEntryField.KEY_ORDER)
+    public String getOrder() {
+        return order;
+    }
+
+    public void setOrder(String order) {
+        this.order = order;
+    }
+
+    @Override
+    public int compareTo(AuditEntryEntity other) {
+        if (other == null) {
+            return 1;
+        }
+        
+        // Level 1: Sort by createdAt timestamp
+        int timeComparison = this.createdAt.compareTo(other.createdAt);
+        if (timeComparison != 0) {
+            return timeComparison;
+        }
+        
+        // Level 2: Sort by order (if timestamps are equal)
+        if (this.order != null && other.order != null) {
+            int orderComparison = this.order.compareTo(other.order);
+            if (orderComparison != 0) {
+                return orderComparison;
+            }
+        }
+        
+        // Level 3: Sort by state priority (if timestamps and order are equal)
+        return Integer.compare(this.state.getPriority(), other.state.getPriority());
+    }
+
     public AuditEntry toAuditEntry() {
         return new AuditEntry(
                 executionId,
@@ -246,7 +281,8 @@ public class AuditEntryEntity {
                 systemChange,
                 Objects.toString(errorTrace, ""),
                 txType,
-                targetSystemId
+                targetSystemId,
+                order
         );
     }
 }

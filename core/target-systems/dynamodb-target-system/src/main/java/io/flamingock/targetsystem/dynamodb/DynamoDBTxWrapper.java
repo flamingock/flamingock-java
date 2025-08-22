@@ -71,7 +71,10 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
             } else {
                 try {
                     logger.debug("Committing DynamoDB transaction [duration={}]", formatDuration(transactionDuration));
-                    dynamoDBUtil.getEnhancedClient().transactWriteItems(writeRequestBuilder.build());
+                    TransactWriteItemsEnhancedRequest request = writeRequestBuilder.build();
+                    if(request.transactWriteItems() != null && !request.transactWriteItems().isEmpty()) {
+                        dynamoDBUtil.getEnhancedClient().transactWriteItems(request);
+                    }
                     logger.debug("DynamoDB transaction commit completed successfully [duration={}]", formatDuration(transactionDuration));
                 } catch (TransactionCanceledException ex) {
                     String cancellationReasons = ex.cancellationReasons().stream()

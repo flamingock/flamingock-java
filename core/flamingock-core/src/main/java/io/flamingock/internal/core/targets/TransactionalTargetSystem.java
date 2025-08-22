@@ -42,7 +42,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         return autoCreate;
     }
 
-    public boolean inSyncWithAuditStore() {
+    public boolean hasMarker() {
         TargetSystemAuditMarker onGoingTaskStatusRepository = getOnGoingTaskStatusRepository();
         return onGoingTaskStatusRepository != null && !(onGoingTaskStatusRepository instanceof NoOpTargetSystemAuditMarker);
     }

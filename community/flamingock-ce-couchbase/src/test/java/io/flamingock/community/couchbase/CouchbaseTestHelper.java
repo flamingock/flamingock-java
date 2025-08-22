@@ -40,7 +40,7 @@ public class CouchbaseTestHelper {
         return documents
                 .stream()
                 .map(auditMapper::fromDocument)
-                .sorted(Comparator.comparing(AuditEntry::getCreatedAt))
+                .sorted()
                 .collect(Collectors.toList());
     }
 }

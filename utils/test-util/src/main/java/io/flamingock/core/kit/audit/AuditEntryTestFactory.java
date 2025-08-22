@@ -71,7 +71,8 @@ public class AuditEntryTestFactory {
             false,                        // systemChange
             null,                         // errorTrace
             txType,                       // txType
-            "test-target-system"          // targetSystemId
+            "test-target-system",         // targetSystemId
+            "001"                         // order
         );
     }
 
@@ -147,7 +148,8 @@ public class AuditEntryTestFactory {
             false,                        // systemChange
             null,                         // errorTrace
             txType,                       // txType
-            targetSystemId                // targetSystemId
+            targetSystemId,               // targetSystemId
+            "001"                         // order
         );
     }
 }

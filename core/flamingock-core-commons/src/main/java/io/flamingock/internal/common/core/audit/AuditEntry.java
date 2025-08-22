@@ -33,7 +33,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLBAC
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_BACK;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.STARTED;
 
-public class AuditEntry {
+public class AuditEntry implements Comparable<AuditEntry> {
 
 
     private static final List<Status> STATUS_ORDER = Arrays.asList(
@@ -58,6 +58,7 @@ public class AuditEntry {
     private final ExecutionType type;
     private final AuditTxType txType;
     private final String targetSystemId;
+    private final String order;
 
     public AuditEntry(String executionId,
                       String stageId,
@@ -74,7 +75,8 @@ public class AuditEntry {
                       boolean systemChange,
                       String errorTrace,
                       AuditTxType txType,
-                      String targetSystemId) {
+                      String targetSystemId,
+                      String order) {
         this.executionId = executionId;
         this.stageId = stageId;
         this.taskId = taskId;
@@ -90,6 +92,7 @@ public class AuditEntry {
         this.type = type;
         this.txType = txType != null ? txType : AuditTxType.NON_TX;
         this.targetSystemId = targetSystemId;
+        this.order = order;
         this.systemChange = systemChange;
     }
 
@@ -114,7 +117,7 @@ public class AuditEntry {
                       String errorTrace,
                       AuditTxType txType) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null);
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null, null);
     }
 
     /**
@@ -137,7 +140,7 @@ public class AuditEntry {
                       boolean systemChange,
                       String errorTrace) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null);
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null);
     }
 
     public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
@@ -215,6 +218,10 @@ public class AuditEntry {
         return targetSystemId;
     }
 
+    public String getOrder() {
+        return order;
+    }
+
 
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
         if(this.getState().equals(newEntry.getState())) {
@@ -245,8 +252,33 @@ public class AuditEntry {
                 getSystemChange(),
                 getErrorTrace(),
                 getTxType(),
-                getTargetSystemId()
+                getTargetSystemId(),
+                getOrder()
         );
+    }
+
+    @Override
+    public int compareTo(AuditEntry other) {
+        if (other == null) {
+            return 1;
+        }
+        
+        // Level 1: Sort by createdAt timestamp
+        int timeComparison = this.createdAt.compareTo(other.createdAt);
+        if (timeComparison != 0) {
+            return timeComparison;
+        }
+        
+        // Level 2: Sort by order (if timestamps are equal)
+        if (this.order != null && other.order != null) {
+            int orderComparison = this.order.compareTo(other.order);
+            if (orderComparison != 0) {
+                return orderComparison;
+            }
+        }
+        
+        // Level 3: Sort by state priority (if timestamps and order are equal)
+        return Integer.compare(this.state.getPriority(), other.state.getPriority());
     }
 
     public enum Status {

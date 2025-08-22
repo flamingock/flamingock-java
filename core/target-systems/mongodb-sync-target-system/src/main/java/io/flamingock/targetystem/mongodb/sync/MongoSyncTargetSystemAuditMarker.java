@@ -59,7 +59,7 @@ public class MongoSyncTargetSystemAuditMarker implements TargetSystemAuditMarker
     }
 
     @Override
-    public void clear(String changeId) {
+    public void clearMark(String changeId) {
         onGoingTaskStatusCollection.deleteMany(Filters.eq(TASK_ID, changeId));
     }
 

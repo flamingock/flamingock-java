@@ -47,7 +47,8 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getSystemChange(),
                 auditEntry.getErrorTrace(),
                 auditEntry.getTxType(),
-                auditEntry.getTargetSystemId()
+                auditEntry.getTargetSystemId(),
+                auditEntry.getOrder()
         );
 
         // Then
@@ -75,7 +76,8 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getSystemChange(),
                 auditEntry.getErrorTrace(),
                 auditEntry.getTxType(),
-                auditEntry.getTargetSystemId()
+                auditEntry.getTargetSystemId(),
+                auditEntry.getOrder()
         );
 
         // Then

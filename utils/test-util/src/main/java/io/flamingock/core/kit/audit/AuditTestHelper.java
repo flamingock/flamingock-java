@@ -51,7 +51,7 @@ public class AuditTestHelper {
 
     public List<AuditEntry> getAuditEntriesSorted() {
         return auditStorage.getAuditEntries().stream()
-                .sorted((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
+                .sorted()
                 .collect(Collectors.toList());
     }
 
@@ -100,7 +100,9 @@ public class AuditTestHelper {
                 null,
                 false,
                 null,
-                AuditTxType.NON_TX
+                AuditTxType.NON_TX,
+                null,
+                "001"
         );
         auditStorage.addAuditEntry(startedEntry);
     }
@@ -121,7 +123,9 @@ public class AuditTestHelper {
                 null,
                 false,
                 null,
-                AuditTxType.NON_TX
+                AuditTxType.NON_TX,
+                null,
+                "001"
         );
         auditStorage.addAuditEntry(executedEntry);
     }
@@ -138,7 +142,7 @@ public class AuditTestHelper {
         return auditStorage.getAuditEntries().size() == expectedCount;
     }
 
-    public void verifyAuditSequenceStrict(AuditExpectation... expectedAudits) {
+    public void verifyAuditSequenceStrict(AuditEntryExpectation... expectedAudits) {
         List<AuditEntry> actualEntries = getAuditEntriesSorted();
         
         // Check count first
@@ -152,29 +156,27 @@ public class AuditTestHelper {
             ));
         }
         
-        // Check each entry
+        // Check each entry - use the rich AuditEntryAssertions for detailed verification
         for (int i = 0; i < expectedAudits.length; i++) {
             AuditEntry actual = actualEntries.get(i);
-            AuditExpectation expected = expectedAudits[i];
+            AuditEntryExpectation expected = expectedAudits[i];
             
-            if (!expected.getChangeId().equals(actual.getTaskId()) || 
-                expected.getState() != actual.getState()) {
-                
+            try {
+                AuditEntryAssertions.assertAuditEntry(actual, expected);
+            } catch (AssertionError e) {
                 throw new AssertionError(String.format(
-                    "Audit entry mismatch at position %d. Expected: %s, Actual: {changeId='%s', state=%s}. " +
+                    "Audit entry mismatch at position %d: %s. " +
                     "Full expected sequence: %s, Full actual sequence: %s",
                     i,
-                    expected,
-                    actual.getTaskId(),
-                    actual.getState(),
+                    e.getMessage(),
                     formatExpectedSequence(expectedAudits),
                     formatActualSequence(actualEntries)
-                ));
+                ), e);
             }
         }
     }
     
-    private String formatExpectedSequence(AuditExpectation[] expectedAudits) {
+    private String formatExpectedSequence(AuditEntryExpectation[] expectedAudits) {
         if (expectedAudits.length == 0) {
             return "[]";
         }
@@ -182,8 +184,8 @@ public class AuditTestHelper {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < expectedAudits.length; i++) {
             if (i > 0) sb.append(", ");
-            AuditExpectation exp = expectedAudits[i];
-            sb.append(String.format("(%s, %s)", exp.getChangeId(), exp.getState()));
+            AuditEntryExpectation exp = expectedAudits[i];
+            sb.append(String.format("(%s, %s)", exp.getChangeId(), exp.getExpectedState()));
         }
         sb.append("]");
         return sb.toString();

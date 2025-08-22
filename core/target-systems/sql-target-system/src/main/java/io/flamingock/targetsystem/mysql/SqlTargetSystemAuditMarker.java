@@ -72,7 +72,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
     }
 
     @Override
-    public void clear(String changeId) {
+    public void clearMark(String changeId) {
         String sql = String.format("DELETE FROM %s WHERE task_id = ?", tableName);
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {

@@ -88,7 +88,7 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
         }
 
         @Override
-        public void clear(String changeId) {
+        public void clearMark(String changeId) {
             ongoingStatuses.removeIf(status -> changeId.equals(status.getTaskId()));
         }
 

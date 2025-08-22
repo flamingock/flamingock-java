@@ -61,7 +61,7 @@ public interface TargetSystemAuditMarker {
      * @param changeId the identifier of the change whose local mark should be removed.
      * @throws FlamingockException if the operation fails (e.g., storage unavailable).
      */
-    void clear(String changeId);
+    void clearMark(String changeId);
 
     /**
      * Creates or updates a local audit mark.

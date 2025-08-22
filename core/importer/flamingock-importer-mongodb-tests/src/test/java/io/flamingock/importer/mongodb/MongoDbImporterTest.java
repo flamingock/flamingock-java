@@ -43,8 +43,8 @@ import java.util.List;
 
 import static io.flamingock.api.StageType.LEGACY;
 import static io.flamingock.api.StageType.SYSTEM;
-import static io.flamingock.core.kit.audit.AuditExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditExpectation.STARTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @EnableFlamingock(

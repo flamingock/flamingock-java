@@ -10,7 +10,8 @@ dependencies {
 
     testImplementation(project(":utils:test-util"))
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")
-    testImplementation("com.amazonaws:DynamoDBLocal:1.25.0")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.0")
+    testImplementation("org.testcontainers:testcontainers:1.19.0")
 
 //    Mongock
     testImplementation("io.mongock:mongock-standalone:5.5.0")

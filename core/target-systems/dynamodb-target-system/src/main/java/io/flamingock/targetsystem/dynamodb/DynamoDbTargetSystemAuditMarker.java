@@ -69,7 +69,7 @@ public class DynamoDbTargetSystemAuditMarker implements TargetSystemAuditMarker 
     }
 
     @Override
-    public void clear(String changeId) {
+    public void clearMark(String changeId) {
         onGoingTaskStatusTable.deleteItem(
                 DeleteItemEnhancedRequest.builder()
                         .key(Key.builder().partitionValue(changeId).build())

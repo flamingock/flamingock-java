@@ -46,7 +46,7 @@ public class DynamoDBTestHelper {
                 )
                 .items()
                 .stream()
-                .sorted(Comparator.comparing(AuditEntryEntity::getCreatedAt))
+                .sorted()
                 .map(AuditEntryEntity::toAuditEntry)
                 .collect(Collectors.toList());
     }

@@ -16,6 +16,9 @@ dependencies {
     
 
     api("com.github.tomakehurst:wiremock-jre8:2.35.2")
+    
+    // JUnit for assertion utilities
+    api("org.junit.jupiter:junit-jupiter-api:5.9.2")
 
 }
 
