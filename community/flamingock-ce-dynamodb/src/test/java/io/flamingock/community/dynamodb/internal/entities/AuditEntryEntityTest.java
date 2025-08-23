@@ -18,11 +18,8 @@ package io.flamingock.community.dynamodb.internal.entities;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.common.core.targets.OperationType;
+import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 

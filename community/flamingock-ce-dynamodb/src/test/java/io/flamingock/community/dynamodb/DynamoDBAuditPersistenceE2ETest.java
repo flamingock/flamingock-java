@@ -18,26 +18,26 @@ package io.flamingock.community.dynamodb;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
 import io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange;
 import io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange;
 import io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange;
 import io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange;
-import io.flamingock.core.kit.audit.AuditEntryAssertions;
-import io.flamingock.core.kit.audit.AuditEntryExpectation;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.core.kit.TestKit;
+import io.flamingock.dynamodb.kit.DynamoDBTestKit;
+import io.flamingock.core.kit.audit.AuditTestSupport;
+import io.flamingock.dynamodb.kit.DynamoDBAuditStorage;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.targets.DefaultTargetSystem;
-import io.flamingock.internal.util.Trio;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
@@ -46,11 +46,11 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.auditEntry;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Testcontainers
 class DynamoDBAuditPersistenceE2ETest {
@@ -60,9 +60,10 @@ class DynamoDBAuditPersistenceE2ETest {
     @Container
     static final GenericContainer<?> dynamoDBContainer = DynamoDBTestContainer.createContainer();
 
+    private DynamoDBTestKit testKit;
     private DynamoDbClient sharedDynamoDbClient;
     private DynamoDbClient separateDynamoDbClient;
-    private DynamoDBTestHelper dynamoDBTestHelper;
+    private AuditTestHelper auditTestHelper;
 
     @BeforeEach
     void setUp() {
@@ -74,12 +75,12 @@ class DynamoDBAuditPersistenceE2ETest {
         // Create separate DynamoDbClient for TX_SEPARATE_NO_MARKER scenarios
         // Note: In TestContainers, both clients connect to the same container instance
         separateDynamoDbClient = DynamoDBTestContainer.createClient(dynamoDBContainer);
+
         
-        // Initialize test helper with DynamoDB persistence
-        dynamoDBTestHelper = DynamoDBTestContainer.createTestHelper(sharedDynamoDbClient);
-        
-        // Clean up any existing tables to ensure test isolation
-        cleanupTables();
+        // Initialize test kit with DynamoDB persistence using the same client as the driver
+        testKit = DynamoDBTestKit.create(sharedDynamoDbClient, new io.flamingock.community.dynamodb.driver.DynamoDBDriver());
+        auditTestHelper = testKit.getAuditHelper();
+
     }
     
     private void cleanupTables() {
@@ -98,12 +99,7 @@ class DynamoDBAuditPersistenceE2ETest {
 
     @AfterEach
     void tearDown() {
-        if (sharedDynamoDbClient != null) {
-            sharedDynamoDbClient.close();
-        }
-        if (separateDynamoDbClient != null) {
-            separateDynamoDbClient.close();
-        }
+        testKit.cleanUp();
     }
 
     @Test
@@ -112,351 +108,304 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given
         String changeId = "non-tx-transactional-false";
         LocalDateTime testStart = LocalDateTime.now();
+        LocalDateTime testEnd = testStart.plusMinutes(5); // Allow enough time for test execution
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class), null)
-                    )
-            );
-
-            // When - Run Flamingock with DynamoDB persistence
-            assertDoesNotThrow(() -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setRelaxTargetSystemValidation(true)
-                        .addDependency(sharedDynamoDbClient)
-                        .build()
-                        .run();
-            });
-        }
-
-        LocalDateTime testEnd = LocalDateTime.now();
-
-        // Then - Verify complete audit persistence in DynamoDB
-        List<AuditEntry> auditEntries = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(2, auditEntries.size());
-
-        // Verify STARTED entry with all fields
-        AuditEntryExpectation startedExpected = auditEntry()
-                .withTaskId(changeId)
-                .withState(AuditEntry.Status.STARTED)
-                .withType(AuditEntry.ExecutionType.EXECUTION)
-                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
-                .withMethodName("execution")
-                .withTxType(AuditTxType.NON_TX)
-                .withTargetSystemId("default-audit-store-target-system")
-                .withSystemChange(false)
-                .withTimestampBetween(testStart, testEnd);
-
-        AuditEntryAssertions.assertAuditEntry(auditEntries.get(0), startedExpected);
-
-        // Verify EXECUTED entry with all fields
-        AuditEntryExpectation executedExpected = auditEntry()
-                .withTaskId(changeId)
-                .withState(AuditEntry.Status.EXECUTED)
-                .withType(AuditEntry.ExecutionType.EXECUTION)
-                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
-                .withMethodName("execution")
-                .withTxType(AuditTxType.NON_TX)
-                .withTargetSystemId("default-audit-store-target-system")
-                .withSystemChange(false)
-                .withTimestampBetween(testStart, testEnd);
-
-        AuditEntryAssertions.assertAuditEntry(auditEntries.get(1), executedExpected);
-
-        // Verify DynamoDB-specific persistence completeness
-        for (AuditEntry entry : auditEntries) {
-            AuditEntryAssertions.assertAuditEntryCompleteness(entry);
-        }
-
-        // Verify same execution relationship
-        AuditEntryAssertions.assertSameExecution(auditEntries);
+        // When-Then - Complete audit verification within AuditTestSupport framework
+        AuditTestSupport.pipeline()
+                .withAuditHelper(auditTestHelper)
+                .givenChangeUnits(
+                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class))
+                )
+                .when(() -> {
+                    assertDoesNotThrow(() -> {
+                        FlamingockFactory.getCommunityBuilder()
+                                .setRelaxTargetSystemValidation(true)
+                                .addDependency(sharedDynamoDbClient)
+                                .build()
+                                .run();
+                    });
+                })
+                .thenVerifyAuditSequenceStrict(
+                        auditEntry()
+                                .withTaskId(changeId)
+                                .withState(AuditEntry.Status.STARTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("default-audit-store-target-system")
+                                .withSystemChange(false),
+                        auditEntry()
+                                .withTaskId(changeId)
+                                .withState(AuditEntry.Status.EXECUTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("default-audit-store-target-system")
+                                .withSystemChange(false)
+                )
+                .run();
     }
 
     @Test
     @DisplayName("Should persist NON_TX txType for transactional=false scenarios")
     void testNonTxScenarios() {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class), null),
-                            new Trio<>(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class), null)
-                    )
-            );
+        // Given-When-Then - Test NON_TX scenarios
+        AuditTestSupport.pipeline()
+                .withAuditHelper(auditTestHelper)
+                .givenChangeUnits(
+                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class))
+                )
+                .when(() -> {
+                    assertDoesNotThrow(() -> {
+                        FlamingockFactory.getCommunityBuilder()
+                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
+                                .addDependency(sharedDynamoDbClient)
+                                .build()
+                                .run();
+                    });
+                })
+                .thenVerifyAuditSequenceStrict(
+                        // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
+                        auditEntry()
+                                .withTaskId("non-tx-transactional-false")
+                                .withState(AuditEntry.Status.STARTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("default-audit-store-target-system"),
+                        auditEntry()
+                                .withTaskId("non-tx-transactional-false")
+                                .withState(AuditEntry.Status.EXECUTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("default-audit-store-target-system"),
 
-            // When - Run with NON_TX scenarios
-            assertDoesNotThrow(() -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setRelaxTargetSystemValidation(true)
-                        .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
-                        .addDependency(sharedDynamoDbClient)
-                        .build()
-                        .run();
-            });
-        }
-
-        // Then - Verify NON_TX txType and complete field persistence
-        List<AuditEntry> auditEntries = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(4, auditEntries.size()); // 2 changes × 2 states
-
-        // Verify first change (transactional=false)
-        List<AuditEntry> change1Entries = auditEntries.stream()
-                .filter(entry -> "non-tx-transactional-false".equals(entry.getTaskId()))
-                .collect(Collectors.toList());
-        assertEquals(2, change1Entries.size());
-
-        for (AuditEntry entry : change1Entries) {
-            AuditEntryAssertions.assertTransactionFields(entry,
-                    AuditTxType.NON_TX,
-                    "default-audit-store-target-system");
-            AuditEntryAssertions.assertExecutionFields(entry,
-                    "io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange",
-                    "execution",
-                    AuditEntry.ExecutionType.EXECUTION);
-        }
-
-        // Verify second change (DefaultTargetSystem)
-        List<AuditEntry> change2Entries = auditEntries.stream()
-                .filter(entry -> "non-tx-target-system".equals(entry.getTaskId()))
-                .collect(Collectors.toList());
-        assertEquals(2, change2Entries.size());
-
-        for (AuditEntry entry : change2Entries) {
-            AuditEntryAssertions.assertTransactionFields(entry,
-                    AuditTxType.NON_TX,
-                    "non-tx-system");
-            AuditEntryAssertions.assertExecutionFields(entry,
-                    "io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange",
-                    "execution",
-                    AuditEntry.ExecutionType.EXECUTION);
-        }
+                        // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
+                        auditEntry()
+                                .withTaskId("non-tx-target-system")
+                                .withState(AuditEntry.Status.STARTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("non-tx-system"),
+                        auditEntry()
+                                .withTaskId("non-tx-target-system")
+                                .withState(AuditEntry.Status.EXECUTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("non-tx-system")
+                )
+                .run();
     }
 
     @Test
     @DisplayName("Should persist TX_SHARED txType for default and explicit same DynamoDbClient scenarios")
     void testTxSharedScenarios() {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class), null))
-            );
+        // Given-When-Then - Test TX_SHARED scenarios  
+        AuditTestSupport.pipeline()
+                .withAuditHelper(auditTestHelper)
+                .givenChangeUnits(
+                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                )
+                .when(() -> {
+                    assertDoesNotThrow(() -> {
+                        DynamoDBTargetSystem sharedTargetSystem = new DynamoDBTargetSystem("tx-shared-system")
+                                .withDynamoDBClient(sharedDynamoDbClient); // Same DynamoDbClient as audit storage
 
-            // When - Run with TX_SHARED scenarios
-            assertDoesNotThrow(() -> {
-                DynamoDBTargetSystem sharedTargetSystem = new DynamoDBTargetSystem("tx-shared-system")
-                        .withDynamoDBClient(sharedDynamoDbClient); // Same DynamoDbClient as audit storage
-
-                FlamingockFactory.getCommunityBuilder()
-                        .setRelaxTargetSystemValidation(true)
-                        .addTargetSystem(sharedTargetSystem)
-                        .addDependency(sharedDynamoDbClient)
-                        .build()
-                        .run();
-            });
-        }
-
-        // Then - Verify TX_SHARED txType and complete field persistence
-        List<AuditEntry> auditEntries = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(2, auditEntries.size()); // 2 changes × 2 states
-
-        // Verify first change (default TX_SHARED)
-        List<AuditEntry> change1Entries = auditEntries.stream()
-                .filter(entry -> "tx-shared-default".equals(entry.getTaskId()))
-                .collect(Collectors.toList());
-        assertEquals(2, change1Entries.size());
-
-        for (AuditEntry entry : change1Entries) {
-            AuditEntryAssertions.assertTransactionFields(entry,
-                    AuditTxType.TX_SHARED,
-                    "default-audit-store-target-system");
-            AuditEntryAssertions.assertExecutionFields(entry,
-                    "io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange",
-                    "execution",
-                    AuditEntry.ExecutionType.EXECUTION);
-        }
+                        FlamingockFactory.getCommunityBuilder()
+                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(sharedTargetSystem)
+                                .addDependency(sharedDynamoDbClient)
+                                .build()
+                                .run();
+                    });
+                })
+                .thenVerifyAuditSequenceStrict(
+                        auditEntry()
+                                .withTaskId("tx-shared-default")
+                                .withState(AuditEntry.Status.STARTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.TX_SHARED)
+                                .withTargetSystemId("default-audit-store-target-system"),
+                        auditEntry()
+                                .withTaskId("tx-shared-default")
+                                .withState(AuditEntry.Status.EXECUTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.TX_SHARED)
+                                .withTargetSystemId("default-audit-store-target-system")
+                )
+                .run();
 
     }
 
     @Test
     @DisplayName("Should persist TX_SEPARATE_NO_MARKER when targetSystem defined and different from auditStore")
     void testTxNoMarkerWhenSameMongoClientButDifferentTargetSystem() {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class), null)
-                    )
-            );
-
-            // When - Run with multiple target system configurations
-            assertDoesNotThrow(() -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setRelaxTargetSystemValidation(true)
-                        .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
-                                .withDynamoDBClient(separateDynamoDbClient))
-                        .addDependency(sharedDynamoDbClient)
-                        .build()
-                        .run();
-            });
-        }
-
-        // Then - Verify each change has correct targetSystemId
-        List<AuditEntry> auditEntries = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(2, auditEntries.size()); // 3 changes × 2 states
-
-        // Verify separate target system
-        List<AuditEntry> separateEntries = auditEntries.stream()
-                .filter(entry -> "tx-separate-no-marker".equals(entry.getTaskId()))
-                .collect(Collectors.toList());
-        for (AuditEntry entry : separateEntries) {
-            assertEquals("mongo-system", entry.getTargetSystemId());
-        }
+        // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
+        AuditTestSupport.pipeline()
+                .withAuditHelper(auditTestHelper)
+                .givenChangeUnits(
+                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                )
+                .when(() -> {
+                    assertDoesNotThrow(() -> {
+                        FlamingockFactory.getCommunityBuilder()
+                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
+                                        .withDynamoDBClient(separateDynamoDbClient))
+                                .addDependency(sharedDynamoDbClient)
+                                .build()
+                                .run();
+                    });
+                })
+                .thenVerifyAuditSequenceStrict(
+                        auditEntry()
+                                .withTaskId("tx-separate-no-marker")
+                                .withState(AuditEntry.Status.STARTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("mongo-system"),
+                        auditEntry()
+                                .withTaskId("tx-separate-no-marker")
+                                .withState(AuditEntry.Status.EXECUTED)
+                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("mongo-system")
+                )
+                .run();
     }
 
 
     @Test
     @DisplayName("Should persist TX_SEPARATE_NO_MARKER txType for different DynamoDbClient scenario")
     void testTxSeparateNoMarkerScenario() {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class), null)
-                    )
-            );
+        DynamoDBTargetSystem separateTargetSystem = new DynamoDBTargetSystem("mongo-system")
+                .withDynamoDBClient(separateDynamoDbClient); // Different DynamoDbClient from audit storage
 
-            // When - Run with TX_SEPARATE_NO_MARKER scenario
-            assertDoesNotThrow(() -> {
-                DynamoDBTargetSystem separateTargetSystem = new DynamoDBTargetSystem("mongo-system")
-                        .withDynamoDBClient(separateDynamoDbClient); // Different DynamoDbClient from audit storage
-
-                FlamingockFactory.getCommunityBuilder()
-                        .setRelaxTargetSystemValidation(true)
-                        .addTargetSystem(separateTargetSystem)
-                        .addDependency(sharedDynamoDbClient)
-                        .build()
-                        .run();
-            });
-        }
-
-        // Then - Verify TX_SEPARATE_NO_MARKER txType and complete field persistence
-        List<AuditEntry> auditEntries = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(2, auditEntries.size());
-
-        for (AuditEntry entry : auditEntries) {
-            AuditEntryAssertions.assertTransactionFields(entry,
-                    AuditTxType.TX_SEPARATE_NO_MARKER,
-                    "mongo-system");
-            AuditEntryAssertions.assertExecutionFields(entry,
-                    "io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange",
-                    "execution",
-                    AuditEntry.ExecutionType.EXECUTION);
-            AuditEntryAssertions.assertBasicFields(entry,
-                    "tx-separate-no-marker",
-                    "test-author",
-                    entry.getState());
-        }
+        // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
+        AuditTestSupport.pipeline()
+                .withAuditHelper(auditTestHelper)
+                .givenChangeUnits(
+                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                )
+                .when(() -> {
+                    assertDoesNotThrow(() -> {
+                        FlamingockFactory.getCommunityBuilder()
+                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(separateTargetSystem)
+                                .addDependency(sharedDynamoDbClient)
+                                .build()
+                                .run();
+                    });
+                })
+                .thenVerifyAuditSequenceStrict(
+                        STARTED("tx-separate-no-marker")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("mongo-system"),
+                        EXECUTED("tx-separate-no-marker")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("mongo-system")
+                )
+                .run();
     }
 
     @Test
     @DisplayName("Should persist correct targetSystemId for different target system configurations")
     void testTargetSystemIdVariations() {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class), null),
-                            new Trio<>(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class), null),
-                            new Trio<>(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class), null)
-                    )
-            );
+        // Given-When-Then - Test multiple target system configurations with AuditTestSupport
+        AuditTestSupport.pipeline()
+                .withAuditHelper(auditTestHelper)
+                .givenChangeUnits(
+                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                )
+                .when(() -> {
+                    assertDoesNotThrow(() -> {
+                        FlamingockFactory.getCommunityBuilder()
+                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
+                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
+                                        .withDynamoDBClient(separateDynamoDbClient))
+                                .addDependency(sharedDynamoDbClient)
+                                .build()
+                                .run();
+                    });
+                })
+                .thenVerifyAuditSequenceStrict(
+                        // TxSharedDefaultChange - STARTED & EXECUTED with default target system
+                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.STARTED).withTargetSystemId("default-audit-store-target-system"),
+                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.EXECUTED).withTargetSystemId("default-audit-store-target-system"),
 
-            // When - Run with multiple target system configurations
-            assertDoesNotThrow(() -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setRelaxTargetSystemValidation(true)
-                        .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
-                        .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
-                                .withDynamoDBClient(separateDynamoDbClient))
-                        .addDependency(sharedDynamoDbClient)
-                        .build()
-                        .run();
-            });
-        }
+                        // NonTxTargetSystemChange - STARTED & EXECUTED with custom target system
+                        auditEntry().withTaskId("non-tx-target-system").withState(AuditEntry.Status.STARTED).withTargetSystemId("non-tx-system"),
+                        auditEntry().withTaskId("non-tx-target-system").withState(AuditEntry.Status.EXECUTED).withTargetSystemId("non-tx-system"),
 
-        // Then - Verify each change has correct targetSystemId
-        List<AuditEntry> auditEntries = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(6, auditEntries.size()); // 3 changes × 2 states
-
-        // Verify default target system
-        List<AuditEntry> defaultEntries = auditEntries.stream()
-                .filter(entry -> "tx-shared-default".equals(entry.getTaskId()))
-                .collect(Collectors.toList());
-        for (AuditEntry entry : defaultEntries) {
-            assertEquals("default-audit-store-target-system", entry.getTargetSystemId());
-        }
-
-        // Verify custom target system
-        List<AuditEntry> customEntries = auditEntries.stream()
-                .filter(entry -> "non-tx-target-system".equals(entry.getTaskId()))
-                .collect(Collectors.toList());
-        for (AuditEntry entry : customEntries) {
-            assertEquals("non-tx-system", entry.getTargetSystemId());
-        }
-
-        // Verify separate target system
-        List<AuditEntry> separateEntries = auditEntries.stream()
-                .filter(entry -> "tx-separate-no-marker".equals(entry.getTaskId()))
-                .collect(Collectors.toList());
-        for (AuditEntry entry : separateEntries) {
-            assertEquals("mongo-system", entry.getTargetSystemId());
-        }
+                        // TxSeparateChange - STARTED & EXECUTED with separate target system
+                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.STARTED).withTargetSystemId("mongo-system"),
+                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.EXECUTED).withTargetSystemId("mongo-system")
+                )
+                .run();
     }
 
 
     @Test
     @DisplayName("Should persist multiple changes with different txType configurations correctly")
     void testMultipleChangesWithDifferentConfigurations() {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class), null),
-                            new Trio<>(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class), null),
-                            new Trio<>(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class), null)
-                    )
-            );
+        // Given-When-Then - Test comprehensive txType scenarios with AuditTestSupport
+        AuditTestSupport.pipeline()
+                .withAuditHelper(auditTestHelper)
+                .givenChangeUnits(
+                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                )
+                .when(() -> {
+                    assertDoesNotThrow(() -> {
+                        FlamingockFactory.getCommunityBuilder()
+                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
+                                        .withDynamoDBClient(separateDynamoDbClient))
+                                .addDependency(sharedDynamoDbClient)
+                                .build()
+                                .run();
+                    });
+                })
+                .thenVerifyAuditSequenceStrict(
+                        // NonTxTransactionalFalseChange - STARTED & EXECUTED
+                        auditEntry().withTaskId("non-tx-transactional-false").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.NON_TX),
+                        auditEntry().withTaskId("non-tx-transactional-false").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.NON_TX),
 
-            // When - Run comprehensive txType test
-            assertDoesNotThrow(() -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setRelaxTargetSystemValidation(true)
-                        .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
-                                .withDynamoDBClient(separateDynamoDbClient))
-                        .addDependency(sharedDynamoDbClient)
-                        .build()
-                        .run();
-            });
-        }
+                        // TxSharedDefaultChange - STARTED & EXECUTED
+                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.TX_SHARED),
+                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.TX_SHARED),
 
-        // Then - Verify each change has correct txType and all fields are persisted correctly
-        List<AuditEntry> auditEntries = dynamoDBTestHelper.getAuditEntriesSorted(Constants.DEFAULT_AUDIT_STORE_NAME);
-        assertEquals(6, auditEntries.size()); // 3 changes × 2 states
-
-        // Use comprehensive assertions for systematic verification
-        AuditEntryAssertions.assertAuditSequence(auditEntries,
-                // NonTxTransactionalFalseChange - STARTED & EXECUTED
-                auditEntry().withTaskId("non-tx-transactional-false").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.NON_TX),
-                auditEntry().withTaskId("non-tx-transactional-false").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.NON_TX),
-
-                // TxSharedDefaultChange - STARTED & EXECUTED
-                auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.TX_SHARED),
-                auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.TX_SHARED),
-
-                // TxSeparateChange - STARTED & EXECUTED
-                auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
-                auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
-        );
-
-        // Verify each entry has complete audit field persistence
-        for (AuditEntry entry : auditEntries) {
-            AuditEntryAssertions.assertAuditEntryCompleteness(entry);
-        }
+                        // TxSeparateChange - STARTED & EXECUTED
+                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
+                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                )
+                .run();
     }
 }

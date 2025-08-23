@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.dynamodb.internal.entities;
+package io.flamingock.internal.util.dynamodb.entities;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditEntryField;
@@ -48,6 +48,10 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     private AuditTxType txType;
     private String targetSystemId;
     private String order;
+
+    public static AuditEntryEntity fromAuditEntry(AuditEntry auditEntry) {
+        return new AuditEntryEntity(auditEntry);
+    }
 
     public AuditEntryEntity(AuditEntry auditEntry) {
         this.partitionKey = partitionKey(auditEntry.getExecutionId(), auditEntry.getTaskId(), auditEntry.getState());

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.dynamodb.internal.entities;
+package io.flamingock.internal.util.dynamodb.entities;
 
 import io.flamingock.internal.core.community.lock.LockEntry;
 import io.flamingock.internal.core.community.lock.LockEntryField;

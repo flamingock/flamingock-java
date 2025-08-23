@@ -16,6 +16,7 @@
 package io.flamingock.common.test.pipeline;
 
 import io.flamingock.api.StageType;
+import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
@@ -23,6 +24,8 @@ import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import org.jetbrains.annotations.NotNull;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,23 +43,20 @@ public class PipelineTestHelper {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Builds a {@link PreviewPipeline} composed of a single {@link PreviewStage} containing one or more {@link CodePreviewChangeUnit}s.
-     * <p>
-     * Each change unit is derived from a {@link Pair} where:
-     * <ul>
-     *   <li>The first item is the {@link Class} annotated with {@link ChangeUnit}</li>
-     *   <li>The second item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Execution}</li>
-     *   <li>The third item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @RollbackExecution}</li>
-     * </ul>
-     *
-     * @param stageName the name of the stage to create
-     * @param changeDefinitions varargs of pairs containing change classes and their execution method parameters
-     * @return a {@link PreviewPipeline} ready for preview or testing
-     */
-    public static PreviewPipeline getPreviewPipeline(String stageName, ChangeUnitTestDefinition... changeDefinitions) {
+    public static void testWithMockedPipeline(List<ChangeUnitTestDefinition> changeUnitTestDefinitions,
+                      Runnable testOperation) {
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+                    PipelineTestHelper.getPreviewPipeline(changeUnitTestDefinitions)
+            );
+            testOperation.run();
+        }
+    }
 
-        List<AbstractPreviewTask> tasks = Arrays.stream(changeDefinitions)
+
+    public static PreviewPipeline getPreviewPipeline(String stageName, List<ChangeUnitTestDefinition> changeDefinitions) {
+
+        List<AbstractPreviewTask> tasks = changeDefinitions.stream()
                 .map(ChangeUnitTestDefinition::toPreview)
                 .collect(Collectors.toList());
 
@@ -72,7 +72,15 @@ public class PipelineTestHelper {
         return new PreviewPipeline(Collections.singletonList(stage));
     }
 
+    public static PreviewPipeline getPreviewPipeline(String stageName, ChangeUnitTestDefinition... changeDefinitions) {
+        return getPreviewPipeline(stageName, Arrays.asList(changeDefinitions));
+    }
+
     public static PreviewPipeline getPreviewPipeline(ChangeUnitTestDefinition... changeDefinitions) {
+        return getPreviewPipeline(Arrays.asList(changeDefinitions));
+    }
+
+    public static PreviewPipeline getPreviewPipeline(List<ChangeUnitTestDefinition> changeDefinitions) {
         return getPreviewPipeline("default-stage-name", changeDefinitions);
     }
 }

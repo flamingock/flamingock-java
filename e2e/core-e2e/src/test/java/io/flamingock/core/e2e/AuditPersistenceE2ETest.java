@@ -21,6 +21,7 @@ import io.flamingock.core.e2e.changes.CustomTargetSystemChange;
 import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
 import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -234,5 +235,86 @@ class AuditPersistenceE2ETest {
                         .withTargetSystemId("custom-target-system")
         );
 
+    }
+
+    @Test
+    @DisplayName("DEMO: New fluent API for simple audit verification")
+    void testNewFluentAPIDemo() {
+        String changeId = "test1-non-tx-change";
+        
+        // Using the new AuditTestSupport API - this replaces all the MockedStatic boilerplate!
+        AuditTestSupport.pipeline()
+            .withAuditHelper(auditHelper)
+            .givenChangeUnits(
+                new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+            )
+            .when(() -> {
+                // The actual test execution code - no more MockedStatic management needed!
+                assertDoesNotThrow(() -> {
+                    testKit.createBuilder()
+                            .setRelaxTargetSystemValidation(true)
+                            .build()
+                            .run();
+                });
+            })
+            .thenVerifyAuditSequenceStrict(
+                STARTED(changeId),
+                EXECUTED(changeId)
+            )
+            .run();
+    }
+    
+    @Test
+    @DisplayName("COMPARISON: Before vs After - Multiple changes with new API") 
+    void testMultipleChangesWithNewAPI() {
+        String changeId1 = "test1-non-tx-change";
+        String changeId2 = "test-custom-target-change";
+        
+        // NEW WAY: Clean, readable, no boilerplate
+        AuditTestSupport.pipeline()
+            .withAuditHelper(auditHelper)
+            .givenChangeUnits(
+                new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
+                new CodeChangeUnitTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
+            )
+            .when(() -> {
+                assertDoesNotThrow(() -> {
+                    testKit.createBuilder()
+                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new DefaultTargetSystem("custom-target-system"))
+                            .build()
+                            .run();
+                });
+            })
+            .thenVerifyAuditSequenceStrict(
+                // First change sequence
+                STARTED(changeId1)
+                        .withAuthor("default_author")
+                        .withType(AuditEntry.ExecutionType.EXECUTION)
+                        .withClass(SimpleNonTransactionalChange.class)
+                        .withTxType(AuditTxType.NON_TX)
+                        .withTargetSystemId("default-audit-store-target-system"),
+                EXECUTED(changeId1)
+                        .withAuthor("default_author")
+                        .withType(AuditEntry.ExecutionType.EXECUTION)
+                        .withClass(SimpleNonTransactionalChange.class)
+                        .withTxType(AuditTxType.NON_TX)
+                        .withTargetSystemId("default-audit-store-target-system"),
+                
+                // Second change sequence  
+                STARTED(changeId2)
+                        .withAuthor("default_author")
+                        .withType(AuditEntry.ExecutionType.EXECUTION)
+                        .withClass(CustomTargetSystemChange.class)
+                        .withTxType(AuditTxType.NON_TX)
+                        .withTargetSystemId("custom-target-system"),
+                EXECUTED(changeId2)
+                        .withAuthor("default_author")
+                        .withType(AuditEntry.ExecutionType.EXECUTION)
+                        .withClass(CustomTargetSystemChange.class)
+                        .withTxType(AuditTxType.NON_TX)
+                        .withTargetSystemId("custom-target-system")
+            )
+            .run();
     }
 }

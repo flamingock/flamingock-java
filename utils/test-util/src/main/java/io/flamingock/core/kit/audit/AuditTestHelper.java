@@ -50,7 +50,8 @@ public class AuditTestHelper {
     }
 
     public List<AuditEntry> getAuditEntriesSorted() {
-        return auditStorage.getAuditEntries().stream()
+        List<AuditEntry> auditEntries = auditStorage.getAuditEntries();
+        return auditEntries.stream()
                 .sorted()
                 .collect(Collectors.toList());
     }

@@ -4,6 +4,7 @@ dependencies {
     api(project(":utils:general-util"))
     api(project(":core:flamingock-core"))
     api(project(":core:flamingock-core-commons"))
+    api(project(":core:flamingock-processor"))
 
     api("javax.inject:javax.inject:1")
     api("org.reflections:reflections:0.10.1")
@@ -19,6 +20,7 @@ dependencies {
     
     // JUnit for assertion utilities
     api("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    api("org.mockito:mockito-inline:4.11.0")
 
 }
 

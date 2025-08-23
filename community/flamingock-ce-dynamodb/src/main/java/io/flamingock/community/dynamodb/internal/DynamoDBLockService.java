@@ -15,7 +15,7 @@
  */
 package io.flamingock.community.dynamodb.internal;
 
-import io.flamingock.community.dynamodb.internal.entities.LockEntryEntity;
+import io.flamingock.internal.util.dynamodb.entities.LockEntryEntity;
 import io.flamingock.internal.core.community.lock.LocalLockService;
 import io.flamingock.internal.core.community.lock.LockEntry;
 import io.flamingock.internal.core.engine.lock.LockAcquisition;
