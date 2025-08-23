@@ -243,12 +243,12 @@ class AuditPersistenceE2ETest {
         String changeId = "test1-non-tx-change";
         
         // Using the new AuditTestSupport API - this replaces all the MockedStatic boilerplate!
-        AuditTestSupport.pipeline()
-            .withAuditHelper(auditHelper)
-            .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+            
+            .GIVEN_ChangeUnits(
                 new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
             )
-            .when(() -> {
+            .WHEN(() -> {
                 // The actual test execution code - no more MockedStatic management needed!
                 assertDoesNotThrow(() -> {
                     testKit.createBuilder()
@@ -257,7 +257,7 @@ class AuditPersistenceE2ETest {
                             .run();
                 });
             })
-            .thenVerifyAuditSequenceStrict(
+            .THEN_VerifyAuditSequenceStrict(
                 STARTED(changeId),
                 EXECUTED(changeId)
             )
@@ -271,13 +271,13 @@ class AuditPersistenceE2ETest {
         String changeId2 = "test-custom-target-change";
         
         // NEW WAY: Clean, readable, no boilerplate
-        AuditTestSupport.pipeline()
-            .withAuditHelper(auditHelper)
-            .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+            
+            .GIVEN_ChangeUnits(
                 new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
                 new CodeChangeUnitTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
             )
-            .when(() -> {
+            .WHEN(() -> {
                 assertDoesNotThrow(() -> {
                     testKit.createBuilder()
                             .setRelaxTargetSystemValidation(true)
@@ -286,7 +286,7 @@ class AuditPersistenceE2ETest {
                             .run();
                 });
             })
-            .thenVerifyAuditSequenceStrict(
+            .THEN_VerifyAuditSequenceStrict(
                 // First change sequence
                 STARTED(changeId1)
                         .withAuthor("default_author")

@@ -96,13 +96,12 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with DEFAULT repository names related tables should exists")
     void happyPathWithDefaultRepositoryNames() {
         // Given-When
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
                         new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
                         new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
-                .when(() -> {
+                .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
                             .addDependency(client)
                             .setRelaxTargetSystemValidation(true)
@@ -144,13 +143,12 @@ class DynamoDBDriverTest {
         DynamoDBConfiguration config = new DynamoDBConfiguration();
 
         // When
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
                         new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
                         new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
-                .when(() -> {
+                .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
                             .addDependency(config)
                             .setProperty("dynamodb.autoCreate", false)
@@ -184,13 +182,12 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver with transactions enabled should persist the audit logs and the user's table updated")
     void happyPathWithTransaction() {
         // Given-When-Then
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
                         new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
                         new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
-                .when(() -> {
+                .WHEN(() -> {
                     // Run pipeline twice to verify repeated execution
                     FlamingockFactory.getCommunityBuilder()
                             .addDependency(client)
@@ -204,7 +201,7 @@ class DynamoDBDriverTest {
                             .build()
                             .run();
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         auditEntry().withTaskId("table-create").withState(AuditEntry.Status.STARTED),
                         auditEntry().withTaskId("table-create").withState(AuditEntry.Status.EXECUTED),
                         auditEntry().withTaskId("insert-user").withState(AuditEntry.Status.STARTED),
@@ -231,13 +228,12 @@ class DynamoDBDriverTest {
     @DisplayName("When standalone runs the driver and execution fails should persist only the executed audit logs")
     void failedWithTransaction() {
         // Given-When-Then - Test failure scenario with audit verification
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
                         new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
-                .when(() -> {
+                .WHEN(() -> {
                     assertThrows(PipelineExecutionException.class, () -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .addDependency(client)
@@ -246,7 +242,7 @@ class DynamoDBDriverTest {
                                 .run();
                     });
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         STARTED("table-create"),
                         EXECUTED("table-create"),
 

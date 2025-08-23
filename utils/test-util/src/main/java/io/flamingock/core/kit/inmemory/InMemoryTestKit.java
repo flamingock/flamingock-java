@@ -85,6 +85,12 @@ public class InMemoryTestKit implements TestKit {
         return lockHelper;
     }
 
+    @Override
+    public void cleanUp() {
+        auditStorage.clear();
+        lockStorage.clear();
+    }
+
     public InMemoryAuditStorage getAuditStorage() {
         return auditStorage;
     }

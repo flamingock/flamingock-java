@@ -68,18 +68,8 @@ public interface TestKit {
      */
     LockTestHelper getLockHelper();
 
-    /**
-     * Creates a generic TestKit with custom storage implementations and driver.
-     * This is the preferred method for creating TestKits with real databases.
-     * 
-     * @param auditStorage storage implementation for audit operations
-     * @param lockStorage storage implementation for lock operations  
-     * @param driver driver for the specific database/storage technology
-     * @return generic TestKit instance
-     */
-    static TestKit create(AuditStorage auditStorage, LockStorage lockStorage, LocalDriver driver) {
-        return new GenericTestKit(auditStorage, lockStorage, driver);
-    }
+    void cleanUp();
+
 
     default TestFlamingockBuilder createBuilderWithDriver(LocalDriver driver) {
         return new TestFlamingockBuilder(

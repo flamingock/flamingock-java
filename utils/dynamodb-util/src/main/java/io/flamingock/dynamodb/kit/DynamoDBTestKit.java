@@ -15,15 +15,14 @@
  */
 package io.flamingock.dynamodb.kit;
 
-import io.flamingock.core.kit.GenericTestKit;
-import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.AbstractTestKit;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.internal.core.community.driver.LocalDriver;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 
-public class DynamoDBTestKit extends GenericTestKit {
+public class DynamoDBTestKit extends AbstractTestKit {
 
     private final DynamoDbClient client;
 
@@ -32,6 +31,7 @@ public class DynamoDBTestKit extends GenericTestKit {
         this.client = client;
     }
 
+    @Override
     public void cleanUp() {
         if (client != null) {
             // delete all tables created during the test

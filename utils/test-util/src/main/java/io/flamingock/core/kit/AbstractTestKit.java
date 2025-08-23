@@ -29,7 +29,7 @@ import io.flamingock.internal.core.community.driver.LocalDriver;
  * the proper dependency separation - storage classes only depend on their respective
  * database clients, not on Flamingock-specific database components.
  */
-public class GenericTestKit implements TestKit {
+public abstract class AbstractTestKit implements TestKit {
     
     private final AuditStorage auditStorage;
     private final LockStorage lockStorage;
@@ -37,7 +37,7 @@ public class GenericTestKit implements TestKit {
     private final AuditTestHelper auditHelper;
     private final LockTestHelper lockHelper;
     
-    public GenericTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalDriver driver) {
+    protected AbstractTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalDriver driver) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
         this.driver = driver;
@@ -61,4 +61,5 @@ public class GenericTestKit implements TestKit {
     public LockTestHelper getLockHelper() {
         return lockHelper;
     }
+
 }

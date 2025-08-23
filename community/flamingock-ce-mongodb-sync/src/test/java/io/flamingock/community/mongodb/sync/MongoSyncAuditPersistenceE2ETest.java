@@ -71,21 +71,13 @@ class MongoSyncAuditPersistenceE2ETest {
         separateMongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
 
         // Initialize test kit with MongoDB persistence
-        testKit = MongoSyncTestKit.create(new MongoSyncDriver(), database);
+        testKit = MongoSyncTestKit.create(new MongoSyncDriver(), sharedMongoClient, database);
         auditHelper = testKit.getAuditHelper();
     }
 
     @AfterEach
     void tearDown() {
-        if (database != null) {
-            database.drop(); // Clean between tests
-        }
-        if (sharedMongoClient != null) {
-            sharedMongoClient.close();
-        }
-        if (separateMongoClient != null) {
-            separateMongoClient.close();
-        }
+        testKit.cleanUp();
     }
 
     @Test
@@ -97,12 +89,11 @@ class MongoSyncAuditPersistenceE2ETest {
         LocalDateTime testEnd = testStart.plusMinutes(5); // Allow enough time for test execution
 
         // Given-When-Then - Test MongoDB audit persistence with AuditTestSupport
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList())
                 )
-                .when(() -> {
+                .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setRelaxTargetSystemValidation(true)
@@ -112,7 +103,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         STARTED(changeId)
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
@@ -135,13 +126,12 @@ class MongoSyncAuditPersistenceE2ETest {
     @DisplayName("Should persist NON_TX txType for transactional=false scenarios")
     void testNonTxScenarios() {
         // Given-When-Then - Test NON_TX scenarios with AuditTestSupport
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList()),
                         new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.emptyList())
                 )
-                .when(() -> {
+                .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setRelaxTargetSystemValidation(true)
@@ -152,7 +142,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
                         STARTED("non-tx-transactional-false")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
@@ -188,12 +178,11 @@ class MongoSyncAuditPersistenceE2ETest {
                 .withDatabase(database);
 
         // Given-When-Then - Test TX_SHARED scenarios with AuditTestSupport
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Collections.emptyList())
                 )
-                .when(() -> {
+                .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setRelaxTargetSystemValidation(true)
@@ -204,7 +193,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-shared-default")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSharedDefaultChange.class)
@@ -227,12 +216,11 @@ class MongoSyncAuditPersistenceE2ETest {
                 .withDatabase(database);
 
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Collections.emptyList())
                 )
-                .when(() -> {
+                .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setRelaxTargetSystemValidation(true)
@@ -243,7 +231,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-separate-no-marker")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSeparateAndSameMongoClientChange.class)
@@ -267,12 +255,11 @@ class MongoSyncAuditPersistenceE2ETest {
                 .withDatabase(separateDatabase);
 
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(TxSeparateChange.class, Collections.emptyList())
                 )
-                .when(() -> {
+                .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setRelaxTargetSystemValidation(true)
@@ -283,7 +270,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-separate-no-marker")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSeparateChange.class)
@@ -304,14 +291,13 @@ class MongoSyncAuditPersistenceE2ETest {
         MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
 
         // Given-When-Then - Test multiple target system configurations with AuditTestSupport
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Collections.emptyList()),
                         new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.emptyList()),
                         new CodeChangeUnitTestDefinition(TxSeparateChange.class, Collections.emptyList())
                 )
-                .when(() -> {
+                .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setRelaxTargetSystemValidation(true)
@@ -325,7 +311,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .run();
                     });
                 })
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         // TxSharedDefaultChange - STARTED & EXECUTED with default target system
                         STARTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
                         EXECUTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
@@ -346,13 +332,12 @@ class MongoSyncAuditPersistenceE2ETest {
     void testMultipleChangesWithDifferentConfigurations() {
 
 
-        AuditTestSupport.pipeline()
-                .withAuditHelper(auditHelper)
-                .givenChangeUnits(
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList()),
                         new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Collections.emptyList()),
                         new CodeChangeUnitTestDefinition(TxSeparateChange.class, Collections.emptyList())
-                ).when(() -> assertDoesNotThrow(() -> {
+                ).WHEN(() -> assertDoesNotThrow(() -> {
                     MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
                     testKit.createBuilder()
                             .setRelaxTargetSystemValidation(true)
@@ -364,7 +349,7 @@ class MongoSyncAuditPersistenceE2ETest {
                             .build()
                             .run();
                 }))
-                .thenVerifyAuditSequenceStrict(
+                .THEN_VerifyAuditSequenceStrict(
                         STARTED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
                         EXECUTED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
 

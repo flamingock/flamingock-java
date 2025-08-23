@@ -17,17 +17,41 @@ package io.flamingock.mongodb.kit;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.AbstractTestKit;
+import io.flamingock.core.kit.audit.AuditStorage;
+import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.internal.core.community.driver.LocalDriver;
 
-public class MongoSyncTestKit {
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+public class MongoSyncTestKit extends AbstractTestKit {
+    private static final Set<String> SYSTEM_DATABASES =
+            new HashSet<>(Arrays.asList("admin", "config", "local"));
+
+    private final MongoClient mongoClient;
+
+    public MongoSyncTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalDriver driver, MongoClient mongoClient) {
+        super(auditStorage, lockStorage, driver);
+        this.mongoClient = mongoClient;
+    }
+
+    @Override
+    public void cleanUp() {
+        mongoClient.listDatabaseNames().forEach(dbName -> {
+            if (!SYSTEM_DATABASES.contains(dbName)) {
+                mongoClient.getDatabase(dbName).drop();
+            }
+        });
+    }
 
     /**
      * Create a new MongoSyncTestKit with MongoDB client and database
      */
-    public static TestKit create(LocalDriver driver, MongoDatabase database) {
+    public static MongoSyncTestKit create(LocalDriver driver, MongoClient mongoClient, MongoDatabase database) {
         MongoSyncAuditStorage auditStorage = new MongoSyncAuditStorage(database);
         MongoSyncLockStorage lockStorage = new MongoSyncLockStorage(database);
-        return TestKit.create(auditStorage, lockStorage, driver);
+        return new MongoSyncTestKit(auditStorage, lockStorage, driver, mongoClient);
     }
 }

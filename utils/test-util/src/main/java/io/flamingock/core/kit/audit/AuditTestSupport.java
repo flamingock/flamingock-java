@@ -17,6 +17,7 @@ package io.flamingock.core.kit.audit;
 
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
+import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.processor.util.Deserializer;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -36,28 +37,20 @@ import org.mockito.Mockito;
  * </ul>
  */
 public class AuditTestSupport {
-    
+
+    private final TestKit testKit;
     private AuditTestHelper auditHelper;
     private CodeChangeUnitTestDefinition[] changeUnits;
     private Runnable testCode;
     private AuditEntryExpectation[] expectedAudits;
 
-    public static AuditTestSupport pipeline() {
-        return new AuditTestSupport();
+    public static AuditTestSupport withTestKit(TestKit testKit) {
+        return new AuditTestSupport(testKit);
     }
 
-    AuditTestSupport() {
-    }
-    
-    /**
-     * Configures the audit helper for this test execution.
-     * 
-     * @param auditHelper the audit helper to use for verification
-     * @return this builder for method chaining
-     */
-    public AuditTestSupport withAuditHelper(AuditTestHelper auditHelper) {
-        this.auditHelper = auditHelper;
-        return this;
+    AuditTestSupport(TestKit testKit) {
+        this.testKit = testKit;
+        this.auditHelper = testKit.getAuditHelper();
     }
     
     /**
@@ -66,7 +59,7 @@ public class AuditTestSupport {
      * @param changeUnits varargs array of CodeChangeUnitTestDefinition instances
      * @return this builder for method chaining
      */
-    public AuditTestSupport givenChangeUnits(CodeChangeUnitTestDefinition... changeUnits) {
+    public AuditTestSupport GIVEN_ChangeUnits(CodeChangeUnitTestDefinition... changeUnits) {
         this.changeUnits = changeUnits;
         return this;
     }
@@ -79,7 +72,7 @@ public class AuditTestSupport {
      * @param testCode the test code to execute
      * @return this builder for method chaining
      */
-    public AuditTestSupport when(Runnable testCode) {
+    public AuditTestSupport WHEN(Runnable testCode) {
         this.testCode = testCode;
         return this;
     }
@@ -92,7 +85,7 @@ public class AuditTestSupport {
      * @param expectedAudits varargs array of expected audit entry expectations
      * @return this builder for method chaining
      */
-    public AuditTestSupport thenVerifyAuditSequenceStrict(AuditEntryExpectation... expectedAudits) {
+    public AuditTestSupport THEN_VerifyAuditSequenceStrict(AuditEntryExpectation... expectedAudits) {
         this.expectedAudits = expectedAudits;
         return this;
     }

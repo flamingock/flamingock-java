@@ -42,8 +42,12 @@ public class MongoSyncAuditStorage implements AuditStorage {
     private final MongoDBAuditMapper<SimpleMongoDocumentHelper> mapper;
     
     public MongoSyncAuditStorage(MongoDatabase database) {
+        this(database, AUDIT_COLLECTION_NAME);
+    }
+    
+    public MongoSyncAuditStorage(MongoDatabase database, String collectionName) {
         this.database = database;
-        this.auditCollection = database.getCollection(AUDIT_COLLECTION_NAME);
+        this.auditCollection = database.getCollection(collectionName);
         this.mapper = new MongoDBAuditMapper<>(() -> new SimpleMongoDocumentHelper(new Document()));
     }
     

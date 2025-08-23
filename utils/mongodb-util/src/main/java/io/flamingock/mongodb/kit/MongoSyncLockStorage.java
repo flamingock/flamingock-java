@@ -42,9 +42,13 @@ public class MongoSyncLockStorage implements LockStorage {
     private final MongoCollection<Document> metadataCollection;
     
     public MongoSyncLockStorage(MongoDatabase database) {
+        this(database, LOCK_COLLECTION_NAME);
+    }
+    
+    public MongoSyncLockStorage(MongoDatabase database, String lockCollectionName) {
         this.database = database;
-        this.lockCollection = database.getCollection(LOCK_COLLECTION_NAME);
-        this.metadataCollection = database.getCollection(METADATA_COLLECTION_NAME);
+        this.lockCollection = database.getCollection(lockCollectionName);
+        this.metadataCollection = database.getCollection(lockCollectionName + "Metadata");
     }
     
     @Override
