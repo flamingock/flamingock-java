@@ -170,36 +170,24 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .thenVerifyAuditSequenceStrict(
                         // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
-                        auditEntry()
-                                .withTaskId("non-tx-transactional-false")
-                                .withState(AuditEntry.Status.STARTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        STARTED("non-tx-transactional-false")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("default-audit-store-target-system"),
-                        auditEntry()
-                                .withTaskId("non-tx-transactional-false")
-                                .withState(AuditEntry.Status.EXECUTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        EXECUTED("non-tx-transactional-false")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("default-audit-store-target-system"),
 
                         // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
-                        auditEntry()
-                                .withTaskId("non-tx-target-system")
-                                .withState(AuditEntry.Status.STARTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        STARTED("non-tx-target-system")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system"),
-                        auditEntry()
-                                .withTaskId("non-tx-target-system")
-                                .withState(AuditEntry.Status.EXECUTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        EXECUTED("non-tx-target-system")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
@@ -231,18 +219,12 @@ class DynamoDBAuditPersistenceE2ETest {
                     });
                 })
                 .thenVerifyAuditSequenceStrict(
-                        auditEntry()
-                                .withTaskId("tx-shared-default")
-                                .withState(AuditEntry.Status.STARTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        EXECUTED("tx-shared-default")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SHARED)
                                 .withTargetSystemId("default-audit-store-target-system"),
-                        auditEntry()
-                                .withTaskId("tx-shared-default")
-                                .withState(AuditEntry.Status.EXECUTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        EXECUTED("tx-shared-default")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SHARED)
@@ -273,18 +255,12 @@ class DynamoDBAuditPersistenceE2ETest {
                     });
                 })
                 .thenVerifyAuditSequenceStrict(
-                        auditEntry()
-                                .withTaskId("tx-separate-no-marker")
-                                .withState(AuditEntry.Status.STARTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        STARTED("tx-separate-no-marker")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system"),
-                        auditEntry()
-                                .withTaskId("tx-separate-no-marker")
-                                .withState(AuditEntry.Status.EXECUTED)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                        EXECUTED("tx-separate-no-marker")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
@@ -356,16 +332,16 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .thenVerifyAuditSequenceStrict(
                         // TxSharedDefaultChange - STARTED & EXECUTED with default target system
-                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.STARTED).withTargetSystemId("default-audit-store-target-system"),
-                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.EXECUTED).withTargetSystemId("default-audit-store-target-system"),
+                        STARTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
+                        EXECUTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
 
                         // NonTxTargetSystemChange - STARTED & EXECUTED with custom target system
-                        auditEntry().withTaskId("non-tx-target-system").withState(AuditEntry.Status.STARTED).withTargetSystemId("non-tx-system"),
-                        auditEntry().withTaskId("non-tx-target-system").withState(AuditEntry.Status.EXECUTED).withTargetSystemId("non-tx-system"),
+                        STARTED("non-tx-target-system").withTargetSystemId("non-tx-system"),
+                        EXECUTED("non-tx-target-system").withTargetSystemId("non-tx-system"),
 
                         // TxSeparateChange - STARTED & EXECUTED with separate target system
-                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.STARTED).withTargetSystemId("mongo-system"),
-                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.EXECUTED).withTargetSystemId("mongo-system")
+                        STARTED("tx-separate-no-marker").withTargetSystemId("mongo-system"),
+                        EXECUTED("tx-separate-no-marker").withTargetSystemId("mongo-system")
                 )
                 .run();
     }
@@ -395,16 +371,16 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .thenVerifyAuditSequenceStrict(
                         // NonTxTransactionalFalseChange - STARTED & EXECUTED
-                        auditEntry().withTaskId("non-tx-transactional-false").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.NON_TX),
-                        auditEntry().withTaskId("non-tx-transactional-false").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.NON_TX),
+                        STARTED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
+                        EXECUTED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
 
                         // TxSharedDefaultChange - STARTED & EXECUTED
-                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.TX_SHARED),
-                        auditEntry().withTaskId("tx-shared-default").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.TX_SHARED),
+                        STARTED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
+                        EXECUTED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
 
                         // TxSeparateChange - STARTED & EXECUTED
-                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.STARTED).withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
-                        auditEntry().withTaskId("tx-separate-no-marker").withState(AuditEntry.Status.EXECUTED).withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                        STARTED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
+                        EXECUTED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                 )
                 .run();
     }
