@@ -1,4 +1,4 @@
-rootProject.name = "flamingock-project"
+rootProject.name = "flamingock-java"
 
 
 //////////////////////////////////////
