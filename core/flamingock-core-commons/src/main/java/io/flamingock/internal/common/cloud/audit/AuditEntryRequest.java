@@ -22,7 +22,13 @@ public class AuditEntryRequest {
     public enum ExecutionType {EXECUTION, BEFORE_EXECUTION}
 
     public enum Status {
-        STARTED, EXECUTED, EXECUTION_FAILED, ROLLED_BACK, ROLLBACK_FAILED;
+        STARTED,
+        EXECUTED,
+        EXECUTION_FAILED,
+        ROLLED_BACK,
+        ROLLBACK_FAILED,
+        MANUAL_MARKED_AS_EXECUTED,
+        MANUAL_MARKED_AS_FAILED
     }
 
     private final String stageId;

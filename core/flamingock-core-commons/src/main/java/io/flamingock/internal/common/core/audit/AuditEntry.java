@@ -282,7 +282,13 @@ public class AuditEntry implements Comparable<AuditEntry> {
     }
 
     public enum Status {
-        STARTED(1), EXECUTED(2), EXECUTION_FAILED(3), ROLLED_BACK(4), ROLLBACK_FAILED(5);
+        STARTED(1),
+        EXECUTED(2),
+        EXECUTION_FAILED(3),
+        ROLLED_BACK(4),
+        ROLLBACK_FAILED(5),
+        MANUAL_MARKED_AS_EXECUTED(6),
+        MANUAL_MARKED_AS_FAILED(7);
 
         private final int priority;
 
