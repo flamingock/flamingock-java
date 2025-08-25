@@ -131,14 +131,14 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
 
-        Map<String, TargetSystemAuditMarkType> ongoingStatusesMap = getOngoingStatuses()
+        Map<String, TargetSystemAuditMarkType> auditMarks = getOngoingStatuses()
                 .stream()
                 .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
 
         ExecutionPlanRequest requestBody = ExecutionPlanMapper.toRequest(
                 loadedStages,
                 coreConfiguration.getLockAcquiredForMillis(),
-                ongoingStatusesMap);
+                auditMarks);
 
         ExecutionPlanResponse responsePlan = client.createExecution(requestBody, lastAcquisitionId, elapsedMillis);
         responsePlan.validate();

@@ -17,8 +17,10 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChangeUnit> {
@@ -30,6 +32,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private boolean isTransactional;
     private boolean isSystem;
     private TargetSystemDescriptor targetSystem;
+    private RecoveryDescriptor recovery;
     private boolean isBeforeExecution;//only for old change units
 
     private CodeLoadedTaskBuilder() {
@@ -65,6 +68,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setTransactional(preview.isTransactional());
         setSystem(preview.isSystem());
         setTargetSystem(preview.getTargetSystem());
+        setRecovery(preview.getRecovery());
         return this;
     }
 
@@ -90,6 +94,12 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     @Override
     public CodeLoadedTaskBuilder setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
+        return this;
+    }
+
+    @Override
+    public CodeLoadedTaskBuilder setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
         return this;
     }
 
@@ -136,7 +146,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
                     isRunAlways,
                     isTransactional,
                     isSystem,
-                    targetSystem
+                    targetSystem,
+                    recovery
             );
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -150,6 +161,16 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setRunAlways(annotation.runAlways());
         setTransactional(annotation.transactional());
         setSystem(false);
+        setRecoveryFromClass(sourceClass);
+    }
+
+    private void setRecoveryFromClass(Class<?> sourceClass) {
+        if (sourceClass.isAnnotationPresent(Recovery.class)) {
+            Recovery recoveryAnnotation = sourceClass.getAnnotation(Recovery.class);
+            setRecovery(RecoveryDescriptor.fromStrategy(recoveryAnnotation.strategy()));
+        } else {
+            setRecovery(RecoveryDescriptor.getDefault());
+        }
     }
 
 }

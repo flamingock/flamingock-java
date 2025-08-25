@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.beans.Transient;
@@ -41,8 +42,9 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
                                  boolean runAlways,
                                  boolean transactional,
                                  boolean system,
-                                 TargetSystemDescriptor targetSystem) {
-        super(id, order, sourceClassPath, runAlways, transactional, system, targetSystem);
+                                 TargetSystemDescriptor targetSystem,
+                                 RecoveryDescriptor recovery) {
+        super(id, order, sourceClassPath, runAlways, transactional, system, targetSystem, recovery);
         this.executionMethodName = executionMethodPreview;
         this.rollbackMethodName = rollbackMethodPreview;
         this.beforeExecutionMethodName = beforeExecutionMethodPreview;
@@ -102,6 +104,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +
                 (getTargetSystem() != null ? ", targetSystem='" + getTargetSystem().getId() + '\'' : "") +
+                (getRecovery() != null ? ", recovery='" + getRecovery().getStrategy() + '\'' : "") +
                 '}';
     }
 

@@ -17,16 +17,20 @@ package io.flamingock.internal.core.community;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.core.engine.audit.domain.AuditEntryInfo;
 import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
 import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Builds action maps for stages based on audit state information.
@@ -42,110 +46,133 @@ public class LocalChangeActionBuilder {
      * Builds a stage action plan from audit stage status and validates for execution readiness.
      * This method analyzes each change's audit state and transaction type
      * to determine the appropriate action (APPLY, SKIP, MANUAL_INTERVENTION).
-     * 
+     *
+     * @param changeUnits the list of available change units
      * @param auditStatus the audit status containing change states and transaction info
      * @return a StageActionPlan with actions for each change
-     * @throws io.flamingock.internal.core.engine.audit.recovery.ManualInterventionRequiredException 
+     * @throws io.flamingock.internal.core.engine.audit.recovery.ManualInterventionRequiredException
      *         if any changes require manual intervention
      */
-    public static ChangeActionMap build(AuditStageStatus auditStatus) {
+    public static ChangeActionMap build(Collection<AbstractLoadedTask> changeUnits, AuditStageStatus auditStatus) {
         Map<String, ChangeAction> actionMap = new HashMap<>();
-        
         Map<String, AuditEntryInfo> entryInfoMap = auditStatus.getEntryInfoMap();
-        
-        for (Map.Entry<String, AuditEntryInfo> entry : entryInfoMap.entrySet()) {
-            String changeId = entry.getKey();
-            AuditEntryInfo entryInfo = entry.getValue();
-            
-            ChangeAction action = determineAction(entryInfo.getStatus(), entryInfo.getTxType());
-            actionMap.put(changeId, action);
+        for(AbstractLoadedTask changeUnit: changeUnits) {
+            AuditEntryInfo entryInfo = entryInfoMap.get(changeUnit.getId());
+            ChangeAction action = determineAction(changeUnit, entryInfo);
+            actionMap.put(changeUnit.getId(), action);
         }
-        
+
         return new ChangeActionMap(actionMap);
     }
 
     /**
      * Determines the action to take based on audit status and transaction type.
-     * This implements the sophisticated recovery decision matrix based on the 
-     * combination of state and transaction type:
-     * <p>
-     * EXECUTED: Always SKIP (already completed successfully)
-     * </p>
-     * <p>
-     * STARTED: Always MANUAL_INTERVENTION (ambiguous state - interrupted execution)
-     * - NON_TX: MANUAL_INTERVENTION
-     * - TX_SEPARATE_NO_MARKER: MANUAL_INTERVENTION  
-     * - TX_SEPARATE: MANUAL_INTERVENTION
-     * - TX_SHARED: MANUAL_INTERVENTION (not possible but safe fallback)
-     * </p>
-     * <p>
-     * EXECUTION_FAILED: Depends on transaction type
-     * - NON_TX: MANUAL_INTERVENTION (no transaction safety)
-     * - TX_SEPARATE_NO_MARKER: APPLY (transactional safety allows retry)
-     * - TX_SEPARATE: APPLY (transactional safety allows retry)
-     * - TX_SHARED: APPLY (transactional safety allows retry)
-     * </p>
-     * <p>
-     * ROLLED_BACK: Always APPLY (safe to retry after rollback)
-     * - All txTypes: APPLY
-     * </p>
-     * <p>
-     * ROLLBACK_FAILED: Always MANUAL_INTERVENTION (unsafe state)
-     * - NON_TX: MANUAL_INTERVENTION
-     * - TX_SEPARATE_NO_MARKER: MANUAL_INTERVENTION (not possible but safe)
-     * - TX_SEPARATE: MANUAL_INTERVENTION (not possible but safe)
-     * - TX_SHARED: MANUAL_INTERVENTION (not possible but safe)
-     * </p>
-     * <p>
-     * null (no audit entry): APPLY (first execution)
-     * </p>
-     * 
-     * @param status the audit entry status
-     * @param txType the transaction type - critical for recovery decisions
-     * @return the action to take for this change
+     * This implements the recovery decision matrix based on the
+     * combination of state and transaction type.
      */
-    public static ChangeAction determineAction(AuditEntry.Status status, AuditTxType txType) {
-        if (status == null) {
+    private static ChangeAction determineAction(AbstractLoadedTask changeUnit, AuditEntryInfo entryInfo) {
+        AuditEntry.Status status = entryInfo != null ? entryInfo.getStatus() : null;
+        AuditTxType txType = entryInfo != null ? entryInfo.getTxType() : null;
+
+        if (entryInfo == null || status == null) {
             // No audit entry found - first execution
+            log.info("Change[{}] in state='unknown' (TxType={}) -> Action={} | Reason: {}",
+                    changeUnit.getId(),
+                    txType != null ? txType : "unknown",
+                    ChangeAction.APPLY,
+                    "No previous audit entry found (first execution)");
+
             return ChangeAction.APPLY;
         }
-        
+
         switch (status) {
+            case MANUAL_MARKED_AS_EXECUTED:
             case EXECUTED:
-                // Change was successfully executed - skip it
-                return ChangeAction.SKIP;
-                
+                return logDecision(changeUnit, entryInfo, ChangeAction.SKIP, "Change already marked/executed");
+
             case STARTED:
-                // Process was interrupted during execution - ambiguous state
-                // Always requires manual intervention regardless of txType
-                if(txType == AuditTxType.TX_SEPARATE_WITH_MARKER) {
-                    log.warn("Marker not supporter in community edition");
+                if (txType == AuditTxType.TX_SEPARATE_WITH_MARKER) {
+                    log.warn("Change[{}] uses TX_SEPARATE_WITH_MARKER, which is not supported in the Community Edition.",
+                            changeUnit.getId());
                 }
-                return ChangeAction.MANUAL_INTERVENTION;
-                
-            case EXECUTION_FAILED:
-                // Decision depends on transaction type
-                if (txType == null || txType == AuditTxType.NON_TX) {
-                    // Non-transactional changes that failed require manual intervention
-                    return ChangeAction.MANUAL_INTERVENTION;
+                log.debug("Change[{}] STARTED: recovery.isAlwaysRetry()={}, recovery.strategy={}", 
+                    changeUnit.getId(), changeUnit.getRecovery().isAlwaysRetry(), changeUnit.getRecovery().getStrategy());
+                if (changeUnit.getRecovery().isAlwaysRetry()) {
+                    return logDecision(changeUnit, entryInfo, ChangeAction.APPLY,
+                            "Interrupted execution, retry allowed by recovery strategy=" + changeUnit.getRecovery().getStrategy());
                 } else {
-                    // Transactional changes can be safely retried after failure
-                    return ChangeAction.APPLY;
+                    return logDecision(changeUnit, entryInfo, ChangeAction.MANUAL_INTERVENTION,
+                            "Interrupted execution, requires manual intervention");
                 }
-                
+
+            case MANUAL_MARKED_AS_FAILED:
+            case EXECUTION_FAILED:
+                if (txType == null || txType == AuditTxType.NON_TX) {
+                    if (changeUnit.getRecovery().isAlwaysRetry()) {
+                        return logDecision(changeUnit, entryInfo, ChangeAction.APPLY,
+                                "Failure on NON_TX change, retry allowed by recovery strategy=" + changeUnit.getRecovery().getStrategy());
+                    } else {
+                        return logDecision(changeUnit, entryInfo, ChangeAction.MANUAL_INTERVENTION,
+                                "Failure on NON_TX change, manual intervention required");
+                    }
+                } else {
+                    return logDecision(changeUnit, entryInfo, ChangeAction.APPLY,
+                            "Transactional failure, safe to retry");
+                }
+
             case ROLLED_BACK:
-                // Safe to retry - previous execution was rolled back cleanly
-                return ChangeAction.APPLY;
-                
+                return logDecision(changeUnit, entryInfo, ChangeAction.APPLY,
+                        "Previous execution rolled back cleanly, safe to retry");
+
             case ROLLBACK_FAILED:
-                // Rollback failed - unsafe state requiring manual intervention
-                // This should not happen with transactional types, but handle safely
-                return ChangeAction.MANUAL_INTERVENTION;
-                
+                if (changeUnit.getRecovery().isAlwaysRetry()) {
+                    return logDecision(changeUnit, entryInfo, ChangeAction.APPLY,
+                            "Rollback failed, retry forced by recovery strategy=" + changeUnit.getRecovery().getStrategy());
+                } else {
+                    return logDecision(changeUnit, entryInfo, ChangeAction.MANUAL_INTERVENTION,
+                            "Rollback failed, manual intervention required");
+                }
+
             default:
-                // Unknown status - require manual intervention for safety
-                return ChangeAction.MANUAL_INTERVENTION;
+                if (changeUnit.getRecovery().isAlwaysRetry()) {
+                    return logDecision(changeUnit, entryInfo, ChangeAction.APPLY,
+                            "Unknown status, retry forced by recovery strategy=" + changeUnit.getRecovery().getStrategy());
+                } else {
+                    return logDecision(changeUnit, entryInfo, ChangeAction.MANUAL_INTERVENTION,
+                            "Unknown status, manual intervention required");
+                }
         }
+    }
+
+    /**
+     * Centralized helper to log consistent decision messages.
+     */
+    private static ChangeAction logDecision(AbstractLoadedTask changeUnit,
+                                            AuditEntryInfo entryInfo,
+                                            ChangeAction action,
+                                            String reason) {
+        AuditEntry.Status status = entryInfo.getStatus();
+        AuditTxType txType = entryInfo.getTxType();
+
+        String msg = String.format("Change[%s] in state='%s' (TxType=%s) -> Action=%s | Reason: %s",
+                changeUnit.getId(),
+                status,
+                txType,
+                action,
+                reason);
+
+        switch (action) {
+            case APPLY:
+                log.info(msg);
+                break;
+            case SKIP:
+                log.debug(msg);
+                break;
+            case MANUAL_INTERVENTION:
+                log.error(msg);
+                break;
+        }
+        return action;
     }
 
 }

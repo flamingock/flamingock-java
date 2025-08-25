@@ -18,6 +18,7 @@ package io.flamingock.internal.common.cloud.planner.request;
 
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 
+//TODO add recoveryStrategy, so we can determin the acction in the server
 public class TaskRequest {
 
     private final String id;

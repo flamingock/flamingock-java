@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.core.pipeline.actions.ChangeAction;
@@ -90,6 +90,11 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
     }
 
     @Override
+    public RecoveryDescriptor getRecovery() {
+        return descriptor.getRecovery();
+    }
+
+    @Override
     public boolean isAlreadyExecuted() {
         return action == ChangeAction.SKIP;
     }
@@ -118,6 +123,7 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
                 "id='" + descriptor.getId() + '\'' +
                 ", action=" + action +
                 ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
+                ", recovery='" + (getRecovery() != null ? getRecovery().getStrategy() : null) + '\'' +
                 "} ";
     }
 }

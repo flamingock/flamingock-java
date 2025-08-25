@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.core.template;
 
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 public class ChangeTemplateFileContent {
@@ -27,6 +28,7 @@ public class ChangeTemplateFileContent {
     private Object execution;
     private Object rollback;
     private TargetSystemDescriptor targetSystem;
+    private RecoveryDescriptor recovery;
 
     public ChangeTemplateFileContent() {
     }
@@ -39,7 +41,8 @@ public class ChangeTemplateFileContent {
                                      Object configuration,
                                      Object execution,
                                      Object rollback,
-                                     TargetSystemDescriptor targetSystem) {
+                                     TargetSystemDescriptor targetSystem,
+                                     RecoveryDescriptor recovery) {
         this.id = id;
         this.order = order;
         this.template = template;
@@ -49,6 +52,7 @@ public class ChangeTemplateFileContent {
         this.execution = execution;
         this.rollback = rollback;
         this.targetSystem = targetSystem;
+        this.recovery = recovery;
     }
 
 
@@ -123,5 +127,13 @@ public class ChangeTemplateFileContent {
 
     public void setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
+    }
+
+    public RecoveryDescriptor getRecovery() {
+        return recovery;
+    }
+
+    public void setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
     }
 }

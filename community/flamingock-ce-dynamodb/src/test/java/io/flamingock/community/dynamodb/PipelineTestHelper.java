@@ -17,6 +17,7 @@ package io.flamingock.community.dynamodb;
 
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
@@ -90,7 +91,8 @@ public class PipelineTestHelper {
                             false,
                             changeInfo.transactional,
                             false,
-                            changeInfo.targetSystem
+                            changeInfo.targetSystem,
+                            RecoveryDescriptor.getDefault()
                     ));
                     return changes;
                 })

@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
@@ -90,7 +91,8 @@ public class PipelineTestHelper {
                             false,
                             changeInfo.transactional,
                             false,
-                            changeInfo.targetSystem
+                            changeInfo.targetSystem,
+                            RecoveryDescriptor.getDefault()
                     ));
                     return changes;
                 })

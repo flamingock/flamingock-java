@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.core.preview;
 
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.List;
@@ -42,8 +43,9 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                                      Object configuration,
                                      Object execution,
                                      Object rollback,
-                                     TargetSystemDescriptor targetSystem) {
-        super(id, order, templateName, runAlways, transactional, system, targetSystem);
+                                     TargetSystemDescriptor targetSystem,
+                                     RecoveryDescriptor recovery) {
+        super(id, order, templateName, runAlways, transactional, system, targetSystem, recovery);
         this.fileName = fileName;
         this.profiles = profiles;
         this.configuration = configuration;
@@ -107,7 +109,8 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +
                 ", system=" + system +
-                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) +
+                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
+                ", recovery='" + (getRecovery() != null ? getRecovery().getStrategy() : null) + '\'' +
                 '}';
     }
 }

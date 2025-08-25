@@ -35,6 +35,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     protected TargetSystemDescriptor targetSystem;
 
+    protected RecoveryDescriptor recovery;
+
     public AbstractTaskDescriptor(){}
 
     public AbstractTaskDescriptor(String id,
@@ -43,7 +45,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                                   boolean runAlways,
                                   boolean transactional,
                                   boolean system,
-                                  TargetSystemDescriptor targetSystem) {
+                                  TargetSystemDescriptor targetSystem,
+                                  RecoveryDescriptor recovery) {
         this.id = id;
         this.order = order;
         this.source = source;
@@ -51,6 +54,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         this.transactional = transactional;
         this.system = system;
         this.targetSystem = targetSystem;
+        this.recovery = recovery;
     }
 
     @Override
@@ -87,6 +91,10 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         return targetSystem;
     }
 
+    public RecoveryDescriptor getRecovery() {
+        return recovery;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -113,6 +121,10 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     public void setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
+    }
+
+    public void setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
     }
 
     @Override
@@ -142,6 +154,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                 .add("order=" + getOrder())
                 .add("sortable=" + isSortable())
                 .add("targetSystem=" + targetSystem)
+                .add("recovery=" + recovery)
                 .toString();
     }
 

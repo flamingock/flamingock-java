@@ -75,7 +75,7 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
                 .stream()
                 .map(loadedStage -> {
                     // Convert audit status to action plan using the new action-based architecture
-                    ChangeActionMap changeActionMap = LocalChangeActionBuilder.build(currentAuditStageStatus);
+                    ChangeActionMap changeActionMap = LocalChangeActionBuilder.build(loadedStage.getTasks(), currentAuditStageStatus);
                     return loadedStage.applyActions(changeActionMap);
                 })
                 .collect(Collectors.toList());

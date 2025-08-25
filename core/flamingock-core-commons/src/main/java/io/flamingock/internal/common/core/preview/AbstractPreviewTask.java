@@ -18,6 +18,7 @@ package io.flamingock.internal.common.core.preview;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -37,15 +38,17 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                                boolean runAlways,
                                boolean transactional,
                                boolean system,
-                               TargetSystemDescriptor targetSystem) {
-        super(id, order, source, runAlways, transactional, system, targetSystem);
+                               TargetSystemDescriptor targetSystem,
+                               RecoveryDescriptor recovery) {
+        super(id, order, source, runAlways, transactional, system, targetSystem, recovery);
     }
 
     @Override
     public String pretty() {
         String fromParent = super.pretty();
         String targetInfo = String.format(", targetSystem='%s'", getTargetSystem().getId());
-        return fromParent + targetInfo;
+        String recoveryInfo = String.format(", recovery='%s'", getRecovery() != null ? getRecovery().getStrategy() : "MANUAL_INTERVENTION");
+        return fromParent + targetInfo + recoveryInfo;
     }
 
     @Override
@@ -56,7 +59,8 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +
-                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) +
+                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
+                ", recovery='" + (getRecovery() != null ? getRecovery().getStrategy() : null) + '\'' +
                 '}';
     }
 }

@@ -15,12 +15,14 @@
  */
 package io.flamingock.common.test.pipeline;
 
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.List;
@@ -30,6 +32,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
     private final String className;
     private final String targetSystem;
+    private final RecoveryDescriptor recovery;
 
     private final List<Class<?>> executionParameters;
     private final List<Class<?>> rollbackParameters;
@@ -40,6 +43,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
         this(
                 changeUnitClass.getAnnotation(ChangeUnit.class),
                 changeUnitClass.getAnnotation(TargetSystem.class),
+                changeUnitClass.getAnnotation(Recovery.class),
                 changeUnitClass.getName(),
                 executionParameters,
                 rollbackParameters
@@ -51,6 +55,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
         this(
                 changeUnitClass.getAnnotation(ChangeUnit.class),
                 changeUnitClass.getAnnotation(TargetSystem.class),
+                changeUnitClass.getAnnotation(Recovery.class),
                 changeUnitClass.getName(),
                 executionParameters,
                 null
@@ -59,6 +64,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
     private CodeChangeUnitTestDefinition(ChangeUnit changeUnitAnn,
                                          TargetSystem targetSystemAnn,
+                                         Recovery recoveryAnn,
                                          String className,
                                          List<Class<?>> executionParameters,
                                          List<Class<?>> rollbackParameters) {
@@ -67,6 +73,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 className,
                 targetSystemAnn != null ? targetSystemAnn.id() : null,
                 changeUnitAnn.transactional(),
+                RecoveryDescriptor.fromStrategy(recoveryAnn != null ? recoveryAnn.strategy() : null),
                 executionParameters,
                 rollbackParameters);
     }
@@ -76,10 +83,12 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                         String className,
                                         String targetSystem,
                                         boolean transactional,
+                                        RecoveryDescriptor recovery,
                                         List<Class<?>> executionParameters,
                                         List<Class<?>> rollbackParameters) {
         super(id, order, transactional);
         this.targetSystem = targetSystem;
+        this.recovery = recovery;
         this.className = className;
         this.executionParameters = executionParameters;
         this.rollbackParameters = rollbackParameters;
@@ -108,7 +117,8 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 false,
                 isTransactional(),
                 false,
-                TargetSystemDescriptor.fromId(targetSystem)
+                TargetSystemDescriptor.fromId(targetSystem),
+                recovery
         );
     }
 

@@ -20,6 +20,7 @@ import io.flamingock.api.task.ChangeCategoryAware;
 import io.flamingock.internal.common.core.error.validation.Validatable;
 
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 
@@ -36,8 +37,9 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
                               boolean runAlways,
                               boolean transactional,
                               boolean system,
-                              TargetSystemDescriptor targetSystem) {
-        super(id, order, implementationSourceName, runAlways, transactional, system, targetSystem);
+                              TargetSystemDescriptor targetSystem,
+                              RecoveryDescriptor recovery) {
+        super(id, order, implementationSourceName, runAlways, transactional, system, targetSystem, recovery);
     }
 
     public abstract Constructor<?> getConstructor();

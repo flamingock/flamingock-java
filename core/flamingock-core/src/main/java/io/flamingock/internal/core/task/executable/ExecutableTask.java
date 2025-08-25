@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
+import io.flamingock.internal.core.engine.audit.recovery.RecoveryIssue;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.pipeline.actions.ChangeAction;
@@ -38,4 +39,5 @@ public interface ExecutableTask extends TaskDescriptor {
     void addRollback(Rollback rollback);
 
     List<? extends Rollback> getRollbackChain();
+
 }

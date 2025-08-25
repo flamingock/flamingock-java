@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Execution;
 import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.internal.util.ReflectionUtil;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
@@ -35,8 +36,9 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
                          boolean runAlways,
                          boolean transactional,
                          boolean systemTask,
-                         TargetSystemDescriptor targetSystem) {
-        super(changeUnitClass.getSimpleName(), id, order, changeUnitClass, runAlways, transactional, systemTask, targetSystem);
+                         TargetSystemDescriptor targetSystem,
+                         RecoveryDescriptor recovery) {
+        super(changeUnitClass.getSimpleName(), id, order, changeUnitClass, runAlways, transactional, systemTask, targetSystem, recovery);
     }
 
     @Override

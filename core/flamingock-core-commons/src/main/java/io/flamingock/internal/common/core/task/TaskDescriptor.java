@@ -34,6 +34,8 @@ public interface TaskDescriptor extends Comparable<TaskDescriptor> {
 
     TargetSystemDescriptor getTargetSystem();
 
+    RecoveryDescriptor getRecovery();
+
     default String pretty() {
         if (getOrder().isPresent()) {
             return String.format("%s) id: %s ", getOrder().get(), getId());

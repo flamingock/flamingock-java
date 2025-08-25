@@ -22,6 +22,7 @@ import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -517,7 +518,7 @@ public class PipelinePreProcessorTest {
     private Map<String, List<AbstractPreviewTask>> createMockChangeUnitsMap() {
         Map<String, List<AbstractPreviewTask>> map = new HashMap<>();
         // Create mock tasks for each package so stages can be built
-        AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-source", false, true, false, null) {};
+        AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-source", false, true, false, null, RecoveryDescriptor.getDefault()) {};
         
         map.put("com.example.system", Collections.singletonList(mockTask));
         map.put("com.example.system1", Collections.singletonList(mockTask));

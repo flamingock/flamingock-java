@@ -21,6 +21,7 @@ import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import org.junit.jupiter.api.Assertions;
@@ -114,7 +115,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         CodePreviewChangeUnit taskWithInvalidOrder2 = new CodePreviewChangeUnit(
                 "task-with-invalid-order-3",
@@ -127,7 +129,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
@@ -164,7 +167,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         CodePreviewChangeUnit taskWithValidOrder2 = new CodePreviewChangeUnit(
                 "task-with-valid-order-2",
@@ -177,7 +181,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         CodePreviewChangeUnit taskWithValidOrder3 = new CodePreviewChangeUnit(
                 "task-with-valid-order-3",
@@ -190,7 +195,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         CodePreviewChangeUnit taskWithValidOrder4 = new CodePreviewChangeUnit(
                 "task-with-valid-order-4",
@@ -203,7 +209,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
@@ -238,7 +245,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         CodePreviewChangeUnit task2 = new CodePreviewChangeUnit(
                 "unique-id",
@@ -251,7 +259,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         CodePreviewChangeUnit task3 = new CodePreviewChangeUnit(
                 "duplicate-id",
@@ -264,7 +273,8 @@ public class PipelineTest {
                 false,
                 true,
                 false,
-                null);
+                null,
+                RecoveryDescriptor.getDefault());
 
         PreviewStage stage1 = Mockito.mock(PreviewStage.class);
         Mockito.when(stage1.getType()).thenReturn(StageType.DEFAULT);

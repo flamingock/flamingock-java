@@ -17,6 +17,7 @@ package io.flamingock.internal.common.core.preview.builder;
 
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,6 +40,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private Object execution;
     private Object rollback;
     private TargetSystemDescriptor targetSystem;
+    private RecoveryDescriptor recovery;
 
 
     private TemplatePreviewTaskBuilder() {
@@ -101,6 +103,10 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         this.targetSystem = targetSystem;
     }
 
+    public void setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
+    }
+
     @Override
     public TemplatePreviewChangeUnit build() {
 
@@ -117,7 +123,8 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
                 configuration,
                 execution,
                 rollback,
-                targetSystem);
+                targetSystem,
+                recovery);
     }
 
     @NotNull
@@ -143,6 +150,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         setTransactional(templateTaskDescriptor.getTransactional() != null ? templateTaskDescriptor.getTransactional() : true);
         setRunAlways(false);
         setTargetSystem(templateTaskDescriptor.getTargetSystem());
+        setRecovery(templateTaskDescriptor.getRecovery() != null ? templateTaskDescriptor.getRecovery() : RecoveryDescriptor.getDefault());
         return this;
     }
 

@@ -20,6 +20,7 @@ import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     private Object execution;
     private Object rollback;
     private TargetSystemDescriptor targetSystem;
+    private RecoveryDescriptor recovery;
 
     private TemplateLoadedTaskBuilder() {
     }
@@ -64,6 +66,12 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     @Override
     public TemplateLoadedTaskBuilder setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
+        return this;
+    }
+
+    @Override
+    public TemplateLoadedTaskBuilder setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
         return this;
     }
 
@@ -136,7 +144,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
                 configuration,
                 execution,
                 rollback,
-                targetSystem);
+                targetSystem,
+                recovery);
 
     }
 
@@ -153,6 +162,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
         setExecution(preview.getExecution());
         setRollback(preview.getRollback());
         setTargetSystem(preview.getTargetSystem());
+        setRecovery(preview.getRecovery());
         return this;
     }
 

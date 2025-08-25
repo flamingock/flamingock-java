@@ -17,10 +17,12 @@ package io.flamingock.internal.common.core.preview.builder;
 
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.RollbackExecution;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.RollbackBeforeExecution;
@@ -52,6 +54,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private boolean transactional;
     private boolean system;
     private TargetSystemDescriptor targetSystem;
+    private RecoveryDescriptor recovery;
 
     private CodePreviewTaskBuilder() {
     }
@@ -71,6 +74,11 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
 
     public CodePreviewTaskBuilder setTargetSystem(TargetSystemDescriptor targetSystem) {
         this.targetSystem = targetSystem;
+        return this;
+    }
+
+    public CodePreviewTaskBuilder setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
         return this;
     }
 
@@ -120,6 +128,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     CodePreviewTaskBuilder setTypeElement(TypeElement typeElement) {
         ChangeUnit changeUnitAnnotation = typeElement.getAnnotation(ChangeUnit.class);
         TargetSystem targetSystemAnnotation = typeElement.getAnnotation(TargetSystem.class);
+        Recovery recoveryAnnotation = typeElement.getAnnotation(Recovery.class);
         if(changeUnitAnnotation != null) {
             setId(changeUnitAnnotation.id());
             setOrder(changeUnitAnnotation.order());
@@ -134,6 +143,11 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         }
         if(targetSystemAnnotation != null) {
             setTargetSystem(TargetSystemDescriptor.fromId(targetSystemAnnotation.id()));
+        }
+        if(recoveryAnnotation != null) {
+            setRecovery(RecoveryDescriptor.fromStrategy(recoveryAnnotation.strategy()));
+        } else {
+            setRecovery(RecoveryDescriptor.getDefault());
         }
         return this;
     }
@@ -158,7 +172,8 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
                 runAlways,
                 transactional,
                 system,
-                targetSystem);
+                targetSystem,
+                recovery);
     }
 
     private Optional<PreviewMethod> getAnnotatedMethodInfo(TypeElement typeElement,

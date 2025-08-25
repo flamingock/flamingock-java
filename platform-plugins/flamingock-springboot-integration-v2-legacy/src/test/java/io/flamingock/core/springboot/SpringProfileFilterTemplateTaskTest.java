@@ -17,6 +17,7 @@ package io.flamingock.core.springboot;
 
 import io.flamingock.api.annotations.ChangeUnit;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
@@ -116,7 +117,8 @@ class SpringProfileFilterTemplateTaskTest {
                 null,
                 null,
                 null,
-                null
+                null,
+                RecoveryDescriptor.getDefault()
         );
 
         TemplatePreviewChangeUnit preview = PreviewTaskBuilder.getTemplateBuilder("TemplateBase.yaml", changeFileDescriptor).build();
