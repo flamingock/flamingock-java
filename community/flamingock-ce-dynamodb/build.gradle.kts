@@ -1,7 +1,6 @@
 dependencies {
     implementation(project(":utils:dynamodb-util"))
     implementation(project(":core:flamingock-core"))
-    api(project(":community:flamingock-ce-commons"))
 
     api(project(":core:target-systems:dynamodb-target-system"))
 

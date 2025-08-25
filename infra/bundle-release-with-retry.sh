@@ -6,7 +6,7 @@ validate_bundle() {
       return 0
       ;;
     *)
-      echo "Error: Invalid bundle name [$1]. Myst be one of the following values[all, core, driver, transactioner, template]"
+      echo "Error: Invalid bundle name [$1]. Myst be one of the following values[all, core, auditStore, transactioner, template]"
       exit 1
       ;;
   esac

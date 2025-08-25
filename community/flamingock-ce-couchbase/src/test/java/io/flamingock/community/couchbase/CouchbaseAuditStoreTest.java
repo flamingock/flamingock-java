@@ -20,10 +20,11 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.community.Flamingock;
+import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
+import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
@@ -42,7 +43,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
-class CouchbaseDriverTest {
+class CouchbaseAuditStoreTest {
 
     private static final String BUCKET_NAME = "test";
 
@@ -90,7 +91,9 @@ class CouchbaseDriverTest {
                     new Trio<>(io.flamingock.community.couchbase.changes.happyPath._003_insert_another_document.class, Collections.singletonList(Collection.class)))
             );
 
-            Flamingock.builder()
+            FlamingockFactory.getCommunityBuilder()
+                    .setAuditStore(new CouchbaseAuditStore())
+                    .setAuditStore(new CouchbaseAuditStore())
                     .addDependency(cluster)
                     .addDependency(bucket)
                     .addDependency(testCollection) // for test purpose only
@@ -138,7 +141,8 @@ class CouchbaseDriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                Flamingock.builder()
+                FlamingockFactory.getCommunityBuilder()
+                    .setAuditStore(new CouchbaseAuditStore())
                         .addDependency(cluster)
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only
@@ -184,7 +188,8 @@ class CouchbaseDriverTest {
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
-                Flamingock.builder()
+                FlamingockFactory.getCommunityBuilder()
+                    .setAuditStore(new CouchbaseAuditStore())
                         .addDependency(cluster)
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only

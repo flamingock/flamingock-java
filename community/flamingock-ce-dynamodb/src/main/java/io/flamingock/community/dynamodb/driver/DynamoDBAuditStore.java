@@ -16,19 +16,18 @@
 package io.flamingock.community.dynamodb.driver;
 
 import io.flamingock.api.targets.TargetSystem;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.LocalEngine;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.dynamodb.DynamoDBConfiguration;
 import io.flamingock.community.dynamodb.internal.DynamoDBEngine;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDBDriver implements LocalDriver {
+public class DynamoDBAuditStore implements LocalAuditStore {
 
     private RunnerId runnerId;
     private DynamoDBTargetSystem targetSystem;
@@ -36,15 +35,15 @@ public class DynamoDBDriver implements LocalDriver {
     private CommunityConfigurable communityConfiguration;
     private DynamoDBConfiguration driverConfiguration;
 
-    public static DynamoDBDriver fromTargetSystem(DynamoDBTargetSystem targetSystem) {
-        return new DynamoDBDriver(targetSystem);
+    public static DynamoDBAuditStore fromTargetSystem(DynamoDBTargetSystem targetSystem) {
+        return new DynamoDBAuditStore(targetSystem);
     }
 
-    public DynamoDBDriver() {
+    public DynamoDBAuditStore() {
         this(null);
     }
 
-    public DynamoDBDriver(DynamoDBTargetSystem targetSystem) {
+    public DynamoDBAuditStore(DynamoDBTargetSystem targetSystem) {
         this.targetSystem = targetSystem;
     }
 

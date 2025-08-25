@@ -13,13 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder.local;
+package io.flamingock.internal.core.community.store;
 
-
-/**
- * Interface for potential configuration for local runners.
- * Don't confuse with AuditStoreConfigurable
- */
-public interface CommunityConfigurable {
-
+//Marker interface for community audit store configuration
+public interface AuditStoreConfigurable {
 }

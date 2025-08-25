@@ -23,6 +23,8 @@ import com.couchbase.client.java.manager.bucket.BucketManager;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
+import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.community.Constants;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
@@ -119,7 +121,8 @@ public class CouchbaseImporterTest {
                 .put("_doctype", "mongockChangeEntry");
         originCollection.upsert("change-1", doc);
 
-        Runner flamingock = io.flamingock.community.Flamingock.builder()
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(new CouchbaseAuditStore())
                 .addDependency(cluster)
                 .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
@@ -147,7 +150,8 @@ public class CouchbaseImporterTest {
 
     @Test
     void failIfEmptyOrigin() {
-        Runner flamingock = io.flamingock.community.Flamingock.builder()
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(new CouchbaseAuditStore())
                 .addDependency(cluster)
                 .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)

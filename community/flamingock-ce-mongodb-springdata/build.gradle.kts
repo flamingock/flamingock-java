@@ -29,7 +29,7 @@ dependencies {
 
 }
 
-description = "MongoDB Spring Data v4.x integration module for Flamingock Community Edition, providing seamless integration with Spring Data MongoDB 4.x applications. Compatible with MongoDB Driver Sync 4.8.0+ and Spring Boot 3.x. Requires JDK 17 or above."
+description = "MongoDB Spring Data v4.x integration module for Flamingock Community Edition, providing seamless integration with Spring Data MongoDB 4.x applications. Compatible with MongoDB AuditStore Sync 4.8.0+ and Spring Boot 3.x. Requires JDK 17 or above."
 
 java {
     toolchain {

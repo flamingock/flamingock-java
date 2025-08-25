@@ -71,8 +71,8 @@ public class InMemoryTestKit implements TestKit {
     
     @Override
     public TestFlamingockBuilder createBuilder() {
-        InMemoryTestDriver driver = new InMemoryTestDriver(auditStorage, lockStorage);
-        return createBuilderWithDriver(driver);
+        InMemoryTestAuditStore auditStore = new InMemoryTestAuditStore(auditStorage, lockStorage);
+        return createBuilderWithAuditStore(auditStore);
     }
     
     @Override

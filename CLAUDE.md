@@ -67,10 +67,10 @@ This is a multi-module Gradle project using Kotlin DSL.
 - `pipeline.yaml` - Declarative pipeline definition in `src/test/resources/flamingock/`
 - Stages contain change units which are atomic migration operations
 
-**Driver System**: Database/system-specific implementations:
-- `Driver` interface provides `ConnectionEngine` for specific technologies
-- Drivers live in community modules (e.g., `flamingock-ce-mongodb-sync`, `flamingock-ce-dynamodb`)
-- Driver initialization requires full hierarchical context for dependency resolution
+**AuditStore System**: Database/system-specific implementations:
+- `AuditStore` interface provides `ConnectionEngine` for specific technologies
+- AuditStores live in community modules (e.g., `flamingock-ce-mongodb-sync`, `flamingock-ce-dynamodb`)
+- AuditStore initialization requires full hierarchical context for dependency resolution
 
 **Plugin System**: Extensible architecture via `Plugin` interface:
 - Contribute task filters, event publishers, and dependency contexts
@@ -154,7 +154,7 @@ When modifying the builder pattern in `AbstractFlamingockBuilder.build()`:
 2. Base context preparation before plugin initialization  
 3. Plugin initialization before hierarchical context building
 4. Hierarchical context MUST be complete before driver initialization
-5. Driver initialization provides engine for audit writer registration
+5. AuditStore initialization provides engine for audit writer registration
 6. Pipeline building contributes dependencies back to context
 
 Violating this order will cause runtime failures due to missing dependencies during driver initialization.

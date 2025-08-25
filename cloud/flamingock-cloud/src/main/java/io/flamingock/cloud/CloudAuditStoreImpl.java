@@ -23,7 +23,7 @@ import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.core.builder.cloud.CloudConfigurable;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.cloud.CloudDriver;
+import io.flamingock.internal.core.cloud.CloudAuditStore;
 import io.flamingock.internal.common.cloud.auth.AuthResponse;
 import io.flamingock.cloud.audit.HtttpAuditWriter;
 import io.flamingock.cloud.auth.AuthManager;
@@ -44,8 +44,8 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 
-public class CloudDriverImpl  implements CloudDriver {
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudDriver");
+public class CloudAuditStoreImpl implements CloudAuditStore {
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudAuditStore");
     private CloudEngineImpl engine;
 
 

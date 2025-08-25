@@ -24,7 +24,7 @@ import io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFals
 import io.flamingock.community.mongodb.sync.changes.audit.TxSeparateAndSameMongoClientChange;
 import io.flamingock.community.mongodb.sync.changes.audit.TxSeparateChange;
 import io.flamingock.community.mongodb.sync.changes.audit.TxSharedDefaultChange;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
@@ -71,7 +71,7 @@ class MongoSyncAuditPersistenceE2ETest {
         separateMongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
 
         // Initialize test kit with MongoDB persistence
-        testKit = MongoSyncTestKit.create(new MongoSyncDriver(), sharedMongoClient, database);
+        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), sharedMongoClient, database);
         auditHelper = testKit.getAuditHelper();
     }
 
@@ -96,6 +96,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
+                                .setAuditStore(new MongoSyncAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addDependency(sharedMongoClient)
                                 .addDependency(database)
@@ -134,6 +135,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
+                                .setAuditStore(new MongoSyncAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
                                 .addDependency(sharedMongoClient)
@@ -185,6 +187,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
+                                .setAuditStore(new MongoSyncAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(sharedTargetSystem)
                                 .addDependency(sharedMongoClient)
@@ -223,6 +226,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
+                                .setAuditStore(new MongoSyncAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(sharedTargetSystem)
                                 .addDependency(sharedMongoClient)
@@ -262,6 +266,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
+                                .setAuditStore(new MongoSyncAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(separateTargetSystem)
                                 .addDependency(sharedMongoClient)
@@ -300,6 +305,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
+                                .setAuditStore(new MongoSyncAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
                                 .addTargetSystem(new MongoSyncTargetSystem("tx-separate-system")
@@ -340,6 +346,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 ).WHEN(() -> assertDoesNotThrow(() -> {
                     MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
                     testKit.createBuilder()
+                            .setAuditStore(new MongoSyncAuditStore())
                             .setRelaxTargetSystemValidation(true)
                             .addTargetSystem(new MongoSyncTargetSystem("tx-separate-system")
                                     .withMongoClient(separateMongoClient)

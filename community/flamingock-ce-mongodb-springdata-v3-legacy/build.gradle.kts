@@ -27,7 +27,7 @@ dependencies {
     testImplementation("io.mongock:mongodb-sync-v4-driver:5.5.0")
 }
 
-description = "MongoDB Spring Data v3.x integration module for Flamingock Community Edition, providing seamless integration with Spring Data MongoDB 3.x applications. Compatible with MongoDB Driver Sync 4.0.0-4.6.x and Spring Boot 2.x. Compatible with JDK 8 and above."
+description = "MongoDB Spring Data v3.x integration module for Flamingock Community Edition, providing seamless integration with Spring Data MongoDB 3.x applications. Compatible with MongoDB AuditStore Sync 4.0.0-4.6.x and Spring Boot 2.x. Compatible with JDK 8 and above."
 
 java {
     toolchain {

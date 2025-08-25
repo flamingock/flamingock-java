@@ -19,14 +19,14 @@ import com.mongodb.ReadConcernLevel;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.common.mongodb.MongoDBDriverConfiguration;
+import io.flamingock.internal.common.mongodb.MongoDBAuditStoreConfiguration;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.assertions.Assertions.isTrue;
 
-public class MongoDBSyncConfiguration extends MongoDBDriverConfiguration {
+public class MongoDBSyncConfiguration extends MongoDBAuditStoreConfiguration {
     private ReadConcernLevel readConcern = ReadConcernLevel.MAJORITY;
     private WriteConcernLevel writeConcern = WriteConcernLevel.MAJORITY_WITH_JOURNAL;
     private ReadPreferenceLevel readPreference = ReadPreferenceLevel.PRIMARY;

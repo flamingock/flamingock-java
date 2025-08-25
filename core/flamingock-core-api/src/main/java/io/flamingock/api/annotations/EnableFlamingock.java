@@ -91,7 +91,7 @@ import java.lang.annotation.Target;
  *     &#64;Bean
  *     public Flamingock flamingock(MongoTemplate mongoTemplate) {
  *         return FlamingockFactory.cloudBuilder()
- *             .setDriver(MongoSyncDriver.withDefaultLock(mongoTemplate))
+ *             .setAuditStore(new MongoSyncAuditStore())
  *             .buildRunner();
  *     }
  * }
@@ -197,9 +197,9 @@ public @interface EnableFlamingock {
      * &#64;Configuration  
      * public class Config {
      *     &#64;Bean
-     *     public Flamingock flamingock(Driver driver) {
+     *     public Flamingock flamingock(AuditStore auditStore) {
      *         return FlamingockFactory.cloudBuilder()
-     *             .setDriver(driver)
+     *             .setAuditStore(auditStore)
      *             .buildRunner();
      *     }
      * }

@@ -17,9 +17,9 @@ package io.flamingock.community.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.community.Constants;
-import io.flamingock.internal.core.community.driver.DriverConfigurable;
+import io.flamingock.internal.core.community.store.AuditStoreConfigurable;
 
-public class DynamoDBConfiguration implements DriverConfigurable {
+public class DynamoDBConfiguration implements AuditStoreConfigurable {
 
     private boolean autoCreate = true;
     private String auditRepositoryName = Constants.DEFAULT_AUDIT_STORE_NAME;

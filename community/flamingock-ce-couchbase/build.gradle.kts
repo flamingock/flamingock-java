@@ -1,6 +1,5 @@
 dependencies {
     api(project(":core:flamingock-core"))
-    api(project(":community:flamingock-ce-commons"))
     api(project(":core:target-systems:couchbase-target-system"))
     implementation(project(":utils:couchbase-util"))
     

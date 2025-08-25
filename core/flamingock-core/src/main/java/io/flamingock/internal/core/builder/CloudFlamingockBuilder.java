@@ -18,7 +18,7 @@ package io.flamingock.internal.core.builder;
 import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
 import io.flamingock.internal.core.builder.cloud.CloudConfigurator;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.cloud.CloudDriver;
+import io.flamingock.internal.core.cloud.CloudAuditStore;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.plugin.PluginManager;
 
@@ -33,7 +33,7 @@ public class CloudFlamingockBuilder
                                      CloudConfiguration cloudConfiguration,
                                      Context dependencyInjectableContext,
                                      PluginManager pluginManager,
-                                     CloudDriver driver) {
+                                     CloudAuditStore driver) {
         super(coreConfiguration, dependencyInjectableContext, pluginManager, driver);
         this.cloudConfiguration = cloudConfiguration;
     }

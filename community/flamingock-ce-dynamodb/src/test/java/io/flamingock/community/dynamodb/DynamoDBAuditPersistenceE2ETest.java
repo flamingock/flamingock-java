@@ -15,6 +15,7 @@
  */
 package io.flamingock.community.dynamodb;
 
+import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -74,7 +75,7 @@ class DynamoDBAuditPersistenceE2ETest {
 
         
         // Initialize test kit with DynamoDB persistence using the same client as the driver
-        testKit = DynamoDBTestKit.create(sharedDynamoDbClient, new io.flamingock.community.dynamodb.driver.DynamoDBDriver());
+        testKit = DynamoDBTestKit.create(sharedDynamoDbClient, new DynamoDBAuditStore());
         auditTestHelper = testKit.getAuditHelper();
 
     }
@@ -101,6 +102,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
@@ -143,6 +145,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
                                 .addDependency(sharedDynamoDbClient)
@@ -193,6 +196,7 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withDynamoDBClient(sharedDynamoDbClient); // Same DynamoDbClient as audit storage
 
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(sharedTargetSystem)
                                 .addDependency(sharedDynamoDbClient)
@@ -228,6 +232,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
                                         .withDynamoDBClient(separateDynamoDbClient))
@@ -267,6 +272,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(separateTargetSystem)
                                 .addDependency(sharedDynamoDbClient)
@@ -303,6 +309,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
@@ -343,6 +350,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .setRelaxTargetSystemValidation(true)
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
                                         .withDynamoDBClient(separateDynamoDbClient))

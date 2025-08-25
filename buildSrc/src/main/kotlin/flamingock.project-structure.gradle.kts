@@ -19,7 +19,7 @@ val cloudProjects = setOf(
 
 val communityProjects = setOf(
     "flamingock-ce-bom",
-    "flamingock-ce-commons",
+    "flamingock-community",
     "flamingock-ce-mongodb-sync",
     "flamingock-ce-mongodb-springdata-v3-legacy",
     "flamingock-ce-mongodb-springdata",

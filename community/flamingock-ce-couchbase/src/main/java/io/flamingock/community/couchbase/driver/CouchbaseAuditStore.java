@@ -23,13 +23,13 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.LocalEngine;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.couchbase.CouchbaseConfiguration;
 import io.flamingock.community.couchbase.internal.CouchbaseEngine;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
-public class CouchbaseDriver implements LocalDriver {
+public class CouchbaseAuditStore implements LocalAuditStore {
 
     private RunnerId runnerId;
     private CouchbaseTargetSystem targetSystem;
@@ -37,15 +37,15 @@ public class CouchbaseDriver implements LocalDriver {
     private CommunityConfigurable communityConfiguration;
     private CouchbaseConfiguration driverConfiguration;
 
-    public static CouchbaseDriver fromTargetSystem(CouchbaseTargetSystem targetSystem) {
-        return new CouchbaseDriver(targetSystem);
+    public static CouchbaseAuditStore fromTargetSystem(CouchbaseTargetSystem targetSystem) {
+        return new CouchbaseAuditStore(targetSystem);
     }
 
-    public CouchbaseDriver() {
+    public CouchbaseAuditStore() {
         this(null);
     }
 
-    public CouchbaseDriver(CouchbaseTargetSystem targetSystem) {
+    public CouchbaseAuditStore(CouchbaseTargetSystem targetSystem) {
         this.targetSystem = targetSystem;
     }
 

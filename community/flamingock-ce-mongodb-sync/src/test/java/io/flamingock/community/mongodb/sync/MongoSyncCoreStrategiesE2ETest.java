@@ -25,7 +25,7 @@ import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_t
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_rollback;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.mongodb.kit.MongoSyncTestKit;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
@@ -87,7 +87,7 @@ class MongoSyncCoreStrategiesE2ETest {
     @DisplayName("Should execute non-transactional change using NonTx strategy with complete audit flow in MongoDB")
     void testNonTransactionalChangeExecution() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
 
         // Given-When-Then
         AuditTestSupport.withTestKit(testKit)
@@ -96,6 +96,7 @@ class MongoSyncCoreStrategiesE2ETest {
                         new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)
@@ -114,7 +115,7 @@ class MongoSyncCoreStrategiesE2ETest {
     @DisplayName("Should execute transactional change using SimpleTx/SharedTx strategy with complete audit flow in MongoDB")
     void testTransactionalChangeExecution() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then
@@ -124,6 +125,7 @@ class MongoSyncCoreStrategiesE2ETest {
                         new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)
@@ -142,7 +144,7 @@ class MongoSyncCoreStrategiesE2ETest {
     @DisplayName("Should execute multiple changes with correct audit sequence in MongoDB")
     void testMultipleChangesExecution() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then
@@ -152,6 +154,7 @@ class MongoSyncCoreStrategiesE2ETest {
                         new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)
@@ -170,7 +173,7 @@ class MongoSyncCoreStrategiesE2ETest {
     @DisplayName("Should handle failing transactional change with proper audit and rollback in MongoDB")
     void testFailingTransactionalChangeWithRollback() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then
@@ -181,6 +184,7 @@ class MongoSyncCoreStrategiesE2ETest {
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                             .setRelaxTargetSystemValidation(true)
                             .addDependency(mongoClient)
                             .addDependency(database)
@@ -201,7 +205,7 @@ class MongoSyncCoreStrategiesE2ETest {
     @DisplayName("Should handle already-executed changes correctly on second run with MongoDB persistence")
     void testAlreadyExecutedChangesSkipping() {
         // Given - Create MongoDB test kit with persistent storage
-        TestKit testKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        TestKit testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then - First execution
@@ -210,6 +214,7 @@ class MongoSyncCoreStrategiesE2ETest {
                         new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)
@@ -225,13 +230,14 @@ class MongoSyncCoreStrategiesE2ETest {
         assertEquals(2, auditHelper.getAuditEntriesSorted().size());
 
         // Second execution - create new kit using SAME MongoDB database to simulate persistence
-        TestKit secondRunKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        TestKit secondRunKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
 
         AuditTestSupport.withTestKit(secondRunKit)
                 .GIVEN_ChangeUnits(
                         new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList())
                 )
                 .WHEN(() -> secondRunKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)

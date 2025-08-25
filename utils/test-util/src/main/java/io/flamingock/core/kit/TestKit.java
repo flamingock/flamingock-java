@@ -15,13 +15,11 @@
  */
 package io.flamingock.core.kit;
 
-import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.audit.AuditTestHelper;
-import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.core.kit.lock.LockTestHelper;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.plugin.DefaultPluginManager;
 
@@ -71,13 +69,13 @@ public interface TestKit {
     void cleanUp();
 
 
-    default TestFlamingockBuilder createBuilderWithDriver(LocalDriver driver) {
+    default TestFlamingockBuilder createBuilderWithAuditStore(LocalAuditStore auditStore) {
         return new TestFlamingockBuilder(
             new CoreConfiguration(),
             new CommunityConfiguration(), 
             new SimpleContext(),
             new DefaultPluginManager(),
-            driver
+            auditStore
         );
     }
 }

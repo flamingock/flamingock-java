@@ -13,8 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.community.driver;
+package io.flamingock.internal.core.community.store;
 
-//Marker interface for Driver configuration
-public interface DriverConfigurable {
+import io.flamingock.internal.util.Pair;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.builder.AuditStore;
+import io.flamingock.internal.core.community.LocalEngine;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.Set;
+
+public interface LocalAuditStore extends AuditStore<LocalEngine> {
+
 }

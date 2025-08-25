@@ -21,10 +21,9 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
-import io.flamingock.community.Flamingock;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditEntryField;
-import io.flamingock.internal.core.community.Constants;
+import io.flamingock.internal.core.builder.FlamingockFactory;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +75,8 @@ class MongoChangeTemplateTest {
     @DisplayName("WHEN mongodb template THEN runs fine IF Flamingock mongodb sync ce")
     void happyPath() {
 
-        Flamingock.builder()
+        FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(new MongoSyncAuditStore())
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
                 .setRelaxTargetSystemValidation(true)

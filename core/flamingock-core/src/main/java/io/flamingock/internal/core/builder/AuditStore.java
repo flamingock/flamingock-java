@@ -17,15 +17,15 @@ package io.flamingock.internal.core.builder;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.cloud.CloudDriver;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.cloud.CloudAuditStore;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.core.engine.ConnectionEngine;
 import io.flamingock.internal.core.targets.DefaultTargetSystem;
 
 import java.util.Optional;
 
-public interface Driver<ENGINE extends ConnectionEngine> extends ContextInitializable {
+public interface AuditStore<ENGINE extends ConnectionEngine> extends ContextInitializable {
     String DEFAULT_AUDIT_STORE_TARGET_SYSTEM = "default-audit-store-target-system";
 
     default boolean isCloud() {
@@ -38,20 +38,4 @@ public interface Driver<ENGINE extends ConnectionEngine> extends ContextInitiali
         return new DefaultTargetSystem(DEFAULT_AUDIT_STORE_TARGET_SYSTEM);
     }
 
-
-    static Driver<?> getDriver() {
-        Optional<CloudDriver> cloudDriver = CloudDriver.getDriver();
-        if(cloudDriver.isPresent()) {
-            return cloudDriver.get();
-        }
-
-        Optional<LocalDriver> communityDriver = LocalDriver.getDriver();
-        if(communityDriver.isPresent()) {
-            return communityDriver.get();
-        }
-
-        throw new FlamingockException(
-                "No compatible edition detected. Make sure the Cloud Edition or a supported Community Edition is included in your dependencies."
-        );
-    }
 }

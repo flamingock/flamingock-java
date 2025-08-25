@@ -26,7 +26,7 @@ import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_n
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_transactional_non_rollback;
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_transactional;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
-class MongoSyncDriverTest {
+class MongoSyncAuditStoreTest {
 
     private static final String DB_NAME = "test";
 
@@ -89,7 +89,7 @@ class MongoSyncDriverTest {
     void setupEach() {
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         database = mongoClient.getDatabase("test");
-        testKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
         mongoDBTestHelper = new MongoDBTestHelper(database);
@@ -113,6 +113,7 @@ class MongoSyncDriverTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)
@@ -143,7 +144,7 @@ class MongoSyncDriverTest {
         // Create a custom TestKit that uses the custom audit collection name
         MongoSyncAuditStorage customAuditStorage = new MongoSyncAuditStorage(database, CUSTOM_AUDIT_REPOSITORY_NAME);
         MongoSyncLockStorage customLockStorage = new MongoSyncLockStorage(database, CUSTOM_LOCK_REPOSITORY_NAME);
-        TestKit customTestKit = new MongoSyncTestKit(customAuditStorage, customLockStorage, new MongoSyncDriver(), mongoClient);
+        TestKit customTestKit = new MongoSyncTestKit(customAuditStorage, customLockStorage, new MongoSyncAuditStore(), mongoClient);
 
         AuditTestSupport.withTestKit(customTestKit)
                 .GIVEN_ChangeUnits(
@@ -152,6 +153,7 @@ class MongoSyncDriverTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)
@@ -198,6 +200,7 @@ class MongoSyncDriverTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                         .setRelaxTargetSystemValidation(true)
                         .addDependency(mongoClient)
                         .addDependency(database)
@@ -235,6 +238,7 @@ class MongoSyncDriverTest {
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
+                        .setAuditStore(new MongoSyncAuditStore())
                             .setRelaxTargetSystemValidation(true)
                             .addDependency(mongoClient)
                             .addDependency(database)

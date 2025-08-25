@@ -25,7 +25,7 @@ import io.flamingock.api.annotations.Stage;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.mongodb.kit.MongoSyncTestKit;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import org.bson.Document;
@@ -81,7 +81,7 @@ public class MongoDbImporterTest {
         mongockTestHelper = new MongoDbMongockTestHelper(database.getCollection(MONGOCK_CHANGE_LOGS));
         
         // Initialize TestKit for unified testing
-        testKit = MongoSyncTestKit.create(new MongoSyncDriver(), mongoClient, database);
+        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
     }

@@ -26,12 +26,11 @@ import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.LocalEngine;
-import io.flamingock.internal.core.community.driver.LocalDriver;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 
-public class MongoSyncDriver implements LocalDriver {
+public class MongoSyncAuditStore implements LocalAuditStore {
 
 
     protected RunnerId runnerId;
@@ -42,15 +41,15 @@ public class MongoSyncDriver implements LocalDriver {
     private boolean isTransactionDisabled;
 
 
-    public static MongoSyncDriver fromTargetSystem(MongoSyncTargetSystem syncTargetSystem) {
-        return new MongoSyncDriver(syncTargetSystem);
+    public static MongoSyncAuditStore fromTargetSystem(MongoSyncTargetSystem syncTargetSystem) {
+        return new MongoSyncAuditStore(syncTargetSystem);
     }
 
-    public MongoSyncDriver() {
+    public MongoSyncAuditStore() {
         this(null);
     }
 
-    public MongoSyncDriver(MongoSyncTargetSystem targetSystem) {
+    public MongoSyncAuditStore(MongoSyncTargetSystem targetSystem) {
         this.targetSystem = targetSystem;
     }
 

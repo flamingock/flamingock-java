@@ -93,7 +93,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     private final Context context;
     private final CoreConfiguration coreConfiguration;
 
-    private final Driver<?> driver;
+    protected AuditStore<?> auditStore;
     private final TargetSystemManager targetSystemManager = new TargetSystemManager();
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
     private Consumer<IPipelineCompletedEvent> pipelineCompletedListener;
@@ -109,16 +109,22 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     //  BUILD
 
     /// ////////////////////////////////////////////////////////////////////////////////
+    protected AbstractFlamingockBuilder(
+            CoreConfiguration coreConfiguration,
+            Context context,
+            PluginManager pluginManager) {
+        this(coreConfiguration, context, pluginManager, null);
+    }
 
     protected AbstractFlamingockBuilder(
             CoreConfiguration coreConfiguration,
             Context context,
             PluginManager pluginManager,
-            Driver<?> driver) {
+            AuditStore<?> auditStore) {
         this.pluginManager = pluginManager;
         this.context = context;
         this.coreConfiguration = coreConfiguration;
-        this.driver = driver;
+        this.auditStore = auditStore;
     }
 
     protected abstract void doUpdateContext();
@@ -138,14 +144,14 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
      * <li><strong>Context Preparation</strong> - Sets up base context with runner ID and core config</li>
      * <li><strong>Plugin Initialization</strong> - Initializes plugins with access to base context</li>
      * <li><strong>Hierarchical Context Building</strong> - Merges external contexts (e.g., Spring Boot)</li>
-     * <li><strong>Driver Initialization</strong> - Initializes driver with full hierarchical context</li>
+     * <li><strong>AuditStore Initialization</strong> - Initializes driver with full hierarchical context</li>
      * <li><strong>Engine Setup</strong> - Retrieves engine and registers audit writer</li>
      * <li><strong>Pipeline Building</strong> - Constructs pipeline and contributes dependencies</li>
      * <li><strong>Runner Creation</strong> - Assembles final runner with all components</li>
      * </ol>
      *
      * <h3>Critical Order Dependencies:</h3>
-     * <p><strong>Hierarchical Context MUST be built before Driver initialization.</strong>
+     * <p><strong>Hierarchical Context MUST be built before AuditStore initialization.</strong>
      * The hierarchical context merges external dependency sources (like Spring Boot's application context)
      * with Flamingock's internal context. When {@code driver.initialize(hierarchicalContext)} is called,
      * the driver searches this context for required dependencies (database connections, configuration, etc.).
@@ -154,7 +160,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
      *
      * <h3>Component Relationships:</h3>
      * <ul>
-     * <li><strong>Driver → Engine</strong>: Driver provides the ConnectionEngine implementation</li>
+     * <li><strong>AuditStore → Engine</strong>: AuditStore provides the ConnectionEngine implementation</li>
      * <li><strong>Engine → AuditWriter</strong>: Engine provides audit writer for execution tracking</li>
      * <li><strong>Pipeline → Context</strong>: Pipeline contributes additional dependencies back to context</li>
      * <li><strong>HierarchicalContext → All Components</strong>: Provides unified dependency resolution</li>
@@ -169,13 +175,15 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
      *
      * @return A fully configured Runner ready for execution
      * @see #buildHierarchicalContext() for context merging details
-     * @see Driver#initialize(ContextResolver) for driver initialization requirements
+     * @see AuditStore#initialize(ContextResolver) for driver initialization requirements
      * @see LoadedPipeline#contributeToContext(ContextInjectable) for pipeline contributions
      */
     @Override
     public final Runner build() {
 
         ChangeTemplateManager.loadTemplates();
+
+        validateAuditStore();
 
         RunnerId runnerId = RunnerId.generate(getServiceIdentifier());
         logger.info("Generated runner id:  {}", runnerId);
@@ -185,14 +193,14 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
         PriorityContext hierarchicalContext = buildHierarchicalContext();
 
-        driver.initialize(hierarchicalContext);
+        auditStore.initialize(hierarchicalContext);
 
-        targetSystemManager.setAuditStoreTargetSystem(driver.getTargetSystem());
+        targetSystemManager.setAuditStoreTargetSystem(auditStore.getTargetSystem());
 
 
         targetSystemManager.initialize(hierarchicalContext);
 
-        ConnectionEngine engine = driver.getEngine();
+        ConnectionEngine engine = auditStore.getEngine();
 
         LoadedPipeline pipeline = buildPipeline();
 
@@ -216,13 +224,19 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         );
     }
 
+    private void validateAuditStore() {
+        if(auditStore == null) {
+            throw new BuilderException("AuditStore must be configured before running Flamingock. Provide a valid AuditStore via [Builder.setAuditStore(...)]");
+        }
+    }
+
     private LoadedPipeline buildPipeline() {
         List<TaskFilter> taskFiltersFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getTaskFilters)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
-        ;
+
         return LoadedPipeline.builder()
                 .addFilters(taskFiltersFromPlugins)
                 .addPreviewPipeline(coreConfiguration.getPreviewPipeline())

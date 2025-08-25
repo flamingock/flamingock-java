@@ -111,11 +111,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  flamingock-ce-commons:
+  flamingock-community:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: flamingock-ce-commons
+      module: flamingock-community
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -368,7 +368,7 @@ jobs:
 #      flamingock-graalvm,
 #      flamingock-cloud,
 #      flamingock-cloud-bom,
-#      flamingock-ce-commons,
+#      flamingock-community,
 #      flamingock-ce-bom,
 #      flamingock-ce-mongodb-sync,
 #      flamingock-ce-mongodb-springdata-v3-legacy,
@@ -414,7 +414,7 @@ jobs:
       flamingock-graalvm,
       flamingock-cloud,
       flamingock-cloud-bom,
-      flamingock-ce-commons,
+      flamingock-community,
       flamingock-ce-bom,
       flamingock-ce-mongodb-sync,
       flamingock-ce-mongodb-springdata-v3-legacy,

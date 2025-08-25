@@ -17,10 +17,10 @@ package io.flamingock.community.couchbase;
 
 import com.couchbase.client.core.io.CollectionIdentifier;
 import io.flamingock.internal.core.community.Constants;
-import io.flamingock.internal.core.community.driver.DriverConfigurable;
+import io.flamingock.internal.core.community.store.AuditStoreConfigurable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 
-public class CouchbaseConfiguration implements DriverConfigurable {
+public class CouchbaseConfiguration implements AuditStoreConfigurable {
 
     private boolean autoCreate = true;
     private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;

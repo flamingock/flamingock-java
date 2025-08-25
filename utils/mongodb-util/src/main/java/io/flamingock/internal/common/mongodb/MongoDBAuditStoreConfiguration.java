@@ -15,13 +15,13 @@
  */
 package io.flamingock.internal.common.mongodb;
 
-import io.flamingock.internal.core.community.driver.DriverConfigurable;
+import io.flamingock.internal.core.community.store.AuditStoreConfigurable;
 
 import static io.flamingock.internal.core.community.Constants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.core.community.Constants.DEFAULT_LOCK_STORE_NAME;
 
 
-public class MongoDBDriverConfiguration implements DriverConfigurable {
+public class MongoDBAuditStoreConfiguration implements AuditStoreConfigurable {
 
 
     private boolean autoCreate = true;

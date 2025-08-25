@@ -158,7 +158,7 @@ dependencies {
 
 ### Community Edition
 
-#### `flamingock-ce-commons`
+#### `flamingock-community`
 ```gradle
 dependencies {
     implementation(project(":core:flamingock-core"))
@@ -175,7 +175,7 @@ dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
     api(project(":core:target-systems:mongodb-sync-target-system"))
-    api(project(":community:flamingock-ce-commons"))
+    api(project(":community:flamingock-community"))
     
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
     
@@ -191,7 +191,7 @@ dependencies {
 dependencies {
     implementation(project(":utils:dynamodb-util"))
     implementation(project(":core:flamingock-core"))
-    api(project(":community:flamingock-ce-commons"))
+    api(project(":community:flamingock-community"))
     api(project(":core:target-systems:dynamodb-transactioner"))
     
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:[2.0.0,3.0.0)")
@@ -207,7 +207,7 @@ dependencies {
 ```gradle
 dependencies {
     implementation(project(":core:flamingock-core"))
-    api(project(":community:flamingock-ce-commons"))
+    api(project(":community:flamingock-community"))
     
     compileOnly("com.couchbase.client:java-client:3.6.0")
     

@@ -36,9 +36,9 @@ graph TB
         CriticalOrder --> LoadTemplates[1. Load Change Templates]
         LoadTemplates --> PrepareContext[2. Prepare Base Context<br/>• Runner ID generation<br/>• Core configuration injection]
         PrepareContext --> InitPlugins[3. Initialize Plugins<br/>• Spring Boot integration<br/>• Custom plugins]
-        InitPlugins --> BuildHierarchical[4. Build Hierarchical Context<br/>⚠️ CRITICAL: External dependencies<br/>merged before driver init]
-        BuildHierarchical --> InitDriver[5. Initialize Driver<br/>• Database-specific setup<br/>• Requires full context]
-        InitDriver --> GetEngine[6. Get Connection Engine<br/>• Audit writer registration]
+        InitPlugins --> BuildHierarchical[4. Build Hierarchical Context<br/>⚠️ CRITICAL: External dependencies<br/>merged before AuditStore init]
+        BuildHierarchical --> InitAuditStore[5. Initialize AuditStore<br/>• Database-specific setup<br/>• Requires full context]
+        InitAuditStore --> GetEngine[6. Get Connection Engine<br/>• Audit writer registration]
         GetEngine --> BuildPipeline[7. Build Pipeline<br/>• Load stages and tasks<br/>• Apply filters]
         BuildPipeline --> CreateRunner[8. Create PipelineRunner<br/>• All components assembled]
     end
@@ -149,14 +149,14 @@ The builder pattern follows a **strictly ordered initialization sequence** that 
 2. **Base Context Preparation**: Core configuration and runner ID are established
 3. **Plugin Initialization**: External integrations (Spring Boot, custom plugins) are initialized
 4. **Hierarchical Context Building**: This is the **most critical step** - external dependency sources are merged
-5. **Driver Initialization**: Database-specific drivers are initialized with the complete context
+5. **AuditStore Initialization**: Database-specific auditStores are initialized with the complete context
 6. **Engine Setup**: Connection engines and audit writers are configured
 7. **Pipeline Building**: Stages and tasks are loaded with applied filters
 8. **Runner Creation**: The final executable runner is assembled
 
 #### Why Order Matters
 
-The hierarchical context **must** be built before driver initialization because drivers need access to external dependencies (database connections, Spring application context, configuration properties). If this order is violated, drivers will fail to find required dependencies, causing runtime failures.
+The hierarchical context **must** be built before auditStore initialization because auditStores need access to external dependencies (database connections, Spring application context, configuration properties). If this order is violated, auditStores will fail to find required dependencies, causing runtime failures.
 
 #### Builder Flexibility vs. Execution Rigidity
 
@@ -218,7 +218,7 @@ Flamingock's transaction handling is sophisticated and context-aware.
 #### Transaction Decision Logic
 
 A task executes within a transaction when **all** conditions are met:
-1. **TransactionWrapper available** - Driver supports transactions
+1. **TransactionWrapper available** - AuditStore supports transactions
 2. **Task configured as transactional** - `@ChangeUnit(transactional = true)` (default)
 3. **Database supports transactions** - Not all databases/operations are transactional
 
@@ -287,12 +287,12 @@ The template system bridges the gap between developers and operations teams:
 Spring Boot integration occurs during the **hierarchical context building** phase:
 - Spring's `ApplicationContext` contributes beans for dependency injection
 - Spring events are published alongside Flamingock events
-- Auto-configuration handles driver setup automatically
+- Auto-configuration handles auditStore setup automatically
 
 ### Database Integration
 
-Database integration happens through **driver initialization**:
-- Drivers provide database-specific `ConnectionEngine` implementations
+Database integration happens through **auditStore initialization**:
+- AuditStores provide database-specific `ConnectionEngine` implementations
 - Transaction wrappers handle database-specific transaction semantics
 - Audit repositories store execution history in appropriate formats
 
@@ -327,6 +327,6 @@ Monitoring systems integrate through the **event publishing system**:
 
 **Template System**: Create custom templates for common patterns in your organization.
 
-**Custom Drivers**: Implement new database drivers following the established patterns.
+**Custom AuditStores**: Implement new database auditStores following the established patterns.
 
 This execution flow guide provides the conceptual foundation for understanding Flamingock's architecture. For implementation details and code examples, refer to the comprehensive codebase and the specific component documentation referenced throughout this guide.

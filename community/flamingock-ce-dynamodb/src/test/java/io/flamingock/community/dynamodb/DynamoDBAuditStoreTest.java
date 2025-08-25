@@ -22,7 +22,7 @@ import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_trans
 import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_transactional_non_rollback;
 import io.flamingock.community.dynamodb.changes._004_insert_jorge_happy_transactional;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
-import io.flamingock.community.dynamodb.driver.DynamoDBDriver;
+import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.dynamodb.kit.DynamoDBTestContainer;
@@ -63,9 +63,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
-class DynamoDBDriverTest {
+class DynamoDBAuditStoreTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamoDBDriverTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamoDBAuditStoreTest.class);
 
     @Container
     private static GenericContainer<?> dynamoDBContainer = DynamoDBTestContainer.createContainer();
@@ -82,7 +82,7 @@ class DynamoDBDriverTest {
         client = DynamoDBTestContainer.createClient(dynamoDBContainer);
 
         // Initialize test kit with DynamoDB persistence using the same client as the driver
-        testKit = DynamoDBTestKit.create(client, new DynamoDBDriver());
+        testKit = DynamoDBTestKit.create(client, new DynamoDBAuditStore());
         auditHelper = testKit.getAuditHelper();
     }
 
@@ -103,6 +103,7 @@ class DynamoDBDriverTest {
                         new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                             .addDependency(client)
                             .setRelaxTargetSystemValidation(true)
                             .build()
@@ -150,6 +151,7 @@ class DynamoDBDriverTest {
                         new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                             .addDependency(config)
                             .setProperty("dynamodb.autoCreate", false)
                             .setProperty("dynamodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
@@ -190,12 +192,14 @@ class DynamoDBDriverTest {
                 .WHEN(() -> {
                     // Run pipeline twice to verify repeated execution
                     FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                             .addDependency(client)
                             .setRelaxTargetSystemValidation(true)
                             .build()
                             .run();
 
                     FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                             .addDependency(client)
                             .setRelaxTargetSystemValidation(true)
                             .build()
@@ -236,6 +240,7 @@ class DynamoDBDriverTest {
                 .WHEN(() -> {
                     assertThrows(PipelineExecutionException.class, () -> {
                         FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore())
                                 .addDependency(client)
                                 .setRelaxTargetSystemValidation(true)
                                 .build()

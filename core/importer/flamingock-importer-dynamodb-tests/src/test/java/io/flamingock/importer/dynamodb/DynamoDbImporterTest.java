@@ -17,9 +17,9 @@ package io.flamingock.importer.dynamodb;
 
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.community.Flamingock;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.GenericContainer;
@@ -127,7 +127,7 @@ public class DynamoDbImporterTest {
 
         mongockChangeLogsHelper.insertChangeEntries(entries);
 
-        Runner flamingock = Flamingock.builder()
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
                 .setRelaxTargetSystemValidation(true)
                 .build();
@@ -156,7 +156,7 @@ public class DynamoDbImporterTest {
 
     @Test
     void failIfEmptyOrigin() {
-        Runner flamingock = io.flamingock.community.Flamingock.builder()
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
                 .setRelaxTargetSystemValidation(true)
                 .build();

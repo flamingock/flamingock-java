@@ -20,37 +20,34 @@ import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.mongodb.springdata.config.SpringDataMongoConfiguration;
 import io.flamingock.community.mongodb.springdata.internal.SpringDataMongoEngine;
 import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncDriver;
+import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.LocalEngine;
-import io.flamingock.internal.core.community.driver.LocalDriver;
-import io.flamingock.internal.core.community.driver.OverridesDrivers;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 
-@OverridesDrivers({MongoSyncDriver.class})
-public class SpringDataMongoDriver extends MongoSyncDriver {
+public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
 
     private MongoSpringDataTargetSystem targetSystem;
     private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
     private MongoDBSyncConfiguration driverConfiguration;
 
-    public static SpringDataMongoDriver fromTargetSystem(MongoSpringDataTargetSystem syncTargetSystem) {
-        return new SpringDataMongoDriver(syncTargetSystem);
+    public static SpringDataMongoAuditStore fromTargetSystem(MongoSpringDataTargetSystem syncTargetSystem) {
+        return new SpringDataMongoAuditStore(syncTargetSystem);
     }
 
 
-    public SpringDataMongoDriver() {
+    public SpringDataMongoAuditStore() {
         this(null);
     }
 
-    public SpringDataMongoDriver(MongoSpringDataTargetSystem targetSystem) {
+    public SpringDataMongoAuditStore(MongoSpringDataTargetSystem targetSystem) {
         this.targetSystem = targetSystem;
     }
 

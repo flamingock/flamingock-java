@@ -18,10 +18,11 @@ package io.flamingock.internal.core.builder;
 import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
-import io.flamingock.internal.core.cloud.CloudDriver;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.cloud.CloudAuditStore;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.plugin.DefaultPluginManager;
+
+import java.util.Optional;
 
 public final class FlamingockFactory {
 
@@ -29,23 +30,32 @@ public final class FlamingockFactory {
     }
 
     public static AbstractFlamingockBuilder<?> getEditionAwareBuilder(CoreConfiguration coreConfiguration,
-                                                                         CloudConfiguration cloudConfiguration,
-                                                                         CommunityConfiguration communityConfiguration) {
-        Driver<?> driver = Driver.getDriver();
-        if (driver.isCloud()) {
+                                                                      CloudConfiguration cloudConfiguration,
+                                                                      CommunityConfiguration communityConfiguration,
+                                                                      AuditStore<?> providedAuditStore) {
+        Optional<CloudAuditStore> cloudAuditStore = CloudAuditStore.get();
+        if (cloudAuditStore.isPresent()) {
             return new CloudFlamingockBuilder(
                     coreConfiguration,
                     cloudConfiguration,
                     new SimpleContext(),
                     new DefaultPluginManager(),
-                    (CloudDriver) driver);
+                    cloudAuditStore.get());
         } else {
+            if (providedAuditStore instanceof CloudAuditStore) {
+                return new CloudFlamingockBuilder(
+                        coreConfiguration,
+                        cloudConfiguration,
+                        new SimpleContext(),
+                        new DefaultPluginManager(),
+                        (CloudAuditStore) providedAuditStore);
+            }
             return new CommunityFlamingockBuilder(
                     coreConfiguration,
                     communityConfiguration,
                     new SimpleContext(),
-                    new DefaultPluginManager(),
-                    (LocalDriver) driver);
+                    new DefaultPluginManager())
+                    .setAuditStore(providedAuditStore);
         }
     }
 
@@ -55,16 +65,17 @@ public final class FlamingockFactory {
                 new CloudConfiguration(),
                 new SimpleContext(),
                 new DefaultPluginManager(),
-                CloudDriver.getDriver().orElseThrow(() -> new RuntimeException("No Cloud edition detected")));
+                CloudAuditStore.get().orElseThrow(() -> new RuntimeException("Cloud edition is required but was not imported. Please import flamingock-cloud artefact to your project.")));
     }
 
     public static CommunityFlamingockBuilder getCommunityBuilder() {
+        //auditStore must be set later via builder
         return new CommunityFlamingockBuilder(
                 new CoreConfiguration(),
                 new CommunityConfiguration(),
                 new SimpleContext(),
-                new DefaultPluginManager(),
-                LocalDriver.getDriver().orElseThrow(() -> new RuntimeException("No compatible Community edition detected")));
+                new DefaultPluginManager()
+        );
     }
 
 }

@@ -345,7 +345,7 @@ Flamingock supports releasing different bundles of modules:
 ./gradlew :core:flamingock-core-api:publishToMavenLocal
 ```
 
-**Community Drivers:**
+**Community AuditStores:**
 ```bash
 ./gradlew :community:flamingock-ce-mongodb-sync:test
 ./gradlew :community:flamingock-ce-dynamodb:build

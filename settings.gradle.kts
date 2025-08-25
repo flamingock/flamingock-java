@@ -43,9 +43,9 @@ project(":cloud:flamingock-cloud-bom").projectDir = file("cloud/flamingock-cloud
 // COMMUNITY
 //////////////////////////////////////
 
-include("community:flamingock-ce-commons")
-project(":community:flamingock-ce-commons").name = "flamingock-ce-commons"
-project(":community:flamingock-ce-commons").projectDir = file("community/flamingock-ce-commons")
+include("community:flamingock-community")
+project(":community:flamingock-community").name = "flamingock-community"
+project(":community:flamingock-community").projectDir = file("community/flamingock-community")
 
 include("community:flamingock-ce-bom")
 project(":community:flamingock-ce-bom").name = "flamingock-ce-bom"

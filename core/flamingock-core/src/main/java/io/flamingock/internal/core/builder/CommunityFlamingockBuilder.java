@@ -18,7 +18,6 @@ package io.flamingock.internal.core.builder;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfigurator;
-import io.flamingock.internal.core.community.driver.LocalDriver;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.plugin.PluginManager;
 
@@ -32,9 +31,8 @@ public class CommunityFlamingockBuilder
     protected CommunityFlamingockBuilder(CoreConfiguration coreConfiguration,
                                          CommunityConfiguration communityConfiguration,
                                          Context dependencyInjectableContext,
-                                         PluginManager pluginManager,
-                                         LocalDriver driver) {
-        super(coreConfiguration, dependencyInjectableContext, pluginManager, driver);
+                                         PluginManager pluginManager) {
+        super(coreConfiguration, dependencyInjectableContext, pluginManager);
         this.communityConfiguration = communityConfiguration;
     }
 
@@ -47,6 +45,11 @@ public class CommunityFlamingockBuilder
     protected void doUpdateContext() {
         addDependency(FlamingockEdition.COMMUNITY);
         addDependency(communityConfiguration);
+    }
+
+    public CommunityFlamingockBuilder setAuditStore(AuditStore<?> auditStore) {
+        this.auditStore = auditStore;
+        return this;
     }
 
 }

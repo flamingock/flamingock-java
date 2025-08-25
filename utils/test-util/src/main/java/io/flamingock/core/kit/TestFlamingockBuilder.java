@@ -19,7 +19,7 @@ import io.flamingock.internal.core.builder.CommunityFlamingockBuilder;
 import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.local.CommunityConfiguration;
 import io.flamingock.internal.common.core.context.Context;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.core.plugin.PluginManager;
 
 /**
@@ -43,16 +43,14 @@ import io.flamingock.internal.core.plugin.PluginManager;
  * <p>Typically used through TestKit.createBuilder() rather than directly instantiated.</p>
  */
 public class TestFlamingockBuilder extends CommunityFlamingockBuilder {
-    
-    private final LocalDriver testDriver;
-    
+
     public TestFlamingockBuilder(CoreConfiguration coreConfiguration,
                                 CommunityConfiguration communityConfiguration,
                                 Context dependencyInjectableContext,
                                 PluginManager pluginManager,
-                                LocalDriver driver) {
-        super(coreConfiguration, communityConfiguration, dependencyInjectableContext, pluginManager, driver);
-        this.testDriver = driver;
+                                LocalAuditStore auditStore) {
+        super(coreConfiguration, communityConfiguration, dependencyInjectableContext, pluginManager);
+        this.auditStore = auditStore;
     }
     
     @Override
@@ -60,7 +58,7 @@ public class TestFlamingockBuilder extends CommunityFlamingockBuilder {
         return this;
     }
 
-    public LocalDriver getDriver() {
-        return testDriver;
+    public LocalAuditStore getAuditStore() {
+        return (LocalAuditStore) auditStore;
     }
 }

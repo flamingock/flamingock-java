@@ -16,17 +16,17 @@
 package io.flamingock.core.kit.inmemory;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.util.id.RunnerId;
 
-public class InMemoryTestDriver implements LocalDriver {
+public class InMemoryTestAuditStore implements LocalAuditStore {
     
     private final InMemoryAuditStorage auditStorage;
     private final InMemoryLockStorage lockStorage;
     private InMemoryTestEngine engine;
 
-    public InMemoryTestDriver(InMemoryAuditStorage auditStorage, InMemoryLockStorage lockStorage) {
+    public InMemoryTestAuditStore(InMemoryAuditStorage auditStorage, InMemoryLockStorage lockStorage) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
     }
@@ -49,7 +49,7 @@ public class InMemoryTestDriver implements LocalDriver {
     @Override
     public InMemoryTestEngine getEngine() {
         if (engine == null) {
-            throw new IllegalStateException("Driver not initialized - call initialize first");
+            throw new IllegalStateException("AuditStore not initialized - call initialize first");
         }
         return engine;
     }

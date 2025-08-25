@@ -15,12 +15,13 @@
  */
 package io.flamingock.community.mongodb.springdata;
 
+
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import io.flamingock.community.mongodb.springdata.driver.SpringDataMongoAuditStore;
 import io.flamingock.internal.util.Trio;
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.core.processor.util.Deserializer;
@@ -28,8 +29,6 @@ import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.community.mongodb.springdata.changes._001_create_client_collection_happy;
 import io.flamingock.community.mongodb.springdata.changes._002_insert_federico_happy_non_transactional;
 import io.flamingock.community.mongodb.springdata.changes._002_insert_federico_happy_transactional;
-import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_failed_non_transactional_non_rollback;
-import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_failed_non_transactional_rollback;
 import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_failed_transactional_non_rollback;
 import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_happy_non_transactional;
 import io.flamingock.community.mongodb.springdata.changes._003_insert_jorge_happy_transactional;
@@ -59,10 +58,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
-class SpringDataMongoDriverTest {
+class SpringDataMongoV3AuditStoreTest {
 
     @Container
-    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
+    public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
     private static final String DB_NAME = "test";
     private static final String CLIENTS_COLLECTION = "clientCollection";
     private static final String CUSTOM_AUDIT_REPOSITORY_NAME = "testFlamingockAudit";
@@ -106,6 +105,8 @@ class SpringDataMongoDriverTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
+                    .setAuditStore(new SpringDataMongoAuditStore())
+                    .setAuditStore(new SpringDataMongoAuditStore())
                     .addDependency(mongoTemplate)
                     .setRelaxTargetSystemValidation(true)
                     .build()
@@ -132,8 +133,10 @@ class SpringDataMongoDriverTest {
                     new Trio<>(_003_insert_jorge_happy_transactional.class, Collections.singletonList(MongoTemplate.class)))
             );
             FlamingockFactory.getCommunityBuilder()
+                    .setAuditStore(new SpringDataMongoAuditStore())
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .setRelaxTargetSystemValidation(true)
                     .build()
@@ -159,6 +162,8 @@ class SpringDataMongoDriverTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
+                    .setAuditStore(new SpringDataMongoAuditStore())
+                    //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithTransaction"))
                     .addDependency(mongoTemplate)
                     .setRelaxTargetSystemValidation(true)
                     .build()
@@ -199,7 +204,8 @@ class SpringDataMongoDriverTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
-                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v4.changes.failedWithTransaction"))
+                    .setAuditStore(new SpringDataMongoAuditStore())
+                        //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.failedWithTransaction"))
                         .addDependency(mongoTemplate)
                         .setRelaxTargetSystemValidation(true)
                         .build()
@@ -224,4 +230,5 @@ class SpringDataMongoDriverTest {
         assertEquals(1, clients.size());
         assertTrue(clients.contains("Federico"));
     }
+
 }

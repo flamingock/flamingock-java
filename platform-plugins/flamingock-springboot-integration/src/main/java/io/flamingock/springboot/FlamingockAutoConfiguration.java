@@ -16,9 +16,11 @@
 package io.flamingock.springboot;
 
 import io.flamingock.internal.core.builder.FlamingockFactory;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.core.runner.RunnerBuilder;
 import io.flamingock.internal.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -53,16 +55,20 @@ public class FlamingockAutoConfiguration {
     @Bean("flamingock-builder")
     @Profile(Constants.NON_CLI_PROFILE)
     @ConditionalOnMissingBean(RunnerBuilder.class)
+
     public RunnerBuilder flamingockBuilder(SpringbootProperties configurationProperties,
                                            ApplicationContext springContext,
-                                           ApplicationEventPublisher applicationEventPublisher) {
+                                           ApplicationEventPublisher applicationEventPublisher,
+                                           @Autowired(required = false) LocalAuditStore auditStore) {
         return FlamingockFactory.getEditionAwareBuilder(
-                configurationProperties.getCoreConfiguration(),
-                configurationProperties.getCloudProperties(),
-                configurationProperties.getLocalConfiguration()
-        )
+                        configurationProperties.getCoreConfiguration(),
+                        configurationProperties.getCloudProperties(),
+                        configurationProperties.getLocalConfiguration(),
+                        auditStore
+                )
                 .addDependency(SpringRunnerType.class, configurationProperties.getRunnerType())
                 .addDependency(ApplicationContext.class, springContext)
                 .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
+
     }
 }

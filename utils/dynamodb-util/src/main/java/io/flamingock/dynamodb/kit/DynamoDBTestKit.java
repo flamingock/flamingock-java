@@ -18,7 +18,7 @@ package io.flamingock.dynamodb.kit;
 import io.flamingock.core.kit.AbstractTestKit;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.community.driver.LocalDriver;
+import io.flamingock.internal.core.community.store.LocalAuditStore;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 
@@ -26,7 +26,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
 
     private final DynamoDbClient client;
 
-    public DynamoDBTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalDriver driver, DynamoDbClient client) {
+    public DynamoDBTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalAuditStore driver, DynamoDbClient client) {
         super(auditStorage, lockStorage, driver);
         this.client = client;
     }
@@ -46,16 +46,16 @@ public class DynamoDBTestKit extends AbstractTestKit {
     }
 
     /**
-     * Creates a new DynamoDBTestKit with DynamoDB client and driver using default configuration.
+     * Creates a new DynamoDBTestKit with DynamoDB client and auditStore using default configuration.
      * 
      * @param client the DynamoDB client for database operations
-     * @param driver the local driver for Flamingock execution
+     * @param auditStore the local auditStore for Flamingock execution
      * @return configured TestKit instance
      */
-    public static DynamoDBTestKit create(DynamoDbClient client, LocalDriver driver) {
+    public static DynamoDBTestKit create(DynamoDbClient client, LocalAuditStore auditStore) {
         return builder()
             .withClient(client)
-            .withDriver(driver)
+            .withAuditStore(auditStore)
             .build();
     }
     
@@ -71,7 +71,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
     public static class Builder {
 
         private DynamoDbClient client;
-        private LocalDriver driver;
+        private LocalAuditStore driver;
         private String auditTableName = "flamingockAuditLogs";
         private String lockTableName = "flamingockLocks";
         private boolean autoCleanup = true;
@@ -99,7 +99,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
          * @param driver the local driver to use
          * @return this builder for method chaining
          */
-        public Builder withDriver(LocalDriver driver) {
+        public Builder withAuditStore(LocalAuditStore driver) {
             this.driver = driver;
             return this;
         }
