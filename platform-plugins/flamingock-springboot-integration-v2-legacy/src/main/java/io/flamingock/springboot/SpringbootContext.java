@@ -15,6 +15,8 @@
  */
 package io.flamingock.springboot;
 
+import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.internal.core.builder.AbstractFlamingockBuilder;
 import io.flamingock.internal.core.community.store.LocalAuditStore;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.core.builder.FlamingockFactory;
@@ -27,6 +29,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+
+import java.util.List;
 
 @ConditionalOnExpression("${flamingock.enabled:true}")
 public class SpringbootContext {
@@ -52,18 +56,22 @@ public class SpringbootContext {
     public RunnerBuilder flamingockBuilder(SpringbootProperties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher,
-                                           @Autowired(required = false) LocalAuditStore auditStore) {
-        return FlamingockFactory.getEditionAwareBuilder(
-                configurationProperties.getCoreConfiguration(),
-                configurationProperties.getCloudProperties(),
-                configurationProperties.getLocalConfiguration(),
-                auditStore
-        )
+                                           @Autowired(required = false) LocalAuditStore auditStore,
+                                           List<TargetSystem> targetSystems) {
+        AbstractFlamingockBuilder<?> builder = FlamingockFactory.getEditionAwareBuilder(
+                        configurationProperties.getCoreConfiguration(),
+                        configurationProperties.getCloudProperties(),
+                        configurationProperties.getLocalConfiguration(),
+                        auditStore
+                )
                 .addDependency(SpringRunnerType.class, configurationProperties.getRunnerType())
                 .addDependency(ApplicationContext.class, springContext)
                 .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
 
+        for (TargetSystem targetSystem : targetSystems) {
+            builder.addTargetSystem(targetSystem);
+        }
+
+        return builder;
     }
-
-
 }
