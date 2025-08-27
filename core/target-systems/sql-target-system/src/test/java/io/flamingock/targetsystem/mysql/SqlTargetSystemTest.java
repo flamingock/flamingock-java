@@ -31,7 +31,7 @@ import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
+import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
@@ -76,7 +76,7 @@ public class SqlTargetSystemTest {
     private final String jwt = "fake_jwt";
 
     private MockRunnerServer mockRunnerServer;
-    private CloudFlamingockBuilder flamingockBuilder;
+    private CloudChangeRunnerBuilder flamingockBuilder;
 
     @Container
     public static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))

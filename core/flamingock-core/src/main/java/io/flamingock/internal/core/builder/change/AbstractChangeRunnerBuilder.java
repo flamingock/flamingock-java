@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.internal.core.builder.change;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
@@ -21,6 +21,8 @@ import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
+import io.flamingock.internal.core.builder.AbstractBuilder;
+import io.flamingock.internal.core.builder.BuilderException;
 import io.flamingock.internal.core.configuration.EventLifecycleConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.core.CoreConfigurator;
@@ -84,19 +86,15 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingockBuilder<HOLDER>>
+public abstract class AbstractChangeRunnerBuilder<HOLDER extends AbstractChangeRunnerBuilder<HOLDER>>
+        extends AbstractBuilder<HOLDER>
         implements
-        CoreConfigurator<HOLDER>,
         EventLifecycleConfigurator<HOLDER>,
-        ContextConfigurable<HOLDER>,
         RunnerBuilder {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Builder");
 
     protected final PluginManager pluginManager;
-    protected final Context context;
-    protected final CoreConfiguration coreConfiguration;
 
-    protected AuditStore<?> auditStore;
     private final TargetSystemManager targetSystemManager = new TargetSystemManager();
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
     private Consumer<IPipelineCompletedEvent> pipelineCompletedListener;
@@ -112,25 +110,24 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     //  BUILD
 
     /// ////////////////////////////////////////////////////////////////////////////////
-    protected AbstractFlamingockBuilder(
+    protected AbstractChangeRunnerBuilder(
             CoreConfiguration coreConfiguration,
             Context context,
             PluginManager pluginManager) {
         this(coreConfiguration, context, pluginManager, null);
     }
 
-    protected AbstractFlamingockBuilder(
+    protected AbstractChangeRunnerBuilder(
             CoreConfiguration coreConfiguration,
             Context context,
             PluginManager pluginManager,
             AuditStore<?> auditStore) {
+        super(coreConfiguration, context, auditStore);
         this.pluginManager = pluginManager;
-        this.context = context;
-        this.coreConfiguration = coreConfiguration;
-        this.auditStore = auditStore;
+
     }
 
-    protected abstract void doUpdateContext();
+    protected abstract void updateContextSpecific();
 
     protected abstract ExecutionPlanner buildExecutionPlanner(RunnerId runnerId);
 
@@ -179,7 +176,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
      * </ul>
      *
      * @return A fully configured Runner ready for execution
-     * @see #buildHierarchicalContext() for context merging details
+     * @see #buildContext() for context merging details
      * @see AuditStore#initialize(ContextResolver) for driver initialization requirements
      * @see LoadedPipeline#contributeToContext(ContextInjectable) for pipeline contributions
      */
@@ -187,31 +184,29 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
     public final Runner build() {
 
         ChangeTemplateManager.loadTemplates();
+        pluginManager.initialize(context);
 
         validateAuditStore();
 
-        RunnerId runnerId = RunnerId.generate(getServiceIdentifier());
-        logger.info("Generated runner id:  {}", runnerId);
-        prepareContext(runnerId);
+        RunnerId runnerId = generateRunnerId();
 
-        pluginManager.initialize(context);
-
-        PriorityContext hierarchicalContext = buildHierarchicalContext();
+        PriorityContext hierarchicalContext = buildContext();
 
         auditStore.initialize(hierarchicalContext);
 
+        //Handles the TargetSystems
         targetSystemManager.setAuditStoreTargetSystem(auditStore.getTargetSystem());
-
-
         targetSystemManager.initialize(hierarchicalContext);
 
-        AuditPersistence persistence = auditStore.getPersistence();
+        //Configure the persistence from the auditStore
+        AuditPersistence persistence = getAuditPersistence(hierarchicalContext);
 
-        LoadedPipeline pipeline = buildPipeline();
-
+        //Loads the pipeline
         //This contribution to the context is fine after components initialization as it's only used
+        LoadedPipeline pipeline = loadPipeline();
         pipeline.contributeToContext(hierarchicalContext);
-        hierarchicalContext.addDependency(new Dependency(LifecycleAuditWriter.class, persistence));
+
+
 
 
         return PipelineRunnerCreator.create(
@@ -230,13 +225,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         );
     }
 
-    private void validateAuditStore() {
-        if(auditStore == null) {
-            throw new BuilderException("AuditStore must be configured before running Flamingock. Provide a valid AuditStore via [Builder.setAuditStore(...)]");
-        }
-    }
 
-    private LoadedPipeline buildPipeline() {
+    private LoadedPipeline loadPipeline() {
         List<TaskFilter> taskFiltersFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getTaskFilters)
@@ -249,14 +239,10 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
                 .build();
     }
 
-    private void prepareContext(RunnerId runnerId) {
+    private PriorityContext buildContext() {
         logger.trace("injecting internal configuration");
-        setProperty(runnerId);
         addDependency(coreConfiguration);
-        doUpdateContext();
-    }
-
-    private PriorityContext buildHierarchicalContext() {
+        updateContextSpecific();
         List<ContextResolver> dependencyContextsFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getDependencyContext)

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.internal.core.builder.change;
 
+import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.plan.community.CommunityExecutionPlanner;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
@@ -26,28 +27,28 @@ import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.util.id.RunnerId;
 
-public class CommunityFlamingockBuilder
-        extends AbstractFlamingockBuilder<CommunityFlamingockBuilder>
-        implements CommunityConfigurator<CommunityFlamingockBuilder> {
+public class CommunityChangeRunnerBuilder
+        extends AbstractChangeRunnerBuilder<CommunityChangeRunnerBuilder>
+        implements CommunityConfigurator<CommunityChangeRunnerBuilder> {
 
     private final CommunityConfiguration communityConfiguration;
 
 
-    protected CommunityFlamingockBuilder(CoreConfiguration coreConfiguration,
-                                         CommunityConfiguration communityConfiguration,
-                                         Context dependencyInjectableContext,
-                                         PluginManager pluginManager) {
+    public CommunityChangeRunnerBuilder(CoreConfiguration coreConfiguration,
+                                           CommunityConfiguration communityConfiguration,
+                                           Context dependencyInjectableContext,
+                                           PluginManager pluginManager) {
         super(coreConfiguration, dependencyInjectableContext, pluginManager);
         this.communityConfiguration = communityConfiguration;
     }
 
     @Override
-    protected CommunityFlamingockBuilder getSelf() {
+    protected CommunityChangeRunnerBuilder getSelf() {
         return this;
     }
 
     @Override
-    protected void doUpdateContext() {
+    protected void updateContextSpecific() {
         addDependency(FlamingockEdition.COMMUNITY);
         addDependency(communityConfiguration);
     }
@@ -63,7 +64,7 @@ public class CommunityFlamingockBuilder
                 .build();
     }
 
-    public CommunityFlamingockBuilder setAuditStore(AuditStore<?> auditStore) {
+    public CommunityChangeRunnerBuilder setAuditStore(AuditStore<?> auditStore) {
         this.auditStore = auditStore;
         return this;
     }

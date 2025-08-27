@@ -23,7 +23,7 @@ import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.util.ThreadSleeper;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
+import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.core.store.lock.LockException;
@@ -69,7 +69,7 @@ public class CloudAuditPersistenceTest {
     private final String jwt = "fake_jwt";
 
     private MockRunnerServerOld mockRunnerServer;
-    private CloudFlamingockBuilder flamingockBuilder;
+    private CloudChangeRunnerBuilder flamingockBuilder;
 
     private static final List<AuditEntryMatcher> auditEntryExpectations = new LinkedList<>();
 

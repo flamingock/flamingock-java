@@ -35,7 +35,7 @@ import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
+import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
@@ -83,7 +83,7 @@ public class MongoSyncTargetSystemTest {
     private final String jwt = "fake_jwt";
 
     private MockRunnerServer mockRunnerServer;
-    private CloudFlamingockBuilder flamingockBuilder;
+    private CloudChangeRunnerBuilder flamingockBuilder;
 
     @Container
     public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));

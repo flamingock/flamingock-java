@@ -15,6 +15,9 @@
  */
 package io.flamingock.internal.core.builder;
 
+import io.flamingock.internal.core.builder.change.AbstractChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.change.CommunityChangeRunnerBuilder;
 import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
@@ -30,13 +33,13 @@ public final class FlamingockFactory {
     private FlamingockFactory() {
     }
 
-    public static AbstractFlamingockBuilder<?> getEditionAwareBuilder(CoreConfiguration coreConfiguration,
-                                                                      CloudConfiguration cloudConfiguration,
-                                                                      CommunityConfiguration communityConfiguration,
-                                                                      AuditStore<?> providedAuditStore) {
+    public static AbstractChangeRunnerBuilder<?> getEditionAwareBuilder(CoreConfiguration coreConfiguration,
+                                                                        CloudConfiguration cloudConfiguration,
+                                                                        CommunityConfiguration communityConfiguration,
+                                                                        AuditStore<?> providedAuditStore) {
         Optional<CloudAuditStore> cloudAuditStore = CloudAuditStore.get();
         if (cloudAuditStore.isPresent()) {
-            return new CloudFlamingockBuilder(
+            return new CloudChangeRunnerBuilder(
                     coreConfiguration,
                     cloudConfiguration,
                     new SimpleContext(),
@@ -44,14 +47,14 @@ public final class FlamingockFactory {
                     cloudAuditStore.get());
         } else {
             if (providedAuditStore instanceof CloudAuditStore) {
-                return new CloudFlamingockBuilder(
+                return new CloudChangeRunnerBuilder(
                         coreConfiguration,
                         cloudConfiguration,
                         new SimpleContext(),
                         new DefaultPluginManager(),
                         (CloudAuditStore) providedAuditStore);
             }
-            return new CommunityFlamingockBuilder(
+            return new CommunityChangeRunnerBuilder(
                     coreConfiguration,
                     communityConfiguration,
                     new SimpleContext(),
@@ -60,8 +63,8 @@ public final class FlamingockFactory {
         }
     }
 
-    public static CloudFlamingockBuilder getCloudBuilder() {
-        return new CloudFlamingockBuilder(
+    public static CloudChangeRunnerBuilder getCloudBuilder() {
+        return new CloudChangeRunnerBuilder(
                 new CoreConfiguration(),
                 new CloudConfiguration(),
                 new SimpleContext(),
@@ -69,9 +72,9 @@ public final class FlamingockFactory {
                 CloudAuditStore.get().orElseThrow(() -> new RuntimeException("Cloud edition is required but was not imported. Please import flamingock-cloud artefact to your project.")));
     }
 
-    public static CommunityFlamingockBuilder getCommunityBuilder() {
+    public static CommunityChangeRunnerBuilder getCommunityBuilder() {
         //auditStore must be set later via builder
-        return new CommunityFlamingockBuilder(
+        return new CommunityChangeRunnerBuilder(
                 new CoreConfiguration(),
                 new CommunityConfiguration(),
                 new SimpleContext(),

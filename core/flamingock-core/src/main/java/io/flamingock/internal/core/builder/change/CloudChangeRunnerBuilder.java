@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.internal.core.builder.change;
 
+import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
 import io.flamingock.internal.core.configuration.cloud.CloudConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
@@ -25,30 +26,30 @@ import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.util.id.RunnerId;
 
 //TODO to cloud module
-public class CloudFlamingockBuilder
-        extends AbstractFlamingockBuilder<CloudFlamingockBuilder>
-        implements CloudConfigurator<CloudFlamingockBuilder> {
+public class CloudChangeRunnerBuilder
+        extends AbstractChangeRunnerBuilder<CloudChangeRunnerBuilder>
+        implements CloudConfigurator<CloudChangeRunnerBuilder> {
 
 
     private final CloudConfiguration cloudConfiguration;
 
-    protected CloudFlamingockBuilder(CoreConfiguration coreConfiguration,
-                                     CloudConfiguration cloudConfiguration,
-                                     Context dependencyInjectableContext,
-                                     PluginManager pluginManager,
-                                     CloudAuditStore driver) {
+    public CloudChangeRunnerBuilder(CoreConfiguration coreConfiguration,
+                                       CloudConfiguration cloudConfiguration,
+                                       Context dependencyInjectableContext,
+                                       PluginManager pluginManager,
+                                       CloudAuditStore driver) {
         super(coreConfiguration, dependencyInjectableContext, pluginManager, driver);
         this.cloudConfiguration = cloudConfiguration;
     }
 
     @Override
-    protected CloudFlamingockBuilder getSelf() {
+    protected CloudChangeRunnerBuilder getSelf() {
         return this;
     }
 
 
     @Override
-    protected void doUpdateContext() {
+    protected void updateContextSpecific() {
         addDependency(FlamingockEdition.CLOUD);
         addDependency(cloudConfiguration);
     }
@@ -60,25 +61,25 @@ public class CloudFlamingockBuilder
     }
 
     @Override
-    public CloudFlamingockBuilder setHost(String host) {
+    public CloudChangeRunnerBuilder setHost(String host) {
         cloudConfiguration.setHost(host);
         return this;
     }
 
     @Override
-    public CloudFlamingockBuilder setService(String service) {
+    public CloudChangeRunnerBuilder setService(String service) {
         cloudConfiguration.setServiceName(service);
         return this;
     }
 
     @Override
-    public CloudFlamingockBuilder setEnvironment(String environment) {
+    public CloudChangeRunnerBuilder setEnvironment(String environment) {
         cloudConfiguration.setEnvironmentName(environment);
         return this;
     }
 
     @Override
-    public CloudFlamingockBuilder setApiToken(String clientSecret) {
+    public CloudChangeRunnerBuilder setApiToken(String clientSecret) {
         cloudConfiguration.setApiToken(clientSecret);
         return this;
     }

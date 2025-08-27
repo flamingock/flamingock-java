@@ -20,7 +20,7 @@ import io.flamingock.core.cloud.changes.CloudChange2;
 import io.flamingock.core.cloud.utils.TestCloudTargetSystem;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
-import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
+import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
@@ -63,7 +63,7 @@ public class CloudTransactionTest {
     private final String jwt = "fake_jwt";
 
     private MockRunnerServerOld mockRunnerServer;
-    private CloudFlamingockBuilder flamingockBuilder;
+    private CloudChangeRunnerBuilder flamingockBuilder;
 
     private static final List<AuditEntryMatcher> auditEntries = new LinkedList<>();
 

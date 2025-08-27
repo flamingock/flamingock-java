@@ -29,7 +29,7 @@ import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
-import io.flamingock.internal.core.builder.CloudFlamingockBuilder;
+import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
@@ -90,7 +90,7 @@ public class CouchbaseTargetSystemTest {
     private final String jwt = "fake_jwt";
 
     private MockRunnerServer mockRunnerServer;
-    private CloudFlamingockBuilder flamingockBuilder;
+    private CloudChangeRunnerBuilder flamingockBuilder;
 
     @Container
     public static final CouchbaseContainer couchbaseContainer = new CouchbaseContainer("couchbase/server:7.2.4")
