@@ -20,12 +20,7 @@ import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTED;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTION_FAILED;
@@ -34,13 +29,6 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.STARTED;
 
 public class AuditEntry implements Comparable<AuditEntry> {
-
-
-    private static final List<Status> STATUS_ORDER = Arrays.asList(
-            ROLLBACK_FAILED, ROLLED_BACK, EXECUTION_FAILED, EXECUTED, STARTED
-
-    );
-
     protected final Boolean systemChange;
     private final String executionId;
     private final String stageId;
@@ -288,7 +276,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         ROLLED_BACK(4),
         ROLLBACK_FAILED(5),
         MANUAL_MARKED_AS_EXECUTED(6),
-        MANUAL_MARKED_AS_FAILED(7);
+        MANUAL_MARKED_AS_ROLLED_BACK(7);
 
         private final int priority;
 

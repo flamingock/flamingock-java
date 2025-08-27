@@ -101,7 +101,7 @@ public class CommunityChangeActionBuilder {
                             "Interrupted execution, requires manual intervention");
                 }
 
-            case MANUAL_MARKED_AS_FAILED:
+            case MANUAL_MARKED_AS_ROLLED_BACK:
             case EXECUTION_FAILED:
                 if (txType == null || txType == AuditTxType.NON_TX) {
                     if (changeUnit.getRecovery().isAlwaysRetry()) {

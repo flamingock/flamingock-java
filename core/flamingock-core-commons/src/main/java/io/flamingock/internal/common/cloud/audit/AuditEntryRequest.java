@@ -28,7 +28,7 @@ public class AuditEntryRequest {
         ROLLED_BACK,
         ROLLBACK_FAILED,
         MANUAL_MARKED_AS_EXECUTED,
-        MANUAL_MARKED_AS_FAILED
+        MANUAL_MARKED_AS_ROLLED_BACK
     }
 
     private final String stageId;
