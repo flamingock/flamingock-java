@@ -17,12 +17,12 @@ package io.flamingock.springboot;
 
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
-import io.flamingock.internal.core.builder.cloud.CloudConfigurable;
-import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.builder.local.CommunityConfigurable;
-import io.flamingock.internal.core.builder.local.CommunityConfiguration;
+import io.flamingock.internal.core.configuration.cloud.CloudConfigurable;
+import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
+import io.flamingock.internal.core.configuration.core.CoreConfigurable;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Map;

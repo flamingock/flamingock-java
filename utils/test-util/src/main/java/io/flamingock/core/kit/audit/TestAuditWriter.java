@@ -16,13 +16,13 @@
 package io.flamingock.core.kit.audit;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
-import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
-import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.store.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.RollbackAuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.util.Result;
 
-public class TestAuditWriter implements ExecutionAuditWriter {
+public class TestAuditWriter implements LifecycleAuditWriter {
     
     private final AuditStorage auditStorage;
     

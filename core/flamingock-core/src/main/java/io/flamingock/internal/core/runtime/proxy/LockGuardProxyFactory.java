@@ -17,7 +17,7 @@ package io.flamingock.internal.core.runtime.proxy;
 
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.JdkUtil;
-import io.flamingock.internal.core.engine.lock.Lock;
+import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.utils.ExecutionUtils;
 import javassist.util.proxy.ProxyFactory;
 import org.objenesis.ObjenesisStd;

@@ -17,7 +17,7 @@ package io.flamingock.core.kit.audit;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.core.engine.audit.domain.AuditSnapshotMapBuilder;
+import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 
 
 import java.util.List;

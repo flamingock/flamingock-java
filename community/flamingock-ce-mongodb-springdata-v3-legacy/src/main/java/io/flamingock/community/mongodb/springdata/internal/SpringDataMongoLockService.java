@@ -21,8 +21,8 @@ import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem
 
 public class SpringDataMongoLockService extends MongoSyncLockService {
 
-    protected SpringDataMongoLockService(MongoSpringDataTargetSystem targetSystem,
-                                         String collectionName) {
+    public SpringDataMongoLockService(MongoSpringDataTargetSystem targetSystem,
+                                      String collectionName) {
         super(targetSystem.getMongoTemplate().getCollection(collectionName),
                 targetSystem.getReadConcern(),
                 targetSystem.getReadPreference(),

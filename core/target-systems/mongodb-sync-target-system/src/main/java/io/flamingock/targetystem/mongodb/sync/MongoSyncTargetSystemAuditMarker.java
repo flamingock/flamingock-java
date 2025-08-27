@@ -22,7 +22,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;

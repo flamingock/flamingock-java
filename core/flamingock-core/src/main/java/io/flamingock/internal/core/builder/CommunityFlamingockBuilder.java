@@ -15,11 +15,16 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.builder.local.CommunityConfiguration;
-import io.flamingock.internal.core.builder.local.CommunityConfigurator;
+import io.flamingock.internal.core.plan.community.CommunityExecutionPlanner;
+import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurator;
 import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.plugin.PluginManager;
+import io.flamingock.internal.util.id.RunnerId;
 
 public class CommunityFlamingockBuilder
         extends AbstractFlamingockBuilder<CommunityFlamingockBuilder>
@@ -45,6 +50,17 @@ public class CommunityFlamingockBuilder
     protected void doUpdateContext() {
         addDependency(FlamingockEdition.COMMUNITY);
         addDependency(communityConfiguration);
+    }
+
+    @Override
+    protected ExecutionPlanner buildExecutionPlanner(RunnerId runnerId) {
+
+        return CommunityExecutionPlanner.builder()
+                .setRunnerId(runnerId)
+                .setAuditReader(auditStore.getPersistence())
+                .setLockService(((CommunityAuditStore) auditStore).getLockService())
+                .setCoreConfigurable(coreConfiguration)
+                .build();
     }
 
     public CommunityFlamingockBuilder setAuditStore(AuditStore<?> auditStore) {

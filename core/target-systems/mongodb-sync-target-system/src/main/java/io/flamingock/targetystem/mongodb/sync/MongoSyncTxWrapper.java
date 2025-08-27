@@ -22,7 +22,7 @@ import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 

@@ -16,24 +16,28 @@
 package io.flamingock.community.dynamodb.driver;
 
 import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.community.dynamodb.internal.DynamoDBLockService;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.builder.local.CommunityConfigurable;
-import io.flamingock.internal.core.community.LocalEngine;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.configuration.core.CoreConfigurable;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.store.persistence.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.dynamodb.DynamoDBConfiguration;
-import io.flamingock.community.dynamodb.internal.DynamoDBEngine;
+import io.flamingock.community.dynamodb.internal.DynamoDBAuditPersistence;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDBAuditStore implements LocalAuditStore {
+public class DynamoDBAuditStore implements CommunityAuditStore {
 
     private RunnerId runnerId;
     private DynamoDBTargetSystem targetSystem;
-    private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
     private DynamoDBConfiguration driverConfiguration;
+    private DynamoDBAuditPersistence persistence;
+    private DynamoDBLockService lockService;
 
     public static DynamoDBAuditStore fromTargetSystem(DynamoDBTargetSystem targetSystem) {
         return new DynamoDBAuditStore(targetSystem);
@@ -50,7 +54,6 @@ public class DynamoDBAuditStore implements LocalAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
 
         this.driverConfiguration = baseContext.getDependencyValue(DynamoDBConfiguration.class)
@@ -68,18 +71,32 @@ public class DynamoDBAuditStore implements LocalAuditStore {
     }
 
     @Override
-    public LocalEngine getEngine() {
-        DynamoDBEngine dynamodbEngine = new DynamoDBEngine(
-                targetSystem,
-                driverConfiguration.getAuditRepositoryName(),
-                driverConfiguration.getLockRepositoryName(),
-                driverConfiguration.getReadCapacityUnits(),
-                driverConfiguration.getWriteCapacityUnits(),
-                coreConfiguration,
-                communityConfiguration);
-        dynamodbEngine.initialize(runnerId);
-        return dynamodbEngine;
+    public synchronized CommunityAuditPersistence getPersistence() {
+        if (persistence == null) {
+            persistence = new DynamoDBAuditPersistence(
+                    targetSystem,
+                    driverConfiguration.getAuditRepositoryName(),
+                    driverConfiguration.getReadCapacityUnits(),
+                    driverConfiguration.getWriteCapacityUnits(),
+                    communityConfiguration);
+            persistence.initialize(runnerId);
+        }
+        return persistence;
     }
+
+    @Override
+    public synchronized CommunityLockService getLockService() {
+        if (lockService == null) {
+            lockService = new DynamoDBLockService(targetSystem, TimeService.getDefault());
+            lockService.initialize(
+                    targetSystem.isAutoCreate(),
+                    driverConfiguration.getLockRepositoryName(),
+                    driverConfiguration.getReadCapacityUnits(),
+                    driverConfiguration.getWriteCapacityUnits());
+        }
+        return lockService;
+    }
+
 
     @Override
     public TargetSystem getTargetSystem() {

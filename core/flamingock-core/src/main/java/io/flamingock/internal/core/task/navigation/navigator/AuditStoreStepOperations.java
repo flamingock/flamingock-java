@@ -16,11 +16,11 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
-import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
-import io.flamingock.internal.core.engine.audit.domain.RuntimeContext;
-import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.store.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.RollbackAuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.RuntimeContext;
+import io.flamingock.internal.core.store.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
@@ -32,11 +32,11 @@ import java.time.LocalDateTime;
 
 public class AuditStoreStepOperations {
 
-    private final ExecutionAuditWriter auditWriter;
+    private final LifecycleAuditWriter auditWriter;
     private final AuditTxType auditTxType;
     private final String targetSystemId;
 
-    public AuditStoreStepOperations(ExecutionAuditWriter auditWriter, AuditTxType auditTxType, String targetSystemId) {
+    public AuditStoreStepOperations(LifecycleAuditWriter auditWriter, AuditTxType auditTxType, String targetSystemId) {
         this.auditWriter = auditWriter;
         this.auditTxType = auditTxType;
         this.targetSystemId = targetSystemId;

@@ -16,8 +16,8 @@
 package io.flamingock.core.kit.inmemory;
 
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockKey;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockKey;
 
 import java.util.HashMap;
 import java.util.Map;

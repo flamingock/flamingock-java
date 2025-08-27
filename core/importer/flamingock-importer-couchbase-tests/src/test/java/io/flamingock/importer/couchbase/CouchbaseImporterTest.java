@@ -25,7 +25,7 @@ import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.community.Constants;
+import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import org.junit.jupiter.api.AfterEach;
@@ -57,7 +57,7 @@ public class CouchbaseImporterTest {
 
     public static final String FLAMINGOCK_BUCKET_NAME = "test";
     public static final String FLAMINGOCK_SCOPE_NAME = "flamingock";
-    public static final String FLAMINGOCK_COLLECTION_NAME = Constants.DEFAULT_AUDIT_STORE_NAME;
+    public static final String FLAMINGOCK_COLLECTION_NAME = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 
     public static final String MONGOCK_BUCKET_NAME = "test";
     public static final String MONGOCK_SCOPE_NAME = CollectionIdentifier.DEFAULT_SCOPE;

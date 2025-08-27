@@ -21,23 +21,19 @@ import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.ExecutionAuditContextBundle;
-import io.flamingock.internal.core.engine.audit.domain.RollbackAuditContextBundle;
-import io.flamingock.internal.core.engine.audit.domain.StartExecutionAuditContextBundle;
-import io.flamingock.internal.core.engine.lock.Lock;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.store.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.RollbackAuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.StartExecutionAuditContextBundle;
+import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
-import io.flamingock.internal.core.targets.operations.TargetSystemOps;
-import io.flamingock.internal.core.targets.operations.TargetSystemOpsImpl;
-import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOpsImpl;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
@@ -52,7 +48,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -84,7 +79,7 @@ public class TestRunner {
                                         TestTaskExecution... executionSteps
     ) {
         checker.reset();
-        ExecutionAuditWriter auditWriterMock = mock(ExecutionAuditWriter.class);
+        LifecycleAuditWriter auditWriterMock = mock(LifecycleAuditWriter.class);
         when(auditWriterMock.writeStartExecution(any(StartExecutionAuditContextBundle.class))).thenReturn(Result.OK());
         when(auditWriterMock.writeExecution(any(ExecutionAuditContextBundle.class))).thenReturn(Result.OK());
         when(auditWriterMock.writeRollback(any(RollbackAuditContextBundle.class))).thenReturn(Result.OK());

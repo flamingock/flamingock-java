@@ -15,13 +15,16 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
-import io.flamingock.internal.core.builder.cloud.CloudConfigurator;
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.cloud.CloudAuditStore;
+import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
+import io.flamingock.internal.core.configuration.cloud.CloudConfigurator;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.core.store.CloudAuditStore;
 import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.plugin.PluginManager;
+import io.flamingock.internal.util.id.RunnerId;
 
+//TODO to cloud module
 public class CloudFlamingockBuilder
         extends AbstractFlamingockBuilder<CloudFlamingockBuilder>
         implements CloudConfigurator<CloudFlamingockBuilder> {
@@ -48,6 +51,12 @@ public class CloudFlamingockBuilder
     protected void doUpdateContext() {
         addDependency(FlamingockEdition.CLOUD);
         addDependency(cloudConfiguration);
+    }
+
+    @Override
+    protected ExecutionPlanner buildExecutionPlanner(RunnerId runnerId) {
+        //TODO remove this once this builder is moved to cloud module
+        return ((CloudAuditStore)auditStore).getPersistence().getExecutionPlanner();
     }
 
     @Override

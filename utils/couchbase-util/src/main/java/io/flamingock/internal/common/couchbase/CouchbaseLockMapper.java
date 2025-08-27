@@ -16,24 +16,24 @@
 package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.internal.core.community.lock.LockEntry;
-import io.flamingock.internal.core.community.lock.LockEntryField;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockStatus;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockStatus;
 import io.flamingock.internal.util.TimeUtil;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
 
 public class CouchbaseLockMapper {
 
-    public JsonObject toDocument(LockEntry lockEntry) {
+    public JsonObject toDocument(CommunityLockEntry lockEntry) {
         JsonObject document = JsonObject.create();
         CouchbaseUtils.addFieldToDocument(document, KEY_FIELD, lockEntry.getKey());
         CouchbaseUtils.addFieldToDocument(document, OWNER_FIELD, lockEntry.getOwner());
@@ -42,17 +42,17 @@ public class CouchbaseLockMapper {
         return document;
     }
 
-    public LockEntry lockEntryFromDocument(JsonObject jsonObject) {
-        return new LockEntry(jsonObject.getString(LockEntryField.KEY_FIELD),
-                jsonObject.containsKey(LockEntryField.STATUS_FIELD) ? LockStatus.valueOf(jsonObject.getString(LockEntryField.STATUS_FIELD)) : null,
-                jsonObject.getString(LockEntryField.OWNER_FIELD),
-                TimeUtil.toLocalDateTime(jsonObject.getLong(LockEntryField.EXPIRES_AT_FIELD)));
+    public CommunityLockEntry lockEntryFromDocument(JsonObject jsonObject) {
+        return new CommunityLockEntry(jsonObject.getString(CommunityLockEntryConstants.KEY_FIELD),
+                jsonObject.containsKey(CommunityLockEntryConstants.STATUS_FIELD) ? LockStatus.valueOf(jsonObject.getString(CommunityLockEntryConstants.STATUS_FIELD)) : null,
+                jsonObject.getString(CommunityLockEntryConstants.OWNER_FIELD),
+                TimeUtil.toLocalDateTime(jsonObject.getLong(CommunityLockEntryConstants.EXPIRES_AT_FIELD)));
     }
 
     public LockAcquisition lockAcquisitionFromDocument(JsonObject jsonObject) {
-        long expiration = TimeUtil.toLocalDateTime(jsonObject.getLong(LockEntryField.EXPIRES_AT_FIELD)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long expiration = TimeUtil.toLocalDateTime(jsonObject.getLong(CommunityLockEntryConstants.EXPIRES_AT_FIELD)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long now = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long diffMillis = expiration - now;
-        return new LockAcquisition(RunnerId.fromString(jsonObject.getString(LockEntryField.OWNER_FIELD)), diffMillis);
+        return new LockAcquisition(RunnerId.fromString(jsonObject.getString(CommunityLockEntryConstants.OWNER_FIELD)), diffMillis);
     }
 }

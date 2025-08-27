@@ -20,7 +20,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.kit.AbstractTestKit;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ public class MongoSyncTestKit extends AbstractTestKit {
 
     private final MongoClient mongoClient;
 
-    public MongoSyncTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalAuditStore driver, MongoClient mongoClient) {
+    public MongoSyncTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver, MongoClient mongoClient) {
         super(auditStorage, lockStorage, driver);
         this.mongoClient = mongoClient;
     }
@@ -49,7 +49,7 @@ public class MongoSyncTestKit extends AbstractTestKit {
     /**
      * Create a new MongoSyncTestKit with MongoDB client and database
      */
-    public static MongoSyncTestKit create(LocalAuditStore driver, MongoClient mongoClient, MongoDatabase database) {
+    public static MongoSyncTestKit create(CommunityAuditStore driver, MongoClient mongoClient, MongoDatabase database) {
         MongoSyncAuditStorage auditStorage = new MongoSyncAuditStorage(database);
         MongoSyncLockStorage lockStorage = new MongoSyncLockStorage(database);
         return new MongoSyncTestKit(auditStorage, lockStorage, driver, mongoClient);

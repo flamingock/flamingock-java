@@ -19,7 +19,7 @@ import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.core.kit.lock.LockTestHelper;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 
 /**
  * Generic TestKit implementation that works with any storage technology.
@@ -33,11 +33,11 @@ public abstract class AbstractTestKit implements TestKit {
     
     private final AuditStorage auditStorage;
     private final LockStorage lockStorage;
-    private final LocalAuditStore driver;
+    private final CommunityAuditStore driver;
     private final AuditTestHelper auditHelper;
     private final LockTestHelper lockHelper;
     
-    protected AbstractTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalAuditStore driver) {
+    protected AbstractTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
         this.driver = driver;

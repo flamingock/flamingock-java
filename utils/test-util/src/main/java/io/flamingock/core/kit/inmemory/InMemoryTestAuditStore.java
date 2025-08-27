@@ -16,41 +16,42 @@
 package io.flamingock.core.kit.inmemory;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.util.id.RunnerId;
 
-public class InMemoryTestAuditStore implements LocalAuditStore {
+public class InMemoryTestAuditStore implements CommunityAuditStore {
     
     private final InMemoryAuditStorage auditStorage;
     private final InMemoryLockStorage lockStorage;
-    private InMemoryTestEngine engine;
+    private InMemoryTestAuditPersistence persistence;
+    private RunnerId runnerId;
 
     public InMemoryTestAuditStore(InMemoryAuditStorage auditStorage, InMemoryLockStorage lockStorage) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
+
     }
     
     @Override
     public void initialize(ContextResolver contextResolver) {
         // Extract required components from context
-        RunnerId instanceId = contextResolver.getRequiredDependencyValue(RunnerId.class);
-        CoreConfigurable coreConfiguration = contextResolver.getRequiredDependencyValue(CoreConfigurable.class);
-        
-        // Create the test connection engine with domain-separated storage
-        this.engine = new InMemoryTestEngine(auditStorage, lockStorage, instanceId, coreConfiguration);
+        runnerId = contextResolver.getRequiredDependencyValue(RunnerId.class);
+        // Create the test audit persistence with domain-separated storage
+        this.persistence = new InMemoryTestAuditPersistence(auditStorage);
     }
+
     
     @Override
-    public boolean isCloud() {
-        return false;
-    }
-    
-    @Override
-    public InMemoryTestEngine getEngine() {
-        if (engine == null) {
+    public InMemoryTestAuditPersistence getPersistence() {
+        if (persistence == null) {
             throw new IllegalStateException("AuditStore not initialized - call initialize first");
         }
-        return engine;
+        return persistence;
+    }
+
+    @Override
+    public CommunityLockService getLockService() {
+        return new InMemoryLockService(lockStorage, runnerId);
     }
 }

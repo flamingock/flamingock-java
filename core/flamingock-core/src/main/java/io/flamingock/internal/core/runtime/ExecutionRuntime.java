@@ -24,7 +24,7 @@ import io.flamingock.internal.common.core.context.InjectableContextProvider;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
-import io.flamingock.internal.core.engine.lock.Lock;
+import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.StringUtil;

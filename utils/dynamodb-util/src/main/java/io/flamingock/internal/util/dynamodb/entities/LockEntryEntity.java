@@ -15,10 +15,10 @@
  */
 package io.flamingock.internal.util.dynamodb.entities;
 
-import io.flamingock.internal.core.community.lock.LockEntry;
-import io.flamingock.internal.core.community.lock.LockEntryField;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockStatus;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockStatus;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
@@ -40,7 +40,7 @@ public class LockEntryEntity {
     private String lockOwner;
     private LocalDateTime expiresAt;
 
-    public LockEntryEntity(LockEntry lock) {
+    public LockEntryEntity(CommunityLockEntry lock) {
         this.partitionKey = lock.getKey();
         this.key = lock.getKey();
         this.status = lock.getStatus();
@@ -61,7 +61,7 @@ public class LockEntryEntity {
         this.partitionKey = partitionKey;
     }
 
-    @DynamoDbAttribute(LockEntryField.KEY_FIELD)
+    @DynamoDbAttribute(CommunityLockEntryConstants.KEY_FIELD)
     public String getKey() {
         return key;
     }
@@ -70,7 +70,7 @@ public class LockEntryEntity {
         this.key = key;
     }
 
-    @DynamoDbAttribute(LockEntryField.STATUS_FIELD)
+    @DynamoDbAttribute(CommunityLockEntryConstants.STATUS_FIELD)
     public LockStatus getStatus() {
         return status;
     }
@@ -88,7 +88,7 @@ public class LockEntryEntity {
         this.lockOwner = lockOwner;
     }
 
-    @DynamoDbAttribute(LockEntryField.EXPIRES_AT_FIELD)
+    @DynamoDbAttribute(CommunityLockEntryConstants.EXPIRES_AT_FIELD)
     public Long getExpiresAt() {
         return Timestamp.valueOf(expiresAt).getTime();
     }
@@ -97,8 +97,8 @@ public class LockEntryEntity {
         this.expiresAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiresAt), ZoneId.systemDefault());
     }
 
-    public LockEntry toLockEntry() {
-        return new LockEntry(key, status, lockOwner, expiresAt);
+    public CommunityLockEntry toLockEntry() {
+        return new CommunityLockEntry(key, status, lockOwner, expiresAt);
     }
 
     public LockAcquisition getlockAcquisition() {

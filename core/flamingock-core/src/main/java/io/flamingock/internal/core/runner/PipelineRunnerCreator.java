@@ -16,14 +16,14 @@
 package io.flamingock.internal.core.runner;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.engine.ConnectionEngine;
+import io.flamingock.internal.core.configuration.core.CoreConfigurable;
+import io.flamingock.internal.core.store.audit.AuditPersistence;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.targets.TargetSystemManager;
-import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
 
@@ -36,7 +36,8 @@ public final class PipelineRunnerCreator {
 
     public static Runner create(RunnerId runnerId,
                                 LoadedPipeline pipeline,
-                                ConnectionEngine engine,
+                                AuditPersistence persistence,
+                                ExecutionPlanner executionPlanner,
                                 TargetSystemManager targetSystemManager,
                                 CoreConfigurable coreConfiguration,
                                 EventPublisher eventPublisher,
@@ -46,11 +47,11 @@ public final class PipelineRunnerCreator {
                                 boolean relaxTargetSystemValidation,
                                 Runnable finalizer) {
 
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, engine.getAuditWriter(), targetSystemManager, null, relaxTargetSystemValidation);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null, relaxTargetSystemValidation);
         return new PipelineRunner(
                 runnerId,
                 pipeline,
-                engine.getExecutionPlanner(),
+                executionPlanner,
                 stageExecutor,
                 buildExecutionContext(coreConfiguration),
                 eventPublisher,

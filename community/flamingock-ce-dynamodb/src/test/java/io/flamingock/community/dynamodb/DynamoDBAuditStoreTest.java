@@ -29,7 +29,7 @@ import io.flamingock.dynamodb.kit.DynamoDBTestContainer;
 import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.community.Constants;
+import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
@@ -113,8 +113,8 @@ class DynamoDBAuditStoreTest {
 
         // Then - Verify table existence
         List<String> tableNames = client.listTables().tableNames();
-        assertTrue(tableNames.contains(Constants.DEFAULT_AUDIT_STORE_NAME));
-        assertTrue(tableNames.contains(Constants.DEFAULT_LOCK_STORE_NAME));
+        assertTrue(tableNames.contains(CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME));
+        assertTrue(tableNames.contains(CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME));
         assertFalse(tableNames.contains(CUSTOM_AUDIT_REPOSITORY_NAME));
         assertFalse(tableNames.contains(CUSTOM_LOCK_REPOSITORY_NAME));
     }
@@ -174,8 +174,8 @@ class DynamoDBAuditStoreTest {
 
         // Verify table existence
         List<String> tableNames = client.listTables().tableNames();
-        assertFalse(tableNames.contains(Constants.DEFAULT_AUDIT_STORE_NAME));
-        assertFalse(tableNames.contains(Constants.DEFAULT_LOCK_STORE_NAME));
+        assertFalse(tableNames.contains(CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME));
+        assertFalse(tableNames.contains(CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME));
         assertTrue(tableNames.contains(CUSTOM_AUDIT_REPOSITORY_NAME));
         assertTrue(tableNames.contains(CUSTOM_LOCK_REPOSITORY_NAME));
     }

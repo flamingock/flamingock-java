@@ -18,7 +18,7 @@ package io.flamingock.dynamodb.kit;
 import io.flamingock.core.kit.AbstractTestKit;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 
@@ -26,7 +26,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
 
     private final DynamoDbClient client;
 
-    public DynamoDBTestKit(AuditStorage auditStorage, LockStorage lockStorage, LocalAuditStore driver, DynamoDbClient client) {
+    public DynamoDBTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver, DynamoDbClient client) {
         super(auditStorage, lockStorage, driver);
         this.client = client;
     }
@@ -52,7 +52,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
      * @param auditStore the local auditStore for Flamingock execution
      * @return configured TestKit instance
      */
-    public static DynamoDBTestKit create(DynamoDbClient client, LocalAuditStore auditStore) {
+    public static DynamoDBTestKit create(DynamoDbClient client, CommunityAuditStore auditStore) {
         return builder()
             .withClient(client)
             .withAuditStore(auditStore)
@@ -71,7 +71,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
     public static class Builder {
 
         private DynamoDbClient client;
-        private LocalAuditStore driver;
+        private CommunityAuditStore driver;
         private String auditTableName = "flamingockAuditLogs";
         private String lockTableName = "flamingockLocks";
         private boolean autoCleanup = true;
@@ -99,7 +99,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
          * @param driver the local driver to use
          * @return this builder for method chaining
          */
-        public Builder withAuditStore(LocalAuditStore driver) {
+        public Builder withAuditStore(CommunityAuditStore driver) {
             this.driver = driver;
             return this;
         }

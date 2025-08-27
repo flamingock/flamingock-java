@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.common.mongodb;
 
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.community.lock.LockEntry;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeUtil;
 
@@ -24,10 +24,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.function.Supplier;
 
-import static io.flamingock.internal.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
 
 public class MongoDBLockMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
 
@@ -37,7 +37,7 @@ public class MongoDBLockMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         this.documentckSupplier = documentCreator;
     }
 
-    public DOCUMENT_WRAPPER toDocument(LockEntry lockEntry) {
+    public DOCUMENT_WRAPPER toDocument(CommunityLockEntry lockEntry) {
         DOCUMENT_WRAPPER document = documentckSupplier.get();
         document.append(KEY_FIELD, lockEntry.getKey());
         document.append(OWNER_FIELD, lockEntry.getOwner());

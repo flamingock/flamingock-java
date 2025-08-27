@@ -17,8 +17,8 @@ package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.lock.Lock;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
@@ -58,7 +58,7 @@ public class ChangeProcessStrategyFactory {
 
     protected ExecutableTask changeUnit;
 
-    protected ExecutionAuditWriter auditWriter;
+    protected LifecycleAuditWriter auditWriter;
 
     protected Lock lock;
 
@@ -80,7 +80,7 @@ public class ChangeProcessStrategyFactory {
         return this;
     }
 
-    public ChangeProcessStrategyFactory setAuditWriter(ExecutionAuditWriter auditWriter) {
+    public ChangeProcessStrategyFactory setAuditWriter(LifecycleAuditWriter auditWriter) {
         this.auditWriter = auditWriter;
         return this;
     }

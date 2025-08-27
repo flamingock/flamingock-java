@@ -17,7 +17,7 @@ package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;

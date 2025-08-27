@@ -23,10 +23,10 @@ import com.mongodb.client.result.UpdateResult;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.AuditSnapshotMapBuilder;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 
 import io.flamingock.internal.util.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Result;
@@ -45,7 +45,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANG
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 
-public class MongoSyncAuditor implements ExecutionAuditWriter, AuditReader {
+public class MongoSyncAuditor implements LifecycleAuditWriter, AuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoSyncAuditor");
 

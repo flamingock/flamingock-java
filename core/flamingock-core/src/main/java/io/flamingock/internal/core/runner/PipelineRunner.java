@@ -17,10 +17,10 @@ package io.flamingock.internal.core.runner;
 
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.engine.execution.ExecutionPlan;
-import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
-import io.flamingock.internal.core.engine.lock.Lock;
-import io.flamingock.internal.core.engine.lock.LockException;
+import io.flamingock.internal.core.plan.ExecutionPlan;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
+import io.flamingock.internal.core.store.lock.Lock;
+import io.flamingock.internal.core.store.lock.LockException;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.PipelineFailedEvent;

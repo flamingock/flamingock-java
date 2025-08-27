@@ -17,9 +17,9 @@ package io.flamingock.core.kit;
 
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.lock.LockTestHelper;
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.builder.local.CommunityConfiguration;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.plugin.DefaultPluginManager;
 
@@ -69,7 +69,7 @@ public interface TestKit {
     void cleanUp();
 
 
-    default TestFlamingockBuilder createBuilderWithAuditStore(LocalAuditStore auditStore) {
+    default TestFlamingockBuilder createBuilderWithAuditStore(CommunityAuditStore auditStore) {
         return new TestFlamingockBuilder(
             new CoreConfiguration(),
             new CommunityConfiguration(), 

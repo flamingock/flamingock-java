@@ -18,7 +18,7 @@ package io.flamingock.targetsystem.mysql;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;

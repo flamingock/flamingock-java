@@ -21,7 +21,7 @@ import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
-import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import org.bson.Document;

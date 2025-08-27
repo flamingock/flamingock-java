@@ -16,10 +16,10 @@
 package io.flamingock.core.kit;
 
 import io.flamingock.internal.core.builder.CommunityFlamingockBuilder;
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.builder.local.CommunityConfiguration;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.common.core.context.Context;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.plugin.PluginManager;
 
 /**
@@ -48,7 +48,7 @@ public class TestFlamingockBuilder extends CommunityFlamingockBuilder {
                                 CommunityConfiguration communityConfiguration,
                                 Context dependencyInjectableContext,
                                 PluginManager pluginManager,
-                                LocalAuditStore auditStore) {
+                                CommunityAuditStore auditStore) {
         super(coreConfiguration, communityConfiguration, dependencyInjectableContext, pluginManager);
         this.auditStore = auditStore;
     }
@@ -58,7 +58,7 @@ public class TestFlamingockBuilder extends CommunityFlamingockBuilder {
         return this;
     }
 
-    public LocalAuditStore getAuditStore() {
-        return (LocalAuditStore) auditStore;
+    public CommunityAuditStore getAuditStore() {
+        return (CommunityAuditStore) auditStore;
     }
 }

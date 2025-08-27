@@ -16,14 +16,13 @@
 package io.flamingock.dynamodb.kit;
 
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockKey;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -31,7 +30,6 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * DynamoDB implementation of LockStorage for real database testing.

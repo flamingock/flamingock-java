@@ -16,16 +16,16 @@
 package io.flamingock.community.couchbase;
 
 import com.couchbase.client.core.io.CollectionIdentifier;
-import io.flamingock.internal.core.community.Constants;
-import io.flamingock.internal.core.community.store.AuditStoreConfigurable;
+import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
+import io.flamingock.internal.core.store.persistence.community.CommunityAuditStoreConfigurable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 
-public class CouchbaseConfiguration implements AuditStoreConfigurable {
+public class CouchbaseConfiguration implements CommunityAuditStoreConfigurable {
 
     private boolean autoCreate = true;
     private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
-    private String auditRepositoryName = Constants.DEFAULT_AUDIT_STORE_NAME;
-    private String lockRepositoryName = Constants.DEFAULT_LOCK_STORE_NAME;
+    private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
     public boolean isAutoCreate() {
         return autoCreate;

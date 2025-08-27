@@ -24,12 +24,12 @@ import com.couchbase.client.java.kv.RemoveOptions;
 import com.couchbase.client.java.kv.ReplaceOptions;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
 import io.flamingock.internal.common.couchbase.CouchbaseLockMapper;
-import io.flamingock.internal.core.community.lock.LocalLockService;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.community.lock.LockEntry;
-import io.flamingock.internal.core.engine.lock.LockKey;
-import io.flamingock.internal.core.engine.lock.LockServiceException;
-import io.flamingock.internal.core.engine.lock.LockStatus;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.store.lock.LockKey;
+import io.flamingock.internal.core.store.lock.LockServiceException;
+import io.flamingock.internal.core.store.lock.LockStatus;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 
 import java.time.LocalDateTime;
 
-public class CouchbaseLockService implements LocalLockService {
+public class CouchbaseLockService implements CommunityLockService {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CouchbaseLock");
 
@@ -50,13 +50,13 @@ public class CouchbaseLockService implements LocalLockService {
     private final CouchbaseLockMapper mapper = new CouchbaseLockMapper();
     private final TimeService timeService;
 
-    protected CouchbaseLockService(CouchbaseTargetSystem targetSystem, TimeService timeService) {
+    public CouchbaseLockService(CouchbaseTargetSystem targetSystem, TimeService timeService) {
         this.cluster = targetSystem.getCluster();
         this.bucket = targetSystem.getBucket();
         this.timeService = timeService;
     }
 
-    protected void initialize(boolean autoCreate, String scopeName, String collectionName) {
+    public void initialize(boolean autoCreate, String scopeName, String collectionName) {
         this.collectionInitializator = new CouchbaseCollectionInitializator(cluster, bucket, scopeName, collectionName);
         this.collectionInitializator.initialize(autoCreate);
         this.collection = this.bucket.scope(scopeName).collection(collectionName);
@@ -64,11 +64,11 @@ public class CouchbaseLockService implements LocalLockService {
 
     @Override
     public LockAcquisition upsert(LockKey key, RunnerId owner, long leaseMillis) {
-        LockEntry newLock = new LockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
+        CommunityLockEntry newLock = new CommunityLockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
         String keyId = toKey(newLock);
         try {
             GetResult result = collection.get(keyId);
-            LockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
+            CommunityLockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
             if (newLock.getOwner().equals(existingLock.getOwner()) ||
                     LocalDateTime.now().isAfter(existingLock.getExpiresAt())) {
                 logger.debug("Lock with key {} already owned by us or is expired, so trying to perform a lock.",
@@ -91,11 +91,11 @@ public class CouchbaseLockService implements LocalLockService {
 
     @Override
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
-        LockEntry newLock = new LockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
+        CommunityLockEntry newLock = new CommunityLockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
         String keyId = toKey(newLock);
         try {
             GetResult result = collection.get(keyId);
-            LockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
+            CommunityLockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
             if (newLock.getOwner().equals(existingLock.getOwner())) {
                 logger.debug("Lock with key {} already owned by us, so trying to perform a lock.",
                         existingLock.getKey());
@@ -131,7 +131,7 @@ public class CouchbaseLockService implements LocalLockService {
         String key = toKey(lockKey);
         try {
             GetResult result = collection.get(key);
-            LockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
+            CommunityLockEntry existingLock = mapper.lockEntryFromDocument(result.contentAsObject());
             if (owner.equals(RunnerId.fromString(existingLock.getOwner()))) {
                 logger.debug("Lock for key {} belongs to us, so removing.", key);
                 collection.remove(key, RemoveOptions.removeOptions().cas(result.cas()));
@@ -143,7 +143,7 @@ public class CouchbaseLockService implements LocalLockService {
         }
     }
 
-    private String toKey(LockEntry lockEntry) {
+    private String toKey(CommunityLockEntry lockEntry) {
         return lockEntry.getKey();
     }
 

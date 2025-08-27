@@ -20,25 +20,28 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
-import io.flamingock.community.mongodb.sync.internal.MongoSyncEngine;
+import io.flamingock.community.mongodb.sync.internal.MongoSyncAuditPersistence;
+import io.flamingock.community.mongodb.sync.internal.MongoSyncLockService;
 import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.builder.local.CommunityConfigurable;
-import io.flamingock.internal.core.community.LocalEngine;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.configuration.core.CoreConfigurable;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.store.persistence.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 
-public class MongoSyncAuditStore implements LocalAuditStore {
+public class MongoSyncAuditStore implements CommunityAuditStore {
 
 
     protected RunnerId runnerId;
     private MongoSyncTargetSystem targetSystem;
-    private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
     private MongoDBSyncConfiguration driverConfiguration;
-    private boolean isTransactionDisabled;
+    private MongoSyncAuditPersistence persistence;
+    private MongoSyncLockService lockService;
 
 
     public static MongoSyncAuditStore fromTargetSystem(MongoSyncTargetSystem syncTargetSystem) {
@@ -56,7 +59,6 @@ public class MongoSyncAuditStore implements LocalAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         driverConfiguration = baseContext.getDependencyValue(MongoDBSyncConfiguration.class).orElse(new MongoDBSyncConfiguration());
 
@@ -83,16 +85,32 @@ public class MongoSyncAuditStore implements LocalAuditStore {
     }
 
     @Override
-    public LocalEngine getEngine() {
-        MongoSyncEngine engine = new MongoSyncEngine(
-                targetSystem,
-                driverConfiguration.getAuditRepositoryName(),
-                driverConfiguration.getLockRepositoryName(),
-                coreConfiguration,
-                communityConfiguration);
-        engine.initialize(runnerId);
-        return engine;
+    public synchronized CommunityAuditPersistence getPersistence() {
+        if (persistence == null) {
+            persistence = new MongoSyncAuditPersistence(
+                    targetSystem,
+                    driverConfiguration.getAuditRepositoryName(),
+                    communityConfiguration
+            );
+            persistence.initialize(runnerId);
+        }
+        return persistence;
     }
+
+    @Override
+    public synchronized CommunityLockService getLockService() {
+        if (lockService == null) {
+            lockService = new MongoSyncLockService(
+                    targetSystem,
+                    driverConfiguration.getLockRepositoryName(),
+                    TimeService.getDefault()
+            );
+            lockService.initialize(targetSystem.isAutoCreate());
+
+        }
+        return lockService;
+    }
+
 
     @Override
     public TargetSystem getTargetSystem() {

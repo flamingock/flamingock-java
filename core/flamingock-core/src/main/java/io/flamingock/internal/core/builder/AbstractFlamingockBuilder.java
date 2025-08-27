@@ -21,14 +21,17 @@ import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.builder.core.CoreConfigurator;
+import io.flamingock.internal.core.configuration.EventLifecycleConfigurator;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.core.configuration.core.CoreConfigurator;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
-import io.flamingock.internal.core.engine.ConnectionEngine;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
+import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.core.store.audit.AuditPersistence;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.SimpleEventPublisher;
@@ -89,9 +92,9 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
         RunnerBuilder {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Builder");
 
-    private final PluginManager pluginManager;
-    private final Context context;
-    private final CoreConfiguration coreConfiguration;
+    protected final PluginManager pluginManager;
+    protected final Context context;
+    protected final CoreConfiguration coreConfiguration;
 
     protected AuditStore<?> auditStore;
     private final TargetSystemManager targetSystemManager = new TargetSystemManager();
@@ -129,6 +132,8 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
     protected abstract void doUpdateContext();
 
+    protected abstract ExecutionPlanner buildExecutionPlanner(RunnerId runnerId);
+
     protected abstract HOLDER getSelf();
 
     /**
@@ -145,7 +150,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
      * <li><strong>Plugin Initialization</strong> - Initializes plugins with access to base context</li>
      * <li><strong>Hierarchical Context Building</strong> - Merges external contexts (e.g., Spring Boot)</li>
      * <li><strong>AuditStore Initialization</strong> - Initializes driver with full hierarchical context</li>
-     * <li><strong>Engine Setup</strong> - Retrieves engine and registers audit writer</li>
+     * <li><strong>Persistence Setup</strong> - Retrieves AuditPersistence and registers audit writer</li>
      * <li><strong>Pipeline Building</strong> - Constructs pipeline and contributes dependencies</li>
      * <li><strong>Runner Creation</strong> - Assembles final runner with all components</li>
      * </ol>
@@ -156,7 +161,7 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
      * with Flamingock's internal context. When {@code driver.initialize(hierarchicalContext)} is called,
      * the driver searches this context for required dependencies (database connections, configuration, etc.).
      * If the hierarchical context is built after driver initialization, these external dependencies
-     * won't be available, causing the engine to fail during execution.
+     * won't be available, causing the AuditPersistence to fail during execution.
      *
      * <h3>Component Relationships:</h3>
      * <ul>
@@ -200,27 +205,28 @@ public abstract class AbstractFlamingockBuilder<HOLDER extends AbstractFlamingoc
 
         targetSystemManager.initialize(hierarchicalContext);
 
-        ConnectionEngine engine = auditStore.getEngine();
+        AuditPersistence persistence = auditStore.getPersistence();
 
         LoadedPipeline pipeline = buildPipeline();
 
         //This contribution to the context is fine after components initialization as it's only used
         pipeline.contributeToContext(hierarchicalContext);
-        hierarchicalContext.addDependency(new Dependency(ExecutionAuditWriter.class, engine.getAuditWriter()));
+        hierarchicalContext.addDependency(new Dependency(LifecycleAuditWriter.class, persistence));
 
 
         return PipelineRunnerCreator.create(
                 runnerId,
                 pipeline,
-                engine,
+                persistence,
+                buildExecutionPlanner(runnerId),
                 targetSystemManager,
                 coreConfiguration,
                 buildEventPublisher(),
                 hierarchicalContext,
-                engine.getNonGuardedTypes(),
+                persistence.getNonGuardedTypes(),
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
                 coreConfiguration.isRelaxTargetSystemValidation(),
-                engine.getCloser()
+                persistence.getCloser()
         );
     }
 

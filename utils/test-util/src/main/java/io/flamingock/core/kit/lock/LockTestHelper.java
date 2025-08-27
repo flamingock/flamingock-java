@@ -15,8 +15,8 @@
  */
 package io.flamingock.core.kit.lock;
 
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockKey;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.Map;

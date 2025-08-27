@@ -25,7 +25,7 @@ import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.community.Constants;
+import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
 import org.junit.jupiter.api.*;
@@ -72,7 +72,7 @@ class CouchbaseAuditStoreTest {
     @AfterEach
     void tearDownEach() {
         CouchbaseCollectionHelper.deleteAllDocuments(cluster, BUCKET_NAME, CollectionIdentifier.DEFAULT_SCOPE, CollectionIdentifier.DEFAULT_COLLECTION);
-        CouchbaseCollectionHelper.deleteAllDocuments(cluster, BUCKET_NAME, CollectionIdentifier.DEFAULT_SCOPE, Constants.DEFAULT_AUDIT_STORE_NAME);
+        CouchbaseCollectionHelper.deleteAllDocuments(cluster, BUCKET_NAME, CollectionIdentifier.DEFAULT_SCOPE, CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME);
         CouchbaseCollectionHelper.dropIndexIfExists(cluster, BUCKET_NAME, CollectionIdentifier.DEFAULT_SCOPE, CollectionIdentifier.DEFAULT_COLLECTION, "idx_standalone_index");
     }
 
@@ -104,7 +104,7 @@ class CouchbaseAuditStoreTest {
 
         //Then
         //Checking auditLog
-        Collection auditLogCollection = bucket.collection(Constants.DEFAULT_AUDIT_STORE_NAME);
+        Collection auditLogCollection = bucket.collection(CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME);
         List<AuditEntry> auditLog = couchbaseTestHelper.getAuditEntriesSorted(auditLogCollection);
         assertEquals(3, auditLog.size());
         assertEquals("create-index", auditLog.get(0).getTaskId());
@@ -154,7 +154,7 @@ class CouchbaseAuditStoreTest {
 
         //Then
         //Checking auditLog
-        Collection auditLogCollection = bucket.collection(Constants.DEFAULT_AUDIT_STORE_NAME);
+        Collection auditLogCollection = bucket.collection(CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME);
         List<AuditEntry> auditLog = couchbaseTestHelper.getAuditEntriesSorted(auditLogCollection);
         assertEquals(3, auditLog.size());
         assertEquals("create-index", auditLog.get(0).getTaskId());
@@ -201,7 +201,7 @@ class CouchbaseAuditStoreTest {
 
         //Then
         //Checking auditLog
-        Collection auditLogCollection = bucket.collection(Constants.DEFAULT_AUDIT_STORE_NAME);
+        Collection auditLogCollection = bucket.collection(CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME);
         List<AuditEntry> auditLog = couchbaseTestHelper.getAuditEntriesSorted(auditLogCollection);
         assertEquals(3, auditLog.size());
         assertEquals("create-index", auditLog.get(0).getTaskId());

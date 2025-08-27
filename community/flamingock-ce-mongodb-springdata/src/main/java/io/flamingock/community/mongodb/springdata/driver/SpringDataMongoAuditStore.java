@@ -18,14 +18,15 @@ package io.flamingock.community.mongodb.springdata.driver;
 import com.mongodb.ReadConcern;
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.mongodb.springdata.config.SpringDataMongoConfiguration;
-import io.flamingock.community.mongodb.springdata.internal.SpringDataMongoEngine;
+import io.flamingock.community.mongodb.springdata.internal.SpringDataMongoAuditPersistence;
+import io.flamingock.community.mongodb.springdata.internal.SpringDataMongoLockService;
 import io.flamingock.community.mongodb.sync.MongoDBSyncConfiguration;
 import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.community.mongodb.sync.internal.ReadWriteConfiguration;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.builder.local.CommunityConfigurable;
-import io.flamingock.internal.core.community.LocalEngine;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.store.persistence.community.CommunityAuditPersistence;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -34,9 +35,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
 
     private MongoSpringDataTargetSystem targetSystem;
-    private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
     private MongoDBSyncConfiguration driverConfiguration;
+    private SpringDataMongoAuditPersistence persistence;
+    private SpringDataMongoLockService lockService;
 
     public static SpringDataMongoAuditStore fromTargetSystem(MongoSpringDataTargetSystem syncTargetSystem) {
         return new SpringDataMongoAuditStore(syncTargetSystem);
@@ -55,7 +57,6 @@ public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         driverConfiguration = baseContext.getDependencyValue(SpringDataMongoConfiguration.class)
                 .orElse(new SpringDataMongoConfiguration());
@@ -83,15 +84,24 @@ public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
     }
 
     @Override
-    public LocalEngine getEngine() {
-        SpringDataMongoEngine engine = new SpringDataMongoEngine(
-                targetSystem,
-                driverConfiguration.getAuditRepositoryName(),
-                driverConfiguration.getLockRepositoryName(),
-                coreConfiguration,
-                communityConfiguration);
-        engine.initialize(runnerId);
-        return engine;
+    public synchronized CommunityAuditPersistence getPersistence() {
+        if (persistence == null) {
+            persistence = new SpringDataMongoAuditPersistence(
+                    targetSystem,
+                    driverConfiguration.getAuditRepositoryName(),
+                    communityConfiguration);
+            persistence.initialize(runnerId);
+        }
+        return persistence;
+    }
+
+    @Override
+    public synchronized CommunityLockService getLockService() {
+        if (lockService == null) {
+            lockService = new SpringDataMongoLockService(targetSystem, driverConfiguration.getLockRepositoryName());
+            lockService.initialize(targetSystem.isAutoCreate());
+        }
+        return lockService;
     }
 
     @Override

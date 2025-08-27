@@ -16,14 +16,14 @@
 package io.flamingock.community.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.community.Constants;
-import io.flamingock.internal.core.community.store.AuditStoreConfigurable;
+import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
+import io.flamingock.internal.core.store.persistence.community.CommunityAuditStoreConfigurable;
 
-public class DynamoDBConfiguration implements AuditStoreConfigurable {
+public class DynamoDBConfiguration implements CommunityAuditStoreConfigurable {
 
     private boolean autoCreate = true;
-    private String auditRepositoryName = Constants.DEFAULT_AUDIT_STORE_NAME;
-    private String lockRepositoryName = Constants.DEFAULT_LOCK_STORE_NAME;
+    private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
     private long readCapacityUnits = 5L;
     private long writeCapacityUnits = 5L;
 

@@ -22,8 +22,8 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
-import io.flamingock.internal.core.community.Constants;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
@@ -91,7 +91,7 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
 
         String onGoingTasksRepositoryName = targetSystemContext.getPropertyAs(COUCHBASE_ON_GOING_TASKS_REPOSITORY_NAME_PROPERTY, String.class)
                 .orElseGet(() -> baseContext.getPropertyAs(COUCHBASE_ON_GOING_TASKS_REPOSITORY_NAME_PROPERTY, String.class)
-                        .orElse(Constants.DEFAULT_ON_GOING_TASKS_STORE_NAME));
+                        .orElse(CommunityPersistenceConstants.DEFAULT_ON_GOING_TASKS_STORE_NAME));
 
         TransactionManager<TransactionAttemptContext> txManager = new TransactionManager<>(null); //TODO change to a new constructor without args
         txWrapper = new CouchbaseTxWrapper(cluster, txManager);

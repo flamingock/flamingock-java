@@ -30,10 +30,10 @@ import io.flamingock.internal.common.couchbase.CouchbaseAuditMapper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.AuditSnapshotMapBuilder;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
@@ -46,7 +46,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 
-public class CouchbaseAuditor implements ExecutionAuditWriter, AuditReader {
+public class CouchbaseAuditor implements LifecycleAuditWriter, AuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CouchbaseAuditor");
 

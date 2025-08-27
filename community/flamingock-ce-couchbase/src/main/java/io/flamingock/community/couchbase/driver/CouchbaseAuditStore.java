@@ -18,24 +18,27 @@ package io.flamingock.community.couchbase.driver;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.community.couchbase.internal.CouchbaseLockService;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.builder.local.CommunityConfigurable;
-import io.flamingock.internal.core.community.LocalEngine;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.store.persistence.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.couchbase.CouchbaseConfiguration;
-import io.flamingock.community.couchbase.internal.CouchbaseEngine;
+import io.flamingock.community.couchbase.internal.CouchbaseAuditPersistence;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
-public class CouchbaseAuditStore implements LocalAuditStore {
+public class CouchbaseAuditStore implements CommunityAuditStore {
 
     private RunnerId runnerId;
     private CouchbaseTargetSystem targetSystem;
-    private CoreConfigurable coreConfiguration;
     private CommunityConfigurable communityConfiguration;
     private CouchbaseConfiguration driverConfiguration;
+    private CouchbaseAuditPersistence persistence;
+    private CouchbaseLockService lockService;
 
     public static CouchbaseAuditStore fromTargetSystem(CouchbaseTargetSystem targetSystem) {
         return new CouchbaseAuditStore(targetSystem);
@@ -52,7 +55,6 @@ public class CouchbaseAuditStore implements LocalAuditStore {
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
-        coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         this.driverConfiguration = baseContext.getDependencyValue(CouchbaseConfiguration.class).orElse(new CouchbaseConfiguration());
         driverConfiguration.mergeConfig(baseContext);
@@ -70,14 +72,27 @@ public class CouchbaseAuditStore implements LocalAuditStore {
     }
 
     @Override
-    public LocalEngine getEngine() {
-        CouchbaseEngine couchbaseEngine = new CouchbaseEngine(
-                targetSystem,
-                coreConfiguration,
-                communityConfiguration,
-                driverConfiguration);
-        couchbaseEngine.initialize(runnerId);
-        return couchbaseEngine;
+    public synchronized CommunityAuditPersistence getPersistence() {
+        if (persistence == null) {
+            persistence = new CouchbaseAuditPersistence(
+                    targetSystem,
+                    communityConfiguration,
+                    driverConfiguration);
+            persistence.initialize(runnerId);
+        }
+        return persistence;
+    }
+
+    @Override
+    public synchronized CommunityLockService getLockService() {
+        if (lockService == null) {
+            lockService = new CouchbaseLockService(targetSystem, TimeService.getDefault());
+            lockService.initialize(
+                    driverConfiguration.isAutoCreate(),
+                    driverConfiguration.getScopeName(),
+                    driverConfiguration.getLockRepositoryName());
+        }
+        return lockService;
     }
 
     @Override

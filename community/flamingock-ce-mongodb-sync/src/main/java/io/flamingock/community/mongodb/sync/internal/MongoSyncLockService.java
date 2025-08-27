@@ -22,7 +22,6 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
@@ -31,11 +30,11 @@ import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.core.community.lock.LocalLockService;
-import io.flamingock.internal.core.community.lock.LockEntry;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockKey;
-import io.flamingock.internal.core.engine.lock.LockServiceException;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockKey;
+import io.flamingock.internal.core.store.lock.LockServiceException;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBLockMapper;
 import org.bson.Document;
@@ -43,13 +42,13 @@ import org.bson.conversions.Bson;
 
 import java.util.Date;
 
-import static io.flamingock.internal.core.engine.lock.LockStatus.LOCK_HELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.EXPIRES_AT_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.KEY_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.OWNER_FIELD;
-import static io.flamingock.internal.core.community.lock.LockEntryField.STATUS_FIELD;
+import static io.flamingock.internal.core.store.lock.LockStatus.LOCK_HELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
+import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
 
-public class MongoSyncLockService implements LocalLockService {
+public class MongoSyncLockService implements CommunityLockService {
 
     private final MongoDBLockMapper<MongoSyncDocumentHelper> mapper = new MongoDBLockMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
 
@@ -57,7 +56,7 @@ public class MongoSyncLockService implements LocalLockService {
     private final MongoCollection<Document> collection;
     private final TimeService timeService;
 
-    protected MongoSyncLockService(MongoSyncTargetSystem targetSystem,
+    public MongoSyncLockService(MongoSyncTargetSystem targetSystem,
                                    String collectionName,
                                    TimeService timeService) {
         this(targetSystem.getDatabase().getCollection(collectionName),
@@ -95,14 +94,14 @@ public class MongoSyncLockService implements LocalLockService {
 
     @Override
     public LockAcquisition upsert(LockKey key, RunnerId owner, long leaseMillis) {
-        LockEntry newLock = new LockEntry(key.toString(), LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
+        CommunityLockEntry newLock = new CommunityLockEntry(key.toString(), LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
         insertUpdate(newLock, false);
         return new LockAcquisition(owner, leaseMillis);
     }
 
     @Override
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
-        LockEntry newLock = new LockEntry(key.toString(), LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
+        CommunityLockEntry newLock = new CommunityLockEntry(key.toString(), LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
         insertUpdate(newLock, true);
         return new LockAcquisition(owner, leaseMillis);
     }
@@ -121,7 +120,7 @@ public class MongoSyncLockService implements LocalLockService {
         collection.deleteMany(Filters.and(Filters.eq(KEY_FIELD, lockKey.toString()), Filters.eq(OWNER_FIELD, owner.toString())));
     }
 
-    protected void insertUpdate(LockEntry newLock, boolean onlyIfSameOwner) {
+    protected void insertUpdate(CommunityLockEntry newLock, boolean onlyIfSameOwner) {
         boolean lockHeld;
         String debErrorDetail = "not db error";
         Bson acquireLockQuery = getAcquireLockQuery(newLock.getKey(), newLock.getOwner(), onlyIfSameOwner);

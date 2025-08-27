@@ -23,7 +23,7 @@ import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
-import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 
 import java.util.function.Predicate;

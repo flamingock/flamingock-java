@@ -16,7 +16,7 @@
 package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.internal.core.engine.audit.domain.AuditContextBundle;
+import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;

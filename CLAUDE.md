@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flamingock is an open-source Change-as-Code engine for auditable, versioned changes across distributed systems. It enables synchronized evolution of databases, queues, APIs, configurations, and resources during application startup with governance, auditability, and rollback capabilities.
+Flamingock is an open-source Change-as-Code auditPersistence for auditable, versioned changes across distributed systems. It enables synchronized evolution of databases, queues, APIs, configurations, and resources during application startup with governance, auditability, and rollback capabilities.
 
 ## Build System
 
@@ -154,7 +154,7 @@ When modifying the builder pattern in `AbstractFlamingockBuilder.build()`:
 2. Base context preparation before plugin initialization  
 3. Plugin initialization before hierarchical context building
 4. Hierarchical context MUST be complete before driver initialization
-5. AuditStore initialization provides engine for audit writer registration
+5. AuditStore initialization provides auditPersistence for audit writer registration
 6. Pipeline building contributes dependencies back to context
 
 Violating this order will cause runtime failures due to missing dependencies during driver initialization.

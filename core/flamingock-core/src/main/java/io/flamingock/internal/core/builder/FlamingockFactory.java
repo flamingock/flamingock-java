@@ -15,12 +15,13 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.builder.cloud.CloudConfiguration;
-import io.flamingock.internal.core.builder.core.CoreConfiguration;
-import io.flamingock.internal.core.builder.local.CommunityConfiguration;
-import io.flamingock.internal.core.cloud.CloudAuditStore;
+import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
+import io.flamingock.internal.core.store.CloudAuditStore;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.plugin.DefaultPluginManager;
+import io.flamingock.internal.core.store.AuditStore;
 
 import java.util.Optional;
 

@@ -16,11 +16,11 @@
 package io.flamingock.community.dynamodb.internal;
 
 import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.audit.domain.AuditSnapshotMapBuilder;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.community.TransactionManager;
+import io.flamingock.internal.core.transaction.TransactionManager;
 
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBAuditor implements ExecutionAuditWriter, AuditReader {
+public class DynamoDBAuditor implements LifecycleAuditWriter, AuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditor");
 

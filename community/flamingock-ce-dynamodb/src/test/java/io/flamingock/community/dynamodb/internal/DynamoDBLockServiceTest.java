@@ -20,9 +20,9 @@ import io.flamingock.community.dynamodb.DynamoDBTestContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import io.flamingock.internal.core.community.Constants;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockKey;
+import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockKey;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +52,7 @@ class DynamoDBLockServiceTest {
         cleanupTables();
         
         lockService = new DynamoDBLockService(client, new TimeService());
-        lockService.initialize(true, Constants.DEFAULT_LOCK_STORE_NAME, 5L, 5L);
+        lockService.initialize(true, CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME, 5L, 5L);
     }
     
     private void cleanupTables() {

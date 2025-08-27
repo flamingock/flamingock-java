@@ -21,9 +21,9 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.http.Http;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.ServiceId;
-import io.flamingock.internal.core.builder.cloud.CloudConfigurable;
-import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.cloud.CloudAuditStore;
+import io.flamingock.internal.core.configuration.cloud.CloudConfigurable;
+import io.flamingock.internal.core.configuration.core.CoreConfigurable;
+import io.flamingock.internal.core.store.CloudAuditStore;
 import io.flamingock.internal.common.cloud.auth.AuthResponse;
 import io.flamingock.cloud.audit.HtttpAuditWriter;
 import io.flamingock.cloud.auth.AuthManager;
@@ -34,8 +34,8 @@ import io.flamingock.cloud.lock.client.LockServiceClient;
 import io.flamingock.cloud.planner.CloudExecutionPlanner;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.cloud.planner.client.HttpExecutionPlannerClient;
-import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
-import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
+import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import org.apache.http.impl.client.HttpClients;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +46,7 @@ import java.io.IOException;
 
 public class CloudAuditStoreImpl implements CloudAuditStore {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudAuditStore");
-    private CloudEngineImpl engine;
+    private CloudAuditPersistenceImpl persistence;
 
 
     @Override
@@ -60,7 +60,7 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                 Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
 
         synchronized (this) {
-            this.engine = buildEngine(
+            this.persistence = buildPersistence(
                     runnerId,
                     coreConfiguration,
                     cloudConfiguration,
@@ -70,15 +70,15 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
     }
 
     @Override
-    public CloudEngineImpl getEngine() {
-        return engine;
+    public CloudAuditPersistenceImpl getPersistence() {
+        return persistence;
     }
 
     @NotNull
-    private CloudEngineImpl buildEngine(RunnerId runnerId,
-                                        CoreConfigurable coreConfiguration,
-                                        CloudConfigurable cloudConfiguration,
-                                        Http.RequestBuilderFactory requestBuilderFactory) {
+    private CloudAuditPersistenceImpl buildPersistence(RunnerId runnerId,
+                                                       CoreConfigurable coreConfiguration,
+                                                       CloudConfigurable cloudConfiguration,
+                                                       Http.RequestBuilderFactory requestBuilderFactory) {
         AuthManager authManager = new AuthManager(
                 cloudConfiguration.getApiToken(),
                 cloudConfiguration.getServiceName(),
@@ -89,7 +89,7 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
         EnvironmentId environmentId = EnvironmentId.fromString(authResponse.getEnvironmentId());
         ServiceId serviceId = ServiceId.fromString(authResponse.getServiceId());
 
-        ExecutionAuditWriter auditWriter = new HtttpAuditWriter(
+        LifecycleAuditWriter auditWriter = new HtttpAuditWriter(
                 cloudConfiguration.getHost(),
                 environmentId,
                 serviceId,
@@ -108,7 +108,7 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                 environmentId,
                 serviceId);
 
-        return new CloudEngineImpl(
+        return new CloudAuditPersistenceImpl(
                 environmentId,
                 serviceId,
                 authResponse.getJwt(),

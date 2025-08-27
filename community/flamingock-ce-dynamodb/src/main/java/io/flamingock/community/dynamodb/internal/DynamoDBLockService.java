@@ -16,12 +16,12 @@
 package io.flamingock.community.dynamodb.internal;
 
 import io.flamingock.internal.util.dynamodb.entities.LockEntryEntity;
-import io.flamingock.internal.core.community.lock.LocalLockService;
-import io.flamingock.internal.core.community.lock.LockEntry;
-import io.flamingock.internal.core.engine.lock.LockAcquisition;
-import io.flamingock.internal.core.engine.lock.LockKey;
-import io.flamingock.internal.core.engine.lock.LockServiceException;
-import io.flamingock.internal.core.engine.lock.LockStatus;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.store.lock.LockAcquisition;
+import io.flamingock.internal.core.store.lock.LockKey;
+import io.flamingock.internal.core.store.lock.LockServiceException;
+import io.flamingock.internal.core.store.lock.LockStatus;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
@@ -43,7 +43,7 @@ import java.time.LocalDateTime;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBLockService implements LocalLockService {
+public class DynamoDBLockService implements CommunityLockService {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoLockService");
 
@@ -52,7 +52,7 @@ public class DynamoDBLockService implements LocalLockService {
     private final TimeService timeService;
     protected DynamoDbTable<LockEntryEntity> table;
 
-    protected DynamoDBLockService(DynamoDBTargetSystem targetSystem,
+    public DynamoDBLockService(DynamoDBTargetSystem targetSystem,
                                   TimeService timeService) {
         this(targetSystem.getClient(), timeService);
     }
@@ -64,7 +64,7 @@ public class DynamoDBLockService implements LocalLockService {
     }
 
 
-    protected void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
+    public void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
         if (autoCreate) {
             dynamoDBUtil.createTable(
                     dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
@@ -80,7 +80,7 @@ public class DynamoDBLockService implements LocalLockService {
 
     @Override
     public LockAcquisition upsert(LockKey key, RunnerId owner, long leaseMillis) {
-        LockEntry newLock = new LockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
+        CommunityLockEntry newLock = new CommunityLockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
         table.putItem(
                 PutItemEnhancedRequest.builder(LockEntryEntity.class)
                         .item(new LockEntryEntity(newLock))
@@ -98,7 +98,7 @@ public class DynamoDBLockService implements LocalLockService {
 
     @Override
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
-        LockEntry updatedLock = new LockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
+        CommunityLockEntry updatedLock = new CommunityLockEntry(key.toString(), LockStatus.LOCK_HELD, owner.toString(), timeService.currentDatePlusMillis(leaseMillis));
         table.updateItem(
                 UpdateItemEnhancedRequest.builder(LockEntryEntity.class)
                         .item(new LockEntryEntity(updatedLock))
@@ -135,7 +135,7 @@ public class DynamoDBLockService implements LocalLockService {
                         .build()
         );
         if (existingLockEntity != null) {
-            LockEntry existingLock = existingLockEntity.toLockEntry();
+            CommunityLockEntry existingLock = existingLockEntity.toLockEntry();
             if (owner.equals(RunnerId.fromString(existingLock.getOwner()))) {
                 logger.debug("Lock for key {} belongs to us, so removing.", lockKey);
                 table.deleteItem(

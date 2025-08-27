@@ -17,7 +17,7 @@ package io.flamingock.springboot;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.builder.AbstractFlamingockBuilder;
-import io.flamingock.internal.core.community.store.LocalAuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.RunnerBuilder;
@@ -56,7 +56,7 @@ public class SpringbootContext {
     public RunnerBuilder flamingockBuilder(SpringbootProperties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher,
-                                           @Autowired(required = false) LocalAuditStore auditStore,
+                                           @Autowired(required = false) CommunityAuditStore auditStore,
                                            List<TargetSystem> targetSystems) {
         AbstractFlamingockBuilder<?> builder = FlamingockFactory.getEditionAwareBuilder(
                         configurationProperties.getCoreConfiguration(),
