@@ -29,21 +29,24 @@ import com.couchbase.client.java.transactions.TransactionGetResult;
 import io.flamingock.internal.common.couchbase.CouchbaseAuditMapper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
-import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
+import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
+import io.flamingock.internal.core.engine.audit.domain.AuditSnapshotMapBuilder;
+
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 
-public class CouchbaseAuditor implements LocalAuditor {
+public class CouchbaseAuditor implements ExecutionAuditWriter, AuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CouchbaseAuditor");
 
@@ -106,9 +109,10 @@ public class CouchbaseAuditor implements LocalAuditor {
         return Result.OK();
     }
 
+
     @Override
-    public AuditStageStatus getAuditStageStatus() {
-        AuditStageStatus.EntryBuilder builder = AuditStageStatus.entryBuilder();
+    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
+        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
         List<JsonObject> documents = CouchbaseCollectionHelper.selectAllDocuments(cluster, collection.bucketName(), collection.scopeName(), collection.name());
         documents.stream()
                 .map(mapper::fromDocument)

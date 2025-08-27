@@ -25,12 +25,12 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuditStageStatusTest {
+class AuditSnapshotMapBuilderTest {
 
     @Test
     void shouldBuildWithEntryBuilderAndProvideAllMaps() {
         // Given
-        AuditStageStatus.EntryBuilder builder = AuditStageStatus.entryBuilder();
+        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
         
         AuditEntry entry1 = createAuditEntry("change-1", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX);
         AuditEntry entry2 = createAuditEntry("change-2", AuditEntry.Status.STARTED, AuditTxType.TX_SHARED);
@@ -38,27 +38,25 @@ class AuditStageStatusTest {
         // When
         builder.addEntry(entry1);
         builder.addEntry(entry2);
-        AuditStageStatus status = builder.build();
-
         // Then - Entry info map should work  
-        Map<String, AuditEntryInfo> infoMap = status.getEntryInfoMap();
+        Map<String, AuditEntry> infoMap = builder.build();
         assertEquals(2, infoMap.size());
-        
-        AuditEntryInfo info1 = infoMap.get("change-1");
-        assertEquals("change-1", info1.getChangeId());
-        assertEquals(AuditEntry.Status.EXECUTED, info1.getStatus());
+
+        AuditEntry info1 = infoMap.get("change-1");
+        assertEquals("change-1", info1.getTaskId());
+        assertEquals(AuditEntry.Status.EXECUTED, info1.getState());
         assertEquals(AuditTxType.NON_TX, info1.getTxType());
 
-        AuditEntryInfo info2 = infoMap.get("change-2");
-        assertEquals("change-2", info2.getChangeId());
-        assertEquals(AuditEntry.Status.STARTED, info2.getStatus());
+        AuditEntry info2 = infoMap.get("change-2");
+        assertEquals("change-2", info2.getTaskId());
+        assertEquals(AuditEntry.Status.STARTED, info2.getState());
         assertEquals(AuditTxType.TX_SHARED, info2.getTxType());
     }
 
     @Test
     void shouldHandleMostRelevantEntryInBuilder() {
         // Given - Two entries for same change, second one is more recent
-        AuditStageStatus.EntryBuilder builder = AuditStageStatus.entryBuilder();
+        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
         
         AuditEntry olderEntry = createAuditEntry("change-1", AuditEntry.Status.STARTED, AuditTxType.NON_TX, 
                 LocalDateTime.now().minusMinutes(10));
@@ -68,26 +66,25 @@ class AuditStageStatusTest {
         // When
         builder.addEntry(olderEntry);
         builder.addEntry(newerEntry);
-        AuditStageStatus status = builder.build();
+        Map<String, AuditEntry> snapshotMap = builder.build();
 
         // Then - Should use the most relevant (newer) entry
-        AuditEntryInfo info = status.getEntryInfoMap().get("change-1");
-        assertEquals(AuditEntry.Status.EXECUTED, info.getStatus());
+        AuditEntry info = snapshotMap.get("change-1");
+        assertEquals(AuditEntry.Status.EXECUTED, info.getState());
         assertEquals(AuditTxType.TX_SHARED, info.getTxType());
     }
 
     @Test
     void shouldHandleNullTxTypeInEntries() {
         // Given - Entry with null txType
-        AuditStageStatus.EntryBuilder builder = AuditStageStatus.entryBuilder();
+        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
         AuditEntry entryWithNullTxType = createAuditEntry("change-1", AuditEntry.Status.EXECUTED, null);
         
         // When
         builder.addEntry(entryWithNullTxType);
-        AuditStageStatus status = builder.build();
-
+        Map<String, AuditEntry> snapshotMap = builder.build();
         // Then - Should default to NON_TX
-        AuditEntryInfo info = status.getEntryInfoMap().get("change-1");
+        AuditEntry info = snapshotMap.get("change-1");
         assertEquals(AuditTxType.NON_TX, info.getTxType());
     }
 
@@ -95,7 +92,7 @@ class AuditStageStatusTest {
     @Test
     void shouldMaintainConsistencyBetweenMaps() {
         // Given
-        AuditStageStatus.EntryBuilder builder = AuditStageStatus.entryBuilder();
+        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
         
         for (int i = 1; i <= 5; i++) {
             AuditEntry entry = createAuditEntry("change-" + i, 
@@ -103,19 +100,16 @@ class AuditStageStatusTest {
             builder.addEntry(entry);
         }
         
-        // When
-        AuditStageStatus status = builder.build();
-
-        // Then - Entry info map should contain all entries with correct data
-        Map<String, AuditEntryInfo> infoMap = status.getEntryInfoMap();
+        // When - Then - Entry info map should contain all entries with correct data
+        Map<String, AuditEntry> infoMap = builder.build();
         
         assertEquals(5, infoMap.size());
         
         for (int i = 1; i <= 5; i++) {
             String changeId = "change-" + i;
-            AuditEntryInfo info = infoMap.get(changeId);
+            AuditEntry info = infoMap.get(changeId);
             assertNotNull(info, "Entry info should exist for " + changeId);
-            assertEquals(AuditEntry.Status.EXECUTED, info.getStatus());
+            assertEquals(AuditEntry.Status.EXECUTED, info.getState());
             assertEquals(AuditTxType.TX_SHARED, info.getTxType());
         }
     }

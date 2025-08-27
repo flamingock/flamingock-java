@@ -17,9 +17,8 @@ package io.flamingock.internal.core.community;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
-import io.flamingock.internal.core.engine.audit.domain.AuditEntryInfo;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+
 import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
@@ -29,8 +28,6 @@ import org.slf4j.Logger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Builds action maps for stages based on audit state information.
@@ -48,16 +45,15 @@ public class LocalChangeActionBuilder {
      * to determine the appropriate action (APPLY, SKIP, MANUAL_INTERVENTION).
      *
      * @param changeUnits the list of available change units
-     * @param auditStatus the audit status containing change states and transaction info
+     * @param auditSnapshot the audit status containing change states and transaction info
      * @return a StageActionPlan with actions for each change
      * @throws io.flamingock.internal.core.engine.audit.recovery.ManualInterventionRequiredException
      *         if any changes require manual intervention
      */
-    public static ChangeActionMap build(Collection<AbstractLoadedTask> changeUnits, AuditStageStatus auditStatus) {
+    public static ChangeActionMap build(Collection<AbstractLoadedTask> changeUnits, Map<String, AuditEntry> auditSnapshot) {
         Map<String, ChangeAction> actionMap = new HashMap<>();
-        Map<String, AuditEntryInfo> entryInfoMap = auditStatus.getEntryInfoMap();
         for(AbstractLoadedTask changeUnit: changeUnits) {
-            AuditEntryInfo entryInfo = entryInfoMap.get(changeUnit.getId());
+            AuditEntry entryInfo = auditSnapshot.get(changeUnit.getId());
             ChangeAction action = determineAction(changeUnit, entryInfo);
             actionMap.put(changeUnit.getId(), action);
         }
@@ -70,8 +66,8 @@ public class LocalChangeActionBuilder {
      * This implements the recovery decision matrix based on the
      * combination of state and transaction type.
      */
-    private static ChangeAction determineAction(AbstractLoadedTask changeUnit, AuditEntryInfo entryInfo) {
-        AuditEntry.Status status = entryInfo != null ? entryInfo.getStatus() : null;
+    private static ChangeAction determineAction(AbstractLoadedTask changeUnit, AuditEntry entryInfo) {
+        AuditEntry.Status status = entryInfo != null ? entryInfo.getState() : null;
         AuditTxType txType = entryInfo != null ? entryInfo.getTxType() : null;
 
         if (entryInfo == null || status == null) {
@@ -148,10 +144,10 @@ public class LocalChangeActionBuilder {
      * Centralized helper to log consistent decision messages.
      */
     private static ChangeAction logDecision(AbstractLoadedTask changeUnit,
-                                            AuditEntryInfo entryInfo,
+                                            AuditEntry entryInfo,
                                             ChangeAction action,
                                             String reason) {
-        AuditEntry.Status status = entryInfo.getStatus();
+        AuditEntry.Status status = entryInfo.getState();
         AuditTxType txType = entryInfo.getTxType();
 
         String msg = String.format("Change[%s] in state='%s' (TxType=%s) -> Action=%s | Reason: %s",

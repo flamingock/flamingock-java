@@ -29,8 +29,16 @@ import io.flamingock.internal.util.Result;
  * to the developer implementing this abstract class.
  */
 public interface ExecutionAuditWriter extends AuditWriter {
-    Result writeStartExecution(StartExecutionAuditContextBundle auditContextBundle);
-    Result writeExecution(ExecutionAuditContextBundle auditContextBundle);
-    Result writeRollback(RollbackAuditContextBundle auditContextBundle);
+    default Result writeStartExecution(StartExecutionAuditContextBundle auditContextBundle) {
+        return writeEntry(auditContextBundle.toAuditEntry());
+    }
+
+    default Result writeExecution(ExecutionAuditContextBundle auditContextBundle) {
+        return writeEntry(auditContextBundle.toAuditEntry());
+    }
+
+    default Result writeRollback(RollbackAuditContextBundle auditContextBundle) {
+        return writeEntry(auditContextBundle.toAuditEntry());
+    }
 
 }

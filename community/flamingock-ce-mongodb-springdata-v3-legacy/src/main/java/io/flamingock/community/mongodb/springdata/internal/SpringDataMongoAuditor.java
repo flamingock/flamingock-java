@@ -24,8 +24,10 @@ import io.flamingock.community.mongodb.springdata.internal.mongodb.SpringDataMon
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.internal.core.community.LocalAuditor;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
+import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
+import io.flamingock.internal.core.engine.audit.domain.AuditSnapshotMapBuilder;
+
 import io.flamingock.internal.util.Result;
 import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 import org.bson.Document;
@@ -34,6 +36,7 @@ import io.flamingock.internal.util.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_AUTHOR;
@@ -41,7 +44,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANG
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 
-public class SpringDataMongoAuditor implements LocalAuditor {
+public class SpringDataMongoAuditor implements ExecutionAuditWriter, AuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("SpringMongoAuditor");
 
@@ -89,8 +92,8 @@ public class SpringDataMongoAuditor implements LocalAuditor {
 
 
     @Override
-    public AuditStageStatus getAuditStageStatus() {
-        AuditStageStatus.EntryBuilder builder = AuditStageStatus.entryBuilder();
+    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
+        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
         collection.find()
                 .into(new LinkedList<>())
                 .stream()
@@ -99,6 +102,5 @@ public class SpringDataMongoAuditor implements LocalAuditor {
                 .collect(Collectors.toList())
                 .forEach(builder::addEntry);
         return builder.build();
-
     }
 }

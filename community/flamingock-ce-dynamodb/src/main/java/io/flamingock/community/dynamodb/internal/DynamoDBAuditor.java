@@ -15,11 +15,13 @@
  */
 package io.flamingock.community.dynamodb.internal;
 
+import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
+import io.flamingock.internal.core.engine.audit.domain.AuditSnapshotMapBuilder;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.TransactionManager;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
+
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
@@ -33,11 +35,12 @@ import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBAuditor implements LocalAuditor {
+public class DynamoDBAuditor implements ExecutionAuditWriter, AuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditor");
 
@@ -93,8 +96,8 @@ public class DynamoDBAuditor implements LocalAuditor {
     }
 
     @Override
-    public AuditStageStatus getAuditStageStatus() {
-        AuditStageStatus.EntryBuilder response = AuditStageStatus.entryBuilder();
+    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
+        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
         table
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)
@@ -104,8 +107,8 @@ public class DynamoDBAuditor implements LocalAuditor {
                 .stream()
                 .map(AuditEntryEntity::toAuditEntry)
                 .collect(Collectors.toList())
-                .forEach(response::addEntry);
-        return response.build();
+                .forEach(builder::addEntry);
+        return builder.build();
     }
 
 }

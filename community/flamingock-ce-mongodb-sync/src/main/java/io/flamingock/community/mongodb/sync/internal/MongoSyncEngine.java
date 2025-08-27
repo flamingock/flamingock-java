@@ -19,8 +19,8 @@ import com.mongodb.client.ClientSession;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
 import io.flamingock.internal.core.builder.local.CommunityConfigurable;
 import io.flamingock.internal.core.community.AbstractLocalEngine;
-import io.flamingock.internal.core.community.LocalAuditor;
 import io.flamingock.internal.core.community.LocalExecutionPlanner;
+import io.flamingock.internal.core.engine.audit.ExecutionAuditWriter;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
@@ -66,7 +66,7 @@ public class MongoSyncEngine extends AbstractLocalEngine {
     }
 
     @Override
-    public LocalAuditor getAuditWriter() {
+    public ExecutionAuditWriter getAuditWriter() {
         return auditor;
     }
 

@@ -16,11 +16,12 @@
 package io.flamingock.internal.core.community;
 
 
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.core.community.lock.LocalLock;
 import io.flamingock.internal.core.community.lock.LocalLockService;
 import io.flamingock.internal.core.builder.core.CoreConfigurable;
-import io.flamingock.internal.core.engine.audit.AuditReader;
-import io.flamingock.internal.core.engine.audit.domain.AuditStageStatus;
+
 import io.flamingock.internal.core.engine.execution.ExecutionPlan;
 import io.flamingock.internal.core.engine.execution.ExecutionPlanner;
 import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,14 +70,14 @@ public class LocalExecutionPlanner extends ExecutionPlanner {
 
     @Override
     public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
-        AuditStageStatus currentAuditStageStatus = auditReader.getAuditStageStatus();
-        logger.debug("Pulled remote state:\n{}", currentAuditStageStatus);
+        Map<String, AuditEntry> auditSnapshot = auditReader.getAuditSnapshotByChangeId();
+        logger.debug("Pulled remote state:\n{}", auditSnapshot);
         
         List<ExecutableStage> executableStages = loadedStages
                 .stream()
                 .map(loadedStage -> {
                     // Convert audit status to action plan using the new action-based architecture
-                    ChangeActionMap changeActionMap = LocalChangeActionBuilder.build(loadedStage.getTasks(), currentAuditStageStatus);
+                    ChangeActionMap changeActionMap = LocalChangeActionBuilder.build(loadedStage.getTasks(), auditSnapshot);
                     return loadedStage.applyActions(changeActionMap);
                 })
                 .collect(Collectors.toList());

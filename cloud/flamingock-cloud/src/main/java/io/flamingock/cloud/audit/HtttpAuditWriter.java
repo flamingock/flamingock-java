@@ -82,10 +82,6 @@ public class HtttpAuditWriter implements CloudAuditWriter {
 
     }
 
-    @Override
-    public boolean isCloud() {
-        return true;
-    }
 
     private AuditEntryRequest buildRequest(AuditEntry auditEntry) {
         long executedAtEpochMillis = ZonedDateTime.of(auditEntry.getCreatedAt(), ZoneId.systemDefault()).toInstant().toEpochMilli();

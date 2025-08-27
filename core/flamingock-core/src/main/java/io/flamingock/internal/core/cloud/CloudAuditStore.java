@@ -23,11 +23,6 @@ import java.util.ServiceLoader;
 
 public interface CloudAuditStore extends AuditStore<CloudEngine> {
 
-    @Override
-    default boolean isCloud() {
-        return true;
-    }
-
     static Optional<CloudAuditStore> get() {
 
         CloudAuditStore store = null;

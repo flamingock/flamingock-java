@@ -27,10 +27,6 @@ import io.flamingock.internal.util.Result;
 public interface AuditWriter {
 
     Result writeEntry(AuditEntry auditEntry);
-
-    default boolean isCloud() {
-        return false;
-    }
-
+    
 
 }

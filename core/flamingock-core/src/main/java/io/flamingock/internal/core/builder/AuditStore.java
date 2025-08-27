@@ -28,9 +28,6 @@ import java.util.Optional;
 public interface AuditStore<ENGINE extends ConnectionEngine> extends ContextInitializable {
     String DEFAULT_AUDIT_STORE_TARGET_SYSTEM = "default-audit-store-target-system";
 
-    default boolean isCloud() {
-        return false;
-    }
 
     ENGINE getEngine();
 
