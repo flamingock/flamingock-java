@@ -22,17 +22,13 @@ import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.builder.AbstractBuilder;
-import io.flamingock.internal.core.builder.BuilderException;
 import io.flamingock.internal.core.configuration.EventLifecycleConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
-import io.flamingock.internal.core.configuration.core.CoreConfigurator;
-import io.flamingock.internal.common.core.context.ContextConfigurable;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -51,7 +47,6 @@ import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.core.runner.PipelineRunnerCreator;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.core.runner.RunnerBuilder;
-import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
@@ -95,7 +90,6 @@ public abstract class AbstractChangeRunnerBuilder<HOLDER extends AbstractChangeR
 
     protected final PluginManager pluginManager;
 
-    private final TargetSystemManager targetSystemManager = new TargetSystemManager();
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
     private Consumer<IPipelineCompletedEvent> pipelineCompletedListener;
     private Consumer<IPipelineIgnoredEvent> pipelineIgnoredListener;
@@ -192,11 +186,7 @@ public abstract class AbstractChangeRunnerBuilder<HOLDER extends AbstractChangeR
 
         PriorityContext hierarchicalContext = buildContext();
 
-        auditStore.initialize(hierarchicalContext);
-
-        //Handles the TargetSystems
-        targetSystemManager.setAuditStoreTargetSystem(auditStore.getTargetSystem());
-        targetSystemManager.initialize(hierarchicalContext);
+        configureStoreAndTargetSystem(hierarchicalContext);
 
         //Configure the persistence from the auditStore
         AuditPersistence persistence = getAuditPersistence(hierarchicalContext);

@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.builder;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
 import io.flamingock.internal.common.core.context.Dependency;
@@ -24,6 +25,7 @@ import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.util.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;
@@ -58,6 +60,7 @@ public abstract class AbstractBuilder<HOLDER extends AbstractBuilder<HOLDER>>
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Builder");
 
     protected final Context context;
+    protected final TargetSystemManager targetSystemManager = new TargetSystemManager();
     protected final CoreConfiguration coreConfiguration;
 
     protected AuditStore<?> auditStore;
@@ -75,9 +78,15 @@ public abstract class AbstractBuilder<HOLDER extends AbstractBuilder<HOLDER>>
         this.auditStore = auditStore;
     }
 
-    protected abstract void updateContextSpecific();
 
     protected abstract HOLDER getSelf();
+
+    protected void configureStoreAndTargetSystem(PriorityContext dependencyContext) {
+        auditStore.initialize(dependencyContext);
+        //remove this, targetSystem should be mandatory
+        targetSystemManager.setAuditStoreTargetSystem(auditStore.getTargetSystem());
+        targetSystemManager.initialize(dependencyContext);
+    }
 
     protected AuditPersistence getAuditPersistence(PriorityContext hierarchicalContext) {
         AuditPersistence persistence = auditStore.getPersistence();
@@ -103,7 +112,11 @@ public abstract class AbstractBuilder<HOLDER extends AbstractBuilder<HOLDER>>
     //  CORE
 
     /// ////////////////////////////////////////////////////////////////////////////////
-
+    @Override
+    public HOLDER addTargetSystem(TargetSystem targetSystem) {
+        targetSystemManager.add(targetSystem);
+        return getSelf();
+    }
 
     @Override
     public HOLDER setLockAcquiredForMillis(long lockAcquiredForMillis) {

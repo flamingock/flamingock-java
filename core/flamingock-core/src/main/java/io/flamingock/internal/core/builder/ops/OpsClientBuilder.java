@@ -50,8 +50,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public abstract class OpsClientBuilder<HOLDER extends OpsClientBuilder<HOLDER>>
-    extends AbstractBuilder<HOLDER> {
+public class OpsClientBuilder
+    extends AbstractBuilder<OpsClientBuilder> {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Builder");
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -59,30 +59,30 @@ public abstract class OpsClientBuilder<HOLDER extends OpsClientBuilder<HOLDER>>
 
     /// ////////////////////////////////////////////////////////////////////////////////
 
-    protected OpsClientBuilder(
+    public OpsClientBuilder(
             CoreConfiguration coreConfiguration,
             Context context,
             AuditStore<?> auditStore) {
         super(coreConfiguration, context, auditStore);
     }
 
-    protected abstract void updateContextSpecific();
-
-    protected abstract HOLDER getSelf();
+    protected OpsClientBuilder getSelf() {
+        return this;
+    }
 
     public OpsClient build() {
         validateAuditStore();
         RunnerId runnerId = generateRunnerId();
-        PriorityContext hierarchicalContext = buildContext();
-        auditStore.initialize(hierarchicalContext);
-        AuditPersistence persistence = getAuditPersistence(hierarchicalContext);
+        PriorityContext dependencyContext = buildContext();
+        configureStoreAndTargetSystem(dependencyContext);
+        targetSystemManager.initialize(dependencyContext);
+        AuditPersistence persistence = getAuditPersistence(dependencyContext);
         return new OpsClient(runnerId, persistence);
     }
 
     private PriorityContext buildContext() {
         logger.trace("injecting internal configuration");
         addDependency(coreConfiguration);
-        updateContextSpecific();
         return new PriorityContext(new SimpleContext(), context);
     }
 
@@ -95,55 +95,56 @@ public abstract class OpsClientBuilder<HOLDER extends OpsClientBuilder<HOLDER>>
 
 
     @Override
-    public HOLDER setLockAcquiredForMillis(long lockAcquiredForMillis) {
+    public OpsClientBuilder setLockAcquiredForMillis(long lockAcquiredForMillis) {
         coreConfiguration.setLockAcquiredForMillis(lockAcquiredForMillis);
         return getSelf();
     }
 
     @Override
-    public HOLDER setLockQuitTryingAfterMillis(Long lockQuitTryingAfterMillis) {
+    public OpsClientBuilder setLockQuitTryingAfterMillis(Long lockQuitTryingAfterMillis) {
         coreConfiguration.setLockQuitTryingAfterMillis(lockQuitTryingAfterMillis);
         return getSelf();
     }
 
     @Override
-    public HOLDER setLockTryFrequencyMillis(long lockTryFrequencyMillis) {
+    public OpsClientBuilder setLockTryFrequencyMillis(long lockTryFrequencyMillis) {
         coreConfiguration.setLockTryFrequencyMillis(lockTryFrequencyMillis);
         return getSelf();
     }
 
     @Override
-    public HOLDER setThrowExceptionIfCannotObtainLock(boolean throwExceptionIfCannotObtainLock) {
+    public OpsClientBuilder setThrowExceptionIfCannotObtainLock(boolean throwExceptionIfCannotObtainLock) {
         coreConfiguration.setThrowExceptionIfCannotObtainLock(throwExceptionIfCannotObtainLock);
         return getSelf();
     }
 
     @Override
-    public HOLDER setEnabled(boolean enabled) {
+    public OpsClientBuilder setEnabled(boolean enabled) {
         coreConfiguration.setEnabled(enabled);
         return getSelf();
     }
 
     @Override
-    public HOLDER setServiceIdentifier(String serviceIdentifier) {
+    public OpsClientBuilder setServiceIdentifier(String serviceIdentifier) {
         coreConfiguration.setServiceIdentifier(serviceIdentifier);
         return getSelf();
     }
 
     @Override
-    public HOLDER setMetadata(Map<String, Object> metadata) {
+    public OpsClientBuilder setMetadata(Map<String, Object> metadata) {
         coreConfiguration.setMetadata(metadata);
         return getSelf();
     }
 
     @Override
-    public HOLDER setDefaultAuthor(String publicMigrationAuthor) {
+    public OpsClientBuilder setDefaultAuthor(String publicMigrationAuthor) {
         coreConfiguration.setDefaultAuthor(publicMigrationAuthor);
         return getSelf();
     }
 
+
     @Override
-    public HOLDER setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
+    public OpsClientBuilder setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
         coreConfiguration.setRelaxTargetSystemValidation(relaxTargetSystemValidation);
         return getSelf();
     }
@@ -201,13 +202,13 @@ public abstract class OpsClientBuilder<HOLDER extends OpsClientBuilder<HOLDER>>
 
 
     @Override
-    public HOLDER addDependency(String name, Class<?> type, Object instance) {
+    public OpsClientBuilder addDependency(String name, Class<?> type, Object instance) {
         context.addDependency(new Dependency(name, type, instance));
         return getSelf();
     }
 
     @Override
-    public HOLDER addDependency(Object instance) {
+    public OpsClientBuilder addDependency(Object instance) {
         if (instance instanceof Dependency) {
             context.addDependency(instance);
             return getSelf();
@@ -218,245 +219,245 @@ public abstract class OpsClientBuilder<HOLDER extends OpsClientBuilder<HOLDER>>
     }
 
     @Override
-    public HOLDER addDependency(String name, Object instance) {
+    public OpsClientBuilder addDependency(String name, Object instance) {
         return addDependency(name, instance.getClass(), instance);
     }
 
     @Override
-    public HOLDER addDependency(Class<?> type, Object instance) {
+    public OpsClientBuilder addDependency(Class<?> type, Object instance) {
         return addDependency(Dependency.DEFAULT_NAME, type, instance);
     }
 
     @Override
-    public HOLDER setProperty(Property property) {
+    public OpsClientBuilder setProperty(Property property) {
         context.setProperty(property);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, String value) {
+    public OpsClientBuilder setProperty(String key, String value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Boolean value) {
+    public OpsClientBuilder setProperty(String key, Boolean value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Integer value) {
+    public OpsClientBuilder setProperty(String key, Integer value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Float value) {
+    public OpsClientBuilder setProperty(String key, Float value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Long value) {
+    public OpsClientBuilder setProperty(String key, Long value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Double value) {
+    public OpsClientBuilder setProperty(String key, Double value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, UUID value) {
+    public OpsClientBuilder setProperty(String key, UUID value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Currency value) {
+    public OpsClientBuilder setProperty(String key, Currency value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Locale value) {
+    public OpsClientBuilder setProperty(String key, Locale value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Charset value) {
+    public OpsClientBuilder setProperty(String key, Charset value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, File value) {
+    public OpsClientBuilder setProperty(String key, File value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Path value) {
+    public OpsClientBuilder setProperty(String key, Path value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, InetAddress value) {
+    public OpsClientBuilder setProperty(String key, InetAddress value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, URL value) {
+    public OpsClientBuilder setProperty(String key, URL value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, URI value) {
+    public OpsClientBuilder setProperty(String key, URI value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Duration value) {
+    public OpsClientBuilder setProperty(String key, Duration value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Period value) {
+    public OpsClientBuilder setProperty(String key, Period value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Instant value) {
+    public OpsClientBuilder setProperty(String key, Instant value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, LocalDate value) {
+    public OpsClientBuilder setProperty(String key, LocalDate value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, LocalTime value) {
+    public OpsClientBuilder setProperty(String key, LocalTime value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, LocalDateTime value) {
+    public OpsClientBuilder setProperty(String key, LocalDateTime value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, ZonedDateTime value) {
+    public OpsClientBuilder setProperty(String key, ZonedDateTime value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, OffsetDateTime value) {
+    public OpsClientBuilder setProperty(String key, OffsetDateTime value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, OffsetTime value) {
+    public OpsClientBuilder setProperty(String key, OffsetTime value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, java.util.Date value) {
+    public OpsClientBuilder setProperty(String key, java.util.Date value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, java.sql.Date value) {
+    public OpsClientBuilder setProperty(String key, java.sql.Date value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Time value) {
+    public OpsClientBuilder setProperty(String key, Time value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Timestamp value) {
+    public OpsClientBuilder setProperty(String key, Timestamp value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, String[] value) {
+    public OpsClientBuilder setProperty(String key, String[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Integer[] value) {
+    public OpsClientBuilder setProperty(String key, Integer[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Long[] value) {
+    public OpsClientBuilder setProperty(String key, Long[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Double[] value) {
+    public OpsClientBuilder setProperty(String key, Double[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Float[] value) {
+    public OpsClientBuilder setProperty(String key, Float[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Boolean[] value) {
+    public OpsClientBuilder setProperty(String key, Boolean[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Byte[] value) {
+    public OpsClientBuilder setProperty(String key, Byte[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Short[] value) {
+    public OpsClientBuilder setProperty(String key, Short[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public HOLDER setProperty(String key, Character[] value) {
+    public OpsClientBuilder setProperty(String key, Character[] value) {
         context.setProperty(key, value);
         return getSelf();
     }
 
     @Override
-    public <T extends Enum<T>> HOLDER setProperty(String key, T value) {
+    public <T extends Enum<T>> OpsClientBuilder setProperty(String key, T value) {
         context.setProperty(key, value);
         return getSelf();
     }

@@ -173,6 +173,13 @@ project(":core:importer:flamingock-importer-couchbase-tests").name = "flamingock
 project(":core:importer:flamingock-importer-couchbase-tests").projectDir = file("core/importer/flamingock-importer-couchbase-tests")
 
 //////////////////////////////////////
+// CLI
+//////////////////////////////////////
+include("cli:flamingock-cli")
+project(":cli:flamingock-cli").name = "flamingock-cli"
+project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
+
+//////////////////////////////////////
 // E2E TESTS
 //////////////////////////////////////
 include("e2e:core-e2e")
