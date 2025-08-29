@@ -16,8 +16,10 @@
 package io.flamingock.cli;
 
 import io.flamingock.cli.command.AuditCommand;
+import io.flamingock.cli.logging.LoggingMixin;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Option;
 
 @Command(
@@ -27,28 +29,44 @@ import picocli.CommandLine.Option;
     mixinStandardHelpOptions = true,
     version = "Flamingock CLI 1.0.0"
 )
-public class FlamingockCli {
+public class FlamingockCli implements Runnable {
 
     @Option(names = {"-c", "--config"}, description = "Path to configuration file (default: flamingock.yml)")
     private String configFile = "flamingock.yml";
+    
+    @Mixin
+    private LoggingMixin loggingMixin;
 
     public static void main(String[] args) {
-        CommandLine cmd = new CommandLine(new FlamingockCli());
-        cmd.setExecutionExceptionHandler(new CommandLine.IExecutionExceptionHandler() {
-            @Override
-            public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult parseResult) {
-                System.err.println("Error: " + ex.getMessage());
-                if (System.getProperty("flamingock.debug") != null) {
-                    ex.printStackTrace();
-                }
-                return 1;
+        FlamingockCli cli = new FlamingockCli();
+        CommandLine cmd = new CommandLine(cli);
+        
+        cmd.setExecutionStrategy(parseResult -> {
+            cli.loggingMixin.initializeLogging();
+            return new CommandLine.RunLast().execute(parseResult);
+        });
+        
+        cmd.setExecutionExceptionHandler((ex, commandLine, parseResult) -> {
+            System.err.println("Error: " + ex.getMessage());
+            if (System.getProperty("flamingock.debug") != null) {
+                ex.printStackTrace();
             }
+            return 1;
         });
         
         int exitCode = cmd.execute(args);
         System.exit(exitCode);
     }
 
+    @Override
+    public void run() {
+        // Initialize logging when any command is about to run
+        loggingMixin.initializeLogging();
+        
+        // This runs when no subcommand is specified - show help
+        new CommandLine(this).usage(System.out);
+    }
+    
     public String getConfigFile() {
         return configFile;
     }

@@ -26,7 +26,7 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.time.Duration;

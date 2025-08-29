@@ -32,7 +32,7 @@ import io.flamingock.internal.util.Result;
 import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.LinkedList;

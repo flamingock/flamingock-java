@@ -32,7 +32,7 @@ import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.Collections;

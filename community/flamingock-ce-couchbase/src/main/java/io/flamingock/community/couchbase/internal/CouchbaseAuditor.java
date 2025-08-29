@@ -36,7 +36,7 @@ import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.slf4j.Logger;
 

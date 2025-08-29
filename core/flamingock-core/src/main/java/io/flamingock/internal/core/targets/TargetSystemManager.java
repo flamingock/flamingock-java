@@ -23,7 +23,7 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.targets.operations.TargetSystemOpsImpl;
 import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOpsImpl;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import javax.annotation.concurrent.NotThreadSafe;

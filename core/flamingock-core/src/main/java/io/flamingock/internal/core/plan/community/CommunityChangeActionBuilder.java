@@ -22,7 +22,7 @@ import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
 import io.flamingock.internal.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.Collection;

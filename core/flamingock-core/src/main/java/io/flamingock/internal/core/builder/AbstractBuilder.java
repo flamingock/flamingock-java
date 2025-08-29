@@ -26,7 +26,7 @@ import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.targets.TargetSystemManager;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;
 import org.slf4j.Logger;

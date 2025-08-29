@@ -27,7 +27,7 @@ import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;

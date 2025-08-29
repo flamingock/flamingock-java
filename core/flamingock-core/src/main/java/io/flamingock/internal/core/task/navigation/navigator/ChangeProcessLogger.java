@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
@@ -25,7 +24,7 @@ import io.flamingock.internal.core.task.navigation.step.execution.SuccessExecuti
 import io.flamingock.internal.core.task.navigation.step.rolledback.FailedManualRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.util.Result;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 public class ChangeProcessLogger {

@@ -28,7 +28,7 @@ import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.StringUtil;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import javax.inject.Named;

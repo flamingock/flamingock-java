@@ -23,7 +23,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.http.Http;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.time.ZoneId;

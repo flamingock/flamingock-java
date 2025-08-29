@@ -4,9 +4,9 @@ flamingock:
   
   # MongoDB Configuration (uncomment to use)
   audit:
-   mongodb:
-    connection-string: "mongodb://localhost:27017"
-    database: "myapp"
+    mongodb:
+      connection-string: "mongodb://localhost:27017"
+      database: "test"
   
   # DynamoDB Configuration (uncomment to use)  
   # audit:

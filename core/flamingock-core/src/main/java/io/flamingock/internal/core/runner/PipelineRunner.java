@@ -36,7 +36,7 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.execution.StageSummary;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;

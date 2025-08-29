@@ -22,7 +22,7 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;

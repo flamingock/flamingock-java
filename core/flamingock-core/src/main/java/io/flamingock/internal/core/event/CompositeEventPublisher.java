@@ -17,7 +17,7 @@ package io.flamingock.internal.core.event;
 
 
 import io.flamingock.internal.core.event.model.Event;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.List;

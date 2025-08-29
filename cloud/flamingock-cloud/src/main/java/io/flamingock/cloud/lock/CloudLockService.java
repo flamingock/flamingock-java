@@ -24,7 +24,7 @@ import io.flamingock.internal.core.store.lock.LockService;
 import io.flamingock.internal.core.store.lock.LockServiceException;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.ServerException;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 public class CloudLockService implements LockService {

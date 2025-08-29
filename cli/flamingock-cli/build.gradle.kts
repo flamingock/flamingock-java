@@ -18,9 +18,8 @@ dependencies {
     implementation("org.mongodb:mongodb-driver-sync:4.9.1")
     implementation("software.amazon.awssdk:dynamodb:2.20.0")
     
-    // Logging - use logback for better debugging in development (Java 8 compatible versions)
-    implementation("ch.qos.logback:logback-classic:1.2.12")
-    implementation("org.slf4j:slf4j-api:1.7.36")
+    // SLF4J API - needed for interface compatibility (provided by flamingock-core)
+    // implementation("org.slf4j:slf4j-api:1.7.36") // Already provided by core dependencies
     
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
@@ -153,10 +152,8 @@ val debugCli by tasks.registering(JavaExec::class) {
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("io.flamingock.cli.FlamingockCli")
     
-    // Enable debug logging
-    systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "DEBUG")
+    // Enable debug logging using CLI flags
     systemProperty("flamingock.debug", "true")
-    systemProperty("logback.configurationFile", "logback-debug.xml")
     
     // JVM debugging
     jvmArgs = listOf(
@@ -167,8 +164,8 @@ val debugCli by tasks.registering(JavaExec::class) {
     // Set working directory to distribution directory
     workingDir = file("${project.rootDir}/flamingock-cli-dist")
     
-    // Default arguments (can be overridden)
-    args = listOf("--help")
+    // Default arguments with debug flag (can be overridden)
+    args = listOf("--debug", "--help")
 }
 
 // Quick test task - run CLI without MongoDB dependency  
@@ -182,7 +179,7 @@ val testCli by tasks.registering(JavaExec::class) {
     systemProperty("flamingock.debug", "true")
     workingDir = file("${project.rootDir}/flamingock-cli-dist")
     
-    args = listOf("--help")
+    args = listOf("--verbose", "--help")
 }
 
 java {

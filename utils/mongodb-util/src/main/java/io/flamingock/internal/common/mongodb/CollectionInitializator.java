@@ -16,7 +16,7 @@
 package io.flamingock.internal.common.mongodb;
 
 
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.List;

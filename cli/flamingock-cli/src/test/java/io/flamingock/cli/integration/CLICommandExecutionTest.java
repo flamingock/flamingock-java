@@ -65,7 +65,7 @@ class CLICommandExecutionTest {
         try {
             // When - Execute command that requires OpsClient creation
             String output = SystemLambda.tapSystemOut(() -> {
-                String[] args = {"--verbose", "--config", configFile.toString(), "audit", "list"};
+                String[] args = {"--debug", "--config", configFile.toString(), "audit", "list"};
                 CommandLine cmd = new CommandLine(new FlamingockCli());
                 int exitCode = cmd.execute(args);
                 
@@ -139,7 +139,7 @@ class CLICommandExecutionTest {
 
     private void testAuditListVerboseCommand(Path configFile) throws Exception {
         String output = SystemLambda.tapSystemOut(() -> {
-            String[] args = {"--verbose", "--config", configFile.toString(), "audit", "list"};
+            String[] args = {"--debug", "--config", configFile.toString(), "audit", "list"};
             CommandLine cmd = new CommandLine(new FlamingockCli());
             int exitCode = cmd.execute(args);
             assertThat(exitCode).isIn(0, 1, 2); // Accept success, runtime errors, and CLI syntax/config errors

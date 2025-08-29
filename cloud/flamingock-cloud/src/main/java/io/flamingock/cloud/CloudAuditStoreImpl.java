@@ -39,7 +39,7 @@ import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import org.apache.http.impl.client.HttpClients;
 import org.jetbrains.annotations.NotNull;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;

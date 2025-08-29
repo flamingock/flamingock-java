@@ -19,7 +19,7 @@ import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;

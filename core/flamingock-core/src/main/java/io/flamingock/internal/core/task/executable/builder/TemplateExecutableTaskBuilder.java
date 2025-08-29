@@ -15,12 +15,11 @@
  */
 package io.flamingock.internal.core.task.executable.builder;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.pipeline.actions.ChangeAction;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;

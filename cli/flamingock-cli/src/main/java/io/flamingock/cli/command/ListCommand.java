@@ -19,7 +19,10 @@ import io.flamingock.cli.FlamingockCli;
 import io.flamingock.cli.config.ConfigLoader;
 import io.flamingock.cli.config.FlamingockConfig;
 import io.flamingock.cli.service.AuditService;
+import io.flamingock.cli.service.TableFormatter;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ParentCommand;
@@ -34,6 +37,8 @@ import java.util.List;
     description = "List audit entries"
 )
 public class ListCommand implements Runnable {
+    
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("ListCommand");
 
     @ParentCommand
     private AuditCommand parent;
@@ -53,9 +58,15 @@ public class ListCommand implements Runnable {
     @CommandLine.Option(names = "--page", description = "Page number for pagination")
     private Integer page;
 
+    @CommandLine.Option(names = {"--extended", "-e"}, description = "Show extended audit information")
+    private boolean extended;
+
     @Override
     public void run() {
         try {
+            logger.info("Starting list command execution");
+            logger.debug("Configuration file: {}", parent.getConfigFile());
+            
             // Load configuration
             FlamingockConfig config = ConfigLoader.loadConfig(parent.getConfigFile());
             
@@ -109,10 +120,20 @@ public class ListCommand implements Runnable {
                     separator.append("=");
                 }
                 System.out.println(separator.toString());
-                for (AuditEntry entry : entries) {
-                    printAuditEntry(entry);
-                    System.out.println("------------------------");
+                System.out.println();
+                
+                // Use table formatter
+                TableFormatter formatter = new TableFormatter();
+                if (extended) {
+                    formatter.printExtendedTable(entries);
+                } else {
+                    formatter.printBasicTable(entries);
                 }
+                
+                // Print state legend
+                TableFormatter.printStateLegend();
+                
+                System.out.println();
                 System.out.println("Total entries: " + entries.size());
                 
                 if (limit != null && limit > 0) {
@@ -125,24 +146,4 @@ public class ListCommand implements Runnable {
         }
     }
 
-    private void printAuditEntry(AuditEntry entry) {
-        System.out.println("ID: " + entry.getTaskId());
-        System.out.println("Execution ID: " + entry.getExecutionId());
-        System.out.println("Stage ID: " + entry.getStageId());
-        System.out.println("Author: " + entry.getAuthor());
-        System.out.println("State: " + entry.getState());
-        System.out.println("Type: " + entry.getType());
-        System.out.println("Class: " + entry.getClassName());
-        System.out.println("Method: " + entry.getMethodName());
-        System.out.println("Created At: " + entry.getCreatedAt());
-        System.out.println("Execution Time: " + entry.getExecutionMillis() + "ms");
-        System.out.println("Hostname: " + entry.getExecutionHostname());
-        System.out.println("System Change: " + entry.getSystemChange());
-        if (entry.getTargetSystemId() != null) {
-            System.out.println("Target System: " + entry.getTargetSystemId());
-        }
-        if (entry.getErrorTrace() != null && !entry.getErrorTrace().isEmpty()) {
-            System.out.println("Error: " + entry.getErrorTrace());
-        }
-    }
 }

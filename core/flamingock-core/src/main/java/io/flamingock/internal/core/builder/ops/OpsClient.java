@@ -17,13 +17,13 @@ package io.flamingock.internal.core.builder.ops;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.id.RunnerId;
 import org.slf4j.Logger;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class OpsClient {
     private final Logger logger = FlamingockLoggerFactory.getLogger("OpsClient");
@@ -43,8 +43,9 @@ public class OpsClient {
     }
 
     public List<AuditEntry> getConflictedAuditEntries() {
-        logger.info("Listing audit entires");
-        return Collections.emptyList();
+        logger.info("Listing audit entries");
+        return auditPersistence.getAuditSnapshotByChangeId().values()
+                .stream().sorted().collect(Collectors.toList());
     }
 
     /**
@@ -54,7 +55,8 @@ public class OpsClient {
     public List<AuditEntry> getAuditEntriesSnapshot() {
         logger.info("Getting audit entries snapshot (latest per changeUnit)");
         // TODO: Implementation - return latest entry for each unique changeUnit
-        return Collections.emptyList();
+        return auditPersistence.getAuditSnapshotByChangeId().values()
+                .stream().sorted().collect(Collectors.toList());
     }
 
     /**
@@ -64,7 +66,8 @@ public class OpsClient {
     public List<AuditEntry> getAuditEntriesWithIssues() {
         logger.info("Getting audit entries with issues");
         // TODO: Implementation - filter for failed, conflicted, or problematic entries
-        return Collections.emptyList();
+        return auditPersistence.getAuditSnapshotByChangeId().values()
+                .stream().sorted().collect(Collectors.toList());
     }
 
     /**
@@ -74,7 +77,8 @@ public class OpsClient {
     public List<AuditEntry> getAuditEntriesHistory() {
         logger.info("Getting full audit history");
         // TODO: Implementation - return all entries ordered chronologically
-        return Collections.emptyList();
+        return auditPersistence.getAuditSnapshotByChangeId().values()
+                .stream().sorted().collect(Collectors.toList());
     }
 
     /**
@@ -85,7 +89,8 @@ public class OpsClient {
     public List<AuditEntry> getAuditEntriesSince(LocalDateTime since) {
         logger.info("Getting audit entries since: {}", since);
         // TODO: Implementation - filter entries by timestamp >= since
-        return Collections.emptyList();
+        return auditPersistence.getAuditSnapshotByChangeId().values()
+                .stream().sorted().collect(Collectors.toList());
     }
 
     /**
@@ -97,7 +102,8 @@ public class OpsClient {
     public List<AuditEntry> getAuditEntriesPaginated(int limit, int page) {
         logger.info("Getting paginated audit entries - limit: {}, page: {}", limit, page);
         // TODO: Implementation - return subset based on pagination
-        return Collections.emptyList();
+        return auditPersistence.getAuditSnapshotByChangeId().values()
+                .stream().sorted().collect(Collectors.toList());
     }
 
     /**
@@ -116,6 +122,7 @@ public class OpsClient {
         logger.info("Getting audit entries with filters - snapshot: {}, issues: {}, history: {}, since: {}, limit: {}, page: {}", 
                     snapshot, issuesOnly, fullHistory, since, limit, page);
         // TODO: Implementation - combine all filtering logic
-        return Collections.emptyList();
+        return auditPersistence.getAuditSnapshotByChangeId().values()
+                .stream().sorted().collect(Collectors.toList());
     }
 }

@@ -19,7 +19,7 @@ import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;

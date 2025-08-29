@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.util;
+package io.flamingock.internal.util.log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

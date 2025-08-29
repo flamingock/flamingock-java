@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.targets.mark;
 
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.Collections;

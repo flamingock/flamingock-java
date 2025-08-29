@@ -18,7 +18,7 @@ package io.flamingock.template.mongodb.model.operator;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.template.mongodb.model.MongoOperation;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 public abstract class MongoOperator {

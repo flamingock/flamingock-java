@@ -23,7 +23,7 @@ import io.flamingock.internal.common.core.error.DatabaseTransactionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;

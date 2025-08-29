@@ -22,7 +22,7 @@ import io.flamingock.internal.core.store.lock.LockException;
 import io.flamingock.internal.core.store.lock.LockServiceException;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.time.Instant;

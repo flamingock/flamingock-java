@@ -17,7 +17,7 @@ package io.flamingock.internal.common.core.template;
 
 import io.flamingock.api.template.ChangeTemplate;
 import org.jetbrains.annotations.TestOnly;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;

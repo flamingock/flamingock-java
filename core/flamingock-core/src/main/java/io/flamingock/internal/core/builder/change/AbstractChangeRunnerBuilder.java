@@ -52,7 +52,7 @@ import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;
 import org.jetbrains.annotations.NotNull;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.io.File;

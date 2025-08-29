@@ -92,7 +92,7 @@ class CLIDynamoIntegrationTest {
         try {
             // When - Execute CLI audit list command with verbose flag
             String output = SystemLambda.tapSystemOut(() -> {
-                String[] args = {"--verbose", "--config", configFile.toString(), "audit", "list"};
+                String[] args = {"--debug", "--config", configFile.toString(), "audit", "list"};
                 CommandLine cmd = new CommandLine(new FlamingockCli());
                 int exitCode = cmd.execute(args);
                 

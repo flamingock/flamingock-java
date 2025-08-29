@@ -33,7 +33,7 @@ import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.store.lock.LockException;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.util.Collection;

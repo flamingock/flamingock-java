@@ -32,7 +32,7 @@ import io.flamingock.internal.core.task.navigation.step.complete.failed.Complete
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.util.Wrapper;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.time.LocalDateTime;

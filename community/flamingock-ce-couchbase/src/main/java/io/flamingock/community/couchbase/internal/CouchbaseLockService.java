@@ -32,7 +32,7 @@ import io.flamingock.internal.core.store.lock.LockServiceException;
 import io.flamingock.internal.core.store.lock.LockStatus;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.slf4j.Logger;
 

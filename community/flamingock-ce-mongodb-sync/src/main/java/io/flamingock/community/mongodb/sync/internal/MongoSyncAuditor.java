@@ -28,7 +28,7 @@ import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 
-import io.flamingock.internal.util.FlamingockLoggerFactory;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Result;
 import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
