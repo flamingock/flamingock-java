@@ -3,10 +3,10 @@ flamingock:
   service-identifier: "flamingock-cli"
   
   # MongoDB Configuration (uncomment to use)
-  audit:
-    mongodb:
-      connection-string: "mongodb://localhost:27017"
-      database: "test"
+  # audit:
+  #   mongodb:
+  #     connection-string: "mongodb://localhost:27017"
+  #     database: "myapp"
   
   # DynamoDB Configuration (uncomment to use)  
   # audit:

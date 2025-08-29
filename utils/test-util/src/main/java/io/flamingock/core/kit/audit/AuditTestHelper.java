@@ -103,7 +103,8 @@ public class AuditTestHelper {
                 null,
                 AuditTxType.NON_TX,
                 null,
-                "001"
+                "001",
+                "MANUAL_INTERVENTION"
         );
         auditStorage.addAuditEntry(startedEntry);
     }
@@ -126,7 +127,8 @@ public class AuditTestHelper {
                 null,
                 AuditTxType.NON_TX,
                 null,
-                "001"
+                "001",
+                "MANUAL_INTERVENTION"
         );
         auditStorage.addAuditEntry(executedEntry);
     }

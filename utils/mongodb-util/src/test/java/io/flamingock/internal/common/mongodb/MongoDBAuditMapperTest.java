@@ -103,6 +103,32 @@ class MongoDBAuditMapperTest {
         assertNull(deserialized.getTargetSystemId());
     }
 
+    @Test
+    void shouldSerializeAndDeserializeRecoveryStrategy() {
+        // Given
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntryWithRecoveryStrategy("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, "ALWAYS_RETRY");
+
+        // When
+        TestDocumentWrapper document = mapper.toDocument(original);
+        AuditEntry deserialized = mapper.fromDocument(document);
+
+        // Then
+        assertEquals("ALWAYS_RETRY", deserialized.getRecoveryStrategy());
+    }
+
+    @Test
+    void shouldHandleNullRecoveryStrategy() {
+        // Given
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntryWithRecoveryStrategy("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null);
+
+        // When
+        TestDocumentWrapper document = mapper.toDocument(original);
+        AuditEntry deserialized = mapper.fromDocument(document);
+
+        // Then
+        assertEquals("MANUAL_INTERVENTION", deserialized.getRecoveryStrategy()); // Should default to MANUAL_INTERVENTION
+    }
+
     // Simple test implementation of DocumentHelper
     static class TestDocumentWrapper implements DocumentHelper {
         private final Map<String, Object> data = new HashMap<>();

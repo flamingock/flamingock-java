@@ -31,6 +31,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECU
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ORDER;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_RECOVERY_STRATEGY;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TX_TYPE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
@@ -59,6 +60,7 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
         CouchbaseUtils.addFieldToDocument(document, KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         CouchbaseUtils.addFieldToDocument(document, KEY_ORDER, auditEntry.getOrder());
+        CouchbaseUtils.addFieldToDocument(document, KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy());
         return document;
     }
 
@@ -90,6 +92,7 @@ public class CouchbaseAuditMapper {
                 jsonObject.getString(KEY_ERROR_TRACE),
                 txType,
                 jsonObject.getString(KEY_TARGET_SYSTEM_ID),
-                jsonObject.getString(KEY_ORDER));
+                jsonObject.getString(KEY_ORDER),
+                jsonObject.getString(KEY_RECOVERY_STRATEGY));
     }
 }

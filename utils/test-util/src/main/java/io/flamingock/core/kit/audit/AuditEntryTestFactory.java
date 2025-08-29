@@ -72,7 +72,8 @@ public class AuditEntryTestFactory {
             null,                         // errorTrace
             txType,                       // txType
             "test-target-system",         // targetSystemId
-            "001"                         // order
+            "001",                        // order
+            "MANUAL_INTERVENTION"          // recoveryStrategy
         );
     }
 
@@ -149,7 +150,40 @@ public class AuditEntryTestFactory {
             null,                         // errorTrace
             txType,                       // txType
             targetSystemId,               // targetSystemId
-            "001"                         // order
+            "001",                        // order
+            "MANUAL_INTERVENTION"          // recoveryStrategy
+        );
+    }
+
+    /**
+     * Creates a test audit entry with specific state, transaction type, and recovery strategy.
+     *
+     * @param changeId the unique identifier for the change unit
+     * @param status the audit entry status (STARTED, EXECUTED, etc.)
+     * @param txType the transaction type (NON_TX, TX_SHARED, etc.)
+     * @param recoveryStrategy the recovery strategy for this change unit
+     * @return a properly configured AuditEntry for testing with specified recovery strategy
+     */
+    public static AuditEntry createTestAuditEntryWithRecoveryStrategy(String changeId, AuditEntry.Status status, AuditTxType txType, String recoveryStrategy) {
+        return new AuditEntry(
+            UUID.randomUUID().toString(),  // executionId
+            "test-stage",                  // stageId
+            changeId,                      // taskId
+            "test-author",                 // author
+            LocalDateTime.now(),           // timestamp
+            status,                        // state
+            AuditEntry.ExecutionType.EXECUTION,  // type
+            "TestChangeClass",             // className
+            "testMethod",                  // methodName
+            0L,                           // executionMillis
+            "localhost",                  // executionHostname
+            null,                         // metadata
+            false,                        // systemChange
+            null,                         // errorTrace
+            txType,                       // txType
+            null,                         // targetSystemId
+            "001",                        // order
+            recoveryStrategy              // recoveryStrategy
         );
     }
 }

@@ -48,7 +48,8 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getErrorTrace(),
                 auditEntry.getTxType(),
                 auditEntry.getTargetSystemId(),
-                auditEntry.getOrder()
+                auditEntry.getOrder(),
+                auditEntry.getRecoveryStrategy()
         );
 
         // Then
@@ -77,7 +78,8 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getErrorTrace(),
                 auditEntry.getTxType(),
                 auditEntry.getTargetSystemId(),
-                auditEntry.getOrder()
+                auditEntry.getOrder(),
+                auditEntry.getRecoveryStrategy()
         );
 
         // Then

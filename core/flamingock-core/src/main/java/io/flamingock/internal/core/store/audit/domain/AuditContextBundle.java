@@ -106,7 +106,8 @@ public abstract class AuditContextBundle {
                 ThrowableUtil.serialize(runtimeContext.getError().orElse(null)),
                 getAuditTxType(),
                 getTargetSystemId(),
-                loadedTask.getOrder().orElseThrow(() -> new IllegalStateException("Order is required but not present"))
+                loadedTask.getOrder().orElseThrow(() -> new IllegalStateException("Order is required but not present")),
+                loadedTask.getRecovery().getStrategy().name()
         );
     }
 

@@ -48,6 +48,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     private AuditTxType txType;
     private String targetSystemId;
     private String order;
+    private String recoveryStrategy;
 
     public static AuditEntryEntity fromAuditEntry(AuditEntry auditEntry) {
         return new AuditEntryEntity(auditEntry);
@@ -71,6 +72,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.txType = auditEntry.getTxType();
         this.targetSystemId = auditEntry.getTargetSystemId();
         this.order = auditEntry.getOrder();
+        this.recoveryStrategy = auditEntry.getRecoveryStrategy();
         this.systemChange = auditEntry.getSystemChange();
     }
 
@@ -244,6 +246,15 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.order = order;
     }
 
+    @DynamoDbAttribute(AuditEntryField.KEY_RECOVERY_STRATEGY)
+    public String getRecoveryStrategy() {
+        return recoveryStrategy;
+    }
+
+    public void setRecoveryStrategy(String recoveryStrategy) {
+        this.recoveryStrategy = recoveryStrategy;
+    }
+
     @Override
     public int compareTo(AuditEntryEntity other) {
         if (other == null) {
@@ -286,7 +297,8 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
                 Objects.toString(errorTrace, ""),
                 txType,
                 targetSystemId,
-                order
+                order,
+                recoveryStrategy
         );
     }
 }

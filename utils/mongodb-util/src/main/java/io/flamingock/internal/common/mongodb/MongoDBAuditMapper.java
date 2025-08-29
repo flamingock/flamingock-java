@@ -31,6 +31,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECU
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ORDER;
+import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_RECOVERY_STRATEGY;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TX_TYPE;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
@@ -66,6 +67,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
         document.append(KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         document.append(KEY_ORDER, auditEntry.getOrder());
+        document.append(KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy());
         return document;
     }
 
@@ -99,7 +101,8 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.getString(KEY_ERROR_TRACE),
                 txType,
                 entry.getString(KEY_TARGET_SYSTEM_ID),
-                entry.getString(KEY_ORDER));
+                entry.getString(KEY_ORDER),
+                entry.getString(KEY_RECOVERY_STRATEGY));
 
     }
 }

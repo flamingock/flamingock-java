@@ -101,7 +101,8 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                 auditEntry.getErrorTrace(),
                 auditEntry.getTxType(),
                 auditEntry.getTargetSystemId(),
-                auditEntry.getOrder()
+                auditEntry.getOrder(),
+                auditEntry.getRecoveryStrategy()
         );
     }
 
