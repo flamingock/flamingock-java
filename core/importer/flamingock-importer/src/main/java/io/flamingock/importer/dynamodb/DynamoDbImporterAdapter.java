@@ -17,7 +17,6 @@ package io.flamingock.importer.dynamodb;
 
 import io.flamingock.importer.ImporterAdapter;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.error.FlamingockException;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -29,23 +28,23 @@ import java.util.stream.StreamSupport;
 
 public class DynamoDbImporterAdapter implements ImporterAdapter {
 
-    private final DynamoDbTable<DynamoDbChangeEntry> sourceTable;
+    private final DynamoDbTable<MongockDynamoDbAuditEntry> sourceTable;
 
     public DynamoDbImporterAdapter(DynamoDbClient client, String tableName) {
         DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
                 .build();
-        this.sourceTable = enhancedClient.table(tableName, TableSchema.fromBean(DynamoDbChangeEntry.class));
+        this.sourceTable = enhancedClient.table(tableName, TableSchema.fromBean(MongockDynamoDbAuditEntry.class));
     }
 
     @Override
     public List<AuditEntry> getAuditEntries() {
-        List<DynamoDbChangeEntry> entries = StreamSupport
+        List<MongockDynamoDbAuditEntry> entries = StreamSupport
                 .stream(sourceTable.scan().items().spliterator(), false)
                 .collect(Collectors.toList());
 
         return entries.stream()
-                .map(DynamoDbChangeEntry::toAuditEntry)
+                .map(MongockDynamoDbAuditEntry::toAuditEntry)
                 .collect(Collectors.toList());
     }
 }

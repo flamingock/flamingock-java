@@ -17,6 +17,7 @@ package io.flamingock.importer.dynamodb;
 
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockFactory;
@@ -48,7 +49,6 @@ import static org.junit.jupiter.api.Assertions.*;
                 @Stage(location = "io.flamingock.importer.dynamodb.dynamodb")
         }
 )
-@Disabled("Investigate error. It doesn't happen in test for driver")
 @Testcontainers
 public class DynamoDbImporterTest {
 
@@ -92,8 +92,8 @@ public class DynamoDbImporterTest {
 
     @Test
     void testImportDynamoDbChangeLogs() {
-        List<DynamoDbChangeEntry> entries = Arrays.asList(
-                new DynamoDbChangeEntry(
+        List<MongockDynamoDbAuditEntry> entries = Arrays.asList(
+                new MongockDynamoDbAuditEntry(
                         "exec-1",
                         "client-initializer",
                         "author1",
@@ -108,7 +108,7 @@ public class DynamoDbImporterTest {
                         null,
                         true
                 ),
-                new DynamoDbChangeEntry(
+                new MongockDynamoDbAuditEntry(
                         "exec-1",
                         "client-updater",
                         "author1",
@@ -130,20 +130,42 @@ public class DynamoDbImporterTest {
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
                 .setRelaxTargetSystemValidation(true)
+                .setAuditStore(new DynamoDBAuditStore())
                 .build();
 
         flamingock.run();
 
         List<AuditEntry> auditLog = new DynamoDbTestHelper(client, DEFAULT_AUDIT_STORE_NAME).getAuditEntriesSorted();
-        assertEquals(7, auditLog.size());
+        assertEquals(6, auditLog.size());
+
+        for (AuditEntry entry : auditLog) {
+            System.out.println("executionId: " + entry.getExecutionId());
+            System.out.println("stageId: " + entry.getStageId());
+            System.out.println("taskId: " + entry.getTaskId());
+            System.out.println("author: " + entry.getAuthor());
+            System.out.println("createdAt: " + entry.getCreatedAt());
+            System.out.println("state: " + entry.getState());
+            System.out.println("type: " + entry.getType());
+            System.out.println("className: " + entry.getClassName());
+            System.out.println("methodName: " + entry.getMethodName());
+            System.out.println("executionMillis: " + entry.getExecutionMillis());
+            System.out.println("executionHostname: " + entry.getExecutionHostname());
+            System.out.println("metadata: " + entry.getMetadata());
+            System.out.println("systemChange: " + entry.getSystemChange());
+            System.out.println("errorTrace: " + entry.getErrorTrace());
+            System.out.println("txType: " + entry.getTxType());
+            System.out.println("targetSystemId: " + entry.getTargetSystemId());
+            System.out.println("order: " + entry.getOrder());
+            System.out.println("-----");
+        }
 
         AuditEntry entry1 = auditLog.stream()
-                .filter(e -> "change-1".equals(e.getTaskId()))
+                .filter(e -> "client-updater".equals(e.getTaskId()))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("Entry with changeId 'change-1' not found"));
+                .orElseThrow(() -> new AssertionError("Entry with changeId 'client-updater' not found"));
 
 
-        assertEquals("change-1", entry1.getTaskId());
+        assertEquals("client-updater", entry1.getTaskId());
         assertEquals("author1", entry1.getAuthor());
         assertEquals("exec-1", entry1.getExecutionId());
         assertTrue(entry1.getSystemChange());
@@ -159,6 +181,7 @@ public class DynamoDbImporterTest {
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
                 .setRelaxTargetSystemValidation(true)
+                .setAuditStore(new DynamoDBAuditStore())
                 .build();
 
         Assertions.assertThrows(FlamingockException.class, flamingock::run);

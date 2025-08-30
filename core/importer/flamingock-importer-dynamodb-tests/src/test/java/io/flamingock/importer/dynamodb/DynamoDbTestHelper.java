@@ -15,6 +15,7 @@
  */
 package io.flamingock.importer.dynamodb;
 
+import io.flamingock.importer.dynamodb.dynamodb.DynamoDBAuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -23,11 +24,13 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+
 public class DynamoDbTestHelper {
 
     private final DynamoDbClient client;
     private final String tableName;
-    private final DynamoDbTable<DynamoDbChangeEntry> table;
+    private final DynamoDbTable<?> table;
 
     public DynamoDbTestHelper(DynamoDbClient client, String tableName) {
         this.client = client;
@@ -36,30 +39,45 @@ public class DynamoDbTestHelper {
                 .dynamoDbClient(client)
                 .build();
 
-        this.table = enhancedClient.table(tableName, TableSchema.fromBean(DynamoDbChangeEntry.class));
+        if (DEFAULT_AUDIT_STORE_NAME.equals(tableName)) {
+            this.table = enhancedClient.table(tableName, TableSchema.fromBean(DynamoDBAuditEntryEntity.class));
+        } else {
+            this.table = enhancedClient.table(tableName, TableSchema.fromBean(MongockDynamoDbAuditEntry.class));
+        }
     }
 
     public void ensureTableExists() {
         ListTablesResponse tables = client.listTables();
         if (!tables.tableNames().contains(tableName)) {
-            client.createTable(CreateTableRequest.builder()
-                    .tableName(tableName)
-                    .keySchema(
-                            KeySchemaElement.builder().attributeName("executionId").keyType(KeyType.HASH).build(),
-                            KeySchemaElement.builder().attributeName("changeId").keyType(KeyType.RANGE).build()
-                    )
-                    .attributeDefinitions(
-                            AttributeDefinition.builder().attributeName("executionId").attributeType(ScalarAttributeType.S).build(),
-                            AttributeDefinition.builder().attributeName("changeId").attributeType(ScalarAttributeType.S).build()
-                    )
-                    .provisionedThroughput(
-                            ProvisionedThroughput.builder()
-                                    .readCapacityUnits(5L)
-                                    .writeCapacityUnits(5L)
-                                    .build()
-                    )
-                    .build());
-            // Wait for table to be active
+            if (DEFAULT_AUDIT_STORE_NAME.equals(tableName)) {
+                client.createTable(CreateTableRequest.builder()
+                        .tableName(tableName)
+                        .keySchema(
+                                KeySchemaElement.builder().attributeName("partitionKey").keyType(KeyType.HASH).build()
+                        )
+                        .attributeDefinitions(
+                                AttributeDefinition.builder().attributeName("partitionKey").attributeType(ScalarAttributeType.S).build()
+                        )
+                        .provisionedThroughput(
+                                ProvisionedThroughput.builder().readCapacityUnits(5L).writeCapacityUnits(5L).build()
+                        )
+                        .build());
+            } else {
+                client.createTable(CreateTableRequest.builder()
+                        .tableName(tableName)
+                        .keySchema(
+                                KeySchemaElement.builder().attributeName("executionId").keyType(KeyType.HASH).build(),
+                                KeySchemaElement.builder().attributeName("changeId").keyType(KeyType.RANGE).build()
+                        )
+                        .attributeDefinitions(
+                                AttributeDefinition.builder().attributeName("executionId").attributeType(ScalarAttributeType.S).build(),
+                                AttributeDefinition.builder().attributeName("changeId").attributeType(ScalarAttributeType.S).build()
+                        )
+                        .provisionedThroughput(
+                                ProvisionedThroughput.builder().readCapacityUnits(5L).writeCapacityUnits(5L).build()
+                        )
+                        .build());
+            }
             waitForTableActive();
         }
     }
@@ -81,8 +99,12 @@ public class DynamoDbTestHelper {
         ScanResponse scanResponse = client.scan(scanRequest);
         for (Map<String, AttributeValue> item : scanResponse.items()) {
             Map<String, AttributeValue> key = new HashMap<>();
-            key.put("executionId", item.get("executionId"));
-            key.put("changeId", item.get("changeId"));
+            if (DEFAULT_AUDIT_STORE_NAME.equals(tableName)) {
+                key.put("partitionKey", item.get("partitionKey"));
+            } else {
+                key.put("executionId", item.get("executionId"));
+                key.put("changeId", item.get("changeId"));
+            }
             client.deleteItem(DeleteItemRequest.builder()
                     .tableName(tableName)
                     .key(key)
@@ -90,18 +112,33 @@ public class DynamoDbTestHelper {
         }
     }
 
-    public void insertChangeEntries(List<DynamoDbChangeEntry> entries) {
-        for (DynamoDbChangeEntry entry : entries) {
-            table.putItem(entry);
+    public void insertChangeEntries(List<MongockDynamoDbAuditEntry> entries) {
+        if (DEFAULT_AUDIT_STORE_NAME.equals(tableName)) {
+            throw new UnsupportedOperationException("insertChangeEntries is only for change log tables");
+        }
+        DynamoDbTable<MongockDynamoDbAuditEntry> changeTable = (DynamoDbTable<MongockDynamoDbAuditEntry>) table;
+        for (MongockDynamoDbAuditEntry entry : entries) {
+            changeTable.putItem(entry);
         }
     }
 
     public List<AuditEntry> getAuditEntriesSorted() {
-        List<DynamoDbChangeEntry> entries = new ArrayList<>();
-        table.scan().items().forEach(entries::add);
-        return entries.stream()
-                .map(DynamoDbChangeEntry::toAuditEntry)
-                .sorted()
-                .collect(Collectors.toList());
+        if (DEFAULT_AUDIT_STORE_NAME.equals(tableName)) {
+            DynamoDbTable<DynamoDBAuditEntryEntity> auditTable = (DynamoDbTable<DynamoDBAuditEntryEntity>) table;
+            List<DynamoDBAuditEntryEntity> entities = new ArrayList<>();
+            auditTable.scan().items().forEach(entities::add);
+            return entities.stream()
+                    .map(DynamoDBAuditEntryEntity::toAuditEntry)
+                    .sorted()
+                    .collect(Collectors.toList());
+        } else {
+            DynamoDbTable<MongockDynamoDbAuditEntry> changeTable = (DynamoDbTable<MongockDynamoDbAuditEntry>) table;
+            List<MongockDynamoDbAuditEntry> entries = new ArrayList<>();
+            changeTable.scan().items().forEach(entries::add);
+            return entries.stream()
+                    .map(MongockDynamoDbAuditEntry::toAuditEntry)
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
     }
 }
