@@ -22,6 +22,7 @@ import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Property;
@@ -51,7 +52,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class OpsClientBuilder
-    extends AbstractBuilder<OpsClientBuilder> {
+    extends AbstractBuilder<AuditStore<?>, OpsClientBuilder> {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Builder");
 
     ///////////////////////////////////////////////////////////////////////////////////

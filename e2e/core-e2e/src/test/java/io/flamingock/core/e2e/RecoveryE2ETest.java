@@ -27,8 +27,8 @@ import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.recovery.ManualInterventionRequiredException;
-import io.flamingock.internal.core.recovery.RecoveryIssue;
+import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -108,7 +108,7 @@ class RecoveryE2ETest {
     void testExecutionFailedTxSharedSuccessfulExecution() {
         // Given - Pre-insert audit entry with EXECUTION_FAILED state and TX_SHARED type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTION_FAILED, AuditTxType.TX_SHARED);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTION_FAILED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -140,7 +140,7 @@ class RecoveryE2ETest {
     void testRolledBackNonTxSuccessfulExecution() {
         // Given - Pre-insert audit entry with ROLLED_BACK state and NON_TX type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.NON_TX);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -172,7 +172,7 @@ class RecoveryE2ETest {
     void testRolledBackTxSeparateNoMarkerSuccessfulExecution() {
         // Given - Pre-insert audit entry with ROLLED_BACK state and TX_SEPARATE_NO_MARKER type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SEPARATE_NO_MARKER);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SEPARATE_NO_MARKER, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -204,7 +204,7 @@ class RecoveryE2ETest {
     void testRolledBackTxSharedSuccessfulExecution() {
         // Given - Pre-insert audit entry with ROLLED_BACK state and TX_SHARED type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SHARED);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -236,7 +236,7 @@ class RecoveryE2ETest {
     void testRollbackFailedNonTxRequiresManualIntervention() {
         // Given - Pre-insert audit entry with ROLLBACK_FAILED state and NON_TX type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLBACK_FAILED, AuditTxType.NON_TX);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLBACK_FAILED, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -284,7 +284,7 @@ class RecoveryE2ETest {
     void testExecutedNonTxDoNothing() {
         // Given - Pre-insert audit entry with EXECUTED state and NON_TX type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.NON_TX);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -314,7 +314,7 @@ class RecoveryE2ETest {
     void testExecutedTxSeparateNoMarkerDoNothing() {
         // Given - Pre-insert audit entry with EXECUTED state and TX_SEPARATE_NO_MARKER type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.TX_SEPARATE_NO_MARKER);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.TX_SEPARATE_NO_MARKER, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -344,7 +344,7 @@ class RecoveryE2ETest {
     void testExecutedTxSharedDoNothing() {
         // Given - Pre-insert audit entry with EXECUTED state and TX_SHARED type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -453,7 +453,7 @@ class RecoveryE2ETest {
                               Class<?> changeUnitClass,
                               AuditEntryExpectation... expectedAuditSequence) {
         // Given - Pre-insert audit entry
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txType);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txType, changeUnitClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -485,7 +485,7 @@ class RecoveryE2ETest {
                                                     Class<?> changeUnitClass,
                                                     AuditEntryExpectation... expectedAuditSequence) {
         // Given - Pre-insert audit entry
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txType);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txType, changeUnitClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {

@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.store.audit.recovery;
 
-import io.flamingock.internal.core.recovery.ManualInterventionRequiredException;
-import io.flamingock.internal.core.recovery.RecoveryIssue;
+import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

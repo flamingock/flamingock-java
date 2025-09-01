@@ -15,6 +15,7 @@
  */
 package io.flamingock.core.kit.audit;
 
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 
@@ -104,7 +105,7 @@ public class AuditTestHelper {
                 AuditTxType.NON_TX,
                 null,
                 "001",
-                "MANUAL_INTERVENTION"
+                Recovery.RecoveryStrategy.MANUAL_INTERVENTION
         );
         auditStorage.addAuditEntry(startedEntry);
     }
@@ -128,7 +129,7 @@ public class AuditTestHelper {
                 AuditTxType.NON_TX,
                 null,
                 "001",
-                "MANUAL_INTERVENTION"
+                Recovery.RecoveryStrategy.MANUAL_INTERVENTION
         );
         auditStorage.addAuditEntry(executedEntry);
     }

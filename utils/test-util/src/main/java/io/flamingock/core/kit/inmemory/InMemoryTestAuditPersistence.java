@@ -19,10 +19,10 @@ import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.audit.TestAuditReader;
 import io.flamingock.core.kit.audit.TestAuditWriter;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.store.persistence.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 
-import java.util.Map;
+import java.util.List;
 
 public class InMemoryTestAuditPersistence implements CommunityAuditPersistence {
     
@@ -35,8 +35,8 @@ public class InMemoryTestAuditPersistence implements CommunityAuditPersistence {
     }
 
     @Override
-    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        return auditReader.getAuditSnapshotByChangeId();
+    public List<AuditEntry> getAuditHistory() {
+        return auditReader.getAuditHistory();
     }
 
     @Override

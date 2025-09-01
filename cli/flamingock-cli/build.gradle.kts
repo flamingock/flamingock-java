@@ -14,6 +14,9 @@ dependencies {
     // YAML configuration
     implementation("org.yaml:snakeyaml:2.2")
     
+    // JSON formatting
+    implementation("com.google.code.gson:gson:2.10.1")
+    
     // Database clients (community edition)
     implementation("org.mongodb:mongodb-driver-sync:4.9.1")
     implementation("software.amazon.awssdk:dynamodb:2.20.0")

@@ -17,11 +17,9 @@ package io.flamingock.core.kit.audit;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
-import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 
 
 import java.util.List;
-import java.util.Map;
 
 public class TestAuditReader implements AuditReader {
     
@@ -33,17 +31,8 @@ public class TestAuditReader implements AuditReader {
 
 
     @Override
-    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        List<AuditEntry> allAuditEntries = auditStorage.getAuditEntries();
-
-        // Build AuditStageStatus from all audit entries
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
-
-        for (AuditEntry entry : allAuditEntries) {
-            builder.addEntry(entry);
-        }
-
-        return builder.build();
+    public List<AuditEntry> getAuditHistory() {
+        return auditStorage.getAuditEntries();
     }
 
 }

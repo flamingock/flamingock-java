@@ -89,7 +89,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 ExecutionPlanResponse response = createExecution(loadedStages, lastOwnerGuid, counterPerGuid.getElapsed());
                 logger.info("Obtained cloud execution plan: {}", response.getAction());
                 if (response.isContinue()) {
-                    List<ExecutableStage> executableStages = ExecutionPlanMapper.getExecutableStages(response, loadedStages);
+                    List<ExecutableStage> executableStages = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
                     return ExecutionPlan.CONTINUE(executableStages);
 
                 } else if (response.isExecute()) {
@@ -135,7 +135,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 .stream()
                 .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
 
-        ExecutionPlanRequest requestBody = ExecutionPlanMapper.toRequest(
+        ExecutionPlanRequest requestBody = CloudExecutionPlanMapper.toRequest(
                 loadedStages,
                 coreConfiguration.getLockAcquiredForMillis(),
                 auditMarks);
@@ -152,8 +152,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {
         return ExecutionPlan.newExecution(
                 response.getExecutionId(),
-                ExecutionPlanMapper.extractLockFromResponse(response, coreConfiguration, runnerId, lockService, timeService),
-                ExecutionPlanMapper.getExecutableStages(response, loadedStages)
+                CloudExecutionPlanMapper.extractLockFromResponse(response, coreConfiguration, runnerId, lockService, timeService),
+                CloudExecutionPlanMapper.getExecutableStages(response, loadedStages)
         );
     }
 

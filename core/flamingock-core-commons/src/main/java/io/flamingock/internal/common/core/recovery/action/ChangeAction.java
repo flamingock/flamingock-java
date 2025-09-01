@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.pipeline.actions;
+package io.flamingock.internal.common.core.recovery.action;
 
 /**
  * Represents the action to be taken for a specific change during pipeline execution.

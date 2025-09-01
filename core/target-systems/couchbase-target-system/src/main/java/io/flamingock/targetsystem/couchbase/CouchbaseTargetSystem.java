@@ -22,7 +22,7 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
-import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
+import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;

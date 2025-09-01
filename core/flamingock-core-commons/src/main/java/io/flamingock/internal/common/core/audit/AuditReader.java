@@ -15,8 +15,38 @@
  */
 package io.flamingock.internal.common.core.audit;
 
-import java.util.Map;
+import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
+import io.flamingock.internal.common.core.audit.issue.AuditEntryIssueFactory;
+import io.flamingock.internal.common.core.audit.issue.NonIssue;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public interface AuditReader {
-    Map<String, AuditEntry> getAuditSnapshotByChangeId();
+
+    List<AuditEntry> getAuditHistory();
+
+    default List<AuditEntry> getSnapshotList() {
+        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
+        getAuditHistory().forEach(builder::addEntry);
+        return builder.buildList();
+    }
+
+    default List<AuditEntryIssue> getAuditIssues() {
+        return getSnapshotList()
+                .stream()
+                .map(AuditEntryIssueFactory::getIssue)
+                .filter(issue -> !(issue instanceof NonIssue))
+                .collect(Collectors.toList());
+    }
+
+    default Optional<AuditEntryIssue> getAuditIssueByChangeId(String changeId) {
+        return getAuditIssues()
+                .stream()
+                .filter(entry -> changeId.equals(entry.getChangeId()))
+                .findFirst();
+    }
+
 }

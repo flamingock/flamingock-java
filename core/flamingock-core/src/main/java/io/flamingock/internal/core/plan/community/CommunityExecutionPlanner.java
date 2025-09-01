@@ -17,19 +17,20 @@ package io.flamingock.internal.core.plan.community;
 
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
+import io.flamingock.internal.core.plan.ExecutionId;
 import io.flamingock.internal.core.store.lock.community.CommunityLock;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
 import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.store.lock.LockException;
 import io.flamingock.internal.core.store.lock.LockRefreshDaemon;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
 public class CommunityExecutionPlanner extends ExecutionPlanner {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("LocalExecution");
 
-    private final AuditReader auditReader;
+    private final CommunityAuditReader auditReader;
     private final CommunityLockService lockService;
 
     private final CoreConfigurable configuration;
@@ -64,7 +65,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      */
     public CommunityExecutionPlanner(RunnerId instanceId,
                                      CommunityLockService lockService,
-                                     AuditReader auditReader,
+                                     CommunityAuditReader auditReader,
                                      CoreConfigurable coreConfiguration) {
         this.instanceId = instanceId;
         this.auditReader = auditReader;
@@ -96,7 +97,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
             if (configuration.isEnableRefreshDaemon()) {
                 new LockRefreshDaemon(lock, TimeService.getDefault()).start();
             }
-            String executionId = UUID.randomUUID().toString();
+            String executionId = ExecutionId.getNewExecutionId();
             return ExecutionPlan.newExecution(executionId, lock, Collections.singletonList(nextStageOpt.get()));
 
         } else {
@@ -118,7 +119,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
 
     public static class Builder {
         private RunnerId runnerId;
-        private AuditReader auditReader;
+        private CommunityAuditReader auditReader;
         private CommunityLockService lockService;
         private CoreConfigurable coreConfigurable;
 
@@ -130,7 +131,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
             return this;
         }
 
-        public Builder setAuditReader(AuditReader auditReader) {
+        public Builder setAuditReader(CommunityAuditReader auditReader) {
             this.auditReader = auditReader;
             return this;
         }

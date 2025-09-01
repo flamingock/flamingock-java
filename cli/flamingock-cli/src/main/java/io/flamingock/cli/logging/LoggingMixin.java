@@ -19,22 +19,33 @@ import picocli.CommandLine.Option;
 
 /**
  * Mixin class for CLI logging options.
- * Can be included in any command to provide logging level control.
+ * Provides global logging level control for all Flamingock operations.
+ * 
+ * <p>Note: These options must be specified before the command name.
+ * Example: {@code flamingock --verbose audit list}
  * 
  * @since 6.0.0
  */
 public class LoggingMixin {
     
-    @Option(names = {"--quiet"}, description = "Only show error messages")
+    @Option(names = {"--quiet"}, 
+            description = "Suppress all output except errors. Global option - must be placed before commands.",
+            order = 1)
     private boolean quiet;
     
-    @Option(names = {"--verbose"}, description = "Show informational messages")
+    @Option(names = {"--verbose"}, 
+            description = "Enable informational output. Global option - must be placed before commands.",
+            order = 2)
     private boolean verbose;
     
-    @Option(names = {"--debug"}, description = "Show debug messages")
+    @Option(names = {"--debug"}, 
+            description = "Enable debug output for troubleshooting. Global option - must be placed before commands.",
+            order = 3)
     private boolean debug;
     
-    @Option(names = {"--trace"}, description = "Show trace messages (most verbose)")
+    @Option(names = {"--trace"}, 
+            description = "Enable trace output (most detailed). Global option - must be placed before commands.",
+            order = 4)
     private boolean trace;
     
     /**

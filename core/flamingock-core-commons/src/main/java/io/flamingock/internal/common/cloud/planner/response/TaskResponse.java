@@ -17,14 +17,14 @@ package io.flamingock.internal.common.cloud.planner.response;
 
 public class TaskResponse {
     private String id;
-    private CloudChangeAction state;
+    private CloudChangeAction action;
 
     public TaskResponse() {
     }
 
-    public TaskResponse(String id, CloudChangeAction state) {
+    public TaskResponse(String id, CloudChangeAction action) {
         this.id = id;
-        this.state = state;
+        this.action = action;
     }
 
     public String getId() {
@@ -35,11 +35,11 @@ public class TaskResponse {
         this.id = id;
     }
 
-    public CloudChangeAction getState() {
-        return state;
+    public CloudChangeAction getAction() {
+        return action;
     }
 
-    public void setState(CloudChangeAction state) {
-        this.state = state;
+    public void setAction(CloudChangeAction action) {
+        this.action = action;
     }
 }

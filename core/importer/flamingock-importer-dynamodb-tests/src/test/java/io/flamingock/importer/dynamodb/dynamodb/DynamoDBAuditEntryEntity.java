@@ -15,6 +15,7 @@
  */
 package io.flamingock.importer.dynamodb.dynamodb;
 
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditEntryField;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -71,7 +72,7 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
         this.targetSystemId = auditEntry.getTargetSystemId();
         this.order = auditEntry.getOrder();
         this.systemChange = auditEntry.getSystemChange();
-        this.recoveryStrategy = auditEntry.getRecoveryStrategy();
+        this.recoveryStrategy = auditEntry.getRecoveryStrategy().name();
     }
 
     public DynamoDBAuditEntryEntity() {}
@@ -289,7 +290,7 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
                 txType,
                 targetSystemId,
                 order,
-                recoveryStrategy
+                recoveryStrategy != null ? Recovery.RecoveryStrategy.valueOf(recoveryStrategy) : Recovery.RecoveryStrategy.MANUAL_INTERVENTION
         );
     }
 }

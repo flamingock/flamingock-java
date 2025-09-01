@@ -16,6 +16,7 @@
 package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.TimeUtil;
@@ -60,7 +61,7 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
         CouchbaseUtils.addFieldToDocument(document, KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         CouchbaseUtils.addFieldToDocument(document, KEY_ORDER, auditEntry.getOrder());
-        CouchbaseUtils.addFieldToDocument(document, KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy());
+        CouchbaseUtils.addFieldToDocument(document, KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy().name());
         return document;
     }
 
@@ -93,6 +94,9 @@ public class CouchbaseAuditMapper {
                 txType,
                 jsonObject.getString(KEY_TARGET_SYSTEM_ID),
                 jsonObject.getString(KEY_ORDER),
-                jsonObject.getString(KEY_RECOVERY_STRATEGY));
+                jsonObject.getString(KEY_RECOVERY_STRATEGY) != null
+                        ? Recovery.RecoveryStrategy.valueOf(jsonObject.getString(KEY_RECOVERY_STRATEGY))
+                        : Recovery.RecoveryStrategy.MANUAL_INTERVENTION
+        );
     }
 }

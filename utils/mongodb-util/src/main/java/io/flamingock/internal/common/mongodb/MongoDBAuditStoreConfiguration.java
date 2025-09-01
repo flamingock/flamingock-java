@@ -15,10 +15,10 @@
  */
 package io.flamingock.internal.common.mongodb;
 
-import io.flamingock.internal.core.store.persistence.community.CommunityAuditStoreConfigurable;
+import io.flamingock.internal.core.store.audit.community.CommunityAuditStoreConfigurable;
 
-import static io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
-import static io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
+import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
 
 public class MongoDBAuditStoreConfiguration implements CommunityAuditStoreConfigurable {

@@ -17,12 +17,12 @@ package io.flamingock.community.dynamodb.internal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
-import io.flamingock.internal.core.store.persistence.community.AbstractCommunityAuditPersistence;
+import io.flamingock.internal.core.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 
-import java.util.Map;
+import java.util.List;
 
 public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence {
 
@@ -57,8 +57,8 @@ public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence 
     }
 
     @Override
-    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        return auditor.getAuditSnapshotByChangeId();
+    public List<AuditEntry> getAuditHistory() {
+        return auditor.getAuditHistory();
     }
 
     @Override

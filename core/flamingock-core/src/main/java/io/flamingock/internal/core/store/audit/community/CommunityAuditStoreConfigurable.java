@@ -13,21 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.store.persistence.cloud;
+package io.flamingock.internal.core.store.audit.community;
 
-import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.util.id.EnvironmentId;
-import io.flamingock.internal.util.id.ServiceId;
-import io.flamingock.internal.core.store.audit.AuditPersistence;
-
-public interface CloudAuditPersistence extends AuditPersistence {
-
-    //TODO remove this when cloudBuilder moved to cloud module
-    ExecutionPlanner getExecutionPlanner();
-
-    EnvironmentId getEnvironmentId();
-
-    ServiceId getServiceId();
-
-    String getJwt();
+//Marker interface for community audit store configuration
+public interface CommunityAuditStoreConfigurable {
 }

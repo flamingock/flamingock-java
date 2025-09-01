@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.store;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.store.persistence.cloud.CloudAuditPersistence;
+import io.flamingock.internal.core.store.audit.cloud.CloudAuditPersistence;
 
 import java.util.Optional;
 import java.util.ServiceLoader;

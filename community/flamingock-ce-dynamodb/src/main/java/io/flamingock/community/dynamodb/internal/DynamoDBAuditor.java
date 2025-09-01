@@ -15,9 +15,8 @@
  */
 package io.flamingock.community.dynamodb.internal;
 
-import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
+import io.flamingock.internal.core.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -35,12 +34,12 @@ import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
-public class DynamoDBAuditor implements LifecycleAuditWriter, AuditReader {
+public class DynamoDBAuditor implements LifecycleAuditWriter, CommunityAuditReader {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditor");
 
@@ -96,9 +95,8 @@ public class DynamoDBAuditor implements LifecycleAuditWriter, AuditReader {
     }
 
     @Override
-    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
-        table
+    public List<AuditEntry> getAuditHistory() {
+        return table
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)
                         .build()
@@ -106,9 +104,7 @@ public class DynamoDBAuditor implements LifecycleAuditWriter, AuditReader {
                 .items()
                 .stream()
                 .map(AuditEntryEntity::toAuditEntry)
-                .collect(Collectors.toList())
-                .forEach(builder::addEntry);
-        return builder.build();
+                .collect(Collectors.toList());
     }
 
 }

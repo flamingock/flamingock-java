@@ -29,7 +29,7 @@ import io.flamingock.dynamodb.kit.DynamoDBTestContainer;
 import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.store.persistence.community.CommunityPersistenceConstants;
+import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;

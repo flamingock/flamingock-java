@@ -15,21 +15,37 @@
  */
 package io.flamingock.cloud.audit;
 
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Recovery;
+import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import org.junit.jupiter.api.Test;
 
-import io.flamingock.core.kit.audit.AuditEntryTestFactory;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class HttpAuditWriterMapperTest {
 
+    // Test classes for different recovery strategies
+    @ChangeUnit(id = "test-manual", order = "001")
+    @Recovery(strategy = Recovery.RecoveryStrategy.MANUAL_INTERVENTION)
+    static class TestManualInterventionChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
+    @ChangeUnit(id = "test-default", order = "001")
+    static class TestDefaultRecoveryChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
     @Test
     void shouldIncludeTxTypeInRequest() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -59,7 +75,7 @@ class HttpAuditWriterMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(

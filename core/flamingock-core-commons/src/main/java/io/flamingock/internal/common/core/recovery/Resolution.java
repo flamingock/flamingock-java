@@ -13,14 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.store.persistence.community;
+package io.flamingock.internal.common.core.recovery;
 
-public final class CommunityPersistenceConstants {
-
-    public static final String DEFAULT_AUDIT_STORE_NAME = "flamingockAuditLogs";
-    public static final String DEFAULT_LOCK_STORE_NAME = "flamingockLocks";
-    public static final String DEFAULT_ON_GOING_TASKS_STORE_NAME = "flamingockOnGoingTasks";
-
-    private CommunityPersistenceConstants() {
-    }
+public enum Resolution {
+    APPLIED, ROLLED_BACK
 }

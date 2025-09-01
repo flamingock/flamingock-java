@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.recovery;
+package io.flamingock.internal.common.core.recovery;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 

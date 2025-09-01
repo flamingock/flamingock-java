@@ -15,6 +15,9 @@
  */
 package io.flamingock.internal.common.mongodb;
 
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -31,10 +34,31 @@ class MongoDBAuditMapperTest {
     private final MongoDBAuditMapper<TestDocumentWrapper> mapper = 
         new MongoDBAuditMapper<>(TestDocumentWrapper::new);
 
+    // Test classes for different recovery strategies
+    @ChangeUnit(id = "test-manual", order = "001")
+    @Recovery(strategy = Recovery.RecoveryStrategy.MANUAL_INTERVENTION)
+    static class TestManualInterventionChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
+    @ChangeUnit(id = "test-always-retry", order = "001") 
+    @Recovery(strategy = Recovery.RecoveryStrategy.ALWAYS_RETRY)
+    static class TestAlwaysRetryChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
+    @ChangeUnit(id = "test-default", order = "001")
+    static class TestDefaultRecoveryChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
     @Test
     void shouldSerializeAndDeserializeTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -47,7 +71,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -80,7 +104,7 @@ class MongoDBAuditMapperTest {
     void shouldSerializeAndDeserializeTargetSystemId() {
         // Given
         String expectedTargetSystemId = "custom-target-system";
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -93,7 +117,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldHandleNullTargetSystemId() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -106,27 +130,27 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeRecoveryStrategy() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntryWithRecoveryStrategy("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, "ALWAYS_RETRY");
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, TestAlwaysRetryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
         AuditEntry deserialized = mapper.fromDocument(document);
 
         // Then
-        assertEquals("ALWAYS_RETRY", deserialized.getRecoveryStrategy());
+        assertEquals(Recovery.RecoveryStrategy.ALWAYS_RETRY, deserialized.getRecoveryStrategy());
     }
 
     @Test
     void shouldHandleNullRecoveryStrategy() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntryWithRecoveryStrategy("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, TestDefaultRecoveryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
         AuditEntry deserialized = mapper.fromDocument(document);
 
         // Then
-        assertEquals("MANUAL_INTERVENTION", deserialized.getRecoveryStrategy()); // Should default to MANUAL_INTERVENTION
+        assertEquals(Recovery.RecoveryStrategy.MANUAL_INTERVENTION, deserialized.getRecoveryStrategy()); // Should default to MANUAL_INTERVENTION
     }
 
     // Simple test implementation of DocumentHelper

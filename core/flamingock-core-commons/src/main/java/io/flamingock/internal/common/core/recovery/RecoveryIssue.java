@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.recovery;
+package io.flamingock.internal.common.core.recovery;
 
 /**
  * Represents a recovery issue that requires manual intervention during pipeline execution.

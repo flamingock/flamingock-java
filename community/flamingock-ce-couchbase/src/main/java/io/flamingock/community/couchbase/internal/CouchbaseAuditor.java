@@ -26,22 +26,19 @@ import com.couchbase.client.java.kv.ReplicateTo;
 import com.couchbase.client.java.kv.UpsertOptions;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import com.couchbase.client.java.transactions.TransactionGetResult;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.couchbase.CouchbaseAuditMapper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
-import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
-
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.slf4j.Logger;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -90,13 +87,11 @@ public class CouchbaseAuditor implements LifecycleAuditWriter, AuditReader {
                 } catch (DocumentNotFoundException e) {
                     ctx.insert(collection, key, document);
                 }
-            }
-            catch (CouchbaseException couchbaseException) {
+            } catch (CouchbaseException couchbaseException) {
                 logger.warn("Error saving audit entry with key {}", key, couchbaseException);
                 throw new RuntimeException(couchbaseException);
             }
-        }
-        else {
+        } else {
             try {
                 collection.upsert(key, document,
                         UpsertOptions.upsertOptions().durability(PersistTo.ACTIVE, ReplicateTo.NONE));
@@ -111,14 +106,12 @@ public class CouchbaseAuditor implements LifecycleAuditWriter, AuditReader {
 
 
     @Override
-    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
-        List<JsonObject> documents = CouchbaseCollectionHelper.selectAllDocuments(cluster, collection.bucketName(), collection.scopeName(), collection.name());
-        documents.stream()
+    public List<AuditEntry> getAuditHistory() {
+        return CouchbaseCollectionHelper.selectAllDocuments(cluster, collection.bucketName(), collection.scopeName(), collection.name())
+                .stream()
                 .map(mapper::fromDocument)
-                .collect(Collectors.toList())
-                .forEach(builder::addEntry);
-        return builder.build();
+                .collect(Collectors.toList());
+
     }
 
     private String toKey(AuditEntry auditEntry) {

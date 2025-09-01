@@ -16,6 +16,9 @@
 package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -27,10 +30,31 @@ class CouchbaseAuditMapperTest {
 
     private final CouchbaseAuditMapper mapper = new CouchbaseAuditMapper();
 
+    // Test classes for different recovery strategies
+    @ChangeUnit(id = "test-manual", order = "001")
+    @Recovery(strategy = Recovery.RecoveryStrategy.MANUAL_INTERVENTION)
+    static class TestManualInterventionChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
+    @ChangeUnit(id = "test-always-retry", order = "001") 
+    @Recovery(strategy = Recovery.RecoveryStrategy.ALWAYS_RETRY)
+    static class TestAlwaysRetryChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
+    @ChangeUnit(id = "test-default", order = "001")
+    static class TestDefaultRecoveryChangeUnit {
+        @Execution
+        public void execute() {}
+    }
+
     @Test
     void shouldSerializeAndDeserializeTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -43,7 +67,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -57,7 +81,7 @@ class CouchbaseAuditMapperTest {
     void shouldSerializeAndDeserializeTargetSystemId() {
         // Given
         String expectedTargetSystemId = "custom-target-system";
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChangeUnit.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -70,7 +94,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldHandleNullTargetSystemId() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -84,7 +108,7 @@ class CouchbaseAuditMapperTest {
     void shouldHandleAllTxTypes() {
         for (AuditTxType txType : AuditTxType.values()) {
             // Given
-            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, txType);
+            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, txType, TestManualInterventionChangeUnit.class);
 
             // When
             JsonObject document = mapper.toDocument(original);

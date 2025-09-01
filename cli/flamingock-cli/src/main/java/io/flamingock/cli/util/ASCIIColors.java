@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.store.persistence.community;
+package io.flamingock.cli.util;
 
-//Marker interface for community audit store configuration
-public interface CommunityAuditStoreConfigurable {
+public final class ASCIIColors {
+    private ASCIIColors(){}
+
+    public static final String VIOLET = "\u001B[35m";
+    public static final String RESET = "\u001B[0m";
+
+    public static String inViolet(String msg) {
+        return VIOLET + msg + RESET;
+    }
 }

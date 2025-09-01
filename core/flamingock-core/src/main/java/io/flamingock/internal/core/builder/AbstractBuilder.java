@@ -53,7 +53,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public abstract class AbstractBuilder<HOLDER extends AbstractBuilder<HOLDER>>
+public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER extends AbstractBuilder<AUDIT_STORE, HOLDER>>
         implements
         CoreConfigurator<HOLDER>,
         ContextConfigurable<HOLDER> {
@@ -63,7 +63,7 @@ public abstract class AbstractBuilder<HOLDER extends AbstractBuilder<HOLDER>>
     protected final TargetSystemManager targetSystemManager = new TargetSystemManager();
     protected final CoreConfiguration coreConfiguration;
 
-    protected AuditStore<?> auditStore;
+    protected AUDIT_STORE auditStore;
 
     ///////////////////////////////////////////////////////////////////////////////////
     //  BUILD
@@ -72,7 +72,7 @@ public abstract class AbstractBuilder<HOLDER extends AbstractBuilder<HOLDER>>
     protected AbstractBuilder(
             CoreConfiguration coreConfiguration,
             Context context,
-            AuditStore<?> auditStore) {
+            AUDIT_STORE auditStore) {
         this.context = context;
         this.coreConfiguration = coreConfiguration;
         this.auditStore = auditStore;

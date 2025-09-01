@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.pipeline.actions;
+package io.flamingock.internal.common.core.recovery.action;
 
 import java.util.Collections;
 import java.util.Map;
@@ -42,14 +42,6 @@ public class ChangeActionMap {
         return actionMap.getOrDefault(changeId, ChangeAction.APPLY);
     }
 
-    /**
-     * Returns an immutable copy of the action map.
-     *
-     * @return the complete action map for the stage
-     */
-    public Map<String, ChangeAction> getActionMap() {
-        return actionMap;
-    }
 
     /**
      * Returns true if the action plan is empty (no actions specified).

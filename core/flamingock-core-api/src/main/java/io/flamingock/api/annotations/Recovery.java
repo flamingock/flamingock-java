@@ -28,6 +28,11 @@ public @interface Recovery {
 
     enum RecoveryStrategy {
         ALWAYS_RETRY,
-        MANUAL_INTERVENTION
+        MANUAL_INTERVENTION;
+
+        public boolean isAlwaysRetry() {
+            return this == ALWAYS_RETRY;
+        }
     }
+
 }

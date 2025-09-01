@@ -17,7 +17,7 @@ package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
-import io.flamingock.internal.core.pipeline.actions.ChangeAction;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 
 import java.lang.reflect.Method;
 import java.util.LinkedList;

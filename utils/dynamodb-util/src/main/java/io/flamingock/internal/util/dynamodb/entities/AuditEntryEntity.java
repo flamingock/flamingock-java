@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.util.dynamodb.entities;
 
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditEntryField;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -72,7 +73,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.txType = auditEntry.getTxType();
         this.targetSystemId = auditEntry.getTargetSystemId();
         this.order = auditEntry.getOrder();
-        this.recoveryStrategy = auditEntry.getRecoveryStrategy();
+        this.recoveryStrategy = auditEntry.getRecoveryStrategy().name();
         this.systemChange = auditEntry.getSystemChange();
     }
 
@@ -298,7 +299,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
                 txType,
                 targetSystemId,
                 order,
-                recoveryStrategy
+                recoveryStrategy != null ? Recovery.RecoveryStrategy.valueOf(recoveryStrategy) : Recovery.RecoveryStrategy.MANUAL_INTERVENTION
         );
     }
 }

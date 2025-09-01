@@ -27,7 +27,7 @@ import io.flamingock.internal.util.id.RunnerId;
 
 //TODO to cloud module
 public class CloudChangeRunnerBuilder
-        extends AbstractChangeRunnerBuilder<CloudChangeRunnerBuilder>
+        extends AbstractChangeRunnerBuilder<CloudAuditStore, CloudChangeRunnerBuilder>
         implements CloudConfigurator<CloudChangeRunnerBuilder> {
 
 
@@ -37,8 +37,8 @@ public class CloudChangeRunnerBuilder
                                        CloudConfiguration cloudConfiguration,
                                        Context dependencyInjectableContext,
                                        PluginManager pluginManager,
-                                       CloudAuditStore driver) {
-        super(coreConfiguration, dependencyInjectableContext, pluginManager, driver);
+                                       CloudAuditStore auditStore) {
+        super(coreConfiguration, dependencyInjectableContext, pluginManager, auditStore);
         this.cloudConfiguration = cloudConfiguration;
     }
 

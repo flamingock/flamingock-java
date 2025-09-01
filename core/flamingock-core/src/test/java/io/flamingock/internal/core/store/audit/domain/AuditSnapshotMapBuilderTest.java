@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.store.audit.domain;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditSnapshotBuilder;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import org.junit.jupiter.api.Test;
 
@@ -28,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuditSnapshotMapBuilderTest {
 
     @Test
-    void shouldBuildWithEntryBuilderAndProvideAllMaps() {
+    void shouldBuildMapWithEntryBuilderAndProvideAllMaps() {
         // Given
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
+        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
         
         AuditEntry entry1 = createAuditEntry("change-1", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX);
         AuditEntry entry2 = createAuditEntry("change-2", AuditEntry.Status.STARTED, AuditTxType.TX_SHARED);
@@ -39,7 +40,7 @@ class AuditSnapshotMapBuilderTest {
         builder.addEntry(entry1);
         builder.addEntry(entry2);
         // Then - Entry info map should work  
-        Map<String, AuditEntry> infoMap = builder.build();
+        Map<String, AuditEntry> infoMap = builder.buildMap();
         assertEquals(2, infoMap.size());
 
         AuditEntry info1 = infoMap.get("change-1");
@@ -56,7 +57,7 @@ class AuditSnapshotMapBuilderTest {
     @Test
     void shouldHandleMostRelevantEntryInBuilder() {
         // Given - Two entries for same change, second one is more recent
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
+        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
         
         AuditEntry olderEntry = createAuditEntry("change-1", AuditEntry.Status.STARTED, AuditTxType.NON_TX, 
                 LocalDateTime.now().minusMinutes(10));
@@ -66,7 +67,7 @@ class AuditSnapshotMapBuilderTest {
         // When
         builder.addEntry(olderEntry);
         builder.addEntry(newerEntry);
-        Map<String, AuditEntry> snapshotMap = builder.build();
+        Map<String, AuditEntry> snapshotMap = builder.buildMap();
 
         // Then - Should use the most relevant (newer) entry
         AuditEntry info = snapshotMap.get("change-1");
@@ -77,12 +78,12 @@ class AuditSnapshotMapBuilderTest {
     @Test
     void shouldHandleNullTxTypeInEntries() {
         // Given - Entry with null txType
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
+        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
         AuditEntry entryWithNullTxType = createAuditEntry("change-1", AuditEntry.Status.EXECUTED, null);
         
         // When
         builder.addEntry(entryWithNullTxType);
-        Map<String, AuditEntry> snapshotMap = builder.build();
+        Map<String, AuditEntry> snapshotMap = builder.buildMap();
         // Then - Should default to NON_TX
         AuditEntry info = snapshotMap.get("change-1");
         assertEquals(AuditTxType.NON_TX, info.getTxType());
@@ -92,7 +93,7 @@ class AuditSnapshotMapBuilderTest {
     @Test
     void shouldMaintainConsistencyBetweenMaps() {
         // Given
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
+        AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
         
         for (int i = 1; i <= 5; i++) {
             AuditEntry entry = createAuditEntry("change-" + i, 
@@ -101,7 +102,7 @@ class AuditSnapshotMapBuilderTest {
         }
         
         // When - Then - Entry info map should contain all entries with correct data
-        Map<String, AuditEntry> infoMap = builder.build();
+        Map<String, AuditEntry> infoMap = builder.buildMap();
         
         assertEquals(5, infoMap.size());
         

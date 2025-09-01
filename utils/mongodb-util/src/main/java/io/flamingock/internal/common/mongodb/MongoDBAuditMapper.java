@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.mongodb;
 
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.TimeUtil;
@@ -67,7 +68,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
         document.append(KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         document.append(KEY_ORDER, auditEntry.getOrder());
-        document.append(KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy());
+        document.append(KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy().name());
         return document;
     }
 
@@ -102,7 +103,11 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 txType,
                 entry.getString(KEY_TARGET_SYSTEM_ID),
                 entry.getString(KEY_ORDER),
-                entry.getString(KEY_RECOVERY_STRATEGY));
+                entry.getString(KEY_RECOVERY_STRATEGY) != null
+                        ? Recovery.RecoveryStrategy.valueOf(entry.getString(KEY_RECOVERY_STRATEGY))
+                        : Recovery.RecoveryStrategy.MANUAL_INTERVENTION
+
+        );
 
     }
 }

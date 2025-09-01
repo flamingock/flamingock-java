@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.store;
 
-import io.flamingock.internal.core.store.persistence.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 
 public interface CommunityAuditStore extends AuditStore<CommunityAuditPersistence> {

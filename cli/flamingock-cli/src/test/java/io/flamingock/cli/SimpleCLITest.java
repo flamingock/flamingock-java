@@ -43,38 +43,9 @@ class SimpleCLITest {
         // Then
         assertThat(cmd.getSubcommands()).containsKey("audit");
         CommandLine auditCmd = cmd.getSubcommands().get("audit");
-        assertThat(auditCmd.getSubcommands()).containsKeys("list", "mark");
+        assertThat(auditCmd.getSubcommands()).containsKeys("list", "fix");
     }
 
-    @Test
-    void shouldValidateChangeIdForMarkCommand() {
-        // Test the validation logic that would be used in the service
-
-        // Valid change IDs
-        assertThatNoException().isThrownBy(() -> {
-            String changeId = "valid-change-001";
-            if (changeId == null || changeId.trim().isEmpty()) {
-                throw new IllegalArgumentException("Change ID is required");
-            }
-        });
-
-        // Invalid change IDs
-        assertThatThrownBy(() -> {
-            String changeId = null;
-            if (changeId == null || changeId.trim().isEmpty()) {
-                throw new IllegalArgumentException("Change ID is required");
-            }
-        }).isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("Change ID is required");
-
-        assertThatThrownBy(() -> {
-            String changeId = "   ";
-            if (changeId == null || changeId.trim().isEmpty()) {
-                throw new IllegalArgumentException("Change ID is required");
-            }
-        }).isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("Change ID is required");
-    }
 
     @Test
     void shouldDetectDatabaseTypes() {

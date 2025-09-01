@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.store.persistence.community;
+package io.flamingock.internal.core.plan;
 
-import io.flamingock.internal.core.store.audit.AuditPersistence;
+import java.util.UUID;
 
-public interface CommunityAuditPersistence extends AuditPersistence {
+public class ExecutionId {
 
-//    LocalLockService getLockService();
+    public static String getNewExecutionId() {
+        return UUID.randomUUID().toString();
+    }
 }

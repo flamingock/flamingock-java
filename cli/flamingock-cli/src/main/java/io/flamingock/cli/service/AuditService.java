@@ -27,6 +27,9 @@ import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
+import io.flamingock.internal.common.core.recovery.FixResult;
+import io.flamingock.internal.common.core.recovery.Resolution;
 import io.flamingock.internal.core.builder.ops.OpsClient;
 import io.flamingock.internal.core.builder.ops.OpsClientBuilder;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
@@ -36,8 +39,8 @@ import io.flamingock.internal.core.store.AuditStore;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class AuditService {
     private final FlamingockConfig config;
@@ -50,69 +53,52 @@ public class AuditService {
         this.opsClient = createOpsClient();
     }
 
-    public List<AuditEntry> listAuditEntries() {
-        return opsClient.getConflictedAuditEntries();
-    }
-
     /**
      * Get snapshot view - latest state per changeUnit (DEFAULT)
      */
     public List<AuditEntry> listAuditEntriesSnapshot() {
-        return opsClient.getAuditEntriesSnapshot();
-    }
-
-    /**
-     * Get only entries with issues
-     */
-    public List<AuditEntry> listAuditEntriesWithIssues() {
-        return opsClient.getAuditEntriesWithIssues();
+        return opsClient.getAuditSnapshot();
     }
 
     /**
      * Get full chronological history
      */
     public List<AuditEntry> listAuditEntriesHistory() {
-        return opsClient.getAuditEntriesHistory();
+        return opsClient.getAuditHistory();
     }
 
     /**
      * Get entries since a specific date
      */
     public List<AuditEntry> listAuditEntriesSince(LocalDateTime since) {
-        return opsClient.getAuditEntriesSince(since);
+        return opsClient.getAuditSnapshotSince(since);
     }
 
     /**
-     * Apply pagination to a list of entries (client-side for now)
-     * TODO: This should ideally be done at the database level
+     * Get only entries with issues
      */
-    public List<AuditEntry> applyPagination(List<AuditEntry> entries, int limit, int page) {
-        if (entries == null || entries.isEmpty()) {
-            return entries;
-        }
-        
-        int startIndex = (page - 1) * limit;
-        int endIndex = Math.min(startIndex + limit, entries.size());
-        
-        if (startIndex >= entries.size()) {
-            return new ArrayList<>();
-        }
-        
-        return new ArrayList<>(entries.subList(startIndex, endIndex));
+    public List<AuditEntryIssue> listAuditEntriesWithIssues() {
+        return opsClient.getAuditIssues();
     }
 
-    public void markAsSuccess(String changeId) {
+
+    public FixResult fixAuditIssue(String changeId, Resolution resolution) {
         if (changeId == null || changeId.trim().isEmpty()) {
             throw new IllegalArgumentException("Change ID is required");
         }
-        opsClient.markAsSuccess(changeId.trim());
+        return opsClient.fixAuditIssue(changeId.trim(), resolution);
     }
-
-    public void markAsRolledBack(String changeId) {
+    /**
+     * Get detailed information about a specific change unit that has issues.
+     * 
+     * @param changeId the change unit ID to inspect
+     * @return detailed issue information including all audit entries, error details, etc.
+     */
+    public Optional<AuditEntryIssue> getAuditEntryIssue(String changeId) {
         if (changeId == null || changeId.trim().isEmpty()) {
             throw new IllegalArgumentException("Change ID is required");
         }
-        opsClient.markAsRolledBack(changeId.trim());
+        return opsClient.getAuditIssueByChange(changeId.trim());
     }
 
     private OpsClient createOpsClient() {

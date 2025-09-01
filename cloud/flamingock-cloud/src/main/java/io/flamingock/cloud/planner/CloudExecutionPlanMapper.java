@@ -27,13 +27,14 @@ import io.flamingock.internal.common.cloud.planner.response.CloudChangeAction;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
-import io.flamingock.internal.core.pipeline.actions.ChangeAction;
-import io.flamingock.internal.core.pipeline.actions.ChangeActionMap;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
+import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
 import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.store.lock.LockKey;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,7 +46,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
-public final class ExecutionPlanMapper {
+public final class CloudExecutionPlanMapper {
 
     public static ExecutionPlanRequest toRequest(List<AbstractLoadedStage> loadedStages,
                                                  long lockAcquiredForMillis,
@@ -57,7 +58,7 @@ public final class ExecutionPlanMapper {
             List<TaskRequest> stageTasks = currentStage
                     .getTasks()
                     .stream()
-                    .map(descriptor -> ExecutionPlanMapper.mapToTaskRequest(descriptor, ongoingStatusesMap))
+                    .map(descriptor -> CloudExecutionPlanMapper.mapToTaskRequest(descriptor, ongoingStatusesMap))
                     .collect(Collectors.toList());
             requestStages.add(new StageRequest(currentStage.getName(), i, stageTasks));
         }
@@ -98,15 +99,21 @@ public final class ExecutionPlanMapper {
     private static ExecutableStage mapToExecutable(AbstractLoadedStage loadedStage, StageResponse stageResponse) {
         Map<String, CloudChangeAction> taskStateMap = stageResponse.getTasks()
                 .stream()
-                .collect(Collectors.toMap(TaskResponse::getId, TaskResponse::getState));
+                .collect(Collectors.toMap(TaskResponse::getId, TaskResponse::getAction));
 
         // Build action map using anti-corruption layer
+        ChangeActionMap actionPlan = getChangeActionMap(loadedStage, taskStateMap);
+        return loadedStage.applyActions(actionPlan);
+    }
+
+    @NotNull
+    private static ChangeActionMap getChangeActionMap(AbstractLoadedStage loadedStage, Map<String, CloudChangeAction> actionsMapByChangeId) {
         Map<String, ChangeAction> actionMap = new HashMap<>();
-        
+
         for (TaskDescriptor task : loadedStage.getTasks()) {
             String taskId = task.getId();
-            CloudChangeAction cloudAction = taskStateMap.get(taskId);
-            
+            CloudChangeAction cloudAction = actionsMapByChangeId.get(taskId);
+
             // If task not in response, assume it's already executed (cloud orchestrator decision)
             if (cloudAction == null) {
                 actionMap.put(taskId, ChangeAction.SKIP);
@@ -115,11 +122,10 @@ public final class ExecutionPlanMapper {
                 actionMap.put(taskId, mapCloudActionToChangeAction(cloudAction));
             }
         }
-        
-        ChangeActionMap actionPlan = new ChangeActionMap(actionMap);
-        return loadedStage.applyActions(actionPlan);
+
+        return new ChangeActionMap(actionMap);
     }
-    
+
     /**
      * Anti-corruption layer: Maps cloud domain CloudChangeAction to internal ChangeAction.
      * Since both enums now have aligned values, we can use direct enum name mapping.

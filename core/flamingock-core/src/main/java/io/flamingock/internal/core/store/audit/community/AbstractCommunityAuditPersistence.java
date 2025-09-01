@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.store.persistence.community;
+package io.flamingock.internal.core.store.audit.community;
 
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;

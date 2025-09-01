@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable.builder;
 
-import io.flamingock.internal.core.pipeline.actions.ChangeAction;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;

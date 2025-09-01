@@ -15,7 +15,9 @@
  */
 package io.flamingock.cli;
 
-import io.flamingock.cli.command.AuditCommand;
+import io.flamingock.cli.command.audit.AuditCommand;
+import io.flamingock.cli.command.issue.IssueCommand;
+import io.flamingock.cli.handler.CliExceptionHandler;
 import io.flamingock.cli.logging.LoggingMixin;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -24,14 +26,30 @@ import picocli.CommandLine.Option;
 
 @Command(
     name = "flamingock",
-    description = "Flamingock CLI - Database change management and audit operations",
-    subcommands = {AuditCommand.class},
+    description = "Flamingock CLI - Change-as-Code platform for distributed systems evolution",
+    header = {
+        "@|bold,cyan Flamingock CLI|@ - Change-as-Code platform for distributed systems",
+        ""
+    },
+    footer = {
+        "",
+        "@|bold Examples:|@",
+        "  flamingock --verbose audit list",
+        "  flamingock --debug -c custom.yml issue list",
+        "  flamingock --quiet audit mark-success change-id",
+        "",
+        "@|yellow Note:|@ Global options (--verbose, --debug, etc.) must be placed before commands.",
+        "For detailed help on any command, use: flamingock <command> --help"
+    },
+    subcommands = {AuditCommand.class, IssueCommand.class},
     mixinStandardHelpOptions = true,
     version = "Flamingock CLI 1.0.0"
 )
 public class FlamingockCli implements Runnable {
 
-    @Option(names = {"-c", "--config"}, description = "Path to configuration file (default: flamingock.yml)")
+    @Option(names = {"-c", "--config"}, 
+            description = "Path to configuration file. Global option - must be placed before commands. (default: flamingock.yml)",
+            order = 0)
     private String configFile = "flamingock.yml";
     
     @Mixin
@@ -46,13 +64,8 @@ public class FlamingockCli implements Runnable {
             return new CommandLine.RunLast().execute(parseResult);
         });
         
-        cmd.setExecutionExceptionHandler((ex, commandLine, parseResult) -> {
-            System.err.println("Error: " + ex.getMessage());
-            if (System.getProperty("flamingock.debug") != null) {
-                ex.printStackTrace();
-            }
-            return 1;
-        });
+        // Use custom exception handler for better error messages
+        cmd.setExecutionExceptionHandler(new CliExceptionHandler());
         
         int exitCode = cmd.execute(args);
         System.exit(exitCode);

@@ -91,3 +91,5 @@ dynamodb-local-metadata*
 
 # Claude Code configuration files
 .claude/settings.local.json
+
+/flamingock-cli-dist

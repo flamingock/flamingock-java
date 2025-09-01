@@ -81,8 +81,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public abstract class AbstractChangeRunnerBuilder<HOLDER extends AbstractChangeRunnerBuilder<HOLDER>>
-        extends AbstractBuilder<HOLDER>
+public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER extends AbstractChangeRunnerBuilder<AUDIT_STORE, HOLDER>>
+        extends AbstractBuilder<AUDIT_STORE, HOLDER>
         implements
         EventLifecycleConfigurator<HOLDER>,
         RunnerBuilder {
@@ -115,7 +115,7 @@ public abstract class AbstractChangeRunnerBuilder<HOLDER extends AbstractChangeR
             CoreConfiguration coreConfiguration,
             Context context,
             PluginManager pluginManager,
-            AuditStore<?> auditStore) {
+            AUDIT_STORE auditStore) {
         super(coreConfiguration, context, auditStore);
         this.pluginManager = pluginManager;
 

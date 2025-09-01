@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.executable;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
-import io.flamingock.internal.core.pipeline.actions.ChangeAction;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;

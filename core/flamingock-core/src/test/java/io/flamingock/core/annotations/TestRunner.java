@@ -26,7 +26,7 @@ import io.flamingock.internal.core.store.audit.domain.ExecutionAuditContextBundl
 import io.flamingock.internal.core.store.audit.domain.RollbackAuditContextBundle;
 import io.flamingock.internal.core.store.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.core.store.lock.Lock;
-import io.flamingock.internal.core.pipeline.actions.ChangeAction;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;

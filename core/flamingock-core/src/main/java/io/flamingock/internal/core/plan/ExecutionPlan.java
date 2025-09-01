@@ -20,9 +20,9 @@ import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.pipeline.actions.ChangeAction;
-import io.flamingock.internal.core.recovery.ManualInterventionRequiredException;
-import io.flamingock.internal.core.recovery.RecoveryIssue;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
+import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 
 import java.util.List;
 import java.util.ArrayList;

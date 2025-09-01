@@ -58,7 +58,7 @@ public class SpringbootContext {
                                            ApplicationEventPublisher applicationEventPublisher,
                                            @Autowired(required = false) CommunityAuditStore auditStore,
                                            List<TargetSystem> targetSystems) {
-        AbstractChangeRunnerBuilder<?> builder = FlamingockFactory.getEditionAwareBuilder(
+        AbstractChangeRunnerBuilder<?,?> builder = FlamingockFactory.getEditionAwareBuilder(
                         configurationProperties.getCoreConfiguration(),
                         configurationProperties.getCloudProperties(),
                         configurationProperties.getLocalConfiguration(),

@@ -16,18 +16,21 @@
 package io.flamingock.cloud;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditSnapshotBuilder;
+import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.context.ContextContributor;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.JwtProperty;
 import io.flamingock.internal.util.id.ServiceId;
-import io.flamingock.internal.core.store.persistence.cloud.CloudAuditPersistence;
+import io.flamingock.internal.core.store.audit.cloud.CloudAuditPersistence;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
+import java.util.Optional;
 
 public final class CloudAuditPersistenceImpl implements CloudAuditPersistence, ContextContributor {
 
@@ -81,12 +84,27 @@ public final class CloudAuditPersistenceImpl implements CloudAuditPersistence, C
     }
 
     @Override
-    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        return Collections.emptyMap();
+    public Result writeEntry(AuditEntry auditEntry) {
+        return auditWriter.writeEntry(auditEntry);
     }
 
     @Override
-    public Result writeEntry(AuditEntry auditEntry) {
-        return auditWriter.writeEntry(auditEntry);
+    public List<AuditEntry> getAuditHistory() {
+        throw new UnsupportedOperationException("getAuditHistory still not implemented for cloud edition");
+    }
+
+    @Override
+    public List<AuditEntry> getSnapshotList() {
+        throw new UnsupportedOperationException("getSnapshotList still not implemented for cloud edition");
+    }
+
+    @Override
+    public List<AuditEntryIssue> getAuditIssues() {
+        throw new UnsupportedOperationException("getAuditIssues still not implemented for cloud edition");
+    }
+
+    @Override
+    public Optional<AuditEntryIssue> getAuditIssueByChangeId(String changeId) {
+        throw new UnsupportedOperationException("getAuditIssueByChangeId still not implemented for cloud edition");
     }
 }

@@ -16,16 +16,22 @@
 package io.flamingock.internal.core.builder.ops;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
+import io.flamingock.internal.common.core.recovery.FixResult;
+import io.flamingock.internal.common.core.recovery.Resolution;
+import io.flamingock.internal.core.plan.ExecutionId;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
-import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class OpsClient {
+public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, AuditIssueManager {
     private final Logger logger = FlamingockLoggerFactory.getLogger("OpsClient");
 
     private final AuditPersistence auditPersistence;
@@ -34,95 +40,79 @@ public class OpsClient {
         this.auditPersistence = auditPersistence;
     }
 
-    public void markAsSuccess(String changeUnit) {
-        logger.info("ChangeUnit[{}] marked as success", changeUnit);
+    public List<AuditEntry> getAuditHistory() {
+        logger.debug("Getting full audit history");
+        return auditPersistence.getAuditHistory();
     }
 
-    public void markAsRolledBack(String changeUnit) {
-        logger.info("ChangeUnit[{}] marked as rolled back", changeUnit);
+    @Override
+    public List<AuditEntry> getAuditSnapshot() {
+        logger.debug("Getting audit entries snapshot (latest per changeUnit)");
+        return auditPersistence.getSnapshotList();
     }
 
-    public List<AuditEntry> getConflictedAuditEntries() {
-        logger.info("Listing audit entries");
-        return auditPersistence.getAuditSnapshotByChangeId().values()
-                .stream().sorted().collect(Collectors.toList());
+    @Override
+    public List<AuditEntry> getAuditSnapshotSince(LocalDateTime since) {
+        logger.debug("Getting audit entries since: {}", since);
+        return auditPersistence.getSnapshotList()
+                .stream()
+                .filter(auditEntry -> !auditEntry.getCreatedAt().isBefore(since))
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Get snapshot view - latest state per changeUnit (DEFAULT behavior)
-     * @return List of latest audit entries per changeUnit
-     */
-    public List<AuditEntry> getAuditEntriesSnapshot() {
-        logger.info("Getting audit entries snapshot (latest per changeUnit)");
-        // TODO: Implementation - return latest entry for each unique changeUnit
-        return auditPersistence.getAuditSnapshotByChangeId().values()
-                .stream().sorted().collect(Collectors.toList());
+    @Override
+    public Optional<AuditEntryIssue> getAuditIssueByChange(String changeId) {
+        logger.debug("Getting issue details for changeId: {}", changeId);
+        return auditPersistence.getAuditIssueByChangeId(changeId);
     }
 
-    /**
-     * Get only entries with issues
-     * @return List of audit entries with problems/issues
-     */
-    public List<AuditEntry> getAuditEntriesWithIssues() {
-        logger.info("Getting audit entries with issues");
-        // TODO: Implementation - filter for failed, conflicted, or problematic entries
-        return auditPersistence.getAuditSnapshotByChangeId().values()
-                .stream().sorted().collect(Collectors.toList());
+    @Override
+    public List<AuditEntryIssue> getAuditIssues() {
+        logger.debug("Getting audit entries with issues");
+        return auditPersistence.getAuditIssues();
     }
 
-    /**
-     * Get full chronological history
-     * @return All audit entries ordered by timestamp
-     */
-    public List<AuditEntry> getAuditEntriesHistory() {
-        logger.info("Getting full audit history");
-        // TODO: Implementation - return all entries ordered chronologically
-        return auditPersistence.getAuditSnapshotByChangeId().values()
-                .stream().sorted().collect(Collectors.toList());
+    @Override
+    // TODO: This needs to be done under the lok
+    public FixResult fixAuditIssue(String changeId, Resolution resolution) {
+        logger.debug("ChangeUnit[{}] marked as {}", changeId, resolution);
+
+        Optional<AuditEntryIssue> auditIssue = getAuditIssueByChange(changeId);
+        if (!auditIssue.isPresent()) {
+            return FixResult.NO_ISSUE_FOUND;
+        }
+
+        AuditEntry currentEntry = auditIssue.get().getAuditEntry();
+        AuditEntry fixedAuditEntry = new AuditEntry(
+                ExecutionId.getNewExecutionId(),
+                currentEntry.getStageId(),
+                currentEntry.getTaskId(),
+                "flamingock-cli",//TODO in cloud this will be retrieved from the token
+                LocalDateTime.now(),
+                getState(resolution),
+                currentEntry.getType(),
+                currentEntry.getClassName(),
+                currentEntry.getMethodName(),
+                currentEntry.getExecutionMillis(),
+                StringUtil.hostname(),
+                currentEntry.getMetadata(),//??
+                currentEntry.getSystemChange(),
+                "",
+                currentEntry.getTxType(),
+                currentEntry.getTargetSystemId(),
+                currentEntry.getOrder(),
+                currentEntry.getRecoveryStrategy()
+        );
+        auditPersistence.writeEntry(fixedAuditEntry);
+        return FixResult.APPLIED;
     }
 
-    /**
-     * Get entries since a specific date
-     * @param since The date to filter from
-     * @return List of audit entries after the specified date
-     */
-    public List<AuditEntry> getAuditEntriesSince(LocalDateTime since) {
-        logger.info("Getting audit entries since: {}", since);
-        // TODO: Implementation - filter entries by timestamp >= since
-        return auditPersistence.getAuditSnapshotByChangeId().values()
-                .stream().sorted().collect(Collectors.toList());
-    }
-
-    /**
-     * Get paginated results
-     * @param limit Number of entries per page
-     * @param page Page number (1-based)
-     * @return List of audit entries for the specified page
-     */
-    public List<AuditEntry> getAuditEntriesPaginated(int limit, int page) {
-        logger.info("Getting paginated audit entries - limit: {}, page: {}", limit, page);
-        // TODO: Implementation - return subset based on pagination
-        return auditPersistence.getAuditSnapshotByChangeId().values()
-                .stream().sorted().collect(Collectors.toList());
-    }
-
-    /**
-     * Combined method for all filters
-     * @param snapshot Whether to get snapshot view (latest per changeUnit)
-     * @param issuesOnly Whether to filter for issues only
-     * @param fullHistory Whether to get full chronological history
-     * @param since Filter entries after this date
-     * @param limit Pagination limit
-     * @param page Pagination page number
-     * @return List of audit entries based on filters
-     */
-    public List<AuditEntry> getAuditEntries(boolean snapshot, boolean issuesOnly, 
-                                            boolean fullHistory, LocalDateTime since, 
-                                            Integer limit, Integer page) {
-        logger.info("Getting audit entries with filters - snapshot: {}, issues: {}, history: {}, since: {}, limit: {}, page: {}", 
-                    snapshot, issuesOnly, fullHistory, since, limit, page);
-        // TODO: Implementation - combine all filtering logic
-        return auditPersistence.getAuditSnapshotByChangeId().values()
-                .stream().sorted().collect(Collectors.toList());
+    private AuditEntry.Status getState(Resolution resolution) {
+        if(resolution == Resolution.APPLIED) {
+            return AuditEntry.Status.MANUAL_MARKED_AS_EXECUTED;
+        } else {
+            // Resolution.ROLLED_BACK
+            return AuditEntry.Status.MANUAL_MARKED_AS_ROLLED_BACK;
+        }
     }
 }

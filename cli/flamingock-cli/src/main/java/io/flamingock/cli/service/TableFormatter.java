@@ -22,9 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Formats audit entries as professional tables with Unicode borders
- */
+
 public class TableFormatter {
     
     // Unicode box-drawing characters
@@ -276,9 +274,9 @@ public class TableFormatter {
      */
     public static void printStateLegend() {
         System.out.println("\nState Legend:");
-        System.out.println("✅ EXECUTED        - Successfully completed, won't be reapplied");
-        System.out.println("🔄 ROLLED_BACK     - Successfully reverted, needs to be applied again");
-        System.out.println("❌ EXECUTION_FAILED - Execution or rollback failed");
-        System.out.println("⚠️ STARTED         - Unknown/incomplete state (partial execution or audit failure)");
+        System.out.println("✅ EXECUTED    - Successfully completed, won't be reapplied");
+        System.out.println("🔄 ROLLED_BACK - Successfully reverted, needs to be applied again");
+        System.out.println("❌ FAILED      - Execution or rollback failed");
+        System.out.println("⚠️ STARTED     - Unknown/incomplete state (partial execution or audit failure)");
     }
 }

@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.store.audit.domain;
+package io.flamingock.internal.common.core.audit;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
-
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-public class AuditSnapshotMapBuilder {
-    private final Map<String, AuditEntry> entryMap = new HashMap<>();
+public class AuditSnapshotBuilder {
+    private final Map<String, AuditEntry> entryMap = new LinkedHashMap<>();
 
     public void addEntry(AuditEntry newEntry) {
         if(!entryMap.containsKey(newEntry.getTaskId())) {
@@ -30,12 +30,21 @@ public class AuditSnapshotMapBuilder {
         } else {
             AuditEntry currentEntry = entryMap.get(newEntry.getTaskId());
             AuditEntry winner = AuditEntry.getMostRelevant(currentEntry, newEntry);
-            entryMap.put(newEntry.getTaskId(), winner);
+            if(winner.equals(newEntry)) {
+                //we need to remove it first because LinkedHashMap keeps the original key position,
+                //and in case to replace it, we want to update the position
+                entryMap.remove(currentEntry.getTaskId());
+                entryMap.put(newEntry.getTaskId(), winner);
+            }
         }
     }
 
-    public Map<String, AuditEntry> build() {
+    public Map<String, AuditEntry> buildMap() {
         return Collections.unmodifiableMap(entryMap);
+    }
+
+    public List<AuditEntry> buildList() {
+        return Collections.unmodifiableList(new ArrayList<>(entryMap.values()));
     }
 
 }

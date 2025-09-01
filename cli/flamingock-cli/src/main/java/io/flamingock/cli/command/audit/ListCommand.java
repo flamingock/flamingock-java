@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cli.command;
+package io.flamingock.cli.command.audit;
 
-import io.flamingock.cli.FlamingockCli;
 import io.flamingock.cli.config.ConfigLoader;
 import io.flamingock.cli.config.FlamingockConfig;
 import io.flamingock.cli.service.AuditService;
@@ -43,20 +42,17 @@ public class ListCommand implements Runnable {
     @ParentCommand
     private AuditCommand parent;
 
-    @CommandLine.Option(names = "--issues", description = "Show only audits with issues")
-    private boolean issues;
-
     @CommandLine.Option(names = "--history", description = "Show full chronological audit history")
     private boolean history;
 
     @CommandLine.Option(names = "--since", description = "Show audits since date (ISO-8601 format: 2025-01-01T00:00:00)")
     private String since;
 
-    @CommandLine.Option(names = "--limit", description = "Limit number of results")
-    private Integer limit;
-
-    @CommandLine.Option(names = "--page", description = "Page number for pagination")
-    private Integer page;
+//    @CommandLine.Option(names = "--limit", description = "Limit number of results")
+//    private Integer limit;
+//
+//    @CommandLine.Option(names = "--page", description = "Page number for pagination")
+//    private Integer page;
 
     @CommandLine.Option(names = {"--extended", "-e"}, description = "Show extended audit information")
     private boolean extended;
@@ -91,10 +87,6 @@ public class ListCommand implements Runnable {
                 // Full chronological history
                 entries = auditService.listAuditEntriesHistory();
                 listType = "Full Audit History";
-            } else if (issues) {
-                // Only entries with issues
-                entries = auditService.listAuditEntriesWithIssues();
-                listType = "Audit Entries with Issues";
             } else if (sinceDate != null) {
                 // Entries since a specific date
                 entries = auditService.listAuditEntriesSince(sinceDate);
@@ -104,11 +96,7 @@ public class ListCommand implements Runnable {
                 entries = auditService.listAuditEntriesSnapshot();
                 listType = "Audit Entries Snapshot (Latest per Change Unit)";
             }
-            
-            // Apply pagination if specified
-            if (limit != null && limit > 0) {
-                entries = auditService.applyPagination(entries, limit, page != null ? page : 1);
-            }
+
             
             // Display results
             if (entries.isEmpty()) {
@@ -135,11 +123,9 @@ public class ListCommand implements Runnable {
                 
                 System.out.println();
                 System.out.println("Total entries: " + entries.size());
-                
-                if (limit != null && limit > 0) {
-                    System.out.println("Page: " + (page != null ? page : 1) + ", Limit: " + limit);
-                }
+
             }
+            System.out.println();
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to list audit entries: " + e.getMessage(), e);

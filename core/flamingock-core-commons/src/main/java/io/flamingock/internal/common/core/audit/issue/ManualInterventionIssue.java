@@ -13,26 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cli.command;
+package io.flamingock.internal.common.core.audit.issue;
 
-import io.flamingock.cli.FlamingockCli;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.ParentCommand;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
-@Command(
-    name = "audit",
-    description = "Audit operations for Flamingock changes",
-    subcommands = {
-        ListCommand.class,
-        MarkCommand.class
-    }
-)
-public class AuditCommand {
-
-    @ParentCommand
-    private FlamingockCli flamingockCli;
-
-    public String getConfigFile() {
-        return flamingockCli.getConfigFile();
+public class ManualInterventionIssue extends AuditEntryIssue{
+    protected ManualInterventionIssue(AuditEntry auditEntry) {
+        super(auditEntry);
     }
 }

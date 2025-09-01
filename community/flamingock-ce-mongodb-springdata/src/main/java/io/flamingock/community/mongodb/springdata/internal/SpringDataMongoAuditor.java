@@ -26,7 +26,6 @@ import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.store.audit.domain.AuditSnapshotMapBuilder;
 
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Result;
@@ -36,7 +35,7 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_AUTHOR;
@@ -91,16 +90,12 @@ public class SpringDataMongoAuditor implements LifecycleAuditWriter, AuditReader
     }
 
     @Override
-    public Map<String, AuditEntry> getAuditSnapshotByChangeId() {
-        AuditSnapshotMapBuilder builder = new AuditSnapshotMapBuilder();
-        collection.find()
+    public List<AuditEntry> getAuditHistory() {
+        return collection.find()
                 .into(new LinkedList<>())
                 .stream()
                 .map(SpringDataMongoDocumentWrapper::new)
                 .map(mapper::fromDocument)
-                .collect(Collectors.toList())
-                .forEach(builder::addEntry);
-        return builder.build();
-
+                .collect(Collectors.toList());
     }
 }

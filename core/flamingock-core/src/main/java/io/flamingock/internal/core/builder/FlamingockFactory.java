@@ -25,6 +25,7 @@ import io.flamingock.internal.core.store.CloudAuditStore;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.plugin.DefaultPluginManager;
 import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 
 import java.util.Optional;
 
@@ -33,10 +34,10 @@ public final class FlamingockFactory {
     private FlamingockFactory() {
     }
 
-    public static AbstractChangeRunnerBuilder<?> getEditionAwareBuilder(CoreConfiguration coreConfiguration,
+    public static AbstractChangeRunnerBuilder<?,?> getEditionAwareBuilder(CoreConfiguration coreConfiguration,
                                                                         CloudConfiguration cloudConfiguration,
                                                                         CommunityConfiguration communityConfiguration,
-                                                                        AuditStore<?> providedAuditStore) {
+                                                                        CommunityAuditStore communityAuditStore) {
         Optional<CloudAuditStore> cloudAuditStore = CloudAuditStore.get();
         if (cloudAuditStore.isPresent()) {
             return new CloudChangeRunnerBuilder(
@@ -46,20 +47,12 @@ public final class FlamingockFactory {
                     new DefaultPluginManager(),
                     cloudAuditStore.get());
         } else {
-            if (providedAuditStore instanceof CloudAuditStore) {
-                return new CloudChangeRunnerBuilder(
-                        coreConfiguration,
-                        cloudConfiguration,
-                        new SimpleContext(),
-                        new DefaultPluginManager(),
-                        (CloudAuditStore) providedAuditStore);
-            }
             return new CommunityChangeRunnerBuilder(
                     coreConfiguration,
                     communityConfiguration,
                     new SimpleContext(),
                     new DefaultPluginManager())
-                    .setAuditStore(providedAuditStore);
+                    .setAuditStore(communityAuditStore);
         }
     }
 
