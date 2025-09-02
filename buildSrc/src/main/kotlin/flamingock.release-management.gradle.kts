@@ -97,6 +97,24 @@ jreleaser {
             }
         }
     }
+    
+    // Configure CLI distribution files for GitHub Releases
+    if (project.name.equals("flamingock-cli")) {
+        files {
+            artifact {
+                path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.zip"))
+                platform.set("cross-platform")
+            }
+            artifact {
+                path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.tar.gz"))
+                platform.set("unix")
+            }
+            artifact {
+                path.set(layout.buildDirectory.file("distributions/checksums.txt"))
+                platform.set("checksums")
+            }
+        }
+    }
 }
 
 // Release detection and management

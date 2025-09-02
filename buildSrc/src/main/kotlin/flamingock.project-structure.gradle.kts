@@ -9,7 +9,8 @@ val coreProjects = setOf(
     "flamingock-core-commons", 
     "flamingock-core-api",
     "flamingock-processor",
-    "flamingock-graalvm"
+    "flamingock-graalvm",
+    "flamingock-cli"
 )
 
 val cloudProjects = setOf(

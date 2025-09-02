@@ -1,5 +1,9 @@
+import java.security.MessageDigest
+
 plugins {
     `java-library`
+    `maven-publish`
+    application
 }
 
 description = "Flamingock CLI"
@@ -61,79 +65,75 @@ val uberJar by tasks.registering(Jar::class) {
     })
 }
 
-// Generate distribution directory with executable scripts
-val generateDistribution by tasks.registering {
-    group = "build"
-    description = "Generate CLI distribution with executable scripts"
-    dependsOn(uberJar)
+// Configure application plugin
+application {
+    mainClass.set("io.flamingock.cli.FlamingockCli")
+    applicationName = "flamingock"
     
-    val distDir = file("${project.rootDir}/flamingock-cli-dist")
-    
-    doLast {
-        // Create distribution directory
-        distDir.mkdirs()
-        
-        // Copy uber JAR
-        copy {
-            from(uberJar.get().archiveFile)
-            into(distDir)
+    // Use the uber JAR for distributions
+    applicationDefaultJvmArgs = listOf("-Xmx512m")
+}
+
+// Configure distributions to use uber JAR instead of individual dependencies
+distributions {
+    main {
+        contents {
+            // Set duplicate strategy
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            
+            // Clear default lib directory content
+            exclude("lib/*.jar")
+            
+            // Add uber JAR to lib directory
+            from(uberJar) {
+                into("lib")
+            }
+            
+            // Add sample configuration
+            from("src/dist") {
+                into(".")
+            }
         }
-        
-        // Generate Unix shell script
-        val shellScript = file("$distDir/flamingock")
-        shellScript.writeText("""#!/bin/bash
-DIR="${'$'}(cd "${'$'}(dirname "${'$'}{BASH_SOURCE[0]}")" && pwd)"
-java -jar "${'$'}DIR/flamingock-cli.jar" "${'$'}@"
-""")
-        shellScript.setExecutable(true)
-        
-        // Generate Windows batch file
-        val batFile = file("$distDir/flamingock.bat")
-        batFile.writeText("""@echo off
-java -jar "%~dp0flamingock-cli.jar" %*
-""")
-        
-        // Copy sample configuration if it doesn't exist
-        val sampleConfig = file("$distDir/flamingock.yml")
-        if (!sampleConfig.exists()) {
-            sampleConfig.writeText("""# Flamingock CLI Configuration
-flamingock:
-  service-identifier: "flamingock-cli"
-  
-  # MongoDB Configuration (uncomment to use)
-  # audit:
-  #   mongodb:
-  #     connection-string: "mongodb://localhost:27017"
-  #     database: "myapp"
-  
-  # DynamoDB Configuration (uncomment to use)  
-  # audit:
-  #   dynamodb:
-  #     region: "us-east-1"
-  #     # endpoint: "http://localhost:8000"  # Optional for local DynamoDB
-""")
-        }
-        
-        println("CLI distribution generated at: ${distDir.absolutePath}")
-        println("Available executables:")
-        println("  Unix/Linux/macOS: ./flamingock-cli-dist/flamingock")
-        println("  Windows: ./flamingock-cli-dist/flamingock.bat")
     }
 }
 
-// Build task depends on distribution generation
-tasks.build {
-    dependsOn(generateDistribution)
+// Ensure uber JAR is built before distributions
+tasks.distZip {
+    dependsOn(uberJar)
 }
 
-// Clean task removes distribution directory
-tasks.clean {
+tasks.distTar {
+    dependsOn(uberJar)
+    compression = Compression.GZIP
+    archiveExtension.set("tar.gz")
+}
+
+tasks.installDist {
+    dependsOn(uberJar)
+}
+
+// Update start scripts to use uber JAR
+tasks.startScripts {
+    dependsOn(uberJar)
+    classpath = files(uberJar.get().archiveFile)
+    
+    // Customize script generation
     doLast {
-        val distDir = file("${project.rootDir}/flamingock-cli-dist")
-        if (distDir.exists()) {
-            distDir.deleteRecursively()
-            println("Removed CLI distribution directory")
-        }
+        // Fix Unix script to use the uber JAR
+        val unixScript = file("$outputDir/$applicationName")
+        val unixText = unixScript.readText()
+        unixScript.writeText(unixText.replace(
+            "CLASSPATH=\$APP_HOME/lib/.*",
+            "CLASSPATH=\$APP_HOME/lib/flamingock-cli.jar"
+        ))
+        
+        // Fix Windows script to use the uber JAR  
+        val winScript = file("$outputDir/${applicationName}.bat")
+        val winText = winScript.readText()
+        winScript.writeText(winText.replace(
+            "set CLASSPATH=.*",
+            "set CLASSPATH=%APP_HOME%\\lib\\flamingock-cli.jar"
+        ))
     }
 }
 
@@ -188,4 +188,68 @@ val testCli by tasks.registering(JavaExec::class) {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// Add uber jar as additional artifact to existing maven publication
+afterEvaluate {
+    publishing {
+        publications {
+            named<MavenPublication>("maven") {
+                // Add the uber jar as additional artifact
+                artifact(uberJar.get()) {
+                    classifier = "uber"
+                }
+                
+                // Override description for CLI module
+                pom {
+                    name.set("Flamingock CLI")
+                    description.set("Command-line interface for Flamingock audit and issue management operations")
+                }
+            }
+        }
+    }
+}
+
+// Generate checksums for distributions
+val generateChecksums by tasks.registering {
+    group = "distribution"
+    description = "Generate checksums for distribution files"
+    dependsOn(tasks.distZip, tasks.distTar)
+    
+    doLast {
+        val distDir = file("${layout.buildDirectory.get()}/distributions")
+        val checksumFile = file("${distDir}/checksums.txt")
+        
+        val checksums = mutableListOf<String>()
+        distDir.listFiles()?.forEach { distFile ->
+            if (distFile.extension in listOf("gz", "zip")) {
+                val sha256 = MessageDigest.getInstance("SHA-256")
+                distFile.inputStream().use { input ->
+                    val buffer = ByteArray(8192)
+                    var bytesRead = input.read(buffer)
+                    while (bytesRead != -1) {
+                        sha256.update(buffer, 0, bytesRead)
+                        bytesRead = input.read(buffer)
+                    }
+                }
+                val checksum = sha256.digest().joinToString("") { byte -> "%02x".format(byte) }
+                checksums.add("${checksum}  ${distFile.name}")
+            }
+        }
+        
+        checksumFile.writeText(checksums.joinToString("\n"))
+        println("Checksums written to: ${checksumFile.absolutePath}")
+    }
+}
+
+// Ensure distributions are built before JReleaser tasks
+tasks.matching { it.name.startsWith("jreleaser") }.configureEach {
+    dependsOn(generateChecksums)
+}
+
+// Add task to build all distributions
+tasks.register("buildDistributions") {
+    group = "distribution"
+    description = "Build all distribution archives"
+    dependsOn(tasks.distZip, tasks.distTar, generateChecksums)
 }
