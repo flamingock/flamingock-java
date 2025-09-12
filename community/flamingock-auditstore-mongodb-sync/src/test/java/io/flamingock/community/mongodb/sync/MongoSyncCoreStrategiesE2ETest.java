@@ -41,8 +41,8 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.util.Collections;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -104,9 +104,9 @@ class MongoSyncCoreStrategiesE2ETest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-federico-document"),
-                        EXECUTED("insert-federico-document")
+                        APPLIED("insert-federico-document")
                 )
                 .run();
     }
@@ -133,9 +133,9 @@ class MongoSyncCoreStrategiesE2ETest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-federico-document"),
-                        EXECUTED("insert-federico-document")
+                        APPLIED("insert-federico-document")
                 )
                 .run();
     }
@@ -162,9 +162,9 @@ class MongoSyncCoreStrategiesE2ETest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-federico-document"),
-                        EXECUTED("insert-federico-document")
+                        APPLIED("insert-federico-document")
                 )
                 .run();
     }
@@ -193,9 +193,9 @@ class MongoSyncCoreStrategiesE2ETest {
                 }))
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-jorge-document"),
-                        EXECUTION_FAILED("insert-jorge-document"),
+                        FAILED("insert-jorge-document"),
                         ROLLED_BACK("insert-jorge-document")
                 )
                 .run();
@@ -222,7 +222,7 @@ class MongoSyncCoreStrategiesE2ETest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection")
+                        APPLIED("create-client-collection")
                 )
                 .run();
 
@@ -245,7 +245,7 @@ class MongoSyncCoreStrategiesE2ETest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection")
+                        APPLIED("create-client-collection")
                 )
                 .run();
     }

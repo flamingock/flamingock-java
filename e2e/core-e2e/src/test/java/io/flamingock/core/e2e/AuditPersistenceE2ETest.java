@@ -37,7 +37,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -102,7 +102,7 @@ class AuditPersistenceE2ETest {
                 .withSystemChange(false)
                 .withTimestampBetween(testStart, testEnd);
 
-        AuditEntryExpectation executedExpected = EXECUTED(changeId)
+        AuditEntryExpectation executedExpected = APPLIED(changeId)
                 .withAuthor("default_author")
                 .withType(AuditEntry.ExecutionType.EXECUTION)
                 .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
@@ -139,7 +139,7 @@ class AuditPersistenceE2ETest {
         // Then - Verify audit entries have correct default targetSystemId using unified approach
         auditHelper.verifyAuditSequenceStrict(
                 STARTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("default-audit-store-target-system"),
-                EXECUTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("default-audit-store-target-system")
+                APPLIED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("default-audit-store-target-system")
         );
     }
 
@@ -170,7 +170,7 @@ class AuditPersistenceE2ETest {
         // Then - Verify audit entries have correct custom targetSystemId using unified approach
         auditHelper.verifyAuditSequenceStrict(
                 STARTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId(customTargetSystemId),
-                EXECUTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId(customTargetSystemId)
+                APPLIED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId(customTargetSystemId)
         );
     }
 
@@ -206,28 +206,28 @@ class AuditPersistenceE2ETest {
         auditEntriesSorted.forEach(c-> System.out.println("id: " + c.getTaskId() + ", state: " + c.getState() + ", time: " +c.getCreatedAt()));
 
         auditHelper.verifyAuditSequenceStrict(
-                // First change (SimpleNonTransactionalChange) - STARTED & EXECUTED
+                // First change (SimpleNonTransactionalChange) - STARTED & APPLIED
                 STARTED(changeId1)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("default-audit-store-target-system"),
-                EXECUTED(changeId1)
+                APPLIED(changeId1)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("default-audit-store-target-system"),
 
-                // Second change (CustomTargetSystemChange) - STARTED & EXECUTED
+                // Second change (CustomTargetSystemChange) - STARTED & APPLIED
                 STARTED(changeId2)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system"),
-                EXECUTED(changeId2)
+                APPLIED(changeId2)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.CustomTargetSystemChange.class)
@@ -259,7 +259,7 @@ class AuditPersistenceE2ETest {
             })
             .THEN_VerifyAuditSequenceStrict(
                 STARTED(changeId),
-                EXECUTED(changeId)
+                APPLIED(changeId)
             )
             .run();
     }
@@ -294,7 +294,7 @@ class AuditPersistenceE2ETest {
                         .withClass(SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("default-audit-store-target-system"),
-                EXECUTED(changeId1)
+                APPLIED(changeId1)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(SimpleNonTransactionalChange.class)
@@ -308,7 +308,7 @@ class AuditPersistenceE2ETest {
                         .withClass(CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system"),
-                EXECUTED(changeId2)
+                APPLIED(changeId2)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(CustomTargetSystemChange.class)

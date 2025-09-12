@@ -67,7 +67,7 @@ public class AuditEntryTestFactory {
      * extracted from the ChangeUnit class's @Recovery annotation.</p>
      *
      * @param changeId the change ID for the audit entry (typically the @ChangeUnit id)
-     * @param status   the audit status (STARTED, EXECUTED, EXECUTION_FAILED, etc.)
+     * @param status   the audit status (STARTED, APPLIED, EXECUTION_FAILED, etc.)
      * @param txType   the transaction type (NON_TX, TX_SHARED, etc.)
      * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
      * @return a properly configured AuditEntry for testing
@@ -201,7 +201,7 @@ public class AuditEntryTestFactory {
      * need to be verified in audit logs.</p>
      *
      * @param changeId       the change ID for the audit entry (typically the @ChangeUnit id)
-     * @param status         the audit status (STARTED, EXECUTED, EXECUTION_FAILED, etc.)
+     * @param status         the audit status (STARTED, APPLIED, EXECUTION_FAILED, etc.)
      * @param txType         the transaction type (NON_TX, TX_SHARED, etc.)
      * @param targetSystemId the target system identifier
      * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
@@ -262,7 +262,7 @@ public class AuditEntryTestFactory {
      * Creates a test audit entry with specific state, transaction type, and recovery strategy.
      *
      * @param changeId         the unique identifier for the change unit
-     * @param status           the audit entry status (STARTED, EXECUTED, etc.)
+     * @param status           the audit entry status (STARTED, APPLIED, etc.)
      * @param txType           the transaction type (NON_TX, TX_SHARED, etc.)
      * @param recoveryStrategy the recovery strategy for this change unit
      * @return a properly configured AuditEntry for testing with specified recovery strategy

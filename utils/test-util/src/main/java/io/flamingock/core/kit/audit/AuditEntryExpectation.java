@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
  * <pre>{@code
  * AuditEntryExpectation expected = auditEntry()
  *     .withTaskId("test-change-id")
- *     .withState(EXECUTED)
+ *     .withState(APPLIED)
  *     .withTxType(TX_SHARED)
  *     .withTargetSystemId("custom-target")
  *     .withClassName("TestChangeClass")
@@ -90,13 +90,13 @@ public class AuditEntryExpectation {
     }
     
     /**
-     * Creates an expectation for an EXECUTED audit entry.
+     * Creates an expectation for an APPLIED audit entry.
      * 
      * @param taskId the task ID
-     * @return audit expectation for EXECUTED state
+     * @return audit expectation for APPLIED state
      */
-    public static AuditEntryExpectation EXECUTED(String taskId) {
-        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.EXECUTED);
+    public static AuditEntryExpectation APPLIED(String taskId) {
+        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.APPLIED);
     }
     
     /**
@@ -105,8 +105,8 @@ public class AuditEntryExpectation {
      * @param taskId the task ID
      * @return audit expectation for EXECUTION_FAILED state
      */
-    public static AuditEntryExpectation EXECUTION_FAILED(String taskId) {
-        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.EXECUTION_FAILED);
+    public static AuditEntryExpectation FAILED(String taskId) {
+        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.FAILED);
     }
     
     /**
@@ -142,13 +142,13 @@ public class AuditEntryExpectation {
     }
     
     /**
-     * @deprecated Use EXECUTED(String) instead. This method uses changeId for backward compatibility.
+     * @deprecated Use APPLIED(String) instead. This method uses changeId for backward compatibility.
      * @param changeId the change ID for backward compatibility
-     * @return audit expectation for EXECUTED state
+     * @return audit expectation for APPLIED state
      */
     @Deprecated 
     public static AuditEntryExpectation executed(String changeId) {
-        return EXECUTED(changeId);
+        return APPLIED(changeId);
     }
     
     /**
@@ -158,7 +158,7 @@ public class AuditEntryExpectation {
      */
     @Deprecated
     public static AuditEntryExpectation failed(String changeId) {
-        return EXECUTION_FAILED(changeId);
+        return FAILED(changeId);
     }
     
     /**

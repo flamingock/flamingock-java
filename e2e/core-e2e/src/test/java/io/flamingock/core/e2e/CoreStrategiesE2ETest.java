@@ -23,7 +23,6 @@ import io.flamingock.core.e2e.changes.FailingTransactionalChange;
 import io.flamingock.core.e2e.changes.MultiTest1NonTransactionalChange;
 import io.flamingock.core.e2e.changes.MultiTest2TransactionalChange;
 import io.flamingock.core.e2e.changes.SecondRunNonTransactionalChange;
-import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
@@ -38,8 +37,8 @@ import org.mockito.Mockito;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -72,7 +71,7 @@ class CoreStrategiesE2ETest {
         // Then - Verify complete audit flow using audit-specific helper
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test1-non-tx-change"),
-                EXECUTED("test1-non-tx-change")
+                APPLIED("test1-non-tx-change")
         );
 
         List<AuditEntry> auditEntriesSorted = auditHelper.getAuditEntriesSorted();
@@ -105,7 +104,7 @@ class CoreStrategiesE2ETest {
 
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test2-tx-change"),
-                EXECUTED("test2-tx-change")
+                APPLIED("test2-tx-change")
         );
     }
     
@@ -133,9 +132,9 @@ class CoreStrategiesE2ETest {
         
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test3-multi-non-tx-change"),
-                EXECUTED("test3-multi-non-tx-change"),
+                APPLIED("test3-multi-non-tx-change"),
                 STARTED("test3-multi-tx-change"),
-                EXECUTED("test3-multi-tx-change")
+                APPLIED("test3-multi-tx-change")
         );
     }
     
@@ -165,7 +164,7 @@ class CoreStrategiesE2ETest {
         // Then - Verify failure audit sequence using new concise API
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test4-failing-tx-change"),
-                EXECUTION_FAILED("test4-failing-tx-change"),
+                FAILED("test4-failing-tx-change"),
                 ROLLED_BACK("test4-failing-tx-change")
         );
     }
@@ -193,7 +192,7 @@ class CoreStrategiesE2ETest {
             // Verify first execution
             auditHelper.verifyAuditSequenceStrict(
                     STARTED("test5-second-run-change"),
-                    EXECUTED("test5-second-run-change")
+                    APPLIED("test5-second-run-change")
             );
 
             
@@ -213,7 +212,7 @@ class CoreStrategiesE2ETest {
         // Then - Should still have only original 2 audit entries (no additional executions)
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test5-second-run-change"),
-                EXECUTED("test5-second-run-change")
+                APPLIED("test5-second-run-change")
         );
     }
 }

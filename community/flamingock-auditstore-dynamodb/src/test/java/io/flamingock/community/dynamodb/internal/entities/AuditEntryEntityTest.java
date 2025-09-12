@@ -45,7 +45,7 @@ class AuditEntryEntityTest {
     @Test
     void shouldConvertToAndFromAuditEntryWithTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SEPARATE_NO_MARKER, TestManualInterventionChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SEPARATE_NO_MARKER, TestManualInterventionChangeUnit.class);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);
@@ -62,7 +62,7 @@ class AuditEntryEntityTest {
     @Test
     void shouldReturnNonTxWhenNull() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);
@@ -100,7 +100,7 @@ class AuditEntryEntityTest {
     void shouldHandleAllTxTypes() {
         for (AuditTxType txType : AuditTxType.values()) {
             // Given
-            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, txType, TestManualInterventionChangeUnit.class);
+            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txType, TestManualInterventionChangeUnit.class);
 
             // When
             AuditEntryEntity entity = new AuditEntryEntity(original);
@@ -116,7 +116,7 @@ class AuditEntryEntityTest {
     void shouldConvertToAndFromAuditEntryWithTargetSystemId() {
         // Given
         String expectedTargetSystemId = "custom-target-system";
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChangeUnit.class);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);
@@ -133,7 +133,7 @@ class AuditEntryEntityTest {
     @Test
     void shouldHandleNullTargetSystemId() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         AuditEntryEntity entity = new AuditEntryEntity(original);

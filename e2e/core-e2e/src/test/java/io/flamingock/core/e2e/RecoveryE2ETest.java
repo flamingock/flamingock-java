@@ -37,8 +37,8 @@ import org.mockito.Mockito;
 
 import java.util.Collections;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLBACK_FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
@@ -86,10 +86,10 @@ class RecoveryE2ETest {
     void testExecutionFailedNonTxRequiresManualIntervention() {
         String changeId = "test1-non-tx-change";
         testForManualInterventionException(changeId,
-                AuditEntry.Status.EXECUTION_FAILED,
+                AuditEntry.Status.FAILED,
                 AuditTxType.NON_TX,
                 SimpleNonTransactionalChange.class,
-                EXECUTION_FAILED(changeId));
+                FAILED(changeId));
     }
 
     @Test
@@ -97,10 +97,10 @@ class RecoveryE2ETest {
     void testExecutionFailedTxSeparateNoMarkerSuccessfulExecution() {
         String changeId = "test1-non-tx-change";
         testForRetry(changeId,
-                AuditEntry.Status.EXECUTION_FAILED,
+                AuditEntry.Status.FAILED,
                 AuditTxType.TX_SEPARATE_NO_MARKER,
                 SimpleNonTransactionalChange.class,
-                EXECUTION_FAILED(changeId), STARTED(changeId), EXECUTED(changeId));
+                FAILED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
     @Test
@@ -108,7 +108,7 @@ class RecoveryE2ETest {
     void testExecutionFailedTxSharedSuccessfulExecution() {
         // Given - Pre-insert audit entry with EXECUTION_FAILED state and TX_SHARED type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTION_FAILED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.FAILED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -129,9 +129,9 @@ class RecoveryE2ETest {
 
         // Then - Verify audit log shows successful execution after recovery
         auditHelper.verifyAuditSequenceStrict(
-                EXECUTION_FAILED(changeId),
+                FAILED(changeId),
                 STARTED(changeId),
-                EXECUTED(changeId)
+                APPLIED(changeId)
         );
     }
 
@@ -163,7 +163,7 @@ class RecoveryE2ETest {
         auditHelper.verifyAuditSequenceStrict(
                 ROLLED_BACK(changeId),
                 STARTED(changeId),
-                EXECUTED(changeId)
+                APPLIED(changeId)
         );
     }
 
@@ -195,7 +195,7 @@ class RecoveryE2ETest {
         auditHelper.verifyAuditSequenceStrict(
                 ROLLED_BACK(changeId),
                 STARTED(changeId),
-                EXECUTED(changeId)
+                APPLIED(changeId)
         );
     }
 
@@ -227,7 +227,7 @@ class RecoveryE2ETest {
         auditHelper.verifyAuditSequenceStrict(
                 ROLLED_BACK(changeId),
                 STARTED(changeId),
-                EXECUTED(changeId)
+                APPLIED(changeId)
         );
     }
 
@@ -280,11 +280,11 @@ class RecoveryE2ETest {
     }
 
     @Test
-    @DisplayName("Should do nothing for EXECUTED NON_TX change")
+    @DisplayName("Should do nothing for APPLIED NON_TX change")
     void testExecutedNonTxDoNothing() {
-        // Given - Pre-insert audit entry with EXECUTED state and NON_TX type  
+        // Given - Pre-insert audit entry with APPLIED state and NON_TX type
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -303,18 +303,18 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log remains unchanged (only the pre-inserted EXECUTED entry)
+        // Then - Verify audit log remains unchanged (only the pre-inserted APPLIED entry)
         auditHelper.verifyAuditSequenceStrict(
-                EXECUTED(changeId)
+                APPLIED(changeId)
         );
     }
 
     @Test
-    @DisplayName("Should do nothing for EXECUTED TX_SEPARATE_NO_MARKER change")
+    @DisplayName("Should do nothing for APPLIED TX_SEPARATE_NO_MARKER change")
     void testExecutedTxSeparateNoMarkerDoNothing() {
-        // Given - Pre-insert audit entry with EXECUTED state and TX_SEPARATE_NO_MARKER type  
+        // Given - Pre-insert audit entry with APPLIED state and TX_SEPARATE_NO_MARKER type
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.TX_SEPARATE_NO_MARKER, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SEPARATE_NO_MARKER, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -333,18 +333,18 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log remains unchanged (only the pre-inserted EXECUTED entry)
+        // Then - Verify audit log remains unchanged (only the pre-inserted APPLIED entry)
         auditHelper.verifyAuditSequenceStrict(
-                EXECUTED(changeId)
+                APPLIED(changeId)
         );
     }
 
     @Test
-    @DisplayName("Should do nothing for EXECUTED TX_SHARED change")
+    @DisplayName("Should do nothing for APPLIED TX_SHARED change")
     void testExecutedTxSharedDoNothing() {
-        // Given - Pre-insert audit entry with EXECUTED state and TX_SHARED type  
+        // Given - Pre-insert audit entry with APPLIED state and TX_SHARED type
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -363,9 +363,9 @@ class RecoveryE2ETest {
             });
         }
 
-        // Then - Verify audit log remains unchanged (only the pre-inserted EXECUTED entry)
+        // Then - Verify audit log remains unchanged (only the pre-inserted APPLIED entry)
         auditHelper.verifyAuditSequenceStrict(
-                EXECUTED(changeId)
+                APPLIED(changeId)
         );
     }
 
@@ -381,7 +381,7 @@ class RecoveryE2ETest {
                 AuditEntry.Status.STARTED,
                 AuditTxType.NON_TX,
                 AlwaysRetryNonTransactionalChange.class,
-                STARTED(changeId), STARTED(changeId), EXECUTED(changeId));
+                STARTED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
     @Test
@@ -389,10 +389,10 @@ class RecoveryE2ETest {
     void testExecutionFailedNonTxWithAlwaysRetrySuccessfulExecution() {
         String changeId = "always-retry-non-tx-change";
         testForRetry(changeId,
-                AuditEntry.Status.EXECUTION_FAILED,
+                AuditEntry.Status.FAILED,
                 AuditTxType.NON_TX,
                 AlwaysRetryNonTransactionalChange.class,
-                EXECUTION_FAILED(changeId), STARTED(changeId), EXECUTED(changeId));
+                FAILED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
     @Test
@@ -403,7 +403,7 @@ class RecoveryE2ETest {
                 AuditEntry.Status.ROLLBACK_FAILED,
                 AuditTxType.NON_TX,
                 AlwaysRetryNonTransactionalChange.class,
-                ROLLBACK_FAILED(changeId), STARTED(changeId), EXECUTED(changeId));
+                ROLLBACK_FAILED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
     // =================================
@@ -426,10 +426,10 @@ class RecoveryE2ETest {
     void testExecutionFailedNonTxWithExplicitManualInterventionRequiresManualIntervention() {
         String changeId = "manual-intervention-non-tx-change";
         testForManualInterventionException(changeId,
-                AuditEntry.Status.EXECUTION_FAILED,
+                AuditEntry.Status.FAILED,
                 AuditTxType.NON_TX,
                 ManualInterventionNonTransactionalChange.class,
-                EXECUTION_FAILED(changeId));
+                FAILED(changeId));
     }
 
     @Test

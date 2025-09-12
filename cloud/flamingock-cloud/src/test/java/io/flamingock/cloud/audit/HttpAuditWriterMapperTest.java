@@ -45,7 +45,7 @@ class HttpAuditWriterMapperTest {
     @Test
     void shouldIncludeTxTypeInRequest() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -75,7 +75,7 @@ class HttpAuditWriterMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(

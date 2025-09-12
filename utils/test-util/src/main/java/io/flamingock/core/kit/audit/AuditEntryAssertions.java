@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * // Multiple entries verification
  * AuditEntryAssertions.assertAuditSequence(entries, 
  *     auditEntry().withState(STARTED),
- *     auditEntry().withState(EXECUTED));
+ *     auditEntry().withState(APPLIED));
  * }</pre>
  */
 public class AuditEntryAssertions {
@@ -253,7 +253,7 @@ public class AuditEntryAssertions {
     
     /**
      * Verification of multiple audit entries in sequence.
-     * Useful for testing complete execution flows (STARTED to EXECUTED, etc.)
+     * Useful for testing complete execution flows (STARTED to APPLIED, etc.)
      * 
      * @param actualEntries list of actual audit entries from the system
      * @param expectedEntries expected audit entry expectations to verify against
@@ -271,7 +271,7 @@ public class AuditEntryAssertions {
     
     /**
      * Verification that all entries in a sequence have the same core identity fields.
-     * Useful for verifying that STARTED and EXECUTED entries belong to the same execution.
+     * Useful for verifying that STARTED and APPLIED entries belong to the same execution.
      * 
      * @param entries list of audit entries to verify belong to same execution
      */

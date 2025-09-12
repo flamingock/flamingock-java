@@ -27,12 +27,12 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
  * <pre>{@code
  * // Basic state expectations
  * STARTED("change1")
- * EXECUTED("change2") 
+ * APPLIED("change2")
  * EXECUTION_FAILED("change3")
  * ROLLED_BACK("change4")
  * 
  * // Verify audit sequence
- * verify(STARTED("change1"), EXECUTED("change1"), STARTED("change2"), EXECUTED("change2"));
+ * verify(STARTED("change1"), APPLIED("change1"), STARTED("change2"), APPLIED("change2"));
  * }</pre>
  */
 public class AuditExpectation {
@@ -50,15 +50,15 @@ public class AuditExpectation {
     }
     
     /**
-     * Creates an expectation for an EXECUTED audit entry.
+     * Creates an expectation for an APPLIED audit entry.
      * 
-     * @param changeId the change ID that should have an EXECUTED audit entry
-     * @return expectation for EXECUTED state
+     * @param changeId the change ID that should have an APPLIED audit entry
+     * @return expectation for APPLIED state
      */
-    public static AuditEntryExpectation EXECUTED(String changeId) {
+    public static AuditEntryExpectation APPLIED(String changeId) {
         return AuditEntryExpectation.auditEntry()
             .withTaskId(changeId)
-            .withState(AuditEntry.Status.EXECUTED);
+            .withState(AuditEntry.Status.APPLIED);
     }
     
     /**
@@ -70,7 +70,7 @@ public class AuditExpectation {
     public static AuditEntryExpectation EXECUTION_FAILED(String changeId) {
         return AuditEntryExpectation.auditEntry()
             .withTaskId(changeId)
-            .withState(AuditEntry.Status.EXECUTION_FAILED);
+            .withState(AuditEntry.Status.FAILED);
     }
     
     /**

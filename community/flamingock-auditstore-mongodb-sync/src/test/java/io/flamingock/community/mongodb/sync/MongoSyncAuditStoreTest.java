@@ -48,8 +48,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
@@ -121,11 +121,11 @@ class MongoSyncAuditStoreTest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-federico-document"),
-                        EXECUTED("insert-federico-document"),
+                        APPLIED("insert-federico-document"),
                         STARTED("insert-jorge-document"),
-                        EXECUTED("insert-jorge-document")
+                        APPLIED("insert-jorge-document")
                 )
                 .run();
 
@@ -167,11 +167,11 @@ class MongoSyncAuditStoreTest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-federico-document"),
-                        EXECUTED("insert-federico-document"),
+                        APPLIED("insert-federico-document"),
                         STARTED("insert-jorge-document"),
-                        EXECUTED("insert-jorge-document")
+                        APPLIED("insert-jorge-document")
                 )
                 .run();
 
@@ -208,11 +208,11 @@ class MongoSyncAuditStoreTest {
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-federico-document"),
-                        EXECUTED("insert-federico-document"),
+                        APPLIED("insert-federico-document"),
                         STARTED("insert-jorge-document"),
-                        EXECUTED("insert-jorge-document")
+                        APPLIED("insert-jorge-document")
                 )
                 .run();
 
@@ -247,11 +247,11 @@ class MongoSyncAuditStoreTest {
                 }))
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("create-client-collection"),
-                        EXECUTED("create-client-collection"),
+                        APPLIED("create-client-collection"),
                         STARTED("insert-federico-document"),
-                        EXECUTED("insert-federico-document"),
+                        APPLIED("insert-federico-document"),
                         STARTED("insert-jorge-document"),
-                        EXECUTION_FAILED("insert-jorge-document"),
+                        FAILED("insert-jorge-document"),
                         ROLLED_BACK("insert-jorge-document")
                 )
                 .run();

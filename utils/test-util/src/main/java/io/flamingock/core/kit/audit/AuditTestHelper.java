@@ -62,11 +62,11 @@ public class AuditTestHelper {
     }
 
     public long getExecutedAuditCount() {
-        return auditStorage.countAuditEntriesWithStatus(AuditEntry.Status.EXECUTED);
+        return auditStorage.countAuditEntriesWithStatus(AuditEntry.Status.APPLIED);
     }
 
     public long getFailedAuditCount() {
-        return auditStorage.countAuditEntriesWithStatus(AuditEntry.Status.EXECUTION_FAILED);
+        return auditStorage.countAuditEntriesWithStatus(AuditEntry.Status.FAILED);
     }
 
     public long getRolledBackAuditCount() {
@@ -81,7 +81,7 @@ public class AuditTestHelper {
         }
         
         boolean hasStarted = changeEntries.stream().anyMatch(e -> e.getState() == AuditEntry.Status.STARTED);
-        boolean hasExecuted = changeEntries.stream().anyMatch(e -> e.getState() == AuditEntry.Status.EXECUTED);
+        boolean hasExecuted = changeEntries.stream().anyMatch(e -> e.getState() == AuditEntry.Status.APPLIED);
         
         return hasStarted && hasExecuted;
     }
@@ -117,7 +117,7 @@ public class AuditTestHelper {
                 changeId,
                 author,
                 LocalDateTime.now(),
-                AuditEntry.Status.EXECUTED,
+                AuditEntry.Status.APPLIED,
                 AuditEntry.ExecutionType.EXECUTION,
                 "TestClass",
                 "testMethod",

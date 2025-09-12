@@ -25,7 +25,7 @@
 ./gradlew :cli:flamingock-cli:debugCli --args="audit list"
 
 # Debug with custom arguments
-./gradlew :cli:flamingock-cli:debugCli --args="--config custom.yml audit mark --change-id test --state EXECUTED"
+./gradlew :cli:flamingock-cli:debugCli --args="--config custom.yml audit mark --change-id test --state APPLIED"
 
 # Test CLI without database connection attempts
 ./gradlew :cli:flamingock-cli:testCli --args="--help"
@@ -191,7 +191,7 @@ mongosh --eval "
 use test;
 db.flamingockAudit.insertOne({
     changeId: 'test-change-001',
-    status: 'EXECUTED',
+    status: 'APPLIED',
     timestamp: new Date()
 });
 "

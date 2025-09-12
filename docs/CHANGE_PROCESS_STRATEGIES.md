@@ -26,7 +26,7 @@ flowchart TD
     B -->|Yes| C[Return: Already Applied]
     B -->|No| D[Audit: STARTED]
     D --> E[Apply change to target system]
-    E -->|Success| F[Audit: EXECUTED]
+    E -->|Success| F[Audit: APPLIED]
     F -->|Success| G[Return: Success]
     F -->|Failed| H[Return: Failed - change applied but audit failed]
     E -->|Failed| I[Audit: FAILED]
@@ -39,7 +39,7 @@ flowchart TD
 
 | Scenario                                            | Target System State           | Audit Store State              |
 |-----------------------------------------------------|-------------------------------|--------------------------------|
-| Full success                                        | Change applied                | STARTED → EXECUTED             |
+| Full success                                        | Change applied                | STARTED → APPLIED              |
 | Change execution failure                            | Unchanged, rollback attempted | STARTED → FAILED → ROLLED_BACK |
 | Change success, audit EXECUTED failure              | Change applied                | STARTED                        |
 | Change execution failure, audit FAILED failure      | Unchanged, rollback attempted | STARTED                        |
@@ -70,7 +70,7 @@ flowchart TD
     E --> F[Apply change to target system]
     F -->|Success| G[Mark as applied if supported]
     G --> H[Commit target system transaction]
-    H --> I[Audit: EXECUTED in audit store]
+    H --> I[Audit: APPLIED in audit store]
     I -->|Success| J[Clear marker]
     J --> K[Return: Success]
     I -->|Failed| L[Return: Failed - marker remains]
@@ -85,7 +85,7 @@ flowchart TD
 
 | Scenario                    | Target System State      | Audit Store State              | Marker State |
 |-----------------------------|--------------------------|--------------------------------|--------------|
-| Full success                | Change committed         | STARTED → EXECUTED             | Cleared      |
+| Full success                | Change committed         | STARTED → APPLIED             | Cleared      |
 | Execution failure           | Transaction rolled back  | STARTED → FAILED → ROLLED_BACK | None         |
 | Audit failure after success | Change committed         | STARTED → FAILED               | Remains      |
 | Process interruption        | Potentially inconsistent | STARTED                        | May remain   |
@@ -116,7 +116,7 @@ flowchart TD
     B -->|No| D[Begin shared transaction]
     D --> E[Audit: STARTED within transaction]
     E --> F[Apply change within transaction]
-    F -->|Success| G[Audit: EXECUTED within transaction]
+    F -->|Success| G[Audit: APPLIED within transaction]
     G -->|Success| H[Commit shared transaction]
     H --> I[Return: Success]
     G -->|Failed| J[Transaction rollback]
@@ -134,7 +134,7 @@ flowchart TD
 
 | Scenario                     | Target System State         | Audit Store State                        |
 |------------------------------|-----------------------------|------------------------------------------|
-| Full success                 | Change committed atomically | STARTED → EXECUTED                       |
+| Full success                 | Change committed atomically | STARTED → APPLIED                       |
 | Execution failure with audit | No changes committed        | STARTED → EXECUTION_FAILED → ROLLED_BACK |
 | Complete failure             | No changes committed        | No audit trail                           |
 

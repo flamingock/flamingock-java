@@ -51,8 +51,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTION_FAILED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.auditEntry;
@@ -207,11 +207,11 @@ class DynamoDBAuditStoreTest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         auditEntry().withTaskId("table-create").withState(AuditEntry.Status.STARTED),
-                        auditEntry().withTaskId("table-create").withState(AuditEntry.Status.EXECUTED),
+                        auditEntry().withTaskId("table-create").withState(AuditEntry.Status.APPLIED),
                         auditEntry().withTaskId("insert-user").withState(AuditEntry.Status.STARTED),
-                        auditEntry().withTaskId("insert-user").withState(AuditEntry.Status.EXECUTED),
+                        auditEntry().withTaskId("insert-user").withState(AuditEntry.Status.APPLIED),
                         auditEntry().withTaskId("insert-another-user").withState(AuditEntry.Status.STARTED),
-                        auditEntry().withTaskId("insert-another-user").withState(AuditEntry.Status.EXECUTED)
+                        auditEntry().withTaskId("insert-another-user").withState(AuditEntry.Status.APPLIED)
                 )
                 .run();
 
@@ -249,13 +249,13 @@ class DynamoDBAuditStoreTest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("table-create"),
-                        EXECUTED("table-create"),
+                        APPLIED("table-create"),
 
                         STARTED("insert-user"),
-                        EXECUTED("insert-user"),
+                        APPLIED("insert-user"),
 
                         STARTED("execution-with-exception"),
-                        EXECUTION_FAILED("execution-with-exception"),
+                        FAILED("execution-with-exception"),
                         ROLLED_BACK("execution-with-exception")
                 )
                 .run();

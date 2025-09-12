@@ -108,11 +108,11 @@ class CouchbaseAuditStoreTest {
         List<AuditEntry> auditLog = couchbaseTestHelper.getAuditEntriesSorted(auditLogCollection);
         assertEquals(3, auditLog.size());
         assertEquals("create-index", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(1).getState());
         assertEquals("insert-another-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(2).getState());
 
         //Checking created index and documents
         assertTrue(CouchbaseCollectionHelper.indexExists(cluster, testCollection.bucketName(), testCollection.scopeName(), testCollection.name(), "idx_standalone_index"));
@@ -158,9 +158,9 @@ class CouchbaseAuditStoreTest {
         List<AuditEntry> auditLog = couchbaseTestHelper.getAuditEntriesSorted(auditLogCollection);
         assertEquals(3, auditLog.size());
         assertEquals("create-index", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(1).getState());
         assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
         assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(2).getState());
 
@@ -205,9 +205,9 @@ class CouchbaseAuditStoreTest {
         List<AuditEntry> auditLog = couchbaseTestHelper.getAuditEntriesSorted(auditLogCollection);
         assertEquals(3, auditLog.size());
         assertEquals("create-index", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(0).getState());
         assertEquals("insert-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(1).getState());
         assertEquals("execution-with-exception", auditLog.get(2).getTaskId());
         assertEquals(AuditEntry.Status.ROLLED_BACK, auditLog.get(2).getState());
 

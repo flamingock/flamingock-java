@@ -20,14 +20,6 @@ import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.EXECUTION_FAILED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLBACK_FAILED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_BACK;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.STARTED;
 
 public class AuditEntry implements Comparable<AuditEntry> {
     protected final Boolean systemChange;
@@ -280,11 +272,11 @@ public class AuditEntry implements Comparable<AuditEntry> {
 
     public enum Status {
         STARTED(1),
-        EXECUTED(2),
-        EXECUTION_FAILED(3),
+        APPLIED(2),
+        FAILED(3),
         ROLLED_BACK(4),
         ROLLBACK_FAILED(5),
-        MANUAL_MARKED_AS_EXECUTED(6),
+        MANUAL_MARKED_AS_APPLIED(6),
         MANUAL_MARKED_AS_ROLLED_BACK(7);
 
         private final int priority;
@@ -304,7 +296,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
 
 
         public static boolean isRequiredExecution(Status entryStatus) {
-            return entryStatus == null || entryStatus == EXECUTION_FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;
+            return entryStatus == null || entryStatus == FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;
         }
 
         public AuditEntryRequest.Status toRequestStatus() {
@@ -313,6 +305,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
 
     }
 
+    //TODO remove this
     public enum ExecutionType {
         EXECUTION, BEFORE_EXECUTION;
 

@@ -53,8 +53,8 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.UUID;
 
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.EXECUTED;
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.EXECUTION_FAILED;
+import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.APPLIED;
+import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.FAILED;
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
 
 public class DynamoDBCloudTargetSystemTest {
@@ -155,8 +155,8 @@ public class DynamoDBCloudTargetSystemTest {
                             new ExecutionPlanRequestResponseMock(executionId),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
-                            new AuditRequestExpectation(executionId, "create-table-clients", EXECUTED),
-                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                            new AuditRequestExpectation(executionId, "create-table-clients", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")
@@ -213,8 +213,8 @@ public class DynamoDBCloudTargetSystemTest {
                             new ExecutionPlanRequestResponseMock(executionId),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
-                            new AuditRequestExpectation(executionId, "unhappy-create-table-clients", EXECUTED),
-                            new AuditRequestExpectation(executionId, "unhappy-insert-clients", EXECUTION_FAILED),
+                            new AuditRequestExpectation(executionId, "unhappy-create-table-clients", APPLIED),
+                            new AuditRequestExpectation(executionId, "unhappy-insert-clients", FAILED),
                             new AuditRequestExpectation(executionId, "unhappy-insert-clients", ROLLED_BACK)
                     ).start();
 
@@ -276,8 +276,8 @@ public class DynamoDBCloudTargetSystemTest {
                             new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", TargetSystemAuditMarkType.APPLIED)),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
-                            new AuditRequestExpectation(executionId, "create-table-clients", EXECUTED),
-                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                            new AuditRequestExpectation(executionId, "create-table-clients", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")

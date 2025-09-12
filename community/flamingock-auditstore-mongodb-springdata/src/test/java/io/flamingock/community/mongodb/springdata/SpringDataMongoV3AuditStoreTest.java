@@ -175,11 +175,11 @@ class SpringDataMongoV3AuditStoreTest {
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(0).getState());
         assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(1).getState());
         assertEquals("insert-jorge-document", auditLog.get(2).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(2).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(2).getState());
 
         //Checking clients collection
         Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)
@@ -218,9 +218,9 @@ class SpringDataMongoV3AuditStoreTest {
         List<AuditEntry> auditLog = mongoDBTestHelper.getAuditEntriesSorted(DEFAULT_AUDIT_STORE_NAME);
         assertEquals(3, auditLog.size());
         assertEquals("create-client-collection", auditLog.get(0).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(0).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(0).getState());
         assertEquals("insert-federico-document", auditLog.get(1).getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, auditLog.get(1).getState());
+        assertEquals(AuditEntry.Status.APPLIED, auditLog.get(1).getState());
 
         //Checking clients collection
         Set<String> clients = mongoTemplate.getCollection(CLIENTS_COLLECTION)

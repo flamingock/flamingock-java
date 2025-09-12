@@ -30,7 +30,6 @@ import picocli.CommandLine.ParentCommand;
 import java.util.List;
 import java.util.Optional;
 
-import static io.flamingock.cli.util.ASCIIColors.VIOLET;
 import static io.flamingock.cli.util.ASCIIColors.inViolet;
 
 @Command(
@@ -161,7 +160,7 @@ public class GetIssueCommand implements Runnable {
             switch (state) {
                 case STARTED:
                     return "Execution interrupted unexpectedly";
-                case EXECUTION_FAILED:
+                case FAILED:
                     return "Change execution failed due to unknown reasons";
                 case ROLLBACK_FAILED:
                     return "Rollback operation failed due to unknown reasons";

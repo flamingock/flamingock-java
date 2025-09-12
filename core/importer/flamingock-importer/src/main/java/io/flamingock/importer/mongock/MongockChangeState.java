@@ -22,10 +22,11 @@ public enum MongockChangeState {
 
   public AuditEntry.Status toAuditStatus() {
     switch (this) {
-      case FAILED: return AuditEntry.Status.EXECUTION_FAILED;
+      case FAILED: return AuditEntry.Status.FAILED;
       case ROLLED_BACK: return AuditEntry.Status.ROLLED_BACK;
       case ROLLBACK_FAILED: return AuditEntry.Status.ROLLBACK_FAILED;
-      default: return AuditEntry.Status.EXECUTED;
+      case EXECUTED:
+      default: return AuditEntry.Status.APPLIED;
     }
   }
 

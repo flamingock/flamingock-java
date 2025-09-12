@@ -93,12 +93,12 @@ class MongoChangeTemplateTest {
         assertEquals("create-users-collection-with-index", auditLog.get(0).getString("changeId"));
         assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(0).getString("state"));
         assertEquals("create-users-collection-with-index", auditLog.get(1).getString("changeId"));
-        assertEquals(AuditEntry.Status.EXECUTED.name(), auditLog.get(1).getString("state"));
+        assertEquals(AuditEntry.Status.APPLIED.name(), auditLog.get(1).getString("state"));
 
         assertEquals("seed-users", auditLog.get(2).getString("changeId"));
         assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(2).getString("state"));
         assertEquals("seed-users", auditLog.get(3).getString("changeId"));
-        assertEquals(AuditEntry.Status.EXECUTED.name(), auditLog.get(3).getString("state"));
+        assertEquals(AuditEntry.Status.APPLIED.name(), auditLog.get(3).getString("state"));
 
         List<Document> users = mongoDatabase.getCollection("users")
                 .find()

@@ -116,7 +116,7 @@ public abstract class AuditContextBundle {
             case START_EXECUTION:
                 return AuditEntry.Status.STARTED;
             case EXECUTION:
-                return getRuntimeContext().isSuccess() ? AuditEntry.Status.EXECUTED : AuditEntry.Status.EXECUTION_FAILED;
+                return getRuntimeContext().isSuccess() ? AuditEntry.Status.APPLIED : AuditEntry.Status.FAILED;
             case ROLLBACK:
             default:
                 return getRuntimeContext().isSuccess() ? AuditEntry.Status.ROLLED_BACK : AuditEntry.Status.ROLLBACK_FAILED;

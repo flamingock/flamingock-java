@@ -43,7 +43,7 @@ import java.util.List;
 
 import static io.flamingock.api.StageType.LEGACY;
 import static io.flamingock.api.StageType.SYSTEM;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -106,24 +106,24 @@ public class MongoDbImporterTest {
         flamingock.run();
 
         // Verify audit sequence: 11 total entries as shown in actual execution
-        // Legacy imports only show EXECUTED (imported from Mongock), new changes show STARTED+EXECUTED
+        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
         auditHelper.verifyAuditSequenceStrict(
-            // Legacy imports from Mongock (EXECUTED only - no STARTED for imported changes)
-            EXECUTED("system-change-00001_before"),
-            EXECUTED("system-change-00001"),
-            EXECUTED("client-initializer_before"),
-            EXECUTED("client-initializer"),
-            EXECUTED("client-updater"),
+            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+            APPLIED("system-change-00001_before"),
+            APPLIED("system-change-00001"),
+            APPLIED("client-initializer_before"),
+            APPLIED("client-initializer"),
+            APPLIED("client-updater"),
             
             // System stage - actual system importer change
             STARTED("migration-from-mongock"),
-            EXECUTED("migration-from-mongock"),
+            APPLIED("migration-from-mongock"),
             
             // Application stage - new changes created by templates
             STARTED("create-users-collection-with-index"),
-            EXECUTED("create-users-collection-with-index"),
+            APPLIED("create-users-collection-with-index"),
             STARTED("seed-users"),
-            EXECUTED("seed-users")
+            APPLIED("seed-users")
         );
         
 

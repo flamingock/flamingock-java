@@ -66,7 +66,7 @@ import java.time.LocalDateTime;
  * <h3>Audit Store State Outcomes</h3>
  * <ul>
  * <li><strong>STARTED:</strong> Change execution began but process interrupted</li>
- * <li><strong>STARTED → EXECUTED:</strong> Change successfully applied and audited</li>
+ * <li><strong>STARTED → APPLIED:</strong> Change successfully applied and audited</li>
  * <li><strong>STARTED → FAILED:</strong> Change execution failed</li>
  * <li><strong>STARTED → FAILED → ROLLED_BACK:</strong> Change failed and automatic rollback audited</li>
  * </ul>

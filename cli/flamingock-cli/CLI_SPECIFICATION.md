@@ -59,11 +59,11 @@ flamingock audit mark --change-unit <id> --state <state>
 
 **Options:**
 - `--change-unit <id>` / `-c <id>` → the changeUnitId (required) 
-- `--state <state>` / `-s <state>` → the state to mark (`EXECUTED` or `ROLLED_BACK`) (required) 
+- `--state <state>` / `-s <state>` → the state to mark (`APPLIED` or `ROLLED_BACK`) (required) 
 
 **Examples:**
 ```bash
-flamingock audit mark --change-unit CU123 --state EXECUTED
+flamingock audit mark --change-unit CU123 --state APPLIED
 flamingock audit mark -c CU123 -s ROLLED_BACK
 ```
 

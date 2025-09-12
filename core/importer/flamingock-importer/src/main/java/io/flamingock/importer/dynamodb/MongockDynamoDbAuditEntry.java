@@ -15,6 +15,7 @@
  */
 package io.flamingock.importer.dynamodb;
 
+import io.flamingock.importer.mongock.MongockChangeState;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -77,45 +78,106 @@ public class MongockDynamoDbAuditEntry {
     public String getChangeId() {
         return changeId;
     }
+
     public void setChangeId(String changeId) {
         this.changeId = changeId;
     }
 
-    public String getExecutionId() { return executionId; }
-    public void setExecutionId(String executionId) { this.executionId = executionId; }
+    public String getExecutionId() {
+        return executionId;
+    }
 
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+    public void setExecutionId(String executionId) {
+        this.executionId = executionId;
+    }
 
-    public String getTimestamp() { return timestamp; }
-    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+    public String getAuthor() {
+        return author;
+    }
 
-    public String getState() { return state; }
-    public void setState(String state) { this.state = state; }
+    public void setAuthor(String author) {
+        this.author = author;
+    }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public String getTimestamp() {
+        return timestamp;
+    }
 
-    public String getChangeLogClass() { return changeLogClass; }
-    public void setChangeLogClass(String changeLogClass) { this.changeLogClass = changeLogClass; }
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
 
-    public String getChangeSetMethod() { return changeSetMethod; }
-    public void setChangeSetMethod(String changeSetMethod) { this.changeSetMethod = changeSetMethod; }
+    public String getState() {
+        return state;
+    }
 
-    public String getMetadata() { return metadata; }
-    public void setMetadata(String metadata) { this.metadata = metadata; }
+    public void setState(String state) {
+        this.state = state;
+    }
 
-    public Long getExecutionMillis() { return executionMillis; }
-    public void setExecutionMillis(Long executionMillis) { this.executionMillis = executionMillis; }
+    public String getType() {
+        return type;
+    }
 
-    public String getExecutionHostName() { return executionHostName; }
-    public void setExecutionHostName(String executionHostName) { this.executionHostName = executionHostName; }
+    public void setType(String type) {
+        this.type = type;
+    }
 
-    public String getErrorTrace() { return errorTrace; }
-    public void setErrorTrace(String errorTrace) { this.errorTrace = errorTrace; }
+    public String getChangeLogClass() {
+        return changeLogClass;
+    }
 
-    public Boolean getSystemChange() { return systemChange; }
-    public void setSystemChange(Boolean systemChange) { this.systemChange = systemChange; }
+    public void setChangeLogClass(String changeLogClass) {
+        this.changeLogClass = changeLogClass;
+    }
+
+    public String getChangeSetMethod() {
+        return changeSetMethod;
+    }
+
+    public void setChangeSetMethod(String changeSetMethod) {
+        this.changeSetMethod = changeSetMethod;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
+    public Long getExecutionMillis() {
+        return executionMillis;
+    }
+
+    public void setExecutionMillis(Long executionMillis) {
+        this.executionMillis = executionMillis;
+    }
+
+    public String getExecutionHostName() {
+        return executionHostName;
+    }
+
+    public void setExecutionHostName(String executionHostName) {
+        this.executionHostName = executionHostName;
+    }
+
+    public String getErrorTrace() {
+        return errorTrace;
+    }
+
+    public void setErrorTrace(String errorTrace) {
+        this.errorTrace = errorTrace;
+    }
+
+    public Boolean getSystemChange() {
+        return systemChange;
+    }
+
+    public void setSystemChange(Boolean systemChange) {
+        this.systemChange = systemChange;
+    }
 
     public AuditEntry toAuditEntry() {
         long epochMillis;
@@ -130,14 +192,14 @@ public class MongockDynamoDbAuditEntry {
         }
         LocalDateTime ts = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
 
-
+        MongockChangeState stateEnum = MongockChangeState.valueOf(state);
         return new AuditEntry(
                 executionId,
                 null,
                 changeId,
                 author,
                 ts,
-                AuditEntry.Status.valueOf(state),
+                stateEnum.toAuditStatus(),
                 AuditEntry.ExecutionType.valueOf(type),
                 changeLogClass,
                 changeSetMethod,

@@ -16,6 +16,7 @@
 package io.flamingock.importer.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.importer.mongock.MongockChangeState;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.time.Instant;
@@ -83,13 +84,14 @@ public class CouchbaseChangeEntry {
         }
         LocalDateTime ts = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
 
+        MongockChangeState stateEnum = MongockChangeState.valueOf(state);
         return new AuditEntry(
                 executionId,
                 null,
                 changeId,
                 author,
                 ts,
-                AuditEntry.Status.valueOf(state),
+                stateEnum.toAuditStatus(),
                 AuditEntry.ExecutionType.valueOf(type),
                 changeLogClass,
                 changeSetMethod,

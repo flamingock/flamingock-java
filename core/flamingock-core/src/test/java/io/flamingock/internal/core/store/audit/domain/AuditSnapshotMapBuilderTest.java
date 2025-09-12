@@ -33,7 +33,7 @@ class AuditSnapshotMapBuilderTest {
         // Given
         AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
         
-        AuditEntry entry1 = createAuditEntry("change-1", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX);
+        AuditEntry entry1 = createAuditEntry("change-1", AuditEntry.Status.APPLIED, AuditTxType.NON_TX);
         AuditEntry entry2 = createAuditEntry("change-2", AuditEntry.Status.STARTED, AuditTxType.TX_SHARED);
         
         // When
@@ -45,7 +45,7 @@ class AuditSnapshotMapBuilderTest {
 
         AuditEntry info1 = infoMap.get("change-1");
         assertEquals("change-1", info1.getTaskId());
-        assertEquals(AuditEntry.Status.EXECUTED, info1.getState());
+        assertEquals(AuditEntry.Status.APPLIED, info1.getState());
         assertEquals(AuditTxType.NON_TX, info1.getTxType());
 
         AuditEntry info2 = infoMap.get("change-2");
@@ -61,7 +61,7 @@ class AuditSnapshotMapBuilderTest {
         
         AuditEntry olderEntry = createAuditEntry("change-1", AuditEntry.Status.STARTED, AuditTxType.NON_TX, 
                 LocalDateTime.now().minusMinutes(10));
-        AuditEntry newerEntry = createAuditEntry("change-1", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED,
+        AuditEntry newerEntry = createAuditEntry("change-1", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED,
                 LocalDateTime.now());
         
         // When
@@ -71,7 +71,7 @@ class AuditSnapshotMapBuilderTest {
 
         // Then - Should use the most relevant (newer) entry
         AuditEntry info = snapshotMap.get("change-1");
-        assertEquals(AuditEntry.Status.EXECUTED, info.getState());
+        assertEquals(AuditEntry.Status.APPLIED, info.getState());
         assertEquals(AuditTxType.TX_SHARED, info.getTxType());
     }
 
@@ -79,7 +79,7 @@ class AuditSnapshotMapBuilderTest {
     void shouldHandleNullTxTypeInEntries() {
         // Given - Entry with null txType
         AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
-        AuditEntry entryWithNullTxType = createAuditEntry("change-1", AuditEntry.Status.EXECUTED, null);
+        AuditEntry entryWithNullTxType = createAuditEntry("change-1", AuditEntry.Status.APPLIED, null);
         
         // When
         builder.addEntry(entryWithNullTxType);
@@ -97,7 +97,7 @@ class AuditSnapshotMapBuilderTest {
         
         for (int i = 1; i <= 5; i++) {
             AuditEntry entry = createAuditEntry("change-" + i, 
-                AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED);
+                AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED);
             builder.addEntry(entry);
         }
         
@@ -110,7 +110,7 @@ class AuditSnapshotMapBuilderTest {
             String changeId = "change-" + i;
             AuditEntry info = infoMap.get(changeId);
             assertNotNull(info, "Entry info should exist for " + changeId);
-            assertEquals(AuditEntry.Status.EXECUTED, info.getState());
+            assertEquals(AuditEntry.Status.APPLIED, info.getState());
             assertEquals(AuditTxType.TX_SHARED, info.getTxType());
         }
     }

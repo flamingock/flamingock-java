@@ -57,7 +57,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -70,7 +70,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -88,7 +88,7 @@ class MongoDBAuditMapperTest {
         document.append("stageId", "test-stage");
         document.append("taskId", "test-task");
         document.append("author", "test-author");
-        document.append("state", AuditEntry.Status.EXECUTED.name());
+        document.append("state", AuditEntry.Status.APPLIED.name());
         document.append("type", AuditEntry.ExecutionType.EXECUTION.name());
         document.append("txType", "INVALID_OPERATION_TYPE");
 
@@ -103,7 +103,7 @@ class MongoDBAuditMapperTest {
     void shouldSerializeAndDeserializeTargetSystemId() {
         // Given
         String expectedTargetSystemId = "custom-target-system";
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -116,7 +116,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldHandleNullTargetSystemId() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, null, TestDefaultRecoveryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -129,7 +129,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeRecoveryStrategy() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, TestAlwaysRetryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, TestAlwaysRetryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);
@@ -142,7 +142,7 @@ class MongoDBAuditMapperTest {
     @Test
     void shouldHandleNullRecoveryStrategy() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.EXECUTED, AuditTxType.NON_TX, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, TestDefaultRecoveryChangeUnit.class);
 
         // When
         TestDocumentWrapper document = mapper.toDocument(original);

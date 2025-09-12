@@ -45,7 +45,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.EXECUTED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -112,7 +112,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withTargetSystemId("default-audit-store-target-system")
                                 .withSystemChange(false)
                                 .withTimestampBetween(testStart, testEnd),
-                        EXECUTED(changeId)
+                        APPLIED(changeId)
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
@@ -151,7 +151,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("default-audit-store-target-system"),
-                        EXECUTED("non-tx-transactional-false")
+                        APPLIED("non-tx-transactional-false")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
@@ -163,7 +163,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTargetSystemChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system"),
-                        EXECUTED("non-tx-target-system")
+                        APPLIED("non-tx-target-system")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTargetSystemChange.class)
                                 .withTxType(AuditTxType.NON_TX)
@@ -202,7 +202,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSharedDefaultChange.class)
                                 .withTxType(AuditTxType.TX_SHARED)
                                 .withTargetSystemId("default-audit-store-target-system"),
-                        EXECUTED("tx-shared-default")
+                        APPLIED("tx-shared-default")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSharedDefaultChange.class)
                                 .withTxType(AuditTxType.TX_SHARED)
@@ -241,7 +241,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSeparateAndSameMongoClientChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system"),
-                        EXECUTED("tx-separate-no-marker")
+                        APPLIED("tx-separate-no-marker")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSeparateAndSameMongoClientChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
@@ -281,7 +281,7 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSeparateChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("tx-separate-system"),
-                        EXECUTED("tx-separate-no-marker")
+                        APPLIED("tx-separate-no-marker")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSeparateChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
@@ -320,15 +320,15 @@ class MongoSyncAuditPersistenceE2ETest {
                 .THEN_VerifyAuditSequenceStrict(
                         // TxSharedDefaultChange - STARTED & EXECUTED with default target system
                         STARTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
-                        EXECUTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
+                        APPLIED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
 
                         // NonTxTargetSystemChange - STARTED & EXECUTED
                         STARTED("non-tx-target-system").withTargetSystemId("non-tx-system"),
-                        EXECUTED("non-tx-target-system").withTargetSystemId("non-tx-system"),
+                        APPLIED("non-tx-target-system").withTargetSystemId("non-tx-system"),
 
                         // TxSeparateChange - STARTED & EXECUTED with separate target system
                         STARTED("tx-separate-no-marker").withTargetSystemId("tx-separate-system"),
-                        EXECUTED("tx-separate-no-marker").withTargetSystemId("tx-separate-system")
+                        APPLIED("tx-separate-no-marker").withTargetSystemId("tx-separate-system")
                 )
                 .run();
     }
@@ -358,15 +358,15 @@ class MongoSyncAuditPersistenceE2ETest {
                 }))
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
-                        EXECUTED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
+                        APPLIED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
 
                         // TxSharedDefaultChange - STARTED & EXECUTED
                         STARTED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
-                        EXECUTED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
+                        APPLIED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
 
                         // TxSeparateChange - STARTED & EXECUTED
                         STARTED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
-                        EXECUTED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                        APPLIED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                 )
                 .run();
 

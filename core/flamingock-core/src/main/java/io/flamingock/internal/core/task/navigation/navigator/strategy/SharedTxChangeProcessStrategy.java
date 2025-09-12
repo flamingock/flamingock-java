@@ -61,7 +61,7 @@ import java.time.LocalDateTime;
  * 
  * <h3>Audit Store State Outcomes</h3>
  * <ul>
- * <li><strong>STARTED → EXECUTED:</strong> Successful atomic execution and audit</li>
+ * <li><strong>STARTED → APPLIED:</strong> Successful atomic execution and audit</li>
  * <li><strong>STARTED → EXECUTION_FAILED → ROLLED_BACK:</strong> Failed execution with detailed failure audit</li>
  * <li><strong>No audit trail:</strong> Complete transaction failure (safe to retry)</li>
  * </ul>

@@ -221,13 +221,13 @@ public class TableFormatter {
         if (status == null) return "❓";
         
         switch (status) {
-            case EXECUTED:
-            case MANUAL_MARKED_AS_EXECUTED:
+            case APPLIED:
+            case MANUAL_MARKED_AS_APPLIED:
                 return "✅";
             case ROLLED_BACK:
             case MANUAL_MARKED_AS_ROLLED_BACK:
                 return "🔄";
-            case EXECUTION_FAILED:
+            case FAILED:
             case ROLLBACK_FAILED:
                 return "❌";
             case STARTED:
@@ -274,7 +274,7 @@ public class TableFormatter {
      */
     public static void printStateLegend() {
         System.out.println("\nState Legend:");
-        System.out.println("✅ EXECUTED    - Successfully completed, won't be reapplied");
+        System.out.println("✅ APPLIED    - Successfully completed, won't be reapplied");
         System.out.println("🔄 ROLLED_BACK - Successfully reverted, needs to be applied again");
         System.out.println("❌ FAILED      - Execution or rollback failed");
         System.out.println("⚠️ STARTED     - Unknown/incomplete state (partial execution or audit failure)");

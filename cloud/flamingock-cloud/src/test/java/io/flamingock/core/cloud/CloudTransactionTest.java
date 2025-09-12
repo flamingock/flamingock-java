@@ -73,7 +73,7 @@ public class CloudTransactionTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template",
-                AuditEntryRequest.Status.EXECUTED,
+                AuditEntryRequest.Status.APPLIED,
                 CloudChange1.class.getName(),
                 "execution"
         ));
@@ -81,7 +81,7 @@ public class CloudTransactionTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template-2",
-                AuditEntryRequest.Status.EXECUTED,
+                AuditEntryRequest.Status.APPLIED,
                 CloudChange2.class.getName(),
                 "execution"
         ));

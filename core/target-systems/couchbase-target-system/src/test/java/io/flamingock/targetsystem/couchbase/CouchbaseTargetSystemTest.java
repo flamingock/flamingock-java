@@ -59,8 +59,8 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
 
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.EXECUTED;
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.EXECUTION_FAILED;
+import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.APPLIED;
+import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.FAILED;
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
 
 @Testcontainers
@@ -158,8 +158,8 @@ public class CouchbaseTargetSystemTest {
                             new ExecutionPlanRequestResponseMock(executionId),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
-                            new AuditRequestExpectation(executionId, "create-clients-collection", EXECUTED),
-                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                            new AuditRequestExpectation(executionId, "create-clients-collection", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
 
@@ -214,8 +214,8 @@ public class CouchbaseTargetSystemTest {
                             new ExecutionPlanRequestResponseMock(executionId),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
-                            new AuditRequestExpectation(executionId, "create-clients-collection", EXECUTED),
-                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTION_FAILED),
+                            new AuditRequestExpectation(executionId, "create-clients-collection", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", FAILED),
                             new AuditRequestExpectation(executionId, "insert-clients", ROLLED_BACK)
                     ).start();
 
@@ -274,8 +274,8 @@ public class CouchbaseTargetSystemTest {
                             new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", TargetSystemAuditMarkType.APPLIED)),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
-                            new AuditRequestExpectation(executionId, "create-clients-collection", EXECUTED),
-                            new AuditRequestExpectation(executionId, "insert-clients", EXECUTED)
+                            new AuditRequestExpectation(executionId, "create-clients-collection", APPLIED),
+                            new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
 

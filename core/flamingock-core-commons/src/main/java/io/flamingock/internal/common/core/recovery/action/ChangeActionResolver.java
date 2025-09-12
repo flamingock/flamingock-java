@@ -40,8 +40,8 @@ public final class ChangeActionResolver {
         AuditTxType txType = auditEntry.getTxType();
 
         switch (status) {
-            case MANUAL_MARKED_AS_EXECUTED:
-            case EXECUTED:
+            case MANUAL_MARKED_AS_APPLIED:
+            case APPLIED:
                 log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
                         auditEntry.getTaskId(), status, txType, SKIP, "Change already marked/executed");
                 return SKIP;
@@ -65,7 +65,7 @@ public final class ChangeActionResolver {
                 }
 
             case MANUAL_MARKED_AS_ROLLED_BACK:
-            case EXECUTION_FAILED:
+            case FAILED:
                 if (txType == null || txType == AuditTxType.NON_TX) {
                     if (auditEntry.getRecoveryStrategy().isAlwaysRetry()) {
                         log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",

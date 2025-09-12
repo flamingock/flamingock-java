@@ -144,7 +144,7 @@ public class CouchbaseImporterTest {
         assertEquals("change-1", entry.getString("changeId"));
         assertEquals("author1", entry.getString("author"));
         assertEquals("exec-1", entry.getString("executionId"));
-        assertEquals("EXECUTED", entry.getString("state"));
+        assertEquals("APPLIED", entry.getString("state"));
         assertTrue(entry.getBoolean("systemChange"));
     }
 

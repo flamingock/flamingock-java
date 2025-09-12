@@ -109,7 +109,7 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
 
     private AuditEntry.Status getState(Resolution resolution) {
         if(resolution == Resolution.APPLIED) {
-            return AuditEntry.Status.MANUAL_MARKED_AS_EXECUTED;
+            return AuditEntry.Status.MANUAL_MARKED_AS_APPLIED;
         } else {
             // Resolution.ROLLED_BACK
             return AuditEntry.Status.MANUAL_MARKED_AS_ROLLED_BACK;
