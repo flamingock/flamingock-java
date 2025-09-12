@@ -124,11 +124,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  flamingock-ce-bom:
+  flamingock-community-bom:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: flamingock-ce-bom
+      module: flamingock-community-bom
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -137,11 +137,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  flamingock-ce-mongodb-sync:
+  flamingock-auditstore-mongodb-sync:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: flamingock-ce-mongodb-sync
+      module: flamingock-auditstore-mongodb-sync
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -150,11 +150,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  flamingock-ce-mongodb-springdata:
+  flamingock-auditstore-mongodb-springdata:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: flamingock-ce-mongodb-springdata
+      module: flamingock-auditstore-mongodb-springdata
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -163,11 +163,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  flamingock-ce-couchbase:
+  flamingock-auditstore-couchbase:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: flamingock-ce-couchbase
+      module: flamingock-auditstore-couchbase
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -176,11 +176,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  flamingock-ce-dynamodb:
+  flamingock-auditstore-dynamodb:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: flamingock-ce-dynamodb
+      module: flamingock-auditstore-dynamodb
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -343,11 +343,11 @@ jobs:
 #      flamingock-cloud,
 #      flamingock-cloud-bom,
 #      flamingock-community,
-#      flamingock-ce-bom,
-#      flamingock-ce-mongodb-sync,
-#      flamingock-ce-mongodb-springdata,
-#      flamingock-ce-couchbase,
-#      flamingock-ce-dynamodb,
+#      flamingock-community-bom,
+#      flamingock-auditstore-mongodb-sync,
+#      flamingock-auditstore-mongodb-springdata,
+#      flamingock-auditstore-couchbase,
+#      flamingock-auditstore-dynamodb,
 #      flamingock-importer,
 #      flamingock-springboot-integration,
 #      sql-target-system,
@@ -387,11 +387,11 @@ jobs:
       flamingock-cloud,
       flamingock-cloud-bom,
       flamingock-community,
-      flamingock-ce-bom,
-      flamingock-ce-mongodb-sync,
-      flamingock-ce-mongodb-springdata,
-      flamingock-ce-couchbase,
-      flamingock-ce-dynamodb,
+      flamingock-community-bom,
+      flamingock-auditstore-mongodb-sync,
+      flamingock-auditstore-mongodb-springdata,
+      flamingock-auditstore-couchbase,
+      flamingock-auditstore-dynamodb,
       flamingock-importer,
       flamingock-springboot-integration,
       sql-target-system,
@@ -413,7 +413,7 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 #  test-examples:
-#    needs: [ flamingock-core,flamingock-core-api,flamingock-core-commons,flamingock-springboot-v2-integration,flamingock-springboot-v3-integration,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,flamingock-ce-dynamodb,mongodb-util,flamingock-ce-mongodb-springdata-v2,flamingock-ce-mongodb-springdata-v3,flamingock-ce-mongodb-springdata-v4,flamingock-ce-mongodb-sync,flamingock-ce-mongodb-v3,flamingock-sql-template,sql-target-system ]
+#    needs: [ flamingock-core,flamingock-core-api,flamingock-core-commons,flamingock-springboot-v2-integration,flamingock-springboot-v3-integration,utils,driver-common,couchbase-driver,couchbase-springboot-v2-driver,flamingock-auditstore-dynamodb,mongodb-util,flamingock-auditstore-mongodb-springdata-v2,flamingock-auditstore-mongodb-springdata-v3,flamingock-auditstore-mongodb-springdata-v4,flamingock-auditstore-mongodb-sync,flamingock-ce-mongodb-v3,flamingock-sql-template,sql-target-system ]
 #    run: |
 #        curl -X POST \
 #             -H "Accept: application/vnd.github+json" \

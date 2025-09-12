@@ -8,9 +8,9 @@ dependencies {
 
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
-    testImplementation(project(":community:flamingock-ce-mongodb-sync"))
+    testImplementation(project(":community:flamingock-auditstore-mongodb-sync"))
     testImplementation(project(":templates:flamingock-mongodb-sync-template"))
-    testImplementation(project(":community:flamingock-ce-dynamodb"))
+    testImplementation(project(":community:flamingock-auditstore-dynamodb"))
     testImplementation(project(":utils:test-util"))
     testImplementation("org.testcontainers:mongodb:1.18.3")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")

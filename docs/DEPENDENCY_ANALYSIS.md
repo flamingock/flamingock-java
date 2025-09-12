@@ -169,7 +169,7 @@ dependencies {
 - **Java Version**: 8+
 - **Notes**: Clean dependency structure
 
-#### `flamingock-ce-mongodb-sync`
+#### `flamingock-auditstore-mongodb-sync`
 ```gradle
 dependencies {
     implementation(project(":utils:mongodb-util"))
@@ -186,7 +186,7 @@ dependencies {
 - **Java Version**: 8+
 - **Notes**: Proper use of compileOnly for MongoDB driver
 
-#### `flamingock-ce-dynamodb`
+#### `flamingock-auditstore-dynamodb`
 ```gradle
 dependencies {
     implementation(project(":utils:dynamodb-util"))
@@ -203,7 +203,7 @@ dependencies {
 - **Java Version**: 8+
 - **Notes**: Good pattern for database integration
 
-#### `flamingock-ce-couchbase`
+#### `flamingock-auditstore-couchbase`
 ```gradle
 dependencies {
     implementation(project(":core:flamingock-core"))
@@ -218,12 +218,12 @@ dependencies {
 - **Java Version**: 8+
 - **Notes**: No transactioner - might need one for consistency
 
-#### `flamingock-ce-mongodb-springdata`
+#### `flamingock-auditstore-mongodb-springdata`
 ```gradle
 dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
-    api(project(":community:flamingock-ce-mongodb-sync"))
+    api(project(":community:flamingock-auditstore-mongodb-sync"))
     
     compileOnly("org.mongodb:mongodb-driver-sync:[4.8.0, 5.6.0)")
     compileOnly("org.springframework.data:spring-data-mongodb:[4.0.0, 5.0.0)")

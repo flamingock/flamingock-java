@@ -9,9 +9,9 @@ dependencies {
     api(project(":core:target-systems:mongodb-sync-target-system"))
     api(project(":core:target-systems:sql-target-system"))
 // Community
-    api(project(":community:flamingock-ce-couchbase"))
-    api(project(":community:flamingock-ce-dynamodb"))
-    api(project(":community:flamingock-ce-mongodb-sync"))
+    api(project(":community:flamingock-auditstore-couchbase"))
+    api(project(":community:flamingock-auditstore-dynamodb"))
+    api(project(":community:flamingock-auditstore-mongodb-sync"))
 }
 
 description = "${project.name}'s description"

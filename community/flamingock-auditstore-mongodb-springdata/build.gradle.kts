@@ -9,9 +9,9 @@ dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
     api(project(":core:target-systems:mongodb-springdata-target-system"))
-    api(project(":community:flamingock-ce-mongodb-sync"))
+    api(project(":community:flamingock-auditstore-mongodb-sync"))
 
-    compileOnly("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")//this filters the broader range in flamingock-ce-mongodb-sync
+    compileOnly("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")//this filters the broader range in flamingock-auditstore-mongodb-sync
     compileOnly("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
 
     compileOnly("org.springframework.boot:spring-boot-autoconfigure:${versions["springboot"]}")

@@ -118,7 +118,7 @@ This is a multi-module Gradle project using Kotlin DSL.
 
 **AuditStore System**: Database/system-specific implementations:
 - `AuditStore` interface provides `ConnectionEngine` for specific technologies
-- AuditStores live in community modules (e.g., `flamingock-ce-mongodb-sync`, `flamingock-ce-dynamodb`)
+- AuditStores live in community modules (e.g., `flamingock-auditstore-mongodb-sync`, `flamingock-auditstore-dynamodb`)
 - AuditStore initialization requires full hierarchical context for dependency resolution
 
 **Plugin System**: Extensible architecture via `Plugin` interface:

@@ -50,7 +50,7 @@ plugins {
 
 dependencies {
     // Flamingock dependencies
-    implementation(platform("io.flamingock:flamingock-ce-bom:0.0.38-beta"))
+    implementation(platform("io.flamingock:flamingock-community-bom:0.0.38-beta"))
     implementation("io.flamingock:flamingock-community")
     implementation("io.flamingock:flamingock-springboot-integration")
     annotationProcessor("io.flamingock:flamingock-processor:0.0.38-beta")

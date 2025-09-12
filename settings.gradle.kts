@@ -47,25 +47,25 @@ include("community:flamingock-community")
 project(":community:flamingock-community").name = "flamingock-community"
 project(":community:flamingock-community").projectDir = file("community/flamingock-community")
 
-include("community:flamingock-ce-bom")
-project(":community:flamingock-ce-bom").name = "flamingock-ce-bom"
-project(":community:flamingock-ce-bom").projectDir = file("community/flamingock-ce-bom")
+include("community:flamingock-community-bom")
+project(":community:flamingock-community-bom").name = "flamingock-community-bom"
+project(":community:flamingock-community-bom").projectDir = file("community/flamingock-community-bom")
 
-include("community:flamingock-ce-mongodb-sync")
-project(":community:flamingock-ce-mongodb-sync").name = "flamingock-ce-mongodb-sync"
-project(":community:flamingock-ce-mongodb-sync").projectDir = file("community/flamingock-ce-mongodb-sync")
+include("community:flamingock-auditstore-mongodb-sync")
+project(":community:flamingock-auditstore-mongodb-sync").name = "flamingock-auditstore-mongodb-sync"
+project(":community:flamingock-auditstore-mongodb-sync").projectDir = file("community/flamingock-auditstore-mongodb-sync")
 
-include("community:flamingock-ce-mongodb-springdata")
-project(":community:flamingock-ce-mongodb-springdata").name = "flamingock-ce-mongodb-springdata"
-project(":community:flamingock-ce-mongodb-springdata").projectDir = file("community/flamingock-ce-mongodb-springdata")
+include("community:flamingock-auditstore-mongodb-springdata")
+project(":community:flamingock-auditstore-mongodb-springdata").name = "flamingock-auditstore-mongodb-springdata"
+project(":community:flamingock-auditstore-mongodb-springdata").projectDir = file("community/flamingock-auditstore-mongodb-springdata")
 
-include("community:flamingock-ce-couchbase")
-project(":community:flamingock-ce-couchbase").name = "flamingock-ce-couchbase"
-project(":community:flamingock-ce-couchbase").projectDir = file("community/flamingock-ce-couchbase")
+include("community:flamingock-auditstore-couchbase")
+project(":community:flamingock-auditstore-couchbase").name = "flamingock-auditstore-couchbase"
+project(":community:flamingock-auditstore-couchbase").projectDir = file("community/flamingock-auditstore-couchbase")
 
-include("community:flamingock-ce-dynamodb")
-project(":community:flamingock-ce-dynamodb").name = "flamingock-ce-dynamodb"
-project(":community:flamingock-ce-dynamodb").projectDir = file("community/flamingock-ce-dynamodb")
+include("community:flamingock-auditstore-dynamodb")
+project(":community:flamingock-auditstore-dynamodb").name = "flamingock-auditstore-dynamodb"
+project(":community:flamingock-auditstore-dynamodb").projectDir = file("community/flamingock-auditstore-dynamodb")
 
 //////////////////////////////////////
 // PLUGINS

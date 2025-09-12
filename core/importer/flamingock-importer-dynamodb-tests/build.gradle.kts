@@ -4,7 +4,7 @@ dependencies {
 
     testImplementation(project(":core:importer:flamingock-importer"))
     testAnnotationProcessor(project(":core:flamingock-processor"))
-    testImplementation(project(":community:flamingock-ce-dynamodb"))
+    testImplementation(project(":community:flamingock-auditstore-dynamodb"))
 
 
     testImplementation(project(":utils:test-util"))

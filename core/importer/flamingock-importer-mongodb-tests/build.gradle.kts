@@ -3,7 +3,7 @@ dependencies {
 
     testImplementation(project(":core:importer:flamingock-importer"))
     testAnnotationProcessor(project(":core:flamingock-processor"))
-    testImplementation(project(":community:flamingock-ce-mongodb-sync"))
+    testImplementation(project(":community:flamingock-auditstore-mongodb-sync"))
     testImplementation(project(":templates:flamingock-mongodb-sync-template"))
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":utils:mongodb-util"))

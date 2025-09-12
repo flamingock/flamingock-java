@@ -13,7 +13,7 @@ dependencies {
     compileOnly("com.couchbase.client:java-client:3.6.0")
     testImplementation(project(":core:importer:flamingock-importer"))
     testAnnotationProcessor(project(":core:flamingock-processor"))
-    testImplementation(project(":community:flamingock-ce-couchbase"))
+    testImplementation(project(":community:flamingock-auditstore-couchbase"))
     testImplementation(project(":utils:couchbase-util"))
     testImplementation(project(":utils:test-util"))
 

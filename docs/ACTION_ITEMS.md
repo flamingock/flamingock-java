@@ -167,11 +167,11 @@ dependencies {
 **Impact**: Inconsistent pattern compared to other database integrations  
 **Risk Level**: LOW  
 
-**Issue**: `flamingock-ce-couchbase` doesn't use a transactioner pattern like MongoDB and DynamoDB
+**Issue**: `flamingock-auditstore-couchbase` doesn't use a transactioner pattern like MongoDB and DynamoDB
 
 **Action Required**: 
 1. Create `couchbase-transactioner` module
-2. Update `flamingock-ce-couchbase` to use it
+2. Update `flamingock-auditstore-couchbase` to use it
 3. Follow the same pattern as other database integrations
 
 **Estimated Effort**: 2-4 hours  
@@ -193,7 +193,7 @@ dependencies {
 **Impact**: No dependency management for community users  
 **Risk Level**: LOW  
 
-**Issue**: `flamingock-ce-bom` should contain constraints for all community modules
+**Issue**: `flamingock-community-bom` should contain constraints for all community modules
 
 **Action Required**: Add dependency constraints similar to cloud BOM
 
@@ -223,7 +223,7 @@ dependencies {
 
 - [ ] **Create Couchbase Transactioner** (if needed)
   - Create: `transactioners/couchbase-transactioner/`
-  - Update: `community/flamingock-ce-couchbase/build.gradle.kts`
+  - Update: `community/flamingock-auditstore-couchbase/build.gradle.kts`
   - Test: Couchbase integration tests
 
 ### Phase 3: Future Improvements

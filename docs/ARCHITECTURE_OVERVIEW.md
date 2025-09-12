@@ -41,10 +41,10 @@ These modules are designed to be directly imported by end users:
 - `flamingock-cloud` - Cloud edition
 - 
 #### Community Edition
-- `flamingock-ce-mongodb-sync` - MongoDB Sync community Edition
-- `flamingock-ce-dynamodb` - DynamoDB community Edition  
-- `flamingock-ce-couchbase` - Couchbase community Edition
-- `flamingock-ce-mongodb-springdata` - Spring Data MongoDB community Edition
+- `flamingock-auditstore-mongodb-sync` - MongoDB Sync community Edition
+- `flamingock-auditstore-dynamodb` - DynamoDB community Edition  
+- `flamingock-auditstore-couchbase` - Couchbase community Edition
+- `flamingock-auditstore-mongodb-springdata` - Spring Data MongoDB community Edition
 
 #### Templates
 - `flamingock-mongodb-sync-template` - MongoDB template support
@@ -59,7 +59,7 @@ These modules are designed to be directly imported by end users:
 - `flamingock-springboot-integration` - Spring Boot integration
 #### BOMs
 - `flamingock-cloud-bom` - Cloud dependencies management
-- `flamingock-ce-bom` - Cloud dependencies management
+- `flamingock-community-bom` - Cloud dependencies management
 
 ### UBU (Used By User) - API Access Only
 These modules provide APIs that users interact with but typically don't import directly:
@@ -116,11 +116,11 @@ graph TB
     subgraph Community["Community Edition"]
         direction TB
         flamingock-community[flamingock-community<br/>UBU]:::ubu
-        flamingock-ce-mongodb-sync[flamingock-ce-mongodb-sync<br/>IBU]:::ibu
-        flamingock-ce-dynamodb[flamingock-ce-dynamodb<br/>IBU]:::ibu
-        flamingock-ce-couchbase[flamingock-ce-couchbase<br/>IBU]:::ibu
-        flamingock-ce-mongodb-springdata[flamingock-ce-mongodb-springdata<br/>IBU]:::ibu
-        flamingock-ce-bom[flamingock-ce-bom<br/>BOM]:::bom
+        flamingock-auditstore-mongodb-sync[flamingock-auditstore-mongodb-sync<br/>IBU]:::ibu
+        flamingock-auditstore-dynamodb[flamingock-auditstore-dynamodb<br/>IBU]:::ibu
+        flamingock-auditstore-couchbase[flamingock-auditstore-couchbase<br/>IBU]:::ibu
+        flamingock-auditstore-mongodb-springdata[flamingock-auditstore-mongodb-springdata<br/>IBU]:::ibu
+        flamingock-community-bom[flamingock-community-bom<br/>BOM]:::bom
     end
 
     %% TRANSACTIONERS
@@ -163,19 +163,19 @@ graph TB
     %% COMMUNITY DEPENDENCIES
     flamingock-community -->|impl| flamingock-core
     flamingock-community -->|api| flamingock-core-api
-    flamingock-ce-mongodb-sync -->|impl| mongodb-util
-    flamingock-ce-mongodb-sync -->|impl| flamingock-core
-    flamingock-ce-mongodb-sync -->|api| mongodb-sync-target-system
-    flamingock-ce-mongodb-sync -->|api| flamingock-community
-    flamingock-ce-dynamodb -->|impl| dynamodb-util
-    flamingock-ce-dynamodb -->|impl| flamingock-core
-    flamingock-ce-dynamodb -->|api| flamingock-community
-    flamingock-ce-dynamodb -->|api| dynamodb-transactioner
-    flamingock-ce-couchbase -->|impl| flamingock-core
-    flamingock-ce-couchbase -->|api| flamingock-community
-    flamingock-ce-mongodb-springdata -->|impl| mongodb-util
-    flamingock-ce-mongodb-springdata -->|impl| flamingock-core
-    flamingock-ce-mongodb-springdata -->|api| flamingock-ce-mongodb-sync
+    flamingock-auditstore-mongodb-sync -->|impl| mongodb-util
+    flamingock-auditstore-mongodb-sync -->|impl| flamingock-core
+    flamingock-auditstore-mongodb-sync -->|api| mongodb-sync-target-system
+    flamingock-auditstore-mongodb-sync -->|api| flamingock-community
+    flamingock-auditstore-dynamodb -->|impl| dynamodb-util
+    flamingock-auditstore-dynamodb -->|impl| flamingock-core
+    flamingock-auditstore-dynamodb -->|api| flamingock-community
+    flamingock-auditstore-dynamodb -->|api| dynamodb-transactioner
+    flamingock-auditstore-couchbase -->|impl| flamingock-core
+    flamingock-auditstore-couchbase -->|api| flamingock-community
+    flamingock-auditstore-mongodb-springdata -->|impl| mongodb-util
+    flamingock-auditstore-mongodb-springdata -->|impl| flamingock-core
+    flamingock-auditstore-mongodb-springdata -->|api| flamingock-auditstore-mongodb-sync
 
     %% TRANSACTIONER DEPENDENCIES
     mongodb-sync-target-system -->|api| flamingock-core
@@ -210,10 +210,10 @@ graph TB
     %% External dependency connections (dotted lines)
     flamingock-core-api -.->|impl| Jackson
     general-util -.->|api| Jackson
-    flamingock-ce-mongodb-sync -.->|compileOnly| MongoDB
+    flamingock-auditstore-mongodb-sync -.->|compileOnly| MongoDB
     flamingock-springboot-integration -.->|compileOnly| Spring
-    flamingock-ce-dynamodb -.->|compileOnly| AWS
-    flamingock-ce-couchbase -.->|compileOnly| Couchbase
+    flamingock-auditstore-dynamodb -.->|compileOnly| AWS
+    flamingock-auditstore-couchbase -.->|compileOnly| Couchbase
 
     %% Legend
     subgraph Legend["Module Type Legend"]
@@ -245,7 +245,7 @@ graph TB
 | **Core Framework** | Java 8+ | All |
 | `flamingock-graalvm` | Java 17+ | GraalVM users |
 | `flamingock-springboot-integration` | Java 17+ | Spring Boot 3.x users |
-| `flamingock-ce-mongodb-springdata` | Java 17+ | Spring Data 4.x users |
+| `flamingock-auditstore-mongodb-springdata` | Java 17+ | Spring Data 4.x users |
 | **All Other Modules** | Java 8+ | Broad compatibility |
 
 ## Key Architecture Principles
@@ -300,20 +300,20 @@ graph TB
     classDef external fill:#f1f8e9,stroke:#33691e,stroke-width:1px
 
     User[User Application]:::external
-    User -->|imports| flamingock-ce-mongodb-sync
+    User -->|imports| flamingock-auditstore-mongodb-sync
     
-    flamingock-ce-mongodb-sync[flamingock-ce-mongodb-sync<br/>IBU]:::ibu
+    flamingock-auditstore-mongodb-sync[flamingock-auditstore-mongodb-sync<br/>IBU]:::ibu
     flamingock-community[flamingock-community<br/>UBU]:::ubu
     mongodb-sync-target-system[mongodb-sync-target-system<br/>IBU]:::ibu
     flamingock-core[flamingock-core<br/>Internal]:::internal
     mongodb-util[mongodb-util<br/>Internal]:::internal
     MongoAuditStore[MongoDB AuditStore<br/>4.0.0]:::external
     
-    flamingock-ce-mongodb-sync -->|api| flamingock-community
-    flamingock-ce-mongodb-sync -->|api| mongodb-sync-target-system
-    flamingock-ce-mongodb-sync -->|impl| flamingock-core
-    flamingock-ce-mongodb-sync -->|impl| mongodb-util
-    flamingock-ce-mongodb-sync -.->|compileOnly| MongoAuditStore
+    flamingock-auditstore-mongodb-sync -->|api| flamingock-community
+    flamingock-auditstore-mongodb-sync -->|api| mongodb-sync-target-system
+    flamingock-auditstore-mongodb-sync -->|impl| flamingock-core
+    flamingock-auditstore-mongodb-sync -->|impl| mongodb-util
+    flamingock-auditstore-mongodb-sync -.->|compileOnly| MongoAuditStore
     mongodb-sync-target-system -->|api| flamingock-core
     mongodb-sync-target-system -->|impl| mongodb-util
     mongodb-sync-target-system -.->|compileOnly| MongoAuditStore
@@ -328,22 +328,22 @@ graph TB
     classDef external fill:#f1f8e9,stroke:#33691e,stroke-width:1px
 
     User[User Application]:::external
-    User -->|imports| flamingock-ce-mongodb-springdata
+    User -->|imports| flamingock-auditstore-mongodb-springdata
     
-    flamingock-ce-mongodb-springdata[flamingock-ce-mongodb-springdata<br/>IBU]:::ibu
-    flamingock-ce-mongodb-sync[flamingock-ce-mongodb-sync<br/>IBU]:::ibu
+    flamingock-auditstore-mongodb-springdata[flamingock-auditstore-mongodb-springdata<br/>IBU]:::ibu
+    flamingock-auditstore-mongodb-sync[flamingock-auditstore-mongodb-sync<br/>IBU]:::ibu
     flamingock-core[flamingock-core<br/>Internal]:::internal
     mongodb-util[mongodb-util<br/>Internal]:::internal
     MongoAuditStore[MongoDB AuditStore<br/>4.8.0-5.6.0]:::external
     SpringData[Spring Data MongoDB<br/>4.0.0-5.0.0]:::external
     SpringBoot[Spring Boot<br/>3.0.0-4.0.0]:::external
     
-    flamingock-ce-mongodb-springdata -->|api| flamingock-ce-mongodb-sync
-    flamingock-ce-mongodb-springdata -->|impl| flamingock-core
-    flamingock-ce-mongodb-springdata -->|impl| mongodb-util
-    flamingock-ce-mongodb-springdata -.->|compileOnly| MongoAuditStore
-    flamingock-ce-mongodb-springdata -.->|compileOnly| SpringData
-    flamingock-ce-mongodb-springdata -.->|compileOnly| SpringBoot
+    flamingock-auditstore-mongodb-springdata -->|api| flamingock-auditstore-mongodb-sync
+    flamingock-auditstore-mongodb-springdata -->|impl| flamingock-core
+    flamingock-auditstore-mongodb-springdata -->|impl| mongodb-util
+    flamingock-auditstore-mongodb-springdata -.->|compileOnly| MongoAuditStore
+    flamingock-auditstore-mongodb-springdata -.->|compileOnly| SpringData
+    flamingock-auditstore-mongodb-springdata -.->|compileOnly| SpringBoot
 ```
 
 ### DynamoDB Community Edition
@@ -355,20 +355,20 @@ graph TB
     classDef external fill:#f1f8e9,stroke:#33691e,stroke-width:1px
 
     User[User Application]:::external
-    User -->|imports| flamingock-ce-dynamodb
+    User -->|imports| flamingock-auditstore-dynamodb
     
-    flamingock-ce-dynamodb[flamingock-ce-dynamodb<br/>IBU]:::ibu
+    flamingock-auditstore-dynamodb[flamingock-auditstore-dynamodb<br/>IBU]:::ibu
     flamingock-community[flamingock-community<br/>UBU]:::ubu
     dynamodb-transactioner[dynamodb-transactioner<br/>IBU]:::ibu
     flamingock-core[flamingock-core<br/>Internal]:::internal
     dynamodb-util[dynamodb-util<br/>Internal]:::internal
     AWSSDKAuditStore[AWS SDK DynamoDB<br/>2.0.0-3.0.0]:::external
     
-    flamingock-ce-dynamodb -->|api| flamingock-community
-    flamingock-ce-dynamodb -->|api| dynamodb-transactioner
-    flamingock-ce-dynamodb -->|impl| flamingock-core
-    flamingock-ce-dynamodb -->|impl| dynamodb-util
-    flamingock-ce-dynamodb -.->|compileOnly| AWSSDKDriver
+    flamingock-auditstore-dynamodb -->|api| flamingock-community
+    flamingock-auditstore-dynamodb -->|api| dynamodb-transactioner
+    flamingock-auditstore-dynamodb -->|impl| flamingock-core
+    flamingock-auditstore-dynamodb -->|impl| dynamodb-util
+    flamingock-auditstore-dynamodb -.->|compileOnly| AWSSDKDriver
     dynamodb-transactioner -->|api| flamingock-core
     dynamodb-transactioner -->|impl| dynamodb-util
     dynamodb-transactioner -.->|compileOnly| AWSSDKDriver
@@ -383,16 +383,16 @@ graph TB
     classDef external fill:#f1f8e9,stroke:#33691e,stroke-width:1px
 
     User[User Application]:::external
-    User -->|imports| flamingock-ce-couchbase
+    User -->|imports| flamingock-auditstore-couchbase
     
-    flamingock-ce-couchbase[flamingock-ce-couchbase<br/>IBU]:::ibu
+    flamingock-auditstore-couchbase[flamingock-auditstore-couchbase<br/>IBU]:::ibu
     flamingock-community[flamingock-community<br/>UBU]:::ubu
     flamingock-core[flamingock-core<br/>Internal]:::internal
     CouchbaseAuditStore[Couchbase Client<br/>3.0.0-4.0.0]:::external
     
-    flamingock-ce-couchbase -->|api| flamingock-community
-    flamingock-ce-couchbase -->|impl| flamingock-core
-    flamingock-ce-couchbase -.->|compileOnly| CouchbaseAuditStore
+    flamingock-auditstore-couchbase -->|api| flamingock-community
+    flamingock-auditstore-couchbase -->|impl| flamingock-core
+    flamingock-auditstore-couchbase -.->|compileOnly| CouchbaseAuditStore
 ```
 
 

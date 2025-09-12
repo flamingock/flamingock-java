@@ -70,7 +70,7 @@ This phase covers your day-to-day development activities on your local machine.
 ./gradlew :core:flamingock-core:build
 
 # Test specific module  
-./gradlew :community:flamingock-ce-mongodb-sync:test
+./gradlew :community:flamingock-auditstore-mongodb-sync:test
 
 # Publish specific module locally
 ./gradlew :core:flamingock-core:publishToMavenLocal
@@ -347,8 +347,8 @@ Flamingock supports releasing different bundles of modules:
 
 **Community AuditStores:**
 ```bash
-./gradlew :community:flamingock-ce-mongodb-sync:test
-./gradlew :community:flamingock-ce-dynamodb:build
+./gradlew :community:flamingock-auditstore-mongodb-sync:test
+./gradlew :community:flamingock-auditstore-dynamodb:build
 ```
 
 **Platform Plugins:**
