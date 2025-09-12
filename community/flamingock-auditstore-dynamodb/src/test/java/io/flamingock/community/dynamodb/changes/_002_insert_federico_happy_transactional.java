@@ -15,8 +15,8 @@
  */
 package io.flamingock.community.dynamodb.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -24,10 +24,10 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@ChangeUnit(id = "insert-user", order = "002")
+@Change(id = "insert-user", order = "002")
 public class _002_insert_federico_happy_transactional {
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         DynamoDbTable<UserEntity> table = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)

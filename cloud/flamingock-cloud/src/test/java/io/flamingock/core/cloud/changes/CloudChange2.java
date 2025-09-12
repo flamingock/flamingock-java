@@ -15,17 +15,17 @@
  */
 package io.flamingock.core.cloud.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.core.utils.TaskExecutionChecker;
 
 @TargetSystem(id = "transactional-target-system")
-@ChangeUnit(id = "create-persons-table-from-template-2", order = "002")
+@Change(id = "create-persons-table-from-template-2", order = "002")
 public class CloudChange2 {
     public static final TaskExecutionChecker checker = new TaskExecutionChecker();
 
-    @Execution
+    @Apply
     public void execution() {
         checker.markExecution();
     }

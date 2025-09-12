@@ -24,7 +24,7 @@ import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.TimeUtil;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
@@ -53,7 +53,7 @@ public class MongoDBTestHelper {
     private final MongoDBAuditMapper<SpringDataMongoDocumentWrapper> mapper = new MongoDBAuditMapper<>(() -> new SpringDataMongoDocumentWrapper(new Document()));
 
     private static final Function<Class<?>, ChangeInfo> infoExtractor = c -> {
-        ChangeUnit ann = c.getAnnotation(ChangeUnit.class);
+        Change ann = c.getAnnotation(Change.class);
         TargetSystem targetSystemAnn = c.getAnnotation(TargetSystem.class);
         String targetSystemId = targetSystemAnn != null ? targetSystemAnn.id() : null;
         return new ChangeInfo(ann.id(), ann.order(), targetSystemId, ann.transactional());
@@ -93,7 +93,7 @@ public class MongoDBTestHelper {
      * <p>
      * Each change unit is derived from a {@link Pair} where:
      * <ul>
-     *   <li>The first item is the {@link Class} annotated with {@link ChangeUnit} or {@link io.mongock.api.annotations.ChangeUnit}</li>
+     *   <li>The first item is the {@link Class} annotated with {@link Change} or {@link io.mongock.api.annotations.ChangeUnit}</li>
      *   <li>The second item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Execution}</li>
      *   <li>The third item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @RollbackExecution}</li>
      * </ul>

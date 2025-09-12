@@ -20,13 +20,13 @@ import org.bson.Document;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
-@ChangeUnit( id="insert-jorge-document" , order = "003")
+@Change( id="insert-jorge-document" , order = "003")
 public class _003_insert_jorge_failed_transactional_non_rollback {
 
-    @Execution
+    @Apply
     public void execution(MongoDatabase mongoDatabase, ClientSession clientSession) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(clientSession, new Document().append("name", "Jorge"));

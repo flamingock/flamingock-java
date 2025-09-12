@@ -15,8 +15,8 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
@@ -24,10 +24,10 @@ import io.flamingock.api.annotations.TargetSystem;
  * This change unit is bound to the "custom-target-system" target system.
  */
 @TargetSystem(id = "custom-target-system")
-@ChangeUnit(id = "test-custom-target-change", order = "002", transactional = false)
+@Change(id = "test-custom-target-change", order = "002", transactional = false)
 public class CustomTargetSystemChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         System.out.println("Executing change with custom target system");

@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ChangeUnit {
+public @interface Change {
 
     String NULL_ORDER = "NULL_VALUE";
 

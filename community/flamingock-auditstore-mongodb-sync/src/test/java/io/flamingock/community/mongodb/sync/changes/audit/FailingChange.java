@@ -15,17 +15,17 @@
  */
 package io.flamingock.community.mongodb.sync.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Change unit that intentionally fails to test error audit scenarios.
  * Used for testing audit persistence of error fields like errorTrace.
  */
-@ChangeUnit(id = "failing-change", order = "006", transactional = false)
+@Change(id = "failing-change", order = "006", transactional = false)
 public class FailingChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Intentionally throw exception to test error audit
         throw new RuntimeException("Intentional failure for audit testing");

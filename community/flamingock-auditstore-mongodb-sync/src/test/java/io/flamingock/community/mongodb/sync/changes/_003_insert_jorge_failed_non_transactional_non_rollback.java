@@ -17,14 +17,14 @@ package io.flamingock.community.mongodb.sync.changes;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import org.bson.Document;
 
-@ChangeUnit( id="insert-jorge-document" , order = "003", transactional = false)
+@Change( id="insert-jorge-document" , order = "003", transactional = false)
 public class _003_insert_jorge_failed_non_transactional_non_rollback {
 
-    @Execution
+    @Apply
     public void execution(MongoDatabase mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(new Document().append("name", "Jorge"));

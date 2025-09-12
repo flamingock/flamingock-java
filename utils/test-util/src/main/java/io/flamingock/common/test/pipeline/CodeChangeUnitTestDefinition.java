@@ -18,7 +18,7 @@ package io.flamingock.common.test.pipeline;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.util.CollectionUtil;
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -41,7 +41,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                         List<Class<?>> executionParameters,
                                         List<Class<?>> rollbackParameters) {
         this(
-                changeUnitClass.getAnnotation(ChangeUnit.class),
+                changeUnitClass.getAnnotation(Change.class),
                 changeUnitClass.getAnnotation(TargetSystem.class),
                 changeUnitClass.getAnnotation(Recovery.class),
                 changeUnitClass.getName(),
@@ -53,7 +53,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
     public CodeChangeUnitTestDefinition(Class<?> changeUnitClass,
                                         List<Class<?>> executionParameters) {
         this(
-                changeUnitClass.getAnnotation(ChangeUnit.class),
+                changeUnitClass.getAnnotation(Change.class),
                 changeUnitClass.getAnnotation(TargetSystem.class),
                 changeUnitClass.getAnnotation(Recovery.class),
                 changeUnitClass.getName(),
@@ -62,7 +62,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
         );
     }
 
-    private CodeChangeUnitTestDefinition(ChangeUnit changeUnitAnn,
+    private CodeChangeUnitTestDefinition(Change changeUnitAnn,
                                          TargetSystem targetSystemAnn,
                                          Recovery recoveryAnn,
                                          String className,

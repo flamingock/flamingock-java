@@ -16,8 +16,8 @@
 package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -31,23 +31,23 @@ class CouchbaseAuditMapperTest {
     private final CouchbaseAuditMapper mapper = new CouchbaseAuditMapper();
 
     // Test classes for different recovery strategies
-    @ChangeUnit(id = "test-manual", order = "001")
+    @Change(id = "test-manual", order = "001")
     @Recovery(strategy = Recovery.RecoveryStrategy.MANUAL_INTERVENTION)
     static class TestManualInterventionChangeUnit {
-        @Execution
+        @Apply
         public void execute() {}
     }
 
-    @ChangeUnit(id = "test-always-retry", order = "001") 
+    @Change(id = "test-always-retry", order = "001")
     @Recovery(strategy = Recovery.RecoveryStrategy.ALWAYS_RETRY)
     static class TestAlwaysRetryChangeUnit {
-        @Execution
+        @Apply
         public void execute() {}
     }
 
-    @ChangeUnit(id = "test-default", order = "001")
+    @Change(id = "test-default", order = "001")
     static class TestDefaultRecoveryChangeUnit {
-        @Execution
+        @Apply
         public void execute() {}
     }
 

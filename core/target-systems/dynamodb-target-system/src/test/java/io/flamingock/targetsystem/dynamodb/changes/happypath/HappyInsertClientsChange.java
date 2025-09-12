@@ -17,8 +17,8 @@ package io.flamingock.targetsystem.dynamodb.changes.happypath;
 
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.targetsystem.dynamodb.changes.common.UserEntity;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -27,10 +27,10 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 @TargetSystem( id = "dynamodb-ts")
-@ChangeUnit(id = "insert-clients", order = "002")
+@Change(id = "insert-clients", order = "002")
 public class HappyInsertClientsChange {
 
-    @Execution
+    @Apply
     public void execution(@NonLockGuarded DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         DynamoDbTable<UserEntity> table = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)

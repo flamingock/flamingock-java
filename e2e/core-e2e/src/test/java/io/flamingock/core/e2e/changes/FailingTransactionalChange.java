@@ -15,23 +15,23 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 
 /**
  * Failing transactional change unit for testing error handling and rollback scenarios.
  */
-@ChangeUnit(id = "test4-failing-tx-change", order = "006", transactional = true)
+@Change(id = "test4-failing-tx-change", order = "006", transactional = true)
 public class FailingTransactionalChange {
 
-    @Execution
+    @Apply
     public void execution() {
         System.out.println("Executing failing transactional change");
         throw new RuntimeException("Simulated execution failure");
     }
     
-    @RollbackExecution
+    @Rollback
     public void rollback() {
         System.out.println("Rolling back failing transactional change");
     }

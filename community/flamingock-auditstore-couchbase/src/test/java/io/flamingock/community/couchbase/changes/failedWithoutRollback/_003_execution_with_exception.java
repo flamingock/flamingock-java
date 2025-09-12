@@ -18,14 +18,14 @@ package io.flamingock.community.couchbase.changes.failedWithoutRollback;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 
-@ChangeUnit( id="execution-with-exception" , order = "003")
+@Change( id="execution-with-exception" , order = "003")
 public class _003_execution_with_exception {
 
-    @Execution
+    @Apply
     public void execution(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
         ctx.insert(collection,"test-client-Jorge", JsonObject.create().put("name", "Jorge"));
         throw new RuntimeException("test");

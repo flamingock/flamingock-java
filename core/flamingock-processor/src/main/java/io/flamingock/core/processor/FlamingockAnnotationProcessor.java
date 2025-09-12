@@ -16,7 +16,7 @@
 package io.flamingock.core.processor;
 
 import io.flamingock.api.StageType;
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.AnnotationFinder;
@@ -48,7 +48,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -130,7 +129,7 @@ import java.util.Set;
  * <h2>Supported Annotations</h2>
  * <ul>
  *     <li>{@link EnableFlamingock} - Mandatory pipeline configuration</li>
- *     <li>{@link ChangeUnit} - Represents a change unit defined within the code</li>
+ *     <li>{@link Change} - Represents a change unit defined within the code</li>
  *     <li>io.mongock.api.annotations.ChangeUnit - Legacy change unit support</li>
  * </ul>
  *
@@ -182,7 +181,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<>(Arrays.asList(
                 EnableFlamingock.class.getName(),
-                ChangeUnit.class.getName()
+                Change.class.getName()
         ));
     }
 

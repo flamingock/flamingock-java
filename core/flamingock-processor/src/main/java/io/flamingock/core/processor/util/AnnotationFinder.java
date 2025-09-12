@@ -15,9 +15,8 @@
  */
 package io.flamingock.core.processor.util;
 
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
-import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
@@ -69,7 +68,7 @@ public final class AnnotationFinder {
     }
 
     private Collection<CodePreviewChangeUnit> findAnnotatedChanges() {
-        return roundEnv.getElementsAnnotatedWith(ChangeUnit.class)
+        return roundEnv.getElementsAnnotatedWith(Change.class)
                 .stream()
                 .filter(e -> e.getKind() == ElementKind.CLASS)
                 .map(e -> (TypeElement) e)

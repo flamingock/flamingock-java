@@ -15,16 +15,16 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Transactional change unit for multiple changes test.
  */
-@ChangeUnit(id = "test3-multi-tx-change", order = "004", transactional = true)
+@Change(id = "test3-multi-tx-change", order = "004", transactional = true)
 public class MultiTest2TransactionalChange {
 
-    @Execution
+    @Apply
     public void execution() {
         System.out.println("Executing multi test 2 transactional change");
     }

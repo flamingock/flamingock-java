@@ -15,8 +15,8 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
 
 /**
@@ -24,11 +24,11 @@ import io.flamingock.api.annotations.Recovery;
  * Used for testing recovery behavior when changes are in inconsistent states
  * and should require explicit manual intervention (same as default behavior).
  */
-@ChangeUnit(id = "manual-intervention-non-tx-change", order = "001", transactional = false)
+@Change(id = "manual-intervention-non-tx-change", order = "001", transactional = false)
 @Recovery(strategy = Recovery.RecoveryStrategy.MANUAL_INTERVENTION)
 public class ManualInterventionNonTransactionalChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         System.out.println("Executing manual-intervention non-transactional change");

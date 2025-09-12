@@ -15,6 +15,9 @@
  */
 package io.flamingock.community.dynamodb.changes;
 
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.community.dynamodb.changes.common.DynamoDBUtil;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import io.mongock.api.annotations.BeforeExecution;
@@ -33,7 +36,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import static java.util.Collections.emptyList;
 
 
-@io.flamingock.api.annotations.ChangeUnit(id = "client-initializer", order = "001", author = "mongock")
+@Change(id = "client-initializer", order = "001", author = "mongock")
 @ChangeUnit(id = "client-initializer", order = "001", author = "mongock")
 public class _001_mongock_create_authors_collection {
 
@@ -76,7 +79,7 @@ public class _001_mongock_create_authors_collection {
         );
     }
 
-    @io.flamingock.api.annotations.Execution
+    @Apply
     @Execution
     public void execution(DynamoDbClient client) {
         final TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = TransactWriteItemsEnhancedRequest.builder();
@@ -87,7 +90,7 @@ public class _001_mongock_create_authors_collection {
         enhancedClient.transactWriteItems(writeRequestBuilder.build());
     }
 
-    @io.flamingock.api.annotations.RollbackExecution
+    @Rollback
     @RollbackExecution
     public void rollbackExecution(DynamoDbClient client) {
         final TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = TransactWriteItemsEnhancedRequest.builder();

@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.common.core.error.FlamingockException;
 
 import java.util.regex.Matcher;
@@ -46,7 +46,7 @@ public final class LoadedChangeUnitUtil {
      * For CodeLoadedChangeUnit - validates order from class name
      */
     public static String getMatchedOrderFromClassName(String changeUnitId, String orderInAnnotation, String className) {
-        String orderInAnnotationFiltered = ChangeUnit.NULL_ORDER.equals(orderInAnnotation) ? null : orderInAnnotation;
+        String orderInAnnotationFiltered = Change.NULL_ORDER.equals(orderInAnnotation) ? null : orderInAnnotation;
         return getMatchedOrder(changeUnitId, orderInAnnotationFiltered, className, true);
     }
 

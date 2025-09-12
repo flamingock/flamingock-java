@@ -19,8 +19,8 @@ package io.flamingock.targetsystem.dynamodb.changes.happypath;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.targetsystem.dynamodb.changes.common.UserEntity;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
@@ -28,10 +28,10 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import static java.util.Collections.emptyList;
 
 @TargetSystem( id = "dynamodb-ts")
-@ChangeUnit(id = "create-table-clients", order = "001", transactional = false)
+@Change(id = "create-table-clients", order = "001", transactional = false)
 public class HappyCreateTableClientsChange {
 
-    @Execution
+    @Apply
     public void execution(@NonLockGuarded DynamoDbClient client) {
 
         DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);

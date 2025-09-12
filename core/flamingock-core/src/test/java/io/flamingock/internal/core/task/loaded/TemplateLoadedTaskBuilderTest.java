@@ -18,13 +18,11 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,7 +66,7 @@ class TemplateLoadedTaskBuilderTest {
         @Override
         public Collection<Class<?>> getReflectiveClasses() { return Collections.emptyList(); }
         
-        @Execution
+        @Apply
         public void execute(Object config, Object execution, Object context) {
             // Test implementation
         }

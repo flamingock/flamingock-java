@@ -15,17 +15,17 @@
  */
 package io.flamingock.community.mongodb.sync.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Change unit that produces NON_TX txType via transactional=false annotation.
  * Used for testing audit persistence of NON_TX transaction type.
  */
-@ChangeUnit(id = "non-tx-transactional-false", order = "001", transactional = false)
+@Change(id = "non-tx-transactional-false", order = "001", transactional = false)
 public class NonTxTransactionalFalseChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         System.out.println("Executing NON_TX change via transactional=false");

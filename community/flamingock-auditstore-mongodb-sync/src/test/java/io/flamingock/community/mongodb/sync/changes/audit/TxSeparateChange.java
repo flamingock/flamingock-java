@@ -15,8 +15,8 @@
  */
 package io.flamingock.community.mongodb.sync.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
@@ -24,10 +24,10 @@ import io.flamingock.api.annotations.TargetSystem;
  * Used for testing audit persistence of TX_SEPARATE_NO_MARKER transaction type.
  */
 @TargetSystem(id = "tx-separate-system")
-@ChangeUnit(id = "tx-separate-no-marker", order = "005", transactional = true)
+@Change(id = "tx-separate-no-marker", order = "005", transactional = true)
 public class TxSeparateChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         System.out.println("Executing TX_SEPARATE_NO_MARKER change via MongoSyncTargetSystem with different MongoClient");

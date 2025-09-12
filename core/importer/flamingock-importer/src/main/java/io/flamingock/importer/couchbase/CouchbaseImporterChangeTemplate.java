@@ -15,12 +15,11 @@
  */
 package io.flamingock.importer.couchbase;
 
-import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.importer.AbstractImporterChangeTemplate;
 import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.internal.common.core.audit.AuditWriter;
@@ -37,7 +36,7 @@ public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTempl
         super(CouchbaseImportConfiguration.class);
     }
 
-    @Execution
+    @Apply
     public void execution(Cluster cluster,
                           Bucket bucket, //TODO this is the main bucket, we need to provide a way to get a custom bucket (target system)
                           @NonLockGuarded AuditWriter auditWriter,
@@ -49,7 +48,7 @@ public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTempl
         logger.info("Finished audit log migration from Mongock to Flamingock local audit store[Couchbase]");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollback() {
         // TODO: Implement rollback logic if needed
     }

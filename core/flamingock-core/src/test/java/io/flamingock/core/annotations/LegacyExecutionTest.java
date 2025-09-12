@@ -15,9 +15,9 @@
  */
 package io.flamingock.core.annotations;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.core.utils.TaskExecutionChecker;
 import io.flamingock.core.utils.TestTaskExecution;
 import io.mongock.api.annotations.BeforeExecution;
@@ -52,23 +52,23 @@ class LegacyExecutionTest {
     }
 
 
-    @ChangeUnit(id = "taskId", order = "001")
+    @Change(id = "taskId", order = "001")
     public static class SingleChangeUnit {
 
-        @Execution
+        @Apply
         public void execution() {
             CHECKER.markExecution();
         }
 
         //added but it shouldn't be executed
-        @RollbackExecution
+        @Rollback
         public void rollbackExecution() {
             CHECKER.markRollBackExecution();
         }
     }
 
 
-    @ChangeUnit(id = "taskId", order = "001")
+    @Change(id = "taskId", order = "001")
     public static class ChangeUnitWithBeforeExecution {
 
         @BeforeExecution
@@ -82,13 +82,13 @@ class LegacyExecutionTest {
             CHECKER.markBeforeExecutionRollBack();
         }
 
-        @Execution
+        @Apply
         public void execution() {
             CHECKER.markExecution();
         }
 
         //added but it shouldn't be executed
-        @RollbackExecution
+        @Rollback
         public void rollbackExecution() {
             CHECKER.markRollBackExecution();
         }

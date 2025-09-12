@@ -18,17 +18,17 @@ package io.flamingock.targetsystem.mongodb.sync.changes.unhappypath;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.TargetSystem;
 import org.bson.Document;
 
 @TargetSystem( id = "mongodb-ts")
-@ChangeUnit(id = "insert-clients", order = "002")
+@Change(id = "insert-clients", order = "002")
 public class UnhappyInsertClientsChange {
 
-    @Execution
+    @Apply
     public void execution(@NonLockGuarded MongoDatabase mongoDatabase, @NonLockGuarded ClientSession clientSession) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(clientSession, new Document().append("name", "Should Have Been Rolled Back"));;

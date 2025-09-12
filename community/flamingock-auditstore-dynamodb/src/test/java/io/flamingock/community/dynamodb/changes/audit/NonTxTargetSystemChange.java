@@ -15,8 +15,8 @@
  */
 package io.flamingock.community.dynamodb.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -25,10 +25,10 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  * Uses custom target system for testing targetSystemId persistence.
  */
 @TargetSystem(id = "non-tx-system")
-@ChangeUnit(id = "non-tx-target-system", order = "002", author = "test-author")
+@Change(id = "non-tx-target-system", order = "002", author = "test-author")
 public class NonTxTargetSystemChange {
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient client) {
         // Simple execution - this will be NON_TX due to DefaultTargetSystem
         System.out.println("Executing NON_TX change via DefaultTargetSystem");

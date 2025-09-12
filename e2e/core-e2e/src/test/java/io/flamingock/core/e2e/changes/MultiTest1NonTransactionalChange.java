@@ -15,16 +15,16 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Non-transactional change unit for multiple changes test.
  */
-@ChangeUnit(id = "test3-multi-non-tx-change", order = "003", transactional = false)
+@Change(id = "test3-multi-non-tx-change", order = "003", transactional = false)
 public class MultiTest1NonTransactionalChange {
 
-    @Execution
+    @Apply
     public void execution() {
         System.out.println("Executing multi test 1 non-transactional change");
     }

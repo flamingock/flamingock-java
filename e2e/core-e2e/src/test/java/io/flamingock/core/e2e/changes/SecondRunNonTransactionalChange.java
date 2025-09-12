@@ -15,16 +15,16 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Non-transactional change unit for second run test.
  */
-@ChangeUnit(id = "test5-second-run-change", order = "005", transactional = false)
+@Change(id = "test5-second-run-change", order = "005", transactional = false)
 public class SecondRunNonTransactionalChange {
 
-    @Execution
+    @Apply
     public void execution() {
         System.out.println("Executing second run non-transactional change");
     }

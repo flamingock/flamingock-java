@@ -16,9 +16,9 @@
 package io.flamingock.importer.mongodb;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.importer.AbstractImporterChangeTemplate;
 import io.flamingock.importer.ImportConfiguration;
 import io.flamingock.importer.ImporterExecutor;
@@ -35,7 +35,7 @@ public class MongoDbImporterChangeTemplate extends AbstractImporterChangeTemplat
         super(ImportConfiguration.class);
     }
 
-    @Execution
+    @Apply
     public void execution(MongoDatabase db,
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
@@ -45,7 +45,7 @@ public class MongoDbImporterChangeTemplate extends AbstractImporterChangeTemplat
         logger.info("Finished audit log migration from Mongock to Flamingock local audit store[MongoDB]");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollback() {
         //TODO
     }

@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -202,7 +202,7 @@ class CodeLoadedTaskBuilderTest {
     }
 
     // Test class with ChangeUnit annotation for testing setFromFlamingockChangeAnnotation
-    @ChangeUnit(id = "annotation-test", order = "100", transactional = false)
+    @Change(id = "annotation-test", order = "100", transactional = false)
     static class TestChangeUnitClass {
     }
 
@@ -232,7 +232,7 @@ class CodeLoadedTaskBuilderTest {
         assertFalse(CodeLoadedTaskBuilder.supportsSourceClass(String.class));
     }
 
-    @ChangeUnit(id = "no-order-in_annotation")
+    @Change(id = "no-order-in_annotation")
     static class _100_noOrderInAnnotation {
     }
 

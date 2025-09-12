@@ -17,14 +17,14 @@ package io.flamingock.community.mongodb.sync.changes;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import org.bson.Document;
 
-@ChangeUnit( id="insert-federico-document" , order = "002")
+@Change( id="insert-federico-document" , order = "002")
 public class _002_insert_federico_happy_non_transactional {
 
-    @Execution
+    @Apply
     public void execution(MongoDatabase mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(new Document().append("name", "Federico"));

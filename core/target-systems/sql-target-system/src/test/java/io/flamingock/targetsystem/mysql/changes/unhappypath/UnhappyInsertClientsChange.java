@@ -15,9 +15,9 @@
  */
 package io.flamingock.targetsystem.mysql.changes.unhappypath;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
@@ -25,16 +25,16 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @TargetSystem( id = "mysql-ts")
-@ChangeUnit(id = "insert-clients", order = "002")
+@Change(id = "insert-clients", order = "002")
 public class UnhappyInsertClientsChange {
 
-    @Execution
+    @Apply
     public void execution(Connection connection) throws SQLException {
         // This will fail due to intentional error
         throw new RuntimeException("Intentional failure for testing rollback");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollback(Connection connection) throws SQLException {
         String sql = "DELETE FROM client_table WHERE email = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

@@ -15,8 +15,8 @@
  */
 package io.flamingock.community.dynamodb.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -26,10 +26,10 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  * Uses custom DynamoDBTargetSystem with same DynamoDbClient as audit storage.
  */
 @TargetSystem(id = "tx-shared-system")
-@ChangeUnit(id = "tx-shared-explicit", order = "004", author = "test-author")
+@Change(id = "tx-shared-explicit", order = "004", author = "test-author")
 public class TxSharedExplicitChange {
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Transactional execution with explicit same DynamoDbClient - this will be TX_SHARED
         System.out.println("Executing TX_SHARED change via explicit DynamoDBTargetSystem with same DynamoDbClient");

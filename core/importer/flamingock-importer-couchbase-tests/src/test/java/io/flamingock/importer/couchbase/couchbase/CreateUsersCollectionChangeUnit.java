@@ -18,15 +18,15 @@ package io.flamingock.importer.couchbase.couchbase;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 import java.util.Collections;
 
-@ChangeUnit(id = "create-users-collection", order = "001", author = "importer", transactional = false)
+@Change(id = "create-users-collection", order = "001", author = "importer", transactional = false)
 public class CreateUsersCollectionChangeUnit {
 
-    @Execution
+    @Apply
     public void execution(Bucket bucket) {
         Collection collection = bucket.defaultCollection();
 

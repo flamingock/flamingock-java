@@ -19,21 +19,21 @@ import org.bson.Document;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 
-@ChangeUnit( id="insert-jorge-document" , order = "003")
+@Change( id="insert-jorge-document" , order = "003")
 public class _003_insert_jorge_failed_non_transactional_rollback {
 
-    @Execution
+    @Apply
     public void execution(MongoDatabase mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(new Document().append("name", "Jorge"));
         throw new RuntimeException("test");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollbackExecution(MongoDatabase mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.deleteOne(new Document().append("name", "Jorge"));

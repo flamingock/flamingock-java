@@ -15,15 +15,15 @@
  */
 package io.flamingock.importer.dynamodb.dynamodb;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-@ChangeUnit(id = "create-users-table", order = "001", author = "importer")
+@Change(id = "create-users-table", order = "001", author = "importer")
 public class CreateUsersTableChangeUnit {
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient dynamoDbClient) {
         String tableName = "users";
         try {

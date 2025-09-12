@@ -20,16 +20,16 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.TargetSystem;
 
 @TargetSystem( id = "couchbase-ts")
-@ChangeUnit(id = "insert-clients", order = "002")
+@Change(id = "insert-clients", order = "002")
 public class UnhappyInsertClientsChange {
 
-    @Execution
+    @Apply
     public void execution(@NonLockGuarded Bucket bucket, @NonLockGuarded TransactionAttemptContext ctx) {
         Collection collection = bucket
                 .scope(CollectionIdentifier.DEFAULT_SCOPE)

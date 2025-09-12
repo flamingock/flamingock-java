@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
@@ -43,17 +43,17 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
 
     @Override
     public Method getExecutionMethod() {
-        Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Execution.class);
+        Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Apply.class);
         return firstAnnotatedMethod
                 .orElseThrow(() -> new IllegalArgumentException(String.format(
                         "Executable changeUnit[%s] without %s method",
                         getSource(),
-                        Execution.class.getName())));
+                        Apply.class.getName())));
     }
 
     @Override
     public Optional<Method> getRollbackMethod() {
-        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), RollbackExecution.class);
+        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Rollback.class);
     }
 
     @Override

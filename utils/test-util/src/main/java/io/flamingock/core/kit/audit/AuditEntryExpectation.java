@@ -15,6 +15,7 @@
  */
 package io.flamingock.core.kit.audit;
 
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 
@@ -251,7 +252,7 @@ public class AuditEntryExpectation {
         // Find the method annotated with @Execution
         java.lang.reflect.Method[] methods = clazz.getDeclaredMethods();
         for (java.lang.reflect.Method method : methods) {
-            if (method.isAnnotationPresent(io.flamingock.api.annotations.Execution.class)) {
+            if (method.isAnnotationPresent(Apply.class)) {
                 this.expectedMethodName = method.getName();
                 return this;
             }

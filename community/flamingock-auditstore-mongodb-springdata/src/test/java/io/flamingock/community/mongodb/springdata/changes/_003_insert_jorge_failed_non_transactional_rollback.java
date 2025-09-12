@@ -16,23 +16,23 @@
 package io.flamingock.community.mongodb.springdata.changes;
 
 import com.mongodb.client.MongoCollection;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@ChangeUnit( id="insert-jorge-document" , order = "003")
+@Change( id="insert-jorge-document" , order = "003")
 public class _003_insert_jorge_failed_non_transactional_rollback {
 
-    @Execution
+    @Apply
     public void execution(MongoTemplate mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(new Document().append("name", "Jorge"));
         throw new RuntimeException("test");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollbackExecution(MongoTemplate mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.deleteOne(new Document().append("name", "Jorge"));

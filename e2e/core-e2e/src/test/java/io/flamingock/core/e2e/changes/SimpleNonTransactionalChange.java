@@ -15,17 +15,17 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Simple non-transactional change unit for testing core execution strategies.
  * Does not require any external dependencies.
  */
-@ChangeUnit(id = "test1-non-tx-change", order = "001", transactional = false)
+@Change(id = "test1-non-tx-change", order = "001", transactional = false)
 public class SimpleNonTransactionalChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         System.out.println("Executing simple non-transactional change");

@@ -18,14 +18,14 @@ package io.flamingock.community.couchbase.changes.failedWithoutRollback;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 
-@ChangeUnit( id="insert-document" , order = "002")
+@Change( id="insert-document" , order = "002")
 public class _002_insert_document {
 
-    @Execution
+    @Apply
     public void execution(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
         ctx.insert(collection,"test-client-Federico", JsonObject.create().put("name", "Federico"));
     }

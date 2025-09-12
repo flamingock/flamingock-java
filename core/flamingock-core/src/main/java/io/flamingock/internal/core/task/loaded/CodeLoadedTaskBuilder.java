@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.util.StringUtil;
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
@@ -55,7 +55,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     public static boolean supportsSourceClass(Class<?> sourceClass) {
-        return sourceClass.isAnnotationPresent(ChangeUnit.class);
+        return sourceClass.isAnnotationPresent(Change.class);
 
     }
 
@@ -73,15 +73,15 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     private CodeLoadedTaskBuilder setSourceClass(Class<?> sourceClass) {
-        if (sourceClass.isAnnotationPresent(ChangeUnit.class)) {
-            setFromFlamingockChangeAnnotation(sourceClass, sourceClass.getAnnotation(ChangeUnit.class));
+        if (sourceClass.isAnnotationPresent(Change.class)) {
+            setFromFlamingockChangeAnnotation(sourceClass, sourceClass.getAnnotation(Change.class));
             return this;
 
         } else {
             throw new IllegalArgumentException(String.format(
                     "Change unit class[%s] should be annotate with %s",
                     sourceClass.getName(),
-                    ChangeUnit.class.getName()
+                    Change.class.getName()
             ));
         }
     }
@@ -154,7 +154,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         }
     }
 
-    private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, ChangeUnit annotation) {
+    private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, Change annotation) {
         setId(annotation.id());
         setOrderInContent(annotation.order());
         setChangeUnitClass(sourceClass.getName());

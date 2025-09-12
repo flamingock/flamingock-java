@@ -15,8 +15,8 @@
  */
 package io.flamingock.template.sql;
 
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 
 import java.sql.Connection;
@@ -28,12 +28,12 @@ public class SqlTemplate extends AbstractChangeTemplate<Void, String, String> {
         super();
     }
 
-    @Execution
+    @Apply
     public void execution(Connection connection) {
         execute(connection, execution);
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollback(Connection connection) {
         execute(connection, rollback);
     }

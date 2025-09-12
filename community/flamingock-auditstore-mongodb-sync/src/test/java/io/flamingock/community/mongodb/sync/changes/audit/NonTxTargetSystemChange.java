@@ -15,8 +15,8 @@
  */
 package io.flamingock.community.mongodb.sync.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
@@ -24,10 +24,10 @@ import io.flamingock.api.annotations.TargetSystem;
  * Used for testing audit persistence of NON_TX transaction type with custom target system.
  */
 @TargetSystem(id = "non-tx-system")
-@ChangeUnit(id = "non-tx-target-system", order = "002")
+@Change(id = "non-tx-target-system", order = "002")
 public class NonTxTargetSystemChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         System.out.println("Executing NON_TX change via DefaultTargetSystem");

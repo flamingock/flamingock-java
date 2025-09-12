@@ -16,6 +16,9 @@
 package io.flamingock.community.mongodb.sync.changes;
 
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Rollback;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -27,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
-@io.flamingock.api.annotations.ChangeUnit(id = "create-author-collection", order = "000", author = "mongock")
+@Change(id = "create-author-collection", order = "000", author = "mongock")
 @ChangeUnit(id = "create-author-collection", order = "000", author = "mongock")
 public class _000_mongock_create_authors_collection {
 
@@ -46,7 +49,7 @@ public class _000_mongock_create_authors_collection {
         mongoDatabase.getCollection(CLIENTS_COLLECTION_NAME).drop();
     }
 
-    @io.flamingock.api.annotations.Execution
+    @Apply
     @Execution
     public void execution(MongoDatabase mongoDatabase) {
 
@@ -56,7 +59,7 @@ public class _000_mongock_create_authors_collection {
                         .collect(Collectors.toList()));
     }
 
-    @io.flamingock.api.annotations.RollbackExecution
+    @Rollback
     @RollbackExecution
     public void rollbackExecution(MongoDatabase mongoDatabase) {
         mongoDatabase.getCollection(CLIENTS_COLLECTION_NAME).deleteMany(new Document());

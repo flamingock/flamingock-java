@@ -16,13 +16,13 @@
 package io.flamingock.community.mongodb.sync.changes;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
-@ChangeUnit( id="create-client-collection" , order = "001", transactional = false)
+@Change( id="create-client-collection" , order = "001", transactional = false)
 public class _001_create_client_collection_happy {
 
-    @Execution
+    @Apply
     public void execution(MongoDatabase mongoDatabase) {
         mongoDatabase.createCollection("clientCollection");
     }

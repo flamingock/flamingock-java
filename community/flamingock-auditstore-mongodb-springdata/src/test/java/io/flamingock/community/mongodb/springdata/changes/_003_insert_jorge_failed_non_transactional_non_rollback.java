@@ -16,15 +16,15 @@
 package io.flamingock.community.mongodb.springdata.changes;
 
 import com.mongodb.client.MongoCollection;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@ChangeUnit( id="insert-jorge-document" , order = "003", transactional = false)
+@Change( id="insert-jorge-document" , order = "003", transactional = false)
 public class _003_insert_jorge_failed_non_transactional_non_rollback {
 
-    @Execution
+    @Apply
     public void execution(MongoTemplate mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(new Document().append("name", "Jorge"));

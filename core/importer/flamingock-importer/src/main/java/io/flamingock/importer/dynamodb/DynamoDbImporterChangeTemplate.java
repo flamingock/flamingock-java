@@ -15,9 +15,9 @@
  */
 package io.flamingock.importer.dynamodb;
 
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.importer.AbstractImporterChangeTemplate;
 import io.flamingock.importer.ImportConfiguration;
 import io.flamingock.importer.ImporterExecutor;
@@ -34,7 +34,7 @@ public class DynamoDbImporterChangeTemplate extends AbstractImporterChangeTempla
         super(ImportConfiguration.class);
     }
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient client,
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
@@ -44,7 +44,7 @@ public class DynamoDbImporterChangeTemplate extends AbstractImporterChangeTempla
         logger.info("Finished audit log migration from Mongock to Flamingock local audit store[Couchbase]");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollback() {
         //TODO
     }

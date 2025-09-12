@@ -16,15 +16,15 @@
 package io.flamingock.community.couchbase.changes.failedWithoutRollback;
 
 import com.couchbase.client.java.Collection;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 import java.util.Arrays;
 
-@ChangeUnit(id = "create-index", order = "001", transactional = false)
+@Change(id = "create-index", order = "001", transactional = false)
 public class _001_create_index {
 
-	@Execution
+	@Apply
 	public void execution(Collection collection) {
 		collection.queryIndexes().createIndex( "idx_standalone_index", Arrays.asList("field1", "field2"));
 	}

@@ -15,8 +15,8 @@
  */
 package io.flamingock.targetsystem.mysql.changes.unhappypath;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 
@@ -25,10 +25,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 @TargetSystem( id = "mysql-ts")
-@ChangeUnit(id = "create-clients-table", order = "001", transactional = false)
+@Change(id = "create-clients-table", order = "001", transactional = false)
 public class UnhappyCreateClientsTableChange {
 
-    @Execution
+    @Apply
     public void execution(Connection connection) throws SQLException {
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(

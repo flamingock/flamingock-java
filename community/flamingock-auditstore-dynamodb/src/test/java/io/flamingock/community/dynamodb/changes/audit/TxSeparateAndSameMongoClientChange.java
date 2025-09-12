@@ -15,8 +15,8 @@
  */
 package io.flamingock.community.dynamodb.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -26,10 +26,10 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  * Uses custom DynamoDBTargetSystem with different DynamoDbClient than audit storage.
  */
 @TargetSystem(id = "mongo-system")
-@ChangeUnit(id = "tx-separate-no-marker", order = "005", author = "test-author")
+@Change(id = "tx-separate-no-marker", order = "005", author = "test-author")
 public class TxSeparateAndSameMongoClientChange {
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Transactional execution with different DynamoDbClient - this will be TX_SEPARATE_NO_MARKER
         System.out.println("Executing TX_SEPARATE_NO_MARKER change via DynamoDBTargetSystem with different DynamoDbClient");

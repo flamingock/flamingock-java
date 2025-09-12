@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.utils;
 
 import io.flamingock.internal.util.ReflectionUtil;
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.NonLockGuardedType;
 
@@ -28,7 +28,7 @@ import java.util.List;
 
 public final class ExecutionUtils {
 
-    private static final Class<ChangeUnit> CHANGE_UNIT_CLASS = ChangeUnit.class;
+    private static final Class<Change> CHANGE_UNIT_CLASS = Change.class;
 
 
     private ExecutionUtils() {

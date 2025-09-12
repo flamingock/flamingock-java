@@ -19,18 +19,18 @@ import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.targetsystem.dynamodb.changes.common.UserEntity;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.api.annotations.NonLockGuarded;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 
 import static java.util.Collections.emptyList;
 
 @TargetSystem( id = "dynamodb-ts")
-@ChangeUnit(id = "unhappy-create-table-clients", order = "001", transactional = false)
+@Change(id = "unhappy-create-table-clients", order = "001", transactional = false)
 public class UnhappyCreateTableClientsChange {
 
-    @Execution
+    @Apply
     public void execution(@NonLockGuarded DynamoDbClient client) {
 
         DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);

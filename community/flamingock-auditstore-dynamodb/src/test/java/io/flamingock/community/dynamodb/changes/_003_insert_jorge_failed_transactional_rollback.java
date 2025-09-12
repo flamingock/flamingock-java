@@ -15,9 +15,9 @@
  */
 package io.flamingock.community.dynamodb.changes;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -25,10 +25,10 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@ChangeUnit(id = "execution-with-exception", order = "003")
+@Change(id = "execution-with-exception", order = "003")
 public class _003_insert_jorge_failed_transactional_rollback {
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         DynamoDbTable<UserEntity> table = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
@@ -39,7 +39,7 @@ public class _003_insert_jorge_failed_transactional_rollback {
         throw new RuntimeException("test");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollbackExecution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Do nothing
         System.out.println("THIS SHOULD NOT BE CALLED");

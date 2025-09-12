@@ -15,11 +15,11 @@
  */
 package io.flamingock.importer.couchbase.legacy;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.mongock.api.annotations.BeforeExecution;
 
-@ChangeUnit(id = "client-initializer", order = "1", author = "mongock", transactional = false)
+@Change(id = "client-initializer", order = "1", author = "mongock", transactional = false)
 public class ClientInitializer {
 
     @BeforeExecution
@@ -27,7 +27,7 @@ public class ClientInitializer {
         System.out.println("Client Initializer");
     }
 
-    @Execution
+    @Apply
     public void execution() {
         System.out.println("Client Initializer");
     }

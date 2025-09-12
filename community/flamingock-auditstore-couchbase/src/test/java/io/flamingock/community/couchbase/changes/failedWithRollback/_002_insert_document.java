@@ -17,19 +17,19 @@ package io.flamingock.community.couchbase.changes.failedWithRollback;
 
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 
-@ChangeUnit( id="insert-document" , order = "002", transactional = false)
+@Change( id="insert-document" , order = "002", transactional = false)
 public class _002_insert_document {
 
-    @Execution
+    @Apply
     public void execution(Collection collection) {
         collection.insert("test-client-Federico", JsonObject.create().put("name", "Federico"));
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollbackExecution(Collection collection) {
         collection.remove("test-client-Federico");
     }

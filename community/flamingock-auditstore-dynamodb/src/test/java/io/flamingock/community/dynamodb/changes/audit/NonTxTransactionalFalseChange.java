@@ -15,18 +15,18 @@
  */
 package io.flamingock.community.dynamodb.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 /**
  * ChangeUnit that produces NON_TX txType via transactional=false.
  * Used for testing audit persistence of transaction type determination.
  */
-@ChangeUnit(id = "non-tx-transactional-false", order = "001", transactional = false, author = "test-author")
+@Change(id = "non-tx-transactional-false", order = "001", transactional = false, author = "test-author")
 public class NonTxTransactionalFalseChange {
 
-    @Execution
+    @Apply
     public void execution(DynamoDbClient client) {
         // Simple execution - this will be NON_TX due to transactional=false
         System.out.println("Executing NON_TX change via transactional=false");

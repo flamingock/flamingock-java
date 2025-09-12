@@ -15,17 +15,17 @@
  */
 package io.flamingock.community.mongodb.sync.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Change unit that produces TX_SHARED txType via default behavior.
  * Used for testing audit persistence of TX_SHARED transaction type.
  */
-@ChangeUnit(id = "tx-shared-default", order = "003", transactional = true)
+@Change(id = "tx-shared-default", order = "003", transactional = true)
 public class TxSharedDefaultChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         System.out.println("Executing TX_SHARED change via default behavior");

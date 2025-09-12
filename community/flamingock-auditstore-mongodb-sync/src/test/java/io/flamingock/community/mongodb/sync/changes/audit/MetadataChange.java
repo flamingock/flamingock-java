@@ -15,17 +15,17 @@
  */
 package io.flamingock.community.mongodb.sync.changes.audit;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 
 /**
  * Change unit for testing metadata serialization in audit entries.
  * Used for testing audit persistence of metadata field.
  */
-@ChangeUnit(id = "metadata-change", order = "007", transactional = false)
+@Change(id = "metadata-change", order = "007", transactional = false)
 public class MetadataChange {
 
-    @Execution
+    @Apply
     public void execution() {
         // Simple operation that completes successfully
         // Metadata testing will be done through test configuration

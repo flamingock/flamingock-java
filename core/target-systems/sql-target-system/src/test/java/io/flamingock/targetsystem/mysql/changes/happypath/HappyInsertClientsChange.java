@@ -15,8 +15,8 @@
  */
 package io.flamingock.targetsystem.mysql.changes.happypath;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
@@ -24,10 +24,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @TargetSystem( id = "mysql-ts")
-@ChangeUnit(id = "insert-clients", order = "002")
+@Change(id = "insert-clients", order = "002")
 public class HappyInsertClientsChange {
 
-    @Execution
+    @Apply
     public void execution(Connection connection) throws SQLException {
         String sql = "INSERT INTO client_table (name, email) VALUES (?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

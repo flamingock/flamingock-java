@@ -15,10 +15,10 @@
  */
 package io.flamingock.internal.common.core.preview.builder;
 
-import io.flamingock.api.annotations.ChangeUnit;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -126,15 +126,15 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     }
 
     CodePreviewTaskBuilder setTypeElement(TypeElement typeElement) {
-        ChangeUnit changeUnitAnnotation = typeElement.getAnnotation(ChangeUnit.class);
+        Change changeUnitAnnotation = typeElement.getAnnotation(Change.class);
         TargetSystem targetSystemAnnotation = typeElement.getAnnotation(TargetSystem.class);
         Recovery recoveryAnnotation = typeElement.getAnnotation(Recovery.class);
         if(changeUnitAnnotation != null) {
             setId(changeUnitAnnotation.id());
             setOrder(changeUnitAnnotation.order());
             setSourceClassPath(typeElement.getQualifiedName().toString());
-            setExecutionMethod(getAnnotatedMethodInfo(typeElement, Execution.class).orElse(null));
-            setRollbackMethod(getAnnotatedMethodInfo(typeElement, RollbackExecution.class).orElse(null));
+            setExecutionMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
+            setRollbackMethod(getAnnotatedMethodInfo(typeElement, Rollback.class).orElse(null));
             setBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, BeforeExecution.class).orElse(null));
             setRollbackBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, RollbackBeforeExecution.class).orElse(null));
             setTransactional(changeUnitAnnotation.transactional());

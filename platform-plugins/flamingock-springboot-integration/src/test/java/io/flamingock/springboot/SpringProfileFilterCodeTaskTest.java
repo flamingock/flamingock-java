@@ -15,7 +15,7 @@
  */
 package io.flamingock.springboot;
 
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
 import org.junit.jupiter.api.DisplayName;
@@ -91,22 +91,22 @@ class SpringProfileFilterCodeTaskTest {
         return LoadedTaskBuilder.getCodeBuilderInstance(sourceClass).build();
     }
 
-    @ChangeUnit(id="not-annotated", order = "000")
+    @Change(id="not-annotated", order = "000")
     public static class NotAnnotated {
     }
 
     @Profile("P1")
-    @ChangeUnit(id="annotated-p1", order = "001")
+    @Change(id="annotated-p1", order = "001")
     public static class P1 {
     }
 
     @Profile("!P1")
-    @ChangeUnit(id="annotated-!-p1", order = "002")
+    @Change(id="annotated-!-p1", order = "002")
     public static class NotP1 {
     }
 
     @Profile({"P1", "P2"})
-    @ChangeUnit(id="annotated-p1-p2", order = "003")
+    @Change(id="annotated-p1-p2", order = "003")
     public static class P1AndP2 {
     }
 }

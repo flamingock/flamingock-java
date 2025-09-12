@@ -17,9 +17,9 @@ package io.flamingock.template.mongodb;
 
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.annotations.Execution;
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Nullable;
-import io.flamingock.api.annotations.RollbackExecution;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.template.mongodb.model.MongoOperation;
 
@@ -29,7 +29,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
         super(MongoOperation.class);
     }
 
-    @Execution
+    @Apply
     public void execute(MongoDatabase db, @Nullable ClientSession clientSession) {
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional changeUnit[%s] requires transactional ecosystem with ClientSession", changeId));
@@ -37,7 +37,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
         executeOp(db, execution, clientSession);
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollback(MongoDatabase db, @Nullable ClientSession clientSession) {
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional changeUnit[%s] requires transactional ecosystem with ClientSession", changeId));

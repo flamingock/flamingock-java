@@ -16,7 +16,7 @@
 package io.flamingock.targetsystem.couchbase;
 
 import io.flamingock.api.StageType;
-import io.flamingock.api.annotations.ChangeUnit;
+import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 public class PipelineTestHelper {
 
     private static final Function<Class<?>, ChangeInfo> infoExtractor = c -> {
-        ChangeUnit ann = c.getAnnotation(ChangeUnit.class);
+        Change ann = c.getAnnotation(Change.class);
         TargetSystem targetSystemAnn = c.getAnnotation(TargetSystem.class);
         String targetSystemId = targetSystemAnn != null ? targetSystemAnn.id() : null;
         return new ChangeInfo(ann.id(), ann.order(), targetSystemId, ann.transactional());
@@ -57,7 +57,7 @@ public class PipelineTestHelper {
      * <p>
      * Each change unit is derived from a {@link Pair} where:
      * <ul>
-     *   <li>The first item is the {@link Class} annotated with {@link ChangeUnit} </li>
+     *   <li>The first item is the {@link Class} annotated with {@link Change} </li>
      *   <li>The second item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Execution}</li>
      *   <li>The third item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @RollbackExecution}</li>
      * </ul>
