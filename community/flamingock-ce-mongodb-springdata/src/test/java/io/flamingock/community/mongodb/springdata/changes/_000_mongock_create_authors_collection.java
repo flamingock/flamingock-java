@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
 @io.flamingock.api.annotations.ChangeUnit(id = "create-author-collection", order = "000", author = "mongock")
 @ChangeUnit(id = "create-author-collection", order = "000", author = "mongock")
 public class _000_mongock_create_authors_collection {

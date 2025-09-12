@@ -1,6 +1,6 @@
 
-val springBootVersion = "2.0.0.RELEASE"//2.7.18
-val springFrameworkVersion = "5.0.4.RELEASE"//5.3.32
+val springBootVersion = "2.0.0.RELEASE"
+val springFrameworkVersion = "5.0.4.RELEASE"
 dependencies {
     api(project(":core:flamingock-core"))
     implementation(project(":core:flamingock-core-commons"))

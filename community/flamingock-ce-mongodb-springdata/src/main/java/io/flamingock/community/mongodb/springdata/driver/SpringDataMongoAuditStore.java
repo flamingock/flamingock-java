@@ -60,8 +60,8 @@ public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
         driverConfiguration = baseContext.getDependencyValue(SpringDataMongoConfiguration.class)
                 .orElse(new SpringDataMongoConfiguration());
-        
-        if (targetSystem == null) {
+
+        if(targetSystem == null) {
 
             driverConfiguration.mergeConfig(baseContext);
 

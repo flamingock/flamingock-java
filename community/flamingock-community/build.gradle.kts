@@ -11,7 +11,6 @@ dependencies {
 // Community
     api(project(":community:flamingock-ce-couchbase"))
     api(project(":community:flamingock-ce-dynamodb"))
-    api(project(":community:flamingock-ce-mongodb-springdata-v3-legacy"))
     api(project(":community:flamingock-ce-mongodb-sync"))
 }
 

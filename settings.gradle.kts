@@ -55,11 +55,6 @@ include("community:flamingock-ce-mongodb-sync")
 project(":community:flamingock-ce-mongodb-sync").name = "flamingock-ce-mongodb-sync"
 project(":community:flamingock-ce-mongodb-sync").projectDir = file("community/flamingock-ce-mongodb-sync")
 
-include("community:flamingock-ce-mongodb-springdata-v3-legacy")
-project(":community:flamingock-ce-mongodb-springdata-v3-legacy").name = "flamingock-ce-mongodb-springdata-v3-legacy"
-project(":community:flamingock-ce-mongodb-springdata-v3-legacy").projectDir =
-    file("community/flamingock-ce-mongodb-springdata-v3-legacy")
-
 include("community:flamingock-ce-mongodb-springdata")
 project(":community:flamingock-ce-mongodb-springdata").name = "flamingock-ce-mongodb-springdata"
 project(":community:flamingock-ce-mongodb-springdata").projectDir = file("community/flamingock-ce-mongodb-springdata")

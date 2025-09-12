@@ -44,8 +44,7 @@ These modules are designed to be directly imported by end users:
 - `flamingock-ce-mongodb-sync` - MongoDB Sync community Edition
 - `flamingock-ce-dynamodb` - DynamoDB community Edition  
 - `flamingock-ce-couchbase` - Couchbase community Edition
-- `flamingock-ce-mongodb-springdata` - Spring Data MongoDB v4.x community Edition
-- `flamingock-ce-mongodb-springdata-v3-legacy` - Spring Data MongoDB v3.x community Edition
+- `flamingock-ce-mongodb-springdata` - Spring Data MongoDB community Edition
 
 #### Templates
 - `flamingock-mongodb-sync-template` - MongoDB template support
@@ -121,7 +120,6 @@ graph TB
         flamingock-ce-dynamodb[flamingock-ce-dynamodb<br/>IBU]:::ibu
         flamingock-ce-couchbase[flamingock-ce-couchbase<br/>IBU]:::ibu
         flamingock-ce-mongodb-springdata[flamingock-ce-mongodb-springdata<br/>IBU]:::ibu
-        flamingock-ce-mongodb-springdata-v3-legacy[flamingock-ce-mongodb-springdata-v3-legacy<br/>IBU]:::ibu
         flamingock-ce-bom[flamingock-ce-bom<br/>BOM]:::bom
     end
 

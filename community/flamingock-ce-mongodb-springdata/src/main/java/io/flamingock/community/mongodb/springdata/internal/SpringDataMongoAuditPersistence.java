@@ -16,10 +16,10 @@
 package io.flamingock.community.mongodb.springdata.internal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.util.Result;
-import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.store.audit.community.AbstractCommunityAuditPersistence;
+import io.flamingock.internal.util.Result;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.mongodb.springdata.MongoSpringDataTargetSystem;
 
 import java.util.List;
@@ -41,7 +41,6 @@ public class SpringDataMongoAuditPersistence extends AbstractCommunityAuditPersi
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-
         auditor = new SpringDataMongoAuditor(targetSystem, auditCollectionName);
         auditor.initialize(targetSystem.isAutoCreate());
     }
@@ -50,7 +49,6 @@ public class SpringDataMongoAuditPersistence extends AbstractCommunityAuditPersi
     public List<AuditEntry> getAuditHistory() {
         return auditor.getAuditHistory();
     }
-
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {

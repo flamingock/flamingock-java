@@ -13,6 +13,14 @@ This document provides the definitive compatibility matrix for using Flamingock 
 | **Java**                | `8+`                | Minimum JVM version                                                     |
 | **Gradle**              | `7.0+`              | For Spring Boot 2.4.3 support                                           |
 
+## ⚠️ Important Notice
+
+**Flamingock Dependency Management Policy**: While Flamingock accepts the versions listed above, **Flamingock does not treat or manage these dependencies**. All dependency resolution and version management is left entirely to your application's configuration.
+
+**End-of-Life Version Warning**: We strongly recommend avoiding end-of-life (EOL) versions of any dependencies, as they may contain unpatched security vulnerabilities and are no longer officially supported by their respective maintainers. Always consult the official support lifecycle documentation for each dependency.
+
+The compatibility matrix provided here represents the minimum technical requirements for Flamingock to function correctly, not necessarily the recommended production configuration for your application.
+
 ## 🚨 Critical Compatibility Points
 
 ### 1. MongoDB Driver 4.0.0+ is MANDATORY

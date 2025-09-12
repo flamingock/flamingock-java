@@ -22,7 +22,6 @@ val communityProjects = setOf(
     "flamingock-ce-bom",
     "flamingock-community",
     "flamingock-ce-mongodb-sync",
-    "flamingock-ce-mongodb-springdata-v3-legacy",
     "flamingock-ce-mongodb-springdata",
     "flamingock-ce-couchbase",
     "flamingock-ce-dynamodb",
