@@ -22,8 +22,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.net.URL;
@@ -52,15 +55,14 @@ class FlamingockAutoConfigurationTests {
         if(json != null) {
             Path metaInfDir = dir.resolve("META-INF/flamingock");
             Files.createDirectories(metaInfDir);
-            Files.writeString(metaInfDir.resolve("metadata.json"), json);
-            // Build a new class loader that exposes the temp directory
+            Files.write(metaInfDir.resolve("metadata.json"), json.getBytes(StandardCharsets.UTF_8));            // Build a new class loader that exposes the temp directory
             URL[] urls = { dir.toUri().toURL() };
             ClassLoader cl = new URLClassLoader(urls, getClass().getClassLoader());
             applicationContextRunner = applicationContextRunner.withClassLoader(cl);
         }
 
         return applicationContextRunner
-                .withBean("flamingock-builder", RunnerBuilder.class, DummyRunnerBuilder::new)
+                .withUserConfiguration(TestConfiguration.class)
                 .withPropertyValues("spring.profiles.active=" + PROFILE);
     }
 
@@ -76,11 +78,7 @@ class FlamingockAutoConfigurationTests {
 
     @Test
     void runnerBeanRegisteredWhenSetupDefault(@TempDir Path dir) throws IOException {
-        String json = """
-                      {
-                        "setup": "DEFAULT"
-                      }
-                      """;
+        String json = "{\n  \"setup\": \"DEFAULT\"\n}";
 
         contextWithJson(json, dir).run(ctx ->
                 assertThat(ctx).hasBean("flamingock-runner"));
@@ -102,5 +100,13 @@ class FlamingockAutoConfigurationTests {
         );
 
         contextEmpty().run(ctx -> assertThat(ctx).doesNotHaveBean("flamingock-runner"));
+    }
+    
+    @Configuration
+    static class TestConfiguration {
+        @Bean
+        public RunnerBuilder flamingockBuilder() {
+            return new DummyRunnerBuilder();
+        }
     }
 }

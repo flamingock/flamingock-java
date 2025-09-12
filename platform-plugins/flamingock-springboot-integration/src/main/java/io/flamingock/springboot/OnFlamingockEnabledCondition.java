@@ -61,7 +61,7 @@ public final class OnFlamingockEnabledCondition extends SpringBootCondition {
 
         Optional<FlamingockMetadata> metadataOpt = metadataSupplier.get();
 
-        if (metadataOpt.isEmpty()) {
+        if (!metadataOpt.isPresent()) {
             return ConditionOutcome.noMatch(msg.because("no metadata file found"));
         }
 

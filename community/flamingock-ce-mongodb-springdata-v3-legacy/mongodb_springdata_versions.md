@@ -1,0 +1,14 @@
+| Spring Data Release Train | JDK Version | Spring Core (Spring Framework) | Spring Boot | Spring Data MongoDB | Driver Version | MongoDB Server |             Starter Artifact             |
+|:-------------------------:|:-----------:|:------------------------------:|:-----------:|:-------------------:|:--------------:|:--------------:|:----------------------------------------:|
+|        **2025.0**         |    17–24    |             6.2.7+             |    3.5.x    |        4.5.x        |     5.3.x      |    6.x–8.x     | `spring-boot-starter-data-mongodb:3.5.x` |
+|        **2024.1**         |    17–24    |             6.2.7+             |    3.4.x    |        4.4.x        |     5.2.x      |   4.4.x–8.x    | `spring-boot-starter-data-mongodb:3.4.x` |
+|        **2024.0**         |    17–23    |             6.2.7+             |    3.3.x    |        4.3.x        |  4.11.x & 5.x  |   4.4.x–7.x    | `spring-boot-starter-data-mongodb:3.3.x` |
+|        **2023.1**         |    17–21    |             6.2.7+             |    3.2.x    |        4.2.x        |     4.9.x      |   4.4.x–7.x    | `spring-boot-starter-data-mongodb:3.2.x` |
+|       **2023.0**(†)       |    17–21    |             6.2.7+             |    3.1.x    |        4.1.x        |     4.9.x      |   4.4.x–6.x    | `spring-boot-starter-data-mongodb:3.1.x` |
+|       **2022.0**(†)       |    17–21    |             6.0.9+             |    3.0.x    |        4.0.x        |     4.8.x      |   4.4.x–6.x    | `spring-boot-starter-data-mongodb:3.0.x` |
+|   **TRANSITION JDK 17**   |    -----    |            -------             |   ------    |        -----        |    --------    |   ----------   |  --------------------------------------  |
+|       **2021.2**(†)       |    8–21     |             5.3.x              |    2.7.x    |        3.4.x        |     4.6.x      |  4.4.x–5.0.x   | `spring-boot-starter-data-mongodb:2.7.x` |
+|       **2021.1**(†)       |    8–19     |             5.3.x              |    2.6.x    |        3.3.x        |     4.4.x      |  4.4.x–5.0.x   | `spring-boot-starter-data-mongodb:2.6.x` |
+|       **2021.0**(†)       |    8–18     |             5.3.x              |    2.5.x    |        3.2.x        |     4.1.x      |     4.4.x      | `spring-boot-starter-data-mongodb:2.5.x` |
+|       **2020.0**(†)       |    8–16     |             5.2.x              |    2.4.x    |        3.1.x        |     4.1.x      |     4.4.x      | `spring-boot-starter-data-mongodb:2.4.x` |
+|      **Neumann**(†)       |    8–15     |             5.2.x              |    2.3.x    |        3.0.x        |     4.0.x      |     4.4.x      | `spring-boot-starter-data-mongodb:2.3.x` |

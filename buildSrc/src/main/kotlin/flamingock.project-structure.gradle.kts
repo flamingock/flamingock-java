@@ -30,7 +30,6 @@ val communityProjects = setOf(
 )
 
 val pluginProjects = setOf(
-    "flamingock-springboot-integration-v2-legacy",
     "flamingock-springboot-integration"
 )
 

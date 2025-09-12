@@ -15,14 +15,15 @@
  */
 package io.flamingock.springboot;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.builder.FlamingockFactory;
+import io.flamingock.internal.core.builder.change.AbstractChangeRunnerBuilder;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.runner.RunnerBuilder;
 import io.flamingock.internal.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,9 +31,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-@AutoConfiguration
+import java.util.List;
+
+@Configuration
 @ConditionalOnClass(name = "org.springframework.boot.SpringApplication")
 @ConditionalOnFlamingockEnabled
 @EnableConfigurationProperties(SpringbootProperties.class)
@@ -59,8 +63,10 @@ public class FlamingockAutoConfiguration {
     public RunnerBuilder flamingockBuilder(SpringbootProperties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher,
-                                           @Autowired(required = false) CommunityAuditStore auditStore) {
-        return FlamingockFactory.getEditionAwareBuilder(
+                                           @Autowired(required = false) CommunityAuditStore auditStore,
+                                           List<TargetSystem> targetSystems) {
+
+        AbstractChangeRunnerBuilder<?,?> builder = FlamingockFactory.getEditionAwareBuilder(
                         configurationProperties.getCoreConfiguration(),
                         configurationProperties.getCloudProperties(),
                         configurationProperties.getLocalConfiguration(),
@@ -69,6 +75,12 @@ public class FlamingockAutoConfiguration {
                 .addDependency(SpringRunnerType.class, configurationProperties.getRunnerType())
                 .addDependency(ApplicationContext.class, springContext)
                 .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
+
+        for (TargetSystem targetSystem : targetSystems) {
+            builder.addTargetSystem(targetSystem);
+        }
+
+        return builder;
 
     }
 }

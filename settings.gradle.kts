@@ -75,12 +75,6 @@ project(":community:flamingock-ce-dynamodb").projectDir = file("community/flamin
 //////////////////////////////////////
 // PLUGINS
 //////////////////////////////////////
-include("platform-plugins:flamingock-springboot-integration-v2-legacy")
-project(":platform-plugins:flamingock-springboot-integration-v2-legacy").name =
-    "flamingock-springboot-integration-v2-legacy"
-project(":platform-plugins:flamingock-springboot-integration-v2-legacy").projectDir =
-    file("platform-plugins/flamingock-springboot-integration-v2-legacy")
-
 include("platform-plugins:flamingock-springboot-integration")
 project(":platform-plugins:flamingock-springboot-integration").name = "flamingock-springboot-integration"
 project(":platform-plugins:flamingock-springboot-integration").projectDir =

@@ -1,8 +1,0 @@
-flamingock:
-  enabled: true
-  runner-type: ApplicationRunner
-
-logging:
-  level:
-    io.flamingock: DEBUG
-    com.mongodb: DEBUG

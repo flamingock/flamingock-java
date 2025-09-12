@@ -57,9 +57,7 @@ These modules are designed to be directly imported by end users:
 - `sql-transactioner` - SQL transaction management
 
 #### Platform Integration
-- `flamingock-springboot-integration` - Spring Boot v3.x integration
-- `flamingock-springboot-integration-v2-legacy` - Spring Boot v2.x integration
-
+- `flamingock-springboot-integration` - Spring Boot integration
 #### BOMs
 - `flamingock-cloud-bom` - Cloud dependencies management
 - `flamingock-ce-bom` - Cloud dependencies management
@@ -146,7 +144,6 @@ graph TB
     subgraph Platforms["Platform Integration"]
         direction TB
         flamingock-springboot-integration[flamingock-springboot-integration<br/>IBU]:::ibu
-        flamingock-springboot-integration-v2-legacy[flamingock-springboot-integration-v2-legacy<br/>IBU]:::ibu
     end
 
     %% CORE DEPENDENCIES (api = thick line, implementation = normal line)
