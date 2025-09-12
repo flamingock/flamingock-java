@@ -18,6 +18,7 @@ package io.flamingock.graalvm;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.importer.ImporterTemplateFactory;
+import io.flamingock.importer.mongodb.MongoDbImporterChangeTemplate;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -26,6 +27,8 @@ import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
@@ -35,6 +38,7 @@ import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
@@ -73,6 +77,8 @@ public class RegistrationFeature implements Feature {
         registerClassForReflection(PreviewMethod.class);
         registerClassForReflection(TemplatePreviewChangeUnit.class.getName());
         registerClassForReflection(FlamingockMetadata.class.getName());
+        registerClassForReflection(TargetSystemDescriptor.class.getName());
+        registerClassForReflection(RecoveryDescriptor.class.getName());
 
         //Loaded
         registerClassForReflection(LoadedPipeline.class.getName());
@@ -98,6 +104,9 @@ public class RegistrationFeature implements Feature {
         initializeClassAtBuildTime(TemplateLoadedChangeUnit.class);
         initializeClassAtBuildTime(ChangeTemplateManager.class);
         initializeClassAtBuildTime(ImporterTemplateFactory.class);
+        initializeClassAtBuildTime(RecoveryDescriptor.class);
+        initializeClassAtBuildTime(FlamingockLoggerFactory.class);
+        initializeClassAtBuildTime(MongoDbImporterChangeTemplate.class);
         logger.completeInitializationProcess("internal classes");
     }
 
