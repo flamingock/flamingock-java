@@ -25,12 +25,12 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
     private String fileName;
     private List<String> profiles;
     private Object configuration;
-    private Object execution;
+    private Object apply;
     private Object rollback;
 
     public TemplatePreviewChangeUnit() {}
 
-    //TODO add execution and rollbackMethod
+    //TODO add apply and rollbackMethod
     //TODO add configurationSetter and validation method
     public TemplatePreviewChangeUnit(String fileName,
                                      String id,
@@ -41,7 +41,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                                      boolean runAlways,
                                      boolean system,
                                      Object configuration,
-                                     Object execution,
+                                     Object apply,
                                      Object rollback,
                                      TargetSystemDescriptor targetSystem,
                                      RecoveryDescriptor recovery) {
@@ -49,7 +49,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
         this.fileName = fileName;
         this.profiles = profiles;
         this.configuration = configuration;
-        this.execution = execution;
+        this.apply = apply;
         this.rollback = rollback;
     }
 
@@ -81,12 +81,12 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
         this.configuration = configuration;
     }
 
-    public Object getExecution() {
-        return execution;
+    public Object getApply() {
+        return apply;
     }
 
-    public void setExecution(Object execution) {
-        this.execution = execution;
+    public void setApply(Object apply) {
+        this.apply = apply;
     }
 
     public Object getRollback() {
@@ -101,7 +101,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
     public String toString() {
         return "TemplatePreviewChangeUnit{" + "profiles=" + profiles +
                 ", configuration=" + configuration +
-                ", execution=" + execution +
+                ", apply=" + apply +
                 ", rollback=" + rollback +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +

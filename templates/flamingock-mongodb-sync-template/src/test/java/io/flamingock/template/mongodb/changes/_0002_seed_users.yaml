@@ -2,7 +2,7 @@ id: seed-users
 order: 0002
 transactional: true
 template: MongoChangeTemplate
-execution:
+apply:
   type: insert
   collection: users
   parameters:

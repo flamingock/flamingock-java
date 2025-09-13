@@ -25,7 +25,7 @@ public class ChangeTemplateFileContent {
     private String profiles; //colon-separated list of profiles
     private Boolean transactional;
     private Object configuration;
-    private Object execution;
+    private Object apply;
     private Object rollback;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
@@ -39,7 +39,7 @@ public class ChangeTemplateFileContent {
                                      String profiles,
                                      Boolean transactional,
                                      Object configuration,
-                                     Object execution,
+                                     Object apply,
                                      Object rollback,
                                      TargetSystemDescriptor targetSystem,
                                      RecoveryDescriptor recovery) {
@@ -49,7 +49,7 @@ public class ChangeTemplateFileContent {
         this.profiles = profiles;
         this.transactional = transactional;
         this.configuration = configuration;
-        this.execution = execution;
+        this.apply = apply;
         this.rollback = rollback;
         this.targetSystem = targetSystem;
         this.recovery = recovery;
@@ -105,12 +105,12 @@ public class ChangeTemplateFileContent {
         this.configuration = configuration;
     }
 
-    public Object getExecution() {
-        return execution;
+    public Object getApply() {
+        return apply;
     }
 
-    public void setExecution(Object execution) {
-        this.execution = execution;
+    public void setApply(Object apply) {
+        this.apply = apply;
     }
 
     public Object getRollback() {

@@ -37,7 +37,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private boolean runAlways;
     private Boolean transactional;
     private Object configuration;
-    private Object execution;
+    private Object apply;
     private Object rollback;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
@@ -91,8 +91,8 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         this.rollback = rollback;
     }
 
-    public void setExecution(Object execution) {
-        this.execution = execution;
+    public void setApply(Object apply) {
+        this.apply = apply;
     }
 
     public void setConfiguration(Object configuration) {
@@ -121,7 +121,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
                 runAlways,
                 false,
                 configuration,
-                execution,
+                apply,
                 rollback,
                 targetSystem,
                 recovery);
@@ -145,7 +145,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         setTemplate(templateTaskDescriptor.getTemplate());
         setProfilesString(templateTaskDescriptor.getProfiles());
         setConfiguration(templateTaskDescriptor.getConfiguration());
-        setExecution(templateTaskDescriptor.getExecution());
+        setApply(templateTaskDescriptor.getApply());
         setRollback(templateTaskDescriptor.getRollback());
         setTransactional(templateTaskDescriptor.getTransactional() != null ? templateTaskDescriptor.getTransactional() : true);
         setRunAlways(false);

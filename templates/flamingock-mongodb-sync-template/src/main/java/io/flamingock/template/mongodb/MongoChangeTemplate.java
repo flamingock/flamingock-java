@@ -34,7 +34,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional changeUnit[%s] requires transactional ecosystem with ClientSession", changeId));
         }
-        executeOp(db, execution, clientSession);
+        executeOp(db, apply, clientSession);
     }
 
     @Rollback

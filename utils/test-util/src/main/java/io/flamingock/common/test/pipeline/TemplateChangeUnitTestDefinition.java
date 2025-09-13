@@ -28,7 +28,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
     private final String fileName;
     private final String templateName;
     private final Object configuration;
-    private final Object execution;
+    private final Object apply;
     private final Object rollback;
     private final String targetSystem;
 
@@ -39,9 +39,9 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                             String templateName,
                                             boolean transactional,
                                             Object configuration,
-                                            Object execution,
+                                            Object apply,
                                             Object rollback) {
-        this(fileName, id, order, templateName, transactional, configuration, execution, rollback, null);
+        this(fileName, id, order, templateName, transactional, configuration, apply, rollback, null);
     }
 
     public TemplateChangeUnitTestDefinition(String fileName,
@@ -50,14 +50,14 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                             String templateName,
                                             boolean transactional,
                                             Object configuration,
-                                            Object execution,
+                                            Object apply,
                                             Object rollback,
                                             String targetSystem) {
         super(id, order, transactional);
         this.fileName = fileName;
         this.templateName = templateName;
         this.configuration = configuration;
-        this.execution = execution;
+        this.apply = apply;
         this.rollback = rollback;
         this.targetSystem = targetSystem;
     }
@@ -75,7 +75,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 false,
                 false,
                 configuration,
-                execution,
+                apply,
                 rollback,
                 TargetSystemDescriptor.fromId(targetSystem),
                 RecoveryDescriptor.getDefault()

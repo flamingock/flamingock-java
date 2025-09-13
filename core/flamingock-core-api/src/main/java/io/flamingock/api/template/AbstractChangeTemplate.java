@@ -23,16 +23,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public abstract class AbstractChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK> implements ChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK> {
+public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
 
-    private final Class<CONFIGURATION> configurationClass;
-    private final Class<EXECUTION> executionClass;
-    private final Class<ROLLBACK> rollbackClass;
+    private final Class<SHARED_CONFIGURATION_FIELD> configurationClass;
+    private final Class<APPLY_FIELD> applyClass;
+    private final Class<ROLLBACK_FIELD> rollbackClass;
     protected String changeId;
     protected boolean isTransactional;
-    protected CONFIGURATION configuration;
-    protected EXECUTION execution;
-    protected ROLLBACK rollback;
+    protected SHARED_CONFIGURATION_FIELD configuration;
+    protected APPLY_FIELD apply;
+    protected ROLLBACK_FIELD rollback;
 
 
     private final Set<Class<?>> reflectiveClasses;
@@ -49,12 +49,12 @@ public abstract class AbstractChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK>
                 throw new IllegalStateException("Expected 3 generic type arguments for a Template, but found " + typeArgs.length);
             }
 
-            this.configurationClass = (Class<CONFIGURATION>) typeArgs[0];
-            this.executionClass = (Class<EXECUTION>) typeArgs[1];
-            this.rollbackClass = (Class<ROLLBACK>) typeArgs[2];
+            this.configurationClass = (Class<SHARED_CONFIGURATION_FIELD>) typeArgs[0];
+            this.applyClass = (Class<APPLY_FIELD>) typeArgs[1];
+            this.rollbackClass = (Class<ROLLBACK_FIELD>) typeArgs[2];
 
             reflectiveClasses.add(configurationClass);
-            reflectiveClasses.add(executionClass);
+            reflectiveClasses.add(applyClass);
             reflectiveClasses.add(rollbackClass);
         } catch (ClassCastException e) {
             throw new IllegalStateException("Generic type arguments for a Template must be concrete types (classes, interfaces, or primitive wrappers like String, Integer, etc.): " + e.getMessage(), e);
@@ -79,32 +79,32 @@ public abstract class AbstractChangeTemplate<CONFIGURATION, EXECUTION, ROLLBACK>
     }
 
     @Override
-    public void setConfiguration(CONFIGURATION configuration) {
+    public void setConfiguration(SHARED_CONFIGURATION_FIELD configuration) {
         this.configuration = configuration;
     }
 
     @Override
-    public void setExecution(EXECUTION execution) {
-        this.execution = execution;
+    public void setApply(APPLY_FIELD apply) {
+        this.apply = apply;
     }
 
     @Override
-    public void setRollback(ROLLBACK rollback) {
+    public void setRollback(ROLLBACK_FIELD rollback) {
         this.rollback = rollback;
     }
 
     @Override
-    public Class<CONFIGURATION> getConfigurationClass() {
+    public Class<SHARED_CONFIGURATION_FIELD> getConfigurationClass() {
         return configurationClass;
     }
 
     @Override
-    public Class<EXECUTION> getExecutionClass() {
-        return executionClass;
+    public Class<APPLY_FIELD> getApplyClass() {
+        return applyClass;
     }
 
     @Override
-    public Class<ROLLBACK> getRollbackClass() {
+    public Class<ROLLBACK_FIELD> getRollbackClass() {
         return rollbackClass;
     }
 

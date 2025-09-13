@@ -21,22 +21,22 @@ package io.flamingock.api.template;
  * <p>This interface is commonly implemented by classes that act as templates for Change Units
  * where a specific configuration needs to be injected and managed independently.
  */
-public interface ChangeTemplate<SHARED_CONFIG, EXECUTION, ROLLBACK> extends ReflectionMetadataProvider {
+public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD> extends ReflectionMetadataProvider {
 
     void setChangeId(String changeId);
 
     void setTransactional(boolean isTransactional);
 
-    void setConfiguration(SHARED_CONFIG configuration);
+    void setConfiguration(SHARED_CONFIG_FIELD configuration);
 
-    void setExecution(EXECUTION execution);
+    void setApply(APPLY_FIELD apply);
 
-    void setRollback(ROLLBACK rollback);
+    void setRollback(ROLLBACK_FIELD rollback);
 
-    Class<SHARED_CONFIG> getConfigurationClass();
+    Class<SHARED_CONFIG_FIELD> getConfigurationClass();
 
-    Class<EXECUTION> getExecutionClass();
+    Class<APPLY_FIELD> getApplyClass();
 
-    Class<ROLLBACK> getRollbackClass();
+    Class<ROLLBACK_FIELD> getRollbackClass();
 
 }

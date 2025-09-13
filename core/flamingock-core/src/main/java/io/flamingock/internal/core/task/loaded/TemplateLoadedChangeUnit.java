@@ -31,7 +31,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
 
     private final List<String> profiles;
     private final Object configuration;
-    private final Object execution;
+    private final Object apply;
     private final Object rollback;
 
     TemplateLoadedChangeUnit(String changeUnitFileName,
@@ -43,7 +43,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
                              boolean runAlways,
                              boolean systemTask,
                              Object configuration,
-                             Object execution,
+                             Object apply,
                              Object rollback,
                              TargetSystemDescriptor targetSystem,
                              RecoveryDescriptor recovery) {
@@ -51,7 +51,7 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
         this.profiles = profiles;
         this.transactional = transactional;
         this.configuration = configuration;
-        this.execution = execution;
+        this.apply = apply;
         this.rollback = rollback;
     }
 
@@ -59,8 +59,8 @@ public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
         return configuration;
     }
 
-    public Object getExecution() {
-        return execution;
+    public Object getApply() {
+        return apply;
     }
 
     public Object getRollback() {

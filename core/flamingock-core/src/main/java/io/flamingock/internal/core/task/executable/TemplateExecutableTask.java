@@ -45,7 +45,7 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
         ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
         changeTemplateInstance.setTransactional(descriptor.isTransactional());
         setExecutionData(executionRuntime, changeTemplateInstance, "Configuration");
-        setExecutionData(executionRuntime, changeTemplateInstance, "Execution");
+        setExecutionData(executionRuntime, changeTemplateInstance, "Apply");
         setExecutionData(executionRuntime, changeTemplateInstance, "Rollback");
         executionRuntime.executeMethodWithInjectedDependencies(instance, method);
     }
@@ -61,9 +61,9 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
                 parameterClass = instance.getConfigurationClass();
                 data = descriptor.getConfiguration();
                 break;
-            case "Execution":
-                parameterClass = instance.getExecutionClass();
-                data = descriptor.getExecution();
+            case "Apply":
+                parameterClass = instance.getApplyClass();
+                data = descriptor.getApply();
                 break;
             case "Rollback":
                 parameterClass = instance.getRollbackClass();

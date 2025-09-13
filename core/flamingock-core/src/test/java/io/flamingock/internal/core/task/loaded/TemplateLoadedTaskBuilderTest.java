@@ -49,7 +49,7 @@ class TemplateLoadedTaskBuilderTest {
         public void setConfiguration(Object configuration) {}
         
         @Override
-        public void setExecution(Object execution) {}
+        public void setApply(Object apply) {}
         
         @Override
         public void setRollback(Object rollback) {}
@@ -58,7 +58,7 @@ class TemplateLoadedTaskBuilderTest {
         public Class<Object> getConfigurationClass() { return Object.class; }
         
         @Override
-        public Class<Object> getExecutionClass() { return Object.class; }
+        public Class<Object> getApplyClass() { return Object.class; }
         
         @Override
         public Class<Object> getRollbackClass() { return Object.class; }
@@ -93,7 +93,7 @@ class TemplateLoadedTaskBuilderTest {
                     .setTransactional(true)
                     .setSystem(false)
                     .setConfiguration(new Object())
-                    .setExecution(new Object())
+                    .setApply(new Object())
                     .setRollback(new Object());
             builder.setProfiles(Arrays.asList("test"));
 
@@ -123,7 +123,7 @@ class TemplateLoadedTaskBuilderTest {
                     .setTransactional(true)
                     .setSystem(false)
                     .setConfiguration(new Object())
-                    .setExecution(new Object())
+                    .setApply(new Object())
                     .setRollback(new Object());
             builder.setProfiles(Arrays.asList("test"));
 
@@ -154,7 +154,7 @@ class TemplateLoadedTaskBuilderTest {
             builder.setTransactional(true)
                     .setSystem(false)
                     .setConfiguration(new Object())
-                    .setExecution(new Object())
+                    .setApply(new Object())
                     .setRollback(new Object());
 
             // When
@@ -184,7 +184,7 @@ class TemplateLoadedTaskBuilderTest {
             builder.setTransactional(true)
                     .setSystem(false)
                     .setConfiguration(new Object())
-                    .setExecution(new Object())
+                    .setApply(new Object())
                     .setRollback(new Object());
 
             // When & Then
@@ -213,7 +213,7 @@ class TemplateLoadedTaskBuilderTest {
             builder.setTransactional(true)
                     .setSystem(false)
                     .setConfiguration(new Object())
-                    .setExecution(new Object())
+                    .setApply(new Object())
                     .setRollback(new Object());
 
             // When & Then
@@ -241,7 +241,7 @@ class TemplateLoadedTaskBuilderTest {
             builder.setTransactional(true)
                     .setSystem(false)
                     .setConfiguration(new Object())
-                    .setExecution(new Object())
+                    .setApply(new Object())
                     .setRollback(new Object());
 
             // When
