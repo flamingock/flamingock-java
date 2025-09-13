@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Apply;
  * Simple non-transactional change unit for testing core execution strategies.
  * Does not require any external dependencies.
  */
-@Change(id = "test1-non-tx-change", order = "001", transactional = false)
+@Change(id = "test1-non-tx-change", order = "001", transactional = false, author = "aperezdieppa")
 public class SimpleNonTransactionalChange {
 
     @Apply

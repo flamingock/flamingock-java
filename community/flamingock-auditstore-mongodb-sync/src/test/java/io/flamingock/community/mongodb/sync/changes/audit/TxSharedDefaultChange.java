@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Apply;
  * Change unit that produces TX_SHARED txType via default behavior.
  * Used for testing audit persistence of TX_SHARED transaction type.
  */
-@Change(id = "tx-shared-default", order = "003", transactional = true)
+@Change(id = "tx-shared-default", order = "003", transactional = true, author = "aperezdieppa")
 public class TxSharedDefaultChange {
 
     @Apply

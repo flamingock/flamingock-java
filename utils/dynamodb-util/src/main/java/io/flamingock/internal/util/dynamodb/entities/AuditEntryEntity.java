@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.util.dynamodb.entities;
 
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditEntryField;
@@ -299,7 +300,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
                 txType,
                 targetSystemId,
                 order,
-                recoveryStrategy != null ? Recovery.RecoveryStrategy.valueOf(recoveryStrategy) : Recovery.RecoveryStrategy.MANUAL_INTERVENTION
+                recoveryStrategy != null ? RecoveryStrategy.valueOf(recoveryStrategy) : RecoveryStrategy.MANUAL_INTERVENTION
         );
     }
 }

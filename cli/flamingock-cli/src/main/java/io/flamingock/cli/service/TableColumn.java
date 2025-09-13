@@ -52,6 +52,9 @@ public class TableColumn {
     
     /**
      * Format text according to column width and alignment
+     *
+     * @param text the text to format
+     * @return formatted text that fits within the column width and alignment
      */
     public String format(String text) {
         String truncated = truncate(text);

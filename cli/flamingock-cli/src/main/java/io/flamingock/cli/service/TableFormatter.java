@@ -55,6 +55,8 @@ public class TableFormatter {
     
     /**
      * Print basic table with 4 columns
+     *
+     * @param entries the audit entries to display in the table
      */
     public void printBasicTable(List<AuditEntry> entries) {
         List<TableColumn> columns = new ArrayList<>();
@@ -68,6 +70,8 @@ public class TableFormatter {
     
     /**
      * Print extended table with 9 columns
+     *
+     * @param entries the audit entries to display in the extended table
      */
     public void printExtendedTable(List<AuditEntry> entries) {
         List<TableColumn> columns = new ArrayList<>();

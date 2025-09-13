@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.common.cloud.audit;
 
-import io.flamingock.api.annotations.Recovery;
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 
 public class AuditEntryRequest {
@@ -63,7 +63,7 @@ public class AuditEntryRequest {
 
     private final String order;
 
-    private final Recovery.RecoveryStrategy recoveryStrategy;
+    private final RecoveryStrategy recoveryStrategy;
 
     protected Boolean systemChange;//TODO not in server
 
@@ -83,7 +83,7 @@ public class AuditEntryRequest {
                              AuditTxType txType,
                              String targetSystemId,
                              String order,
-                             Recovery.RecoveryStrategy recoveryStrategy) {
+                             RecoveryStrategy recoveryStrategy) {
         this.stageId = stageId;
         this.taskId = taskId;
         this.author = author;
@@ -168,7 +168,7 @@ public class AuditEntryRequest {
         return order;
     }
 
-    public Recovery.RecoveryStrategy getRecoveryStrategy() {
+    public RecoveryStrategy getRecoveryStrategy() {
         return recoveryStrategy;
     }
 

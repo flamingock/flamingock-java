@@ -19,7 +19,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@Change( id="create-client-collection" , order = "001", transactional = false)
+@Change( id="create-client-collection" , order = "001", transactional = false, author = "aperezdieppa")
 public class _001_create_client_collection_happy {
 
     @Apply

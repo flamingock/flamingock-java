@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.Apply;
 /**
  * Non-transactional change unit for multiple changes test.
  */
-@Change(id = "test3-multi-non-tx-change", order = "003", transactional = false)
+@Change(id = "test3-multi-non-tx-change", order = "003", transactional = false, author = "aperezdieppa")
 public class MultiTest1NonTransactionalChange {
 
     @Apply

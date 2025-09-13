@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Apply;
  * Change unit that produces NON_TX txType via transactional=false annotation.
  * Used for testing audit persistence of NON_TX transaction type.
  */
-@Change(id = "non-tx-transactional-false", order = "001", transactional = false)
+@Change(id = "non-tx-transactional-false", order = "001", transactional = false, author = "aperezdieppa")
 public class NonTxTransactionalFalseChange {
 
     @Apply

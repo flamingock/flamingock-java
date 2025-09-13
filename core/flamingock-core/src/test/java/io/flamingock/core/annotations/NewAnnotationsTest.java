@@ -60,7 +60,7 @@ class NewAnnotationsTest {
         );
     }
 
-    @Change(id = "taskId", order = "001")
+    @Change(id = "taskId", order = "001", author = "aperezdieppa")
     public static class SingleChangeUnit {
 
         @Apply
@@ -75,7 +75,7 @@ class NewAnnotationsTest {
         }
     }
 
-    @Change(id = "taskId", order = "001")
+    @Change(id = "taskId", order = "001", author = "aperezdieppa")
     public static class ChangeUnitWithExecutionError {
 
         @Apply

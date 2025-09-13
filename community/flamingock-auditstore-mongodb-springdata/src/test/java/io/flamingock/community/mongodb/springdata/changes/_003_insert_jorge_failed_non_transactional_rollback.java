@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Rollback;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@Change( id="insert-jorge-document" , order = "003")
+@Change( id="insert-jorge-document" , order = "003", author = "aperezdieppa")
 public class _003_insert_jorge_failed_non_transactional_rollback {
 
     @Apply

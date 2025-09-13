@@ -20,6 +20,35 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Marks the method that applies a change to the target system.
+ * This method contains the forward migration logic that evolves your system state.
+ *
+ * <p>The method can accept dependency-injected parameters from the Flamingock context,
+ * including database connections, repositories, and custom dependencies.
+ *
+ * <p>Example usage:
+ * <pre>{@code
+ * &#64;Change(id = "add-user-email-index", order = "2024-11-15-002", author = "team@example.com")
+ * public class AddUserEmailIndex {
+ *
+ *     &#64;Apply
+ *     public void addIndex(MongoDatabase database) {
+ *         database.getCollection("users")
+ *                 .createIndex(Indexes.ascending("email"));
+ *     }
+ *
+ *     &#64;Rollback
+ *     public void removeIndex(MongoDatabase database) {
+ *         database.getCollection("users")
+ *                 .dropIndex("email_1");
+ *     }
+ * }
+ * }</pre>
+ *
+ * @see Change
+ * @see Rollback
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Apply {

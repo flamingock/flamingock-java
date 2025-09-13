@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 
-@Change( id="execution-with-exception" , order = "003")
+@Change( id="execution-with-exception" , order = "003", author = "aperezdieppa")
 public class _003_execution_with_exception {
 
     @Apply

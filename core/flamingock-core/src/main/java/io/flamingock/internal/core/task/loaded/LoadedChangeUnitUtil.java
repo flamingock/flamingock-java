@@ -46,8 +46,7 @@ public final class LoadedChangeUnitUtil {
      * For CodeLoadedChangeUnit - validates order from class name
      */
     public static String getMatchedOrderFromClassName(String changeUnitId, String orderInAnnotation, String className) {
-        String orderInAnnotationFiltered = Change.NULL_ORDER.equals(orderInAnnotation) ? null : orderInAnnotation;
-        return getMatchedOrder(changeUnitId, orderInAnnotationFiltered, className, true);
+        return getMatchedOrder(changeUnitId, orderInAnnotation, className, true);
     }
 
     /**

@@ -24,7 +24,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-@Change(id = "execution-with-exception", order = "003")
+@Change(id = "execution-with-exception", order = "003", author = "aperezdieppa")
 public class _003_insert_jorge_failed_non_transactional_non_rollback {
 
     @Apply

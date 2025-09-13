@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 
-@Change( id="insert-another-document" , order = "003")
+@Change( id="insert-another-document" , order = "003", author = "aperezdieppa")
 public class _003_insert_another_document {
 
     @Apply

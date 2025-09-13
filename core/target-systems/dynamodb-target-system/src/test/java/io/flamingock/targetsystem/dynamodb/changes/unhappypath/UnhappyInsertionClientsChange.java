@@ -27,7 +27,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 @TargetSystem( id = "dynamodb-ts")
-@Change(id = "unhappy-insert-clients", order = "002")
+@Change(id = "unhappy-insert-clients", order = "002", author = "aperezdieppa")
 public class UnhappyInsertionClientsChange {
 
     @Apply

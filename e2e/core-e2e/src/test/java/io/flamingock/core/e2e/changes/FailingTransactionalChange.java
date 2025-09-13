@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Rollback;
 /**
  * Failing transactional change unit for testing error handling and rollback scenarios.
  */
-@Change(id = "test4-failing-tx-change", order = "006", transactional = true)
+@Change(id = "test4-failing-tx-change", order = "006", transactional = true, author = "aperezdieppa")
 public class FailingTransactionalChange {
 
     @Apply

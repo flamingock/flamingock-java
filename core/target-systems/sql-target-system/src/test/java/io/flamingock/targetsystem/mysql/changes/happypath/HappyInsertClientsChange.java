@@ -24,7 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @TargetSystem( id = "mysql-ts")
-@Change(id = "insert-clients", order = "002")
+@Change(id = "insert-clients", order = "002", author = "aperezdieppa")
 public class HappyInsertClientsChange {
 
     @Apply

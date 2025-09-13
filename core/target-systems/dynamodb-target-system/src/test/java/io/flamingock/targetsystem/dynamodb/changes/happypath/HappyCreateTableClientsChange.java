@@ -28,7 +28,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import static java.util.Collections.emptyList;
 
 @TargetSystem( id = "dynamodb-ts")
-@Change(id = "create-table-clients", order = "001", transactional = false)
+@Change(id = "create-table-clients", order = "001", transactional = false, author = "aperezdieppa")
 public class HappyCreateTableClientsChange {
 
     @Apply

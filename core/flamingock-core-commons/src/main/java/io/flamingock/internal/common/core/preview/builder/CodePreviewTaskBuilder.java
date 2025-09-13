@@ -50,7 +50,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private PreviewMethod rollbackMethod;
     private PreviewMethod beforeExecutionMethod;
     private PreviewMethod rollbackBeforeExecutionMethod;
-    private boolean runAlways;
+    private boolean runAlways = false;
     private boolean transactional;
     private boolean system;
     private TargetSystemDescriptor targetSystem;
@@ -138,7 +138,6 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
             setBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, BeforeExecution.class).orElse(null));
             setRollbackBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, RollbackBeforeExecution.class).orElse(null));
             setTransactional(changeUnitAnnotation.transactional());
-            setRunAlways(changeUnitAnnotation.runAlways());
             setSystem(false);
         }
         if(targetSystemAnnotation != null) {

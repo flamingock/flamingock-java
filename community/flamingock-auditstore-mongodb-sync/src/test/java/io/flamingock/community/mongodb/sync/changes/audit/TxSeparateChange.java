@@ -24,7 +24,7 @@ import io.flamingock.api.annotations.TargetSystem;
  * Used for testing audit persistence of TX_SEPARATE_NO_MARKER transaction type.
  */
 @TargetSystem(id = "tx-separate-system")
-@Change(id = "tx-separate-no-marker", order = "005", transactional = true)
+@Change(id = "tx-separate-no-marker", order = "005", transactional = true, author = "aperezdieppa")
 public class TxSeparateChange {
 
     @Apply

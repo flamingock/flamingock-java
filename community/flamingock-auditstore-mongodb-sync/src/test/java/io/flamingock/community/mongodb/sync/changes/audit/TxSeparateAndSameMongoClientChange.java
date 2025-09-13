@@ -24,7 +24,7 @@ import io.flamingock.api.annotations.TargetSystem;
  * Used for testing audit persistence of TX_SHARED transaction type with explicit target system.
  */
 @TargetSystem(id = "mongo-system")
-@Change(id = "tx-separate-no-marker", order = "004", transactional = true)
+@Change(id = "tx-separate-no-marker", order = "004", transactional = true, author = "aperezdieppa")
 public class TxSeparateAndSameMongoClientChange {
 
     @Apply

@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.Apply;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@Change( id="insert-federico-document" , order = "002")
+@Change( id="insert-federico-document" , order = "002", author = "aperezdieppa")
 public class _002_insert_federico_happy_transactional {
 
     @Apply

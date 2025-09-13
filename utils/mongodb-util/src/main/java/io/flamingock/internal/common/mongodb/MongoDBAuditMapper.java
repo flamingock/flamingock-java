@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.mongodb;
 
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -104,8 +105,8 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.getString(KEY_TARGET_SYSTEM_ID),
                 entry.getString(KEY_ORDER),
                 entry.getString(KEY_RECOVERY_STRATEGY) != null
-                        ? Recovery.RecoveryStrategy.valueOf(entry.getString(KEY_RECOVERY_STRATEGY))
-                        : Recovery.RecoveryStrategy.MANUAL_INTERVENTION
+                        ? RecoveryStrategy.valueOf(entry.getString(KEY_RECOVERY_STRATEGY))
+                        : RecoveryStrategy.MANUAL_INTERVENTION
 
         );
 

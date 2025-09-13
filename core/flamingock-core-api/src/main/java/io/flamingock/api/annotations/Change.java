@@ -21,62 +21,59 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
+/**
+ * Marks a class as a change unit that encapsulates a system evolution operation.
+ * Each change represents an atomic, versioned modification to your distributed system.
+ *
+ * <p>Example usage:
+ * <pre>{@code
+ * &#64;Change(id = "create-user-index", order = "2024-11-15-001", author = "john.doe")
+ * public class CreateUserIndexChange {
+ *     &#64;Apply
+ *     public void createIndex(MongoDatabase db) {
+ *         // Implementation
+ *     }
+ * }
+ * }</pre>
+ *
+ * @see Apply
+ * @see Rollback
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Change {
 
-    String NULL_ORDER = "NULL_VALUE";
-
     /**
-     * Change unit's id. It will be used to identify both change entries, the one linked to @Execution and @BeforeExecution(this one with the suffix `_before`)
-     * Equivalent to field `id` in ChangeSet annotation
+     * Unique identifier for this change. Must be globally unique across all changes.
+     * Typically follows a kebab-case naming convention describing the operation.
      *
-     * @return Change unit's id
+     * @return the unique change identifier
      */
     String id();
 
     /**
-     * Equivalent to field `order` in ChangeSet annotation and ChangeLog,
-     * as now there is only one "changeSet", annotated with @Execution
+     * Execution order for this change. Changes are executed in lexicographical order.
+     * Minimum 4 characters required. Recommended format: date-based with index (e.g., "2024-05-19-001").
+     * This format provides optimal sorting, clarity, and sequential indexing within the same day.
+     * Alternative formats like zero-padded numbers ("0001", "0002") are also supported.
      *
-     * @return ChangeSet's author
+     * @return the execution order string
      */
-    String order() default NULL_ORDER;
+    String order();
 
     /**
-     * Equivalent to field `author` in ChangeSet annotation
+     * Author of this change. Required for audit trail and accountability.
+     * Typically an email, username, or team identifier.
      *
-     * @return ChangeSet's author
+     * @return the change author identifier
      */
-    String author() default "default_author";
+    String author();
 
     /**
-     * Equivalent to field `failFast` in ChangeSet annotation
+     * Whether this change should run within a transaction if supported by the target system.
+     * Set to {@code false} for operations that cannot be transactional (e.g., DDL in some databases).
      *
-     * @return ChangeSet if the ChangeLog is fail fast
-     */
-    @Deprecated
-    boolean failFast() default true;
-
-    /**
-     * Equivalent to field `runAlways` in ChangeSet annotation
-     *
-     * @return ChangeSet if the ChangeLog is runAlways
-     */
-    @Deprecated
-    boolean runAlways() default false;
-
-    /**
-     * Equivalent to field `systemVersion` in ChangeSet annotation
-     *
-     * @return ChangeSet if the ChangeLog is runAlways
-     */
-    String systemVersion() default "0";
-
-    /**
-     * If true, Mongock will try to run the changeUnit in a native transaction, if possible.
-     *
-     * @return If he changeUnit should be run in a native transaction.
+     * @return {@code true} if transactional execution is required, {@code false} otherwise
      */
     boolean transactional() default true;
 

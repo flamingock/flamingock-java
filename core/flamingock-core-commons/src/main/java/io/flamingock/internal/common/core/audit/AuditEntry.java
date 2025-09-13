@@ -16,7 +16,7 @@
 package io.flamingock.internal.common.core.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.flamingock.api.annotations.Recovery;
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 
 import java.time.LocalDateTime;
@@ -40,7 +40,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     private final AuditTxType txType;
     private final String targetSystemId;
     private final String order;
-    private final Recovery.RecoveryStrategy recoveryStrategy;
+    private final RecoveryStrategy recoveryStrategy;
 
     public AuditEntry(String executionId,
                       String stageId,
@@ -59,7 +59,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       AuditTxType txType,
                       String targetSystemId,
                       String order,
-                      Recovery.RecoveryStrategy recoveryStrategy) {
+                      RecoveryStrategy recoveryStrategy) {
         this.executionId = executionId;
         this.stageId = stageId;
         this.taskId = taskId;
@@ -77,7 +77,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         this.targetSystemId = targetSystemId;
         this.order = order;
         this.systemChange = systemChange;
-        this.recoveryStrategy = recoveryStrategy != null ? recoveryStrategy : Recovery.RecoveryStrategy.MANUAL_INTERVENTION;
+        this.recoveryStrategy = recoveryStrategy != null ? recoveryStrategy : RecoveryStrategy.MANUAL_INTERVENTION;
     }
 
     /**
@@ -101,7 +101,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       String errorTrace,
                       AuditTxType txType) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null, null, Recovery.RecoveryStrategy.MANUAL_INTERVENTION);
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null, null, RecoveryStrategy.MANUAL_INTERVENTION);
     }
 
     /**
@@ -124,7 +124,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       boolean systemChange,
                       String errorTrace) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null, Recovery.RecoveryStrategy.MANUAL_INTERVENTION);
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null, RecoveryStrategy.MANUAL_INTERVENTION);
     }
 
     public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
@@ -206,7 +206,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         return order;
     }
 
-    public Recovery.RecoveryStrategy getRecoveryStrategy() {
+    public RecoveryStrategy getRecoveryStrategy() {
         return recoveryStrategy;
     }
 

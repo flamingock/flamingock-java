@@ -55,6 +55,8 @@ public class AuditService {
 
     /**
      * Get snapshot view - latest state per changeUnit (DEFAULT)
+     *
+     * @return list of audit entries representing the latest state of each change unit
      */
     public List<AuditEntry> listAuditEntriesSnapshot() {
         return opsClient.getAuditSnapshot();
@@ -62,6 +64,8 @@ public class AuditService {
 
     /**
      * Get full chronological history
+     *
+     * @return list of audit entries in chronological order
      */
     public List<AuditEntry> listAuditEntriesHistory() {
         return opsClient.getAuditHistory();
@@ -69,6 +73,9 @@ public class AuditService {
 
     /**
      * Get entries since a specific date
+     *
+     * @param since the date from which to retrieve audit entries
+     * @return list of audit entries since the specified date
      */
     public List<AuditEntry> listAuditEntriesSince(LocalDateTime since) {
         return opsClient.getAuditSnapshotSince(since);
@@ -76,6 +83,8 @@ public class AuditService {
 
     /**
      * Get only entries with issues
+     *
+     * @return list of audit entries that have issues requiring attention
      */
     public List<AuditEntryIssue> listAuditEntriesWithIssues() {
         return opsClient.getAuditIssues();

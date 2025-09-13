@@ -18,14 +18,15 @@ package io.flamingock.core.e2e.changes;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
+import io.flamingock.api.RecoveryStrategy;
 
 /**
  * Non-transactional change unit configured with explicit MANUAL_INTERVENTION recovery strategy.
  * Used for testing recovery behavior when changes are in inconsistent states
  * and should require explicit manual intervention (same as default behavior).
  */
-@Change(id = "manual-intervention-non-tx-change", order = "001", transactional = false)
-@Recovery(strategy = Recovery.RecoveryStrategy.MANUAL_INTERVENTION)
+@Change(id = "manual-intervention-non-tx-change", order = "001", transactional = false, author = "aperezdieppa")
+@Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
 public class ManualInterventionNonTransactionalChange {
 
     @Apply

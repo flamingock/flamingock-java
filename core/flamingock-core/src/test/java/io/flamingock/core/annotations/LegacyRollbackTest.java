@@ -69,7 +69,7 @@ class LegacyRollbackTest {
         );
     }
 
-    @Change(id = "taskId", order = "001")
+    @Change(id = "taskId", order = "001", author = "aperezdieppa")
     public static class ChangeUnitWithExecutionError {
 
         @BeforeExecution
@@ -89,7 +89,7 @@ class LegacyRollbackTest {
         }
     }
 
-    @Change(id = "taskId", order = "001")
+    @Change(id = "taskId", order = "001", author = "aperezdieppa")
     public static class ChangeUnitWithBeforeRollbackExecution {
 
         @BeforeExecution

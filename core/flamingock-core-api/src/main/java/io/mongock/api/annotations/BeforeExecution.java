@@ -24,7 +24,6 @@ import java.lang.annotation.Target;
 /**
  * For old classes, this annotation can remain. It won't be removed from the legacy library.
  * For new classes, another ChangeUnit should be created to cover this logic
- * <p>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

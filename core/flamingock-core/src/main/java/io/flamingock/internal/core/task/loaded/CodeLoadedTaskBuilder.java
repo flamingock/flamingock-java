@@ -158,7 +158,6 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setId(annotation.id());
         setOrderInContent(annotation.order());
         setChangeUnitClass(sourceClass.getName());
-        setRunAlways(annotation.runAlways());
         setTransactional(annotation.transactional());
         setSystem(false);
         setRecoveryFromClass(sourceClass);

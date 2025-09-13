@@ -16,6 +16,7 @@
 package io.flamingock.core.kit.audit;
 
 import io.flamingock.api.annotations.Recovery;
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 
@@ -50,12 +51,12 @@ public class AuditEntryTestFactory {
      * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
      * @return the recovery strategy from @Recovery annotation, or MANUAL_INTERVENTION if not present
      */
-    public static Recovery.RecoveryStrategy extractRecoveryStrategy(Class<?> changeUnitClass) {
+    public static RecoveryStrategy extractRecoveryStrategy(Class<?> changeUnitClass) {
         if (changeUnitClass != null && changeUnitClass.isAnnotationPresent(Recovery.class)) {
             Recovery recoveryAnnotation = changeUnitClass.getAnnotation(Recovery.class);
             return recoveryAnnotation.strategy();
         }
-        return Recovery.RecoveryStrategy.MANUAL_INTERVENTION;
+        return RecoveryStrategy.MANUAL_INTERVENTION;
     }
 
     /**
@@ -73,7 +74,7 @@ public class AuditEntryTestFactory {
      * @return a properly configured AuditEntry for testing
      */
     public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txType, Class<?> changeUnitClass) {
-        Recovery.RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
+        RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
@@ -120,7 +121,7 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 "test-target-system",         // targetSystemId
                 "001",                        // order
-                Recovery.RecoveryStrategy.MANUAL_INTERVENTION          // recoveryStrategy
+                RecoveryStrategy.MANUAL_INTERVENTION          // recoveryStrategy
         );
     }
 
@@ -208,7 +209,7 @@ public class AuditEntryTestFactory {
      * @return a properly configured AuditEntry for testing with specified target system
      */
     public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txType, String targetSystemId, Class<?> changeUnitClass) {
-        Recovery.RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
+        RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
@@ -254,7 +255,7 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 targetSystemId,               // targetSystemId
                 "001",                        // order
-                Recovery.RecoveryStrategy.MANUAL_INTERVENTION // recoveryStrategy
+                RecoveryStrategy.MANUAL_INTERVENTION // recoveryStrategy
         );
     }
 
@@ -286,7 +287,7 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 null,                         // targetSystemId
                 "001",                        // order
-                Recovery.RecoveryStrategy.MANUAL_INTERVENTION // recoveryStrategy
+                RecoveryStrategy.MANUAL_INTERVENTION // recoveryStrategy
         );
     }
 }

@@ -16,6 +16,7 @@
 package io.flamingock.internal.common.core.task;
 
 import io.flamingock.api.annotations.Recovery;
+import io.flamingock.api.RecoveryStrategy;
 
 import java.util.Objects;
 
@@ -25,9 +26,9 @@ import java.util.Objects;
  */
 public class RecoveryDescriptor {
 
-    private static final RecoveryDescriptor DEFAULT_INSTANCE = new RecoveryDescriptor(Recovery.RecoveryStrategy.MANUAL_INTERVENTION);
+    private static final RecoveryDescriptor DEFAULT_INSTANCE = new RecoveryDescriptor(RecoveryStrategy.MANUAL_INTERVENTION);
 
-    private Recovery.RecoveryStrategy strategy;
+    private RecoveryStrategy strategy;
 
     public static RecoveryDescriptor getDefault() {
         return DEFAULT_INSTANCE;
@@ -44,7 +45,7 @@ public class RecoveryDescriptor {
      *
      * @param strategy the recovery strategy
      */
-    public RecoveryDescriptor(Recovery.RecoveryStrategy strategy) {
+    public RecoveryDescriptor(RecoveryStrategy strategy) {
         this.strategy = strategy;
     }
 
@@ -55,8 +56,8 @@ public class RecoveryDescriptor {
      * @param strategy the recovery strategy
      * @return a new RecoveryDescriptor
      */
-    public static RecoveryDescriptor fromStrategy(Recovery.RecoveryStrategy strategy) {
-        return new RecoveryDescriptor(strategy != null ? strategy : Recovery.RecoveryStrategy.MANUAL_INTERVENTION);
+    public static RecoveryDescriptor fromStrategy(RecoveryStrategy strategy) {
+        return new RecoveryDescriptor(strategy != null ? strategy : RecoveryStrategy.MANUAL_INTERVENTION);
     }
 
 
@@ -65,7 +66,7 @@ public class RecoveryDescriptor {
      *
      * @return the recovery strategy
      */
-    public Recovery.RecoveryStrategy getStrategy() {
+    public RecoveryStrategy getStrategy() {
         return strategy;
     }
 
@@ -74,12 +75,12 @@ public class RecoveryDescriptor {
      *
      * @param strategy the recovery strategy
      */
-    public void setStrategy(Recovery.RecoveryStrategy strategy) {
+    public void setStrategy(RecoveryStrategy strategy) {
         this.strategy = strategy;
     }
 
     public boolean isAlwaysRetry() {
-        return strategy == Recovery.RecoveryStrategy.ALWAYS_RETRY;
+        return strategy == RecoveryStrategy.ALWAYS_RETRY;
     }
 
     @Override

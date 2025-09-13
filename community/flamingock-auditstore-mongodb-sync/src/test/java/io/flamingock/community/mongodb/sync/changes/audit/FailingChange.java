@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Apply;
  * Change unit that intentionally fails to test error audit scenarios.
  * Used for testing audit persistence of error fields like errorTrace.
  */
-@Change(id = "failing-change", order = "006", transactional = false)
+@Change(id = "failing-change", order = "006", transactional = false, author = "aperezdieppa")
 public class FailingChange {
 
     @Apply

@@ -20,6 +20,41 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Marks the method that rolls back a change in case of failure or manual reversion.
+ * This method should undo the operations performed by the corresponding {@link Apply} method.
+ *
+ * <p>Rollback methods are optional but recommended for production systems to ensure
+ * safe change reversibility. They receive the same dependency injection as Apply methods.
+ *
+ * <p>Example usage:
+ * <pre>{@code
+ * &#64;Change(id = "migrate-user-schema", order = "2024-11-16-001", author = "ops-team")
+ * public class MigrateUserSchema {
+ *
+ *     &#64;Apply
+ *     public void migrateSchema(MongoDatabase db) {
+ *         // Add new field and migrate data
+ *         db.getCollection("users").updateMany(
+ *             new Document(),
+ *             Updates.set("createdAt", new Date())
+ *         );
+ *     }
+ *
+ *     &#64;Rollback
+ *     public void revertSchema(MongoDatabase db) {
+ *         // Remove the added field
+ *         db.getCollection("users").updateMany(
+ *             new Document(),
+ *             Updates.unset("createdAt")
+ *         );
+ *     }
+ * }
+ * }</pre>
+ *
+ * @see Change
+ * @see Apply
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Rollback {

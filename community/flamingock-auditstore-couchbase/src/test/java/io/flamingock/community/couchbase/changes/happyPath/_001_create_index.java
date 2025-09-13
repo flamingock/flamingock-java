@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.Apply;
 
 import java.util.Arrays;
 
-@Change(id = "create-index", order = "001", transactional = false)
+@Change(id = "create-index", order = "001", transactional = false, author = "aperezdieppa")
 public class _001_create_index {
 
 	@Apply

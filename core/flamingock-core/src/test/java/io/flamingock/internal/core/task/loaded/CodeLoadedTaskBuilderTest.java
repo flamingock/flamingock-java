@@ -202,7 +202,7 @@ class CodeLoadedTaskBuilderTest {
     }
 
     // Test class with ChangeUnit annotation for testing setFromFlamingockChangeAnnotation
-    @Change(id = "annotation-test", order = "100", transactional = false)
+    @Change(id = "annotation-test", order = "100", transactional = false, author = "aperezdieppa")
     static class TestChangeUnitClass {
     }
 
@@ -232,23 +232,23 @@ class CodeLoadedTaskBuilderTest {
         assertFalse(CodeLoadedTaskBuilder.supportsSourceClass(String.class));
     }
 
-    @Change(id = "no-order-in_annotation")
-    static class _100_noOrderInAnnotation {
+    @Change(id = "no-order-in_annotation", order = "0001", author = "aperezdieppa")
+    static class _0001_anotherChange {
     }
 
     @Test
     @DisplayName("Should build from annotated class correctly")
     void shouldBuildFromAnnotatedClassCorrectlyWhenOrderInAnnotationNull() {
         // Given
-        CodeLoadedTaskBuilder builderFromClass = CodeLoadedTaskBuilder.getInstanceFromClass(_100_noOrderInAnnotation.class);
+        CodeLoadedTaskBuilder builderFromClass = CodeLoadedTaskBuilder.getInstanceFromClass(_0001_anotherChange.class);
 
         // When
         CodeLoadedChangeUnit result = builderFromClass.build();
 
         // Then
         assertEquals("no-order-in_annotation", result.getId());
-        assertEquals("100", result.getOrder().orElse(null));
-        assertEquals(_100_noOrderInAnnotation.class, result.getImplementationClass());
+        assertEquals("0001", result.getOrder().orElse(null));
+        assertEquals(_0001_anotherChange.class, result.getImplementationClass());
     }
 
 }

@@ -16,6 +16,7 @@
 package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -95,8 +96,8 @@ public class CouchbaseAuditMapper {
                 jsonObject.getString(KEY_TARGET_SYSTEM_ID),
                 jsonObject.getString(KEY_ORDER),
                 jsonObject.getString(KEY_RECOVERY_STRATEGY) != null
-                        ? Recovery.RecoveryStrategy.valueOf(jsonObject.getString(KEY_RECOVERY_STRATEGY))
-                        : Recovery.RecoveryStrategy.MANUAL_INTERVENTION
+                        ? RecoveryStrategy.valueOf(jsonObject.getString(KEY_RECOVERY_STRATEGY))
+                        : RecoveryStrategy.MANUAL_INTERVENTION
         );
     }
 }

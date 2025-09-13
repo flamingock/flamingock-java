@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Rollback;
 
-@Change( id="insert-document" , order = "002", transactional = false)
+@Change( id="insert-document" , order = "002", transactional = false, author = "aperezdieppa")
 public class _002_insert_document {
 
     @Apply

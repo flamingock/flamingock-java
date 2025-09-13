@@ -22,7 +22,7 @@ import io.flamingock.api.annotations.Apply;
  * Change unit for testing metadata serialization in audit entries.
  * Used for testing audit persistence of metadata field.
  */
-@Change(id = "metadata-change", order = "007", transactional = false)
+@Change(id = "metadata-change", order = "007", transactional = false, author = "aperezdieppa")
 public class MetadataChange {
 
     @Apply

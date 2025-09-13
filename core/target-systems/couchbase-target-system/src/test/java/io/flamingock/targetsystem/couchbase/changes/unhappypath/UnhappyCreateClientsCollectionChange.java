@@ -25,7 +25,7 @@ import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.TargetSystem;
 
 @TargetSystem( id = "couchbase-ts")
-@Change(id = "create-clients-collection", order = "001", transactional = false)
+@Change(id = "create-clients-collection", order = "001", transactional = false, author = "aperezdieppa")
 public class UnhappyCreateClientsCollectionChange {
 
     @Apply

@@ -24,7 +24,7 @@ import io.flamingock.api.annotations.TargetSystem;
  * This change unit is bound to the "custom-target-system" target system.
  */
 @TargetSystem(id = "custom-target-system")
-@Change(id = "test-custom-target-change", order = "002", transactional = false)
+@Change(id = "test-custom-target-change", order = "002", transactional = false, author = "aperezdieppa")
 public class CustomTargetSystemChange {
 
     @Apply

@@ -18,14 +18,15 @@ package io.flamingock.core.e2e.changes;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
+import io.flamingock.api.RecoveryStrategy;
 
 /**
  * Non-transactional change unit configured with ALWAYS_RETRY recovery strategy.
  * Used for testing recovery behavior when changes are in inconsistent states
  * but should be retried automatically instead of requiring manual intervention.
  */
-@Change(id = "always-retry-non-tx-change", order = "001", transactional = false)
-@Recovery(strategy = Recovery.RecoveryStrategy.ALWAYS_RETRY)
+@Change(id = "always-retry-non-tx-change", order = "001", transactional = false, author = "aperezdieppa")
+@Recovery(strategy = RecoveryStrategy.ALWAYS_RETRY)
 public class AlwaysRetryNonTransactionalChange {
 
     @Apply
