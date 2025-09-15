@@ -6,7 +6,7 @@
 // Module categorization
 val coreProjects = setOf(
     "flamingock-core",
-    "flamingock-core-commons", 
+    "flamingock-core-commons",
     "flamingock-core-api",
     "flamingock-processor",
     "flamingock-graalvm",
@@ -59,7 +59,7 @@ fun Project.isLibraryModule(): Boolean = name !in setOf("flamingock-community-bo
 // Module category lookup
 fun Project.getProjectCategory(): String? = when (name) {
     in coreProjects -> "core"
-    in cloudProjects -> "cloud" 
+    in cloudProjects -> "cloud"
     in communityProjects -> "community"
     in pluginProjects -> "plugins"
     in transactionerProjects -> "transactioners"
@@ -93,6 +93,7 @@ extra["allProjects"] = allProjects
 
 // Apply appropriate plugins based on project type
 when {
+    project == rootProject -> { /* Do not publish root project */ }
     isBomModule() -> {
         apply(plugin = "java-platform")
         apply(plugin = "flamingock.license")

@@ -10,12 +10,14 @@ buildscript {
 plugins {
     id("flamingock.root-project")
     id("flamingock.license")
+    id("flamingock.project-structure")
+    id("flamingock.release-management")
 }
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.38-beta"
-    
+    version = "0.0.39-beta"
+
     repositories {
         mavenCentral()
     }

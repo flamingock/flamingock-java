@@ -5,11 +5,6 @@ plugins {
 }
 
 jreleaser {
-    project {
-        description.set("Description should be here")
-        inceptionYear.set("2024")
-        authors.set(setOf("dieppa"))
-    }
     signing {
         active.set(Active.ALWAYS)
         armored = true
