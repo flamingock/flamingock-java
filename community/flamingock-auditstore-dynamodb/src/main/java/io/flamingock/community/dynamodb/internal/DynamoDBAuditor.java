@@ -19,19 +19,16 @@ import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.transaction.TransactionManager;
-
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
-import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.util.List;
@@ -45,11 +42,9 @@ public class DynamoDBAuditor implements LifecycleAuditWriter, CommunityAuditRead
 
     private final DynamoDBUtil dynamoDBUtil;
     protected DynamoDbTable<AuditEntryEntity> table;
-    protected final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> transactionManager;
 
-    protected DynamoDBAuditor(DynamoDBTargetSystem targetSystem) {
-        this.dynamoDBUtil = new DynamoDBUtil(targetSystem.getClient());
-        this.transactionManager = targetSystem.getTxManager();
+    public DynamoDBAuditor(DynamoDbClient client) {
+        this.dynamoDBUtil = new DynamoDBUtil(client);
     }
 
     protected void initialize(Boolean autoCreate, String tableName, long readCapacityUnits, long writeCapacityUnits) {
@@ -70,27 +65,16 @@ public class DynamoDBAuditor implements LifecycleAuditWriter, CommunityAuditRead
     public Result writeEntry(AuditEntry auditEntry) {
         AuditEntryEntity entity = new AuditEntryEntity(auditEntry);
         logger.debug("Saving audit entry with key {}", entity.getPartitionKey());
-
-        TransactWriteItemsEnhancedRequest.Builder transactionBuilder = transactionManager
-                .getSession(auditEntry.getTaskId())
-                .orElse(null);
-
-        if (transactionBuilder != null) {
-            logger.debug("Adding PUT item to transaction for key {}", entity.getPartitionKey());
-            transactionBuilder.addPutItem(table, entity);
-        } else {
-            try {
-                table.putItem(
-                        PutItemEnhancedRequest.builder(AuditEntryEntity.class)
-                                .item(entity)
-                                .build()
-                );
-            } catch (ConditionalCheckFailedException ex) {
-                logger.warn("Error saving audit entry with key {}", entity.getPartitionKey(), ex);
-                throw ex;
-            }
+        try {
+            table.putItem(
+                    PutItemEnhancedRequest.builder(AuditEntryEntity.class)
+                            .item(entity)
+                            .build()
+            );
+        } catch (ConditionalCheckFailedException ex) {
+            logger.warn("Error saving audit entry with key {}", entity.getPartitionKey(), ex);
+            throw ex;
         }
-
         return Result.OK();
     }
 
@@ -106,5 +90,4 @@ public class DynamoDBAuditor implements LifecycleAuditWriter, CommunityAuditRead
                 .map(AuditEntryEntity::toAuditEntry)
                 .collect(Collectors.toList());
     }
-
 }

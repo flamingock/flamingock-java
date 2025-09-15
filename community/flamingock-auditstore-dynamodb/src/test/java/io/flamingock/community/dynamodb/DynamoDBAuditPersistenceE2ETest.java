@@ -102,7 +102,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                         .withDynamoDBClient(sharedDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
@@ -146,7 +146,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                         .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
@@ -198,7 +198,7 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withDynamoDBClient(sharedDynamoDbClient); // Same DynamoDbClient as audit storage
 
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                         .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(sharedTargetSystem)
@@ -235,7 +235,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                         .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
@@ -276,7 +276,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                         .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(separateTargetSystem)
@@ -314,7 +314,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                         .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
@@ -356,7 +356,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                         .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")

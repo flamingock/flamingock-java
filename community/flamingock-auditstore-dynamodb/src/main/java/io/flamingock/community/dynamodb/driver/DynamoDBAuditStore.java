@@ -26,24 +26,32 @@ import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.dynamodb.DynamoDBConfiguration;
 import io.flamingock.community.dynamodb.internal.DynamoDBAuditPersistence;
-import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBAuditStore implements CommunityAuditStore {
 
     private RunnerId runnerId;
-    private DynamoDBTargetSystem targetSystem;
     private CommunityConfigurable communityConfiguration;
     private DynamoDBConfiguration driverConfiguration;
     private DynamoDBAuditPersistence persistence;
     private DynamoDBLockService lockService;
+    private DynamoDbClient client;
+    private Boolean autoCreate;
 
-    public DynamoDBAuditStore() {
-        this(null);
+    public DynamoDBAuditStore() {}
+
+    public DynamoDBAuditStore withDynamoDBClient(DynamoDbClient client) {
+        this.client = client;
+        return this;
     }
 
-    public DynamoDBAuditStore(DynamoDBTargetSystem targetSystem) {
-        this.targetSystem = targetSystem;
+    public DynamoDBAuditStore withAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
+        return this;
+    }
+
+    private boolean isAutoCreateEnabled() {
+        return autoCreate != null ? autoCreate : driverConfiguration.isAutoCreate();
     }
 
     @Override
@@ -55,25 +63,20 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
                 .orElse(new DynamoDBConfiguration());
         this.driverConfiguration.mergeConfig(baseContext);
 
-        if(targetSystem == null) {
-            DynamoDbClient client = baseContext.getRequiredDependencyValue(DynamoDbClient.class);
-
-
-            targetSystem = new DynamoDBTargetSystem(DEFAULT_AUDIT_STORE_TARGET_SYSTEM)
-                    .withDynamoDBClient(client);
-            targetSystem.initialize(baseContext);
+        if (client == null) {
+            client = baseContext.getRequiredDependencyValue(DynamoDbClient.class);
         }
-
     }
 
     @Override
     public synchronized CommunityAuditPersistence getPersistence() {
         if (persistence == null) {
             persistence = new DynamoDBAuditPersistence(
-                    targetSystem,
+                    client,
                     driverConfiguration.getAuditRepositoryName(),
                     driverConfiguration.getReadCapacityUnits(),
                     driverConfiguration.getWriteCapacityUnits(),
+                    isAutoCreateEnabled(),
                     communityConfiguration);
             persistence.initialize(runnerId);
         }
@@ -83,9 +86,9 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     @Override
     public synchronized CommunityLockService getLockService() {
         if (lockService == null) {
-            lockService = new DynamoDBLockService(targetSystem, TimeService.getDefault());
+            lockService = new DynamoDBLockService(client, TimeService.getDefault());
             lockService.initialize(
-                    targetSystem.isAutoCreate(),
+                    isAutoCreateEnabled(),
                     driverConfiguration.getLockRepositoryName(),
                     driverConfiguration.getReadCapacityUnits(),
                     driverConfiguration.getWriteCapacityUnits());
@@ -93,10 +96,8 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
         return lockService;
     }
 
-
     @Override
     public TargetSystem getTargetSystem() {
-        return targetSystem;
+        return null;
     }
-
 }

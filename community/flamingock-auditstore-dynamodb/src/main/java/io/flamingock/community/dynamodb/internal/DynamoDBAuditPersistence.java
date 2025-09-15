@@ -20,37 +20,39 @@ import io.flamingock.internal.core.configuration.community.CommunityConfigurable
 import io.flamingock.internal.core.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.List;
 
 public class DynamoDBAuditPersistence extends AbstractCommunityAuditPersistence {
 
-    private final DynamoDBTargetSystem targetSystem;
+    private final DynamoDbClient client;
     private final String auditTableName;
     private final long readCapacityUnits;
     private final long writeCapacityUnits;
+    private final boolean autoCreate;
 
     private DynamoDBAuditor auditor;
 
-
-    public DynamoDBAuditPersistence(DynamoDBTargetSystem targetSystem,
+    public DynamoDBAuditPersistence(DynamoDbClient client,
                                     String auditTableName,
                                     long readCapacityUnits,
                                     long writeCapacityUnits,
+                                    boolean autoCreate,
                                     CommunityConfigurable localConfiguration) {
         super(localConfiguration);
-        this.targetSystem = targetSystem;
+        this.client = client;
         this.auditTableName = auditTableName;
         this.readCapacityUnits = readCapacityUnits;
         this.writeCapacityUnits = writeCapacityUnits;
+        this.autoCreate = autoCreate;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        auditor = new DynamoDBAuditor(targetSystem);
+        auditor = new DynamoDBAuditor(client);
         auditor.initialize(
-                targetSystem.isAutoCreate(),
+                autoCreate,
                 auditTableName,
                 readCapacityUnits,
                 writeCapacityUnits);

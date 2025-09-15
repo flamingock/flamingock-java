@@ -104,7 +104,7 @@ class DynamoDBAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(client))
                             .addDependency(client)
                             .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                     .withDynamoDBClient(client))
@@ -153,7 +153,7 @@ class DynamoDBAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(client))
                             .addDependency(config)
                             .setProperty("dynamodb.autoCreate", false)
                             .setProperty("dynamodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
@@ -195,7 +195,7 @@ class DynamoDBAuditStoreTest {
                 .WHEN(() -> {
                     // Run pipeline twice to verify repeated execution
                     FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(client))
                             .addDependency(client)
                             .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                     .withDynamoDBClient(client))
@@ -203,7 +203,7 @@ class DynamoDBAuditStoreTest {
                             .run();
 
                     FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(client))
                             .addDependency(client)
                             .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                     .withDynamoDBClient(client))
@@ -245,7 +245,7 @@ class DynamoDBAuditStoreTest {
                 .WHEN(() -> {
                     assertThrows(PipelineExecutionException.class, () -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore())
+                                .setAuditStore(new DynamoDBAuditStore().withDynamoDBClient(client))
                                 .addDependency(client)
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
                                     .withDynamoDBClient(client))
@@ -278,4 +278,58 @@ class DynamoDBAuditStoreTest {
         assertTrue(rows.contains("Pepe Pérez"));
     }
 
+    @Test
+    @DisplayName("DynamoDBAuditStore withAutoCreate(false) does not create tables automatically")
+    void auditStoreWithAutoCreateFalseDoesNotCreateTables() {
+        List<String> initialTables = client.listTables().tableNames();
+        assertFalse(initialTables.contains(CUSTOM_AUDIT_REPOSITORY_NAME));
+        assertFalse(initialTables.contains(CUSTOM_LOCK_REPOSITORY_NAME));
+
+        DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);
+        dynamoDBUtil.createTable(
+                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getKeySchemas(DynamoDBConstants.AUDIT_LOG_PK, null),
+                dynamoDBUtil.getProvisionedThroughput(1L, 1L),
+                CUSTOM_AUDIT_REPOSITORY_NAME,
+                Collections.emptyList(),
+                Collections.emptyList()
+        );
+        dynamoDBUtil.createTable(
+                dynamoDBUtil.getAttributeDefinitions(DynamoDBConstants.LOCK_PK, null),
+                dynamoDBUtil.getKeySchemas(DynamoDBConstants.LOCK_PK, null),
+                dynamoDBUtil.getProvisionedThroughput(1L, 1L),
+                CUSTOM_LOCK_REPOSITORY_NAME,
+                Collections.emptyList(),
+                Collections.emptyList()
+        );
+
+        DynamoDBAuditStore auditStore = new DynamoDBAuditStore()
+                .withDynamoDBClient(client)
+                .withAutoCreate(false);
+
+        DynamoDBConfiguration config = new DynamoDBConfiguration();
+        config.setAuditRepositoryName(CUSTOM_AUDIT_REPOSITORY_NAME);
+        config.setLockRepositoryName(CUSTOM_LOCK_REPOSITORY_NAME);
+
+        AuditTestSupport.withTestKit(testKit)
+                .GIVEN_ChangeUnits(
+                        new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeUnitTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                .WHEN(() -> {
+                    FlamingockFactory.getCommunityBuilder()
+                            .setAuditStore(auditStore)
+                            .addDependency(config)
+                            .addDependency(client)
+                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                    .withDynamoDBClient(client))
+                            .build()
+                            .run();
+                })
+                .run();
+
+        List<String> tableNames = client.listTables().tableNames();
+        assertTrue(tableNames.contains(CUSTOM_AUDIT_REPOSITORY_NAME));
+        assertTrue(tableNames.contains(CUSTOM_LOCK_REPOSITORY_NAME));
+    }
 }
