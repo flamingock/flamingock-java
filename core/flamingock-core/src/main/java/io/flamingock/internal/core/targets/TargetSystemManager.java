@@ -45,14 +45,13 @@ public class TargetSystemManager implements ContextInitializable {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("TargetSystem");
 
     private boolean initialized = false;
+
+    //TODO if we decide to remove the TX_SHARED
     private AbstractTargetSystem<?> auditStoreTargetSystem;
     private final Map<String, AbstractTargetSystem<?>> targetSystemMap = new HashMap<>();
 
     @Override
     public void initialize(ContextResolver contextResolver) {
-        if (auditStoreTargetSystem == null) {
-            throw new IllegalArgumentException("Trying to initialize TargetSystemManager without AuditStore TargetSystem");
-        }
         initialized = true;
         targetSystemMap.values()
                 .stream()
@@ -85,75 +84,36 @@ public class TargetSystemManager implements ContextInitializable {
         this.auditStoreTargetSystem = (AbstractTargetSystem<?>) defaultTargetSystem;
     }
 
-
-    public Optional<TargetSystemOps> getOrDefault(TargetSystemDescriptor tsd) {
-        return Optional.ofNullable(getValueOrDefault(tsd));
-    }
-
-    public TargetSystemOps getValueOrDefault(TargetSystemDescriptor tsd) {
-        return getValueOrDefault(tsd != null ? tsd.getId() : null);
-    }
-
-    /**
-     * Returns the {@link TargetSystem} associated with the given ID,
-     * or the default one if no match is found.
-     *
-     * @param id the target system ID
-     * @return an {@link Optional} with the matching or default target system, or empty if none registered
-     */
-    public Optional<TargetSystemOps> getOrDefault(String id) {
-        return Optional.ofNullable(getValueOrDefault(id));
-    }
-
-    public TargetSystemOps getValueOrDefault(String id) {
-        //We do it this way(instead of getOrDefault) because although current implementation(HashMap) allows
-        // nulls, we may change in the future(ConcurrentHashMap doesn't allow nulls, for instance)
-        if (id == null || !targetSystemMap.containsKey(id)) {
-            return toDecorator(auditStoreTargetSystem);
-        } else {
-            AbstractTargetSystem<?> targetSystem = targetSystemMap.getOrDefault(id, auditStoreTargetSystem);
-            return toDecorator(targetSystem);
-        }
-    }
-
     /**
      * Returns the {@link TargetSystem} associated with the given descriptor.
      * 
      * @param tsd the target system descriptor
-     * @param relaxed if true, falls back to audit store target system when not found; if false, throws exception
      * @return the target system operations
      * @throws FlamingockException if relaxed is false and target system is not found
      */
-    public TargetSystemOps getTargetSystem(TargetSystemDescriptor tsd, boolean relaxed) {
+    public TargetSystemOps getTargetSystem(TargetSystemDescriptor tsd) {
         String targetSystemId = tsd != null ? tsd.getId() : null;
-        return getTargetSystem(targetSystemId, relaxed);
+        return getTargetSystem(targetSystemId);
     }
 
     /**
      * Returns the {@link TargetSystem} associated with the given ID.
      * 
      * @param id the target system ID
-     * @param relaxed if true, falls back to audit store target system when not found; if false, throws exception
      * @return the target system operations
      * @throws FlamingockException if relaxed is false and target system is not found
      */
-    public TargetSystemOps getTargetSystem(String id, boolean relaxed) {
-        logger.debug("Resolving target system with id: [{}], relaxed: [{}]", id, relaxed);
+    public TargetSystemOps getTargetSystem(String id) {
+        logger.debug("Resolving target system with id: [{}]", id);
         
         if (id == null || !targetSystemMap.containsKey(id)) {
-            if (relaxed) {
-                logger.warn("Target system with id [{}] not found, falling back to audit store target system [{}]", 
-                           id, auditStoreTargetSystem.getId());
-                return toDecorator(auditStoreTargetSystem);
-            } else {
-                String availableTargetSystems = String.join(", ", targetSystemMap.keySet());
-                String message = String.format(
+            String availableTargetSystems = String.join(", ", targetSystemMap.keySet());
+            String message = String.format(
                     "ChangeUnit requires a valid targetSystem. Found: [%s]. Available target systems: [%s]",
                     id, availableTargetSystems
-                );
-                logger.error(message);
-                throw new FlamingockException(message);
-            }
+            );
+            logger.error(message);
+            throw new FlamingockException(message);
         } else {
             AbstractTargetSystem<?> targetSystem = targetSystemMap.get(id);
             logger.debug("Successfully resolved target system with id: [{}]", id);

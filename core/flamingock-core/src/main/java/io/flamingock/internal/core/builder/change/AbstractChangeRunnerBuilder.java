@@ -210,7 +210,6 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 hierarchicalContext,
                 persistence.getNonGuardedTypes(),
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
-                coreConfiguration.isRelaxTargetSystemValidation(),
                 persistence.getCloser()
         );
     }
@@ -332,12 +331,6 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     }
 
     @Override
-    public HOLDER setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
-        coreConfiguration.setRelaxTargetSystemValidation(relaxTargetSystemValidation);
-        return getSelf();
-    }
-
-    @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguration.getLockAcquiredForMillis();
     }
@@ -376,12 +369,6 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     public String getDefaultAuthor() {
         return coreConfiguration.getDefaultAuthor();
     }
-
-    @Override
-    public boolean isRelaxTargetSystemValidation() {
-        return coreConfiguration.isRelaxTargetSystemValidation();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////
     //  STANDALONE

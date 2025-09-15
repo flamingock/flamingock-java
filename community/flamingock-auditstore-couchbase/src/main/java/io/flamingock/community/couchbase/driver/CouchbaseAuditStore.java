@@ -68,6 +68,7 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
                     .withBucket(bucket)
                     .withScopeName(driverConfiguration.getScopeName())
                     .withAutoCreate(driverConfiguration.isAutoCreate());
+            targetSystem.initialize(baseContext);
         }
     }
 

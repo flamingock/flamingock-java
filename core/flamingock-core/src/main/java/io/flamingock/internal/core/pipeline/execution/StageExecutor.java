@@ -43,20 +43,17 @@ public class StageExecutor {
     private final Set<Class<?>> nonGuardedTypes;
     private final TargetSystemManager targetSystemManager;
     protected final TransactionWrapper auditStoreTxWrapper;
-    private final boolean relaxTargetSystemValidation;
 
     public StageExecutor(ContextResolver dependencyContext,
                          Set<Class<?>> nonGuardedTypes,
                          LifecycleAuditWriter auditWriter,
                          TargetSystemManager targetSystemManager,
-                         TransactionWrapper auditStoreTxWrapper,
-                         boolean relaxTargetSystemValidation) {
+                         TransactionWrapper auditStoreTxWrapper) {
         this.baseDependencyContext = dependencyContext;
         this.nonGuardedTypes = nonGuardedTypes;
         this.auditWriter = auditWriter;
         this.targetSystemManager = targetSystemManager;
         this.auditStoreTxWrapper = auditStoreTxWrapper;
-        this.relaxTargetSystemValidation = relaxTargetSystemValidation;
     }
 
     public Output executeStage(ExecutableStage executableStage,
@@ -125,8 +122,7 @@ public class StageExecutor {
                 .setAuditWriter(auditWriter)
                 .setDependencyContext(contextResolver)
                 .setLock(lock)
-                .setNonGuardedTypes(nonGuardedTypes)
-                .setRelaxTargetSystemValidation(relaxTargetSystemValidation);
+                .setNonGuardedTypes(nonGuardedTypes);
     }
 
     protected Stream<? extends ExecutableTask> getTasksStream(ExecutableStage executableStage) {

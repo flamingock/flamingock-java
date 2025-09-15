@@ -16,6 +16,7 @@
 package io.flamingock.community.dynamodb.changes;
 
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.community.dynamodb.changes.common.DynamoDBUtil;
@@ -36,6 +37,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import static java.util.Collections.emptyList;
 
 
+@TargetSystem(id = "dynamodb")
 @Change(id = "client-initializer", order = "001", author = "mongock")
 @ChangeUnit(id = "client-initializer", order = "001", author = "mongock")
 public class _001_mongock_create_authors_collection {

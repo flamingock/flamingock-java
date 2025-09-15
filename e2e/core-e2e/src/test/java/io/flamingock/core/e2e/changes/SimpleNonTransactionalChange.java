@@ -17,12 +17,14 @@ package io.flamingock.core.e2e.changes;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 
 /**
  * Simple non-transactional change unit for testing core execution strategies.
  * Does not require any external dependencies.
  */
 @Change(id = "test1-non-tx-change", order = "001", transactional = false, author = "aperezdieppa")
+@TargetSystem(id = "kafka")
 public class SimpleNonTransactionalChange {
 
     @Apply

@@ -17,11 +17,12 @@ package io.flamingock.community.mongodb.sync.changes.audit;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
-
+import io.flamingock.api.annotations.TargetSystem;
 /**
  * Change unit that produces TX_SHARED txType via default behavior.
  * Used for testing audit persistence of TX_SHARED transaction type.
  */
+@TargetSystem(id = "mongodb")
 @Change(id = "tx-shared-default", order = "003", transactional = true, author = "aperezdieppa")
 public class TxSharedDefaultChange {
 

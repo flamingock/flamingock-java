@@ -84,7 +84,7 @@ class AuditPersistenceE2ETest {
             // When - Run Flamingock
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -98,7 +98,7 @@ class AuditPersistenceE2ETest {
                 .withType(AuditEntry.ExecutionType.EXECUTION)
                 .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                 .withTxType(AuditTxType.NON_TX)
-                .withTargetSystemId("default-audit-store-target-system")
+                .withTargetSystemId("kafka")
                 .withSystemChange(false)
                 .withTimestampBetween(testStart, testEnd);
 
@@ -107,7 +107,7 @@ class AuditPersistenceE2ETest {
                 .withType(AuditEntry.ExecutionType.EXECUTION)
                 .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                 .withTxType(AuditTxType.NON_TX)
-                .withTargetSystemId("default-audit-store-target-system")
+                .withTargetSystemId("kafka")
                 .withSystemChange(false)
                 .withTimestampBetween(testStart, testEnd);
 
@@ -130,7 +130,7 @@ class AuditPersistenceE2ETest {
             // When - Run Flamingock (should execute successfully and audit with default target system)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -138,8 +138,8 @@ class AuditPersistenceE2ETest {
 
         // Then - Verify audit entries have correct default targetSystemId using unified approach
         auditHelper.verifyAuditSequenceStrict(
-                STARTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("default-audit-store-target-system"),
-                APPLIED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("default-audit-store-target-system")
+                STARTED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("kafka"),
+                APPLIED(changeId).withTxType(AuditTxType.NON_TX).withTargetSystemId("kafka")
         );
     }
 
@@ -160,7 +160,7 @@ class AuditPersistenceE2ETest {
             // When - Run Flamingock with custom target system added to builder
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .addTargetSystem(new DefaultTargetSystem(customTargetSystemId))
                         .build()
                         .run();
@@ -192,7 +192,7 @@ class AuditPersistenceE2ETest {
             // When - Run multiple changes
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .addTargetSystem(new DefaultTargetSystem("custom-target-system"))
                         .build()
                         .run();
@@ -212,13 +212,13 @@ class AuditPersistenceE2ETest {
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("default-audit-store-target-system"),
+                        .withTargetSystemId("kafka"),
                 APPLIED(changeId1)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("default-audit-store-target-system"),
+                        .withTargetSystemId("kafka"),
 
                 // Second change (CustomTargetSystemChange) - STARTED & APPLIED
                 STARTED(changeId2)
@@ -252,7 +252,7 @@ class AuditPersistenceE2ETest {
                 // The actual test execution code - no more MockedStatic management needed!
                 assertDoesNotThrow(() -> {
                     testKit.createBuilder()
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new DefaultTargetSystem("kafka"))
                             .build()
                             .run();
                 });
@@ -280,7 +280,7 @@ class AuditPersistenceE2ETest {
             .WHEN(() -> {
                 assertDoesNotThrow(() -> {
                     testKit.createBuilder()
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new DefaultTargetSystem("kafka"))
                             .addTargetSystem(new DefaultTargetSystem("custom-target-system"))
                             .build()
                             .run();
@@ -293,13 +293,13 @@ class AuditPersistenceE2ETest {
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("default-audit-store-target-system"),
+                        .withTargetSystemId("kafka"),
                 APPLIED(changeId1)
                         .withAuthor("default_author")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
-                        .withTargetSystemId("default-audit-store-target-system"),
+                        .withTargetSystemId("kafka"),
                 
                 // Second change sequence  
                 STARTED(changeId2)

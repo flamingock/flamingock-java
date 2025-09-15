@@ -79,7 +79,9 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
                     .withReadPreference(readWriteConfiguration.getReadPreference())
                     .withWriteConcern(readWriteConfiguration.getWriteConcern())
                     .withAutoCreate(driverConfiguration.isAutoCreate());
+            targetSystem.initialize(baseContext);
         }
+
 
     }
 

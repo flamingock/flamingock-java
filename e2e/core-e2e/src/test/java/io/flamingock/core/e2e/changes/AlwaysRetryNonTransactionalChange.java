@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.RecoveryStrategy;
+import io.flamingock.api.annotations.TargetSystem;
 
 /**
  * Non-transactional change unit configured with ALWAYS_RETRY recovery strategy.
@@ -27,6 +28,7 @@ import io.flamingock.api.RecoveryStrategy;
  */
 @Change(id = "always-retry-non-tx-change", order = "001", transactional = false, author = "aperezdieppa")
 @Recovery(strategy = RecoveryStrategy.ALWAYS_RETRY)
+@TargetSystem(id = "sendgrid")
 public class AlwaysRetryNonTransactionalChange {
 
     @Apply

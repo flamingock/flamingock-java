@@ -44,10 +44,9 @@ public final class PipelineRunnerCreator {
                                 ContextResolver dependencyContext,
                                 Set<Class<?>> nonGuardedTypes,
                                 boolean isThrowExceptionIfCannotObtainLock,
-                                boolean relaxTargetSystemValidation,
                                 Runnable finalizer) {
 
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null, relaxTargetSystemValidation);
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
         return new PipelineRunner(
                 runnerId,
                 pipeline,

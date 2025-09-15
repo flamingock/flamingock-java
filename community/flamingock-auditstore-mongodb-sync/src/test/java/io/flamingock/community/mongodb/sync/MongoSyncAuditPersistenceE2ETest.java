@@ -97,7 +97,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoSyncAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                        .withMongoClient(sharedMongoClient)
+                                        .withDatabase(database))
                                 .addDependency(sharedMongoClient)
                                 .addDependency(database)
                                 .build()
@@ -109,14 +111,14 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system")
+                                .withTargetSystemId("mongodb")
                                 .withSystemChange(false)
                                 .withTimestampBetween(testStart, testEnd),
                         APPLIED(changeId)
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system")
+                                .withTargetSystemId("mongodb")
                                 .withSystemChange(false)
                                 .withTimestampBetween(testStart, testEnd)
                 )
@@ -136,7 +138,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoSyncAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                        .withMongoClient(sharedMongoClient)
+                                        .withDatabase(database))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
                                 .addDependency(sharedMongoClient)
                                 .addDependency(database)
@@ -150,12 +154,12 @@ class MongoSyncAuditPersistenceE2ETest {
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system"),
+                                .withTargetSystemId("mongodb"),
                         APPLIED("non-tx-transactional-false")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system"),
+                                .withTargetSystemId("mongodb"),
 
                         // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
                         STARTED("non-tx-target-system")
@@ -188,7 +192,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoSyncAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                        .withMongoClient(sharedMongoClient)
+                                        .withDatabase(database))
                                 .addTargetSystem(sharedTargetSystem)
                                 .addDependency(sharedMongoClient)
                                 .addDependency(database)
@@ -200,13 +206,13 @@ class MongoSyncAuditPersistenceE2ETest {
                         STARTED("tx-shared-default")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSharedDefaultChange.class)
-                                .withTxType(AuditTxType.TX_SHARED)
-                                .withTargetSystemId("default-audit-store-target-system"),
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("mongodb"),
                         APPLIED("tx-shared-default")
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
                                 .withClass(io.flamingock.community.mongodb.sync.changes.audit.TxSharedDefaultChange.class)
-                                .withTxType(AuditTxType.TX_SHARED)
-                                .withTargetSystemId("default-audit-store-target-system")
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("mongodb")
                 )
                 .run();
     }
@@ -227,7 +233,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoSyncAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                        .withMongoClient(sharedMongoClient)
+                                        .withDatabase(database))
                                 .addTargetSystem(sharedTargetSystem)
                                 .addDependency(sharedMongoClient)
                                 .addDependency(database)
@@ -267,7 +275,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoSyncAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                        .withMongoClient(sharedMongoClient)
+                                        .withDatabase(database))
                                 .addTargetSystem(separateTargetSystem)
                                 .addDependency(sharedMongoClient)
                                 .addDependency(database)
@@ -306,7 +316,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoSyncAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                        .withMongoClient(sharedMongoClient)
+                                        .withDatabase(database))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
                                 .addTargetSystem(new MongoSyncTargetSystem("tx-separate-system")
                                         .withMongoClient(separateMongoClient)
@@ -318,9 +330,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     });
                 })
                 .THEN_VerifyAuditSequenceStrict(
-                        // TxSharedDefaultChange - STARTED & EXECUTED with default target system
-                        STARTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
-                        APPLIED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
+                        // TxSharedDefaultChange - STARTED & EXECUTED with mongodb target system
+                        STARTED("tx-shared-default").withTargetSystemId("mongodb"),
+                        APPLIED("tx-shared-default").withTargetSystemId("mongodb"),
 
                         // NonTxTargetSystemChange - STARTED & EXECUTED
                         STARTED("non-tx-target-system").withTargetSystemId("non-tx-system"),
@@ -347,7 +359,9 @@ class MongoSyncAuditPersistenceE2ETest {
                     MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
                     testKit.createBuilder()
                             .setAuditStore(new MongoSyncAuditStore())
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                    .withMongoClient(sharedMongoClient)
+                                    .withDatabase(database))
                             .addTargetSystem(new MongoSyncTargetSystem("tx-separate-system")
                                     .withMongoClient(separateMongoClient)
                                     .withDatabase(separateDatabase))
@@ -361,8 +375,8 @@ class MongoSyncAuditPersistenceE2ETest {
                         APPLIED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
 
                         // TxSharedDefaultChange - STARTED & EXECUTED
-                        STARTED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
-                        APPLIED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
+                        STARTED("tx-shared-default").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
+                        APPLIED("tx-shared-default").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
 
                         // TxSeparateChange - STARTED & EXECUTED
                         STARTED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),

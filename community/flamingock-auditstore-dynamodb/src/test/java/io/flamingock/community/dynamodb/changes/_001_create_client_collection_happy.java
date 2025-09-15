@@ -17,6 +17,7 @@ package io.flamingock.community.dynamodb.changes;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.community.dynamodb.changes.common.DynamoDBUtil;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
@@ -25,6 +26,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 
 import static java.util.Collections.emptyList;
 
+@TargetSystem(id = "dynamodb")
 @Change(id = "table-create", order = "001", transactional = false, author = "aperezdieppa")
 public class _001_create_client_collection_happy {
 

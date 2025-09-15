@@ -43,8 +43,6 @@ public interface CoreConfigurable {
 
     void setDefaultAuthor(String defaultAuthor);
 
-    void setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation);
-
     long getLockAcquiredForMillis();
 
     Long getLockQuitTryingAfterMillis();
@@ -61,6 +59,5 @@ public interface CoreConfigurable {
 
     String getDefaultAuthor();
 
-    boolean isRelaxTargetSystemValidation();
 
 }

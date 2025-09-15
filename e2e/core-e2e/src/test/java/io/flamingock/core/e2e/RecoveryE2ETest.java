@@ -27,6 +27,7 @@ import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.core.targets.DefaultTargetSystem;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import org.junit.jupiter.api.BeforeEach;
@@ -121,7 +122,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -153,7 +155,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -185,7 +188,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
                         .build()
                         .run();
             });
@@ -217,7 +221,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -250,7 +255,8 @@ class RecoveryE2ETest {
                     ManualInterventionRequiredException.class,
                     () -> {
                         testKit.createBuilder()
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
                                 .build()
                                 .run();
                     }
@@ -297,7 +303,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -327,7 +334,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
                         .build()
                         .run();
             });
@@ -357,7 +365,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
                         .build()
                         .run();
             });
@@ -466,7 +475,9 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
+                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
+                        .addTargetSystem(new DefaultTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -499,7 +510,8 @@ class RecoveryE2ETest {
                     ManualInterventionRequiredException.class,
                     () -> {
                         testKit.createBuilder()
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DefaultTargetSystem("keycloak"))
+                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
                                 .build()
                                 .run();
                     }

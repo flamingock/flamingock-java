@@ -21,6 +21,7 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
+import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
@@ -93,11 +94,12 @@ class CouchbaseAuditStoreTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .setAuditStore(new CouchbaseAuditStore())
-                    .setAuditStore(new CouchbaseAuditStore())
                     .addDependency(cluster)
                     .addDependency(bucket)
                     .addDependency(testCollection) // for test purpose only
-                    .setRelaxTargetSystemValidation(true)
+                    .addTargetSystem(new CouchbaseTargetSystem("couchbase")
+                            .withCluster(cluster)
+                            .withBucket(bucket))
                     .build()
                     .run();
         }
@@ -146,7 +148,10 @@ class CouchbaseAuditStoreTest {
                         .addDependency(cluster)
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new CouchbaseTargetSystem("couchbase")
+                            .withCluster(cluster)
+                            .withBucket(bucket)
+                            .withScopeName(CollectionIdentifier.DEFAULT_SCOPE))
                         .build()
                         .run();
             });
@@ -193,7 +198,10 @@ class CouchbaseAuditStoreTest {
                         .addDependency(cluster)
                         .addDependency(bucket)
                         .addDependency(testCollection) // for test purpose only
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new CouchbaseTargetSystem("couchbase")
+                            .withCluster(cluster)
+                            .withBucket(bucket)
+                            .withScopeName(CollectionIdentifier.DEFAULT_SCOPE))
                         .build()
                         .run();
             });

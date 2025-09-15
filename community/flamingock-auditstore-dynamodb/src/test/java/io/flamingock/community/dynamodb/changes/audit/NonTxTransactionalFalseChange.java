@@ -17,12 +17,14 @@ package io.flamingock.community.dynamodb.changes.audit;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 /**
  * ChangeUnit that produces NON_TX txType via transactional=false.
  * Used for testing audit persistence of transaction type determination.
  */
+@TargetSystem(id = "dynamodb")
 @Change(id = "non-tx-transactional-false", order = "001", transactional = false, author = "test-author")
 public class NonTxTransactionalFalseChange {
 

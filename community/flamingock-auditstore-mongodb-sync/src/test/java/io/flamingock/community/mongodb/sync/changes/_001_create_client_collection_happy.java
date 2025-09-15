@@ -18,8 +18,10 @@ package io.flamingock.community.mongodb.sync.changes;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 
 @Change( id="create-client-collection" , order = "001", transactional = false, author = "aperezdieppa")
+@TargetSystem(id = "mongodb")
 public class _001_create_client_collection_happy {
 
     @Apply

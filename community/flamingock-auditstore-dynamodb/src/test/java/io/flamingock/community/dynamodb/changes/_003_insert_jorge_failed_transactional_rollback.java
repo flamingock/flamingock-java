@@ -17,6 +17,7 @@ package io.flamingock.community.dynamodb.changes;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -25,6 +26,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+@TargetSystem(id = "dynamodb")
 @Change(id = "execution-with-exception", order = "003", author = "aperezdieppa")
 public class _003_insert_jorge_failed_transactional_rollback {
 

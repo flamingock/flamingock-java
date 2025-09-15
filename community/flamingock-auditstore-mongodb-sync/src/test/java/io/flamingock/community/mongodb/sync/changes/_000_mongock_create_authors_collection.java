@@ -17,6 +17,7 @@ package io.flamingock.community.mongodb.sync.changes;
 
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Rollback;
 import io.mongock.api.annotations.ChangeUnit;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
+@TargetSystem(id = "mongodb")
 @Change(id = "create-author-collection", order = "000", author = "mongock")
 @ChangeUnit(id = "create-author-collection", order = "000", author = "mongock")
 public class _000_mongock_create_authors_collection {

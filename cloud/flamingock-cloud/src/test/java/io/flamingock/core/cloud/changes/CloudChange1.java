@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.core.utils.TaskExecutionChecker;
 
-@TargetSystem(id = "transactional-target-system")
+@TargetSystem(id = "auth0")
 @Change(id = "create-persons-table-from-template", order = "001", author = "aperezdieppa")
 public class CloudChange1 {
     public static final TaskExecutionChecker checker = new TaskExecutionChecker();

@@ -18,9 +18,11 @@ package io.flamingock.community.mongodb.springdata.changes;
 import com.mongodb.client.MongoCollection;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+@TargetSystem(id = "mongodb")
 @Change( id="insert-federico-document" , order = "002", author = "aperezdieppa")
 public class _002_insert_federico_happy_non_transactional {
 

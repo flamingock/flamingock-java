@@ -20,8 +20,10 @@ import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.api.annotations.NonLockGuarded;
 
+@TargetSystem(id = "couchbase")
 @Change( id="insert-another-document" , order = "003", author = "aperezdieppa")
 public class _003_insert_another_document {
 

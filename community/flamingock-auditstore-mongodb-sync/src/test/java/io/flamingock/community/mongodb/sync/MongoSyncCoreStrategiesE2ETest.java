@@ -19,6 +19,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import io.flamingock.community.mongodb.sync.changes._001_create_client_collection_happy;
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_non_transactional;
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
@@ -97,7 +98,9 @@ class MongoSyncCoreStrategiesE2ETest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .build()
@@ -126,7 +129,9 @@ class MongoSyncCoreStrategiesE2ETest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .build()
@@ -155,7 +160,9 @@ class MongoSyncCoreStrategiesE2ETest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .build()
@@ -185,7 +192,9 @@ class MongoSyncCoreStrategiesE2ETest {
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                             .addDependency(mongoClient)
                             .addDependency(database)
                             .build()
@@ -215,7 +224,9 @@ class MongoSyncCoreStrategiesE2ETest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .build()
@@ -238,7 +249,9 @@ class MongoSyncCoreStrategiesE2ETest {
                 )
                 .WHEN(() -> secondRunKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .build()

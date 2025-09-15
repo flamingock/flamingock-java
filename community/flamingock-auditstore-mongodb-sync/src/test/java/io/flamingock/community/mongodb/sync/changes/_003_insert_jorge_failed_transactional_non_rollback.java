@@ -22,7 +22,8 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
-
+import io.flamingock.api.annotations.TargetSystem;
+@TargetSystem(id = "mongodb")
 @Change( id="insert-jorge-document" , order = "003", author = "aperezdieppa")
 public class _003_insert_jorge_failed_transactional_non_rollback {
 

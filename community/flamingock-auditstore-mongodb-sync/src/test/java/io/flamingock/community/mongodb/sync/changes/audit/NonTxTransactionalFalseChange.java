@@ -17,11 +17,12 @@ package io.flamingock.community.mongodb.sync.changes.audit;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
-
+import io.flamingock.api.annotations.TargetSystem;
 /**
  * Change unit that produces NON_TX txType via transactional=false annotation.
  * Used for testing audit persistence of NON_TX transaction type.
  */
+@TargetSystem(id = "mongodb")
 @Change(id = "non-tx-transactional-false", order = "001", transactional = false, author = "aperezdieppa")
 public class NonTxTransactionalFalseChange {
 

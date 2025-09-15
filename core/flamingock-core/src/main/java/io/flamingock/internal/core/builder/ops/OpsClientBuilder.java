@@ -143,13 +143,6 @@ public class OpsClientBuilder
         return getSelf();
     }
 
-
-    @Override
-    public OpsClientBuilder setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
-        coreConfiguration.setRelaxTargetSystemValidation(relaxTargetSystemValidation);
-        return getSelf();
-    }
-
     @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguration.getLockAcquiredForMillis();
@@ -188,11 +181,6 @@ public class OpsClientBuilder
     @Override
     public String getDefaultAuthor() {
         return coreConfiguration.getDefaultAuthor();
-    }
-
-    @Override
-    public boolean isRelaxTargetSystemValidation() {
-        return coreConfiguration.isRelaxTargetSystemValidation();
     }
 
 

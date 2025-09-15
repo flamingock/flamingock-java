@@ -17,12 +17,14 @@ package io.flamingock.core.e2e.changes;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 
 /**
  * Simple transactional change unit for testing core execution strategies.
  * Does not require any external dependencies.
  */
 @Change(id = "test2-tx-change", order = "002", transactional = true, author = "aperezdieppa")
+@TargetSystem(id = "s3")
 public class SimpleTransactionalChange {
 
     @Apply

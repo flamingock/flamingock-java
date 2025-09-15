@@ -21,6 +21,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.builder.FlamingockFactory;
@@ -79,7 +80,9 @@ class MongoChangeTemplateTest {
                 .setAuditStore(new MongoSyncAuditStore())
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
-                .setRelaxTargetSystemValidation(true)
+                .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                        .withMongoClient(mongoClient)
+                        .withDatabase(mongoClient.getDatabase(DB_NAME)))
                 .build()
                 .run();
 

@@ -34,6 +34,7 @@ import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.mongodb.kit.MongoSyncAuditStorage;
 import io.flamingock.mongodb.kit.MongoSyncLockStorage;
 import io.flamingock.mongodb.kit.MongoSyncTestKit;
+import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -114,7 +115,9 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .build()
@@ -154,7 +157,9 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .addDependency(config)
@@ -201,7 +206,9 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                        .setRelaxTargetSystemValidation(true)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                         .addDependency(mongoClient)
                         .addDependency(database)
                         .build()
@@ -239,7 +246,9 @@ class MongoSyncAuditStoreTest {
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore())
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new MongoSyncTargetSystem("mongodb")
+                                .withMongoClient(mongoClient)
+                                .withDatabase(database))
                             .addDependency(mongoClient)
                             .addDependency(database)
                             .build()

@@ -19,8 +19,10 @@ import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.api.annotations.Rollback;
 
+@TargetSystem(id = "couchbase")
 @Change( id="execution-with-exception" , order = "003", transactional = false, author = "aperezdieppa")
 public class _003_execution_with_exception {
 

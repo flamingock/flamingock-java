@@ -16,6 +16,7 @@
 package io.flamingock.community.dynamodb;
 
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import io.flamingock.community.dynamodb.changes._001_create_client_collection_happy;
 import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_non_transactional;
 import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_transactional;
@@ -105,7 +106,8 @@ class DynamoDBAuditStoreTest {
                     FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
                             .addDependency(client)
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                    .withDynamoDBClient(client))
                             .build()
                             .run();
                 })
@@ -159,7 +161,8 @@ class DynamoDBAuditStoreTest {
                             .setProperty("dynamodb.readCapacityUnits", 1L)
                             .setProperty("dynamodb.writeCapacityUnits", 2L)
                             .addDependency(client)
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                    .withDynamoDBClient(client))
                             .build()
                             .run();
                 })
@@ -194,14 +197,16 @@ class DynamoDBAuditStoreTest {
                     FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
                             .addDependency(client)
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                    .withDynamoDBClient(client))
                             .build()
                             .run();
 
                     FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
                             .addDependency(client)
-                            .setRelaxTargetSystemValidation(true)
+                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                    .withDynamoDBClient(client))
                             .build()
                             .run();
                 })
@@ -242,7 +247,8 @@ class DynamoDBAuditStoreTest {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
                                 .addDependency(client)
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                    .withDynamoDBClient(client))
                                 .build()
                                 .run();
                     });

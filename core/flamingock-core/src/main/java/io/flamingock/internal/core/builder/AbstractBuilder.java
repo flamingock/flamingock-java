@@ -84,7 +84,6 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
     protected void configureStoreAndTargetSystem(PriorityContext dependencyContext) {
         auditStore.initialize(dependencyContext);
         //remove this, targetSystem should be mandatory
-        targetSystemManager.setAuditStoreTargetSystem(auditStore.getTargetSystem());
         targetSystemManager.initialize(dependencyContext);
     }
 
@@ -167,12 +166,6 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
     }
 
     @Override
-    public HOLDER setRelaxTargetSystemValidation(boolean relaxTargetSystemValidation) {
-        coreConfiguration.setRelaxTargetSystemValidation(relaxTargetSystemValidation);
-        return getSelf();
-    }
-
-    @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguration.getLockAcquiredForMillis();
     }
@@ -210,11 +203,6 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
     @Override
     public String getDefaultAuthor() {
         return coreConfiguration.getDefaultAuthor();
-    }
-
-    @Override
-    public boolean isRelaxTargetSystemValidation() {
-        return coreConfiguration.isRelaxTargetSystemValidation();
     }
 
 

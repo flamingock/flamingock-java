@@ -17,11 +17,12 @@ package io.flamingock.community.mongodb.sync.changes.audit;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
-
+import io.flamingock.api.annotations.TargetSystem;
 /**
  * Change unit for testing metadata serialization in audit entries.
  * Used for testing audit persistence of metadata field.
  */
+@TargetSystem(id = "mongodb")
 @Change(id = "metadata-change", order = "007", transactional = false, author = "aperezdieppa")
 public class MetadataChange {
 

@@ -65,6 +65,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
 
             targetSystem = new DynamoDBTargetSystem(DEFAULT_AUDIT_STORE_TARGET_SYSTEM)
                     .withDynamoDBClient(client);
+            targetSystem.initialize(baseContext);
         }
 
     }

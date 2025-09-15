@@ -17,18 +17,19 @@ package io.flamingock.core.e2e;
 
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
-import io.flamingock.core.e2e.changes.SimpleTransactionalChange;
 import io.flamingock.core.e2e.changes.FailingTransactionalChange;
 import io.flamingock.core.e2e.changes.MultiTest1NonTransactionalChange;
 import io.flamingock.core.e2e.changes.MultiTest2TransactionalChange;
 import io.flamingock.core.e2e.changes.SecondRunNonTransactionalChange;
-import io.flamingock.core.processor.util.Deserializer;
-import io.flamingock.core.kit.inmemory.InMemoryTestKit;
+import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
+import io.flamingock.core.e2e.changes.SimpleTransactionalChange;
 import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.core.kit.inmemory.InMemoryTestKit;
+import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.targets.DefaultTargetSystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -46,26 +47,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 class CoreStrategiesE2ETest {
-    
+
     @Test
     @DisplayName("Should execute non-transactional change using NonTx strategy with complete audit flow")
     void testNonTransactionalChangeExecution() {
         // Given - Create isolated test kit with domain-separated helpers
         InMemoryTestKit testKit = InMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
-        
+
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
-                )
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                    )
             );
 
             // When - Execute using test builder with domain separation
             testKit.createBuilder()
-                .setRelaxTargetSystemValidation(true)
-                .build()
-                .run();
+                    .addTargetSystem(new DefaultTargetSystem("okta"))
+                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
+                    .addTargetSystem(new DefaultTargetSystem("kafka"))
+                    .build()
+                    .run();
         }
 
         // Then - Verify complete audit flow using audit-specific helper
@@ -78,28 +81,30 @@ class CoreStrategiesE2ETest {
         AuditEntry auditEntry = auditEntriesSorted.get(0);
         assertEquals(AuditTxType.NON_TX, auditEntry.getTxType());
     }
-    
+
     @Test
     @DisplayName("Should execute transactional change using SimpleTx/SharedTx strategy with complete audit flow")
     void testTransactionalChangeExecution() {
         // Given - Create isolated test kit
         InMemoryTestKit testKit = InMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
-        
+
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(SimpleTransactionalChange.class, Collections.emptyList())
-                )
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeUnitTestDefinition(SimpleTransactionalChange.class, Collections.emptyList())
+                    )
             );
-            
+
             // When
             testKit.createBuilder()
-                .setRelaxTargetSystemValidation(true)
-                .build()
-                .run();
+                    .addTargetSystem(new DefaultTargetSystem("okta"))
+                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
+                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .build()
+                    .run();
         }
-        
+
         // Then - Verify complete audit flow for transactional change
 
         auditHelper.verifyAuditSequenceStrict(
@@ -107,29 +112,31 @@ class CoreStrategiesE2ETest {
                 APPLIED("test2-tx-change")
         );
     }
-    
+
     @Test
     @DisplayName("Should execute multiple changes with correct audit sequence")
     void testMultipleChangesExecution() {
         // Given - Create isolated test kit
         InMemoryTestKit testKit = InMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
-        
+
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(MultiTest1NonTransactionalChange.class, Collections.emptyList()),
-                    new CodeChangeUnitTestDefinition(MultiTest2TransactionalChange.class, Collections.emptyList())
-                )
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeUnitTestDefinition(MultiTest1NonTransactionalChange.class, Collections.emptyList()),
+                            new CodeChangeUnitTestDefinition(MultiTest2TransactionalChange.class, Collections.emptyList())
+                    )
             );
-            
+
             // When
             testKit.createBuilder()
-                .setRelaxTargetSystemValidation(true)
-                .build()
-                .run();
+                    .addTargetSystem(new DefaultTargetSystem("okta"))
+                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
+                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .build()
+                    .run();
         }
-        
+
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test3-multi-non-tx-change"),
                 APPLIED("test3-multi-non-tx-change"),
@@ -137,30 +144,33 @@ class CoreStrategiesE2ETest {
                 APPLIED("test3-multi-tx-change")
         );
     }
-    
+
     @Test
     @DisplayName("Should handle failing transactional change with proper audit and rollback")
     void testFailingTransactionalChangeWithRollback() {
         // Given - Create isolated test kit
         InMemoryTestKit testKit = InMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
-        
+
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(FailingTransactionalChange.class, Collections.emptyList())
-                )
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeUnitTestDefinition(FailingTransactionalChange.class, Collections.emptyList())
+                    )
             );
-            
+
             // When & Then - Execution should fail
             assertThrows(PipelineExecutionException.class, () -> {
                 testKit.createBuilder()
-                    .setRelaxTargetSystemValidation(true)
-                    .build()
-                    .run();
+                        .addTargetSystem(new DefaultTargetSystem("salesforce"))
+                        .addTargetSystem(new DefaultTargetSystem("okta"))
+                        .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
+                        .addTargetSystem(new DefaultTargetSystem("s3"))
+                        .build()
+                        .run();
             });
         }
-        
+
         // Then - Verify failure audit sequence using new concise API
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test4-failing-tx-change"),
@@ -168,47 +178,52 @@ class CoreStrategiesE2ETest {
                 ROLLED_BACK("test4-failing-tx-change")
         );
     }
-    
+
     @Test
     @DisplayName("Should handle already-executed changes correctly on second run")
     void testAlreadyExecutedChangesSkipping() {
         // Given - Create test kit with persistent storage
         InMemoryTestKit testKit = InMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
-        
+
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                PipelineTestHelper.getPreviewPipeline(
-                    new CodeChangeUnitTestDefinition(SecondRunNonTransactionalChange.class, Collections.emptyList())
-                )
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeUnitTestDefinition(SecondRunNonTransactionalChange.class, Collections.emptyList())
+                    )
             );
-            
+
             // First execution
             testKit.createBuilder()
-                .setRelaxTargetSystemValidation(true)
-                .build()
-                .run();
-                
+                    .addTargetSystem(new DefaultTargetSystem("stripe-api"))
+                    .addTargetSystem(new DefaultTargetSystem("okta"))
+                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
+                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .build()
+                    .run();
+
             // Verify first execution
             auditHelper.verifyAuditSequenceStrict(
                     STARTED("test5-second-run-change"),
                     APPLIED("test5-second-run-change")
             );
 
-            
+
             // Second execution - create new kit using SAME storage to simulate persistence
             // but avoid potential builder state issues
             InMemoryTestKit secondRunKit = InMemoryTestKit.create(
-                testKit.getAuditStorage(), 
-                testKit.getLockStorage()
+                    testKit.getAuditStorage(),
+                    testKit.getLockStorage()
             );
-            
+
             secondRunKit.createBuilder()
-                .setRelaxTargetSystemValidation(true)
-                .build()
-                .run();
+                    .addTargetSystem(new DefaultTargetSystem("okta"))
+                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
+                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .build()
+                    .run();
         }
-        
+
         // Then - Should still have only original 2 audit entries (no additional executions)
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test5-second-run-change"),

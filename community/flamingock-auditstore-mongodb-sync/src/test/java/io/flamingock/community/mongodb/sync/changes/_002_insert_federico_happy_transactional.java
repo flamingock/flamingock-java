@@ -20,9 +20,11 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import org.bson.Document;
 
 @Change( id="insert-federico-document" , order = "002", author = "aperezdieppa")
+@TargetSystem(id = "mongodb")
 public class _002_insert_federico_happy_transactional {
 
     @Apply

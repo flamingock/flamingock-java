@@ -17,6 +17,7 @@ package io.flamingock.community.dynamodb.changes;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -24,6 +25,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+@TargetSystem(id = "dynamodb")
 @Change(id = "insert-user", order = "002", transactional = false, author = "aperezdieppa")
 public class _002_insert_federico_happy_non_transactional {
 

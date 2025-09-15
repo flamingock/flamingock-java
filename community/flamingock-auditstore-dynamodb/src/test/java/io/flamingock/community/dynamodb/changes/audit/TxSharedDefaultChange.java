@@ -17,6 +17,7 @@ package io.flamingock.community.dynamodb.changes.audit;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -24,6 +25,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  * ChangeUnit that produces TX_SHARED txType via default behavior.
  * Uses transactional execution with default audit storage DynamoDB client.
  */
+@TargetSystem(id = "dynamodb")
 @Change(id = "tx-shared-default", order = "003", author = "test-author")
 public class TxSharedDefaultChange {
 

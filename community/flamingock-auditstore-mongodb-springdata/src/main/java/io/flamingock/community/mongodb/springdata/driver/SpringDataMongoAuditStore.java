@@ -79,6 +79,7 @@ public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
                     .withReadPreference(readWriteConfiguration.getReadPreference())
                     .withWriteConcern(readWriteConfiguration.getWriteConcern())
                     .withAutoCreate(driverConfiguration.isAutoCreate());
+            targetSystem.initialize(baseContext);
         }
 
     }

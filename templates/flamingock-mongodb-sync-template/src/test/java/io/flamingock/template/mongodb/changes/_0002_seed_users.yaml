@@ -2,6 +2,8 @@ id: seed-users
 order: 0002
 transactional: true
 template: MongoChangeTemplate
+targetSystem:
+  id: "mongodb"
 apply:
   type: insert
   collection: users

@@ -18,9 +18,10 @@ package io.flamingock.community.couchbase.changes.failedWithoutRollback;
 import com.couchbase.client.java.Collection;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
-
+import io.flamingock.api.annotations.TargetSystem;
 import java.util.Arrays;
 
+@TargetSystem(id = "couchbase")
 @Change(id = "create-index", order = "001", transactional = false, author = "aperezdieppa")
 public class _001_create_index {
 

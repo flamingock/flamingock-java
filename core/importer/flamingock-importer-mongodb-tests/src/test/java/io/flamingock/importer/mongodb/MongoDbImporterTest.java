@@ -32,6 +32,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -93,12 +94,12 @@ public class MongoDbImporterTest {
     }
 
     @Test
+    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void testImportMongockChangeLogs() {
         //adds the Mongock
         mongockTestHelper.setupBasicScenario();
 
         Runner flamingock = testKit.createBuilder()
-                .setRelaxTargetSystemValidation(true)
                 .addDependency(mongoClient)
                 .addDependency(database)
                 .build();
@@ -145,11 +146,11 @@ public class MongoDbImporterTest {
 
 
     @Test
+    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void failIfEmptyOrigin() {
         //adds the Mongock
 
         Runner flamingock = testKit.createBuilder()
-                .setRelaxTargetSystemValidation(true)
                 .addDependency(mongoClient)
                 .addDependency(database)
                 .build();

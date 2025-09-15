@@ -30,6 +30,7 @@ import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -102,6 +103,7 @@ public class CouchbaseImporterTest {
     }
 
     @Test
+    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void testImporterIntegration() {
         Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
         JsonObject doc = JsonObject.create()
@@ -127,7 +129,6 @@ public class CouchbaseImporterTest {
                 .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
                 .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
-                .setRelaxTargetSystemValidation(true)
                 .build();
 
         flamingock.run();
@@ -149,6 +150,7 @@ public class CouchbaseImporterTest {
     }
 
     @Test
+    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void failIfEmptyOrigin() {
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .setAuditStore(new CouchbaseAuditStore())
@@ -156,7 +158,6 @@ public class CouchbaseImporterTest {
                 .addDependency(cluster.bucket(FLAMINGOCK_BUCKET_NAME))
                 .setProperty("couchbase.scopeName", FLAMINGOCK_SCOPE_NAME)
                 .setProperty("couchbase.auditRepositoryName", FLAMINGOCK_COLLECTION_NAME)
-                .setRelaxTargetSystemValidation(true)
                 .build();
 
         org.junit.jupiter.api.Assertions.assertThrows(

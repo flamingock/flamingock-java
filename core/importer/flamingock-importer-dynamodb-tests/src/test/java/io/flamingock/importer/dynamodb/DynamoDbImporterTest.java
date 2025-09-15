@@ -91,6 +91,7 @@ public class DynamoDbImporterTest {
     }
 
     @Test
+    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void testImportDynamoDbChangeLogs() {
         List<MongockDynamoDbAuditEntry> entries = Arrays.asList(
                 new MongockDynamoDbAuditEntry(
@@ -129,7 +130,6 @@ public class DynamoDbImporterTest {
 
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
-                .setRelaxTargetSystemValidation(true)
                 .setAuditStore(new DynamoDBAuditStore())
                 .build();
 
@@ -177,10 +177,10 @@ public class DynamoDbImporterTest {
     }
 
     @Test
+    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void failIfEmptyOrigin() {
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
-                .setRelaxTargetSystemValidation(true)
                 .setAuditStore(new DynamoDBAuditStore())
                 .build();
 

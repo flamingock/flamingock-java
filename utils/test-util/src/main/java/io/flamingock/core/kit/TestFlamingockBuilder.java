@@ -32,10 +32,10 @@ import io.flamingock.internal.core.plugin.PluginManager;
  * <p><strong>Usage:</strong></p>
  * <pre>{@code
  * TestFlamingockBuilder builder = testKit.createBuilder();
- * 
+ *
  * // Configure for testing (common settings)
- * builder.setRelaxTargetSystemValidation(true);
- * 
+ * builder.addTargetSystem(new DefaultTargetSystem("test-system"));
+ *
  * // Build and run
  * builder.build().run();
  * }</pre>

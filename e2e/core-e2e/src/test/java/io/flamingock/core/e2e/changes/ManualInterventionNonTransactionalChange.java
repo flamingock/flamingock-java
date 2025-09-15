@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.RecoveryStrategy;
+import io.flamingock.api.annotations.TargetSystem;
 
 /**
  * Non-transactional change unit configured with explicit MANUAL_INTERVENTION recovery strategy.
@@ -27,6 +28,7 @@ import io.flamingock.api.RecoveryStrategy;
  */
 @Change(id = "manual-intervention-non-tx-change", order = "001", transactional = false, author = "aperezdieppa")
 @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
+@TargetSystem(id = "keycloak")
 public class ManualInterventionNonTransactionalChange {
 
     @Apply

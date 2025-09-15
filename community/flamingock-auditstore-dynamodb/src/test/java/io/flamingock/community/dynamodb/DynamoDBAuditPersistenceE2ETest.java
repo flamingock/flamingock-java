@@ -103,7 +103,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                        .withDynamoDBClient(sharedDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
@@ -117,7 +118,7 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system")
+                                .withTargetSystemId("dynamodb")
                                 .withSystemChange(false),
                         auditEntry()
                                 .withTaskId(changeId)
@@ -126,7 +127,7 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system")
+                                .withTargetSystemId("dynamodb")
                                 .withSystemChange(false)
                 )
                 .run();
@@ -146,7 +147,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                        .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
@@ -159,12 +161,12 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system"),
+                                .withTargetSystemId("dynamodb"),
                         APPLIED("non-tx-transactional-false")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
-                                .withTargetSystemId("default-audit-store-target-system"),
+                                .withTargetSystemId("dynamodb"),
 
                         // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
                         STARTED("non-tx-target-system")
@@ -197,7 +199,8 @@ class DynamoDBAuditPersistenceE2ETest {
 
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                        .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(sharedTargetSystem)
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
@@ -208,13 +211,13 @@ class DynamoDBAuditPersistenceE2ETest {
                         STARTED("tx-shared-default")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
                                 .withMethodName("execution")
-                                .withTxType(AuditTxType.TX_SHARED)
-                                .withTargetSystemId("default-audit-store-target-system"),
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("dynamodb"),
                         APPLIED("tx-shared-default")
                                 .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
                                 .withMethodName("execution")
-                                .withTxType(AuditTxType.TX_SHARED)
-                                .withTargetSystemId("default-audit-store-target-system")
+                                .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
+                                .withTargetSystemId("dynamodb")
                 )
                 .run();
 
@@ -233,7 +236,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                        .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
                                         .withDynamoDBClient(separateDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
@@ -273,7 +277,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                        .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(separateTargetSystem)
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
@@ -310,7 +315,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                        .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
                                         .withDynamoDBClient(separateDynamoDbClient))
@@ -321,8 +327,8 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         // TxSharedDefaultChange - STARTED & EXECUTED with default target system
-                        STARTED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
-                        APPLIED("tx-shared-default").withTargetSystemId("default-audit-store-target-system"),
+                        STARTED("tx-shared-default").withTargetSystemId("dynamodb"),
+                        APPLIED("tx-shared-default").withTargetSystemId("dynamodb"),
 
                         // NonTxTargetSystemChange - STARTED & EXECUTED with custom target system
                         STARTED("non-tx-target-system").withTargetSystemId("non-tx-system"),
@@ -351,7 +357,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore())
-                                .setRelaxTargetSystemValidation(true)
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
+                                        .withDynamoDBClient(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
                                         .withDynamoDBClient(separateDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
@@ -365,8 +372,8 @@ class DynamoDBAuditPersistenceE2ETest {
                         APPLIED("non-tx-transactional-false").withTxType(AuditTxType.NON_TX),
 
                         // TxSharedDefaultChange - STARTED & EXECUTED
-                        STARTED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
-                        APPLIED("tx-shared-default").withTxType(AuditTxType.TX_SHARED),
+                        STARTED("tx-shared-default").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
+                        APPLIED("tx-shared-default").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
 
                         // TxSeparateChange - STARTED & EXECUTED
                         STARTED("tx-separate-no-marker").withTxType(AuditTxType.TX_SEPARATE_NO_MARKER),
