@@ -40,10 +40,6 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     private CouchbaseAuditPersistence persistence;
     private CouchbaseLockService lockService;
 
-    public static CouchbaseAuditStore fromTargetSystem(CouchbaseTargetSystem targetSystem) {
-        return new CouchbaseAuditStore(targetSystem);
-    }
-
     public CouchbaseAuditStore() {
         this(null);
     }

@@ -38,10 +38,6 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     private DynamoDBAuditPersistence persistence;
     private DynamoDBLockService lockService;
 
-    public static DynamoDBAuditStore fromTargetSystem(DynamoDBTargetSystem targetSystem) {
-        return new DynamoDBAuditStore(targetSystem);
-    }
-
     public DynamoDBAuditStore() {
         this(null);
     }

@@ -40,11 +40,6 @@ public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
     private SpringDataMongoAuditPersistence persistence;
     private SpringDataMongoLockService lockService;
 
-    public static SpringDataMongoAuditStore fromTargetSystem(MongoSpringDataTargetSystem syncTargetSystem) {
-        return new SpringDataMongoAuditStore(syncTargetSystem);
-    }
-
-
     public SpringDataMongoAuditStore() {
         this(null);
     }

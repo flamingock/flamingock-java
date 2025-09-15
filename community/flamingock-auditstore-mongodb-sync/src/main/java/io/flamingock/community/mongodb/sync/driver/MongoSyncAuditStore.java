@@ -42,11 +42,6 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
     private MongoSyncAuditPersistence persistence;
     private MongoSyncLockService lockService;
 
-
-    public static MongoSyncAuditStore fromTargetSystem(MongoSyncTargetSystem syncTargetSystem) {
-        return new MongoSyncAuditStore(syncTargetSystem);
-    }
-
     public MongoSyncAuditStore() {
         this(null);
     }
