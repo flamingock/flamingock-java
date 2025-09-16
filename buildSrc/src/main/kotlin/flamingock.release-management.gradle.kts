@@ -32,7 +32,7 @@ val projectsToRelease = if (module != null) {
     val transactionerProjects = project.extra["transactionerProjects"] as Set<String>
     val templateProjects = project.extra["templateProjects"] as Set<String>
     val utilProjects = project.extra["utilProjects"] as Set<String>
-    
+
     when (releaseBundle) {
         "core" -> coreProjects
         "cloud" -> cloudProjects
@@ -78,7 +78,7 @@ jreleaser {
                 """.trimIndent())
                 categoryTitleFormat.set("### {{categoryTitle}}")
                 format.set(
-                    """|- {{commitShortHash}} 
+                    """|- {{commitShortHash}}
                        |{{#commitIsConventional}}
                        |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
                        |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
@@ -86,7 +86,7 @@ jreleaser {
                        |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
                        |{{/commitIsConventional}}
                        |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
-                       |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}} 
+                       |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}}
                        |({{contributorName}})
                     |""".trimMargin().replace("\n", "").replace("\r", "")
                 )
@@ -97,29 +97,35 @@ jreleaser {
             }
         }
     }
-    
+
     // Configure CLI distribution files for GitHub Releases
     if (project.name.equals("flamingock-cli")) {
-        files {
-            artifact {
-                path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.zip"))
-                platform.set("cross-platform")
-            }
-            artifact {
-                path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.tar.gz"))
-                platform.set("unix")
-            }
-            artifact {
-                path.set(layout.buildDirectory.file("distributions/checksums.txt"))
-                platform.set("checksums")
+        distributions {
+            create("flamingock-cli") {
+//                type.set(org.jreleaser.model.Distribution.DistributionType.JAVA_BINARY)
+                executable {
+                    name.set("flamingock")
+                }
+                artifact {
+                    path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.zip"))
+                    platform.set("cross-platform")
+                }
+                artifact {
+                    path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.tar.gz"))
+                    platform.set("unix")
+                }
+                artifact {
+                    path.set(layout.buildDirectory.file("distributions/checksums.txt"))
+                    platform.set("checksums")
+                }
             }
         }
     }
 }
 
 // Release detection and management
-val isReleasing = gradle.startParameter.taskNames.any { 
-    it in listOf("jreleaserFullRelease", "jreleaserDeploy", "publish") 
+val isReleasing = gradle.startParameter.taskNames.any {
+    it in listOf("jreleaserFullRelease", "jreleaserDeploy", "publish")
 }
 
 if (isReleasing && projectsToRelease.contains(project.name)) {
@@ -139,20 +145,20 @@ fun Project.getIfAlreadyReleasedFromCentralPortal(): Boolean {
     val mavenPassword: String? = System.getenv("JRELEASER_MAVENCENTRAL_PASSWORD")
     val encodedCredentials: String? = if (mavenUsername != null && mavenPassword != null)
         Base64.getEncoder().encodeToString("$mavenUsername:$mavenPassword".toByteArray()) else null
-    
+
     val url = "https://central.sonatype.com/api/v1/publisher/published?namespace=${group}&name=$name&version=$version"
     val connection = URL(url).openConnection() as HttpURLConnection
     connection.requestMethod = "GET"
     connection.setRequestProperty("accept", "application/json")
     connection.setRequestProperty("Authorization", "Basic $encodedCredentials")
-    
+
     val responseCode = connection.responseCode
     val responseBody = if (responseCode == 200) {
         connection.inputStream.bufferedReader().use { it.readText() }
     } else {
         connection.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
     }
-    
+
     logger.debug("$name: response from Maven Publisher[$responseCode]: $responseBody")
     return if (responseCode == 200) {
         val map = JSONObject(responseBody).toMap()
