@@ -25,6 +25,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Download CLI distributions artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: cli-distributions
+          path: cli/flamingock-cli/build/distributions/
+
       - name: Set up Java
         uses: graalvm/setup-graalvm@v1
         with:
