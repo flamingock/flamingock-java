@@ -332,6 +332,30 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
+  flamingock-cli:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
+
+      - name: Build CLI distributions
+        run: ./gradlew :cli:flamingock-cli:build
+
+      - name: Upload CLI distributions as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cli-distributions
+          path: cli/flamingock-cli/build/distributions/
 
 #  run-examples-with-released-version:
 #    needs: [
@@ -402,7 +426,8 @@ jobs:
       general-util,
       test-util,
       mongodb-util,
-      dynamodb-util
+      dynamodb-util,
+      flamingock-cli
     ]
     uses: ./.github/workflows/github-release.yml
     secrets:
