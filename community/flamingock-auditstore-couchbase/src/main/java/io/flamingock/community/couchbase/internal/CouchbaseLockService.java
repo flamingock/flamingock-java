@@ -33,7 +33,6 @@ import io.flamingock.internal.core.store.lock.LockStatus;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
-import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.slf4j.Logger;
 
 import java.time.LocalDateTime;
@@ -50,9 +49,9 @@ public class CouchbaseLockService implements CommunityLockService {
     private final CouchbaseLockMapper mapper = new CouchbaseLockMapper();
     private final TimeService timeService;
 
-    public CouchbaseLockService(CouchbaseTargetSystem targetSystem, TimeService timeService) {
-        this.cluster = targetSystem.getCluster();
-        this.bucket = targetSystem.getBucket();
+    public CouchbaseLockService(Cluster cluster, Bucket bucket, TimeService timeService) {
+        this.cluster = cluster;
+        this.bucket = bucket;
         this.timeService = timeService;
     }
 

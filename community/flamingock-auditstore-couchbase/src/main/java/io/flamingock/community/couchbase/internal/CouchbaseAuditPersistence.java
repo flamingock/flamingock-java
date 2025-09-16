@@ -15,35 +15,45 @@
  */
 package io.flamingock.community.couchbase.internal;
 
+import com.couchbase.client.java.Bucket;
+import com.couchbase.client.java.Cluster;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.community.couchbase.CouchbaseConfiguration;
-import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
 import java.util.List;
 
 public class CouchbaseAuditPersistence extends AbstractCommunityAuditPersistence {
 
-    private final CouchbaseTargetSystem targetSystem;
+    private final Cluster cluster;
+    private final Bucket bucket;
+    private final String scopeName;
+    private final String auditRepositoryName;
+    private final boolean autoCreate;
+
     private CouchbaseAuditor auditor;
-    private final CouchbaseConfiguration driverConfiguration;
 
 
-    public CouchbaseAuditPersistence(CouchbaseTargetSystem targetSystem,
-                                     CommunityConfigurable localConfiguration,
-                                     CouchbaseConfiguration driverConfiguration) {
+    public CouchbaseAuditPersistence(CommunityConfigurable localConfiguration,
+                                     Cluster cluster,
+                                     Bucket bucket,
+                                     String scopeName,
+                                     String auditRepositoryName,
+                                     boolean autoCreate) {
         super(localConfiguration);
-        this.targetSystem = targetSystem;
-        this.driverConfiguration = driverConfiguration;
+        this.cluster = cluster;
+        this.bucket = bucket;
+        this.scopeName = scopeName;
+        this.auditRepositoryName = auditRepositoryName;
+        this.autoCreate = autoCreate;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-        auditor = new CouchbaseAuditor(targetSystem);
-        auditor.initialize(targetSystem.isAutoCreate(), driverConfiguration.getScopeName(), driverConfiguration.getAuditRepositoryName());
+        auditor = new CouchbaseAuditor(cluster, bucket);
+        auditor.initialize(autoCreate, scopeName, auditRepositoryName);
     }
 
     @Override

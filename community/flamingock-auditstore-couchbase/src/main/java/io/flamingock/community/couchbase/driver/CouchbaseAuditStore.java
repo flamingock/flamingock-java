@@ -29,52 +29,96 @@ import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.couchbase.CouchbaseConfiguration;
 import io.flamingock.community.couchbase.internal.CouchbaseAuditPersistence;
-import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
 public class CouchbaseAuditStore implements CommunityAuditStore {
 
     private RunnerId runnerId;
-    private CouchbaseTargetSystem targetSystem;
     private CommunityConfigurable communityConfiguration;
-    private CouchbaseConfiguration driverConfiguration;
     private CouchbaseAuditPersistence persistence;
     private CouchbaseLockService lockService;
+    private Cluster cluster;
+    private Bucket bucket;
+    private String scopeName;
+    private String auditRepositoryName;
+    private String lockRepositoryName;
+    private Boolean autoCreate;
 
-    public CouchbaseAuditStore() {
-        this(null);
+    public CouchbaseAuditStore() {}
+
+    public CouchbaseAuditStore withCluster(Cluster cluster) {
+        this.cluster = cluster;
+        return this;
     }
 
-    public CouchbaseAuditStore(CouchbaseTargetSystem targetSystem) {
-        this.targetSystem = targetSystem;
+    public CouchbaseAuditStore withBucket(Bucket bucket) {
+        this.bucket = bucket;
+        return this;
+    }
+
+    public CouchbaseAuditStore withScopeName(String scopeName) {
+        this.scopeName = scopeName;
+        return this;
+    }
+
+    public CouchbaseAuditStore withAuditRepositoryName(String auditRepositoryName) {
+        this.auditRepositoryName = auditRepositoryName;
+        return this;
+    }
+
+    public CouchbaseAuditStore withLockRepositoryName(String lockRepositoryName) {
+        this.lockRepositoryName = lockRepositoryName;
+        return this;
+    }
+
+    public CouchbaseAuditStore withAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
+        return this;
     }
 
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
-        this.driverConfiguration = baseContext.getDependencyValue(CouchbaseConfiguration.class).orElse(new CouchbaseConfiguration());
+        CouchbaseConfiguration driverConfiguration = baseContext.getDependencyValue(CouchbaseConfiguration.class).orElse(new CouchbaseConfiguration());
         driverConfiguration.mergeConfig(baseContext);
-        this.validate();
 
-        if (targetSystem == null) {
-            Cluster cluster = baseContext.getRequiredDependencyValue(Cluster.class);
-            Bucket bucket = baseContext.getRequiredDependencyValue(Bucket.class);
-            targetSystem = new CouchbaseTargetSystem(DEFAULT_AUDIT_STORE_TARGET_SYSTEM)
-                    .withCluster(cluster)
-                    .withBucket(bucket)
-                    .withScopeName(driverConfiguration.getScopeName())
-                    .withAutoCreate(driverConfiguration.isAutoCreate());
-            targetSystem.initialize(baseContext);
+        if (cluster == null) {
+            cluster = baseContext.getRequiredDependencyValue(Cluster.class);
         }
+
+        if (bucket == null) {
+            bucket = baseContext.getRequiredDependencyValue(Bucket.class);
+        }
+
+        if (scopeName == null) {
+            scopeName = driverConfiguration.getScopeName();
+        }
+
+        if (auditRepositoryName == null) {
+            auditRepositoryName = driverConfiguration.getAuditRepositoryName();
+        }
+
+        if (lockRepositoryName == null) {
+            lockRepositoryName = driverConfiguration.getLockRepositoryName();
+        }
+
+        if (autoCreate == null) {
+            autoCreate = driverConfiguration.isAutoCreate();
+        }
+
+        this.validate();
     }
 
     @Override
     public synchronized CommunityAuditPersistence getPersistence() {
         if (persistence == null) {
             persistence = new CouchbaseAuditPersistence(
-                    targetSystem,
                     communityConfiguration,
-                    driverConfiguration);
+                    cluster,
+                    bucket,
+                    scopeName,
+                    auditRepositoryName,
+                    autoCreate);
             persistence.initialize(runnerId);
         }
         return persistence;
@@ -83,31 +127,40 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     @Override
     public synchronized CommunityLockService getLockService() {
         if (lockService == null) {
-            lockService = new CouchbaseLockService(targetSystem, TimeService.getDefault());
+            lockService = new CouchbaseLockService(cluster, bucket, TimeService.getDefault());
             lockService.initialize(
-                    driverConfiguration.isAutoCreate(),
-                    driverConfiguration.getScopeName(),
-                    driverConfiguration.getLockRepositoryName());
+                    autoCreate,
+                    scopeName,
+                    lockRepositoryName);
         }
         return lockService;
     }
 
     @Override
     public TargetSystem getTargetSystem() {
-        return targetSystem;
+        return null;
     }
 
     private void validate() {
-        if (driverConfiguration.getAuditRepositoryName() == null || driverConfiguration.getAuditRepositoryName().trim().isEmpty()) {
+
+        if (scopeName == null || scopeName.trim().isEmpty()) {
+            throw new FlamingockException("The 'scopeName' property is required.");
+        }
+
+        if (auditRepositoryName == null || auditRepositoryName.trim().isEmpty()) {
             throw new FlamingockException("The 'auditRepositoryName' property is required.");
         }
 
-        if (driverConfiguration.getLockRepositoryName() == null || driverConfiguration.getLockRepositoryName().trim().isEmpty()) {
+        if (lockRepositoryName == null || lockRepositoryName.trim().isEmpty()) {
             throw new FlamingockException("The 'lockRepositoryName' property is required.");
         }
 
-        if (driverConfiguration.getAuditRepositoryName().trim().equalsIgnoreCase(driverConfiguration.getLockRepositoryName().trim())) {
+        if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
+        }
+
+        if (autoCreate == null) {
+            throw new FlamingockException("The 'autoCreate' property is required.");
         }
     }
 }

@@ -16,7 +16,6 @@
 package io.flamingock.community.couchbase.internal;
 
 import com.couchbase.client.core.error.CouchbaseException;
-import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
@@ -24,22 +23,17 @@ import com.couchbase.client.java.json.JsonObject;
 import com.couchbase.client.java.kv.PersistTo;
 import com.couchbase.client.java.kv.ReplicateTo;
 import com.couchbase.client.java.kv.UpsertOptions;
-import com.couchbase.client.java.transactions.TransactionAttemptContext;
-import com.couchbase.client.java.transactions.TransactionGetResult;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.couchbase.CouchbaseAuditMapper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
-import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.slf4j.Logger;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -49,17 +43,15 @@ public class CouchbaseAuditor implements LifecycleAuditWriter, AuditReader {
 
     protected final Cluster cluster;
     protected final Bucket bucket;
-    private final TransactionManager<TransactionAttemptContext> txManager;
     protected Collection collection;
     protected CouchbaseCollectionInitializator collectionInitializator;
 
 
     private final CouchbaseAuditMapper mapper = new CouchbaseAuditMapper();
 
-    protected CouchbaseAuditor(CouchbaseTargetSystem targetSystem) {
-        this.cluster = targetSystem.getCluster();
-        this.bucket = targetSystem.getBucket();
-        this.txManager = targetSystem.getTxManager();
+    protected CouchbaseAuditor(Cluster cluster, Bucket bucket) {
+        this.cluster = cluster;
+        this.bucket = bucket;
     }
 
     protected void initialize(boolean autoCreate, String scopeName, String collectionName) {
@@ -76,29 +68,12 @@ public class CouchbaseAuditor implements LifecycleAuditWriter, AuditReader {
 
         JsonObject document = mapper.toDocument(auditEntry);
 
-        Optional<TransactionAttemptContext> ctxOpt = txManager.getSession(auditEntry.getTaskId());
-
-        if (ctxOpt.isPresent()) {
-            TransactionAttemptContext ctx = ctxOpt.get();
-            try {
-                try {
-                    TransactionGetResult existing = ctx.get(collection, key);
-                    ctx.replace(existing, document);
-                } catch (DocumentNotFoundException e) {
-                    ctx.insert(collection, key, document);
-                }
-            } catch (CouchbaseException couchbaseException) {
-                logger.warn("Error saving audit entry with key {}", key, couchbaseException);
-                throw new RuntimeException(couchbaseException);
-            }
-        } else {
-            try {
-                collection.upsert(key, document,
-                        UpsertOptions.upsertOptions().durability(PersistTo.ACTIVE, ReplicateTo.NONE));
-            } catch (CouchbaseException couchbaseException) {
-                logger.warn("Error saving audit entry with key {}", key, couchbaseException);
-                throw new RuntimeException(couchbaseException);
-            }
+        try {
+            collection.upsert(key, document,
+                    UpsertOptions.upsertOptions().durability(PersistTo.ACTIVE, ReplicateTo.NONE));
+        } catch (CouchbaseException couchbaseException) {
+            logger.warn("Error saving audit entry with key {}", key, couchbaseException);
+            throw new RuntimeException(couchbaseException);
         }
 
         return Result.OK();
