@@ -36,11 +36,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'graalvm-community'
-          server-id: central
-          server-username: JRELEASER_MAVENCENTRAL_USERNAME
-          server-password: JRELEASER_MAVENCENTRAL_PASSWORD
-          gpg-private-key: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
-          gpg-passphrase: JRELEASER_GPG_PASSPHRASE
           github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
 
       - name: Set up GPG
