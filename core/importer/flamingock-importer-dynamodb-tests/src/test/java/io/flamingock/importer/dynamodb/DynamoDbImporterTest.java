@@ -130,7 +130,7 @@ public class DynamoDbImporterTest {
 
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
-                .setAuditStore(new DynamoDBAuditStore())
+                .setAuditStore(new DynamoDBAuditStore(client))
                 .build();
 
         flamingock.run();
@@ -181,7 +181,7 @@ public class DynamoDbImporterTest {
     void failIfEmptyOrigin() {
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .addDependency(client)
-                .setAuditStore(new DynamoDBAuditStore())
+                .setAuditStore(new DynamoDBAuditStore(client))
                 .build();
 
         Assertions.assertThrows(FlamingockException.class, flamingock::run);

@@ -165,6 +165,6 @@ public class AuditService {
         // Add client to context as dependency
         context.addDependency(new Dependency(DynamoDbClient.class, dynamoClient));
         
-        return new DynamoDBAuditStore();
+        return new DynamoDBAuditStore(dynamoClient);
     }
 }

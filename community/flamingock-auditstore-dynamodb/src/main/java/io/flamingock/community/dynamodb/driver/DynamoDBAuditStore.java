@@ -17,6 +17,8 @@ package io.flamingock.community.dynamodb.driver;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.dynamodb.internal.DynamoDBLockService;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
@@ -24,7 +26,6 @@ import io.flamingock.internal.core.configuration.community.CommunityConfigurable
 import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.community.dynamodb.DynamoDBConfiguration;
 import io.flamingock.community.dynamodb.internal.DynamoDBAuditPersistence;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -32,16 +33,36 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
 
     private RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
-    private DynamoDBConfiguration driverConfiguration;
     private DynamoDBAuditPersistence persistence;
     private DynamoDBLockService lockService;
-    private DynamoDbClient client;
-    private Boolean autoCreate;
+    private final DynamoDbClient client;
+    private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
+    private long readCapacityUnits = 5L;
+    private long writeCapacityUnits = 5L;
+    private boolean autoCreate = true;
 
-    public DynamoDBAuditStore() {}
-
-    public DynamoDBAuditStore withDynamoDBClient(DynamoDbClient client) {
+    public DynamoDBAuditStore(DynamoDbClient client) {
         this.client = client;
+    }
+
+    public DynamoDBAuditStore withAuditRepositoryName(String auditRepositoryName) {
+        this.auditRepositoryName = auditRepositoryName;
+        return this;
+    }
+
+    public DynamoDBAuditStore withLockRepositoryName(String lockRepositoryName) {
+        this.lockRepositoryName = lockRepositoryName;
+        return this;
+    }
+
+    public DynamoDBAuditStore withReadCapacityUnits(long readCapacityUnits) {
+        this.readCapacityUnits = readCapacityUnits;
+        return this;
+    }
+
+    public DynamoDBAuditStore withWriteCapacityUnits(long writeCapacityUnits) {
+        this.writeCapacityUnits = writeCapacityUnits;
         return this;
     }
 
@@ -50,22 +71,11 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
         return this;
     }
 
-    private boolean isAutoCreateEnabled() {
-        return autoCreate != null ? autoCreate : driverConfiguration.isAutoCreate();
-    }
-
     @Override
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
-
-        this.driverConfiguration = baseContext.getDependencyValue(DynamoDBConfiguration.class)
-                .orElse(new DynamoDBConfiguration());
-        this.driverConfiguration.mergeConfig(baseContext);
-
-        if (client == null) {
-            client = baseContext.getRequiredDependencyValue(DynamoDbClient.class);
-        }
+        this.validate();
     }
 
     @Override
@@ -73,10 +83,10 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
         if (persistence == null) {
             persistence = new DynamoDBAuditPersistence(
                     client,
-                    driverConfiguration.getAuditRepositoryName(),
-                    driverConfiguration.getReadCapacityUnits(),
-                    driverConfiguration.getWriteCapacityUnits(),
-                    isAutoCreateEnabled(),
+                    auditRepositoryName,
+                    readCapacityUnits,
+                    writeCapacityUnits,
+                    autoCreate,
                     communityConfiguration);
             persistence.initialize(runnerId);
         }
@@ -88,10 +98,10 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
         if (lockService == null) {
             lockService = new DynamoDBLockService(client, TimeService.getDefault());
             lockService.initialize(
-                    isAutoCreateEnabled(),
-                    driverConfiguration.getLockRepositoryName(),
-                    driverConfiguration.getReadCapacityUnits(),
-                    driverConfiguration.getWriteCapacityUnits());
+                    autoCreate,
+                    lockRepositoryName,
+                    readCapacityUnits,
+                    writeCapacityUnits);
         }
         return lockService;
     }
@@ -99,5 +109,24 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     @Override
     public TargetSystem getTargetSystem() {
         return null;
+    }
+
+    private void validate() {
+
+        if (client == null) {
+            throw new FlamingockException("The 'client' instance is required.");
+        }
+
+        if (auditRepositoryName == null || auditRepositoryName.trim().isEmpty()) {
+            throw new FlamingockException("The 'auditRepositoryName' property is required.");
+        }
+
+        if (lockRepositoryName == null || lockRepositoryName.trim().isEmpty()) {
+            throw new FlamingockException("The 'lockRepositoryName' property is required.");
+        }
+
+        if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
+            throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
+        }
     }
 }
