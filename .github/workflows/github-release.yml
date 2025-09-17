@@ -48,8 +48,10 @@ jobs:
 
       - name: Prepare JReleaser Files
         run: |
-          mkdir -p cli/build/jreleaser
-          cp cli/flamingock-cli/build/distributions/* cli/build/jreleaser/
+          mkdir -p build/jreleaser/distributions
+          cp cli/flamingock-cli/build/distributions/* build/jreleaser/distributions/
+          echo "Verifying contents of staging directory:"
+          ls -lR build/jreleaser/distributions/
 
       - name: Publish Release to Github
         run: ./gradlew jreleaserRelease

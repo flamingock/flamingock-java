@@ -54,52 +54,51 @@ jreleaser {
         authors.set(setOf("dieppa"))
     }
     gitRootSearch.set(true)
-    release {
-        github {
-            update {
-                enabled.set(true)
-                sections.set(setOf(UpdateSection.TITLE, UpdateSection.BODY, UpdateSection.ASSETS))
-            }
-            prerelease {
-                enabled.set(true)
-                pattern.set(".*-(beta|snapshot|alpha)\\$")
-            }
-            changelog {
-                enabled.set(true)
-                formatted.set(Active.ALWAYS)
-                sort.set(org.jreleaser.model.Changelog.Sort.DESC)
-                links.set(true)
-                preset.set("conventional-commits")
-                releaseName.set("Release {{tagName}}")
-                content.set("""
-                    ## Changelog
-                    {{changelogChanges}}
-                    {{changelogContributors}}
-                """.trimIndent())
-                categoryTitleFormat.set("### {{categoryTitle}}")
-                format.set(
-                    """|- {{commitShortHash}}
-                       |{{#commitIsConventional}}
-                       |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
-                       |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
-                       |{{conventionalCommitDescription}}
-                       |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
-                       |{{/commitIsConventional}}
-                       |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
-                       |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}}
-                       |({{contributorName}})
-                    |""".trimMargin().replace("\n", "").replace("\r", "")
-                )
-                contributors {
+    if (project == rootProject) {
+        release {
+            github {
+                update {
                     enabled.set(true)
-                    format.set("- {{contributorName}} ({{contributorUsernameAsLink}})")
+                    sections.set(setOf(UpdateSection.TITLE, UpdateSection.BODY, UpdateSection.ASSETS))
+                }
+                prerelease {
+                    enabled.set(true)
+                    pattern.set(".*-(beta|snapshot|alpha)\\$")
+                }
+                changelog {
+                    enabled.set(true)
+                    formatted.set(Active.ALWAYS)
+                    sort.set(org.jreleaser.model.Changelog.Sort.DESC)
+                    links.set(true)
+                    preset.set("conventional-commits")
+                    releaseName.set("Release {{tagName}}")
+                    content.set("""
+                        ## Changelog
+                        {{changelogChanges}}
+                        {{changelogContributors}}
+                    """.trimIndent())
+                    categoryTitleFormat.set("### {{categoryTitle}}")
+                    format.set(
+                        """|- {{commitShortHash}}
+                           |{{#commitIsConventional}}
+                           |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
+                           |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
+                           |{{conventionalCommitDescription}}
+                           |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
+                           |{{/commitIsConventional}}
+                           |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
+                           |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}}
+                           |({{contributorName}})
+                        |""".trimMargin().replace("\n", "").replace("\r", "")
+                    )
+                    contributors {
+                        enabled.set(true)
+                        format.set("- {{contributorName}} ({{contributorUsernameAsLink}})")
+                    }
                 }
             }
         }
-    }
 
-    // Configure CLI distribution files for GitHub Releases
-    if (project.name.equals("flamingock-cli")) {
         distributions {
             create("flamingock-cli") {
                 distributionType.set(org.jreleaser.model.Distribution.DistributionType.JAVA_BINARY)
@@ -107,15 +106,15 @@ jreleaser {
                     name.set("flamingock")
                 }
                 artifact {
-                    path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.zip"))
+                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.zip"))
                     platform.set("cross-platform")
                 }
                 artifact {
-                    path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.tar.gz"))
+                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.tar.gz"))
                     platform.set("unix")
                 }
                 artifact {
-                    path.set(layout.buildDirectory.file("distributions/checksums.txt"))
+                    path.set(layout.buildDirectory.file("jreleaser/distributions/checksums.txt"))
                     platform.set("checksums")
                 }
             }
