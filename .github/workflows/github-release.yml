@@ -44,7 +44,7 @@ jobs:
           github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
 
       - name: Build CLI distributions
-        run: ./gradlew :cli:flamingock-cli:assemble
+        run: ./gradlew :cli:flamingock-cli:buildDistributions
 
       - name: Prepare JReleaser Files
         run: |
