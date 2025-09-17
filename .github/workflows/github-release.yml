@@ -24,13 +24,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      - name: Download CLI distributions artifact
-        uses: actions/download-artifact@v5
-        with:
-          name: cli-distributions
-          path: cli/flamingock-cli/build/distributions/
-
       - name: Set up Java
         uses: graalvm/setup-graalvm@v1
         with:
@@ -38,18 +31,8 @@ jobs:
           distribution: 'graalvm-community'
           github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
 
-      - name: Set up GPG
-        run: |
-          echo "$GPG_SECRET_KEY" > private.asc
-          gpg --import --batch private.asc
-        env:
-          GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
-
-      - name: Perform publish
-        run: ./gradlew publish -PreleaseBundle=all
-        env:
-          JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
-          JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
+      - name: Build CLI distributions
+        run: ./gradlew :cli:flamingock-cli:build
 
       - name: Publish Release to Github
         run: ./gradlew jreleaserRelease
