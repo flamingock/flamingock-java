@@ -51,15 +51,28 @@ if (project != rootProject) {
     tasks.named("jreleaserRelease") {
         enabled = false
     }
-}
-jreleaser {
-    project {
-        description.set("Description should be here")
-        inceptionYear.set("2024")
-        authors.set(setOf("dieppa"))
+} else {
+    tasks.register("copyReleaseFiles") {
+        dependsOn(":cli:flamingock-cli:assemble")
+        doLast {
+            mkdir("build/jreleaser/distributions")
+            copy {
+                from("cli/flamingock-cli/build/distributions/")
+                into("build/jreleaser/distributions/")
+            }
+        }
     }
-    gitRootSearch.set(true)
-    if (project == rootProject) {
+    tasks.named("jreleaserRelease") {
+        dependsOn("copyReleaseFiles")
+    }
+
+    jreleaser {
+        project {
+            description.set("Description should be here")
+            inceptionYear.set("2024")
+            authors.set(setOf("dieppa"))
+        }
+        gitRootSearch.set(true)
         release {
             github {
                 update {
@@ -102,14 +115,9 @@ jreleaser {
                     }
                 }
             }
-        }
 
-        distributions {
-            create("flamingock-cli") {
-                distributionType.set(org.jreleaser.model.Distribution.DistributionType.JAVA_BINARY)
-                executable {
-                    name.set("flamingock")
-                }
+            files {
+                active.set(org.jreleaser.model.Active.ALWAYS)
                 artifact {
                     path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.zip"))
                     platform.set("cross-platform")

@@ -41,17 +41,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'graalvm-community'
-          github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
-
-      - name: Build CLI distributions
-        run: ./gradlew :cli:flamingock-cli:buildDistributions
-
-      - name: Prepare JReleaser Files
-        run: |
-          mkdir -p build/jreleaser/distributions
-          cp cli/flamingock-cli/build/distributions/* build/jreleaser/distributions/
-          echo "Verifying contents of staging directory:"
-          ls -lR build/jreleaser/distributions/
 
       - name: Publish Release to Github
         run: ./gradlew jreleaserRelease --stacktrace
