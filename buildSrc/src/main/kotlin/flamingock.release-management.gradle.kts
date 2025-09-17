@@ -47,6 +47,11 @@ val projectsToRelease = if (module != null) {
 }
 
 // JReleaser configuration
+if (project != rootProject) {
+    tasks.named("jreleaserRelease") {
+        enabled = false
+    }
+}
 jreleaser {
     project {
         description.set("Description should be here")
