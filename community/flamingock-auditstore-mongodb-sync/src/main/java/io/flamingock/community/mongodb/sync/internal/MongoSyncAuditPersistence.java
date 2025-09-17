@@ -15,13 +15,16 @@
  */
 package io.flamingock.community.mongodb.sync.internal;
 
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
 import io.flamingock.internal.core.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,26 +34,35 @@ import java.util.Set;
 public class MongoSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
     private MongoSyncAuditor auditor;
-    private MongoSyncTargetSystem targetSystem;
+    private final MongoDatabase database;
     private final String auditCollectionName;
+    private final ReadConcern readConcern;
+    private final ReadPreference readPreference;
+    private final WriteConcern writeConcern;
+    private final boolean autoCreate;
 
 
-    public MongoSyncAuditPersistence(MongoSyncTargetSystem targetSystem,
+    public MongoSyncAuditPersistence(CommunityConfigurable localConfiguration,
+                                     MongoDatabase database,
                                      String auditCollectionName,
-                                     CommunityConfigurable localConfiguration) {
+                                     ReadConcern readConcern,
+                                     ReadPreference readPreference,
+                                     WriteConcern writeConcern,
+                                     boolean autoCreate) {
         super(localConfiguration);
-        this.targetSystem = targetSystem;
+        this.database = database;
         this.auditCollectionName = auditCollectionName;
+        this.readConcern = readConcern;
+        this.readPreference = readPreference;
+        this.writeConcern = writeConcern;
+        this.autoCreate = autoCreate;
     }
 
     @Override
     protected void doInitialize(RunnerId runnerId) {
-
-
         //Auditor
-        auditor = new MongoSyncAuditor(targetSystem, auditCollectionName);
-        auditor.initialize(targetSystem.isAutoCreate());
-
+        auditor = new MongoSyncAuditor(database, auditCollectionName, readConcern, readPreference, writeConcern);
+        auditor.initialize(autoCreate);
     }
 
     @Deprecated

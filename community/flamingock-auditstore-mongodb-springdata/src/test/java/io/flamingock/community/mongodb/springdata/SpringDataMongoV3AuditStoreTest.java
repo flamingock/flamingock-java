@@ -109,7 +109,7 @@ class SpringDataMongoV3AuditStoreTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoTemplate)//TODO remove when auditStore accepts MongoTemplate
-                    .setAuditStore(new SpringDataMongoAuditStore())
+                    .setAuditStore(new SpringDataMongoAuditStore(mongoTemplate.getMongoDatabaseFactory().getMongoDatabase()))
                     .addTargetSystem(new MongoSpringDataTargetSystem("mongodb").withMongoTemplate(mongoTemplate))
                     .build()
                     .run();
@@ -136,7 +136,7 @@ class SpringDataMongoV3AuditStoreTest {
             );
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoTemplate)//TODO remove when auditStore accepts MongoTemplate
-                    .setAuditStore(new SpringDataMongoAuditStore())
+                    .setAuditStore(new SpringDataMongoAuditStore(mongoTemplate.getMongoDatabaseFactory().getMongoDatabase()))
                     .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
                     .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
                     //.addStage(new Stage("stage-name").addCodePackage("io.flamingock.oss.driver.mongodb.springdata.v3.changes.happyPathWithTransaction"))
@@ -165,7 +165,7 @@ class SpringDataMongoV3AuditStoreTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .addDependency(mongoTemplate)//TODO remove when auditStore accepts MongoTemplate
-                    .setAuditStore(new SpringDataMongoAuditStore())
+                    .setAuditStore(new SpringDataMongoAuditStore(mongoTemplate.getMongoDatabaseFactory().getMongoDatabase()))
                     .addTargetSystem(new MongoSpringDataTargetSystem("mongodb").withMongoTemplate(mongoTemplate))
                     .build()
                     .run();
@@ -206,7 +206,7 @@ class SpringDataMongoV3AuditStoreTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                         .addDependency(mongoTemplate)//TODO remove when auditStore accepts MongoTemplate
-                        .setAuditStore(new SpringDataMongoAuditStore())
+                        .setAuditStore(new SpringDataMongoAuditStore(mongoTemplate.getMongoDatabaseFactory().getMongoDatabase()))
                         .addTargetSystem(new MongoSpringDataTargetSystem("mongodb").withMongoTemplate(mongoTemplate))
                         .build()
                         .run();

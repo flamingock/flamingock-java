@@ -16,6 +16,7 @@
 package io.flamingock.community.mongodb.springdata.driver;
 
 import com.mongodb.ReadConcern;
+import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.mongodb.springdata.config.SpringDataMongoConfiguration;
 import io.flamingock.community.mongodb.springdata.internal.SpringDataMongoAuditPersistence;
@@ -40,12 +41,9 @@ public class SpringDataMongoAuditStore extends MongoSyncAuditStore {
     private SpringDataMongoAuditPersistence persistence;
     private SpringDataMongoLockService lockService;
 
-    public SpringDataMongoAuditStore() {
-        this(null);
-    }
-
-    public SpringDataMongoAuditStore(MongoSpringDataTargetSystem targetSystem) {
-        this.targetSystem = targetSystem;
+    public SpringDataMongoAuditStore(MongoDatabase mongoDatabase) {
+        super(mongoDatabase);
+        this.targetSystem = null;
     }
 
 

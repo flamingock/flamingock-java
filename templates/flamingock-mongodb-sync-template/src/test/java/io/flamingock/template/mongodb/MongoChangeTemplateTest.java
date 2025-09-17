@@ -77,9 +77,9 @@ class MongoChangeTemplateTest {
     void happyPath() {
 
         FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(new MongoSyncAuditStore())
                 .addDependency(mongoClient)
                 .addDependency(mongoClient.getDatabase(DB_NAME))
+                .setAuditStore(new MongoSyncAuditStore(mongoClient.getDatabase(DB_NAME)))
                 .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                         .withMongoClient(mongoClient)
                         .withDatabase(mongoClient.getDatabase(DB_NAME)))

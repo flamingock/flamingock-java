@@ -151,10 +151,9 @@ public class AuditService {
         MongoDatabase mongoDatabase = MongoClientFactory.createMongoDatabase(mongoClient, mongoConfig);
         
         // Add clients to context as dependencies
-        context.addDependency(new Dependency(MongoClient.class, mongoClient));
         context.addDependency(new Dependency(MongoDatabase.class, mongoDatabase));
         
-        return new MongoSyncAuditStore();
+        return new MongoSyncAuditStore(mongoDatabase);
     }
 
     private AuditStore<?> createDynamoAuditStore(Context context) {

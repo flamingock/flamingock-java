@@ -71,7 +71,7 @@ class MongoSyncAuditPersistenceE2ETest {
         separateMongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
 
         // Initialize test kit with MongoDB persistence
-        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), sharedMongoClient, database);
+        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(database), sharedMongoClient, database);
         auditHelper = testKit.getAuditHelper();
     }
 
@@ -96,7 +96,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoSyncAuditStore())
+                                .setAuditStore(new MongoSyncAuditStore(database))
                                 .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                         .withMongoClient(sharedMongoClient)
                                         .withDatabase(database))
@@ -137,7 +137,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoSyncAuditStore())
+                                .setAuditStore(new MongoSyncAuditStore(database))
                                 .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                         .withMongoClient(sharedMongoClient)
                                         .withDatabase(database))
@@ -191,7 +191,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoSyncAuditStore())
+                                .setAuditStore(new MongoSyncAuditStore(database))
                                 .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                         .withMongoClient(sharedMongoClient)
                                         .withDatabase(database))
@@ -232,7 +232,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoSyncAuditStore())
+                                .setAuditStore(new MongoSyncAuditStore(database))
                                 .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                         .withMongoClient(sharedMongoClient)
                                         .withDatabase(database))
@@ -274,7 +274,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoSyncAuditStore())
+                                .setAuditStore(new MongoSyncAuditStore(database))
                                 .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                         .withMongoClient(sharedMongoClient)
                                         .withDatabase(database))
@@ -315,7 +315,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoSyncAuditStore())
+                                .setAuditStore(new MongoSyncAuditStore(database))
                                 .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                         .withMongoClient(sharedMongoClient)
                                         .withDatabase(database))
@@ -358,7 +358,7 @@ class MongoSyncAuditPersistenceE2ETest {
                 ).WHEN(() -> assertDoesNotThrow(() -> {
                     MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
                     testKit.createBuilder()
-                            .setAuditStore(new MongoSyncAuditStore())
+                            .setAuditStore(new MongoSyncAuditStore(database))
                             .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                     .withMongoClient(sharedMongoClient)
                                     .withDatabase(database))

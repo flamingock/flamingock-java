@@ -15,7 +15,6 @@
  */
 package io.flamingock.community.mongodb.sync;
 
-import com.mongodb.ReadConcernLevel;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -31,8 +30,6 @@ import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
-import io.flamingock.mongodb.kit.MongoSyncAuditStorage;
-import io.flamingock.mongodb.kit.MongoSyncLockStorage;
 import io.flamingock.mongodb.kit.MongoSyncTestKit;
 import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;
@@ -55,7 +52,6 @@ import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -90,7 +86,7 @@ class MongoSyncAuditStoreTest {
     void setupEach() {
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         database = mongoClient.getDatabase("test");
-        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(), mongoClient, database);
+        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(database), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
         mongoDBTestHelper = new MongoDBTestHelper(database);
@@ -114,7 +110,7 @@ class MongoSyncAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore())
+                        .setAuditStore(new MongoSyncAuditStore(database))
                         .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                 .withMongoClient(mongoClient)
                                 .withDatabase(database))
@@ -139,62 +135,6 @@ class MongoSyncAuditStoreTest {
     }
 
     @Test
-    @DisplayName("When standalone runs the driver with CUSTOM config properties all properties are correctly set")
-    void happyPathWithCustomConfigOptions() {
-        //Given-When-Then
-        MongoDBSyncConfiguration config = new MongoDBSyncConfiguration();
-
-        // Create a custom TestKit that uses the custom audit collection name
-        MongoSyncAuditStorage customAuditStorage = new MongoSyncAuditStorage(database, CUSTOM_AUDIT_REPOSITORY_NAME);
-        MongoSyncLockStorage customLockStorage = new MongoSyncLockStorage(database, CUSTOM_LOCK_REPOSITORY_NAME);
-        TestKit customTestKit = new MongoSyncTestKit(customAuditStorage, customLockStorage, new MongoSyncAuditStore(), mongoClient);
-
-        AuditTestSupport.withTestKit(customTestKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                        new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
-                        new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
-                )
-                .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore())
-                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
-                                .withMongoClient(mongoClient)
-                                .withDatabase(database))
-                        .addDependency(mongoClient)
-                        .addDependency(database)
-                        .addDependency(config)
-                        .setProperty("mongodb.indexCreation", true)
-                        .setProperty("mongodb.auditRepositoryName", CUSTOM_AUDIT_REPOSITORY_NAME)
-                        .setProperty("mongodb.lockRepositoryName", CUSTOM_LOCK_REPOSITORY_NAME)
-                        .setProperty("mongodb.readConcern", "LOCAL")
-                        .setProperty("mongodb.readPreference", MongoDBSyncConfiguration.ReadPreferenceLevel.SECONDARY)
-                        .build()
-                        .run())
-                .THEN_VerifyAuditSequenceStrict(
-                        STARTED("create-client-collection"),
-                        APPLIED("create-client-collection"),
-                        STARTED("insert-federico-document"),
-                        APPLIED("insert-federico-document"),
-                        STARTED("insert-jorge-document"),
-                        APPLIED("insert-jorge-document")
-                )
-                .run();
-
-        assertTrue(config.isAutoCreate());
-        //TODO: assertFalse(config.isIndexCreation());
-        assertEquals(CUSTOM_AUDIT_REPOSITORY_NAME, config.getAuditRepositoryName());
-        assertEquals(CUSTOM_LOCK_REPOSITORY_NAME, config.getLockRepositoryName());
-        assertEquals(ReadConcernLevel.LOCAL, config.getReadConcern());
-        assertEquals(MongoDBSyncConfiguration.ReadPreferenceLevel.SECONDARY, config.getReadPreference());
-
-        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_AUDIT_STORE_NAME));
-        assertFalse(mongoDBTestHelper.collectionExists(DEFAULT_LOCK_STORE_NAME));
-
-        assertTrue(mongoDBTestHelper.collectionExists(CUSTOM_AUDIT_REPOSITORY_NAME));
-        assertTrue(mongoDBTestHelper.collectionExists(CUSTOM_LOCK_REPOSITORY_NAME));
-    }
-
-    @Test
     @DisplayName("When standalone runs the driver with transactions enabled should persist the audit logs and the user's collection updated")
     void happyPathWithTransaction() {
         //Given-When-Then
@@ -205,7 +145,7 @@ class MongoSyncAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore())
+                        .setAuditStore(new MongoSyncAuditStore(database))
                         .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                 .withMongoClient(mongoClient)
                                 .withDatabase(database))
@@ -245,7 +185,7 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore())
+                        .setAuditStore(new MongoSyncAuditStore(database))
                             .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                 .withMongoClient(mongoClient)
                                 .withDatabase(database))

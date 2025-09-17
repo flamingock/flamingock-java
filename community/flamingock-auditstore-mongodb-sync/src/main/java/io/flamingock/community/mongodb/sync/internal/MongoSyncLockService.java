@@ -22,10 +22,10 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import io.flamingock.internal.util.id.RunnerId;
@@ -56,14 +56,17 @@ public class MongoSyncLockService implements CommunityLockService {
     private final MongoCollection<Document> collection;
     private final TimeService timeService;
 
-    public MongoSyncLockService(MongoSyncTargetSystem targetSystem,
-                                   String collectionName,
-                                   TimeService timeService) {
-        this(targetSystem.getDatabase().getCollection(collectionName),
-                targetSystem.getReadConcern(),
-                targetSystem.getReadPreference(),
-                targetSystem.getWriteConcern(),
-                timeService);
+    public MongoSyncLockService(MongoDatabase database,
+                                String collectionName,
+                                ReadConcern readConcern,
+                                ReadPreference readPreference,
+                                WriteConcern writeConcern,
+                                TimeService timeService) {
+        this(database.getCollection(collectionName),
+                            readConcern,
+                            readPreference,
+                            writeConcern,
+                            timeService);
     }
 
     protected MongoSyncLockService(MongoCollection<Document> collection,
@@ -78,13 +81,13 @@ public class MongoSyncLockService implements CommunityLockService {
         this.timeService = timeService;
     }
 
-    public void initialize(boolean indexCreation) {
+    public void initialize(boolean autoCreate) {
         CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoSyncCollectionHelper(collection),
                 () -> new MongoSyncDocumentHelper(new Document()),
                 new String[]{KEY_FIELD}
         );
-        if (indexCreation) {
+        if (autoCreate) {
             initializer.initialize();
         } else {
             initializer.justValidateCollection();

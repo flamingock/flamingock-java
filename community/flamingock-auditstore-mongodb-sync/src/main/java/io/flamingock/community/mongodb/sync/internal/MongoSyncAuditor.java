@@ -15,8 +15,11 @@
  */
 package io.flamingock.community.mongodb.sync.internal;
 
-import com.mongodb.client.ClientSession;
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.UpdateResult;
@@ -25,10 +28,8 @@ import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
-import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
 import org.bson.Document;
@@ -49,23 +50,25 @@ public class MongoSyncAuditor implements LifecycleAuditWriter, AuditReader {
 
     private final MongoCollection<Document> collection;
     private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
-    private final TransactionManager<ClientSession> txSessionManager;
 
-    MongoSyncAuditor(MongoSyncTargetSystem targetSystem, String collectionName) {
-        this.collection = targetSystem.getDatabase().getCollection(collectionName)
-                .withReadConcern(targetSystem.getReadConcern())
-                .withReadPreference(targetSystem.getReadPreference())
-                .withWriteConcern(targetSystem.getWriteConcern());
-        this.txSessionManager = targetSystem.getTxManager();
+    MongoSyncAuditor(MongoDatabase database,
+                     String collectionName,
+                     ReadConcern readConcern,
+                     ReadPreference readPreference,
+                     WriteConcern writeConcern) {
+        this.collection = database.getCollection(collectionName)
+                .withReadConcern(readConcern)
+                .withReadPreference(readPreference)
+                .withWriteConcern(writeConcern);
     }
 
-    protected void initialize(boolean indexCreation) {
+    protected void initialize(boolean autoCreate) {
         CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoSyncCollectionHelper(collection),
                 () -> new MongoSyncDocumentHelper(new Document()),
                 new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
         );
-        if (indexCreation) {
+        if (autoCreate) {
             initializer.initialize();
         } else {
             initializer.justValidateCollection();
@@ -83,9 +86,7 @@ public class MongoSyncAuditor implements LifecycleAuditWriter, AuditReader {
 
         Document entryDocument = mapper.toDocument(auditEntry).getDocument();
 
-        UpdateResult result = txSessionManager.getSession(auditEntry.getTaskId())
-                .map(clientSession -> collection.replaceOne(clientSession, filter, entryDocument, new ReplaceOptions().upsert(true)))
-                .orElseGet(() -> collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true)));
+        UpdateResult result = collection.replaceOne(filter, entryDocument, new ReplaceOptions().upsert(true));
         logger.debug("SaveOrUpdate[{}] with result" +
                 "\n[upsertId:{}, matches: {}, modifies: {}, acknowledged: {}]", auditEntry, result.getUpsertedId(), result.getMatchedCount(), result.getModifiedCount(), result.wasAcknowledged());
 
