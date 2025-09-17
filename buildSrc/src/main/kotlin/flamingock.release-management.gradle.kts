@@ -102,7 +102,7 @@ jreleaser {
     if (project.name.equals("flamingock-cli")) {
         distributions {
             create("flamingock-cli") {
-//                type.set(org.jreleaser.model.Distribution.DistributionType.JAVA_BINARY)
+                distributionType.set(org.jreleaser.model.Distribution.DistributionType.JAVA_BINARY)
                 executable {
                     name.set("flamingock")
                 }
