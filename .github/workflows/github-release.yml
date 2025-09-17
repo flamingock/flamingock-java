@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download CLI distributions artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v5
         with:
           name: cli-distributions
           path: cli/flamingock-cli/build/distributions/

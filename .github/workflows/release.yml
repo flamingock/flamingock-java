@@ -352,7 +352,7 @@ jobs:
         run: ./gradlew :cli:flamingock-cli:build
 
       - name: Upload CLI distributions as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cli-distributions
           path: cli/flamingock-cli/build/distributions/
