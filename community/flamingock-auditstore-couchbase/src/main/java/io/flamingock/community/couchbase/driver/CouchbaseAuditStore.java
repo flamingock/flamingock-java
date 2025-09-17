@@ -15,11 +15,13 @@
  */
 package io.flamingock.community.couchbase.driver;
 
+import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.couchbase.internal.CouchbaseLockService;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
@@ -27,7 +29,6 @@ import io.flamingock.internal.core.configuration.community.CommunityConfigurable
 import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.community.couchbase.CouchbaseConfiguration;
 import io.flamingock.community.couchbase.internal.CouchbaseAuditPersistence;
 
 public class CouchbaseAuditStore implements CommunityAuditStore {
@@ -36,23 +37,17 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     private CommunityConfigurable communityConfiguration;
     private CouchbaseAuditPersistence persistence;
     private CouchbaseLockService lockService;
-    private Cluster cluster;
-    private Bucket bucket;
-    private String scopeName;
-    private String auditRepositoryName;
-    private String lockRepositoryName;
-    private Boolean autoCreate;
+    private final Cluster cluster;
+    private final Bucket bucket;
+    private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
+    private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
+    private boolean autoCreate = true;
 
-    public CouchbaseAuditStore() {}
 
-    public CouchbaseAuditStore withCluster(Cluster cluster) {
+    public CouchbaseAuditStore(Cluster cluster, Bucket bucket) {
         this.cluster = cluster;
-        return this;
-    }
-
-    public CouchbaseAuditStore withBucket(Bucket bucket) {
         this.bucket = bucket;
-        return this;
     }
 
     public CouchbaseAuditStore withScopeName(String scopeName) {
@@ -79,33 +74,6 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
-        CouchbaseConfiguration driverConfiguration = baseContext.getDependencyValue(CouchbaseConfiguration.class).orElse(new CouchbaseConfiguration());
-        driverConfiguration.mergeConfig(baseContext);
-
-        if (cluster == null) {
-            cluster = baseContext.getRequiredDependencyValue(Cluster.class);
-        }
-
-        if (bucket == null) {
-            bucket = baseContext.getRequiredDependencyValue(Bucket.class);
-        }
-
-        if (scopeName == null) {
-            scopeName = driverConfiguration.getScopeName();
-        }
-
-        if (auditRepositoryName == null) {
-            auditRepositoryName = driverConfiguration.getAuditRepositoryName();
-        }
-
-        if (lockRepositoryName == null) {
-            lockRepositoryName = driverConfiguration.getLockRepositoryName();
-        }
-
-        if (autoCreate == null) {
-            autoCreate = driverConfiguration.isAutoCreate();
-        }
-
         this.validate();
     }
 
@@ -143,6 +111,14 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
 
     private void validate() {
 
+        if (bucket == null) {
+            throw new FlamingockException("The 'bucket' instance is required.");
+        }
+
+        if (cluster == null) {
+            throw new FlamingockException("The 'cluster' instance is required.");
+        }
+
         if (scopeName == null || scopeName.trim().isEmpty()) {
             throw new FlamingockException("The 'scopeName' property is required.");
         }
@@ -157,10 +133,6 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
 
         if (auditRepositoryName.trim().equalsIgnoreCase(lockRepositoryName.trim())) {
             throw new FlamingockException("The 'auditRepositoryName' and 'lockRepositoryName' properties must not be the same.");
-        }
-
-        if (autoCreate == null) {
-            throw new FlamingockException("The 'autoCreate' property is required.");
         }
     }
 }
