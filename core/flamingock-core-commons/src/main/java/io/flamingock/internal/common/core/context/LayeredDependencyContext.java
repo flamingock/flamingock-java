@@ -15,7 +15,29 @@
  */
 package io.flamingock.internal.common.core.context;
 
+/**
+ * Represents a context that supports layered dependency resolution.
+ * <p>
+ * This interface allows building a hierarchy of dependency contexts where
+ * dependencies are resolved in priority order through multiple layers.
+ * Each new layer added takes precedence over existing layers during
+ * dependency resolution.
+ * <p>
+ * This is particularly useful for the {@code ExecutionRuntime} to support
+ * session-scoped and transaction-scoped dependency injection, where
+ * dependencies added later (e.g., during transaction initialization)
+ * take precedence over base dependencies.
+ */
 public interface LayeredDependencyContext {
 
+    /**
+     * Adds a new context layer with higher priority than existing layers.
+     * <p>
+     * Dependencies in the new layer will be resolved first before
+     * searching in lower layers. This enables overriding or supplementing
+     * existing dependencies without modifying the base context.
+     *
+     * @param contextOnTop the new context layer to add with highest priority
+     */
     void addContextLayer(ContextResolver contextOnTop);
 }

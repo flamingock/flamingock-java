@@ -21,6 +21,7 @@ import io.flamingock.internal.common.core.context.ContextConfigurable;
 import io.flamingock.internal.common.core.context.ContextProvider;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.Property;
@@ -48,6 +49,19 @@ import java.util.UUID;
 import java.util.function.Function;
 
 
+/**
+ * Base implementation for all target systems in Flamingock.
+ * <p>
+ * Provides common functionality for managing target-system-specific context,
+ * including dependencies and properties that will be available to change units
+ * during execution.
+ * <p>
+ * Subclasses should override {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)}
+ * to inject session-scoped dependencies (e.g., database connections, client sessions)
+ * that are obtained fresh for each change execution.
+ *
+ * @param <HOLDER> the concrete target system type for fluent API support
+ */
 public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<HOLDER>>
         implements
         TargetSystem,
@@ -68,9 +82,42 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
 
     abstract protected HOLDER getSelf();
 
-
-    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+    /**
+     * Applies a change operation with session-scoped dependency injection.
+     * <p>
+     * This method is the entry point for non-transactional change execution.
+     * It calls {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)} to allow
+     * subclasses to inject session-scoped dependencies before executing the change.
+     *
+     * @param <T>             the return type of the change operation
+     * @param changeApplier   the function that executes the actual change
+     * @param executionRuntime the runtime context for dependency resolution
+     * @return the result of the change operation
+     */
+    public final <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+        enhanceExecutionRuntime(executionRuntime, false);
         return changeApplier.apply(executionRuntime);
+    }
+
+    /**
+     * Hook for injecting session-scoped dependencies into the execution runtime.
+     * <p>
+     * Subclasses should override this method to inject resources that need to be
+     * obtained fresh for each change execution, such as:
+     * <ul>
+     *   <li>Database connections from a connection pool</li>
+     *   <li>Client sessions for NoSQL databases</li>
+     *   <li>API clients or other session-specific resources</li>
+     * </ul>
+     * <p>
+     * The {@code isTransactional} parameter indicates whether the change will be
+     * executed within a transaction, allowing different dependencies to be injected
+     * based on the execution context.
+     *
+     * @param executionRuntime the runtime to enhance with dependencies
+     * @param isTransactional  true if the change will run in a transaction, false otherwise
+     */
+    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime, boolean isTransactional) {
     }
 
     @Override

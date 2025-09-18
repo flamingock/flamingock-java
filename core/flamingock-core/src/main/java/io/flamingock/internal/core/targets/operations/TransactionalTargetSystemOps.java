@@ -20,8 +20,35 @@ import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 
 import java.util.function.Function;
 
+/**
+ * Operational interface for target systems that support transactional operations.
+ * <p>
+ * Extends {@link TargetSystemOps} to add transactional change execution
+ * and audit marking capabilities. This interface is used by the execution
+ * engine when processing change units marked as transactional.
+ * <p>
+ * Implementations typically wrap a {@link io.flamingock.internal.core.targets.TransactionalTargetSystem}
+ * instance and delegate operations to it.
+ */
 public interface TransactionalTargetSystemOps extends TargetSystemOps, TargetSystemAuditMarker {
 
+    /**
+     * Applies a change operation within a transaction.
+     * <p>
+     * This method coordinates transactional execution by:
+     * <ul>
+     *   <li>Injecting session-scoped dependencies via the target system</li>
+     *   <li>Starting a transaction and injecting transaction-scoped dependencies</li>
+     *   <li>Executing the change function within the transaction</li>
+     *   <li>Committing or rolling back based on the operation result</li>
+     * </ul>
+     *
+     * @param <T>              the return type of the change operation
+     * @param changeApplier    the function that executes the actual change
+     * @param executionRuntime the runtime context for dependency resolution
+     * @return the result of the change operation
+     * @throws RuntimeException if the transaction fails
+     */
     <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime);
 
 }

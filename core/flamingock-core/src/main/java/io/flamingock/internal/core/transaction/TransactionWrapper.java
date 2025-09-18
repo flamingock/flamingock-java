@@ -19,8 +19,42 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 
 import java.util.function.Function;
 
+/**
+ * Manages transaction lifecycle for change operations.
+ * <p>
+ * Implementations are responsible for:
+ * <ul>
+ *   <li>Injecting transaction-scoped dependencies into the execution runtime</li>
+ *   <li>Starting a transaction before the operation</li>
+ *   <li>Committing the transaction on success</li>
+ *   <li>Rolling back the transaction on failure</li>
+ *   <li>Ensuring proper resource cleanup</li>
+ * </ul>
+ * <p>
+ * Transaction-scoped dependencies (e.g., database sessions, transaction handles)
+ * should be injected into the runtime after starting the transaction, making them
+ * available to the change unit during execution.
+ */
 public interface TransactionWrapper {
 
+    /**
+     * Wraps the execution of an operation within a transaction.
+     * <p>
+     * The implementation should follow this pattern:
+     * <ol>
+     *   <li>Start a transaction</li>
+     *   <li>Inject transaction-scoped dependencies into the runtime</li>
+     *   <li>Execute the operation</li>
+     *   <li>Commit on success or rollback on failure</li>
+     *   <li>Clean up resources</li>
+     * </ol>
+     *
+     * @param <T>                        the return type of the operation
+     * @param injectableContextProvider  the execution runtime for dependency injection
+     * @param operation                  the function to execute within the transaction
+     * @return the result of the operation
+     * @throws RuntimeException if the transaction fails
+     */
     <T> T wrapInTransaction(ExecutionRuntime injectableContextProvider, Function<ExecutionRuntime, T> operation);
 
 }

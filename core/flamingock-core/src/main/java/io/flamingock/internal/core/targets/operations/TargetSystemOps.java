@@ -21,10 +21,39 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 
 import java.util.function.Function;
 
+/**
+ * Operational interface for target systems used by the execution engine.
+ * <p>
+ * This interface provides the minimal API required by Flamingock's execution
+ * engine to interact with target systems. It abstracts the implementation
+ * details and exposes only the operations needed for change execution.
+ * <p>
+ * Implementations typically wrap an {@link io.flamingock.internal.core.targets.AbstractTargetSystem}
+ * instance and delegate operations to it.
+ */
 public interface TargetSystemOps extends TargetSystem {
 
+    /**
+     * Returns the type of operations supported by this target system.
+     *
+     * @return the operation type (e.g., NON_TX, TX_AUDIT_STORE_SYNC, TX_NON_SYNC)
+     */
     OperationType getOperationType();
 
+    /**
+     * Applies a change operation to this target system.
+     * <p>
+     * This method coordinates the execution of a change unit by:
+     * <ul>
+     *   <li>Injecting session-scoped dependencies via the target system</li>
+     *   <li>Executing the change function with the enhanced runtime</li>
+     * </ul>
+     *
+     * @param <T>              the return type of the change operation
+     * @param changeApplier    the function that executes the actual change
+     * @param executionRuntime the runtime context for dependency resolution
+     * @return the result of the change operation
+     */
     <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime);
 
 }

@@ -78,13 +78,12 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     }
 
     @Override
-    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime) {
         try {
             executionRuntime.addDependency(dataSource.getConnection());
         } catch (SQLException e) {
             throw new FlamingockException(e);
         }
-        return changeApplier.apply(executionRuntime);
     }
 
     @Override
