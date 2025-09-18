@@ -55,10 +55,6 @@ include("community:flamingock-auditstore-mongodb-sync")
 project(":community:flamingock-auditstore-mongodb-sync").name = "flamingock-auditstore-mongodb-sync"
 project(":community:flamingock-auditstore-mongodb-sync").projectDir = file("community/flamingock-auditstore-mongodb-sync")
 
-include("community:flamingock-auditstore-mongodb-springdata")
-project(":community:flamingock-auditstore-mongodb-springdata").name = "flamingock-auditstore-mongodb-springdata"
-project(":community:flamingock-auditstore-mongodb-springdata").projectDir = file("community/flamingock-auditstore-mongodb-springdata")
-
 include("community:flamingock-auditstore-couchbase")
 project(":community:flamingock-auditstore-couchbase").name = "flamingock-auditstore-couchbase"
 project(":community:flamingock-auditstore-couchbase").projectDir = file("community/flamingock-auditstore-couchbase")
