@@ -6,7 +6,7 @@ plugins {
 val jacksonVersion = "2.16.0"
 dependencies {
 
-    api("software.amazon.awssdk:dynamodb-enhanced:2.25.28")
+    api("software.amazon.awssdk:dynamodb-enhanced:2.12.0")
     
     // TestKit dependencies
     api(project(":utils:test-util"))
