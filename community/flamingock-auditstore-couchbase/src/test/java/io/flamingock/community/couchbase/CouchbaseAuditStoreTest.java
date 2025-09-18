@@ -93,7 +93,7 @@ class CouchbaseAuditStoreTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
-                    .setAuditStore(new CouchbaseAuditStore(cluster, bucket))
+                    .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
                     .addTargetSystem(new CouchbaseTargetSystem("couchbase")
                             .withCluster(cluster)
                             .withBucket(bucket))
@@ -142,7 +142,7 @@ class CouchbaseAuditStoreTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
-                        .setAuditStore(new CouchbaseAuditStore(cluster, bucket))
+                        .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
                         .addTargetSystem(new CouchbaseTargetSystem("couchbase")
                             .withCluster(cluster)
                             .withBucket(bucket))
@@ -189,7 +189,7 @@ class CouchbaseAuditStoreTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
-                    .setAuditStore(new CouchbaseAuditStore(cluster, bucket))
+                    .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
                         .addTargetSystem(new CouchbaseTargetSystem("couchbase")
                             .withCluster(cluster)
                             .withBucket(bucket))

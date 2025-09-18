@@ -38,16 +38,17 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     private CouchbaseAuditPersistence persistence;
     private CouchbaseLockService lockService;
     private final Cluster cluster;
-    private final Bucket bucket;
+    private final String bucketName;
+    private Bucket bucket;
     private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
     private boolean autoCreate = true;
 
 
-    public CouchbaseAuditStore(Cluster cluster, Bucket bucket) {
+    public CouchbaseAuditStore(Cluster cluster, String bucketName) {
         this.cluster = cluster;
-        this.bucket = bucket;
+        this.bucketName = bucketName;
     }
 
     public CouchbaseAuditStore withScopeName(String scopeName) {
@@ -111,12 +112,17 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
 
     private void validate() {
 
-        if (bucket == null) {
-            throw new FlamingockException("The 'bucket' instance is required.");
-        }
-
         if (cluster == null) {
             throw new FlamingockException("The 'cluster' instance is required.");
+        }
+
+        if (bucketName == null || bucketName.trim().isEmpty()) {
+            throw new FlamingockException("The 'bucketName' property is required.");
+        }
+
+        bucket = cluster.bucket(bucketName);
+        if (bucket == null) {
+            throw new FlamingockException("The 'bucketName' property is invalid. The cluster does not contain a bucket named '%s'", bucketName);
         }
 
         if (scopeName == null || scopeName.trim().isEmpty()) {
