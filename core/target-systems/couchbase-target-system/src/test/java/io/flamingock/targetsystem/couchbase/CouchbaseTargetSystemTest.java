@@ -103,6 +103,7 @@ public class CouchbaseTargetSystemTest {
                 couchbaseContainer.getConnectionString(),
                 couchbaseContainer.getUsername(),
                 couchbaseContainer.getPassword());
+
         bucket = cluster.bucket(BUCKET_NAME);
         bucket.waitUntilReady(Duration.ofSeconds(10));
         couchbaseTestHelper = new CouchbaseTestHelper(cluster, bucket, SCOPE_NAME, CommunityPersistenceConstants.DEFAULT_ON_GOING_TASKS_STORE_NAME);
@@ -171,13 +172,9 @@ public class CouchbaseTargetSystemTest {
             ));
 
 
-            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts")
-                    .withCluster(cluster)
-                    .withBucket(bucket)
+            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME)
                     .withScopeName(SCOPE_NAME);
             flamingockBuilder
-                    .addDependency(cluster)
-                    .addDependency(bucket)
                     .addTargetSystem(couchbaseTargetSystem)
                     .build()
                     .execute();
@@ -226,14 +223,10 @@ public class CouchbaseTargetSystemTest {
                     new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
             ));
 
-            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts")
-                    .withCluster(cluster)
-                    .withBucket(bucket)
+            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME)
                     .withScopeName(SCOPE_NAME);
 
             Runner runner = flamingockBuilder
-                    .addDependency(cluster)
-                    .addDependency(bucket)
                     .addTargetSystem(couchbaseTargetSystem)
                     .build();
 
@@ -286,14 +279,10 @@ public class CouchbaseTargetSystemTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
             ));
 
-            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts")
-                    .withCluster(cluster)
-                    .withBucket(bucket)
+            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME)
                     .withScopeName(SCOPE_NAME);
 
             flamingockBuilder
-                    .addDependency(cluster)
-                    .addDependency(bucket)
                     .addTargetSystem(couchbaseTargetSystem)
                     .build()
                     .execute();

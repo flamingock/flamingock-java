@@ -94,9 +94,7 @@ class CouchbaseAuditStoreTest {
 
             FlamingockFactory.getCommunityBuilder()
                     .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
-                    .addTargetSystem(new CouchbaseTargetSystem("couchbase")
-                            .withCluster(cluster)
-                            .withBucket(bucket))
+                    .addTargetSystem(new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME))
                     .addDependency(testCollection) // for test purpose only
                     .build()
                     .run();
@@ -143,9 +141,7 @@ class CouchbaseAuditStoreTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                         .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
-                        .addTargetSystem(new CouchbaseTargetSystem("couchbase")
-                            .withCluster(cluster)
-                            .withBucket(bucket))
+                        .addTargetSystem(new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME))
                         .addDependency(testCollection) // for test purpose only
                         .build()
                         .run();
@@ -190,9 +186,7 @@ class CouchbaseAuditStoreTest {
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                     .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
-                        .addTargetSystem(new CouchbaseTargetSystem("couchbase")
-                            .withCluster(cluster)
-                            .withBucket(bucket))
+                        .addTargetSystem(new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME))
                         .addDependency(testCollection) // for test purpose only
                         .build()
                         .run();
