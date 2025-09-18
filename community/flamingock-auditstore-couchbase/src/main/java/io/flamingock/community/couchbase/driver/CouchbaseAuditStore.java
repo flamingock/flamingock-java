@@ -18,7 +18,6 @@ package io.flamingock.community.couchbase.driver;
 import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.couchbase.internal.CouchbaseLockService;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
@@ -103,11 +102,6 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
                     lockRepositoryName);
         }
         return lockService;
-    }
-
-    @Override
-    public TargetSystem getTargetSystem() {
-        return null;
     }
 
     private void validate() {

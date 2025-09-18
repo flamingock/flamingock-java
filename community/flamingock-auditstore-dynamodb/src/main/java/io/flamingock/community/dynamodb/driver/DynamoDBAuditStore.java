@@ -15,7 +15,6 @@
  */
 package io.flamingock.community.dynamodb.driver;
 
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.dynamodb.internal.DynamoDBLockService;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
@@ -104,11 +103,6 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
                     writeCapacityUnits);
         }
         return lockService;
-    }
-
-    @Override
-    public TargetSystem getTargetSystem() {
-        return null;
     }
 
     private void validate() {

@@ -20,7 +20,6 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.mongodb.sync.internal.MongoSyncAuditPersistence;
 import io.flamingock.community.mongodb.sync.internal.MongoSyncLockService;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -127,11 +126,6 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
 
         }
         return lockService;
-    }
-
-    @Override
-    public TargetSystem getTargetSystem() {
-        return null;
     }
 
     private void validate() {

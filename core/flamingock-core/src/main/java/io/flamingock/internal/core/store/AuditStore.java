@@ -15,19 +15,10 @@
  */
 package io.flamingock.internal.core.store;
 
-import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
 
 public interface AuditStore<PERSISTENCE extends AuditPersistence> extends ContextInitializable {
-    String DEFAULT_AUDIT_STORE_TARGET_SYSTEM = "default-audit-store-target-system";
-
 
     PERSISTENCE getPersistence();
-
-    default TargetSystem getTargetSystem() {
-        return new DefaultTargetSystem(DEFAULT_AUDIT_STORE_TARGET_SYSTEM);
-    }
-
 }
