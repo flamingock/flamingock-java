@@ -18,9 +18,11 @@ package io.flamingock.internal.core.runtime;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.Nullable;
 import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.common.core.context.ContextProvider;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.common.core.context.InjectableContextProvider;
+import io.flamingock.internal.common.core.context.DependencyInjectable;
+import io.flamingock.internal.common.core.context.LayeredDependencyContext;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
@@ -46,17 +48,18 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class ExecutionRuntime implements InjectableContextProvider {
+public final class ExecutionRuntime implements ContextProvider, DependencyInjectable, LayeredDependencyContext {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Runtime");
     private static final Function<Parameter, String> parameterNameProvider = parameter -> parameter.isAnnotationPresent(Named.class)
             ? parameter.getAnnotation(Named.class).value()
             : null;
-    private String sessionId;
     private final Set<Class<?>> nonProxyableTypes = Collections.emptySet();
-    private final Context dependencyContext;
     private final LockGuardProxyFactory proxyFactory;
     private final boolean isNativeImage;
+
+    private String sessionId;
+    private Context dependencyContext;
 
     private ExecutionRuntime(String sessionId,
                              LockGuardProxyFactory proxyFactory,
@@ -72,13 +75,19 @@ public final class ExecutionRuntime implements InjectableContextProvider {
         return new Builder();
     }
 
+    public String getSessionId() {
+        return sessionId;
+    }
+
     @Override
     public ContextResolver getContext() {
         return dependencyContext;
     }
 
-    public String getSessionId() {
-        return sessionId;
+    @Override
+    public void addContextLayer(ContextResolver contextOnTop) {
+        Context priorityContext = new PriorityContext(new SimpleContext(), contextOnTop);
+        dependencyContext = new PriorityContext(priorityContext, dependencyContext);
     }
 
     @Override

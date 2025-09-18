@@ -15,11 +15,12 @@
  */
 package io.flamingock.internal.core.targets;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
+import io.flamingock.internal.common.core.context.ContextProvider;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.util.Property;
@@ -49,7 +50,8 @@ import java.util.function.Function;
 
 public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<HOLDER>>
         implements
-        ContextDecoratorTargetSystem,
+        TargetSystem,
+        ContextProvider,
         ContextConfigurable<HOLDER> {
     private final String id;
 
@@ -72,8 +74,8 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
     }
 
     @Override
-    public Context decorateOnTop(ContextResolver baseContext) {
-        return new PriorityContext(targetSystemContext, baseContext);
+    public ContextResolver getContext() {
+        return targetSystemContext;
     }
 
     @Override

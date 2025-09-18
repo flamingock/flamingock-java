@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.targets.operations;
 
-import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
@@ -37,18 +36,14 @@ public class TargetSystemOpsImpl implements TargetSystemOps {
     }
 
     @Override
-    public <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+    public final <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
+        executionRuntime.addContextLayer(targetSystem.getContext());
         return targetSystem.applyChange(changeApplier, executionRuntime);
     }
 
     @Override
     public String getId() {
         return targetSystem.getId();
-    }
-
-    @Override
-    public ContextResolver decorateOnTop(ContextResolver baseContext) {
-        return targetSystem.decorateOnTop(baseContext);
     }
 
 }

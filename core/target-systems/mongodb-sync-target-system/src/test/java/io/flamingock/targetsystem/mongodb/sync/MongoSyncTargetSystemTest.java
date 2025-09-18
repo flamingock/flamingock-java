@@ -166,7 +166,6 @@ public class MongoSyncTargetSystemTest {
                     .withMongoClient(mongoClient)
                     .withDatabase(testDatabase);
             flamingockBuilder
-                    .addDependency(testDatabase)
                     .addTargetSystem(mongoDBTargetSystem)
                     .build()
                     .execute();

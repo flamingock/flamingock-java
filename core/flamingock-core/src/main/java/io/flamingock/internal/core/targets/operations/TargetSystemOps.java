@@ -15,13 +15,13 @@
  */
 package io.flamingock.internal.core.targets.operations;
 
+import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.ContextDecoratorTargetSystem;
 
 import java.util.function.Function;
 
-public interface TargetSystemOps extends ContextDecoratorTargetSystem {
+public interface TargetSystemOps extends TargetSystem {
 
     OperationType getOperationType();
 

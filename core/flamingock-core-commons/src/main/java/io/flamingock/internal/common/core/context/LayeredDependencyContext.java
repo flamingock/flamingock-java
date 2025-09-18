@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
  */
 package io.flamingock.internal.common.core.context;
 
-/**
- * Combines the ability to provide a context with the capability to inject dependencies into it.
- */
-public interface InjectableContextProvider extends ContextProvider, DependencyInjectable {
-    // No additional methods needed; just a marker for combined behavior
+public interface LayeredDependencyContext {
+
+    void addContextLayer(ContextResolver contextOnTop);
 }
