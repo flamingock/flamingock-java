@@ -159,9 +159,7 @@ public class DynamoDBCloudTargetSystemTest {
                             new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
-            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")
-                .withDynamoDBClient(dynamoDBTestHelper.getDynamoDbClient());
-
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDbClient());
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
@@ -218,8 +216,7 @@ public class DynamoDBCloudTargetSystemTest {
                             new AuditRequestExpectation(executionId, "unhappy-insert-clients", ROLLED_BACK)
                     ).start();
 
-            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")
-                .withDynamoDBClient(dynamoDBTestHelper.getDynamoDbClient());
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDbClient());
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -280,8 +277,7 @@ public class DynamoDBCloudTargetSystemTest {
                             new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
-            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts")
-                .withDynamoDBClient(dynamoDBTestHelper.getDynamoDbClient());
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDbClient());
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(

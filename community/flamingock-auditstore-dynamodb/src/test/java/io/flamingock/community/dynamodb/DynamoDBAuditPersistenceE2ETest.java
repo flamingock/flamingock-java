@@ -103,8 +103,7 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
-                                        .withDynamoDBClient(sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
@@ -147,8 +146,7 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
-                                        .withDynamoDBClient(sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
@@ -194,13 +192,11 @@ class DynamoDBAuditPersistenceE2ETest {
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
-                        DynamoDBTargetSystem sharedTargetSystem = new DynamoDBTargetSystem("tx-shared-system")
-                                .withDynamoDBClient(sharedDynamoDbClient); // Same DynamoDbClient as audit storage
+                        DynamoDBTargetSystem sharedTargetSystem = new DynamoDBTargetSystem("tx-shared-system", sharedDynamoDbClient);
 
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
-                                        .withDynamoDBClient(sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(sharedTargetSystem)
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
@@ -236,10 +232,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
-                                        .withDynamoDBClient(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
-                                        .withDynamoDBClient(separateDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system", separateDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
@@ -264,8 +258,7 @@ class DynamoDBAuditPersistenceE2ETest {
     @Test
     @DisplayName("Should persist TX_SEPARATE_NO_MARKER txType for different DynamoDbClient scenario")
     void testTxSeparateNoMarkerScenario() {
-        DynamoDBTargetSystem separateTargetSystem = new DynamoDBTargetSystem("mongo-system")
-                .withDynamoDBClient(separateDynamoDbClient); // Different DynamoDbClient from audit storage
+        DynamoDBTargetSystem separateTargetSystem = new DynamoDBTargetSystem("mongo-system", separateDynamoDbClient); // Different DynamoDbClient from audit storage
 
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
@@ -277,8 +270,7 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
-                                        .withDynamoDBClient(sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(separateTargetSystem)
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
@@ -315,11 +307,9 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
-                                        .withDynamoDBClient(sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
-                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
-                                        .withDynamoDBClient(separateDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system", separateDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
@@ -357,10 +347,8 @@ class DynamoDBAuditPersistenceE2ETest {
                     assertDoesNotThrow(() -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb")
-                                        .withDynamoDBClient(sharedDynamoDbClient))
-                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system")
-                                        .withDynamoDBClient(separateDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("mongo-system",separateDynamoDbClient))
                                 .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();

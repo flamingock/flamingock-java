@@ -25,21 +25,24 @@ import io.flamingock.internal.core.transaction.TransactionWrapper;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-
 public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "flamingockOnGoingTasks";
 
     private TargetSystemAuditMarker taskStatusRepository;
-
     private DynamoDBTxWrapper txWrapper;
     private DynamoDbClient client;
 
-    public DynamoDBTargetSystem(String id) {
+    public DynamoDBTargetSystem(String id, DynamoDbClient dynamoDbClient) {
         super(id);
+        this.client = dynamoDbClient;
+        this.autoCreate = true;
+        targetSystemContext.addDependency(dynamoDbClient);
+        targetSystemContext.setProperty("autoCreate", true);
     }
 
-    public DynamoDBTargetSystem withDynamoDBClient(DynamoDbClient dynamoDbClient) {
-        targetSystemContext.addDependency(dynamoDbClient);
+    public DynamoDBTargetSystem withAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
+        targetSystemContext.setProperty("autoCreate", autoCreate);
         return this;
     }
 
@@ -56,12 +59,8 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
-        client = targetSystemContext.getDependencyValue(DynamoDbClient.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(DynamoDbClient.class));
-
         TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
         txWrapper = new DynamoDBTxWrapper(client, txManager);
-
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
                 ? new NoOpTargetSystemAuditMarker(this.getId())
@@ -85,5 +84,4 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
     }
-
 }
