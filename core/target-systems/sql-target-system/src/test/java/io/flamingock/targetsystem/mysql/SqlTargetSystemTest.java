@@ -157,8 +157,8 @@ public class SqlTargetSystemTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
             ));
 
-            SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts")
-                    .withDataSource(dataSource);
+            SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts", dataSource);
+
             flamingockBuilder
                     .addTargetSystem(targetSystem)
                     .build()
@@ -204,8 +204,8 @@ public class SqlTargetSystemTest {
                     new Trio<>(UnhappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
             ));
-            SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts")
-                    .withDataSource(dataSource);
+            SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts", dataSource);
+
             Runner runner = flamingockBuilder
                     .addTargetSystem(targetSystem)
                     .build();
@@ -253,8 +253,8 @@ public class SqlTargetSystemTest {
                     new Trio<>(HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
             ));
-            SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts")
-                    .withDataSource(dataSource);
+            SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts", dataSource);
+
             flamingockBuilder
                     .addTargetSystem(targetSystem)
                     .build()

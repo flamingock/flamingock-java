@@ -28,7 +28,6 @@ import io.flamingock.internal.core.transaction.TransactionWrapper;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.function.Function;
 
 public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "FLAMINGOCK_ONGOING_TASKS";
@@ -36,14 +35,10 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     private DataSource dataSource;
     private SqlTxWrapper txWrapper;
 
-    public SqlTargetSystem(String id) {
+    public SqlTargetSystem(String id, DataSource dataSource) {
         super(id);
-    }
-
-    public SqlTargetSystem withDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
         targetSystemContext.addDependency(dataSource);
-        return this;
     }
 
     @Override
@@ -51,13 +46,10 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
-        DataSource dataSource = targetSystemContext.getDependencyValue(DataSource.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(DataSource.class));
-
         TransactionManager<Connection> txManager = new TransactionManager<>(() -> {
             try {
                 return dataSource.getConnection();
-            }catch (SQLException e) {
+            } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -99,5 +91,4 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
     }
-
 }
