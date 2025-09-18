@@ -119,16 +119,4 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
     }
-
-    @Override
-    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
-        if (!(other instanceof CouchbaseTargetSystem)) {
-            return false;
-        }
-        Cluster otherCluster = ((CouchbaseTargetSystem) other).cluster;
-        if (otherCluster == null) {
-            return false;
-        }
-        return otherCluster.equals(this.cluster);
-    }
 }

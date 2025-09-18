@@ -86,16 +86,4 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
         return txWrapper;
     }
 
-    @Override
-    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
-        if(!(other instanceof DynamoDBTargetSystem)) {
-            return false;
-        }
-        DynamoDbClient otherClient = ((DynamoDBTargetSystem) other).client;
-        if(otherClient == null) {
-            return false;
-        }
-        return otherClient.equals(this.client);
-    }
-
 }

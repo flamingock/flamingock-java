@@ -150,16 +150,5 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
         return txWrapper;
     }
 
-    @Override
-    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
-        if (!(other instanceof MongoSyncTargetSystem)) {
-            return false;
-        }
-        MongoClient otherClient = ((MongoSyncTargetSystem) other).mongoClient;
-        if (otherClient == null) {
-            return false;
-        }
-        return otherClient.equals(this.mongoClient);
-    }
 
 }

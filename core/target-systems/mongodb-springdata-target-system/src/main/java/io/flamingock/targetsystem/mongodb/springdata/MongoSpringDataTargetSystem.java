@@ -125,16 +125,4 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
         return txWrapper;
     }
 
-    @Override
-    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
-        if(!(other instanceof MongoSpringDataTargetSystem)) {
-            return false;
-        }
-        MongoTemplate otherMongoTemplate = ((MongoSpringDataTargetSystem) other).mongoTemplate;
-        if(otherMongoTemplate == null) {
-            return false;
-        }
-        return otherMongoTemplate.equals(this.mongoTemplate);
-    }
-
 }

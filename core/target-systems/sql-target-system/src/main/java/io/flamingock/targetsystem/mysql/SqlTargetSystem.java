@@ -78,12 +78,16 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     }
 
     @Override
-    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime) {
-        try {
-            executionRuntime.addDependency(dataSource.getConnection());
-        } catch (SQLException e) {
-            throw new FlamingockException(e);
+    protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime, boolean isTransactional) {
+        //if transactional, the connection is injected in the wrapInTransaction
+        if(!isTransactional) {
+            try {
+                executionRuntime.addDependency(dataSource.getConnection());
+            } catch (SQLException e) {
+                throw new FlamingockException(e);
+            }
         }
+
     }
 
     @Override
@@ -96,15 +100,4 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         return txWrapper;
     }
 
-    @Override
-    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> other) {
-        if(!(other instanceof SqlTargetSystem)) {
-            return false;
-        }
-        DataSource otherDataSource = ((SqlTargetSystem) other).dataSource;
-        if(otherDataSource == null) {
-            return false;
-        }
-        return otherDataSource.equals(this.dataSource);
-    }
 }

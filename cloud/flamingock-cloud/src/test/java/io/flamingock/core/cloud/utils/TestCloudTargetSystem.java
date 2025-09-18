@@ -50,11 +50,6 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
     }
 
     @Override
-    public boolean isSameTxResourceAs(TransactionalTargetSystem<?> txInstance) {
-        return false;
-    }
-
-    @Override
     public void initialize(ContextResolver baseContext) {
 
     }
