@@ -32,7 +32,7 @@ val projectsToRelease = if (module != null) {
     val transactionerProjects = project.extra["transactionerProjects"] as Set<String>
     val templateProjects = project.extra["templateProjects"] as Set<String>
     val utilProjects = project.extra["utilProjects"] as Set<String>
-    
+
     when (releaseBundle) {
         "core" -> coreProjects
         "cloud" -> cloudProjects
@@ -47,79 +47,97 @@ val projectsToRelease = if (module != null) {
 }
 
 // JReleaser configuration
-jreleaser {
-    project {
-        description.set("Description should be here")
-        inceptionYear.set("2024")
-        authors.set(setOf("dieppa"))
+if (project != rootProject) {
+    tasks.named("jreleaserRelease") {
+        enabled = false
     }
-    gitRootSearch.set(true)
-    release {
-        github {
-            update {
-                enabled.set(true)
-                sections.set(setOf(UpdateSection.TITLE, UpdateSection.BODY, UpdateSection.ASSETS))
-            }
-            prerelease {
-                enabled.set(true)
-                pattern.set(".*-(beta|snapshot|alpha)\\$")
-            }
-            changelog {
-                enabled.set(true)
-                formatted.set(Active.ALWAYS)
-                sort.set(org.jreleaser.model.Changelog.Sort.DESC)
-                links.set(true)
-                preset.set("conventional-commits")
-                releaseName.set("Release {{tagName}}")
-                content.set("""
-                    ## Changelog
-                    {{changelogChanges}}
-                    {{changelogContributors}}
-                """.trimIndent())
-                categoryTitleFormat.set("### {{categoryTitle}}")
-                format.set(
-                    """|- {{commitShortHash}} 
-                       |{{#commitIsConventional}}
-                       |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
-                       |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
-                       |{{conventionalCommitDescription}}
-                       |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
-                       |{{/commitIsConventional}}
-                       |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
-                       |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}} 
-                       |({{contributorName}})
-                    |""".trimMargin().replace("\n", "").replace("\r", "")
-                )
-                contributors {
-                    enabled.set(true)
-                    format.set("- {{contributorName}} ({{contributorUsernameAsLink}})")
-                }
+} else {
+    tasks.register("copyReleaseFiles") {
+        dependsOn(":cli:flamingock-cli:assemble")
+        doLast {
+            mkdir("build/jreleaser/distributions")
+            copy {
+                from("cli/flamingock-cli/build/distributions/")
+                into("build/jreleaser/distributions/")
             }
         }
     }
-    
-    // Configure CLI distribution files for GitHub Releases
-    if (project.name.equals("flamingock-cli")) {
-        files {
-            artifact {
-                path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.zip"))
-                platform.set("cross-platform")
+    tasks.named("jreleaserRelease") {
+        dependsOn("copyReleaseFiles")
+    }
+
+    jreleaser {
+        project {
+            description.set("Description should be here")
+            inceptionYear.set("2024")
+            authors.set(setOf("dieppa"))
+        }
+        gitRootSearch.set(true)
+        release {
+            github {
+                update {
+                    enabled.set(true)
+                    sections.set(setOf(UpdateSection.TITLE, UpdateSection.BODY, UpdateSection.ASSETS))
+                }
+                prerelease {
+                    enabled.set(true)
+                    pattern.set(".*-(beta|snapshot|alpha)\\$")
+                }
+                changelog {
+                    enabled.set(true)
+                    formatted.set(Active.ALWAYS)
+                    sort.set(org.jreleaser.model.Changelog.Sort.DESC)
+                    links.set(true)
+                    preset.set("conventional-commits")
+                    releaseName.set("Release {{tagName}}")
+                    content.set("""
+                        ## Changelog
+                        {{changelogChanges}}
+                        {{changelogContributors}}
+                    """.trimIndent())
+                    categoryTitleFormat.set("### {{categoryTitle}}")
+                    format.set(
+                        """|- {{commitShortHash}}
+                           |{{#commitIsConventional}}
+                           |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
+                           |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
+                           |{{conventionalCommitDescription}}
+                           |{{#conventionalCommitBreakingChangeContent}} - *{{conventionalCommitBreakingChangeContent}}*{{/conventionalCommitBreakingChangeContent}}
+                           |{{/commitIsConventional}}
+                           |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
+                           |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}}
+                           |({{contributorName}})
+                        |""".trimMargin().replace("\n", "").replace("\r", "")
+                    )
+                    contributors {
+                        enabled.set(true)
+                        format.set("- {{contributorName}} ({{contributorUsernameAsLink}})")
+                    }
+                }
             }
-            artifact {
-                path.set(layout.buildDirectory.file("distributions/flamingock-${project.version}.tar.gz"))
-                platform.set("unix")
-            }
-            artifact {
-                path.set(layout.buildDirectory.file("distributions/checksums.txt"))
-                platform.set("checksums")
+
+            files {
+                active.set(org.jreleaser.model.Active.ALWAYS)
+                artifact {
+                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.zip"))
+                    platform.set("cross-platform")
+                }
+                artifact {
+                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.tar.gz"))
+                    platform.set("unix")
+                }
+                artifact {
+                    path.set(layout.buildDirectory.file("jreleaser/distributions/checksums.txt"))
+                    platform.set("checksums")
+                }
             }
         }
     }
 }
 
 // Release detection and management
-val isReleasing = gradle.startParameter.taskNames.any { 
-    it in listOf("jreleaserFullRelease", "jreleaserDeploy", "publish") 
+val isReleasing = gradle.startParameter.taskNames.any {
+    it in listOf("jreleaserFullRelease", "jreleaserDeploy", "publish")
 }
 
 if (isReleasing && projectsToRelease.contains(project.name)) {
@@ -139,20 +157,20 @@ fun Project.getIfAlreadyReleasedFromCentralPortal(): Boolean {
     val mavenPassword: String? = System.getenv("JRELEASER_MAVENCENTRAL_PASSWORD")
     val encodedCredentials: String? = if (mavenUsername != null && mavenPassword != null)
         Base64.getEncoder().encodeToString("$mavenUsername:$mavenPassword".toByteArray()) else null
-    
+
     val url = "https://central.sonatype.com/api/v1/publisher/published?namespace=${group}&name=$name&version=$version"
     val connection = URL(url).openConnection() as HttpURLConnection
     connection.requestMethod = "GET"
     connection.setRequestProperty("accept", "application/json")
     connection.setRequestProperty("Authorization", "Basic $encodedCredentials")
-    
+
     val responseCode = connection.responseCode
     val responseBody = if (responseCode == 200) {
         connection.inputStream.bufferedReader().use { it.readText() }
     } else {
         connection.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
     }
-    
+
     logger.debug("$name: response from Maven Publisher[$responseCode]: $responseBody")
     return if (responseCode == 200) {
         val map = JSONObject(responseBody).toMap()
