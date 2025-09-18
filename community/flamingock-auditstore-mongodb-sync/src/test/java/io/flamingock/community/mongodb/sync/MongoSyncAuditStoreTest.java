@@ -86,7 +86,7 @@ class MongoSyncAuditStoreTest {
     void setupEach() {
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         database = mongoClient.getDatabase("test");
-        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(database), mongoClient, database);
+        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(mongoClient, "test"), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
         mongoDBTestHelper = new MongoDBTestHelper(database);
@@ -110,7 +110,7 @@ class MongoSyncAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore(database))
+                        .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
                         .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                 .withMongoClient(mongoClient)
                                 .withDatabase(database))
@@ -145,7 +145,7 @@ class MongoSyncAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore(database))
+                        .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
                         .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                 .withMongoClient(mongoClient)
                                 .withDatabase(database))
@@ -185,7 +185,7 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore(database))
+                        .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
                             .addTargetSystem(new MongoSyncTargetSystem("mongodb")
                                 .withMongoClient(mongoClient)
                                 .withDatabase(database))

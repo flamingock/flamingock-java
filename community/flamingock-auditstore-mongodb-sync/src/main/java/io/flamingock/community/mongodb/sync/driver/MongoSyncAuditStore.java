@@ -18,6 +18,7 @@ package io.flamingock.community.mongodb.sync.driver;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.community.mongodb.sync.internal.MongoSyncAuditPersistence;
@@ -41,7 +42,9 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
     private CommunityConfigurable communityConfiguration;
     private MongoSyncAuditPersistence persistence;
     private MongoSyncLockService lockService;
-    private final MongoDatabase database;
+    private final MongoClient client;
+    private final String databaseName;
+    private MongoDatabase database;
     private String auditRepositoryName = DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = DEFAULT_LOCK_STORE_NAME;
     private ReadConcern readConcern = ReadConcern.MAJORITY;
@@ -50,8 +53,9 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
     private boolean autoCreate = true;
 
 
-    public MongoSyncAuditStore(MongoDatabase database) {
-        this.database = database;
+    public MongoSyncAuditStore(MongoClient client, String databaseName) {
+        this.client = client;
+        this.databaseName = databaseName;
     }
 
     public MongoSyncAuditStore withAuditRepositoryName(String auditRepositoryName) {
@@ -132,9 +136,14 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
 
     private void validate() {
 
-        if (database == null) {
-            throw new FlamingockException("The 'database' instance is required.");
+        if (client == null) {
+            throw new FlamingockException("The 'client' instance is required.");
         }
+
+        if (databaseName == null || databaseName.trim().isEmpty()) {
+            throw new FlamingockException("The 'databaseName' property is required.");
+        }
+        database = client.getDatabase(databaseName);
 
         if (auditRepositoryName == null || auditRepositoryName.trim().isEmpty()) {
             throw new FlamingockException("The 'auditRepositoryName' property is required.");

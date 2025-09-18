@@ -148,12 +148,8 @@ public class AuditService {
         
         // Create MongoDB clients
         MongoClient mongoClient = MongoClientFactory.createMongoClient(mongoConfig);
-        MongoDatabase mongoDatabase = MongoClientFactory.createMongoDatabase(mongoClient, mongoConfig);
-        
-        // Add clients to context as dependencies
-        context.addDependency(new Dependency(MongoDatabase.class, mongoDatabase));
-        
-        return new MongoSyncAuditStore(mongoDatabase);
+
+        return new MongoSyncAuditStore(mongoClient, mongoConfig.getDatabase());
     }
 
     private AuditStore<?> createDynamoAuditStore(Context context) {
@@ -161,9 +157,6 @@ public class AuditService {
         
         // Create DynamoDB client
         DynamoDbClient dynamoClient = DynamoDBClientFactory.createDynamoDbClient(dynamoConfig);
-        
-        // Add client to context as dependency
-        context.addDependency(new Dependency(DynamoDbClient.class, dynamoClient));
         
         return new DynamoDBAuditStore(dynamoClient);
     }
