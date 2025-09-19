@@ -29,14 +29,14 @@ public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD
 
     void setConfiguration(SHARED_CONFIG_FIELD configuration);
 
-    void setApply(APPLY_FIELD apply);
+    void setApplyPayload(APPLY_FIELD applyPayload);
 
-    void setRollback(ROLLBACK_FIELD rollback);
+    void setRollbackPayload(ROLLBACK_FIELD rollbackPayload);
 
     Class<SHARED_CONFIG_FIELD> getConfigurationClass();
 
-    Class<APPLY_FIELD> getApplyClass();
+    Class<APPLY_FIELD> getApplyPayloadClass();
 
-    Class<ROLLBACK_FIELD> getRollbackClass();
+    Class<ROLLBACK_FIELD> getRollbackPayloadClass();
 
 }

@@ -49,19 +49,19 @@ class TemplateLoadedTaskBuilderTest {
         public void setConfiguration(Object configuration) {}
         
         @Override
-        public void setApply(Object apply) {}
-        
+        public void setApplyPayload(Object applyPayload) {}
+
         @Override
-        public void setRollback(Object rollback) {}
+        public void setRollbackPayload(Object rollbackPayload) {}
         
         @Override
         public Class<Object> getConfigurationClass() { return Object.class; }
         
         @Override
-        public Class<Object> getApplyClass() { return Object.class; }
-        
+        public Class<Object> getApplyPayloadClass() { return Object.class; }
+
         @Override
-        public Class<Object> getRollbackClass() { return Object.class; }
+        public Class<Object> getRollbackPayloadClass() { return Object.class; }
         
         @Override
         public Collection<Class<?>> getReflectiveClasses() { return Collections.emptyList(); }

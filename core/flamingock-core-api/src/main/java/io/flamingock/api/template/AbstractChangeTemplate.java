@@ -26,13 +26,13 @@ import java.util.Set;
 public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
 
     private final Class<SHARED_CONFIGURATION_FIELD> configurationClass;
-    private final Class<APPLY_FIELD> applyClass;
-    private final Class<ROLLBACK_FIELD> rollbackClass;
+    private final Class<APPLY_FIELD> applyPayloadClass;
+    private final Class<ROLLBACK_FIELD> rollbackPayloadClass;
     protected String changeId;
     protected boolean isTransactional;
     protected SHARED_CONFIGURATION_FIELD configuration;
-    protected APPLY_FIELD apply;
-    protected ROLLBACK_FIELD rollback;
+    protected APPLY_FIELD applyPayload;
+    protected ROLLBACK_FIELD rollbackPayload;
 
 
     private final Set<Class<?>> reflectiveClasses;
@@ -50,12 +50,12 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
             }
 
             this.configurationClass = (Class<SHARED_CONFIGURATION_FIELD>) typeArgs[0];
-            this.applyClass = (Class<APPLY_FIELD>) typeArgs[1];
-            this.rollbackClass = (Class<ROLLBACK_FIELD>) typeArgs[2];
+            this.applyPayloadClass = (Class<APPLY_FIELD>) typeArgs[1];
+            this.rollbackPayloadClass = (Class<ROLLBACK_FIELD>) typeArgs[2];
 
             reflectiveClasses.add(configurationClass);
-            reflectiveClasses.add(applyClass);
-            reflectiveClasses.add(rollbackClass);
+            reflectiveClasses.add(applyPayloadClass);
+            reflectiveClasses.add(rollbackPayloadClass);
         } catch (ClassCastException e) {
             throw new IllegalStateException("Generic type arguments for a Template must be concrete types (classes, interfaces, or primitive wrappers like String, Integer, etc.): " + e.getMessage(), e);
         } catch (Exception e) {
@@ -84,13 +84,13 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     }
 
     @Override
-    public void setApply(APPLY_FIELD apply) {
-        this.apply = apply;
+    public void setApplyPayload(APPLY_FIELD applyPayload) {
+        this.applyPayload = applyPayload;
     }
 
     @Override
-    public void setRollback(ROLLBACK_FIELD rollback) {
-        this.rollback = rollback;
+    public void setRollbackPayload(ROLLBACK_FIELD rollbackPayload) {
+        this.rollbackPayload = rollbackPayload;
     }
 
     @Override
@@ -99,13 +99,13 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     }
 
     @Override
-    public Class<APPLY_FIELD> getApplyClass() {
-        return applyClass;
+    public Class<APPLY_FIELD> getApplyPayloadClass() {
+        return applyPayloadClass;
     }
 
     @Override
-    public Class<ROLLBACK_FIELD> getRollbackClass() {
-        return rollbackClass;
+    public Class<ROLLBACK_FIELD> getRollbackPayloadClass() {
+        return rollbackPayloadClass;
     }
 
 }

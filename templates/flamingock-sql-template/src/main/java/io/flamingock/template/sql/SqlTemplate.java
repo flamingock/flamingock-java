@@ -30,12 +30,12 @@ public class SqlTemplate extends AbstractChangeTemplate<Void, String, String> {
 
     @Apply
     public void execution(Connection connection) {
-        execute(connection, apply);
+        execute(connection, applyPayload);
     }
 
     @Rollback
     public void rollback(Connection connection) {
-        execute(connection, rollback);
+        execute(connection, rollbackPayload);
     }
 
     private static void execute(Connection connection, String sql) {
