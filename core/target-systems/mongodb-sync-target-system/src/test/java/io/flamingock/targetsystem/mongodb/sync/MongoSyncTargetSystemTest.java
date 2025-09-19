@@ -162,9 +162,8 @@ public class MongoSyncTargetSystemTest {
             ));
 
 
-            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts")
-                    .withMongoClient(mongoClient)
-                    .withDatabase(testDatabase);
+            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
             flamingockBuilder
                     .addTargetSystem(mongoDBTargetSystem)
                     .build()
@@ -196,7 +195,7 @@ public class MongoSyncTargetSystemTest {
         try (
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
-            MongoSyncTargetSystem mongoTargetSystem = new MongoSyncTargetSystem("mongodb-ts").withMongoClient(mongoClient).withDatabase(testDatabase);
+            MongoSyncTargetSystem mongoTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
@@ -218,11 +217,9 @@ public class MongoSyncTargetSystemTest {
                     new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
 
-            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts")
-                    .withMongoClient(mongoClient)
-                    .withDatabase(testDatabase);
+            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
             Runner runner = flamingockBuilder
-                    .addDependency(testDatabase)
                     .addTargetSystem(mongoDBTargetSystem)
                     .build();
 
@@ -258,7 +255,7 @@ public class MongoSyncTargetSystemTest {
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
 
         ) {
-            MongoSyncTargetSystem mongoTargetSystem = new MongoSyncTargetSystem("mongodb-ts").withMongoClient(mongoClient).withDatabase(testDatabase);
+            MongoSyncTargetSystem mongoTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
             mongoDBTestHelper.insertOngoingExecution("insert-clients");
             mockRunnerServer
@@ -278,11 +275,9 @@ public class MongoSyncTargetSystemTest {
                     new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
-            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts")
-                    .withMongoClient(mongoClient)
-                    .withDatabase(testDatabase);
+            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+
             flamingockBuilder
-                    .addDependency(testDatabase)
                     .addTargetSystem(mongoDBTargetSystem)
                     .build()
                     .execute();

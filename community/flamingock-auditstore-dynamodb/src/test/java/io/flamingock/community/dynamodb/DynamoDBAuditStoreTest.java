@@ -105,7 +105,6 @@ class DynamoDBAuditStoreTest {
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(client))
-                            .addDependency(client)
                             .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
                             .build()
                             .run();
@@ -133,14 +132,12 @@ class DynamoDBAuditStoreTest {
                     // Run pipeline twice to verify repeated execution
                     FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(client))
-                            .addDependency(client)
                             .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
                             .build()
                             .run();
 
                     FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(client))
-                            .addDependency(client)
                             .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
                             .build()
                             .run();
@@ -181,7 +178,6 @@ class DynamoDBAuditStoreTest {
                     assertThrows(PipelineExecutionException.class, () -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(client))
-                                .addDependency(client)
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
                                 .build()
                                 .run();
@@ -248,7 +244,6 @@ class DynamoDBAuditStoreTest {
                                     .withAutoCreate(false)
                                     .withAuditRepositoryName(CUSTOM_AUDIT_REPOSITORY_NAME)
                                     .withLockRepositoryName(CUSTOM_LOCK_REPOSITORY_NAME))
-                            .addDependency(client)
                             .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
                             .build()
                             .run();

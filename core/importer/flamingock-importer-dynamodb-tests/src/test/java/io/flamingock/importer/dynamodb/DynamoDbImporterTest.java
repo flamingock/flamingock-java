@@ -129,7 +129,6 @@ public class DynamoDbImporterTest {
         mongockChangeLogsHelper.insertChangeEntries(entries);
 
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .addDependency(client)
                 .setAuditStore(new DynamoDBAuditStore(client))
                 .build();
 
@@ -180,7 +179,6 @@ public class DynamoDbImporterTest {
     @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void failIfEmptyOrigin() {
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .addDependency(client)
                 .setAuditStore(new DynamoDBAuditStore(client))
                 .build();
 

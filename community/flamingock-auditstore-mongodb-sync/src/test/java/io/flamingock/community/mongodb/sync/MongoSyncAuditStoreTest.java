@@ -111,11 +111,7 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
-                                .withMongoClient(mongoClient)
-                                .withDatabase(database))
-                        .addDependency(mongoClient)
-                        .addDependency(database)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb", mongoClient, "test"))
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -146,11 +142,7 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoSyncTargetSystem("mongodb")
-                                .withMongoClient(mongoClient)
-                                .withDatabase(database))
-                        .addDependency(mongoClient)
-                        .addDependency(database)
+                        .addTargetSystem(new MongoSyncTargetSystem("mongodb", mongoClient, "test"))
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -186,11 +178,7 @@ class MongoSyncAuditStoreTest {
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
                         .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
-                            .addTargetSystem(new MongoSyncTargetSystem("mongodb")
-                                .withMongoClient(mongoClient)
-                                .withDatabase(database))
-                            .addDependency(mongoClient)
-                            .addDependency(database)
+                            .addTargetSystem(new MongoSyncTargetSystem("mongodb", mongoClient, "test"))
                             .build()
                             .run();
                 }))

@@ -100,8 +100,6 @@ public class MongoDbImporterTest {
         mongockTestHelper.setupBasicScenario();
 
         Runner flamingock = testKit.createBuilder()
-                .addDependency(mongoClient)
-                .addDependency(database)
                 .build();
 
         flamingock.run();
@@ -151,8 +149,6 @@ public class MongoDbImporterTest {
         //adds the Mongock
 
         Runner flamingock = testKit.createBuilder()
-                .addDependency(mongoClient)
-                .addDependency(database)
                 .build();
 
         //TODO should check error message, but currently it return the summary text

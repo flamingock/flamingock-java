@@ -22,13 +22,13 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-
 
 public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "flamingockOnGoingTasks";
@@ -37,42 +37,47 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     private final ReadConcern DEFAULT_READ_CONCERN = ReadConcern.MAJORITY;
     private final ReadPreference DEFAULT_READ_PREFERENCE = ReadPreference.primary();
 
+    private final MongoClient mongoClient;
+    private final String databaseName;
+    private MongoDatabase database;
+    private WriteConcern writeConcern = DEFAULT_WRITE_CONCERN;
+    private ReadConcern readConcern = DEFAULT_READ_CONCERN;
+    private ReadPreference readPreference = DEFAULT_READ_PREFERENCE;
+    private boolean autoCreate = true;
 
     private TargetSystemAuditMarker taskStatusRepository;
-
     private MongoSyncTxWrapper txWrapper;
-    private MongoClient mongoClient;
-    private MongoDatabase database;
-    private WriteConcern writeConcern = null;
-    private ReadConcern readConcern = null;
-    private ReadPreference readPreference = null;
 
-    public MongoSyncTargetSystem(String id) {
+    public MongoSyncTargetSystem(String id, MongoClient mongoClient, String databaseName) {
         super(id);
-    }
-
-    public MongoSyncTargetSystem withMongoClient(MongoClient mongoClient) {
+        this.mongoClient = mongoClient;
+        this.databaseName = databaseName;
+        this.validate();
         targetSystemContext.addDependency(mongoClient);
-        return this;
-    }
-
-    public MongoSyncTargetSystem withDatabase(MongoDatabase database) {
         targetSystemContext.addDependency(database);
-        return this;
+        targetSystemContext.setProperty("autoCreate", true);
     }
 
     public MongoSyncTargetSystem withReadConcern(ReadConcern readConcern) {
+        this.readConcern = readConcern;
         targetSystemContext.addDependency(readConcern);
         return this;
     }
 
     public MongoSyncTargetSystem withReadPreference(ReadPreference readPreference) {
+        this.readPreference = readPreference;
         targetSystemContext.addDependency(readPreference);
         return this;
     }
 
     public MongoSyncTargetSystem withWriteConcern(WriteConcern writeConcern) {
+        this.writeConcern = writeConcern;
         targetSystemContext.addDependency(writeConcern);
+        return this;
+    }
+
+    public MongoSyncTargetSystem withAutoCreate(boolean autoCreate) {
+        this.autoCreate = autoCreate;
         return this;
     }
 
@@ -98,31 +103,12 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.validate();
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
-        mongoClient = targetSystemContext.getDependencyValue(MongoClient.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(MongoClient.class));
-
-        database = targetSystemContext.getDependencyValue(MongoDatabase.class)
-                .orElseGet(() -> baseContext.getRequiredDependencyValue(MongoDatabase.class));
-
-        readConcern = targetSystemContext.getDependencyValue(ReadConcern.class)
-                .orElseGet(() -> baseContext.getDependencyValue(ReadConcern.class)
-                        .orElse(DEFAULT_READ_CONCERN));
-
-        readPreference = targetSystemContext.getDependencyValue(ReadPreference.class)
-                .orElseGet(() -> baseContext.getDependencyValue(ReadPreference.class)
-                        .orElse(DEFAULT_READ_PREFERENCE));
-
-        writeConcern = targetSystemContext.getDependencyValue(WriteConcern.class)
-                .orElseGet(() -> baseContext.getDependencyValue(WriteConcern.class)
-                        .orElseGet(() -> DEFAULT_WRITE_CONCERN));
-
-
         TransactionManager<ClientSession> txManager = new TransactionManager<>(mongoClient::startSession);
         txWrapper = new MongoSyncTxWrapper(txManager);
-
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
                 ? new NoOpTargetSystemAuditMarker(this.getId())
@@ -133,6 +119,26 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
                 .withReadPreference(readPreference)
                 .withWriteConcern(writeConcern)
                 .build();
+    }
+
+    private void validate() {
+        if (mongoClient == null) {
+            throw new FlamingockException("The 'mongoClient' instance is required.");
+        }
+        if (databaseName == null || databaseName.trim().isEmpty()) {
+            throw new FlamingockException("The 'databaseName' property is required.");
+        }
+        database = mongoClient.getDatabase(databaseName);
+
+        if (readConcern == null) {
+            throw new FlamingockException("The 'readConcern' property is required.");
+        }
+        if (readPreference == null) {
+            throw new FlamingockException("The 'readPreference' property is required.");
+        }
+        if (writeConcern == null) {
+            throw new FlamingockException("The 'writeConcern' property is required.");
+        }
     }
 
     @Override
@@ -149,6 +155,4 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
     }
-
-
 }

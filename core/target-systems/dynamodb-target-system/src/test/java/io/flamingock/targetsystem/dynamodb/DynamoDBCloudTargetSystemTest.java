@@ -167,7 +167,6 @@ public class DynamoDBCloudTargetSystemTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             flamingockBuilder
-                    .addDependency(client)
                     .addTargetSystem(dynamoTargetSystem)
                     .build()
                     .execute();
@@ -225,7 +224,6 @@ public class DynamoDBCloudTargetSystemTest {
                     new Trio<>(UnhappyInsertionClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             Runner runner = flamingockBuilder
-                    .addDependency(client)
                     .addTargetSystem(dynamoTargetSystem)
                     .build();
 
@@ -286,7 +284,6 @@ public class DynamoDBCloudTargetSystemTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             flamingockBuilder
-                    .addDependency(client)
                     .addTargetSystem(dynamoTargetSystem)
                     .build()
                     .execute();
