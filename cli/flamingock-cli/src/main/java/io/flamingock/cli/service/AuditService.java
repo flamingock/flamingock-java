@@ -156,7 +156,7 @@ public class AuditService {
         DatabaseConfig.DynamoDBConfig dynamoConfig = config.getAudit().getDynamodb();
 
         // Create DynamoDB client
-        DynamoDbClient dynamoClient = DynamoDBClientFactory.createDynamoDbClient(dynamoConfig);
+        DynamoDbClient dynamoClient = DynamoDBClientFactory.createDynamoDBClient(dynamoConfig);
 
         return new DynamoDBAuditStore(dynamoClient);
     }

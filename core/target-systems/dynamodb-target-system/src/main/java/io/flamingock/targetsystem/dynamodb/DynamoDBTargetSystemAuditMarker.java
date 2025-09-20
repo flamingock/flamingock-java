@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import static java.util.Collections.emptyList;
 
 
-public class DynamoDbTargetSystemAuditMarker implements TargetSystemAuditMarker {
+public class DynamoDBTargetSystemAuditMarker implements TargetSystemAuditMarker {
     protected static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditMarker");
 
     public static final String OPERATION = "operation";
@@ -43,12 +43,12 @@ public class DynamoDbTargetSystemAuditMarker implements TargetSystemAuditMarker 
     private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
     protected DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable;
 
-    public static Builder builder(DynamoDbClient dynamoDbClient,
+    public static Builder builder(DynamoDbClient dynamoDBClient,
                                   TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
-        return new Builder(dynamoDbClient, txManager);
+        return new Builder(dynamoDBClient, txManager);
     }
 
-    public DynamoDbTargetSystemAuditMarker(DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable,
+    public DynamoDBTargetSystemAuditMarker(DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable,
                                            TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
         this.onGoingTaskStatusTable = onGoingTaskStatusTable;
         this.txManager = txManager;
@@ -99,8 +99,8 @@ public class DynamoDbTargetSystemAuditMarker implements TargetSystemAuditMarker 
         private boolean autoCreate = true;
         protected DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable;
 
-        public Builder(DynamoDbClient dynamoDbClient, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
-            dynamoDBUtil = new DynamoDBUtil(dynamoDbClient);
+        public Builder(DynamoDbClient dynamoDBClient, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
+            dynamoDBUtil = new DynamoDBUtil(dynamoDBClient);
             this.txManager = txManager;
         }
 
@@ -114,7 +114,7 @@ public class DynamoDbTargetSystemAuditMarker implements TargetSystemAuditMarker 
             return this;
         }
 
-        public DynamoDbTargetSystemAuditMarker build() {
+        public DynamoDBTargetSystemAuditMarker build() {
             if (autoCreate) {
                 dynamoDBUtil.createTable(
                         dynamoDBUtil.getAttributeDefinitions("taskId", null),
@@ -130,7 +130,7 @@ public class DynamoDbTargetSystemAuditMarker implements TargetSystemAuditMarker 
                 this.onGoingTaskStatusTable = dynamoDBUtil.getEnhancedClient().table(this.tableName, TableSchema.fromBean(OngoingTaskEntity.class));
             }
 
-            return new DynamoDbTargetSystemAuditMarker(this.onGoingTaskStatusTable, txManager);
+            return new DynamoDBTargetSystemAuditMarker(this.onGoingTaskStatusTable, txManager);
         }
     }
 }

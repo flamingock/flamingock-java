@@ -32,11 +32,11 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     private DynamoDBTxWrapper txWrapper;
     private DynamoDbClient client;
 
-    public DynamoDBTargetSystem(String id, DynamoDbClient dynamoDbClient) {
+    public DynamoDBTargetSystem(String id, DynamoDbClient dynamoDBClient) {
         super(id);
-        this.client = dynamoDbClient;
+        this.client = dynamoDBClient;
         this.autoCreate = true;
-        targetSystemContext.addDependency(dynamoDbClient);
+        targetSystemContext.addDependency(dynamoDBClient);
         targetSystemContext.setProperty("autoCreate", true);
     }
 
@@ -64,7 +64,7 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
                 ? new NoOpTargetSystemAuditMarker(this.getId())
-                : DynamoDbTargetSystemAuditMarker.builder(client, txManager)
+                : DynamoDBTargetSystemAuditMarker.builder(client, txManager)
                 .setTableName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
                 .build();

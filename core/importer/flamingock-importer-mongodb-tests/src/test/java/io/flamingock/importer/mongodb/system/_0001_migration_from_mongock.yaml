@@ -1,6 +1,6 @@
 id: migration-from-mongock
 order: 0001
 transactional: false
-template: MongoDbImporterChangeTemplate
+template: MongoDBImporterChangeTemplate
 configuration:
   origin: mongockChangeLogs

@@ -90,7 +90,7 @@ public final class DynamoDBUtil {
     }
 
     public void createTable(
-            DynamoDbClient dynamoDbClient,
+            DynamoDbClient dynamoDBClient,
             List<AttributeDefinition> attributeDefinitions,
             List<KeySchemaElement> keySchemas,
             ProvisionedThroughput provisionedVal,
@@ -114,12 +114,12 @@ public final class DynamoDBUtil {
             }
 
             DescribeTableRequest tableRequest;
-            dynamoDbClient.createTable(createBuilder.build());
+            dynamoDBClient.createTable(createBuilder.build());
             tableRequest = DescribeTableRequest.builder()
                     .tableName(tableName)
                     .build();
 
-            dynamoDbClient
+            dynamoDBClient
                     .waiter()
                     .waitUntilTableExists(tableRequest).matched();
         } catch (ResourceInUseException e) {

@@ -29,33 +29,33 @@ import java.net.URI;
  * Provides standardized DynamoDB Local container setup and client creation.
  */
 public class DynamoDBTestContainer {
-    
+
     private static final String DYNAMO_DB_LOCAL_IMAGE = "amazon/dynamodb-local:latest";
     private static final int DYNAMO_DB_PORT = 8000;
     private static final String DUMMY_ACCESS_KEY = "dummy";
     private static final String DUMMY_SECRET_KEY = "dummy";
-    
+
     /**
      * Creates a new DynamoDB Local container with standard configuration.
-     * 
+     *
      * @return configured GenericContainer for DynamoDB Local
      */
     public static GenericContainer<?> createContainer() {
         return new GenericContainer<>(DockerImageName.parse(DYNAMO_DB_LOCAL_IMAGE))
                 .withExposedPorts(DYNAMO_DB_PORT);
     }
-    
+
     /**
      * Creates a DynamoDB client configured to connect to the provided container.
-     * 
+     *
      * @param container the running DynamoDB container
      * @return configured DynamoDbClient
      */
     public static DynamoDbClient createClient(GenericContainer<?> container) {
-        String endpoint = String.format("http://%s:%d", 
-                container.getHost(), 
+        String endpoint = String.format("http://%s:%d",
+                container.getHost(),
                 container.getMappedPort(DYNAMO_DB_PORT));
-        
+
         return DynamoDbClient.builder()
                 .region(Region.US_EAST_1)
                 .endpointOverride(URI.create(endpoint))
@@ -66,10 +66,10 @@ public class DynamoDBTestContainer {
                 )
                 .build();
     }
-    
+
     /**
      * Creates a DynamoDB test helper for the provided client.
-     * 
+     *
      * @param client the DynamoDB client
      * @return configured DynamoDBTestHelper
      */

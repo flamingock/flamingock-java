@@ -23,11 +23,11 @@ import org.bson.Document;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MongoDbMongockTestHelper implements MongockTestHelper {
+public class MongoDBMongockTestHelper implements MongockTestHelper {
 
     private final MongoCollection<Document> changeLogCollection;
 
-    public MongoDbMongockTestHelper(MongoCollection<Document> changeLogCollection) {
+    public MongoDBMongockTestHelper(MongoCollection<Document> changeLogCollection) {
         this.changeLogCollection = changeLogCollection;
     }
 

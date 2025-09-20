@@ -93,10 +93,10 @@ public class DynamoDBCloudTargetSystemTest {
         );
         dynamoDBLocal.start();
 
-        client = getDynamoDbClient();
+        client = getDynamoDBClient();
 
         //We use different client, as the transactioner will close it
-        dynamoDBTestHelper = new DynamoDBTestHelper(getDynamoDbClient());
+        dynamoDBTestHelper = new DynamoDBTestHelper(getDynamoDBClient());
 
         logger.info("Starting Mock Server...");
         mockRunnerServer = new MockRunnerServer()
@@ -159,7 +159,7 @@ public class DynamoDBCloudTargetSystemTest {
                             new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
-            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDbClient());
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
@@ -178,7 +178,7 @@ public class DynamoDBCloudTargetSystemTest {
             client.close();
             dynamoDBTestHelper.checkCount(
                     DynamoDbEnhancedClient.builder()
-                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDbClient())
+                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDBClient())
                             .build()
                             .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
                     1);
@@ -215,7 +215,7 @@ public class DynamoDBCloudTargetSystemTest {
                             new AuditRequestExpectation(executionId, "unhappy-insert-clients", ROLLED_BACK)
                     ).start();
 
-            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDbClient());
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -235,7 +235,7 @@ public class DynamoDBCloudTargetSystemTest {
             // check clients changes
             dynamoDBTestHelper.checkCount(
                     DynamoDbEnhancedClient.builder()
-                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDbClient())
+                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDBClient())
                             .build()
                             .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
                     0);
@@ -275,7 +275,7 @@ public class DynamoDBCloudTargetSystemTest {
                             new AuditRequestExpectation(executionId, "insert-clients", APPLIED)
                     ).start();
 
-            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDbClient());
+            DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -295,7 +295,7 @@ public class DynamoDBCloudTargetSystemTest {
             client.close();
             dynamoDBTestHelper.checkCount(
                     DynamoDbEnhancedClient.builder()
-                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDbClient())
+                            .dynamoDbClient(dynamoDBTestHelper.getDynamoDBClient())
                             .build()
                             .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
                     1);
@@ -304,7 +304,7 @@ public class DynamoDBCloudTargetSystemTest {
         }
     }
 
-    private static DynamoDbClient getDynamoDbClient() {
+    private static DynamoDbClient getDynamoDBClient() {
         try {
             return DynamoDbClient.builder()
                     .region(Region.EU_WEST_1)

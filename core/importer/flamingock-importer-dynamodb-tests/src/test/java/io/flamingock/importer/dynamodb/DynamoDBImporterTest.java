@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.*;
         }
 )
 @Testcontainers
-public class DynamoDbImporterTest {
+public class DynamoDBImporterTest {
 
     @Container
     public static final GenericContainer<?> dynamoDBContainer = new GenericContainer<>("amazon/dynamodb-local:latest")
@@ -60,7 +60,7 @@ public class DynamoDbImporterTest {
 
 
     private static DynamoDbClient client;
-    private DynamoDbTestHelper mongockChangeLogsHelper;
+    private DynamoDBTestHelper mongockChangeLogsHelper;
 
     @BeforeAll
     static void beforeAll() {
@@ -82,19 +82,19 @@ public class DynamoDbImporterTest {
 
     @BeforeEach
     void setUp() {
-        mongockChangeLogsHelper = new DynamoDbTestHelper(client, MONGOCK_CHANGE_LOGS);
+        mongockChangeLogsHelper = new DynamoDBTestHelper(client, MONGOCK_CHANGE_LOGS);
         mongockChangeLogsHelper.ensureTableExists();
         mongockChangeLogsHelper.resetTable();
 
-        new DynamoDbTestHelper(client, DEFAULT_AUDIT_STORE_NAME).ensureTableExists();
-        new DynamoDbTestHelper(client, DEFAULT_AUDIT_STORE_NAME).resetTable();
+        new DynamoDBTestHelper(client, DEFAULT_AUDIT_STORE_NAME).ensureTableExists();
+        new DynamoDBTestHelper(client, DEFAULT_AUDIT_STORE_NAME).resetTable();
     }
 
     @Test
     @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
-    void testImportDynamoDbChangeLogs() {
-        List<MongockDynamoDbAuditEntry> entries = Arrays.asList(
-                new MongockDynamoDbAuditEntry(
+    void testImportDynamoDBChangeLogs() {
+        List<MongockDynamoDBAuditEntry> entries = Arrays.asList(
+                new MongockDynamoDBAuditEntry(
                         "exec-1",
                         "client-initializer",
                         "author1",
@@ -109,7 +109,7 @@ public class DynamoDbImporterTest {
                         null,
                         true
                 ),
-                new MongockDynamoDbAuditEntry(
+                new MongockDynamoDBAuditEntry(
                         "exec-1",
                         "client-updater",
                         "author1",
@@ -134,7 +134,7 @@ public class DynamoDbImporterTest {
 
         flamingock.run();
 
-        List<AuditEntry> auditLog = new DynamoDbTestHelper(client, DEFAULT_AUDIT_STORE_NAME).getAuditEntriesSorted();
+        List<AuditEntry> auditLog = new DynamoDBTestHelper(client, DEFAULT_AUDIT_STORE_NAME).getAuditEntriesSorted();
         assertEquals(6, auditLog.size());
 
         for (AuditEntry entry : auditLog) {

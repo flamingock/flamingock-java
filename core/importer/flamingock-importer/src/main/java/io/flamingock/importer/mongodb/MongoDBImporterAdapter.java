@@ -33,11 +33,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 //TODO implement reading from Flamingock
-public class MongoDbImporterAdapter implements ImporterAdapter {
+public class MongoDBImporterAdapter implements ImporterAdapter {
 
     private final MongoCollection<Document> sourceCollection;
 
-    public MongoDbImporterAdapter(MongoDatabase mongoDatabase, String collectionName) {
+    public MongoDBImporterAdapter(MongoDatabase mongoDatabase, String collectionName) {
         this.sourceCollection = mongoDatabase.getCollection(collectionName);
     }
 
@@ -46,7 +46,7 @@ public class MongoDbImporterAdapter implements ImporterAdapter {
         return sourceCollection.find()
                 .into(new ArrayList<>())
                 .stream()
-                .map(MongoDbImporterAdapter::toAuditEntry)
+                .map(MongoDBImporterAdapter::toAuditEntry)
                 .collect(Collectors.toList());
     }
 

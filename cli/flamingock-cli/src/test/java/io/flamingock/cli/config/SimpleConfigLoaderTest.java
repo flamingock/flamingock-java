@@ -67,7 +67,7 @@ class SimpleConfigLoaderTest {
     }
 
     @Test
-    void shouldDetectMongoDbType() throws IOException {
+    void shouldDetectMongoDBType() throws IOException {
         // Given
         FlamingockConfig config = TestUtils.createMongoConfig();
 
@@ -79,7 +79,7 @@ class SimpleConfigLoaderTest {
     }
 
     @Test
-    void shouldDetectDynamoDbType() throws IOException {
+    void shouldDetectDynamoDBType() throws IOException {
         // Given
         FlamingockConfig config = TestUtils.createDynamoConfig();
 
@@ -108,7 +108,7 @@ class SimpleConfigLoaderTest {
                 "      database: \"test\"\n" +
                 "    dynamodb:\n" +
                 "      region: \"us-east-1\"\n";
-        
+
         Path configFile = tempDir.resolve("multi-db.yml");
         Files.write(configFile, yamlContent.getBytes());
 
@@ -126,7 +126,7 @@ class SimpleConfigLoaderTest {
         // Given
         String yamlContent = "flamingock:\n" +
                 "  service-identifier: \"no-db-service\"\n";
-        
+
         Path configFile = tempDir.resolve("no-db.yml");
         Files.write(configFile, yamlContent.getBytes());
 

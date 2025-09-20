@@ -26,7 +26,7 @@ import java.time.ZoneId;
 
 
 @DynamoDbBean
-public class MongockDynamoDbAuditEntry {
+public class MongockDynamoDBAuditEntry {
     private String executionId;
     private String changeId;
     private String author;
@@ -41,10 +41,10 @@ public class MongockDynamoDbAuditEntry {
     private String errorTrace;
     private Boolean systemChange;
 
-    public MongockDynamoDbAuditEntry() {
+    public MongockDynamoDBAuditEntry() {
     }
 
-    public MongockDynamoDbAuditEntry(
+    public MongockDynamoDBAuditEntry(
             String executionId,
             String changeId,
             String author,

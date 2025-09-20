@@ -56,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
     }
 )
 @Testcontainers
-public class MongoDbImporterTest {
+public class MongoDBImporterTest {
 
     @Container
     public static final MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6"));
@@ -66,7 +66,7 @@ public class MongoDbImporterTest {
 
     private static MongoClient mongoClient;
     private static MongoDatabase database;
-    private MongoDbMongockTestHelper mongockTestHelper;
+    private MongoDBMongockTestHelper mongockTestHelper;
     private TestKit testKit;
     private AuditTestHelper auditHelper;
 
@@ -79,7 +79,7 @@ public class MongoDbImporterTest {
                 .build());
         database = mongoClient.getDatabase(DB_NAME);
 
-        mongockTestHelper = new MongoDbMongockTestHelper(database.getCollection(MONGOCK_CHANGE_LOGS));
+        mongockTestHelper = new MongoDBMongockTestHelper(database.getCollection(MONGOCK_CHANGE_LOGS));
 
         // Initialize TestKit for unified testing
         testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);

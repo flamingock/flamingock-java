@@ -28,7 +28,7 @@ import java.net.URI;
 
 public class DynamoDBClientFactory {
 
-    public static DynamoDbClient createDynamoDbClient(DatabaseConfig.DynamoDBConfig config) {
+    public static DynamoDbClient createDynamoDBClient(DatabaseConfig.DynamoDBConfig config) {
         if (config == null) {
             throw new IllegalArgumentException("DynamoDB configuration is required");
         }
@@ -49,7 +49,7 @@ public class DynamoDBClientFactory {
             // Set credentials if provided, otherwise use default provider chain
             if (config.getAccessKey() != null && config.getSecretKey() != null) {
                 AwsCredentials credentials = AwsBasicCredentials.create(
-                        config.getAccessKey(), 
+                        config.getAccessKey(),
                         config.getSecretKey()
                 );
                 builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
@@ -58,10 +58,10 @@ public class DynamoDBClientFactory {
             }
 
             DynamoDbClient client = builder.build();
-            
+
             // Test the connection by listing tables
             client.listTables();
-            
+
             return client;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create DynamoDB client: " + e.getMessage(), e);

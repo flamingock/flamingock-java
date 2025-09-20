@@ -18,7 +18,7 @@ package io.flamingock.graalvm;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.importer.ImporterTemplateFactory;
-import io.flamingock.importer.mongodb.MongoDbImporterChangeTemplate;
+import io.flamingock.importer.mongodb.MongoDBImporterChangeTemplate;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -106,7 +106,7 @@ public class RegistrationFeature implements Feature {
         initializeClassAtBuildTime(ImporterTemplateFactory.class);
         initializeClassAtBuildTime(RecoveryDescriptor.class);
         initializeClassAtBuildTime(FlamingockLoggerFactory.class);
-        initializeClassAtBuildTime(MongoDbImporterChangeTemplate.class);
+        initializeClassAtBuildTime(MongoDBImporterChangeTemplate.class);
         logger.completeInitializationProcess("internal classes");
     }
 

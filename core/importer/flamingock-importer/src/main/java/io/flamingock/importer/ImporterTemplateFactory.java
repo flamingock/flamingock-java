@@ -30,8 +30,8 @@ public class ImporterTemplateFactory implements ChangeTemplateFactory {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("ImporterFactory");
 
-    private static final String MONGO_TEMPLATE_CLASS = "io.flamingock.importer.mongodb.MongoDbImporterChangeTemplate";
-    private static final String DYNAMO_TEMPLATE_CLASS = "io.flamingock.importer.dynamodb.DynamoDbImporterChangeTemplate";
+    private static final String MONGO_TEMPLATE_CLASS = "io.flamingock.importer.mongodb.MongoDBImporterChangeTemplate";
+    private static final String DYNAMO_TEMPLATE_CLASS = "io.flamingock.importer.dynamodb.DynamoDBImporterChangeTemplate";
     private static final String COUCHBASE_TEMPLATE_CLASS = "io.flamingock.importer.couchbase.CouchbaseImporterChangeTemplate";
 
 
@@ -60,9 +60,9 @@ public class ImporterTemplateFactory implements ChangeTemplateFactory {
     @NotNull
     private static Optional<String> getClassName() {
 
-        if (isMongoDbAdapter()) {
+        if (isMongoDBAdapter()) {
             return Optional.of(MONGO_TEMPLATE_CLASS);
-        } else if (isDynamoDbAdapter()) {
+        } else if (isDynamoDBAdapter()) {
             return Optional.of(DYNAMO_TEMPLATE_CLASS);
         } else if (isCouchbaseAdapter()) {
             return Optional.of(COUCHBASE_TEMPLATE_CLASS);
@@ -72,7 +72,7 @@ public class ImporterTemplateFactory implements ChangeTemplateFactory {
         return Optional.empty();
     }
 
-    private static boolean isMongoDbAdapter() {
+    private static boolean isMongoDBAdapter() {
         try {
             Class.forName("com.mongodb.client.MongoCollection");
             return true;
@@ -82,9 +82,9 @@ public class ImporterTemplateFactory implements ChangeTemplateFactory {
         }
     }
 
-    private static boolean isDynamoDbAdapter() {
+    private static boolean isDynamoDBAdapter() {
         try {
-            Class.forName("software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable");
+            Class.forName("software.amazon.awssdk.enhanced.dynamodb.DynamoDBTable");
             return true;
         } catch (ClassNotFoundException e) {
             logger.warn("DynamoDB adapter not found, skipping");

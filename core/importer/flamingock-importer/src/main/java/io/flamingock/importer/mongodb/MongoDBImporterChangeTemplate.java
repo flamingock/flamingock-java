@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.dynamodb;
+package io.flamingock.importer.mongodb;
 
+import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.Rollback;
@@ -25,27 +26,28 @@ import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDbImporterChangeTemplate extends AbstractImporterChangeTemplate<ImportConfiguration> {
-    private static final Logger logger = LoggerFactory.getLogger("DynamoDbImporterChangeTemplate");
+public class MongoDBImporterChangeTemplate extends AbstractImporterChangeTemplate<ImportConfiguration> {
 
-    public DynamoDbImporterChangeTemplate() {
+    private static final Logger logger = LoggerFactory.getLogger("MongoDBImporterChangeTemplate");
+
+    public MongoDBImporterChangeTemplate() {
         super(ImportConfiguration.class);
     }
 
     @Apply
-    public void execution(DynamoDbClient client,
+    public void execution(MongoDatabase db,
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
         logger.info("Starting audit log migration from Mongock to Flamingock local audit store[MongoDB]");
-        DynamoDbImporterAdapter adapter = new DynamoDbImporterAdapter(client, configuration.getOrigin());
+        MongoDBImporterAdapter adapter = new MongoDBImporterAdapter(db, configuration.getOrigin());
         ImporterExecutor.runImport(adapter, configuration, auditWriter, pipelineDescriptor);
-        logger.info("Finished audit log migration from Mongock to Flamingock local audit store[Couchbase]");
+        logger.info("Finished audit log migration from Mongock to Flamingock local audit store[MongoDB]");
     }
 
     @Rollback
     public void rollback() {
         //TODO
     }
+
 }

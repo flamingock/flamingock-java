@@ -24,10 +24,10 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 public class CreateUsersTableChangeUnit {
 
     @Apply
-    public void execution(DynamoDbClient dynamoDbClient) {
+    public void execution(DynamoDbClient dynamoDBClient) {
         String tableName = "users";
         try {
-            dynamoDbClient.createTable(CreateTableRequest.builder()
+            dynamoDBClient.createTable(CreateTableRequest.builder()
                     .tableName(tableName)
                     .keySchema(KeySchemaElement.builder()
                             .attributeName("email")

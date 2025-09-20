@@ -26,25 +26,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class DynamoDbImporterAdapter implements ImporterAdapter {
+public class DynamoDBImporterAdapter implements ImporterAdapter {
 
-    private final DynamoDbTable<MongockDynamoDbAuditEntry> sourceTable;
+    private final DynamoDbTable<MongockDynamoDBAuditEntry> sourceTable;
 
-    public DynamoDbImporterAdapter(DynamoDbClient client, String tableName) {
+    public DynamoDBImporterAdapter(DynamoDbClient client, String tableName) {
         DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
                 .build();
-        this.sourceTable = enhancedClient.table(tableName, TableSchema.fromBean(MongockDynamoDbAuditEntry.class));
+        this.sourceTable = enhancedClient.table(tableName, TableSchema.fromBean(MongockDynamoDBAuditEntry.class));
     }
 
     @Override
     public List<AuditEntry> getAuditEntries() {
-        List<MongockDynamoDbAuditEntry> entries = StreamSupport
+        List<MongockDynamoDBAuditEntry> entries = StreamSupport
                 .stream(sourceTable.scan().items().spliterator(), false)
                 .collect(Collectors.toList());
 
         return entries.stream()
-                .map(MongockDynamoDbAuditEntry::toAuditEntry)
+                .map(MongockDynamoDBAuditEntry::toAuditEntry)
                 .collect(Collectors.toList());
     }
 }

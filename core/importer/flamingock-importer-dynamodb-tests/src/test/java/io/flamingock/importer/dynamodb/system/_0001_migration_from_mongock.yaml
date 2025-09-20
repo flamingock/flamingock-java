@@ -1,7 +1,7 @@
 id: migration-from-mongock
 order: 0001
 transactional: false
-template: DynamoDbImporterChangeTemplate
+template: DynamoDBImporterChangeTemplate
 configuration:
   origin: mongockChangeLogs
   failOnEmptyOrigin: true

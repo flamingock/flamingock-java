@@ -26,13 +26,13 @@ import java.util.stream.Collectors;
 
 import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 
-public class DynamoDbTestHelper {
+public class DynamoDBTestHelper {
 
     private final DynamoDbClient client;
     private final String tableName;
     private final DynamoDbTable<?> table;
 
-    public DynamoDbTestHelper(DynamoDbClient client, String tableName) {
+    public DynamoDBTestHelper(DynamoDbClient client, String tableName) {
         this.client = client;
         this.tableName = tableName;
         DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
@@ -42,7 +42,7 @@ public class DynamoDbTestHelper {
         if (DEFAULT_AUDIT_STORE_NAME.equals(tableName)) {
             this.table = enhancedClient.table(tableName, TableSchema.fromBean(DynamoDBAuditEntryEntity.class));
         } else {
-            this.table = enhancedClient.table(tableName, TableSchema.fromBean(MongockDynamoDbAuditEntry.class));
+            this.table = enhancedClient.table(tableName, TableSchema.fromBean(MongockDynamoDBAuditEntry.class));
         }
     }
 
@@ -112,12 +112,12 @@ public class DynamoDbTestHelper {
         }
     }
 
-    public void insertChangeEntries(List<MongockDynamoDbAuditEntry> entries) {
+    public void insertChangeEntries(List<MongockDynamoDBAuditEntry> entries) {
         if (DEFAULT_AUDIT_STORE_NAME.equals(tableName)) {
             throw new UnsupportedOperationException("insertChangeEntries is only for change log tables");
         }
-        DynamoDbTable<MongockDynamoDbAuditEntry> changeTable = (DynamoDbTable<MongockDynamoDbAuditEntry>) table;
-        for (MongockDynamoDbAuditEntry entry : entries) {
+        DynamoDbTable<MongockDynamoDBAuditEntry> changeTable = (DynamoDbTable<MongockDynamoDBAuditEntry>) table;
+        for (MongockDynamoDBAuditEntry entry : entries) {
             changeTable.putItem(entry);
         }
     }
@@ -132,11 +132,11 @@ public class DynamoDbTestHelper {
                     .sorted()
                     .collect(Collectors.toList());
         } else {
-            DynamoDbTable<MongockDynamoDbAuditEntry> changeTable = (DynamoDbTable<MongockDynamoDbAuditEntry>) table;
-            List<MongockDynamoDbAuditEntry> entries = new ArrayList<>();
+            DynamoDbTable<MongockDynamoDBAuditEntry> changeTable = (DynamoDbTable<MongockDynamoDBAuditEntry>) table;
+            List<MongockDynamoDBAuditEntry> entries = new ArrayList<>();
             changeTable.scan().items().forEach(entries::add);
             return entries.stream()
-                    .map(MongockDynamoDbAuditEntry::toAuditEntry)
+                    .map(MongockDynamoDBAuditEntry::toAuditEntry)
                     .sorted()
                     .collect(Collectors.toList());
         }

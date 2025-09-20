@@ -34,7 +34,7 @@ public class DynamoDBTestHelper {
     }
 
     public boolean tableExists(String tableName) {
-        return dynamoDBUtil.getDynamoDbClient().listTables().tableNames().contains(tableName);
+        return dynamoDBUtil.getDynamoDBClient().listTables().tableNames().contains(tableName);
     }
 
     public List<AuditEntry> getAuditEntriesSorted(String auditLogTable) {

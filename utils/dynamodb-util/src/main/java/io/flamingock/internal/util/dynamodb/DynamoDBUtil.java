@@ -24,20 +24,20 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class DynamoDBUtil {
-    private final DynamoDbClient dynamoDbClient;
+    private final DynamoDbClient dynamoDBClient;
     private final DynamoDbEnhancedClient enhancedClient;
 
     public DynamoDBUtil(
-            DynamoDbClient dynamoDbClient
+            DynamoDbClient dynamoDBClient
     ) {
-        this.dynamoDbClient = dynamoDbClient;
+        this.dynamoDBClient = dynamoDBClient;
         this.enhancedClient = DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(dynamoDbClient)
+                .dynamoDbClient(dynamoDBClient)
                 .build();
     }
 
-    public DynamoDbClient getDynamoDbClient() {
-        return dynamoDbClient;
+    public DynamoDbClient getDynamoDBClient() {
+        return dynamoDBClient;
     }
 
     public DynamoDbEnhancedClient getEnhancedClient() {
@@ -139,12 +139,12 @@ public final class DynamoDBUtil {
             }
 
             DescribeTableRequest tableRequest;
-            this.dynamoDbClient.createTable(createBuilder.build());
+            this.dynamoDBClient.createTable(createBuilder.build());
             tableRequest = DescribeTableRequest.builder()
                     .tableName(tableName)
                     .build();
 
-            this.dynamoDbClient
+            this.dynamoDBClient
                     .waiter()
                     .waitUntilTableExists(tableRequest).matched();
         } catch (ResourceInUseException e) {

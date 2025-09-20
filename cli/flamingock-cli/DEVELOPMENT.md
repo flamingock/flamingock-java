@@ -15,7 +15,7 @@
 ./gradlew :cli:flamingock-cli:test --tests "ConfigLoaderTest"
 
 # Run specific test method
-./gradlew :cli:flamingock-cli:test --tests "ConfigLoaderTest.shouldLoadMongoDbConfiguration"
+./gradlew :cli:flamingock-cli:test --tests "ConfigLoaderTest.shouldLoadMongoDBConfiguration"
 ```
 
 ### Debug CLI Execution
@@ -52,7 +52,7 @@ export MONGO_TEST=true
 ./gradlew :cli:flamingock-cli:test --tests "*MongoClientFactoryTest*"
 
 # Or set for integration tests with real MongoDB
-export MONGO_INTEGRATION_TEST=true  
+export MONGO_INTEGRATION_TEST=true
 ./gradlew :cli:flamingock-cli:test --tests "*AuditServiceTest*"
 ```
 
@@ -233,7 +233,7 @@ cat flamingock-cli-dist/flamingock.yml | grep -A5 "audit:"
 
 The debug log `flamingock-cli-debug.log` contains:
 - Configuration loading steps
-- Database client creation attempts  
+- Database client creation attempts
 - OpsClient builder progression
 - Error stack traces with line numbers
 
@@ -288,10 +288,10 @@ Tests are designed to run in CI without external dependencies:
 void shouldTestSpecificBehavior() {
     // Given
     // Setup test data
-    
-    // When  
+
+    // When
     // Execute the operation
-    
+
     // Then
     assertThat(result).isEqualTo(expected);
 }
