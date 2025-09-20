@@ -53,6 +53,7 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
         this.mongoClient = mongoClient;
         this.databaseName = databaseName;
         this.validate();
+        this.database = mongoClient.getDatabase(databaseName);
         targetSystemContext.addDependency(mongoClient);
         targetSystemContext.addDependency(database);
         targetSystemContext.setProperty("autoCreate", true);
@@ -128,7 +129,6 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
         if (databaseName == null || databaseName.trim().isEmpty()) {
             throw new FlamingockException("The 'databaseName' property is required.");
         }
-        database = mongoClient.getDatabase(databaseName);
 
         if (readConcern == null) {
             throw new FlamingockException("The 'readConcern' property is required.");

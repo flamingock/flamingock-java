@@ -15,15 +15,12 @@
  */
 package io.flamingock.community.dynamodb;
 
+import io.flamingock.community.dynamodb.changes.audit.*;
 import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
-import io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange;
-import io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange;
-import io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange;
-import io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.core.kit.audit.AuditTestSupport;
@@ -104,7 +101,6 @@ class DynamoDBAuditPersistenceE2ETest {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
-                                .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
                     });
@@ -182,6 +178,54 @@ class DynamoDBAuditPersistenceE2ETest {
     }
 
     @Test
+    @DisplayName("Should persist NON_TX txType for transactional=false scenarios without dependency injection")
+    void testNonTxScenariosWithoutDependencies() {
+        // Given-When-Then - Test NON_TX scenarios
+        AuditTestSupport.withTestKit(testKit)
+
+                .GIVEN_ChangeUnits(
+                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChangeNoDependencies.class, Collections.singletonList(DynamoDbClient.class))
+                )
+                .WHEN(() -> {
+                    assertDoesNotThrow(() -> {
+                        FlamingockFactory.getCommunityBuilder()
+                                .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
+                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
+                                .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
+                                .build()
+                                .run();
+                    });
+                })
+                .THEN_VerifyAuditSequenceStrict(
+                        // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
+                        STARTED("non-tx-transactional-false")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("dynamodb"),
+                        APPLIED("non-tx-transactional-false")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("dynamodb"),
+
+                        // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
+                        STARTED("non-tx-target-system")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChangeNoDependencies")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("non-tx-system"),
+                        APPLIED("non-tx-target-system")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChangeNoDependencies")
+                                .withMethodName("execution")
+                                .withTxType(AuditTxType.NON_TX)
+                                .withTargetSystemId("non-tx-system")
+                )
+                .run();
+    }
+
+    @Test
     @DisplayName("Should persist TX_SHARED txType for default and explicit same DynamoDbClient scenarios")
     void testTxSharedScenarios() {
         // Given-When-Then - Test TX_SHARED scenarios  
@@ -198,7 +242,6 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(sharedTargetSystem)
-                                .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
                     });
@@ -234,7 +277,6 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system", separateDynamoDbClient))
-                                .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
                     });
@@ -272,7 +314,6 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(separateTargetSystem)
-                                .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
                     });
@@ -349,7 +390,6 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDbClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system",separateDynamoDbClient))
-                                .addDependency(sharedDynamoDbClient)
                                 .build()
                                 .run();
                     });
