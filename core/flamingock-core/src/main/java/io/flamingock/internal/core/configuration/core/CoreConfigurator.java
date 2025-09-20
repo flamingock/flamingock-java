@@ -40,6 +40,14 @@ public interface CoreConfigurator<HOLDER> {
 
     HOLDER addTargetSystem(TargetSystem targetSystem);
 
+    @SuppressWarnings("unchecked")
+    default HOLDER addTargetSystems(TargetSystem... targetSystems) {
+        for(TargetSystem targetSystem: targetSystems) {
+            addTargetSystem(targetSystem);
+        }
+        return (HOLDER) this;
+    }
+
     long getLockAcquiredForMillis();
 
     Long getLockQuitTryingAfterMillis();
