@@ -26,7 +26,7 @@ import io.flamingock.internal.core.transaction.TransactionWrapper;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 
-public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<MongoSpringDataTargetSystem> {
+public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<MongoDBSpringDataTargetSystem> {
 
     private final WriteConcern DEFAULT_WRITE_CONCERN = WriteConcern.MAJORITY.withJournal(true);
     private final ReadConcern DEFAULT_READ_CONCERN = ReadConcern.MAJORITY;
@@ -34,32 +34,32 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
 
     private TargetSystemAuditMarker taskStatusRepository;
 
-    private MongoSpringDataTxWrapper txWrapper;
+    private MongoDBSpringDataTxWrapper txWrapper;
     private MongoTemplate mongoTemplate;
     private WriteConcern writeConcern = null;
     private ReadConcern readConcern = null;
     private ReadPreference readPreference = null;
 
-    public MongoSpringDataTargetSystem(String id) {
+    public MongoDBSpringDataTargetSystem(String id) {
         super(id);
     }
 
-    public MongoSpringDataTargetSystem withMongoTemplate(MongoTemplate mongoTemplate) {
+    public MongoDBSpringDataTargetSystem withMongoTemplate(MongoTemplate mongoTemplate) {
         targetSystemContext.addDependency(mongoTemplate);
         return this;
     }
-    
-    public MongoSpringDataTargetSystem withReadConcern(ReadConcern readConcern) {
+
+    public MongoDBSpringDataTargetSystem withReadConcern(ReadConcern readConcern) {
         targetSystemContext.addDependency(readConcern);
         return this;
     }
 
-    public MongoSpringDataTargetSystem withReadPreference(ReadPreference readPreference) {
+    public MongoDBSpringDataTargetSystem withReadPreference(ReadPreference readPreference) {
         targetSystemContext.addDependency(readPreference);
         return this;
     }
 
-    public MongoSpringDataTargetSystem withWriteConcern(WriteConcern writeConcern) {
+    public MongoDBSpringDataTargetSystem withWriteConcern(WriteConcern writeConcern) {
         targetSystemContext.addDependency(writeConcern);
         return this;
     }
@@ -99,19 +99,19 @@ public class MongoSpringDataTargetSystem extends TransactionalTargetSystem<Mongo
                 .orElseGet(() -> baseContext.getDependencyValue(WriteConcern.class)
                         .orElseGet(() -> DEFAULT_WRITE_CONCERN));
 
-        txWrapper = MongoSpringDataTxWrapper.builder()
+        txWrapper = MongoDBSpringDataTxWrapper.builder()
                 .mongoTemplate(mongoTemplate)
                 .readConcern(readConcern)
                 .readPreference(readPreference)
                 .writeConcern(writeConcern)
                 .build();
 
-        //TODO create MongoSpringDataOnGoingTaskStatusRepository for cloud edition
+        //TODO create MongoDBSpringDataOnGoingTaskStatusRepository for cloud edition
         taskStatusRepository = new NoOpTargetSystemAuditMarker(this.getId());
     }
 
     @Override
-    protected MongoSpringDataTargetSystem getSelf() {
+    protected MongoDBSpringDataTargetSystem getSelf() {
         return this;
     }
 

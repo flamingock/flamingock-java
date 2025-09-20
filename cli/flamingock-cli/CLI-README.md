@@ -27,7 +27,7 @@ A lightweight command-line interface for Flamingock audit operations in communit
 # Mark change unit as executed
 ./flamingock-cli-dist/flamingock audit mark --change-id ch1 --state APPLIED
 
-# Mark change unit as rolled back  
+# Mark change unit as rolled back
 ./flamingock-cli-dist/flamingock audit mark --change-id ch2 --state ROLLED_BACK
 
 # Use custom configuration file
@@ -74,7 +74,7 @@ No manual steps required - everything is automated!
 After building, `flamingock-cli-dist/` contains:
 
 - **`flamingock-cli.jar`** - Self-contained executable JAR with all dependencies
-- **`flamingock`** - Unix/Linux/macOS executable shell script  
+- **`flamingock`** - Unix/Linux/macOS executable shell script
 - **`flamingock.bat`** - Windows executable batch file
 - **`flamingock.yml`** - Sample configuration file
 
@@ -132,7 +132,7 @@ context.addDependency(MongoClient.class, mongoClient);
 context.addDependency(MongoDatabase.class, mongoDatabase);
 
 // Build OpsClient
-AuditStore<?> auditStore = new MongoSyncAuditStore();
+AuditStore<?> auditStore = new MongoDBSyncAuditStore();
 OpsClient client = new OpsClientBuilder(coreConfig, context, auditStore).build();
 
 // Use OpsClient methods
@@ -169,7 +169,7 @@ Marks a change unit with a specific state:
 
 ## Error Handling
 - **Configuration errors**: Missing files, invalid YAML, multiple databases
-- **Connection errors**: Database connectivity, authentication failures  
+- **Connection errors**: Database connectivity, authentication failures
 - **Validation errors**: Missing required fields, invalid change IDs
 - **Debug mode**: Set `flamingock.debug` system property for stack traces
 
@@ -191,7 +191,7 @@ The build process automatically:
 1. Compiles all CLI sources
 2. Creates UberJar with dependencies
 3. Generates platform-specific executable scripts
-4. Sets proper Unix file permissions  
+4. Sets proper Unix file permissions
 5. Creates sample configuration file
 6. Places everything in `flamingock-cli-dist/`
 

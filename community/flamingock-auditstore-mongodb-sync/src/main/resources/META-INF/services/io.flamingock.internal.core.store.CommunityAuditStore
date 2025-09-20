@@ -1,1 +1,1 @@
-io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore
+io.flamingock.community.mongodb.sync.driver.MongoDBSyncAuditStore

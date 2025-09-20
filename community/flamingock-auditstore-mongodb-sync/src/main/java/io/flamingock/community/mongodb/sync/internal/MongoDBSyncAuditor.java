@@ -30,8 +30,8 @@ import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
@@ -44,14 +44,14 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANG
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
 import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
 
-public class MongoSyncAuditor implements LifecycleAuditWriter, AuditReader {
+public class MongoDBSyncAuditor implements LifecycleAuditWriter, AuditReader {
 
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoSyncAuditor");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoDBSyncAuditor");
 
     private final MongoCollection<Document> collection;
-    private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
+    private final MongoDBAuditMapper<MongoDBSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBSyncDocumentHelper(new Document()));
 
-    MongoSyncAuditor(MongoDatabase database,
+    MongoDBSyncAuditor(MongoDatabase database,
                      String collectionName,
                      ReadConcern readConcern,
                      ReadPreference readPreference,
@@ -63,9 +63,9 @@ public class MongoSyncAuditor implements LifecycleAuditWriter, AuditReader {
     }
 
     protected void initialize(boolean autoCreate) {
-        CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
-                new MongoSyncCollectionHelper(collection),
-                () -> new MongoSyncDocumentHelper(new Document()),
+        CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+                new MongoDBSyncCollectionHelper(collection),
+                () -> new MongoDBSyncDocumentHelper(new Document()),
                 new String[]{KEY_EXECUTION_ID, KEY_CHANGE_ID, KEY_STATE}
         );
         if (autoCreate) {
@@ -99,7 +99,7 @@ public class MongoSyncAuditor implements LifecycleAuditWriter, AuditReader {
         return collection.find()
                 .into(new LinkedList<>())
                 .stream()
-                .map(MongoSyncDocumentHelper::new)
+                .map(MongoDBSyncDocumentHelper::new)
                 .map(mapper::fromDocument)
                 .collect(Collectors.toList());
     }

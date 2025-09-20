@@ -31,9 +31,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class MongoSyncAuditPersistence extends AbstractCommunityAuditPersistence {
+public class MongoDBSyncAuditPersistence extends AbstractCommunityAuditPersistence {
 
-    private MongoSyncAuditor auditor;
+    private MongoDBSyncAuditor auditor;
     private final MongoDatabase database;
     private final String auditCollectionName;
     private final ReadConcern readConcern;
@@ -42,7 +42,7 @@ public class MongoSyncAuditPersistence extends AbstractCommunityAuditPersistence
     private final boolean autoCreate;
 
 
-    public MongoSyncAuditPersistence(CommunityConfigurable localConfiguration,
+    public MongoDBSyncAuditPersistence(CommunityConfigurable localConfiguration,
                                      MongoDatabase database,
                                      String auditCollectionName,
                                      ReadConcern readConcern,
@@ -61,7 +61,7 @@ public class MongoSyncAuditPersistence extends AbstractCommunityAuditPersistence
     @Override
     protected void doInitialize(RunnerId runnerId) {
         //Auditor
-        auditor = new MongoSyncAuditor(database, auditCollectionName, readConcern, readPreference, writeConcern);
+        auditor = new MongoDBSyncAuditor(database, auditCollectionName, readConcern, readPreference, writeConcern);
         auditor.initialize(autoCreate);
     }
 

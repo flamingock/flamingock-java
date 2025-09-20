@@ -31,33 +31,33 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE
 /**
  * MongoDB implementation of AuditStorage for real database testing.
  * Only depends on MongoDB client/database and core Flamingock classes.
- * Does not depend on MongoDB-specific Flamingock components like MongoSyncTargetSystem.
+ * Does not depend on MongoDB-specific Flamingock components like MongoDBSyncTargetSystem.
  */
-public class MongoSyncAuditStorage implements AuditStorage {
-    
+public class MongoDBSyncAuditStorage implements AuditStorage {
+
     private static final String AUDIT_COLLECTION_NAME = "flamingockAuditLogs";
-    
+
     private final MongoDatabase database;
     private final MongoCollection<Document> auditCollection;
     private final MongoDBAuditMapper<SimpleMongoDocumentHelper> mapper;
-    
-    public MongoSyncAuditStorage(MongoDatabase database) {
+
+    public MongoDBSyncAuditStorage(MongoDatabase database) {
         this(database, AUDIT_COLLECTION_NAME);
     }
-    
-    public MongoSyncAuditStorage(MongoDatabase database, String collectionName) {
+
+    public MongoDBSyncAuditStorage(MongoDatabase database, String collectionName) {
         this.database = database;
         this.auditCollection = database.getCollection(collectionName);
         this.mapper = new MongoDBAuditMapper<>(() -> new SimpleMongoDocumentHelper(new Document()));
     }
-    
+
     @Override
     public void addAuditEntry(AuditEntry auditEntry) {
         // Use the existing mapper to convert AuditEntry to MongoDB document
         SimpleMongoDocumentHelper documentHelper = mapper.toDocument(auditEntry);
         auditCollection.insertOne(documentHelper.getDocument());
     }
-    
+
     @Override
     public List<AuditEntry> getAuditEntries() {
         List<AuditEntry> entries = new ArrayList<>();
@@ -66,25 +66,25 @@ public class MongoSyncAuditStorage implements AuditStorage {
         }
         return entries;
     }
-    
+
     @Override
     public List<AuditEntry> getAuditEntriesForChange(String changeId) {
         return auditCollection.find(new Document(KEY_CHANGE_ID, changeId))
                 .map(doc -> mapper.fromDocument(new SimpleMongoDocumentHelper(doc)))
                 .into(new ArrayList<>());
     }
-    
+
     @Override
     public long countAuditEntriesWithStatus(AuditEntry.Status status) {
         // Use the correct field name from AuditEntryField constants
         return auditCollection.countDocuments(new Document(KEY_STATE, status.toString()));
     }
-    
+
     @Override
     public boolean hasAuditEntries() {
         return auditCollection.countDocuments() > 0;
     }
-    
+
     @Override
     public void clear() {
         auditCollection.deleteMany(new Document());

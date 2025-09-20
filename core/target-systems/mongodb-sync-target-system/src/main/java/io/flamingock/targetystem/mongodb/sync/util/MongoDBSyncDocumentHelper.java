@@ -18,11 +18,11 @@ package io.flamingock.targetystem.mongodb.sync.util;
 import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
-public class MongoSyncDocumentHelper implements DocumentHelper {
+public class MongoDBSyncDocumentHelper implements DocumentHelper {
 
     private final Document document;
 
-    public MongoSyncDocumentHelper(Document document) {
+    public MongoDBSyncDocumentHelper(Document document) {
         this.document = document;
     }
 
@@ -67,6 +67,6 @@ public class MongoSyncDocumentHelper implements DocumentHelper {
 
     @Override
     public DocumentHelper getWithWrapper(String key) {
-        return new MongoSyncDocumentHelper((Document) get(key));
+        return new MongoDBSyncDocumentHelper((Document) get(key));
     }
 }

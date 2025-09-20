@@ -26,13 +26,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class MongoSyncTestKit extends AbstractTestKit {
+public class MongoDBSyncTestKit extends AbstractTestKit {
     private static final Set<String> SYSTEM_DATABASES =
             new HashSet<>(Arrays.asList("admin", "config", "local"));
 
     private final MongoClient mongoClient;
 
-    public MongoSyncTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver, MongoClient mongoClient) {
+    public MongoDBSyncTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver, MongoClient mongoClient) {
         super(auditStorage, lockStorage, driver);
         this.mongoClient = mongoClient;
     }
@@ -47,11 +47,11 @@ public class MongoSyncTestKit extends AbstractTestKit {
     }
 
     /**
-     * Create a new MongoSyncTestKit with MongoDB client and database
+     * Create a new MongoDBSyncTestKit with MongoDB client and database
      */
-    public static MongoSyncTestKit create(CommunityAuditStore driver, MongoClient mongoClient, MongoDatabase database) {
-        MongoSyncAuditStorage auditStorage = new MongoSyncAuditStorage(database);
-        MongoSyncLockStorage lockStorage = new MongoSyncLockStorage(database);
-        return new MongoSyncTestKit(auditStorage, lockStorage, driver, mongoClient);
+    public static MongoDBSyncTestKit create(CommunityAuditStore driver, MongoClient mongoClient, MongoDatabase database) {
+        MongoDBSyncAuditStorage auditStorage = new MongoDBSyncAuditStorage(database);
+        MongoDBSyncLockStorage lockStorage = new MongoDBSyncLockStorage(database);
+        return new MongoDBSyncTestKit(auditStorage, lockStorage, driver, mongoClient);
     }
 }

@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Change unit that produces TX_SEPARATE_NO_MARKER txType via MongoSyncTargetSystem with different MongoClient.
+ * Change unit that produces TX_SEPARATE_NO_MARKER txType via MongoDBSyncTargetSystem with different MongoClient.
  * Used for testing audit persistence of TX_SEPARATE_NO_MARKER transaction type.
  */
 @TargetSystem(id = "tx-separate-system")
@@ -30,6 +30,6 @@ public class TxSeparateChange {
     @Apply
     public void execution() {
         // Simple operation that completes successfully
-        System.out.println("Executing TX_SEPARATE_NO_MARKER change via MongoSyncTargetSystem with different MongoClient");
+        System.out.println("Executing TX_SEPARATE_NO_MARKER change via MongoDBSyncTargetSystem with different MongoClient");
     }
 }

@@ -35,12 +35,12 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.function.Function;
 
-public class MongoSpringDataTxWrapper implements TransactionWrapper {
+public class MongoDBSpringDataTxWrapper implements TransactionWrapper {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("SpringMongoTx");
-    
+
     private final TransactionTemplate txTemplate;
 
-    private MongoSpringDataTxWrapper(MongoDatabaseFactory mongoDatabaseFactory, TransactionOptions txOptions) {
+    private MongoDBSpringDataTxWrapper(MongoDatabaseFactory mongoDatabaseFactory, TransactionOptions txOptions) {
         MongoTransactionManager txManager = new MongoTransactionManager(mongoDatabaseFactory, txOptions);
 
         this.txTemplate = new TransactionTemplate(txManager);
@@ -52,15 +52,15 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
     @Override
     public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
         LocalDateTime transactionStart = LocalDateTime.now();
-        
+
         try {
             logger.debug("Starting MongoDB Spring Data transaction");
-            
+
             return txTemplate.execute(status -> {
                 try {
                     T result = operation.apply(executionRuntime);
                     Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
-                    
+
                     if (result instanceof FailedStep) {
                         logger.info("Rolling back MongoDB Spring Data transaction due to failed step [duration={}]", formatDuration(transactionDuration));
                         status.setRollbackOnly();
@@ -69,13 +69,13 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
                         logger.debug("Committing successful MongoDB Spring Data transaction [duration={}]", formatDuration(transactionDuration));
                     }
                     return result;
-                    
+
                 } catch (Exception e) {
                     Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
-                    logger.error("MongoDB Spring Data transaction failed, marking for rollback [duration={} error={}]", 
+                    logger.error("MongoDB Spring Data transaction failed, marking for rollback [duration={} error={}]",
                                formatDuration(failureDuration), e.getMessage());
                     status.setRollbackOnly();
-                    
+
                     throw new DatabaseTransactionException(
                         "MongoDB Spring Data transaction failed during operation execution",
                         DatabaseTransactionException.TransactionState.FAILED,
@@ -89,15 +89,15 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
                     );
                 }
             });
-            
+
         } catch (Exception e) {
             Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
-            
+
             // If it's already our exception, re-throw it
             if (e instanceof DatabaseTransactionException) {
                 throw e;
             }
-            
+
             throw new DatabaseTransactionException(
                 "MongoDB Spring Data transaction failed to start or commit",
                 DatabaseTransactionException.TransactionState.FAILED,
@@ -145,7 +145,7 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
             return this;
         }
 
-        public MongoSpringDataTxWrapper build() {
+        public MongoDBSpringDataTxWrapper build() {
             if (mongoTemplate == null) {
                 throw new IllegalArgumentException("MongoTemplate is required");
             }
@@ -156,10 +156,10 @@ public class MongoSpringDataTxWrapper implements TransactionWrapper {
                     .writeConcern(writeConcern)
                     .build();
 
-            return new MongoSpringDataTxWrapper(mongoTemplate.getMongoDatabaseFactory(),txOptions);
+            return new MongoDBSpringDataTxWrapper(mongoTemplate.getMongoDatabaseFactory(),txOptions);
         }
     }
-    
+
     private String formatDuration(Duration duration) {
         long millis = duration.toMillis();
         if (millis < 1000) {

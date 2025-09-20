@@ -17,8 +17,8 @@ package io.flamingock.targetsystem.mongodb.sync;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
@@ -36,7 +36,7 @@ public class MongoDBTestHelper {
 
     public final MongoDatabase mongoDatabase;
 
-    private final MongoDBAuditMapper<MongoSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
+    private final MongoDBAuditMapper<MongoDBSyncDocumentHelper> mapper = new MongoDBAuditMapper<>(() -> new MongoDBSyncDocumentHelper(new Document()));
 
     public MongoDBTestHelper(MongoDatabase mongoDatabase) {
         this.mongoDatabase = mongoDatabase;
@@ -46,9 +46,9 @@ public class MongoDBTestHelper {
 
         MongoCollection<Document> onGoingTasksCollection = mongoDatabase.getCollection("flamingockOnGoingTasks");
 
-        CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
-                new MongoSyncCollectionHelper(onGoingTasksCollection),
-                () -> new MongoSyncDocumentHelper(new Document()),
+        CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+                new MongoDBSyncCollectionHelper(onGoingTasksCollection),
+                () -> new MongoDBSyncDocumentHelper(new Document()),
                 new String[]{"taskId"}
         );
         initializer.initialize();

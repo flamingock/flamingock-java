@@ -25,24 +25,24 @@ import io.flamingock.internal.core.plugin.DefaultPluginManager;
 
 /**
  * Unified testing interface for end-to-end Flamingock testing across different storage implementations.
- * 
- * <p>This interface provides a consistent API for testing core Flamingock features regardless of the 
+ *
+ * <p>This interface provides a consistent API for testing core Flamingock features regardless of the
  * underlying storage technology (InMemory, MongoDB, DynamoDB, etc.). Implementations should provide
  * the same testing capabilities while using their specific storage backend.</p>
- * 
+ *
  * <p><strong>Usage:</strong></p>
  * <pre>{@code
  * // InMemory testing
  * TestKit testKit = InMemoryTestKit.create();
- * 
- * // MongoDB testing  
- * TestKit testKit = MongoSyncTestKit.create(mongoClient, database);
- * 
+ *
+ * // MongoDB testing
+ * TestKit testKit = MongoDBSyncTestKit.create(mongoClient, database);
+ *
  * // Same API for both
  * testKit.createBuilder().build().run();
  * testKit.getAuditHelper().verifySuccessfulChangeExecution("my-change");
  * }</pre>
- * 
+ *
  * <p><strong>Implementing for new storage types:</strong> Extend this interface and provide
  * storage-specific implementations of AuditStorage and LockStorage.</p>
  */
@@ -72,7 +72,7 @@ public interface TestKit {
     default TestFlamingockBuilder createBuilderWithAuditStore(CommunityAuditStore auditStore) {
         return new TestFlamingockBuilder(
             new CoreConfiguration(),
-            new CommunityConfiguration(), 
+            new CommunityConfiguration(),
             new SimpleContext(),
             new DefaultPluginManager(),
             auditStore

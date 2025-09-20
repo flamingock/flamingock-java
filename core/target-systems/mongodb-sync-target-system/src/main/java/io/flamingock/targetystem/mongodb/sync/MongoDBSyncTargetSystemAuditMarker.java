@@ -23,8 +23,8 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
@@ -35,7 +35,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class MongoSyncTargetSystemAuditMarker implements TargetSystemAuditMarker {
+public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMarker {
     public static final String OPERATION = "operation";
     private static final String TASK_ID = "taskId";
     private final MongoCollection<Document> onGoingTaskStatusCollection;
@@ -45,7 +45,7 @@ public class MongoSyncTargetSystemAuditMarker implements TargetSystemAuditMarker
         return new Builder(mongoDatabase, txManager);
     }
 
-    public MongoSyncTargetSystemAuditMarker(MongoCollection<Document> onGoingTaskStatusCollection,
+    public MongoDBSyncTargetSystemAuditMarker(MongoCollection<Document> onGoingTaskStatusCollection,
                                             TransactionManager<ClientSession> txManager) {
         this.onGoingTaskStatusCollection = onGoingTaskStatusCollection;
         this.txManager = txManager;
@@ -54,7 +54,7 @@ public class MongoSyncTargetSystemAuditMarker implements TargetSystemAuditMarker
     @Override
     public Set<TargetSystemAuditMark> listAll() {
         return onGoingTaskStatusCollection.find()
-                .map(MongoSyncTargetSystemAuditMarker::mapToOnGoingStatus)
+                .map(MongoDBSyncTargetSystemAuditMarker::mapToOnGoingStatus)
                 .into(new HashSet<>());
     }
 
@@ -126,16 +126,16 @@ public class MongoSyncTargetSystemAuditMarker implements TargetSystemAuditMarker
             return this;
         }
 
-        public MongoSyncTargetSystemAuditMarker build() {
+        public MongoDBSyncTargetSystemAuditMarker build() {
             MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName)
 //                    .withReadConcern(readConcern)
 //                    .withReadPreference(readPreference)
 //                    .withWriteConcern(writeConcern)
                     ;
 
-            CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
-                    new MongoSyncCollectionHelper(collection),
-                    () -> new MongoSyncDocumentHelper(new Document()),
+            CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+                    new MongoDBSyncCollectionHelper(collection),
+                    () -> new MongoDBSyncDocumentHelper(new Document()),
                     new String[]{TASK_ID}
             );
             if (autoCreate) {
@@ -143,7 +143,7 @@ public class MongoSyncTargetSystemAuditMarker implements TargetSystemAuditMarker
             } else {
                 initializer.justValidateCollection();
             }
-            return new MongoSyncTargetSystemAuditMarker(collection, txManager);
+            return new MongoDBSyncTargetSystemAuditMarker(collection, txManager);
         }
     }
 }

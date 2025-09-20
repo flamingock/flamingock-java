@@ -20,8 +20,8 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.community.mongodb.sync.internal.MongoSyncAuditPersistence;
-import io.flamingock.community.mongodb.sync.internal.MongoSyncLockService;
+import io.flamingock.community.mongodb.sync.internal.MongoDBSyncAuditPersistence;
+import io.flamingock.community.mongodb.sync.internal.MongoDBSyncLockService;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
@@ -34,13 +34,13 @@ import io.flamingock.internal.util.id.RunnerId;
 import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
-public class MongoSyncAuditStore implements CommunityAuditStore {
+public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
 
     protected RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
-    private MongoSyncAuditPersistence persistence;
-    private MongoSyncLockService lockService;
+    private MongoDBSyncAuditPersistence persistence;
+    private MongoDBSyncLockService lockService;
     private final MongoClient client;
     private final String databaseName;
     private MongoDatabase database;
@@ -52,37 +52,37 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
     private boolean autoCreate = true;
 
 
-    public MongoSyncAuditStore(MongoClient client, String databaseName) {
+    public MongoDBSyncAuditStore(MongoClient client, String databaseName) {
         this.client = client;
         this.databaseName = databaseName;
     }
 
-    public MongoSyncAuditStore withAuditRepositoryName(String auditRepositoryName) {
+    public MongoDBSyncAuditStore withAuditRepositoryName(String auditRepositoryName) {
         this.auditRepositoryName = auditRepositoryName;
         return this;
     }
 
-    public MongoSyncAuditStore withLockRepositoryName(String lockRepositoryName) {
+    public MongoDBSyncAuditStore withLockRepositoryName(String lockRepositoryName) {
         this.lockRepositoryName = lockRepositoryName;
         return this;
     }
 
-    public MongoSyncAuditStore withReadConcern(ReadConcern readConcern) {
+    public MongoDBSyncAuditStore withReadConcern(ReadConcern readConcern) {
         this.readConcern = readConcern;
         return this;
     }
 
-    public MongoSyncAuditStore withReadPreference(ReadPreference readPreference) {
+    public MongoDBSyncAuditStore withReadPreference(ReadPreference readPreference) {
         this.readPreference = readPreference;
         return this;
     }
 
-    public MongoSyncAuditStore withWriteConcern(WriteConcern writeConcern) {
+    public MongoDBSyncAuditStore withWriteConcern(WriteConcern writeConcern) {
         this.writeConcern = writeConcern;
         return this;
     }
 
-    public MongoSyncAuditStore withAutoCreate(boolean autoCreate) {
+    public MongoDBSyncAuditStore withAutoCreate(boolean autoCreate) {
         this.autoCreate = autoCreate;
         return this;
     }
@@ -97,7 +97,7 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
     @Override
     public synchronized CommunityAuditPersistence getPersistence() {
         if (persistence == null) {
-            persistence = new MongoSyncAuditPersistence(
+            persistence = new MongoDBSyncAuditPersistence(
                     communityConfiguration,
                     database,
                     auditRepositoryName,
@@ -114,7 +114,7 @@ public class MongoSyncAuditStore implements CommunityAuditStore {
     @Override
     public synchronized CommunityLockService getLockService() {
         if (lockService == null) {
-            lockService = new MongoSyncLockService(
+            lockService = new MongoDBSyncLockService(
                     database,
                     lockRepositoryName,
                     readConcern,

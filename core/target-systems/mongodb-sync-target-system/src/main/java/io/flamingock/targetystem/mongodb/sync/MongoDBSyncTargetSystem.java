@@ -30,7 +30,7 @@ import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
-public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTargetSystem> {
+public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> {
     private static final String FLAMINGOCK_ON_GOING_TASKS = "flamingockOnGoingTasks";
 
     private final WriteConcern DEFAULT_WRITE_CONCERN = WriteConcern.MAJORITY.withJournal(true);
@@ -46,9 +46,9 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     private boolean autoCreate = true;
 
     private TargetSystemAuditMarker taskStatusRepository;
-    private MongoSyncTxWrapper txWrapper;
+    private MongoDBSyncTxWrapper txWrapper;
 
-    public MongoSyncTargetSystem(String id, MongoClient mongoClient, String databaseName) {
+    public MongoDBSyncTargetSystem(String id, MongoClient mongoClient, String databaseName) {
         super(id);
         this.mongoClient = mongoClient;
         this.databaseName = databaseName;
@@ -59,25 +59,25 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
         targetSystemContext.setProperty("autoCreate", true);
     }
 
-    public MongoSyncTargetSystem withReadConcern(ReadConcern readConcern) {
+    public MongoDBSyncTargetSystem withReadConcern(ReadConcern readConcern) {
         this.readConcern = readConcern;
         targetSystemContext.addDependency(readConcern);
         return this;
     }
 
-    public MongoSyncTargetSystem withReadPreference(ReadPreference readPreference) {
+    public MongoDBSyncTargetSystem withReadPreference(ReadPreference readPreference) {
         this.readPreference = readPreference;
         targetSystemContext.addDependency(readPreference);
         return this;
     }
 
-    public MongoSyncTargetSystem withWriteConcern(WriteConcern writeConcern) {
+    public MongoDBSyncTargetSystem withWriteConcern(WriteConcern writeConcern) {
         this.writeConcern = writeConcern;
         targetSystemContext.addDependency(writeConcern);
         return this;
     }
 
-    public MongoSyncTargetSystem withAutoCreate(boolean autoCreate) {
+    public MongoDBSyncTargetSystem withAutoCreate(boolean autoCreate) {
         this.autoCreate = autoCreate;
         return this;
     }
@@ -109,11 +109,11 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
                 .orElse(FlamingockEdition.CLOUD);
 
         TransactionManager<ClientSession> txManager = new TransactionManager<>(mongoClient::startSession);
-        txWrapper = new MongoSyncTxWrapper(txManager);
+        txWrapper = new MongoDBSyncTxWrapper(txManager);
 
         taskStatusRepository = edition == FlamingockEdition.COMMUNITY
                 ? new NoOpTargetSystemAuditMarker(this.getId())
-                : MongoSyncTargetSystemAuditMarker.builder(database, txManager)
+                : MongoDBSyncTargetSystemAuditMarker.builder(database, txManager)
                 .setCollectionName(FLAMINGOCK_ON_GOING_TASKS)
                 .withAutoCreate(autoCreate)
                 .withReadConcern(readConcern)
@@ -142,7 +142,7 @@ public class MongoSyncTargetSystem extends TransactionalTargetSystem<MongoSyncTa
     }
 
     @Override
-    protected MongoSyncTargetSystem getSelf() {
+    protected MongoDBSyncTargetSystem getSelf() {
         return this;
     }
 

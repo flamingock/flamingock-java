@@ -22,12 +22,12 @@ import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
 
-public class MongoSyncCollectionHelper implements CollectionHelper<MongoSyncDocumentHelper> {
+public class MongoDBSyncCollectionHelper implements CollectionHelper<MongoDBSyncDocumentHelper> {
 
     private final MongoCollection<Document> collection;
 
 
-    public MongoSyncCollectionHelper(MongoCollection<Document> collection) {
+    public MongoDBSyncCollectionHelper(MongoCollection<Document> collection) {
         this.collection = collection;
     }
 
@@ -38,11 +38,11 @@ public class MongoSyncCollectionHelper implements CollectionHelper<MongoSyncDocu
 
     @Override
     public Iterable<DocumentHelper> listIndexes() {
-        return collection.listIndexes().map(MongoSyncDocumentHelper::new);
+        return collection.listIndexes().map(MongoDBSyncDocumentHelper::new);
     }
 
     @Override
-    public String createUniqueIndex(MongoSyncDocumentHelper uniqueIndexDocument) {
+    public String createUniqueIndex(MongoDBSyncDocumentHelper uniqueIndexDocument) {
         return collection.createIndex(uniqueIndexDocument.getDocument(), new IndexOptions().unique(true));
     }
 
@@ -52,7 +52,7 @@ public class MongoSyncCollectionHelper implements CollectionHelper<MongoSyncDocu
     }
 
     @Override
-    public void deleteMany(MongoSyncDocumentHelper documentWrapper) {
+    public void deleteMany(MongoDBSyncDocumentHelper documentWrapper) {
         collection.deleteMany(documentWrapper.getDocument());
     }
 

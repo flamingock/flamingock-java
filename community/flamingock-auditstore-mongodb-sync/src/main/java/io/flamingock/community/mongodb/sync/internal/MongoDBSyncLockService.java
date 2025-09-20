@@ -26,8 +26,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncCollectionHelper;
-import io.flamingock.targetystem.mongodb.sync.util.MongoSyncDocumentHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
+import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
@@ -48,15 +48,15 @@ import static io.flamingock.internal.core.store.lock.community.CommunityLockEntr
 import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
 import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
 
-public class MongoSyncLockService implements CommunityLockService {
+public class MongoDBSyncLockService implements CommunityLockService {
 
-    private final MongoDBLockMapper<MongoSyncDocumentHelper> mapper = new MongoDBLockMapper<>(() -> new MongoSyncDocumentHelper(new Document()));
+    private final MongoDBLockMapper<MongoDBSyncDocumentHelper> mapper = new MongoDBLockMapper<>(() -> new MongoDBSyncDocumentHelper(new Document()));
 
 
     private final MongoCollection<Document> collection;
     private final TimeService timeService;
 
-    public MongoSyncLockService(MongoDatabase database,
+    public MongoDBSyncLockService(MongoDatabase database,
                                 String collectionName,
                                 ReadConcern readConcern,
                                 ReadPreference readPreference,
@@ -69,7 +69,7 @@ public class MongoSyncLockService implements CommunityLockService {
                             timeService);
     }
 
-    protected MongoSyncLockService(MongoCollection<Document> collection,
+    protected MongoDBSyncLockService(MongoCollection<Document> collection,
                                    ReadConcern readConcern,
                                    ReadPreference readPreference,
                                    WriteConcern writeConcern,
@@ -82,9 +82,9 @@ public class MongoSyncLockService implements CommunityLockService {
     }
 
     public void initialize(boolean autoCreate) {
-        CollectionInitializator<MongoSyncDocumentHelper> initializer = new CollectionInitializator<>(
-                new MongoSyncCollectionHelper(collection),
-                () -> new MongoSyncDocumentHelper(new Document()),
+        CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
+                new MongoDBSyncCollectionHelper(collection),
+                () -> new MongoDBSyncDocumentHelper(new Document()),
                 new String[]{KEY_FIELD}
         );
         if (autoCreate) {
@@ -113,7 +113,7 @@ public class MongoSyncLockService implements CommunityLockService {
     public LockAcquisition getLock(LockKey lockKey) {
         Document result = collection.find(new Document().append(KEY_FIELD, lockKey.toString())).first();
         if (result != null) {
-            return mapper.fromDocument(new MongoSyncDocumentHelper(result));
+            return mapper.fromDocument(new MongoDBSyncDocumentHelper(result));
         }
         return null;
     }

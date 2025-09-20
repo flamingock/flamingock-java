@@ -24,8 +24,8 @@ import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.runner.Runner;
-import io.flamingock.mongodb.kit.MongoSyncTestKit;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
+import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
+import io.flamingock.community.mongodb.sync.driver.MongoDBSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import org.bson.Document;
@@ -80,9 +80,9 @@ public class MongoDbImporterTest {
         database = mongoClient.getDatabase(DB_NAME);
 
         mongockTestHelper = new MongoDbMongockTestHelper(database.getCollection(MONGOCK_CHANGE_LOGS));
-        
+
         // Initialize TestKit for unified testing
-        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
     }
@@ -113,18 +113,18 @@ public class MongoDbImporterTest {
             APPLIED("client-initializer_before"),
             APPLIED("client-initializer"),
             APPLIED("client-updater"),
-            
+
             // System stage - actual system importer change
             STARTED("migration-from-mongock"),
             APPLIED("migration-from-mongock"),
-            
+
             // Application stage - new changes created by templates
             STARTED("create-users-collection-with-index"),
             APPLIED("create-users-collection-with-index"),
             STARTED("seed-users"),
             APPLIED("seed-users")
         );
-        
+
 
 
         // Validate actual change

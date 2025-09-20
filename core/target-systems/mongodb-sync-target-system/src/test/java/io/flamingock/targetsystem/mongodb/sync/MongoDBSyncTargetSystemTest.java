@@ -39,7 +39,7 @@ import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
-import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
+import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -58,9 +58,9 @@ import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
 
 @Testcontainers
-public class MongoSyncTargetSystemTest {
+public class MongoDBSyncTargetSystemTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoSyncTargetSystemTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoDBSyncTargetSystemTest.class);
 
     private static final String DB_NAME = "test";
     private static final String CLIENTS_COLLECTION = "clientCollection";
@@ -162,7 +162,7 @@ public class MongoSyncTargetSystemTest {
             ));
 
 
-            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+            TargetSystem mongoDBTargetSystem = new MongoDBSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
             flamingockBuilder
                     .addTargetSystem(mongoDBTargetSystem)
@@ -195,7 +195,7 @@ public class MongoSyncTargetSystemTest {
         try (
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
         ) {
-            MongoSyncTargetSystem mongoTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+            MongoDBSyncTargetSystem mongoTargetSystem = new MongoDBSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
@@ -208,7 +208,7 @@ public class MongoSyncTargetSystemTest {
                             new AuditRequestExpectation(executionId, "insert-clients", ROLLED_BACK)
                     ).start();
 
-            MongoSyncTargetSystem mongoSyncCloudTransactioner = Mockito.spy(mongoTargetSystem);
+            MongoDBSyncTargetSystem mongoSyncCloudTransactioner = Mockito.spy(mongoTargetSystem);
 
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -217,7 +217,7 @@ public class MongoSyncTargetSystemTest {
                     new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
 
-            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+            TargetSystem mongoDBTargetSystem = new MongoDBSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
             Runner runner = flamingockBuilder
                     .addTargetSystem(mongoDBTargetSystem)
@@ -255,7 +255,7 @@ public class MongoSyncTargetSystemTest {
                 MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
 
         ) {
-            MongoSyncTargetSystem mongoTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+            MongoDBSyncTargetSystem mongoTargetSystem = new MongoDBSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
             mongoDBTestHelper.insertOngoingExecution("insert-clients");
             mockRunnerServer
@@ -275,7 +275,7 @@ public class MongoSyncTargetSystemTest {
                     new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
-            TargetSystem mongoDBTargetSystem = new MongoSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
+            TargetSystem mongoDBTargetSystem = new MongoDBSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
             flamingockBuilder
                     .addTargetSystem(mongoDBTargetSystem)

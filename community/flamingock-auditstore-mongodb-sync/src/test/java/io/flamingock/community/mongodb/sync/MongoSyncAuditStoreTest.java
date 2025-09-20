@@ -25,13 +25,13 @@ import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_n
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_transactional_non_rollback;
 import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_happy_transactional;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
+import io.flamingock.community.mongodb.sync.driver.MongoDBSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
-import io.flamingock.mongodb.kit.MongoSyncTestKit;
-import io.flamingock.targetystem.mongodb.sync.MongoSyncTargetSystem;
+import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
+import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -58,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
-class MongoSyncAuditStoreTest {
+class MongoDBSyncAuditStoreTest {
 
     private static final String DB_NAME = "test";
 
@@ -86,7 +86,7 @@ class MongoSyncAuditStoreTest {
     void setupEach() {
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         database = mongoClient.getDatabase("test");
-        testKit = MongoSyncTestKit.create(new MongoSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
         mongoDBTestHelper = new MongoDBTestHelper(database);
@@ -110,8 +110,8 @@ class MongoSyncAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
+                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -141,8 +141,8 @@ class MongoSyncAuditStoreTest {
                         new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
+                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -177,8 +177,8 @@ class MongoSyncAuditStoreTest {
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
-                        .setAuditStore(new MongoSyncAuditStore(mongoClient, "test"))
-                            .addTargetSystem(new MongoSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
+                            .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
                             .build()
                             .run();
                 }))

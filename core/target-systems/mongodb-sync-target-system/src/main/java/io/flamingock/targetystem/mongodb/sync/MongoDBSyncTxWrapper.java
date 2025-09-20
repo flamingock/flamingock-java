@@ -30,12 +30,12 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.function.Function;
 
-public class MongoSyncTxWrapper implements TransactionWrapper {
+public class MongoDBSyncTxWrapper implements TransactionWrapper {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("MongoTx");
 
     private final TransactionManager<ClientSession> sessionManager;
 
-   public MongoSyncTxWrapper(TransactionManager<ClientSession> sessionManager) {
+   public MongoDBSyncTxWrapper(TransactionManager<ClientSession> sessionManager) {
         this.sessionManager = sessionManager;
     }
 
@@ -48,19 +48,19 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
         LocalDateTime transactionStart = LocalDateTime.now();
         String sessionId = executionRuntime.getSessionId();
         Dependency clienteSessionDependency;
-        
+
         try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
             clienteSessionDependency = new Dependency(clientSession);
             String connectionInfo = getConnectionInfo(clientSession);
-            
+
             logger.debug("Starting MongoDB transaction [connection={}]", connectionInfo);
             clientSession.startTransaction(TransactionOptions.builder().build());
             executionRuntime.addDependency(clienteSessionDependency);
-            
+
             try {
                 T result = operation.apply(executionRuntime);
                 Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
-                
+
                 if (result instanceof FailedStep) {
                     logger.info("Rolling back MongoDB transaction due to failed step [duration={}]", formatDuration(transactionDuration));
                     clientSession.abortTransaction();
@@ -71,24 +71,24 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
                     logger.debug("MongoDB transaction commit completed successfully [duration={}]", formatDuration(transactionDuration));
                 }
                 return result;
-                
+
             } catch (Exception e) {
                 Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
-                logger.error("MongoDB transaction failed, attempting rollback [duration={} error={}]", 
+                logger.error("MongoDB transaction failed, attempting rollback [duration={} error={}]",
                            formatDuration(failureDuration), e.getMessage());
-                
+
                 DatabaseTransactionException.RollbackStatus rollbackStatus;
                 try {
                     clientSession.abortTransaction();
                     rollbackStatus = DatabaseTransactionException.RollbackStatus.SUCCESS;
-                    logger.info("MongoDB transaction rollback completed successfully after failure [duration={}]", 
+                    logger.info("MongoDB transaction rollback completed successfully after failure [duration={}]",
                               formatDuration(failureDuration));
                 } catch (Exception rollbackEx) {
                     rollbackStatus = DatabaseTransactionException.RollbackStatus.FAILED;
-                    logger.error("Transaction rollback failed [duration={} rollback_error={}]", 
+                    logger.error("Transaction rollback failed [duration={} rollback_error={}]",
                                formatDuration(failureDuration), rollbackEx.getMessage(), rollbackEx);
                 }
-                
+
                 throw new DatabaseTransactionException(
                     "MongoDB transaction failed during operation execution",
                     DatabaseTransactionException.TransactionState.FAILED,
@@ -101,7 +101,7 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
                     e
                 );
             }
-            
+
         } finally {
             sessionManager.closeSession(sessionId);
         }
@@ -114,7 +114,7 @@ public class MongoSyncTxWrapper implements TransactionWrapper {
             return "connection_info_unavailable";
         }
     }
-    
+
     private String formatDuration(Duration duration) {
         long millis = duration.toMillis();
         if (millis < 1000) {

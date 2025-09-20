@@ -23,7 +23,7 @@ import io.flamingock.cli.config.FlamingockConfig;
 import io.flamingock.cli.factory.DynamoDBClientFactory;
 import io.flamingock.cli.factory.MongoClientFactory;
 import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
-import io.flamingock.community.mongodb.sync.driver.MongoSyncAuditStore;
+import io.flamingock.community.mongodb.sync.driver.MongoDBSyncAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.Dependency;
@@ -99,7 +99,7 @@ public class AuditService {
     }
     /**
      * Get detailed information about a specific change unit that has issues.
-     * 
+     *
      * @param changeId the change unit ID to inspect
      * @return detailed issue information including all audit entries, error details, etc.
      */
@@ -145,19 +145,19 @@ public class AuditService {
 
     private AuditStore<?> createMongoAuditStore(Context context) {
         DatabaseConfig.MongoDBConfig mongoConfig = config.getAudit().getMongodb();
-        
+
         // Create MongoDB clients
         MongoClient mongoClient = MongoClientFactory.createMongoClient(mongoConfig);
 
-        return new MongoSyncAuditStore(mongoClient, mongoConfig.getDatabase());
+        return new MongoDBSyncAuditStore(mongoClient, mongoConfig.getDatabase());
     }
 
     private AuditStore<?> createDynamoAuditStore(Context context) {
         DatabaseConfig.DynamoDBConfig dynamoConfig = config.getAudit().getDynamodb();
-        
+
         // Create DynamoDB client
         DynamoDbClient dynamoClient = DynamoDBClientFactory.createDynamoDbClient(dynamoConfig);
-        
+
         return new DynamoDBAuditStore(dynamoClient);
     }
 }
