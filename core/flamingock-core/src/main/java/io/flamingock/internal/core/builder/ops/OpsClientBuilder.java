@@ -136,13 +136,6 @@ public class OpsClientBuilder
         coreConfiguration.setMetadata(metadata);
         return getSelf();
     }
-
-    @Override
-    public OpsClientBuilder setDefaultAuthor(String publicMigrationAuthor) {
-        coreConfiguration.setDefaultAuthor(publicMigrationAuthor);
-        return getSelf();
-    }
-
     @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguration.getLockAcquiredForMillis();
@@ -176,11 +169,6 @@ public class OpsClientBuilder
     @Override
     public Map<String, Object> getMetadata() {
         return coreConfiguration.getMetadata();
-    }
-
-    @Override
-    public String getDefaultAuthor() {
-        return coreConfiguration.getDefaultAuthor();
     }
 
 

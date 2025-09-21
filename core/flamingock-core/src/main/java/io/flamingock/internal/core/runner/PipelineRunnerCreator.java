@@ -60,7 +60,7 @@ public final class PipelineRunnerCreator {
 
 
     private static OrphanExecutionContext buildExecutionContext(CoreConfigurable configuration) {
-        return new OrphanExecutionContext(StringUtil.hostname(), configuration.getDefaultAuthor(), configuration.getMetadata());
+        return new OrphanExecutionContext(StringUtil.hostname(), configuration.getMetadata());
     }
 
 }

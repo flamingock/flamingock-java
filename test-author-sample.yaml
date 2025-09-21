@@ -1,0 +1,13 @@
+id: test-author-yaml
+order: "001"
+author: "jane.doe"
+template: mongodb-sync
+profiles: ""
+transactional: true
+configuration:
+  collection: "test_collection"
+apply:
+  operation: "insert"
+  document:
+    name: "test"
+    value: "author field test"

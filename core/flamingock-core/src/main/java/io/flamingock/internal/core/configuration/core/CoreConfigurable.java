@@ -41,8 +41,6 @@ public interface CoreConfigurable {
 
     void setMetadata(Map<String, Object> metadata);
 
-    void setDefaultAuthor(String defaultAuthor);
-
     long getLockAcquiredForMillis();
 
     Long getLockQuitTryingAfterMillis();
@@ -56,8 +54,6 @@ public interface CoreConfigurable {
     String getServiceIdentifier();
 
     Map<String, Object> getMetadata();
-
-    String getDefaultAuthor();
 
 
 }

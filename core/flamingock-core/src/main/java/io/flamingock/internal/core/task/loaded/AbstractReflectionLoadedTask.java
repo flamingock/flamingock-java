@@ -94,13 +94,14 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
     public AbstractReflectionLoadedTask(String fileName,
                                         String id,
                                         String order,
+                                        String author,
                                         Class<?> implementationClass,
                                         boolean runAlways,
                                         boolean transactional,
                                         boolean system,
                                         TargetSystemDescriptor targetSystem,
                                         RecoveryDescriptor recovery) {
-        super(id, order, implementationClass.getName(), runAlways, transactional, system, targetSystem, recovery);
+        super(id, order, author, implementationClass.getName(), runAlways, transactional, system, targetSystem, recovery);
         this.fileName = fileName;
         this.implementationClass = implementationClass;
     }

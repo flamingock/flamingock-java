@@ -93,7 +93,7 @@ public abstract class AuditContextBundle {
                 stageExecutionContext.getExecutionId(),
                 runtimeContext.getStageName(),
                 loadedTask.getId(),
-                stageExecutionContext.getAuthor(),
+                loadedTask.getAuthor(),
                 runtimeContext.getExecutedAt(),
                 getAuditStatus(),
                 getExecutionType(),

@@ -69,6 +69,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                 fileName,
                 getId(),
                 getOrder(),
+                "test-author", // Default author for tests
                 templateName,
                 Collections.emptyList(),
                 isTransactional(),

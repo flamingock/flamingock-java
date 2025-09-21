@@ -32,6 +32,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private String fileName;
     private String id;
     private String order;
+    private String author;
     private String templateClassPath;
     private String profilesString;
     private boolean runAlways;
@@ -66,6 +67,11 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
 
     public TemplatePreviewTaskBuilder setOrder(String order) {
         this.order = order;
+        return this;
+    }
+
+    public TemplatePreviewTaskBuilder setAuthor(String author) {
+        this.author = author;
         return this;
     }
 
@@ -115,6 +121,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
                 fileName,
                 id,
                 order,
+                author,
                 templateClassPath,
                 profiles,
                 transactional,
@@ -142,6 +149,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     TemplatePreviewTaskBuilder setFromDefinition(ChangeTemplateFileContent templateTaskDescriptor) {
         setId(templateTaskDescriptor.getId());
         setOrder(templateTaskDescriptor.getOrder());
+        setAuthor(templateTaskDescriptor.getAuthor());
         setTemplate(templateTaskDescriptor.getTemplate());
         setProfilesString(templateTaskDescriptor.getProfiles());
         setConfiguration(templateTaskDescriptor.getConfiguration());

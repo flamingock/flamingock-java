@@ -36,6 +36,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
     private final List<Class<?>> executionParameters;
     private final List<Class<?>> rollbackParameters;
+    private final String author;
 
     public CodeChangeUnitTestDefinition(Class<?> changeUnitClass,
                                         List<Class<?>> executionParameters,
@@ -70,6 +71,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
                                          List<Class<?>> rollbackParameters) {
         this(changeUnitAnn.id(),
                 changeUnitAnn.order(),
+                changeUnitAnn.author(),
                 className,
                 targetSystemAnn != null ? targetSystemAnn.id() : null,
                 changeUnitAnn.transactional(),
@@ -80,6 +82,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
     public CodeChangeUnitTestDefinition(String id,
                                         String order,
+                                        String author,
                                         String className,
                                         String targetSystem,
                                         boolean transactional,
@@ -90,6 +93,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
         this.targetSystem = targetSystem;
         this.recovery = recovery;
         this.className = className;
+        this.author = author;
         this.executionParameters = executionParameters;
         this.rollbackParameters = rollbackParameters;
     }
@@ -109,6 +113,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
         return new CodePreviewChangeUnit(
                 getId(),
                 getOrder(),
+                author, // Default author for tests
                 className,
                 new PreviewMethod("execution", executionParameterNames),
                 rollback,

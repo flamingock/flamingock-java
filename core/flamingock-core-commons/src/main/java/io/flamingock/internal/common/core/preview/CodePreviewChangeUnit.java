@@ -34,6 +34,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
 
     public CodePreviewChangeUnit(String id,
                                  String order,
+                                 String author,
                                  String sourceClassPath,
                                  PreviewMethod executionMethodPreview,
                                  PreviewMethod rollbackMethodPreview,
@@ -44,7 +45,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
                                  boolean system,
                                  TargetSystemDescriptor targetSystem,
                                  RecoveryDescriptor recovery) {
-        super(id, order, sourceClassPath, runAlways, transactional, system, targetSystem, recovery);
+        super(id, order, author, sourceClassPath, runAlways, transactional, system, targetSystem, recovery);
         this.executionMethodName = executionMethodPreview;
         this.rollbackMethodName = rollbackMethodPreview;
         this.beforeExecutionMethodName = beforeExecutionMethodPreview;
@@ -100,6 +101,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
         return "PreviewChangeUnit{" +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +
+                ", author='" + author + '\'' +
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +

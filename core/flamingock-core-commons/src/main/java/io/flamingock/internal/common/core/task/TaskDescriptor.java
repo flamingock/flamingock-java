@@ -22,6 +22,8 @@ public interface TaskDescriptor extends Comparable<TaskDescriptor> {
 
     String getId();
 
+    String getAuthor();
+
     boolean isRunAlways();
 
     boolean isTransactional();

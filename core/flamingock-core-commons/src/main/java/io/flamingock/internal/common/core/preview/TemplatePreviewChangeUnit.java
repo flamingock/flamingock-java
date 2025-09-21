@@ -35,6 +35,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
     public TemplatePreviewChangeUnit(String fileName,
                                      String id,
                                      String order,
+                                     String author,
                                      String templateName,
                                      List<String> profiles,
                                      boolean transactional,
@@ -45,7 +46,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                                      Object rollback,
                                      TargetSystemDescriptor targetSystem,
                                      RecoveryDescriptor recovery) {
-        super(id, order, templateName, runAlways, transactional, system, targetSystem, recovery);
+        super(id, order, author, templateName, runAlways, transactional, system, targetSystem, recovery);
         this.fileName = fileName;
         this.profiles = profiles;
         this.configuration = configuration;
@@ -105,6 +106,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
                 ", rollback=" + rollback +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +
+                ", author='" + author + '\'' +
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
                 ", transactional=" + transactional +

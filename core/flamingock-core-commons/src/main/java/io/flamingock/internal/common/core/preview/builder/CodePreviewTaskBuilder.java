@@ -45,6 +45,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
 
     private String id;
     private String order;
+    private String author;
     private String sourceClassPath;
     private PreviewMethod executionMethod;
     private PreviewMethod rollbackMethod;
@@ -84,6 +85,11 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
 
     public CodePreviewTaskBuilder setOrder(String order) {
         this.order = order;
+        return this;
+    }
+
+    public CodePreviewTaskBuilder setAuthor(String author) {
+        this.author = author;
         return this;
     }
 
@@ -132,6 +138,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         if(changeUnitAnnotation != null) {
             setId(changeUnitAnnotation.id());
             setOrder(changeUnitAnnotation.order());
+            setAuthor(changeUnitAnnotation.author());
             setSourceClassPath(typeElement.getQualifiedName().toString());
             setExecutionMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
             setRollbackMethod(getAnnotatedMethodInfo(typeElement, Rollback.class).orElse(null));
@@ -163,6 +170,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         return new CodePreviewChangeUnit(
                 id,
                 order,
+                author,
                 sourceClassPath,
                 executionMethod,
                 rollbackMethod,

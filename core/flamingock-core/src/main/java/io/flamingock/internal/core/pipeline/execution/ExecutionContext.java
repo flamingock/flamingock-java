@@ -20,8 +20,8 @@ import java.util.Map;
 public class ExecutionContext extends OrphanExecutionContext{
     private final String executionId;
 
-    public ExecutionContext(String executionId, String hostname, String author, Map<String, Object> metadata) {
-        super(hostname, author, metadata);
+    public ExecutionContext(String executionId, String hostname, Map<String, Object> metadata) {
+        super(hostname, metadata);
         this.executionId = executionId;
     }
 

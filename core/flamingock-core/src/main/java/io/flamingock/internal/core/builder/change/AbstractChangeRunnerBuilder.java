@@ -325,12 +325,6 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     }
 
     @Override
-    public HOLDER setDefaultAuthor(String publicMigrationAuthor) {
-        coreConfiguration.setDefaultAuthor(publicMigrationAuthor);
-        return getSelf();
-    }
-
-    @Override
     public long getLockAcquiredForMillis() {
         return coreConfiguration.getLockAcquiredForMillis();
     }
@@ -363,11 +357,6 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     @Override
     public Map<String, Object> getMetadata() {
         return coreConfiguration.getMetadata();
-    }
-
-    @Override
-    public String getDefaultAuthor() {
-        return coreConfiguration.getDefaultAuthor();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////

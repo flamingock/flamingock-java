@@ -25,6 +25,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     protected String order;
 
+    protected String author;
+
     protected String source;
 
     protected boolean runAlways;
@@ -41,6 +43,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     public AbstractTaskDescriptor(String id,
                                   String order,
+                                  String author,
                                   String source,
                                   boolean runAlways,
                                   boolean transactional,
@@ -49,6 +52,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                                   RecoveryDescriptor recovery) {
         this.id = id;
         this.order = order;
+        this.author = author;
         this.source = source;
         this.runAlways = runAlways;
         this.transactional = transactional;
@@ -65,6 +69,11 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
     @Override
     public Optional<String> getOrder() {
         return Optional.ofNullable(order);
+    }
+
+    @Override
+    public String getAuthor() {
+        return author;
     }
 
     @Override
@@ -101,6 +110,10 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     public void setOrder(String order) {
         this.order = order;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
     public void setSource(String source) {
@@ -149,6 +162,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                 .add("sourceClass=" + getSource())
                 .add("sourceName='" + getSource() + "'")
                 .add("id='" + getId() + "'")
+                .add("author='" + getAuthor() + "'")
                 .add("runAlways=" + isRunAlways())
                 .add("transactional=" + isTransactional())
                 .add("order=" + getOrder())

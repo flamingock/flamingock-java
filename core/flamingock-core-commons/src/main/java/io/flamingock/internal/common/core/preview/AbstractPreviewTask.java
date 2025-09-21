@@ -34,13 +34,14 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
 
     public AbstractPreviewTask(String id,
                                String order,
+                               String author,
                                String source,
                                boolean runAlways,
                                boolean transactional,
                                boolean system,
                                TargetSystemDescriptor targetSystem,
                                RecoveryDescriptor recovery) {
-        super(id, order, source, runAlways, transactional, system, targetSystem, recovery);
+        super(id, order, author, source, runAlways, transactional, system, targetSystem, recovery);
     }
 
     @Override

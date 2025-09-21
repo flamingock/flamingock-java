@@ -27,6 +27,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
     private String id;
     private String orderInContent;
+    private String author;
     private String changeUnitClass;
     private boolean isRunAlways;
     private boolean isTransactional;
@@ -63,6 +64,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private CodeLoadedTaskBuilder setPreview(CodePreviewChangeUnit preview) {
         setId(preview.getId());
         setOrderInContent(preview.getOrder().orElse(null));
+        setAuthor(preview.getAuthor());
         setChangeUnitClass(preview.getSource());
         setRunAlways(preview.isRunAlways());
         setTransactional(preview.isTransactional());
@@ -108,6 +110,11 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
+    public CodeLoadedTaskBuilder setAuthor(String author) {
+        this.author = author;
+        return this;
+    }
+
     public CodeLoadedTaskBuilder setChangeUnitClass(String changeUnitClass) {
         this.changeUnitClass = changeUnitClass;
         return this;
@@ -142,6 +149,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
             return new CodeLoadedChangeUnit(
                     isBeforeExecution ? StringUtil.getBeforeExecutionId(id) : id,
                     order,
+                    author,
                     Class.forName(changeUnitClass),
                     isRunAlways,
                     isTransactional,
@@ -157,6 +165,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, Change annotation) {
         setId(annotation.id());
         setOrderInContent(annotation.order());
+        setAuthor(annotation.author());
         setChangeUnitClass(sourceClass.getName());
         setTransactional(annotation.transactional());
         setSystem(false);

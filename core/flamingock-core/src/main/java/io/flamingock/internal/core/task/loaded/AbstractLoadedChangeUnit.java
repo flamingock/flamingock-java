@@ -54,13 +54,14 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
     protected AbstractLoadedChangeUnit(String fileName,
                                        String id,
                                        String order,
+                                       String author,
                                        Class<?> implementationClass,
                                        boolean runAlways,
                                        boolean transactional,
                                        boolean system,
                                        TargetSystemDescriptor targetSystem,
                                        RecoveryDescriptor recovery) {
-        super(fileName, id, order, implementationClass, runAlways, transactional, system, targetSystem, recovery);
+        super(fileName, id, order, author, implementationClass, runAlways, transactional, system, targetSystem, recovery);
 
         this.categories = ReflectionUtil.findAllAnnotations(implementationClass, Categories.class).stream()
                 .map(Categories::value)

@@ -36,8 +36,6 @@ public interface CoreConfigurator<HOLDER> {
 
     HOLDER setMetadata(Map<String, Object> metadata);
 
-    HOLDER setDefaultAuthor(String defaultMigrationAuthor);
-
     HOLDER addTargetSystem(TargetSystem targetSystem);
 
     @SuppressWarnings("unchecked")
@@ -61,8 +59,6 @@ public interface CoreConfigurator<HOLDER> {
     String getServiceIdentifier();
 
     Map<String, Object> getMetadata();
-
-    String getDefaultAuthor();
 
 
 }

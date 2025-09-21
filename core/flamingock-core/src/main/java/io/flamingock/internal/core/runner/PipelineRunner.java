@@ -158,7 +158,7 @@ public class PipelineRunner implements Runner {
         eventPublisher.publish(new StageStartedEvent());
         logger.debug("Applied state to process:\n{}", executableStage);
 
-        ExecutionContext executionContext = new ExecutionContext(executionId, orphanExecutionContext.getHostname(), orphanExecutionContext.getAuthor(), orphanExecutionContext.getMetadata());
+        ExecutionContext executionContext = new ExecutionContext(executionId, orphanExecutionContext.getHostname(), orphanExecutionContext.getMetadata());
         StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock);
         eventPublisher.publish(new StageCompletedEvent(executionOutput));
         return executionOutput.getSummary();

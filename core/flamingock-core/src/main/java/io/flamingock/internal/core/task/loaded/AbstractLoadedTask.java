@@ -33,13 +33,14 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
 
     public AbstractLoadedTask(String id,
                               String order,
+                              String author,
                               String implementationSourceName,
                               boolean runAlways,
                               boolean transactional,
                               boolean system,
                               TargetSystemDescriptor targetSystem,
                               RecoveryDescriptor recovery) {
-        super(id, order, implementationSourceName, runAlways, transactional, system, targetSystem, recovery);
+        super(id, order, author, implementationSourceName, runAlways, transactional, system, targetSystem, recovery);
     }
 
     public abstract Constructor<?> getConstructor();

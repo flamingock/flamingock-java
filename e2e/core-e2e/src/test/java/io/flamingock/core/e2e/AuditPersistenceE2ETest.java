@@ -94,7 +94,7 @@ class AuditPersistenceE2ETest {
 
         // Then - Verify complete audit sequence with all fields using unified approach
         AuditEntryExpectation startedExpected = STARTED(changeId)
-                .withAuthor("default_author")
+                .withAuthor("aperezdieppa")
                 .withType(AuditEntry.ExecutionType.EXECUTION)
                 .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                 .withTxType(AuditTxType.NON_TX)
@@ -103,7 +103,7 @@ class AuditPersistenceE2ETest {
                 .withTimestampBetween(testStart, testEnd);
 
         AuditEntryExpectation executedExpected = APPLIED(changeId)
-                .withAuthor("default_author")
+                .withAuthor("aperezdieppa")
                 .withType(AuditEntry.ExecutionType.EXECUTION)
                 .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                 .withTxType(AuditTxType.NON_TX)
@@ -208,13 +208,13 @@ class AuditPersistenceE2ETest {
         auditHelper.verifyAuditSequenceStrict(
                 // First change (SimpleNonTransactionalChange) - STARTED & APPLIED
                 STARTED(changeId1)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
                 APPLIED(changeId1)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
@@ -222,13 +222,13 @@ class AuditPersistenceE2ETest {
 
                 // Second change (CustomTargetSystemChange) - STARTED & APPLIED
                 STARTED(changeId2)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system"),
                 APPLIED(changeId2)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(io.flamingock.core.e2e.changes.CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
@@ -289,13 +289,13 @@ class AuditPersistenceE2ETest {
             .THEN_VerifyAuditSequenceStrict(
                 // First change sequence
                 STARTED(changeId1)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
                 APPLIED(changeId1)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
@@ -303,13 +303,13 @@ class AuditPersistenceE2ETest {
                 
                 // Second change sequence  
                 STARTED(changeId2)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system"),
                 APPLIED(changeId2)
-                        .withAuthor("default_author")
+                        .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
                         .withClass(CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)

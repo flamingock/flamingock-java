@@ -107,6 +107,7 @@ public class PipelineTest {
         CodePreviewChangeUnit taskWithInvalidOrder1 = new CodePreviewChangeUnit(
                 "task-with-invalid-order-1",
                 "12", // Too short (only 2 digits)
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -121,6 +122,7 @@ public class PipelineTest {
         CodePreviewChangeUnit taskWithInvalidOrder2 = new CodePreviewChangeUnit(
                 "task-with-invalid-order-3",
                 "abc", // Non-numeric
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -159,6 +161,7 @@ public class PipelineTest {
         CodePreviewChangeUnit taskWithValidOrder1 = new CodePreviewChangeUnit(
                 "task-with-valid-order-1",
                 "001", // Valid 3-digit format
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -173,6 +176,7 @@ public class PipelineTest {
         CodePreviewChangeUnit taskWithValidOrder2 = new CodePreviewChangeUnit(
                 "task-with-valid-order-2",
                 "999", // Valid 3-digit format
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -187,6 +191,7 @@ public class PipelineTest {
         CodePreviewChangeUnit taskWithValidOrder3 = new CodePreviewChangeUnit(
                 "task-with-valid-order-3",
                 "0010", // Valid 4-digit format
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -201,6 +206,7 @@ public class PipelineTest {
         CodePreviewChangeUnit taskWithValidOrder4 = new CodePreviewChangeUnit(
                 "task-with-valid-order-4",
                 "9999", // Valid 4-digit format
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -237,6 +243,7 @@ public class PipelineTest {
         CodePreviewChangeUnit task1 = new CodePreviewChangeUnit(
                 "duplicate-id",
                 "001",
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -251,6 +258,7 @@ public class PipelineTest {
         CodePreviewChangeUnit task2 = new CodePreviewChangeUnit(
                 "unique-id",
                 "002",
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,
@@ -265,6 +273,7 @@ public class PipelineTest {
         CodePreviewChangeUnit task3 = new CodePreviewChangeUnit(
                 "duplicate-id",
                 "003",
+                "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
                 null,

@@ -105,11 +105,6 @@ public class SpringbootProperties
         coreConfiguration.setMetadata(metadata);
     }
 
-    @Override
-    public void setDefaultAuthor(String defaultAuthor) {
-        coreConfiguration.setDefaultAuthor(defaultAuthor);
-    }
-
 
     @Override
     public long getLockAcquiredForMillis() {
@@ -144,11 +139,6 @@ public class SpringbootProperties
     @Override
     public Map<String, Object> getMetadata() {
         return coreConfiguration.getMetadata();
-    }
-
-    @Override
-    public String getDefaultAuthor() {
-        return coreConfiguration.getDefaultAuthor();
     }
 
     public SpringRunnerType getRunnerType() {

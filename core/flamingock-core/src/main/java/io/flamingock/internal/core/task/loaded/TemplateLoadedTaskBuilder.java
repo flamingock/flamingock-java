@@ -32,6 +32,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     private String fileName;
     private String id;
     private String orderInContent;
+    private String author;
     private String templateName;
     private List<String> profiles;
     private boolean runAlways;
@@ -77,6 +78,11 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
 
     public TemplateLoadedTaskBuilder setOrderInContent(String order) {
         this.orderInContent = order;
+        return this;
+    }
+
+    public TemplateLoadedTaskBuilder setAuthor(String author) {
+        this.author = author;
         return this;
     }
 
@@ -136,6 +142,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
                 fileName,
                 id,
                 order,
+                author,
                 templateClass,
                 profiles,
                 transactional,
@@ -153,6 +160,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
         setFileName(preview.getFileName());
         setId(preview.getId());
         setOrderInContent(preview.getOrder().orElse(null));
+        setAuthor(preview.getAuthor());
         setTemplateName(preview.getTemplateName());
         setProfiles(preview.getProfiles());
         setRunAlways(preview.isRunAlways());

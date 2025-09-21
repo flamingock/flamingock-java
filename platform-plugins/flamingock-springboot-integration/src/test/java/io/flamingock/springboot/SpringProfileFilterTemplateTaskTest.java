@@ -110,6 +110,7 @@ class SpringProfileFilterTemplateTaskTest {
         ChangeTemplateFileContent changeFileDescriptor = new ChangeTemplateFileContent(
                 "template-base-change-id",
                 "1",
+                "test-author",
                 TemplateSimulate.class.getSimpleName(),
                 profiles,
                 true,

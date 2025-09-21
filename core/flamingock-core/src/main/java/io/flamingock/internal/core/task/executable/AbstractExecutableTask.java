@@ -50,6 +50,11 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
     }
 
     @Override
+    public String getAuthor() {
+        return descriptor.getAuthor();
+    }
+
+    @Override
     public boolean isRunAlways() {
         return descriptor.isRunAlways();
     }

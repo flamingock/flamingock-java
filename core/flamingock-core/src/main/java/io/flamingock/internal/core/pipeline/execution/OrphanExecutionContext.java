@@ -21,14 +21,11 @@ public class OrphanExecutionContext {
 
     private final String hostname;
 
-    private final String author;
-
     private final Map<String, Object> metadata;
 
 
-    public OrphanExecutionContext(String hostname, String author, Map<String, Object> metadata) {
+    public OrphanExecutionContext(String hostname, Map<String, Object> metadata) {
         this.hostname = hostname;
-        this.author = author;
         this.metadata = metadata;
     }
 
@@ -36,9 +33,6 @@ public class OrphanExecutionContext {
         return hostname;
     }
 
-    public String getAuthor() {
-        return author;
-    }
 
     public Map<String, Object> getMetadata() {
         return metadata;

@@ -111,11 +111,6 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public void setDefaultAuthor(String defaultAuthor) {
-        this.defaultAuthor = defaultAuthor;
-    }
-
-    @Override
     public long getLockAcquiredForMillis() {
         return lockConfiguration.getLockAcquiredForMillis();
     }
@@ -148,11 +143,6 @@ public class CoreConfiguration implements CoreConfigurable {
     @Override
     public Map<String, Object> getMetadata() {
         return metadata;
-    }
-
-    @Override
-    public String getDefaultAuthor() {
-        return defaultAuthor;
     }
 
     public static class LockConfiguration {

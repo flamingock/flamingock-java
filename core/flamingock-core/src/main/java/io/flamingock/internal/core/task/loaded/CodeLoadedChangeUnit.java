@@ -32,13 +32,14 @@ import java.util.StringJoiner;
 public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
     CodeLoadedChangeUnit(String id,
                          String order,
+                         String author,
                          Class<?> changeUnitClass,
                          boolean runAlways,
                          boolean transactional,
                          boolean systemTask,
                          TargetSystemDescriptor targetSystem,
                          RecoveryDescriptor recovery) {
-        super(changeUnitClass.getSimpleName(), id, order, changeUnitClass, runAlways, transactional, systemTask, targetSystem, recovery);
+        super(changeUnitClass.getSimpleName(), id, order, author, changeUnitClass, runAlways, transactional, systemTask, targetSystem, recovery);
     }
 
     @Override

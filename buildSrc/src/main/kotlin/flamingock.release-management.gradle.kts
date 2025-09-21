@@ -15,6 +15,7 @@ plugins {
 }
 
 // Get module structure from project-structure plugin
+
 val allProjects = project.extra["allProjects"] as Set<String>
 
 // Release configuration
