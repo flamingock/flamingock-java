@@ -13,3 +13,5 @@ dependencies {
         // etc.
     }
 }
+
+description = "Bill of Materials for Cloud Edition dependency management"

@@ -6,8 +6,7 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 }
 
-description = "Annotation processor for Flamingock. Generates code and metadata from Flamingock annotations such as " +
-        "@ChangeUnit, as well as from templated changes, enabling compile-time processing."
+description = "Annotation processor for generating change metadata and pipeline configurations from @Change annotations and YAML templates"
 
 java {
     toolchain {

@@ -9,7 +9,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
 }
 
-description = "${project.name}'s description"
+description = "Shared internal utilities, preview system, and common infrastructure components"
 
 java {
     toolchain {

@@ -14,7 +14,7 @@ dependencies {
     testImplementation("com.zaxxer:HikariCP:4.0.3")
 }
 
-description = "${project.name}'s description"
+description = "SQL database target system for relational database change operations"
 
 java {
     toolchain {

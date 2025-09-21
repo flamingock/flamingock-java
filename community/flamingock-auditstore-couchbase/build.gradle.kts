@@ -9,7 +9,7 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:1.21.3")
 }
 
-description = "${project.name}'s description"
+description = "Couchbase audit store implementation for distributed change auditing"
 
 java {
     toolchain {

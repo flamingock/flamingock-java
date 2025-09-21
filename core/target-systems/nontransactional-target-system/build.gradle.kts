@@ -5,7 +5,7 @@ dependencies {
     api(project(":core:flamingock-core"))
 }
 
-description = "${project.name}'s description"
+description = "Non-transactional target system implementation for simple change execution"
 
 java {
     toolchain {

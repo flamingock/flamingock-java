@@ -5,7 +5,7 @@ plugins {
     `maven-publish`
 }
 
-description = "Flamingock CLI"
+description = "Command-line interface for Flamingock audit and issue management operations"
 
 dependencies {
     implementation(project(":core:flamingock-core"))

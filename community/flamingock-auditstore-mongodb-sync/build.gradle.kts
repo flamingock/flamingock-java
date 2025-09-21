@@ -21,7 +21,7 @@ dependencies {
     testImplementation("io.mongock:mongodb-sync-v4-driver:5.5.0")
 }
 
-description = "${project.name}'s description"
+description = "MongoDB audit store implementation using synchronous MongoDB driver"
 
 java {
     toolchain {

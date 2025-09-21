@@ -17,6 +17,8 @@ dependencies {
     testImplementation("org.mockito:mockito-inline:4.11.0")
 }
 
+description = "DynamoDB-specific integration tests for the Flamingock importer tool"
+
 tasks.test {
     useJUnitPlatform()
 }

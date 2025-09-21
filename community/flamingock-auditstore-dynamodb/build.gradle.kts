@@ -19,7 +19,7 @@ dependencies {
     testImplementation("io.mongock:dynamodb-driver:5.5.0")
 }
 
-description = "${project.name}'s description"
+description = "Amazon DynamoDB audit store implementation for change tracking"
 
 java {
     toolchain {

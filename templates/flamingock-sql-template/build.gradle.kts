@@ -2,7 +2,7 @@ dependencies {
     implementation(project(":core:flamingock-core-commons"))
 }
 
-description = "${project.name}'s description"
+description = "SQL change templates for declarative database schema and data changes"
 
 java {
     toolchain {

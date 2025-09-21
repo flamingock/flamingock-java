@@ -6,7 +6,7 @@ dependencies {
     testImplementation(project(":core:target-systems:nontransactional-target-system"))
 }
 
-description = "${project.name}'s description"
+description = "Cloud Edition implementation with advanced governance, observability, and SaaS features"
 
 
 tasks.withType<JavaCompile>().configureEach {

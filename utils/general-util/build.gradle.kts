@@ -17,6 +17,8 @@ dependencies {
 
 }
 
+description = "General-purpose utilities and helper classes shared across Flamingock modules"
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))

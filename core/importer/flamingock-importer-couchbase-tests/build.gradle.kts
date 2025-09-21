@@ -22,6 +22,8 @@ dependencies {
     testImplementation("org.mockito:mockito-inline:4.11.0")
 }
 
+description = "Couchbase-specific integration tests for the Flamingock importer tool"
+
 tasks.test {
     useJUnitPlatform()
 }

@@ -16,7 +16,7 @@ dependencies {
     testImplementation(project(":utils:test-util"))
 }
 
-description = "${project.name}'s description"
+description = "MongoDB synchronous driver target system for database change operations"
 
 java {
     toolchain {

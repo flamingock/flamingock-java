@@ -15,7 +15,7 @@ dependencies {
     api(project(":community:flamingock-auditstore-mongodb-sync"))
 }
 
-description = "${project.name}'s description"
+description = "Community Edition aggregate module providing self-managed audit capabilities"
 
 java {
     toolchain {

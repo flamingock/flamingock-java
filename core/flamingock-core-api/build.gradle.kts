@@ -7,7 +7,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
 }
 
-description = "${project.name}'s description"
+description = "Public API annotations and interfaces for defining changes, stages, and templates"
 
 java {
     toolchain {

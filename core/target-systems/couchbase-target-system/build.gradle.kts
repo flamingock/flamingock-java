@@ -16,7 +16,7 @@ dependencies {
     testImplementation(project(":utils:test-util"))
 }
 
-description = "${project.name}'s description"
+description = "Couchbase target system for document database change operations"
 
 java {
     toolchain {

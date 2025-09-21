@@ -20,7 +20,7 @@ dependencies {
     testImplementation(project(":utils:test-util"))
 }
 
-description = "${project.name}'s description"
+description = "Core engine and orchestration logic for executing versioned changes across distributed systems"
 
 
 tasks.withType<JavaCompile>().configureEach {

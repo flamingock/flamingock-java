@@ -21,7 +21,7 @@ dependencies {
     testImplementation("com.couchbase.client:java-client:3.6.0")
 }
 
-
+description = "Import tool for migrating from legacy database migration tools like Mongock to Flamingock"
 
 java {
     toolchain {

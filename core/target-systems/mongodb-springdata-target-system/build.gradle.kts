@@ -23,7 +23,7 @@ dependencies {
     testImplementation(project(":utils:test-util"))
 }
 
-description = "${project.name}'s description"
+description = "MongoDB Spring Data target system for Spring-integrated applications"
 
 java {
     toolchain {

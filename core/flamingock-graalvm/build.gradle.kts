@@ -10,6 +10,8 @@ dependencies {
     compileOnly("org.graalvm.sdk:graal-sdk:22.3.0")
 }
 
+description = "GraalVM native image support and configuration for Flamingock applications"
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))

@@ -16,3 +16,5 @@ dependencies {
         api("io.flamingock:flamingock-graalvm:${version}")
     }
 }
+
+description = "Bill of Materials for Community Edition dependency management"

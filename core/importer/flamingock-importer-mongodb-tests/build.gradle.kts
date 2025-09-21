@@ -15,6 +15,8 @@ dependencies {
     
 }
 
+description = "MongoDB-specific integration tests for the Flamingock importer tool"
+
 tasks.test {
     useJUnitPlatform()
 }

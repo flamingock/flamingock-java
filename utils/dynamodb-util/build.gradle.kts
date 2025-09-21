@@ -18,6 +18,8 @@ dependencies {
 
 }
 
+description = "Amazon DynamoDB utilities and TestContainers support for NoSQL testing and development"
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))

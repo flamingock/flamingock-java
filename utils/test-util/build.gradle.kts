@@ -24,6 +24,8 @@ dependencies {
 
 }
 
+description = "Testing utilities and mock implementations for Flamingock unit and integration tests"
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))

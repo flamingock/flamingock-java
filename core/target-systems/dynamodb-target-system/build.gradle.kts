@@ -12,7 +12,7 @@ dependencies {
     testImplementation(project(":utils:test-util"))
 }
 
-description = "${project.name}'s description"
+description = "Amazon DynamoDB target system for NoSQL change operations"
 
 java {
     toolchain {
