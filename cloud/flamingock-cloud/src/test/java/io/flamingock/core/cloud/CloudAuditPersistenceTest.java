@@ -19,7 +19,7 @@ import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.cloud.changes.CloudChange1;
 import io.flamingock.core.cloud.changes.CloudChange2;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.util.ThreadSleeper;
@@ -115,7 +115,7 @@ public class CloudAuditPersistenceTest {
                 .setHost("http://localhost:" + runnerServerPort)
                 .setService(serviceName)
                 .setEnvironment(environmentName)
-                .addTargetSystem(new DefaultTargetSystem("auth0"))
+                .addTargetSystem(new NonTransactionalTargetSystem("auth0"))
                 //.addStage(new Stage("changes")
 //                        .setCodePackages(Collections.singletonList("io.flamingock.core.cloud.changes")))
         ;

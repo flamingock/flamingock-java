@@ -2,6 +2,7 @@ dependencies {
     //Flamingock
     testImplementation(project(":core:flamingock-core"))
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":core:target-systems:nontransactional-target-system"))
 
     //Test
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")

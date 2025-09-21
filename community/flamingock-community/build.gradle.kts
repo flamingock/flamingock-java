@@ -3,6 +3,7 @@ dependencies {
     implementation(project(":core:flamingock-core"))
     api(project(":core:flamingock-core-api"))
 // target systems
+    api(project(":core:target-systems:nontransactional-target-system"))
     api(project(":core:target-systems:couchbase-target-system"))
     api(project(":core:target-systems:dynamodb-target-system"))
     api(project(":core:target-systems:mongodb-springdata-target-system"))

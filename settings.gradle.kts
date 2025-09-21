@@ -75,6 +75,10 @@ project(":platform-plugins:flamingock-springboot-integration").projectDir =
 // TARGET SYSTEMS
 //////////////////////////////////////
 
+include("core:target-systems:nontransactional-target-system")
+project(":core:target-systems:nontransactional-target-system").projectDir = file("core/target-systems/nontransactional-target-system")
+project(":core:target-systems:nontransactional-target-system").name = "nontransactional-target-system"
+
 include("core:target-systems:mongodb-sync-target-system")
 project(":core:target-systems:mongodb-sync-target-system").projectDir = file("core/target-systems/mongodb-sync-target-system")
 project(":core:target-systems:mongodb-sync-target-system").name = "mongodb-sync-target-system"
@@ -170,3 +174,5 @@ project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
 include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
+
+include("core:target-systems:nontransactional-target-system")

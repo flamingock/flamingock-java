@@ -29,7 +29,7 @@ import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -64,9 +64,9 @@ class CoreStrategiesE2ETest {
 
             // When - Execute using test builder with domain separation
             testKit.createBuilder()
-                    .addTargetSystem(new DefaultTargetSystem("okta"))
-                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
-                    .addTargetSystem(new DefaultTargetSystem("kafka"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("okta"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                     .build()
                     .run();
         }
@@ -98,9 +98,9 @@ class CoreStrategiesE2ETest {
 
             // When
             testKit.createBuilder()
-                    .addTargetSystem(new DefaultTargetSystem("okta"))
-                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
-                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("okta"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("s3"))
                     .build()
                     .run();
         }
@@ -130,9 +130,9 @@ class CoreStrategiesE2ETest {
 
             // When
             testKit.createBuilder()
-                    .addTargetSystem(new DefaultTargetSystem("okta"))
-                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
-                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("okta"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("s3"))
                     .build()
                     .run();
         }
@@ -162,10 +162,10 @@ class CoreStrategiesE2ETest {
             // When & Then - Execution should fail
             assertThrows(PipelineExecutionException.class, () -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("salesforce"))
-                        .addTargetSystem(new DefaultTargetSystem("okta"))
-                        .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
-                        .addTargetSystem(new DefaultTargetSystem("s3"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("salesforce"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("okta"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("s3"))
                         .build()
                         .run();
             });
@@ -195,10 +195,10 @@ class CoreStrategiesE2ETest {
 
             // First execution
             testKit.createBuilder()
-                    .addTargetSystem(new DefaultTargetSystem("stripe-api"))
-                    .addTargetSystem(new DefaultTargetSystem("okta"))
-                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
-                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("stripe-api"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("okta"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("s3"))
                     .build()
                     .run();
 
@@ -217,9 +217,9 @@ class CoreStrategiesE2ETest {
             );
 
             secondRunKit.createBuilder()
-                    .addTargetSystem(new DefaultTargetSystem("okta"))
-                    .addTargetSystem(new DefaultTargetSystem("elasticsearch"))
-                    .addTargetSystem(new DefaultTargetSystem("s3"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("okta"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
+                    .addTargetSystem(new NonTransactionalTargetSystem("s3"))
                     .build()
                     .run();
         }

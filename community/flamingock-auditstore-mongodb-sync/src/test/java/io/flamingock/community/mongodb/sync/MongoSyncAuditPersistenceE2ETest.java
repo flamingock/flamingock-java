@@ -30,7 +30,7 @@ import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;
@@ -135,7 +135,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
                                 .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
-                                .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
+                                .addTargetSystem(new NonTransactionalTargetSystem("non-tx-system")) // Non-transactional target system
                                 .build()
                                 .run();
                     });
@@ -292,7 +292,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
                         testKit.createBuilder()
                                 .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
                                 .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
-                                .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
+                                .addTargetSystem(new NonTransactionalTargetSystem("non-tx-system"))
                                 .addTargetSystem(new MongoDBSyncTargetSystem("tx-separate-system", separateMongoClient, "test"))
                                 .build()
                                 .run();

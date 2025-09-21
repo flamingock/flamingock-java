@@ -26,7 +26,7 @@ import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -84,7 +84,7 @@ class AuditPersistenceE2ETest {
             // When - Run Flamingock
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -130,7 +130,7 @@ class AuditPersistenceE2ETest {
             // When - Run Flamingock (should execute successfully and audit with default target system)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -160,8 +160,8 @@ class AuditPersistenceE2ETest {
             // When - Run Flamingock with custom target system added to builder
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
-                        .addTargetSystem(new DefaultTargetSystem(customTargetSystemId))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem(customTargetSystemId))
                         .build()
                         .run();
             });
@@ -192,8 +192,8 @@ class AuditPersistenceE2ETest {
             // When - Run multiple changes
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
-                        .addTargetSystem(new DefaultTargetSystem("custom-target-system"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("custom-target-system"))
                         .build()
                         .run();
             });
@@ -252,7 +252,7 @@ class AuditPersistenceE2ETest {
                 // The actual test execution code - no more MockedStatic management needed!
                 assertDoesNotThrow(() -> {
                     testKit.createBuilder()
-                            .addTargetSystem(new DefaultTargetSystem("kafka"))
+                            .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                             .build()
                             .run();
                 });
@@ -280,8 +280,8 @@ class AuditPersistenceE2ETest {
             .WHEN(() -> {
                 assertDoesNotThrow(() -> {
                     testKit.createBuilder()
-                            .addTargetSystem(new DefaultTargetSystem("kafka"))
-                            .addTargetSystem(new DefaultTargetSystem("custom-target-system"))
+                            .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                            .addTargetSystem(new NonTransactionalTargetSystem("custom-target-system"))
                             .build()
                             .run();
                 });

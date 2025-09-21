@@ -27,7 +27,7 @@ import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -143,7 +143,7 @@ class DynamoDBAuditPersistenceE2ETest {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDBClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDBClient))
-                                .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
+                                .addTargetSystem(new NonTransactionalTargetSystem("non-tx-system")) // Non-transactional target system
                                 .addDependency(sharedDynamoDBClient)
                                 .build()
                                 .run();
@@ -192,7 +192,7 @@ class DynamoDBAuditPersistenceE2ETest {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDBClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDBClient))
-                                .addTargetSystem(new DefaultTargetSystem("non-tx-system")) // Non-transactional target system
+                                .addTargetSystem(new NonTransactionalTargetSystem("non-tx-system")) // Non-transactional target system
                                 .build()
                                 .run();
                     });
@@ -349,7 +349,7 @@ class DynamoDBAuditPersistenceE2ETest {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(sharedDynamoDBClient))
                                 .addTargetSystem(new DynamoDBTargetSystem("dynamodb", sharedDynamoDBClient))
-                                .addTargetSystem(new DefaultTargetSystem("non-tx-system"))
+                                .addTargetSystem(new NonTransactionalTargetSystem("non-tx-system"))
                                 .addTargetSystem(new DynamoDBTargetSystem("mongo-system", separateDynamoDBClient))
                                 .addDependency(sharedDynamoDBClient)
                                 .build()

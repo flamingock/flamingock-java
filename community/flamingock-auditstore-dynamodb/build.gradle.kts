@@ -8,6 +8,8 @@ dependencies {
 
 
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":core:target-systems:nontransactional-target-system"))
+
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")
     testImplementation("org.testcontainers:junit-jupiter:1.19.0")
     testImplementation("org.testcontainers:testcontainers:1.19.0")

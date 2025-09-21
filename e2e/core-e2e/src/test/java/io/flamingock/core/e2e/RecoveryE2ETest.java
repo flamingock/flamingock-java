@@ -27,7 +27,7 @@ import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.targets.DefaultTargetSystem;
+import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import org.junit.jupiter.api.BeforeEach;
@@ -122,8 +122,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -155,8 +155,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -188,8 +188,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
-                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("sendgrid"))
                         .build()
                         .run();
             });
@@ -221,8 +221,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -255,8 +255,8 @@ class RecoveryE2ETest {
                     ManualInterventionRequiredException.class,
                     () -> {
                         testKit.createBuilder()
-                                .addTargetSystem(new DefaultTargetSystem("kafka"))
-                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
+                                .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("sendgrid"))
                                 .build()
                                 .run();
                     }
@@ -303,8 +303,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -334,8 +334,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
-                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("sendgrid"))
                         .build()
                         .run();
             });
@@ -365,8 +365,8 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
-                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("sendgrid"))
                         .build()
                         .run();
             });
@@ -475,9 +475,9 @@ class RecoveryE2ETest {
             // When - Run Flamingock (should execute successfully without throwing exception)
             assertDoesNotThrow(() -> {
                 testKit.createBuilder()
-                        .addTargetSystem(new DefaultTargetSystem("keycloak"))
-                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
-                        .addTargetSystem(new DefaultTargetSystem("kafka"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("sendgrid"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
                         .build()
                         .run();
             });
@@ -510,8 +510,8 @@ class RecoveryE2ETest {
                     ManualInterventionRequiredException.class,
                     () -> {
                         testKit.createBuilder()
-                                .addTargetSystem(new DefaultTargetSystem("keycloak"))
-                        .addTargetSystem(new DefaultTargetSystem("sendgrid"))
+                                .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
+                        .addTargetSystem(new NonTransactionalTargetSystem("sendgrid"))
                                 .build()
                                 .run();
                     }

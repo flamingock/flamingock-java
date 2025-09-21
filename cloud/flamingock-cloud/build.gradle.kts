@@ -3,6 +3,7 @@ dependencies {
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":core:target-systems:nontransactional-target-system"))
 }
 
 description = "${project.name}'s description"

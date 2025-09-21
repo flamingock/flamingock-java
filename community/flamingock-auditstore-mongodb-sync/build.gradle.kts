@@ -11,6 +11,7 @@ dependencies {
 
 
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":core:target-systems:nontransactional-target-system"))
     testImplementation(project(":e2e:core-e2e"))
     testImplementation("org.testcontainers:mongodb:1.18.3")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")
