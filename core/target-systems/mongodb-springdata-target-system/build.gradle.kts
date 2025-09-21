@@ -18,6 +18,8 @@ dependencies {
     //Test
     testImplementation("org.testcontainers:mongodb:1.18.3")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+
+    testImplementation(project(":cloud:flamingock-cloud"))
     testImplementation(project(":utils:test-util"))
 }
 
