@@ -14,16 +14,16 @@
     <img src="https://img.shields.io/maven-central/v/io.flamingock/flamingock-core" alt="Maven Version" />
   </a>
   
-  <a href="https://github.com/flamingock/flamingock-project/actions/workflows/release.yml">
-    <img src="https://github.com/flamingock/flamingock-project/actions/workflows/release.yml/badge.svg" alt="Release" />
+  <a href="https://github.com/flamingock/flamingock-java/actions/workflows/release.yml">
+    <img src="https://github.com/flamingock/flamingock-java/actions/workflows/release.yml/badge.svg" alt="Release" />
   </a>
 
-  <a href="https://github.com/flamingock/flamingock-project/actions/workflows/build-master.yml">
-    <img src="https://github.com/flamingock/flamingock-project/actions/workflows/build-master.yml/badge.svg" alt="Build Master" />
+  <a href="https://github.com/flamingock/flamingock-java/actions/workflows/build-master.yml">
+    <img src="https://github.com/flamingock/flamingock-java/actions/workflows/build-master.yml/badge.svg" alt="Build Master" />
   </a>
 
-  <a href="https://github.com/flamingock/flamingock-project/actions/workflows/build.yml">
-    <img src="https://github.com/flamingock/flamingock-project/actions/workflows/build.yml/badge.svg" alt="Build Dev" />
+  <a href="https://github.com/flamingock/flamingock-java/actions/workflows/build.yml">
+    <img src="https://github.com/flamingock/flamingock-java/actions/workflows/build.yml/badge.svg" alt="Build Dev" />
   </a>
 
   <a href="LICENSE.md">
@@ -73,7 +73,7 @@ No more fragile scripts or untracked console changes. With CaC:
 ## 🚀 Getting Started
 
 - Read the [getting started tutorial](https://docs.flamingock.io/docs/getting-started/get-started).
-- Explore real-world usage in the [examples repo](https://github.com/mongock/flamingock-examples).
+- Explore real-world usage in the [examples repo](https://github.com/flamingock/flamingock-examples).
 
 <br />
 
@@ -100,8 +100,8 @@ If you'd like to report a bug, suggest a feature, or open a pull request, check 
 ## 📢 Get Involved
 
 ⭐ Star the project to show support
-- Report issues in the [issue tracker](https://github.com/mongock/flamingock-project/issues)
-- Join the conversation in [GitHub discussions](https://github.com/mongock/flamingock-project/discussions)
+- Report issues in the [issue tracker](https://github.com/flamingock/flamingock-java/issues)
+- Join the conversation in [GitHub discussions](https://github.com/flamingock/flamingock-java/discussions)
 
 <br />
 

@@ -19,7 +19,7 @@ We take security seriously and appreciate responsible disclosures.
 
 If you discover a security issue, please report it via one of the following:
 
-- **GitHub Security Advisories** (preferred): [Submit a report](https://github.com/mongock/flamingock-project/security/advisories)
+- **GitHub Security Advisories** (preferred): [Submit a report](https://github.com/flamingock/flamingock-java/security/advisories)
 - **Email**: Send details to [`development@flamingock.io`](mailto:development@flamingock.io)
 
 Please **do not create public GitHub issues** for security-related topics.

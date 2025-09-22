@@ -8,7 +8,7 @@ Thank you for considering contributing to the Flamingock Examples repository! We
 
 To contribute to the project, first, fork the repository to your own GitHub account. This allows you to freely make changes to your copy without affecting the original project.
 
-- Go to the [Flamingock Examples GitHub repository](https://github.com/mongock/flamingock-examples).
+- Go to the [Flamingock Examples GitHub repository](https://github.com/flamingock/flamingock-examples).
 - Click on the **Fork** button at the top-right of the page to create your own copy of the repository.
 
 ### 2. Clone Your Fork
