@@ -69,9 +69,9 @@ if (project != rootProject) {
 
     jreleaser {
         project {
-            description.set("Description should be here")
+            description.set("Flamingock is a Java library that brings Change-as-Code to your applications. It enables you to define and apply versioned, auditable changes to databases, event schemas, and external systems, ensuring safety, synchronization, and governance at runtime")
             inceptionYear.set("2024")
-            authors.set(setOf("dieppa"))
+            authors.set(setOf("dieppa", "osantana", "bercianor", "dfrigolet"))
         }
         gitRootSearch.set(true)
         release {

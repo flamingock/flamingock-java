@@ -22,21 +22,50 @@ publishing {
             from(components[fromComponentPublishing])
             pom {
                 name.set(project.name)
-                description.set("Description should be here")
-                url.set("https://github.com/flamingock/flamingock-java")
+                description.set("Flamingock is a Java library that brings Change-as-Code to your applications. It enables you to define and apply versioned, auditable changes to databases, event schemas, and external systems, ensuring safety, synchronization, and governance at runtime")
+                url.set("https://www.flamingock.io")
                 inceptionYear.set("2024")
+
+                organization {
+                    name.set("Flamingock")
+                    url.set("https://www.flamingock.io")
+                }
+
                 licenses {
                     license {
                         name.set("Apache-2.0")
                         url.set("https://spdx.org/licenses/Apache-2.0.html")
                     }
                 }
+
                 developers {
                     developer {
                         id.set("dieppa")
                         name.set("Antonio Perez Dieppa")
+                        email.set("aperezdieppa@flamingock.io")
+                    }
+                    developer {
+                        id.set("osantana")
+                        name.set("Oliver Santana")
+                        email.set("osantana@flamingock.io")
+                    }
+                    developer {
+                        id.set("bercianor")
+                        name.set("Ruben Berciano")
+                        email.set("bercianor@flamingock.io")
+                    }
+                    developer {
+                        id.set("dfrigolet")
+                        name.set("David Frigolet")
+                        email.set("dfrigolet@flamingock.io")
                     }
                 }
+
+                issueManagement {
+                    system.set("GitHub")
+                    url.set("https://github.com/flamingock/flamingock-java/issues")
+                }
+
                 scm {
                     connection.set("scm:git:https://github.com/flamingock/flamingock-java.git")
                     developerConnection.set("scm:git:ssh://github.com:flamingock/flamingock-java.git")

@@ -72,7 +72,7 @@ No more fragile scripts or untracked console changes. With CaC:
 
 ## 🚀 Getting Started
 
-- Read the [getting started tutorial](https://docs.flamingock.io/docs/getting-started/get-started).
+- Read the [quick start tutorial](https://docs.flamingock.io/docs/overview/quick-start).
 - Explore real-world usage in the [examples repo](https://github.com/flamingock/flamingock-examples).
 
 <br />

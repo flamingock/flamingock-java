@@ -482,7 +482,7 @@ Flamingock supports releasing different bundles of modules:
 ```bash
 # 1. Clone and build
 git clone <repo-url>
-cd flamingock-project
+cd flamingock-java
 ./gradlew build
 
 # 2. Verify everything works
