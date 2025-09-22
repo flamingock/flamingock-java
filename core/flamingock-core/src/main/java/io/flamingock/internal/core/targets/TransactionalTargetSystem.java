@@ -41,19 +41,12 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         extends AbstractTargetSystem<HOLDER>
         implements ContextInitializable {
 
+    protected String onGoingTasksRepositoryName = "flamingockOnGoingTasks";
     protected boolean autoCreate = true;
+    protected TargetSystemAuditMarker markerRepository;
 
     public TransactionalTargetSystem(String id) {
         super(id);
-    }
-
-    public HOLDER withAutoCreate(boolean autoCreate) {
-        this.autoCreate = autoCreate;
-        return getSelf();
-    }
-
-    public boolean isAutoCreate() {
-        return autoCreate;
     }
 
     public boolean hasMarker() {
@@ -90,7 +83,9 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      *
      * @return the audit marker instance
      */
-    abstract public TargetSystemAuditMarker getOnGoingTaskStatusRepository();
+    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
+        return markerRepository;
+    }
 
     /**
      * Returns the transaction wrapper for this target system.

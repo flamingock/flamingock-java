@@ -16,34 +16,24 @@
 package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> {
-    private static final String FLAMINGOCK_ON_GOING_TASKS = "flamingockOnGoingTasks";
 
-    private TargetSystemAuditMarker taskStatusRepository;
-    private DynamoDBTxWrapper txWrapper;
     private DynamoDbClient client;
+
+    private DynamoDBTxWrapper txWrapper;
 
     public DynamoDBTargetSystem(String id, DynamoDbClient dynamoDBClient) {
         super(id);
         this.client = dynamoDBClient;
-        this.autoCreate = true;
-        targetSystemContext.addDependency(dynamoDBClient);
-        targetSystemContext.setProperty("autoCreate", true);
-    }
-
-    public DynamoDBTargetSystem withAutoCreate(boolean autoCreate) {
-        this.autoCreate = autoCreate;
-        targetSystemContext.setProperty("autoCreate", autoCreate);
-        return this;
     }
 
     public DynamoDbClient getClient() {
@@ -56,28 +46,28 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.validate();
+        targetSystemContext.addDependency(client);
+
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
                 .orElse(FlamingockEdition.CLOUD);
 
         TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
         txWrapper = new DynamoDBTxWrapper(client, txManager);
 
-        taskStatusRepository = edition == FlamingockEdition.COMMUNITY
-                ? new NoOpTargetSystemAuditMarker(this.getId())
-                : DynamoDBTargetSystemAuditMarker.builder(client, txManager)
-                .setTableName(FLAMINGOCK_ON_GOING_TASKS)
-                .withAutoCreate(autoCreate)
-                .build();
+        //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
+        markerRepository = new NoOpTargetSystemAuditMarker(this.getId());
+    }
+
+    private void validate() {
+        if (client == null) {
+            throw new FlamingockException("The 'DynamoDbClient' instance is required.");
+        }
     }
 
     @Override
     protected DynamoDBTargetSystem getSelf() {
         return this;
-    }
-
-    @Override
-    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
-        return taskStatusRepository;
     }
 
     @Override

@@ -182,12 +182,15 @@ public class DynamoDBCloudTargetSystemTest {
                             .build()
                             .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
                     1);
+
+            //TODO when cloud enabled
             // check ongoing status
-            dynamoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
+//            dynamoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
         }
     }
 
     @Test
+    @Disabled("adapt when adding cloud support")
     @DisplayName("Should rollback the ongoing deletion when a task fails")
     void failedTasks() {
         String executionId = "execution-1";

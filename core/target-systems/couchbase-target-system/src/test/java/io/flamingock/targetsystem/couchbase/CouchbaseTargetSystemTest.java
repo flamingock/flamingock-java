@@ -172,8 +172,7 @@ public class CouchbaseTargetSystemTest {
             ));
 
 
-            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME)
-                    .withScopeName(SCOPE_NAME);
+            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME);
             flamingockBuilder
                     .addTargetSystem(couchbaseTargetSystem)
                     .build()
@@ -184,12 +183,14 @@ public class CouchbaseTargetSystemTest {
 
             // check clients changes
             couchbaseTestHelper.checkCount(bucket.scope(SCOPE_NAME).collection(CLIENTS_COLLECTION), 1);
+            //TODO add when cloud added
             // check ongoing status
-            couchbaseTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
+//            couchbaseTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
         }
     }
 
     @Test
+    @Disabled("adapt when adding cloud support")
     @DisplayName("Should rollback the ongoing deletion when a task fails")
     void failedTasks() {
         String executionId = "execution-1";
@@ -223,8 +224,7 @@ public class CouchbaseTargetSystemTest {
                     new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
             ));
 
-            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME)
-                    .withScopeName(SCOPE_NAME);
+            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME);
 
             Runner runner = flamingockBuilder
                     .addTargetSystem(couchbaseTargetSystem)
@@ -237,8 +237,10 @@ public class CouchbaseTargetSystemTest {
 
             // check clients changes
             couchbaseTestHelper.checkCount(bucket.scope(SCOPE_NAME).collection(CLIENTS_COLLECTION), 0);
+
+            //TODO when cloud enabled
             // check ongoing status
-            couchbaseTestHelper.checkEmptyTargetSystemAuditMarker();
+//            couchbaseTestHelper.checkEmptyTargetSystemAuditMarker();
         }
     }
 
@@ -279,8 +281,7 @@ public class CouchbaseTargetSystemTest {
                     new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
             ));
 
-            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME)
-                    .withScopeName(SCOPE_NAME);
+            TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME);
 
             flamingockBuilder
                     .addTargetSystem(couchbaseTargetSystem)

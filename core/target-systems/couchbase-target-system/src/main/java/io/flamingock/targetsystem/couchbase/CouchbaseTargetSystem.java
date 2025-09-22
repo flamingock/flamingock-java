@@ -21,51 +21,25 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.FlamingockEdition;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.common.core.error.FlamingockException;
 
 public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTargetSystem> {
 
-    private static final String COUCHBASE_SCOPE_NAME_PROPERTY = "couchbase.scopeName";
-    private static final String COUCHBASE_ON_GOING_TASKS_REPOSITORY_NAME_PROPERTY = "couchbase.onGoingTasksRepositoryName";
-
-    private TargetSystemAuditMarker taskStatusRepository;
-    private CouchbaseTxWrapper txWrapper;
     private Cluster cluster;
     private Bucket bucket;
     private String bucketName;
+    private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
+
+    private CouchbaseTxWrapper txWrapper;
 
     public CouchbaseTargetSystem(String id, Cluster cluster, String bucketName) {
         super(id);
         this.cluster = cluster;
         this.bucketName = bucketName;
-        this.validate();
-        this.bucket = cluster.bucket(bucketName);
-        this.autoCreate = true;
-        targetSystemContext.addDependency(cluster);
-        targetSystemContext.addDependency(bucket);
-        targetSystemContext.setProperty("autoCreate", true);
-    }
-
-    public CouchbaseTargetSystem withScopeName(String scopeName) {
-        targetSystemContext.setProperty(COUCHBASE_SCOPE_NAME_PROPERTY, scopeName);
-        return this;
-    }
-
-    public CouchbaseTargetSystem withOnGoingTasksRepositoryName(String onGoingTasksRepositoryName) {
-        targetSystemContext.setProperty(COUCHBASE_ON_GOING_TASKS_REPOSITORY_NAME_PROPERTY, onGoingTasksRepositoryName);
-        return this;
-    }
-
-    public CouchbaseTargetSystem withAutoCreate(boolean autoCreate) {
-        this.autoCreate = autoCreate;
-        targetSystemContext.setProperty("autoCreate", autoCreate);
-        return this;
     }
 
     public Cluster getCluster() {
@@ -83,27 +57,16 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
     @Override
     public void initialize(ContextResolver baseContext) {
         this.validate();
-        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
-                .orElse(FlamingockEdition.CLOUD);
+        targetSystemContext.addDependency(cluster);
+        bucket = cluster.bucket(bucketName);
+        targetSystemContext.addDependency(bucket);
 
-        String scopeName = targetSystemContext.getPropertyAs(COUCHBASE_SCOPE_NAME_PROPERTY, String.class)
-                .orElseGet(() -> baseContext.getPropertyAs(COUCHBASE_SCOPE_NAME_PROPERTY, String.class)
-                        .orElse(CollectionIdentifier.DEFAULT_SCOPE));
-
-        String onGoingTasksRepositoryName = targetSystemContext.getPropertyAs(COUCHBASE_ON_GOING_TASKS_REPOSITORY_NAME_PROPERTY, String.class)
-                .orElseGet(() -> baseContext.getPropertyAs(COUCHBASE_ON_GOING_TASKS_REPOSITORY_NAME_PROPERTY, String.class)
-                        .orElse(CommunityPersistenceConstants.DEFAULT_ON_GOING_TASKS_STORE_NAME));
 
         TransactionManager<TransactionAttemptContext> txManager = new TransactionManager<>(null); //TODO: update as needed
         txWrapper = new CouchbaseTxWrapper(cluster, txManager);
 
-        taskStatusRepository = edition == FlamingockEdition.COMMUNITY
-                ? new NoOpTargetSystemAuditMarker(this.getId())
-                : CouchbaseTargetSystemAuditMarker.builder(cluster, bucket, txManager)
-                .withScopeName(scopeName)
-                .withCollectionName(onGoingTasksRepositoryName)
-                .withAutoCreate(autoCreate)
-                .build();
+        //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
+        markerRepository = new NoOpTargetSystemAuditMarker(this.getId());
     }
 
     private void validate() {
@@ -113,20 +76,11 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
         if (bucketName == null || bucketName.trim().isEmpty()) {
             throw new FlamingockException("The 'bucketName' property is required.");
         }
-        Bucket testBucket = cluster.bucket(bucketName);
-        if (testBucket == null) {
-            throw new FlamingockException("The 'bucketName' property is invalid. The cluster does not contain a bucket named '%s'", bucketName);
-        }
     }
 
     @Override
     protected CouchbaseTargetSystem getSelf() {
         return this;
-    }
-
-    @Override
-    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
-        return taskStatusRepository;
     }
 
     @Override
