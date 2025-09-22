@@ -41,7 +41,7 @@ public class PipelineTestHelper {
         Change ann = c.getAnnotation(Change.class);
         TargetSystem targetSystemAnn = c.getAnnotation(TargetSystem.class);
         String targetSystemId = targetSystemAnn != null ? targetSystemAnn.id() : null;
-        return new ChangeInfo(ann.id(), ann.order(), targetSystemId, ann.transactional());
+        return new ChangeInfo(ann.id(), ann.order(), ann.author(), targetSystemId, ann.transactional());
     };
 
     @NotNull
@@ -83,6 +83,7 @@ public class PipelineTestHelper {
                     changes.add(new CodePreviewChangeUnit(
                             changeInfo.getChangeId(),
                             changeInfo.getOrder(),
+                            changeInfo.getAuthor(),
                             trio.getFirst().getName(),
                             new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
                             rollback,
@@ -119,12 +120,14 @@ public class PipelineTestHelper {
     static class ChangeInfo {
         private final String changeId;
         private final String order;
+        private final String author;
         private final TargetSystemDescriptor targetSystem;
         private final boolean transactional;
 
-        public ChangeInfo(String changeId, String order, String targetSystemId, boolean transactional) {
+        public ChangeInfo(String changeId, String order, String author, String targetSystemId, boolean transactional) {
             this.changeId = changeId;
             this.order = order;
+            this.author = author;
             this.targetSystem = new TargetSystemDescriptor(targetSystemId);
             this.transactional = transactional;
         }
@@ -136,6 +139,8 @@ public class PipelineTestHelper {
         public String getOrder() {
             return order;
         }
+
+        public String getAuthor() { return author; }
 
         public TargetSystemDescriptor getTargetSystem() {
             return targetSystem;
