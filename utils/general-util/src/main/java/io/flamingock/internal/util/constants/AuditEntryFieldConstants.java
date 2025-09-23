@@ -30,7 +30,7 @@ public class AuditEntryFieldConstants {
     public static final String KEY_EXECUTION_HOSTNAME = "executionHostname";
     public static final String KEY_ERROR_TRACE = "errorTrace";
     public static final String KEY_SYSTEM_CHANGE = "systemChange";
-    public static final String KEY_TX_TYPE = "txType";
+    public static final String KEY_TX_STRATEGY = "txStrategy";
     public static final String KEY_TARGET_SYSTEM_ID = "targetSystemId";
     public static final String KEY_ORDER = "order";
     public static final String KEY_RECOVERY_STRATEGY = "recoveryStrategy";

@@ -37,7 +37,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     private final String executionHostname;
     private final String errorTrace;
     private final ExecutionType type;
-    private final AuditTxType txType;
+    private final AuditTxType txStrategy;
     private final String targetSystemId;
     private final String order;
     private final RecoveryStrategy recoveryStrategy;
@@ -57,7 +57,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       Object metadata,
                       boolean systemChange,
                       String errorTrace,
-                      AuditTxType txType,
+                      AuditTxType txStrategy,
                       String targetSystemId,
                       String order,
                       RecoveryStrategy recoveryStrategy,
@@ -75,7 +75,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         this.executionHostname = executionHostname;
         this.errorTrace = errorTrace;
         this.type = type;
-        this.txType = txType != null ? txType : AuditTxType.NON_TX;
+        this.txStrategy = txStrategy != null ? txStrategy : AuditTxType.NON_TX;
         this.targetSystemId = targetSystemId;
         this.order = order;
         this.systemChange = systemChange;
@@ -102,9 +102,9 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       Object metadata,
                       boolean systemChange,
                       String errorTrace,
-                      AuditTxType txType) {
+                      AuditTxType txStrategy) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName,
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, txStrategy, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
     /**
@@ -198,7 +198,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     }
 
     public AuditTxType getTxType() {
-        return txType;
+        return txStrategy;
     }
 
     public String getTargetSystemId() {

@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Change unit that produces TX_SHARED txType via explicit MongoDBSyncTargetSystem with same MongoClient.
+ * Change unit that produces TX_SHARED txStrategy via explicit MongoDBSyncTargetSystem with same MongoClient.
  * Used for testing audit persistence of TX_SHARED transaction type with explicit target system.
  */
 @TargetSystem(id = "mongo-system")

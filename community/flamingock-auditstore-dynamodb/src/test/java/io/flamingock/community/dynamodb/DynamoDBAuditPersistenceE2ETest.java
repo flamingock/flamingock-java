@@ -129,7 +129,7 @@ class DynamoDBAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist NON_TX txType for transactional=false scenarios")
+    @DisplayName("Should persist NON_TX txStrategy for transactional=false scenarios")
     void testNonTxScenarios() {
         // Given-When-Then - Test NON_TX scenarios
         AuditTestSupport.withTestKit(testKit)
@@ -178,7 +178,7 @@ class DynamoDBAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist NON_TX txType for transactional=false scenarios without dependency injection")
+    @DisplayName("Should persist NON_TX txStrategy for transactional=false scenarios without dependency injection")
     void testNonTxScenariosWithoutDependencies() {
         // Given-When-Then - Test NON_TX scenarios
         AuditTestSupport.withTestKit(testKit)
@@ -226,7 +226,7 @@ class DynamoDBAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist TX_SHARED txType for default and explicit same DynamoDBClient scenarios")
+    @DisplayName("Should persist TX_SHARED txStrategy for default and explicit same DynamoDBClient scenarios")
     void testTxSharedScenarios() {
         // Given-When-Then - Test TX_SHARED scenarios
         AuditTestSupport.withTestKit(testKit)
@@ -298,7 +298,7 @@ class DynamoDBAuditPersistenceE2ETest {
 
 
     @Test
-    @DisplayName("Should persist TX_SEPARATE_NO_MARKER txType for different DynamoDBClient scenario")
+    @DisplayName("Should persist TX_SEPARATE_NO_MARKER txStrategy for different DynamoDBClient scenario")
     void testTxSeparateNoMarkerScenario() {
         DynamoDBTargetSystem separateTargetSystem = new DynamoDBTargetSystem("mongo-system", separateDynamoDBClient); // Different DynamoDbClient from audit storage
 
@@ -374,9 +374,9 @@ class DynamoDBAuditPersistenceE2ETest {
 
 
     @Test
-    @DisplayName("Should persist multiple changes with different txType configurations correctly")
+    @DisplayName("Should persist multiple changes with different txStrategy configurations correctly")
     void testMultipleChangesWithDifferentConfigurations() {
-        // Given-When-Then - Test comprehensive txType scenarios with AuditTestSupport
+        // Given-When-Then - Test comprehensive txStrategy scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_ChangeUnits(

@@ -152,7 +152,7 @@ public class DynamoDBImporterTest {
             System.out.println("metadata: " + entry.getMetadata());
             System.out.println("systemChange: " + entry.getSystemChange());
             System.out.println("errorTrace: " + entry.getErrorTrace());
-            System.out.println("txType: " + entry.getTxType());
+            System.out.println("txStrategy: " + entry.getTxType());
             System.out.println("targetSystemId: " + entry.getTargetSystemId());
             System.out.println("order: " + entry.getOrder());
             System.out.println("-----");

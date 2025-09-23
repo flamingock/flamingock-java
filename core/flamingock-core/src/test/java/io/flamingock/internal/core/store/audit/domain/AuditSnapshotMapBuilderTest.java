@@ -77,7 +77,7 @@ class AuditSnapshotMapBuilderTest {
 
     @Test
     void shouldHandleNullTxTypeInEntries() {
-        // Given - Entry with null txType
+        // Given - Entry with null txStrategy
         AuditSnapshotBuilder builder = new AuditSnapshotBuilder();
         AuditEntry entryWithNullTxType = createAuditEntry("change-1", AuditEntry.Status.APPLIED, null);
         
@@ -115,11 +115,11 @@ class AuditSnapshotMapBuilderTest {
         }
     }
 
-    private AuditEntry createAuditEntry(String taskId, AuditEntry.Status status, AuditTxType txType) {
-        return createAuditEntry(taskId, status, txType, LocalDateTime.now());
+    private AuditEntry createAuditEntry(String taskId, AuditEntry.Status status, AuditTxType txStrategy) {
+        return createAuditEntry(taskId, status, txStrategy, LocalDateTime.now());
     }
 
-    private AuditEntry createAuditEntry(String taskId, AuditEntry.Status status, AuditTxType txType, LocalDateTime timestamp) {
+    private AuditEntry createAuditEntry(String taskId, AuditEntry.Status status, AuditTxType txStrategy, LocalDateTime timestamp) {
         return new AuditEntry(
                 "test-execution",
                 "test-stage",
@@ -135,7 +135,7 @@ class AuditSnapshotMapBuilderTest {
                 new HashMap<>(),
                 false,
                 null,
-                txType
+                txStrategy
         );
     }
 }

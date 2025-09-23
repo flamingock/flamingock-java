@@ -57,7 +57,7 @@ public class AuditEntryRequest {
 
     private final ExecutionType type;
 
-    private final AuditTxType txType;
+    private final AuditTxType txStrategy;
 
     private final String targetSystemId;
 
@@ -82,7 +82,7 @@ public class AuditEntryRequest {
                              Object metadata,
                              boolean systemChange,
                              String errorTrace,
-                             AuditTxType txType,
+                             AuditTxType txStrategy,
                              String targetSystemId,
                              String order,
                              RecoveryStrategy recoveryStrategy,
@@ -99,7 +99,7 @@ public class AuditEntryRequest {
         this.executionHostname = executionHostname;
         this.errorTrace = errorTrace;
         this.type = type;
-        this.txType = txType;
+        this.txStrategy = txStrategy;
         this.targetSystemId = targetSystemId;
         this.order = order;
         this.recoveryStrategy = recoveryStrategy;
@@ -161,7 +161,7 @@ public class AuditEntryRequest {
     }
 
     public AuditTxType getTxType() {
-        return txType;
+        return txStrategy;
     }
 
     public String getTargetSystemId() {

@@ -107,17 +107,17 @@ class CouchbaseAuditMapperTest {
 
     @Test
     void shouldHandleAllTxTypes() {
-        for (AuditTxType txType : AuditTxType.values()) {
+        for (AuditTxType txStrategy : AuditTxType.values()) {
             // Given
-            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txType, TestManualInterventionChangeUnit.class);
+            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txStrategy, TestManualInterventionChangeUnit.class);
 
             // When
             JsonObject document = mapper.toDocument(original);
             AuditEntry deserialized = mapper.fromDocument(document);
 
             // Then
-            assertEquals(txType, deserialized.getTxType(),
-                "Failed for TxType: " + txType);
+            assertEquals(txStrategy, deserialized.getTxType(),
+                "Failed for TxType: " + txStrategy);
         }
     }
 }

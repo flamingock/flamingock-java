@@ -292,8 +292,8 @@ public class AuditEntryExpectation {
     }
     
     // Transaction fields
-    public AuditEntryExpectation withTxType(AuditTxType txType) {
-        this.expectedTxType = txType;
+    public AuditEntryExpectation withTxType(AuditTxType txStrategy) {
+        this.expectedTxType = txStrategy;
         return this;
     }
     

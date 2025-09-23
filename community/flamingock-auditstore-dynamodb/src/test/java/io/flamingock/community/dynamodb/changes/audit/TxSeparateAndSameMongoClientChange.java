@@ -22,7 +22,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 /**
- * ChangeUnit that produces TX_SEPARATE_NO_MARKER txType via different DynamoDbClient.
+ * ChangeUnit that produces TX_SEPARATE_NO_MARKER txStrategy via different DynamoDbClient.
  * Uses custom DynamoDBTargetSystem with different DynamoDbClient than audit storage.
  */
 @TargetSystem(id = "mongo-system")

@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>This test suite verifies that Flamingock correctly handles various audit states
  * and responds appropriately to recovery situations. Each test follows the pattern:</p>
  * <ol>
- *   <li>Pre-insert audit entry with specific state and txType</li>
+ *   <li>Pre-insert audit entry with specific state and txStrategy</li>
  *   <li>Run Flamingock and check for expected exception</li>
  *   <li>Validate audit log state after recovery attempt</li>
  * </ol>
@@ -458,11 +458,11 @@ class RecoveryE2ETest {
      */
     private void testForRetry(String changeId,
                               AuditEntry.Status previousState,
-                              AuditTxType txType,
+                              AuditTxType txStrategy,
                               Class<?> changeUnitClass,
                               AuditEntryExpectation... expectedAuditSequence) {
         // Given - Pre-insert audit entry
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txType, changeUnitClass);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeUnitClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -492,11 +492,11 @@ class RecoveryE2ETest {
      */
     private void testForManualInterventionException(String changeId,
                                                     AuditEntry.Status previousState,
-                                                    AuditTxType txType,
+                                                    AuditTxType txStrategy,
                                                     Class<?> changeUnitClass,
                                                     AuditEntryExpectation... expectedAuditSequence) {
         // Given - Pre-insert audit entry
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txType, changeUnitClass);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeUnitClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {

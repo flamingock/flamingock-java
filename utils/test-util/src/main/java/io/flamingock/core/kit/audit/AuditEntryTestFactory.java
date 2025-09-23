@@ -69,11 +69,11 @@ public class AuditEntryTestFactory {
      *
      * @param changeId the change ID for the audit entry (typically the @ChangeUnit id)
      * @param status   the audit status (STARTED, APPLIED, EXECUTION_FAILED, etc.)
-     * @param txType   the transaction type (NON_TX, TX_SHARED, etc.)
+     * @param txStrategy   the transaction type (NON_TX, TX_SHARED, etc.)
      * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
      * @return a properly configured AuditEntry for testing
      */
-    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txType, Class<?> changeUnitClass) {
+    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, Class<?> changeUnitClass) {
         RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
@@ -90,7 +90,7 @@ public class AuditEntryTestFactory {
                 null,                         // metadata
                 false,                        // systemChange
                 null,                         // errorTrace
-                txType,                       // txType
+                txStrategy,                       // txStrategy
                 "test-target-system",         // targetSystemId
                 "001",                        // order
                 recoveryStrategy,              // recoveryStrategy
@@ -103,7 +103,7 @@ public class AuditEntryTestFactory {
      * Creates a test audit entry with MANUAL_INTERVENTION recovery strategy.
      */
     @Deprecated
-    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txType) {
+    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy) {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
@@ -119,7 +119,7 @@ public class AuditEntryTestFactory {
                 null,                         // metadata
                 false,                        // systemChange
                 null,                         // errorTrace
-                txType,                       // txType
+                txStrategy,                       // txStrategy
                 "test-target-system",         // targetSystemId
                 "001",                        // order
                 RecoveryStrategy.MANUAL_INTERVENTION,          // recoveryStrategy
@@ -205,12 +205,12 @@ public class AuditEntryTestFactory {
      *
      * @param changeId       the change ID for the audit entry (typically the @ChangeUnit id)
      * @param status         the audit status (STARTED, APPLIED, EXECUTION_FAILED, etc.)
-     * @param txType         the transaction type (NON_TX, TX_SHARED, etc.)
+     * @param txStrategy         the transaction type (NON_TX, TX_SHARED, etc.)
      * @param targetSystemId the target system identifier
      * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
      * @return a properly configured AuditEntry for testing with specified target system
      */
-    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txType, String targetSystemId, Class<?> changeUnitClass) {
+    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, String targetSystemId, Class<?> changeUnitClass) {
         RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
@@ -227,7 +227,7 @@ public class AuditEntryTestFactory {
                 null,                         // metadata
                 false,                        // systemChange
                 null,                         // errorTrace
-                txType,                       // txType
+                txStrategy,                       // txStrategy
                 targetSystemId,               // targetSystemId
                 "001",                        // order
                 recoveryStrategy,             // recoveryStrategy
@@ -239,7 +239,7 @@ public class AuditEntryTestFactory {
      * @deprecated Use {@link #createTestAuditEntry(String, AuditEntry.Status, AuditTxType, String, Class)} instead.
      */
     @Deprecated
-    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txType, String targetSystemId) {
+    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, String targetSystemId) {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
@@ -255,7 +255,7 @@ public class AuditEntryTestFactory {
                 null,                         // metadata
                 false,                        // systemChange
                 null,                         // errorTrace
-                txType,                       // txType
+                txStrategy,                       // txStrategy
                 targetSystemId,               // targetSystemId
                 "001",                        // order
                 RecoveryStrategy.MANUAL_INTERVENTION, // recoveryStrategy
@@ -268,11 +268,11 @@ public class AuditEntryTestFactory {
      *
      * @param changeId         the unique identifier for the change unit
      * @param status           the audit entry status (STARTED, APPLIED, etc.)
-     * @param txType           the transaction type (NON_TX, TX_SHARED, etc.)
+     * @param txStrategy           the transaction type (NON_TX, TX_SHARED, etc.)
      * @param recoveryStrategy the recovery strategy for this change unit
      * @return a properly configured AuditEntry for testing with specified recovery strategy
      */
-    public static AuditEntry createTestAuditEntryWithRecoveryStrategy(String changeId, AuditEntry.Status status, AuditTxType txType, String recoveryStrategy) {
+    public static AuditEntry createTestAuditEntryWithRecoveryStrategy(String changeId, AuditEntry.Status status, AuditTxType txStrategy, String recoveryStrategy) {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
@@ -288,7 +288,7 @@ public class AuditEntryTestFactory {
                 null,                         // metadata
                 false,                        // systemChange
                 null,                         // errorTrace
-                txType,                       // txType
+                txStrategy,                       // txStrategy
                 null,                         // targetSystemId
                 "001",                        // order
                 RecoveryStrategy.MANUAL_INTERVENTION, // recoveryStrategy

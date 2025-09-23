@@ -122,7 +122,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist NON_TX txType for transactional=false scenarios")
+    @DisplayName("Should persist NON_TX txStrategy for transactional=false scenarios")
     void testNonTxScenarios() {
         // Given-When-Then - Test NON_TX scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
@@ -169,7 +169,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist TX_SHARED txType when targetSystem not defined in changeUnit")
+    @DisplayName("Should persist TX_SHARED txStrategy when targetSystem not defined in changeUnit")
     void testTxSharedScenarios() {
         MongoDBSyncTargetSystem sharedTargetSystem = new MongoDBSyncTargetSystem("tx-shared-system", sharedMongoClient, "test"); // Same MongoClient as audit storage
 
@@ -240,7 +240,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist TX_SEPARATE_NO_MARKER txType for different MongoClient scenario")
+    @DisplayName("Should persist TX_SEPARATE_NO_MARKER txStrategy for different MongoClient scenario")
     void testTxSeparateNoMarkerScenario() {
         MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
         MongoDBSyncTargetSystem separateTargetSystem = new MongoDBSyncTargetSystem("tx-separate-system", separateMongoClient, "test"); // Different MongoClient from audit storage
@@ -315,7 +315,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist multiple changes with different txType configurations correctly")
+    @DisplayName("Should persist multiple changes with different txStrategy configurations correctly")
     void testMultipleChangesWithDifferentConfigurations() {
 
 

@@ -34,7 +34,7 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ORDER;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TRANSACTION_FLAG;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_TYPE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_STRATEGY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID;
@@ -59,7 +59,7 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
         CouchbaseUtils.addFieldToDocument(document, KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         CouchbaseUtils.addFieldToDocument(document, KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
-        CouchbaseUtils.addFieldToDocument(document, KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
+        CouchbaseUtils.addFieldToDocument(document, KEY_TX_STRATEGY, AuditTxType.safeString(auditEntry.getTxType()));
         CouchbaseUtils.addFieldToDocument(document, KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         CouchbaseUtils.addFieldToDocument(document, KEY_ORDER, auditEntry.getOrder());
         CouchbaseUtils.addFieldToDocument(document, KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy().name());
@@ -69,13 +69,13 @@ public class CouchbaseAuditMapper {
 
     public AuditEntry fromDocument(JsonObject jsonObject) {
         // Parse OperationType with null safety for backward compatibility
-        AuditTxType txType = null;
-        if (jsonObject.get(KEY_TX_TYPE) != null && jsonObject.getString(KEY_TX_TYPE) != null) {
+        AuditTxType txStrategy = null;
+        if (jsonObject.get(KEY_TX_STRATEGY) != null && jsonObject.getString(KEY_TX_STRATEGY) != null) {
             try {
-                txType = AuditTxType.fromString(jsonObject.getString(KEY_TX_TYPE));
+                txStrategy = AuditTxType.fromString(jsonObject.getString(KEY_TX_STRATEGY));
             } catch (IllegalArgumentException e) {
                 // Handle case where stored value is invalid - default to null
-                txType = AuditTxType.NON_TX;
+                txStrategy = AuditTxType.NON_TX;
             }
         }
 
@@ -93,7 +93,7 @@ public class CouchbaseAuditMapper {
                 jsonObject.get(KEY_METADATA) != null ? jsonObject.getObject(KEY_METADATA).toMap() : null,
                 jsonObject.getBoolean(KEY_SYSTEM_CHANGE),
                 jsonObject.getString(KEY_ERROR_TRACE),
-                txType,
+                txStrategy,
                 jsonObject.getString(KEY_TARGET_SYSTEM_ID),
                 jsonObject.getString(KEY_ORDER),
                 jsonObject.getString(KEY_RECOVERY_STRATEGY) != null

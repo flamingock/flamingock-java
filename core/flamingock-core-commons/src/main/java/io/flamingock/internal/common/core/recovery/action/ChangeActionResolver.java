@@ -37,16 +37,16 @@ public final class ChangeActionResolver {
      */
     public static ChangeAction resolve(AuditEntry auditEntry) {
         AuditEntry.Status status = auditEntry.getState();
-        AuditTxType txType = auditEntry.getTxType();
+        AuditTxType txStrategy = auditEntry.getTxType();
 
         switch (status) {
             case MANUAL_MARKED_AS_APPLIED:
             case APPLIED:
                 log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                        auditEntry.getTaskId(), status, txType, SKIP, "Change already marked/executed");
+                        auditEntry.getTaskId(), status, txStrategy, SKIP, "Change already marked/executed");
                 return SKIP;
             case STARTED:
-                if (txType == AuditTxType.TX_SEPARATE_WITH_MARKER) {
+                if (txStrategy == AuditTxType.TX_SEPARATE_WITH_MARKER) {
                     log.warn("Change[{}] uses TX_SEPARATE_WITH_MARKER, which is not supported in the Community Edition.",
                             auditEntry.getTaskId());
                 }
@@ -54,52 +54,52 @@ public final class ChangeActionResolver {
                         auditEntry.getTaskId(), auditEntry.getRecoveryStrategy().isAlwaysRetry(), auditEntry.getRecoveryStrategy());
                 if (auditEntry.getRecoveryStrategy().isAlwaysRetry()) {
                     log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                            auditEntry.getTaskId(), status, txType, APPLY,
+                            auditEntry.getTaskId(), status, txStrategy, APPLY,
                             "Interrupted execution, retry allowed by recovery strategy=" + auditEntry.getRecoveryStrategy());
                     return APPLY;
                 } else {
                     log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                        auditEntry.getTaskId(), status, txType, MANUAL_INTERVENTION,
+                        auditEntry.getTaskId(), status, txStrategy, MANUAL_INTERVENTION,
                             "Interrupted execution, requires manual intervention");
                     return MANUAL_INTERVENTION;
                 }
 
             case MANUAL_MARKED_AS_ROLLED_BACK:
             case FAILED:
-                if (txType == null || txType == AuditTxType.NON_TX) {
+                if (txStrategy == null || txStrategy == AuditTxType.NON_TX) {
                     if (auditEntry.getRecoveryStrategy().isAlwaysRetry()) {
                         log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                                auditEntry.getTaskId(), status, txType, APPLY,
+                                auditEntry.getTaskId(), status, txStrategy, APPLY,
                                 "Failure on NON_TX change, retry allowed by recovery strategy=" + auditEntry.getRecoveryStrategy());
                         return APPLY;
                     } else {
                         log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                                auditEntry.getTaskId(), status, txType, MANUAL_INTERVENTION,
+                                auditEntry.getTaskId(), status, txStrategy, MANUAL_INTERVENTION,
                                 "Failure on NON_TX change, manual intervention required");
                         return MANUAL_INTERVENTION;
                     }
                 } else {
                     log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                            auditEntry.getTaskId(), status, txType, APPLY,
+                            auditEntry.getTaskId(), status, txStrategy, APPLY,
                             "Transactional failure, safe to retry");
                     return APPLY;
                 }
 
             case ROLLED_BACK:
                 log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                        auditEntry.getTaskId(), status, txType, APPLY,
+                        auditEntry.getTaskId(), status, txStrategy, APPLY,
                         "Previous execution rolled back cleanly, safe to retry");
                 return APPLY;
 
             case ROLLBACK_FAILED:
                 if (auditEntry.getRecoveryStrategy().isAlwaysRetry()) {
                     log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                            auditEntry.getTaskId(), status, txType, APPLY,
+                            auditEntry.getTaskId(), status, txStrategy, APPLY,
                             "Rollback failed, retry forced by recovery strategy=" + auditEntry.getRecoveryStrategy());
                     return APPLY;
                 } else {
                     log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                            auditEntry.getTaskId(), status, txType,  MANUAL_INTERVENTION,
+                            auditEntry.getTaskId(), status, txStrategy,  MANUAL_INTERVENTION,
                             "Rollback failed, manual intervention required");
                     return MANUAL_INTERVENTION;
                 }
@@ -107,12 +107,12 @@ public final class ChangeActionResolver {
             default:
                 if (auditEntry.getRecoveryStrategy().isAlwaysRetry()) {
                     log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                            auditEntry.getTaskId(), status, txType, APPLY,
+                            auditEntry.getTaskId(), status, txStrategy, APPLY,
                             "Unknown status, retry forced by recovery strategy=" + auditEntry.getRecoveryStrategy());
                     return APPLY;
                 } else {
                     log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                            auditEntry.getTaskId(), status, txType, MANUAL_INTERVENTION,
+                            auditEntry.getTaskId(), status, txStrategy, MANUAL_INTERVENTION,
                             "Unknown status, manual intervention required");
                     return MANUAL_INTERVENTION;
                 }

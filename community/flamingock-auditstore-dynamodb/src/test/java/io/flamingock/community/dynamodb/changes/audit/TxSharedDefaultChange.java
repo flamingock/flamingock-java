@@ -22,7 +22,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhanced
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 /**
- * ChangeUnit that produces TX_SHARED txType via default behavior.
+ * ChangeUnit that produces TX_SHARED txStrategy via default behavior.
  * Uses transactional execution with default audit storage DynamoDB client.
  */
 @TargetSystem(id = "dynamodb")

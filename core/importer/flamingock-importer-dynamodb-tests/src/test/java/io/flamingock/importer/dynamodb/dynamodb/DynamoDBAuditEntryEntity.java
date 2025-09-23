@@ -44,7 +44,7 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
     private String executionHostname;
     private Object errorTrace;
     private AuditEntry.ExecutionType type;
-    private AuditTxType txType;
+    private AuditTxType txStrategy;
     private String targetSystemId;
     private String order;
     private String recoveryStrategy;
@@ -69,7 +69,7 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
         this.executionHostname = auditEntry.getExecutionHostname();
         this.errorTrace = auditEntry.getErrorTrace();
         this.type = auditEntry.getType();
-        this.txType = auditEntry.getTxType();
+        this.txStrategy = auditEntry.getTxType();
         this.targetSystemId = auditEntry.getTargetSystemId();
         this.order = auditEntry.getOrder();
         this.systemChange = auditEntry.getSystemChange();
@@ -219,13 +219,13 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
         this.systemChange = systemChange;
     }
 
-    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TX_TYPE)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TX_STRATEGY)
     public String getTxType() {
-        return AuditTxType.safeString(txType);
+        return AuditTxType.safeString(txStrategy);
     }
 
-    public void setTxType(String txType) {
-        this.txType = AuditTxType.fromString(txType);
+    public void setTxType(String txStrategy) {
+        this.txStrategy = AuditTxType.fromString(txStrategy);
     }
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID)
@@ -298,7 +298,7 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
                 metadata,
                 systemChange,
                 Objects.toString(errorTrace, ""),
-                txType,
+                txStrategy,
                 targetSystemId,
                 order,
                 recoveryStrategy != null ? RecoveryStrategy.valueOf(recoveryStrategy) : RecoveryStrategy.MANUAL_INTERVENTION,

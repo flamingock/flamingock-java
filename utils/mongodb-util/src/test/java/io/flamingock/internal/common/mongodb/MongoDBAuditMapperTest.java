@@ -91,7 +91,7 @@ class MongoDBAuditMapperTest {
         document.append("author", "test-author");
         document.append("state", AuditEntry.Status.APPLIED.name());
         document.append("type", AuditEntry.ExecutionType.EXECUTION.name());
-        document.append("txType", "INVALID_OPERATION_TYPE");
+        document.append("txStrategy", "INVALID_OPERATION_TYPE");
 
         // When
         AuditEntry deserialized = mapper.fromDocument(document);

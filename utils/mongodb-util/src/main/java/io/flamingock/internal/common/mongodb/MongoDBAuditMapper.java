@@ -34,7 +34,7 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ORDER;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TRANSACTION_FLAG;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_TYPE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_STRATEGY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STAGE_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
@@ -66,7 +66,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
         document.append(KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         document.append(KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
-        document.append(KEY_TX_TYPE, AuditTxType.safeString(auditEntry.getTxType()));
+        document.append(KEY_TX_STRATEGY, AuditTxType.safeString(auditEntry.getTxType()));
         document.append(KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         document.append(KEY_ORDER, auditEntry.getOrder());
         document.append(KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy().name());
@@ -76,13 +76,13 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
 
     public AuditEntry fromDocument(DocumentHelper entry) {
         // Parse OperationType with null safety for backward compatibility
-        AuditTxType txType = null;
-        if (entry.containsKey(KEY_TX_TYPE) && entry.getString(KEY_TX_TYPE) != null) {
+        AuditTxType txStrategy = null;
+        if (entry.containsKey(KEY_TX_STRATEGY) && entry.getString(KEY_TX_STRATEGY) != null) {
             try {
-                txType = AuditTxType.fromString(entry.getString(KEY_TX_TYPE));
+                txStrategy = AuditTxType.fromString(entry.getString(KEY_TX_STRATEGY));
             } catch (IllegalArgumentException e) {
                 // Handle case where stored value is invalid - default to null
-                txType = AuditTxType.NON_TX;
+                txStrategy = AuditTxType.NON_TX;
             }
         }
         
@@ -102,7 +102,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.get(KEY_METADATA),
                 entry.getBoolean(KEY_SYSTEM_CHANGE) != null && entry.getBoolean(KEY_SYSTEM_CHANGE),
                 entry.getString(KEY_ERROR_TRACE),
-                txType,
+                txStrategy,
                 entry.getString(KEY_TARGET_SYSTEM_ID),
                 entry.getString(KEY_ORDER),
                 entry.getString(KEY_RECOVERY_STRATEGY) != null

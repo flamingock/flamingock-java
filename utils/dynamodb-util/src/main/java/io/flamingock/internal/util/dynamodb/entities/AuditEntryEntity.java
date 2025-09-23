@@ -46,7 +46,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     private String executionHostname;
     private Object errorTrace;
     private AuditEntry.ExecutionType type;
-    private AuditTxType txType;
+    private AuditTxType txStrategy;
     private String targetSystemId;
     private String order;
     private String recoveryStrategy;
@@ -71,7 +71,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.executionHostname = auditEntry.getExecutionHostname();
         this.errorTrace = auditEntry.getErrorTrace();
         this.type = auditEntry.getType();
-        this.txType = auditEntry.getTxType();
+        this.txStrategy = auditEntry.getTxType();
         this.targetSystemId = auditEntry.getTargetSystemId();
         this.order = auditEntry.getOrder();
         this.recoveryStrategy = auditEntry.getRecoveryStrategy().name();
@@ -222,13 +222,13 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.systemChange = systemChange;
     }
 
-    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TX_TYPE)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TX_STRATEGY)
     public String getTxType() {
-        return AuditTxType.safeString(txType);
+        return AuditTxType.safeString(txStrategy);
     }
 
-    public void setTxType(String txType) {
-        this.txType = AuditTxType.fromString(txType);
+    public void setTxType(String txStrategy) {
+        this.txStrategy = AuditTxType.fromString(txStrategy);
     }
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID)
@@ -307,7 +307,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
                 metadata,
                 systemChange,
                 Objects.toString(errorTrace, ""),
-                txType,
+                txStrategy,
                 targetSystemId,
                 order,
                 recoveryStrategy != null ? RecoveryStrategy.valueOf(recoveryStrategy) : RecoveryStrategy.MANUAL_INTERVENTION,

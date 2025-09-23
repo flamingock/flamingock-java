@@ -99,17 +99,17 @@ class AuditEntryEntityTest {
 
     @Test
     void shouldHandleAllTxTypes() {
-        for (AuditTxType txType : AuditTxType.values()) {
+        for (AuditTxType txStrategy : AuditTxType.values()) {
             // Given
-            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txType, TestManualInterventionChangeUnit.class);
+            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txStrategy, TestManualInterventionChangeUnit.class);
 
             // When
             AuditEntryEntity entity = new AuditEntryEntity(original);
             AuditEntry converted = entity.toAuditEntry();
 
             // Then
-            assertEquals(txType, converted.getTxType(),
-                "Failed for TxType: " + txType);
+            assertEquals(txStrategy, converted.getTxType(),
+                "Failed for TxType: " + txStrategy);
         }
     }
 
