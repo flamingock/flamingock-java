@@ -90,7 +90,7 @@ public class AuditTestHelper {
     public void addStartedAuditEntry(String changeId, String author) {
         AuditEntry startedEntry = new AuditEntry(
                 "test-execution-id",
-                "test-stage-id", 
+                "test-stage-id",
                 changeId,
                 author,
                 LocalDateTime.now(),
@@ -106,7 +106,8 @@ public class AuditTestHelper {
                 AuditTxType.NON_TX,
                 null,
                 "001",
-                RecoveryStrategy.MANUAL_INTERVENTION
+                RecoveryStrategy.MANUAL_INTERVENTION,
+                null
         );
         auditStorage.addAuditEntry(startedEntry);
     }
@@ -114,7 +115,7 @@ public class AuditTestHelper {
     public void addExecutedAuditEntry(String changeId, String author) {
         AuditEntry executedEntry = new AuditEntry(
                 "test-execution-id",
-                "test-stage-id", 
+                "test-stage-id",
                 changeId,
                 author,
                 LocalDateTime.now(),
@@ -130,7 +131,8 @@ public class AuditTestHelper {
                 AuditTxType.NON_TX,
                 null,
                 "001",
-                RecoveryStrategy.MANUAL_INTERVENTION
+                RecoveryStrategy.MANUAL_INTERVENTION,
+                null
         );
         auditStorage.addAuditEntry(executedEntry);
     }

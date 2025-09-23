@@ -50,6 +50,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     private String targetSystemId;
     private String order;
     private String recoveryStrategy;
+    private Boolean transactionFlag;
 
     public static AuditEntryEntity fromAuditEntry(AuditEntry auditEntry) {
         return new AuditEntryEntity(auditEntry);
@@ -75,6 +76,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.order = auditEntry.getOrder();
         this.recoveryStrategy = auditEntry.getRecoveryStrategy().name();
         this.systemChange = auditEntry.getSystemChange();
+        this.transactionFlag = auditEntry.getTransactionFlag();
     }
 
     public AuditEntryEntity() {
@@ -256,6 +258,15 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.recoveryStrategy = recoveryStrategy;
     }
 
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TRANSACTION_FLAG)
+    public Boolean getTransactionFlag() {
+        return transactionFlag;
+    }
+
+    public void setTransactionFlag(Boolean transactionFlag) {
+        this.transactionFlag = transactionFlag;
+    }
+
     @Override
     public int compareTo(AuditEntryEntity other) {
         if (other == null) {
@@ -299,7 +310,8 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
                 txType,
                 targetSystemId,
                 order,
-                recoveryStrategy != null ? RecoveryStrategy.valueOf(recoveryStrategy) : RecoveryStrategy.MANUAL_INTERVENTION
+                recoveryStrategy != null ? RecoveryStrategy.valueOf(recoveryStrategy) : RecoveryStrategy.MANUAL_INTERVENTION,
+                transactionFlag
         );
     }
 }

@@ -67,6 +67,8 @@ public class AuditEntryRequest {
 
     protected Boolean systemChange;//TODO not in server
 
+    private final Boolean transactionFlag;
+
     public AuditEntryRequest(String stageId,
                              String taskId,
                              String author,
@@ -83,7 +85,8 @@ public class AuditEntryRequest {
                              AuditTxType txType,
                              String targetSystemId,
                              String order,
-                             RecoveryStrategy recoveryStrategy) {
+                             RecoveryStrategy recoveryStrategy,
+                             Boolean transactionFlag) {
         this.stageId = stageId;
         this.taskId = taskId;
         this.author = author;
@@ -100,6 +103,7 @@ public class AuditEntryRequest {
         this.targetSystemId = targetSystemId;
         this.order = order;
         this.recoveryStrategy = recoveryStrategy;
+        this.transactionFlag = transactionFlag;
 
         this.systemChange = systemChange;
     }
@@ -170,6 +174,10 @@ public class AuditEntryRequest {
 
     public RecoveryStrategy getRecoveryStrategy() {
         return recoveryStrategy;
+    }
+
+    public Boolean getTransactionFlag() {
+        return transactionFlag;
     }
 
 

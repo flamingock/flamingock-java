@@ -48,6 +48,7 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
     private String targetSystemId;
     private String order;
     private String recoveryStrategy;
+    private Boolean transactionFlag;
 
     public static DynamoDBAuditEntryEntity fromAuditEntry(AuditEntry auditEntry) {
         return new DynamoDBAuditEntryEntity(auditEntry);
@@ -73,6 +74,7 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
         this.order = auditEntry.getOrder();
         this.systemChange = auditEntry.getSystemChange();
         this.recoveryStrategy = auditEntry.getRecoveryStrategy().name();
+        this.transactionFlag = auditEntry.getTransactionFlag();
     }
 
     public DynamoDBAuditEntryEntity() {}
@@ -253,6 +255,15 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
         this.recoveryStrategy = recoveryStrategy;
     }
 
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TRANSACTION_FLAG)
+    public Boolean getTransactionFlag() {
+        return transactionFlag;
+    }
+
+    public void setTransactionFlag(Boolean transactionFlag) {
+        this.transactionFlag = transactionFlag;
+    }
+
     @Override
     public int compareTo(DynamoDBAuditEntryEntity other) {
         if (other == null) {
@@ -290,7 +301,8 @@ public class DynamoDBAuditEntryEntity implements Comparable<DynamoDBAuditEntryEn
                 txType,
                 targetSystemId,
                 order,
-                recoveryStrategy != null ? RecoveryStrategy.valueOf(recoveryStrategy) : RecoveryStrategy.MANUAL_INTERVENTION
+                recoveryStrategy != null ? RecoveryStrategy.valueOf(recoveryStrategy) : RecoveryStrategy.MANUAL_INTERVENTION,
+                transactionFlag
         );
     }
 }

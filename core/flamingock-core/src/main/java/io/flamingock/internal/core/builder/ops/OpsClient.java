@@ -101,7 +101,8 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
                 currentEntry.getTxType(),
                 currentEntry.getTargetSystemId(),
                 currentEntry.getOrder(),
-                currentEntry.getRecoveryStrategy()
+                currentEntry.getRecoveryStrategy(),
+                currentEntry.getTransactionFlag()
         );
         auditPersistence.writeEntry(fixedAuditEntry);
         return FixResult.APPLIED;

@@ -93,7 +93,8 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 "test-target-system",         // targetSystemId
                 "001",                        // order
-                recoveryStrategy               // recoveryStrategy
+                recoveryStrategy,              // recoveryStrategy
+                null                          // transactionFlag
         );
     }
 
@@ -121,7 +122,8 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 "test-target-system",         // targetSystemId
                 "001",                        // order
-                RecoveryStrategy.MANUAL_INTERVENTION          // recoveryStrategy
+                RecoveryStrategy.MANUAL_INTERVENTION,          // recoveryStrategy
+                null                          // transactionFlag
         );
     }
 
@@ -228,7 +230,8 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 targetSystemId,               // targetSystemId
                 "001",                        // order
-                recoveryStrategy              // recoveryStrategy
+                recoveryStrategy,             // recoveryStrategy
+                null                          // transactionFlag
         );
     }
 
@@ -255,7 +258,8 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 targetSystemId,               // targetSystemId
                 "001",                        // order
-                RecoveryStrategy.MANUAL_INTERVENTION // recoveryStrategy
+                RecoveryStrategy.MANUAL_INTERVENTION, // recoveryStrategy
+                null                          // transactionFlag
         );
     }
 
@@ -287,7 +291,8 @@ public class AuditEntryTestFactory {
                 txType,                       // txType
                 null,                         // targetSystemId
                 "001",                        // order
-                RecoveryStrategy.MANUAL_INTERVENTION // recoveryStrategy
+                RecoveryStrategy.MANUAL_INTERVENTION, // recoveryStrategy
+                null                          // transactionFlag
         );
     }
 }

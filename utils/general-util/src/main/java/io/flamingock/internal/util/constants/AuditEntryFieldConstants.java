@@ -34,4 +34,5 @@ public class AuditEntryFieldConstants {
     public static final String KEY_TARGET_SYSTEM_ID = "targetSystemId";
     public static final String KEY_ORDER = "order";
     public static final String KEY_RECOVERY_STRATEGY = "recoveryStrategy";
+    public static final String KEY_TRANSACTION_FLAG = "transactionFlag";
 }

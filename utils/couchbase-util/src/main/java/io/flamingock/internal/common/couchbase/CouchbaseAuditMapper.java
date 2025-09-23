@@ -33,6 +33,7 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_METADATA;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ORDER;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TRANSACTION_FLAG;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_TYPE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
@@ -62,6 +63,7 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         CouchbaseUtils.addFieldToDocument(document, KEY_ORDER, auditEntry.getOrder());
         CouchbaseUtils.addFieldToDocument(document, KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy().name());
+        CouchbaseUtils.addFieldToDocument(document, KEY_TRANSACTION_FLAG, auditEntry.getTransactionFlag());
         return document;
     }
 
@@ -96,7 +98,8 @@ public class CouchbaseAuditMapper {
                 jsonObject.getString(KEY_ORDER),
                 jsonObject.getString(KEY_RECOVERY_STRATEGY) != null
                         ? RecoveryStrategy.valueOf(jsonObject.getString(KEY_RECOVERY_STRATEGY))
-                        : RecoveryStrategy.MANUAL_INTERVENTION
+                        : RecoveryStrategy.MANUAL_INTERVENTION,
+                jsonObject.getBoolean(KEY_TRANSACTION_FLAG)
         );
     }
 }

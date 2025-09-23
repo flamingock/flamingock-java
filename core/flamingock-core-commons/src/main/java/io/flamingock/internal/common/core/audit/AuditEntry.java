@@ -41,6 +41,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     private final String targetSystemId;
     private final String order;
     private final RecoveryStrategy recoveryStrategy;
+    private final Boolean transactionFlag;
 
     public AuditEntry(String executionId,
                       String stageId,
@@ -59,7 +60,8 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       AuditTxType txType,
                       String targetSystemId,
                       String order,
-                      RecoveryStrategy recoveryStrategy) {
+                      RecoveryStrategy recoveryStrategy,
+                      Boolean transactionFlag) {
         this.executionId = executionId;
         this.stageId = stageId;
         this.taskId = taskId;
@@ -78,6 +80,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         this.order = order;
         this.systemChange = systemChange;
         this.recoveryStrategy = recoveryStrategy != null ? recoveryStrategy : RecoveryStrategy.MANUAL_INTERVENTION;
+        this.transactionFlag = transactionFlag;
     }
 
     /**
@@ -100,8 +103,8 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       boolean systemChange,
                       String errorTrace,
                       AuditTxType txType) {
-        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null, null, RecoveryStrategy.MANUAL_INTERVENTION);
+        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName,
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, txType, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
     /**
@@ -123,8 +126,8 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       Object metadata,
                       boolean systemChange,
                       String errorTrace) {
-        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, 
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null, RecoveryStrategy.MANUAL_INTERVENTION);
+        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName,
+             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
     public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
@@ -210,6 +213,10 @@ public class AuditEntry implements Comparable<AuditEntry> {
         return recoveryStrategy;
     }
 
+    public Boolean getTransactionFlag() {
+        return transactionFlag;
+    }
+
 
     private boolean shouldBeReplacedBy(AuditEntry newEntry) {
         if(this.getState().equals(newEntry.getState())) {
@@ -242,7 +249,8 @@ public class AuditEntry implements Comparable<AuditEntry> {
                 getTxType(),
                 getTargetSystemId(),
                 getOrder(),
-                getRecoveryStrategy()
+                getRecoveryStrategy(),
+                getTransactionFlag()
         );
     }
 

@@ -97,12 +97,13 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                 auditEntry.getExecutionMillis(),
                 auditEntry.getExecutionHostname(),
                 auditEntry.getMetadata(),
-                auditEntry.getSystemChange(),
+                auditEntry.getSystemChange() != null ? auditEntry.getSystemChange() : false,
                 auditEntry.getErrorTrace(),
                 auditEntry.getTxType(),
                 auditEntry.getTargetSystemId(),
                 auditEntry.getOrder(),
-                auditEntry.getRecoveryStrategy()
+                auditEntry.getRecoveryStrategy(),
+                auditEntry.getTransactionFlag()
         );
     }
 

@@ -33,6 +33,7 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_METADATA;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ORDER;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TRANSACTION_FLAG;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_TYPE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STAGE_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
@@ -69,6 +70,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         document.append(KEY_ORDER, auditEntry.getOrder());
         document.append(KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy().name());
+        document.append(KEY_TRANSACTION_FLAG, auditEntry.getTransactionFlag());
         return document;
     }
 
@@ -105,7 +107,8 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.getString(KEY_ORDER),
                 entry.getString(KEY_RECOVERY_STRATEGY) != null
                         ? RecoveryStrategy.valueOf(entry.getString(KEY_RECOVERY_STRATEGY))
-                        : RecoveryStrategy.MANUAL_INTERVENTION
+                        : RecoveryStrategy.MANUAL_INTERVENTION,
+                entry.getBoolean(KEY_TRANSACTION_FLAG)
 
         );
 
