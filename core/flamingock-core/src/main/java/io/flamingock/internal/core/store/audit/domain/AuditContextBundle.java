@@ -95,7 +95,7 @@ public abstract class AuditContextBundle {
                 runtimeContext.getStageName(),
                 loadedTask.getId(),
                 loadedTask.getAuthor(),
-                runtimeContext.getExecutedAt(),
+                runtimeContext.getAppliedAt(),
                 getAuditStatus(),
                 getExecutionType(),
                 loadedTask.getSource(),

@@ -180,8 +180,8 @@ class CoreStrategiesE2ETest {
     }
 
     @Test
-    @DisplayName("Should handle already-executed changes correctly on second run")
-    void testAlreadyExecutedChangesSkipping() {
+    @DisplayName("Should handle already-applied changes correctly on second run")
+    void testAlreadyAppliedChangesSkipping() {
         // Given - Create test kit with persistent storage
         InMemoryTestKit testKit = InMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();

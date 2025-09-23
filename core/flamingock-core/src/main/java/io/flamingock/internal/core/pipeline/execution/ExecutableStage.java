@@ -51,7 +51,7 @@ public class ExecutableStage implements StageDescriptor {
     public boolean isExecutionRequired() {
         return tasks.stream()
                 .filter(Objects::nonNull)
-                .anyMatch(executableTask -> !executableTask.isAlreadyExecuted());
+                .anyMatch(executableTask -> !executableTask.isAlreadyApplied());
     }
 
 

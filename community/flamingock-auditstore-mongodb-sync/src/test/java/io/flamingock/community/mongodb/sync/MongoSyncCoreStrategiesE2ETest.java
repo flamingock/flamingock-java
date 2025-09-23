@@ -195,8 +195,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
     }
 
     @Test
-    @DisplayName("Should handle already-executed changes correctly on second run with MongoDB persistence")
-    void testAlreadyExecutedChangesSkipping() {
+    @DisplayName("Should handle already-applied changes correctly on second run with MongoDB persistence")
+    void testAlreadyAppliedChangesSkipping() {
         // Given - Create MongoDB test kit with persistent storage
         TestKit testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();

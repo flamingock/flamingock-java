@@ -166,7 +166,7 @@ class MongoDBSyncAuditStoreTest {
     }
 
     @Test
-    @DisplayName("When standalone runs the driver with transactions enabled and execution fails should persist only the executed audit logs")
+    @DisplayName("When standalone runs the driver with transactions enabled and execution fails should persist only the applied audit logs")
     void failedWithTransaction() {
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)

@@ -43,7 +43,7 @@ public final class ChangeActionResolver {
             case MANUAL_MARKED_AS_APPLIED:
             case APPLIED:
                 log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
-                        auditEntry.getTaskId(), status, txStrategy, SKIP, "Change already marked/executed");
+                        auditEntry.getTaskId(), status, txStrategy, SKIP, "Change already marked/applied");
                 return SKIP;
             case STARTED:
                 if (txStrategy == AuditTxType.TX_SEPARATE_WITH_MARKER) {

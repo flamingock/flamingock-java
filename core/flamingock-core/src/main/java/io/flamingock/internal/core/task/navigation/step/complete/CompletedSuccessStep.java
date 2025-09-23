@@ -21,12 +21,12 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 
 public final class CompletedSuccessStep extends AfterExecutionAuditStep {
 
-    public static CompletedSuccessStep fromSuccessExecution(SuccessExecutionStep executedStep) {
-        return new CompletedSuccessStep(executedStep.getTask());
+    public static CompletedSuccessStep fromSuccessExecution(SuccessExecutionStep appliedStep) {
+        return new CompletedSuccessStep(appliedStep.getTask());
     }
 
-    private CompletedSuccessStep(ExecutableTask executedTask) {
-        super(executedTask, true);
+    private CompletedSuccessStep(ExecutableTask appliedTask) {
+        super(appliedTask, true);
     }
 
 }

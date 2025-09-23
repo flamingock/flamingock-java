@@ -102,7 +102,7 @@ class AuditPersistenceE2ETest {
                 .withSystemChange(false)
                 .withTimestampBetween(testStart, testEnd);
 
-        AuditEntryExpectation executedExpected = APPLIED(changeId)
+        AuditEntryExpectation appliedExpected = APPLIED(changeId)
                 .withAuthor("aperezdieppa")
                 .withType(AuditEntry.ExecutionType.EXECUTION)
                 .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
@@ -111,7 +111,7 @@ class AuditPersistenceE2ETest {
                 .withSystemChange(false)
                 .withTimestampBetween(testStart, testEnd);
 
-        auditHelper.verifyAuditSequenceStrict(startedExpected, executedExpected);
+        auditHelper.verifyAuditSequenceStrict(startedExpected, appliedExpected);
     }
 
     @Test

@@ -51,7 +51,7 @@ import java.time.LocalDateTime;
  * 
  * <h3>Common Execution Pattern</h3>
  * <ol>
- * <li>Check if change is already executed (skip if so)</li>
+ * <li>Check if change is already applied (skip if so)</li>
  * <li>Audit change start in audit store</li>
  * <li>Execute change using strategy-specific approach</li>
  * <li>Audit execution result</li>
@@ -113,7 +113,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
 
 
     public final TaskSummary applyChange() {
-        if (!changeUnit.isAlreadyExecuted()) {
+        if (!changeUnit.isAlreadyApplied()) {
             return doApplyChange();
         } else {
             stepLogger.logSkippedExecution(changeUnit.getId());

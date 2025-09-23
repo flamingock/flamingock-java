@@ -287,7 +287,7 @@ class RecoveryE2ETest {
 
     @Test
     @DisplayName("Should do nothing for APPLIED NON_TX change")
-    void testExecutedNonTxDoNothing() {
+    void testAppliedNonTxDoNothing() {
         // Given - Pre-insert audit entry with APPLIED state and NON_TX type
         String changeId = "test1-non-tx-change";
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
@@ -318,7 +318,7 @@ class RecoveryE2ETest {
 
     @Test
     @DisplayName("Should do nothing for APPLIED TX_SEPARATE_NO_MARKER change")
-    void testExecutedTxSeparateNoMarkerDoNothing() {
+    void testAppliedTxSeparateNoMarkerDoNothing() {
         // Given - Pre-insert audit entry with APPLIED state and TX_SEPARATE_NO_MARKER type
         String changeId = "test1-non-tx-change";
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SEPARATE_NO_MARKER, SimpleNonTransactionalChange.class);
@@ -349,7 +349,7 @@ class RecoveryE2ETest {
 
     @Test
     @DisplayName("Should do nothing for APPLIED TX_SHARED change")
-    void testExecutedTxSharedDoNothing() {
+    void testAppliedTxSharedDoNothing() {
         // Given - Pre-insert audit entry with APPLIED state and TX_SHARED type
         String changeId = "test1-non-tx-change";
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);

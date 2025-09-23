@@ -135,7 +135,7 @@ public class ChangeProcessStrategyFactory {
      * <p>Strategy selection considers both the change unit's transactional requirements
      * and the target system's operation type to ensure optimal execution patterns.
      *
-     * @param changeUnit           The change to be executed
+     * @param changeUnit           The change to be applied
      * @param targetSystemOps      Target system operations interface
      * @param auditStoreOps        AuditStoreOperations interface
      * @param baseContext          Base dependency resolution context

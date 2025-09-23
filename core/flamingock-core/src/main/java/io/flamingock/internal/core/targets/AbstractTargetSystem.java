@@ -111,7 +111,7 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
      * </ul>
      * <p>
      * The {@code isTransactional} parameter indicates whether the change will be
-     * executed within a transaction, allowing different dependencies to be injected
+     * applied within a transaction, allowing different dependencies to be injected
      * based on the execution context.
      *
      * @param executionRuntime the runtime to enhance with dependencies

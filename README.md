@@ -4,7 +4,7 @@
 
 
 <h3 align="center">Auditable, versioned changes across distributed systems.</h3>
-<p align="center">Evolve queues, DBs, APIs, configs, resources and more — governed, auditable, executed at startup in lockstep.</p>
+<p align="center">Evolve queues, DBs, APIs, configs, resources and more — governed, auditable, applied at startup in lockstep.</p>
 
 <p align="center"><small><a href="https://github.com/flamingock/mongock-legacy?tab=readme-ov-file#%EF%B8%8F-mongock-is-deprecated">Coming from Mongock?</a></small></p>
 <br />
@@ -35,7 +35,7 @@
 
 With Flamingock, your application and the systems it interacts with — including databases, message queues, feature flags, configurations, APIs, and cloud resources — evolve together, in lockstep.
 
-**All changes are versioned, auditable**, and executed as part of the same deployment lifecycle.
+**All changes are versioned, auditable**, and applied as part of the same deployment lifecycle.
 
 No more post-deploy scripts or manual tweaks: every change is declared alongside your code and applied safely during application startup.
 

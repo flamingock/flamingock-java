@@ -60,7 +60,7 @@ public class TaskSummarizer implements StepSummarizer<TaskSummarizer> {
 
     @Override
     public TaskSummarizer add(ExecutionStep step) {
-        return addStep(step.getTask().getDescriptor(), new AbstractTaskStepSummaryLine.ExecutedTaskSummaryLine(step));
+        return addStep(step.getTask().getDescriptor(), new AbstractTaskStepSummaryLine.AppliedTaskSummaryLine(step));
     }
 
     @Override

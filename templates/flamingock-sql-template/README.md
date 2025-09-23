@@ -14,7 +14,7 @@
 13. connect from client to localhost on 3306 with flamingock_user/password
 
 # TODO
-- Currently, there is no a way to know if the rollback should be executed
+- Currently, there is no a way to know if the rollback should be applied
   - Potential solution: Add a method in the template to know if the rollback is provided
   - Interpret the rollback method's return. For example,providing an enum as response. Downside is that we may want to
     use the return value in the future for something...but it could be wrapped in a Result type.

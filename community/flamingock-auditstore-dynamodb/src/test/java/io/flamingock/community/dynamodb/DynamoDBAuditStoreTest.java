@@ -165,7 +165,7 @@ class DynamoDBAuditStoreTest {
     }
 
     @Test
-    @DisplayName("When standalone runs the driver and execution fails should persist only the executed audit logs")
+    @DisplayName("When standalone runs the driver and execution fails should persist only the applied audit logs")
     void failedWithTransaction() {
         // Given-When-Then - Test failure scenario with audit verification
         AuditTestSupport.withTestKit(testKit)

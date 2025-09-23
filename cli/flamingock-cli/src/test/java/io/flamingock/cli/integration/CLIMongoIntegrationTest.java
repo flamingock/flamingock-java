@@ -72,7 +72,7 @@ class CLIMongoIntegrationTest {
             System.out.println("MongoDB container is running: " + mongoContainer.isRunning());
             System.out.println("MongoDB connection string: " + mongoContainer.getConnectionString());
             
-            // The fact that we got here means TestContainers worked and CLI executed
+            // The fact that we got here means TestContainers worked and CLI applied
             assertThat(mongoContainer.isRunning()).isTrue();
             
         } finally {

@@ -37,7 +37,7 @@ public class PipelineSummary implements StepSummary {
             StageSummary stageSummary = new StageSummary(executableStage.getName());
 
             for (ExecutableTask executableTask : executableStage.getTasks()) {
-                if(executableTask.isAlreadyExecuted()) {
+                if(executableTask.isAlreadyApplied()) {
                     stageSummary.addSummary(new TaskSummarizer(executableTask)
                             .add(new CompletedAlreadyAppliedStep(executableTask))
                             .getSummary());

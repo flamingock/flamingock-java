@@ -52,7 +52,7 @@ import java.time.LocalDateTime;
  * <h3>Target System State Outcomes</h3>
  * <ul>
  * <li><strong>Success:</strong> Change applied to target system</li>
- * <li><strong>Failure:</strong> Change not applied, rollback chain executed with best effort</li>
+ * <li><strong>Failure:</strong> Change not applied, rollback chain applied with best effort</li>
  * </ul>
  * 
  * <h3>Audit Store State Outcomes</h3>

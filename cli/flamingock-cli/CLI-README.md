@@ -24,7 +24,7 @@ A lightweight command-line interface for Flamingock audit operations in communit
 # List conflicted audit entries
 ./flamingock-cli-dist/flamingock audit list
 
-# Mark change unit as executed
+# Mark change unit as applied
 ./flamingock-cli-dist/flamingock audit mark --change-id ch1 --state APPLIED
 
 # Mark change unit as rolled back
@@ -163,7 +163,7 @@ Lists all conflicted audit entries showing:
 
 ### `flamingock audit mark`
 Marks a change unit with a specific state:
-- **`--state APPLIED`** - Marks as successfully executed
+- **`--state APPLIED`** - Marks as successfully applied
 - **`--state ROLLED_BACK`** - Marks as rolled back
 - **`--change-id <id>`** - Required change unit identifier
 

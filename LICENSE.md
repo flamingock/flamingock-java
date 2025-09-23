@@ -132,7 +132,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
    by You to the Licensor shall be under the terms and conditions of
    this License, without any additional terms or conditions.
    Notwithstanding the above, nothing herein shall supersede or modify
-   the terms of any separate license agreement you may have executed
+   the terms of any separate license agreement you may have applied
    with Licensor regarding such Contributions.
 
 6. Trademarks. This License does not grant permission to use the trade

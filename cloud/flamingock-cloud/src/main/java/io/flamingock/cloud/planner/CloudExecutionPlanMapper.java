@@ -114,7 +114,7 @@ public final class CloudExecutionPlanMapper {
             String taskId = task.getId();
             CloudChangeAction cloudAction = actionsMapByChangeId.get(taskId);
 
-            // If task not in response, assume it's already executed (cloud orchestrator decision)
+            // If task not in response, assume it's already applied (cloud orchestrator decision)
             if (cloudAction == null) {
                 actionMap.put(taskId, ChangeAction.SKIP);
             } else {

@@ -22,13 +22,13 @@ package io.flamingock.internal.common.core.recovery.action;
 public enum ChangeAction {
     
     /**
-     * The change needs to be applied/executed.
+     * The change needs to be applied/applied.
      * This indicates the change should run its execution logic.
      */
     APPLY,
     
     /**
-     * The change should be skipped as it has already been successfully executed.
+     * The change should be skipped as it has already been successfully applied.
      * This indicates the change does not need to run again.
      */
     SKIP,

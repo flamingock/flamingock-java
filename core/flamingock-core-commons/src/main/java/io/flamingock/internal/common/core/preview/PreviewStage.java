@@ -286,7 +286,7 @@ public class PreviewStage {
         }
 
         /**
-         * Sets whether tasks should be executed in parallel.
+         * Sets whether tasks should be applied in parallel.
          *
          * @param parallel {@code true} to enable parallel execution; {@code false} otherwise
          * @return this builder instance

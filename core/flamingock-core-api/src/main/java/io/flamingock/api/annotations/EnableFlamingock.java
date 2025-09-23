@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 /**
  * Core annotation for configuring Flamingock setup execution and framework integration.
  * This annotation must be placed on a class to enable Flamingock processing and define
- * how the pipeline should be configured and executed.
+ * how the pipeline should be configured and applied.
  *
  * <h2>Pipeline Configuration</h2>
  *

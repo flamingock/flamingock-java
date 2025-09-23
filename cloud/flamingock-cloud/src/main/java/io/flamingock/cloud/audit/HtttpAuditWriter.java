@@ -84,12 +84,12 @@ public class HtttpAuditWriter implements CloudAuditWriter {
 
 
     private AuditEntryRequest buildRequest(AuditEntry auditEntry) {
-        long executedAtEpochMillis = ZonedDateTime.of(auditEntry.getCreatedAt(), ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long appliedAtEpochMillis = ZonedDateTime.of(auditEntry.getCreatedAt(), ZoneId.systemDefault()).toInstant().toEpochMilli();
         return new AuditEntryRequest(
                 auditEntry.getStageId(),
                 auditEntry.getTaskId(),
                 auditEntry.getAuthor(),
-                executedAtEpochMillis,
+                appliedAtEpochMillis,
                 auditEntry.getState().toRequestStatus(),
                 auditEntry.getType().toRequestExecutionType(),
                 auditEntry.getClassName(),

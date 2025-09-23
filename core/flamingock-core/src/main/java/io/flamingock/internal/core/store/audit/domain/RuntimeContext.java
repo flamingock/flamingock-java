@@ -39,7 +39,7 @@ public final class RuntimeContext {
     private final ExecutionResult executionResult;
     private final long duration;
 
-    private final LocalDateTime executedAt;
+    private final LocalDateTime appliedAt;
 
     private final String methodExecutor;
 
@@ -48,13 +48,13 @@ public final class RuntimeContext {
     private RuntimeContext(String stageName,
                            ExecutionResult executionResult,
                            long duration,
-                           LocalDateTime executedAt,
+                           LocalDateTime appliedAt,
                            String methodExecutor,
                            Throwable error) {
         this.stageName = stageName;
         this.executionResult = executionResult;
         this.duration = duration;
-        this.executedAt = executedAt;
+        this.appliedAt = appliedAt;
         this.methodExecutor = methodExecutor;
         this.error = error;
     }
@@ -67,8 +67,8 @@ public final class RuntimeContext {
         return duration;
     }
 
-    public LocalDateTime getExecutedAt() {
-        return executedAt;
+    public LocalDateTime getAppliedAt() {
+        return appliedAt;
     }
 
     public String getMethodExecutor() {
@@ -95,7 +95,7 @@ public final class RuntimeContext {
 
         private long duration = -1L;
 
-        private LocalDateTime executedAt;
+        private LocalDateTime appliedAt;
 
         private String methodExecutor;
 
@@ -147,8 +147,8 @@ public final class RuntimeContext {
         }
 
 
-        public Builder setExecutedAt(LocalDateTime executedAt) {
-            this.executedAt = executedAt;
+        public Builder setAppliedAt(LocalDateTime appliedAt) {
+            this.appliedAt = appliedAt;
             return this;
         }
 
@@ -156,10 +156,10 @@ public final class RuntimeContext {
             if (methodExecutor == null) {
                 throw new IllegalArgumentException("[methodExecutor] cannot be null when building RuntimeContext");
             }
-            if (executedAt == null) {
-                throw new IllegalArgumentException("[executedAt] cannot be null when building RuntimeContext");
+            if (appliedAt == null) {
+                throw new IllegalArgumentException("[appliedAt] cannot be null when building RuntimeContext");
             }
-            return new RuntimeContext(stageName, executionResult, duration, executedAt, methodExecutor, error);
+            return new RuntimeContext(stageName, executionResult, duration, appliedAt, methodExecutor, error);
 
         }
     }

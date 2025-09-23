@@ -39,7 +39,7 @@ public class AuditEntryRequest {
 
     private final String author;
 
-    private final long executedAtEpochMillis;
+    private final long appliedAtEpochMillis;
 
     private final Status state;
 
@@ -72,7 +72,7 @@ public class AuditEntryRequest {
     public AuditEntryRequest(String stageId,
                              String taskId,
                              String author,
-                             long executedAtEpochMillis,
+                             long appliedAtEpochMillis,
                              Status state,
                              ExecutionType type,
                              String className,
@@ -90,7 +90,7 @@ public class AuditEntryRequest {
         this.stageId = stageId;
         this.taskId = taskId;
         this.author = author;
-        this.executedAtEpochMillis = executedAtEpochMillis;
+        this.appliedAtEpochMillis = appliedAtEpochMillis;
         this.state = state;
         this.className = className;
         this.methodName = methodName;
@@ -120,8 +120,8 @@ public class AuditEntryRequest {
         return author;
     }
 
-    public long getExecutedAtEpochMillis() {
-        return executedAtEpochMillis;
+    public long getAppliedAtEpochMillis() {
+        return appliedAtEpochMillis;
     }
 
     public Status getState() {

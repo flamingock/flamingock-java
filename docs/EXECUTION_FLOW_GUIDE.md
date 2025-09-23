@@ -80,9 +80,9 @@ graph TB
     subgraph TaskDetail["🎯 Task Execution Detail (per task)"]
         direction TB
         
-        TaskStart([Task Execution Request]) --> AlreadyExecuted{Already<br/>Executed?}
-        AlreadyExecuted -->|Yes| MarkApplied[Mark as Already Applied]
-        AlreadyExecuted -->|No| StartStep[Create StartStep]
+        TaskStart([Task Execution Request]) --> AlreadyApplied{Already<br/>Applied?}
+        AlreadyApplied -->|Yes| MarkApplied[Mark as Already Applied]
+        AlreadyApplied -->|No| StartStep[Create StartStep]
         
         StartStep --> AuditStart[Audit Start Execution<br/>• Generate execution ID<br/>• Record start timestamp]
         AuditStart --> TransactionDecision{Transaction<br/>Decision Logic}
@@ -122,7 +122,7 @@ graph TB
     class Entry,BuilderCreated,ConfigBuilder,BuildCall builderClass
     class CreateRunner,RunnerRun,PipelineStart,ExecutionLoop,PlannerCheck orchestrationClass
     class StageExecution,StageLoop,StageStart,TaskProcessing,TaskStart,TaskExecution executionClass
-    class CriticalOrder,ExecutionRequired,LockSuccess,TaskResults,MoreStages,AlreadyExecuted,TransactionDecision,ExecutionResult decisionClass
+    class CriticalOrder,ExecutionRequired,LockSuccess,TaskResults,MoreStages,AlreadyApplied,TransactionDecision,ExecutionResult decisionClass
     class AuditStart,AuditSuccess,AuditRollback,AuditAutoRollback auditClass
     class PipelineComplete,ExecutionEnd,TaskComplete,TaskFailed terminalClass
     
@@ -319,7 +319,7 @@ Monitoring systems integrate through the **event publishing system**:
 
 **Lock Conflicts**: Verify that lock acquisition issues aren't causing execution failures.
 
-**Audit Trail**: Use the audit repository to understand exactly what was executed and when.
+**Audit Trail**: Use the audit repository to understand exactly what was applied and when.
 
 ### When Extending Functionality
 

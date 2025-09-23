@@ -92,16 +92,16 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
     }
 
-    public static class ExecutedTaskSummaryLine extends AbstractTaskStepSummaryLine {
+    public static class AppliedTaskSummaryLine extends AbstractTaskStepSummaryLine {
 
-        public ExecutedTaskSummaryLine(ExecutionStep step) {
+        public AppliedTaskSummaryLine(ExecutionStep step) {
             super(step.getTask().getId(), getResultFromSuccess(step.isSuccessStep()));
         }
 
 
         @Override
         public String getPretty() {
-            return String.format("\tExecuted\t\t\t%s", getPrettyResult());
+            return String.format("\tApplied\t\t\t%s", getPrettyResult());
         }
 
     }
@@ -154,7 +154,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tExecuted\t\t\t%s", getPrettyResult());
+            return String.format("\tApplied\t\t\t%s", getPrettyResult());
         }
 
     }
@@ -167,7 +167,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tExecuted\t\t\t%s", getPrettyResult());
+            return String.format("\tApplied\t\t\t%s", getPrettyResult());
         }
 
     }

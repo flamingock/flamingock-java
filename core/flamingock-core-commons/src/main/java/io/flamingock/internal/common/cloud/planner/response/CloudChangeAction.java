@@ -24,13 +24,13 @@ package io.flamingock.internal.common.cloud.planner.response;
 public enum CloudChangeAction {
     
     /**
-     * The task needs to be applied/executed - cloud orchestrator determined it should run.
+     * The task needs to be applied/applied - cloud orchestrator determined it should run.
      * Maps to ChangeAction.APPLY.
      */
     APPLY,
     
     /**
-     * The task should be skipped as it has already been successfully executed.
+     * The task should be skipped as it has already been successfully applied.
      * Maps to ChangeAction.SKIP.
      */
     SKIP,

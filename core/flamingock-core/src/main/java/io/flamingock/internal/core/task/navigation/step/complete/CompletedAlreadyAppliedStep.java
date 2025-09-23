@@ -20,8 +20,8 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 
 public final class CompletedAlreadyAppliedStep extends AbstractTaskStep {
 
-    public CompletedAlreadyAppliedStep(ExecutableTask executedTask) {
-        super(executedTask);
+    public CompletedAlreadyAppliedStep(ExecutableTask appliedTask) {
+        super(appliedTask);
     }
 
 }

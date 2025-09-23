@@ -11,9 +11,9 @@ The following Mermaid graph shows how tasks flow through different TaskStep type
 ```mermaid
 graph TB
     %% Entry Point
-    START([Task Execution Request]) --> CHECK_EXECUTED{task.isAlreadyExecuted?}
+    START([Task Execution Request]) --> CHECK_EXECUTED{task.isAlreadyApplied?}
     
-    %% Already Executed Path
+    %% Already Applied Path
     CHECK_EXECUTED -->|Yes| ALREADY_APPLIED[CompletedAlreadyAppliedStep]
     ALREADY_APPLIED --> SUCCESS_SUMMARY[Success Summary]
     
@@ -121,7 +121,7 @@ graph TB
 ## Key Components Explanation
 
 ### Entry Point Logic
-- **All task execution starts** with checking `task.isAlreadyExecuted()`
+- **All task execution starts** with checking `task.isAlreadyApplied()`
 - **No alternative entry points** - failed tasks that continue still go through StartStep
 - **Pre-execution filtering** determines which tasks reach the StepNavigator
 
@@ -144,7 +144,7 @@ graph TB
 
 ### Completion States
 - **CompletedSuccessStep**: Successful execution and audit
-- **CompletedAlreadyAppliedStep**: Task was already executed
+- **CompletedAlreadyAppliedStep**: Task was already applied
 - **CompletedFailedManualRollback**: Failed with manual rollback
 - **CompleteAutoRolledBackStep**: Failed with automatic rollback
 

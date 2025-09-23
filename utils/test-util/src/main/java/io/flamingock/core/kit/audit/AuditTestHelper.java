@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * helper.verifySuccessfulChangeExecution("my-change-id");
  * 
  * // Check audit counts
- * assertEquals(1, helper.getExecutedAuditCount());
+ * assertEquals(1, helper.getAppliedAuditCount());
  * assertEquals(0, helper.getFailedAuditCount());
  * }</pre>
  */
@@ -62,7 +62,7 @@ public class AuditTestHelper {
         return auditStorage.countAuditEntriesWithStatus(AuditEntry.Status.STARTED);
     }
 
-    public long getExecutedAuditCount() {
+    public long getAppliedAuditCount() {
         return auditStorage.countAuditEntriesWithStatus(AuditEntry.Status.APPLIED);
     }
 
@@ -82,9 +82,9 @@ public class AuditTestHelper {
         }
         
         boolean hasStarted = changeEntries.stream().anyMatch(e -> e.getState() == AuditEntry.Status.STARTED);
-        boolean hasExecuted = changeEntries.stream().anyMatch(e -> e.getState() == AuditEntry.Status.APPLIED);
+        boolean hasApplied = changeEntries.stream().anyMatch(e -> e.getState() == AuditEntry.Status.APPLIED);
         
-        return hasStarted && hasExecuted;
+        return hasStarted && hasApplied;
     }
 
     public void addStartedAuditEntry(String changeId, String author) {
@@ -112,8 +112,8 @@ public class AuditTestHelper {
         auditStorage.addAuditEntry(startedEntry);
     }
 
-    public void addExecutedAuditEntry(String changeId, String author) {
-        AuditEntry executedEntry = new AuditEntry(
+    public void addAppliedAuditEntry(String changeId, String author) {
+        AuditEntry appliedEntry = new AuditEntry(
                 "test-execution-id",
                 "test-stage-id",
                 changeId,
@@ -134,7 +134,7 @@ public class AuditTestHelper {
                 RecoveryStrategy.MANUAL_INTERVENTION,
                 null
         );
-        auditStorage.addAuditEntry(executedEntry);
+        auditStorage.addAuditEntry(appliedEntry);
     }
 
     public void clear() {

@@ -147,7 +147,7 @@ public class AuditEntryExpectation {
      * @return audit expectation for APPLIED state
      */
     @Deprecated 
-    public static AuditEntryExpectation executed(String changeId) {
+    public static AuditEntryExpectation applied(String changeId) {
         return APPLIED(changeId);
     }
     

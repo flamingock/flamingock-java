@@ -16,13 +16,13 @@ Flamingock uses a strategy pattern to handle change execution across different t
 - Changes cannot be atomically rolled back
 - Separate audit store operations
 - Best-effort rollback chain execution
-- **Recovery capability**: Manual intervention if rollback not successfully executed
+- **Recovery capability**: Manual intervention if rollback not successfully applied
 
 #### Execution Flow
 
 ```mermaid
 flowchart TD
-    A[Start] --> B[Check if already executed]
+    A[Start] --> B[Check if already applied]
     B -->|Yes| C[Return: Already Applied]
     B -->|No| D[Audit: STARTED]
     D --> E[Apply change to target system]
@@ -63,7 +63,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Start] --> B[Check if already executed]
+    A[Start] --> B[Check if already applied]
     B -->|Yes| C[Return: Already Applied]
     B -->|No| D[Audit: STARTED in audit store]
     D --> E[Begin target system transaction]
@@ -111,7 +111,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Start] --> B[Check if already executed]
+    A[Start] --> B[Check if already applied]
     B -->|Yes| C[Return: Already Applied]
     B -->|No| D[Begin shared transaction]
     D --> E[Audit: STARTED within transaction]

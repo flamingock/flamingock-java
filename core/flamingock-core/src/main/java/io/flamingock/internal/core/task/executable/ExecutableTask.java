@@ -31,7 +31,7 @@ public interface ExecutableTask extends TaskDescriptor {
 
     String getExecutionMethodName();
 
-    boolean isAlreadyExecuted();
+    boolean isAlreadyApplied();
 
     ChangeAction getAction();
 

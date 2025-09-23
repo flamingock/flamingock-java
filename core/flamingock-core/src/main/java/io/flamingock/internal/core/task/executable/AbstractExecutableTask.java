@@ -100,7 +100,7 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
     }
 
     @Override
-    public boolean isAlreadyExecuted() {
+    public boolean isAlreadyApplied() {
         return action == ChangeAction.SKIP;
     }
 

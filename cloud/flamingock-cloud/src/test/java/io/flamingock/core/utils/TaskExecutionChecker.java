@@ -31,7 +31,7 @@ public class TaskExecutionChecker {
         history.clear();
     }
 
-    public boolean isExecuted() {
+    public boolean isApplied() {
         return history.contains(TestTaskExecution.EXECUTION);
     }
 
@@ -47,7 +47,7 @@ public class TaskExecutionChecker {
         history.add(TestTaskExecution.ROLLBACK_EXECUTION);
     }
 
-    public boolean isBeforeExecuted() {
+    public boolean isBeforeApplied() {
         return history.contains(TestTaskExecution.BEFORE_EXECUTION);
     }
 
