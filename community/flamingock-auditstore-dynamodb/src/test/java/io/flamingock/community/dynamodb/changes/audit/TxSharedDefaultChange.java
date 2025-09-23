@@ -26,7 +26,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  * Uses transactional execution with default audit storage DynamoDB client.
  */
 @TargetSystem(id = "dynamodb")
-@Change(id = "tx-shared-default", order = "003", author = "test-author")
+@Change(id = "tx-shared-default", order = "002", author = "test-author")
 public class TxSharedDefaultChange {
 
     @Apply

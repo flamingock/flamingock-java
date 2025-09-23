@@ -334,7 +334,8 @@ public class PreviewStage {
             }
 
             Collection<AbstractPreviewTask> templatedTasksDescriptors = getTemplatedTaskDescriptors(resourcesDirectories);
-            Collection<AbstractPreviewTask> allDescriptors = mergeDescriptors(templatedTasksDescriptors, changeUnitClassesList);
+            Collection<AbstractPreviewTask> allDescriptors = Stream.concat(templatedTasksDescriptors.stream(), changeUnitClassesList.stream())
+                    .collect(Collectors.toList());
 
 
             return buildInstance(name, description, sourcesPackage, resourcesDir, allDescriptors);
@@ -346,33 +347,6 @@ public class PreviewStage {
                                            String sourcesPackage,
                                            String resourcesDir,
                                            Collection<AbstractPreviewTask> allDescriptors);
-
-        /**
-         * Merges and returns a single collection of task descriptors from both templated files and provided classes.
-         * Ensures all tasks are consistently ordered if applicable.
-         *
-         * @param templatedDescriptors   tasks parsed from YAML files
-         * @param descriptorsFromClasses tasks provided directly
-         * @return merged collection of {@link AbstractPreviewTask}
-         * @throws IllegalArgumentException if only some tasks are sortable
-         */
-        private Collection<AbstractPreviewTask> mergeDescriptors(Collection<? extends AbstractPreviewTask> templatedDescriptors,
-                                                                 Collection<? extends AbstractPreviewTask> descriptorsFromClasses) {
-
-            Collection<AbstractPreviewTask> descriptors = Stream
-                    .concat(templatedDescriptors.stream(), descriptorsFromClasses.stream())
-                    .collect(Collectors.toList());
-
-            if (descriptors.stream().allMatch(AbstractPreviewTask::isSortable)) {
-                return descriptors.stream().sorted().collect(Collectors.toList());
-
-            } else if (descriptors.parallelStream().anyMatch(AbstractPreviewTask::isSortable)) {
-                throw new IllegalArgumentException("Either all tasks are ordered or none is");
-
-            } else {
-                return descriptors;
-            }
-        }
 
         /**
          * Parses and builds templated {@link AbstractPreviewTask} descriptors from YAML files located in the given directories.

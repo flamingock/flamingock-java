@@ -193,6 +193,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
             List<AbstractLoadedTask> loadedTasks = previewStage.getTasks()
                     .stream()
                     .map(LoadedTaskBuilder::build)
+                    .sorted()
                     .collect(Collectors.toList());
             switch(previewStage.getType()) {
                 case LEGACY:

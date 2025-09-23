@@ -25,7 +25,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  * Uses custom target system for testing targetSystemId persistence.
  */
 @TargetSystem(id = "non-tx-system")
-@Change(id = "non-tx-target-system", order = "002", author = "test-author")
+@Change(id = "non-tx-target-system", order = "003", author = "test-author")
 public class NonTxTargetSystemChange {
 
     @Apply

@@ -23,7 +23,7 @@ import io.flamingock.api.annotations.TargetSystem;
  * Used for testing audit persistence of TX_SHARED transaction type.
  */
 @TargetSystem(id = "mongodb")
-@Change(id = "tx-shared-default", order = "003", transactional = true, author = "aperezdieppa")
+@Change(id = "tx-shared-default", order = "002", transactional = true, author = "aperezdieppa")
 public class TxSharedDefaultChange {
 
     @Apply

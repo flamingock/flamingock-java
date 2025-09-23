@@ -24,7 +24,7 @@ import io.flamingock.api.annotations.TargetSystem;
  * Used for testing audit persistence of NON_TX transaction type with custom target system.
  */
 @TargetSystem(id = "non-tx-system")
-@Change(id = "non-tx-target-system", order = "002", author = "aperezdieppa")
+@Change(id = "non-tx-target-system", order = "003", author = "aperezdieppa")
 public class NonTxTargetSystemChange {
 
     @Apply
