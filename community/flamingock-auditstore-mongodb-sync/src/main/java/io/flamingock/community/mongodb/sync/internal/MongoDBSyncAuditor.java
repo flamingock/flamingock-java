@@ -40,9 +40,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 
 public class MongoDBSyncAuditor implements LifecycleAuditWriter, AuditReader {
 

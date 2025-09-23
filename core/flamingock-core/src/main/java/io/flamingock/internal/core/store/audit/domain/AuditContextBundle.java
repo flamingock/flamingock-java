@@ -89,6 +89,7 @@ public abstract class AuditContextBundle {
         TaskDescriptor loadedTask = getLoadedTask();
         ExecutionContext stageExecutionContext = getExecutionContext();
         RuntimeContext runtimeContext = getRuntimeContext();
+        
         return new AuditEntry(
                 stageExecutionContext.getExecutionId(),
                 runtimeContext.getStageName(),

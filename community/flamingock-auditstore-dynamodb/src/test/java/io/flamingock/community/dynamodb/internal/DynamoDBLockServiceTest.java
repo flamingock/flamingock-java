@@ -20,7 +20,7 @@ import io.flamingock.community.dynamodb.DynamoDBTestContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.store.lock.LockAcquisition;
 import io.flamingock.internal.core.store.lock.LockKey;
 import io.flamingock.internal.util.TimeService;

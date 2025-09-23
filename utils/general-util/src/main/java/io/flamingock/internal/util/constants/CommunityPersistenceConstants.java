@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.store.audit.community;
+package io.flamingock.internal.util.constants;
 
 public final class CommunityPersistenceConstants {
 
-    public static final String DEFAULT_AUDIT_STORE_NAME = "flamingockAuditLogs";
+    public static final String DEFAULT_AUDIT_STORE_NAME = "flamingockAuditLog";
     public static final String DEFAULT_LOCK_STORE_NAME = "flamingockLocks";
-    public static final String DEFAULT_ON_GOING_TASKS_STORE_NAME = "flamingockOnGoingTasks";
+    public static final String DEFAULT_MARKER_STORE_NAME = "flamingockAuditMarker";
 
     private CommunityPersistenceConstants() {
     }

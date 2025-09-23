@@ -25,7 +25,7 @@ import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import org.junit.jupiter.api.AfterEach;

@@ -17,29 +17,28 @@ package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.TimeUtil;
 
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGEUNIT_CLASS;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_INVOKED_METHOD;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ERROR_TRACE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_HOSTNAME;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ORDER;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_RECOVERY_STRATEGY;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TX_TYPE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TARGET_SYSTEM_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TYPE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STAGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_AUTHOR;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_CLASS;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_INVOKED_METHOD;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ERROR_TRACE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_MILLIS;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_METADATA;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ORDER;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_TYPE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TIMESTAMP;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TYPE;
 
 public class CouchbaseAuditMapper {
 
@@ -52,7 +51,7 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_TIMESTAMP, TimeUtil.toDate(auditEntry.getCreatedAt()));
         CouchbaseUtils.addFieldToDocument(document, KEY_STATE, auditEntry.getState().name());
         CouchbaseUtils.addFieldToDocument(document, KEY_TYPE, auditEntry.getType().name());
-        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGEUNIT_CLASS, auditEntry.getClassName());
+        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_CLASS, auditEntry.getClassName());
         CouchbaseUtils.addFieldToDocument(document, KEY_INVOKED_METHOD, auditEntry.getMethodName());
         CouchbaseUtils.addFieldToDocument(document, KEY_METADATA, auditEntry.getMetadata());
         CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_MILLIS, auditEntry.getExecutionMillis());
@@ -85,7 +84,7 @@ public class CouchbaseAuditMapper {
                 jsonObject.get(KEY_TIMESTAMP) != null ? TimeUtil.toLocalDateTime(jsonObject.getLong(KEY_TIMESTAMP)) : null,
                 jsonObject.get(KEY_STATE) != null ? AuditEntry.Status.valueOf(jsonObject.getString(KEY_STATE)) : null,
                 jsonObject.get(KEY_TYPE) != null ? AuditEntry.ExecutionType.valueOf(jsonObject.getString(KEY_TYPE)) : null,
-                jsonObject.getString(KEY_CHANGEUNIT_CLASS),
+                jsonObject.getString(KEY_CHANGE_CLASS),
                 jsonObject.getString(KEY_INVOKED_METHOD),
                 jsonObject.getLong(KEY_EXECUTION_MILLIS),
                 jsonObject.getString(KEY_EXECUTION_HOSTNAME),

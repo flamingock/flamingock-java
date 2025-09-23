@@ -16,31 +16,30 @@
 package io.flamingock.internal.common.mongodb;
 
 import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.TimeUtil;
 
 import java.util.function.Supplier;
 
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_AUTHOR;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGEUNIT_CLASS;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_INVOKED_METHOD;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ERROR_TRACE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_HOSTNAME;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_EXECUTION_MILLIS;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_METADATA;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_ORDER;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_RECOVERY_STRATEGY;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TX_TYPE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STAGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_SYSTEM_CHANGE;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TARGET_SYSTEM_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TYPE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_AUTHOR;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_CLASS;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_INVOKED_METHOD;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ERROR_TRACE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_HOSTNAME;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_MILLIS;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_METADATA;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ORDER;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_TYPE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STAGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TIMESTAMP;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TYPE;
 
 public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
 
@@ -59,7 +58,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_TIMESTAMP, TimeUtil.toDate(auditEntry.getCreatedAt()));
         document.append(KEY_STATE, auditEntry.getState().name());
         document.append(KEY_TYPE, auditEntry.getType().name());
-        document.append(KEY_CHANGEUNIT_CLASS, auditEntry.getClassName());
+        document.append(KEY_CHANGE_CLASS, auditEntry.getClassName());
         document.append(KEY_INVOKED_METHOD, auditEntry.getMethodName());
         document.append(KEY_METADATA, auditEntry.getMetadata());
         document.append(KEY_EXECUTION_MILLIS, auditEntry.getExecutionMillis());
@@ -93,7 +92,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 TimeUtil.toLocalDateTime(entry.get(KEY_TIMESTAMP)),
                 entry.containsKey(KEY_STATE) ? AuditEntry.Status.valueOf(entry.getString(KEY_STATE)) : null,
                 entry.containsKey(KEY_TYPE) ? AuditEntry.ExecutionType.valueOf(entry.getString(KEY_TYPE)) : null,
-                entry.getString(KEY_CHANGEUNIT_CLASS),
+                entry.getString(KEY_CHANGE_CLASS),
                 entry.getString(KEY_INVOKED_METHOD),
                 entry.containsKey(KEY_EXECUTION_MILLIS) && entry.get(KEY_EXECUTION_MILLIS) != null
                         ? ((Number) entry.get(KEY_EXECUTION_MILLIS)).longValue() : -1L,

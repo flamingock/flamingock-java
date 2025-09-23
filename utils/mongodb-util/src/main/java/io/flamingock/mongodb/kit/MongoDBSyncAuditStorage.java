@@ -20,13 +20,14 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import org.bson.Document;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 
 /**
  * MongoDB implementation of AuditStorage for real database testing.
@@ -35,7 +36,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE
  */
 public class MongoDBSyncAuditStorage implements AuditStorage {
 
-    private static final String AUDIT_COLLECTION_NAME = "flamingockAuditLogs";
+    private static final String AUDIT_COLLECTION_NAME = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 
     private final MongoDatabase database;
     private final MongoCollection<Document> auditCollection;

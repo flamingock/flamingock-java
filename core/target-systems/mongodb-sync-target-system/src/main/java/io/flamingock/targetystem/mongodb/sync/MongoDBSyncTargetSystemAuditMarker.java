@@ -23,6 +23,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import io.flamingock.internal.core.transaction.TransactionManager;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
 import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
@@ -91,7 +92,7 @@ public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMark
         private final MongoDatabase mongoDatabase;
         private final TransactionManager<ClientSession> txManager;
         private boolean autoCreate = true;
-        private String collectionName = "flamingockOnGoingTasks";
+        private String collectionName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
         private ReadConcern readConcern;
         private ReadPreference readPreference;
         private WriteConcern writeConcern;

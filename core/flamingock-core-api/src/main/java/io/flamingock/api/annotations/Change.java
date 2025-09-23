@@ -45,7 +45,7 @@ public @interface Change {
 
     /**
      * Unique identifier for this change. Must be globally unique across all changes.
-     * Typically follows a kebab-case naming convention describing the operation.
+     * Typically, follows a kebab-case naming convention describing the operation.
      *
      * @return the unique change identifier
      */
@@ -63,7 +63,7 @@ public @interface Change {
 
     /**
      * Author of this change. Required for audit trail and accountability.
-     * Typically an email, username, or team identifier.
+     * Typically, an email, username, or team identifier.
      *
      * @return the change author identifier
      */

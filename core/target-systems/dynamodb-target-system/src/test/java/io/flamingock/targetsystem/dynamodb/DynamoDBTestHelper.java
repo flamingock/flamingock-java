@@ -15,6 +15,7 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -31,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DynamoDBTestHelper {
     public final DynamoDBUtil dynamoDBUtil;
-    public final String tableName = "flamingockOnGoingTasks";
+    public final String tableName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
 
     public DynamoDBTestHelper(DynamoDbClient client) {
         this.dynamoDBUtil = new DynamoDBUtil(client);

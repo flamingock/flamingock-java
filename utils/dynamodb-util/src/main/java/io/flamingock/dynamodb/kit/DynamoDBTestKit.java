@@ -19,6 +19,7 @@ import io.flamingock.core.kit.AbstractTestKit;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 
@@ -72,8 +73,8 @@ public class DynamoDBTestKit extends AbstractTestKit {
 
         private DynamoDbClient client;
         private CommunityAuditStore driver;
-        private String auditTableName = "flamingockAuditLogs";
-        private String lockTableName = "flamingockLocks";
+        private String auditTableName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+        private String lockTableName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
         private boolean autoCleanup = true;
         private boolean createTablesIfNotExist = false;
         private Long readCapacityUnits = 5L;

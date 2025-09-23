@@ -28,8 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_TIMESTAMP;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TIMESTAMP;
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;

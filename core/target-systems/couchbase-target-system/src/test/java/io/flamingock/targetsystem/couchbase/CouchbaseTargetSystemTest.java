@@ -31,7 +31,7 @@ import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.util.Trio;
@@ -106,7 +106,7 @@ public class CouchbaseTargetSystemTest {
 
         bucket = cluster.bucket(BUCKET_NAME);
         bucket.waitUntilReady(Duration.ofSeconds(10));
-        couchbaseTestHelper = new CouchbaseTestHelper(cluster, bucket, SCOPE_NAME, CommunityPersistenceConstants.DEFAULT_ON_GOING_TASKS_STORE_NAME);
+        couchbaseTestHelper = new CouchbaseTestHelper(cluster, bucket, SCOPE_NAME, CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME);
     }
 
     @BeforeEach

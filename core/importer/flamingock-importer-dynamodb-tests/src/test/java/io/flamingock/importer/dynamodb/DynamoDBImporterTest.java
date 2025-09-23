@@ -39,7 +39,7 @@ import java.util.*;
 
 import static io.flamingock.api.StageType.LEGACY;
 import static io.flamingock.api.StageType.SYSTEM;
-import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableFlamingock(

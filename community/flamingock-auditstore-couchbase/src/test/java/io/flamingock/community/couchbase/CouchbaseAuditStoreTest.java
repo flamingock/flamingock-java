@@ -26,7 +26,7 @@ import io.flamingock.core.processor.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
 import org.junit.jupiter.api.*;

@@ -22,6 +22,7 @@ import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.targetsystem.mongodb.springdata.util.MongoDBSyncCollectionHelper;
 import io.flamingock.targetsystem.mongodb.springdata.util.MongoDBSyncDocumentHelper;
 import org.bson.Document;
@@ -44,7 +45,7 @@ public class MongoDBTestHelper {
 
     public void insertOngoingExecution(String taskId) {
 
-        MongoCollection<Document> onGoingTasksCollection = mongoDatabase.getCollection("flamingockOnGoingTasks");
+        MongoCollection<Document> onGoingTasksCollection = mongoDatabase.getCollection(CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME);
 
         CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
                 new MongoDBSyncCollectionHelper(onGoingTasksCollection),

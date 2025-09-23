@@ -16,9 +16,8 @@
 package io.flamingock.internal.util.dynamodb.entities;
 
 import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditEntryField;
+import io.flamingock.internal.util.constants.AuditEntryFieldConstants;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
@@ -95,7 +94,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.partitionKey = partitionKey;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_CHANGE_ID)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_CHANGE_ID)
     public String getTaskId() {
         return taskId;
     }
@@ -104,7 +103,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.taskId = taskId;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_STAGE_ID)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_STAGE_ID)
     public String getStageId() {
         return stageId;
     }
@@ -113,7 +112,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.stageId = stageId;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_EXECUTION_ID)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_EXECUTION_ID)
     public String getExecutionId() {
         return executionId;
     }
@@ -122,7 +121,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.executionId = executionId;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_AUTHOR)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_AUTHOR)
     public String getAuthor() {
         return author;
     }
@@ -131,7 +130,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.author = author;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_TIMESTAMP)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TIMESTAMP)
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -140,7 +139,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.createdAt = createdAt;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_STATE)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_STATE)
     public String getState() {
         return state.name();
     }
@@ -149,7 +148,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.state = AuditEntry.Status.valueOf(state);
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_CHANGEUNIT_CLASS)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_CHANGE_CLASS)
     public String getClassName() {
         return className;
     }
@@ -158,7 +157,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.className = className;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_INVOKED_METHOD)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_INVOKED_METHOD)
     public String getMethodName() {
         return methodName;
     }
@@ -167,7 +166,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.methodName = methodName;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_METADATA)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_METADATA)
     public String getMetadata() {
         return metadata.toString();
     }
@@ -176,7 +175,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.metadata = metadata;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_EXECUTION_MILLIS)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_EXECUTION_MILLIS)
     public Long getExecutionMillis() {
         return executionMillis;
     }
@@ -185,7 +184,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.executionMillis = executionMillis;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_EXECUTION_HOSTNAME)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_EXECUTION_HOSTNAME)
     public String getExecutionHostname() {
         return executionHostname;
     }
@@ -194,7 +193,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.executionHostname = executionHostname;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_ERROR_TRACE)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_ERROR_TRACE)
     public String getErrorTrace() {
         return errorTrace.toString();
     }
@@ -203,7 +202,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.errorTrace = errorTrace;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_TYPE)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TYPE)
     public String getType() {
         return type.name();
     }
@@ -212,7 +211,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.type = AuditEntry.ExecutionType.valueOf(type);
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_SYSTEM_CHANGE)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_SYSTEM_CHANGE)
     public Boolean getSystemChange() {
         return systemChange;
     }
@@ -221,7 +220,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.systemChange = systemChange;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_TX_TYPE)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TX_TYPE)
     public String getTxType() {
         return AuditTxType.safeString(txType);
     }
@@ -230,7 +229,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.txType = AuditTxType.fromString(txType);
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_TARGET_SYSTEM_ID)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID)
     public String getTargetSystemId() {
         return targetSystemId;
     }
@@ -239,7 +238,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.targetSystemId = targetSystemId;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_ORDER)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_ORDER)
     public String getOrder() {
         return order;
     }
@@ -248,7 +247,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.order = order;
     }
 
-    @DynamoDbAttribute(AuditEntryField.KEY_RECOVERY_STRATEGY)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY)
     public String getRecoveryStrategy() {
         return recoveryStrategy;
     }

@@ -18,6 +18,7 @@ package io.flamingock.targetsystem.dynamodb;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -95,7 +96,7 @@ public class DynamoDBTargetSystemAuditMarker implements TargetSystemAuditMarker 
     public static class Builder {
         protected static DynamoDBUtil dynamoDBUtil;
         private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
-        private String tableName = "flamingockOnGoingTasks";
+        private String tableName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
         private boolean autoCreate = true;
         protected DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable;
 

@@ -24,7 +24,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 
 public class DynamoDBTestHelper {
 

@@ -28,7 +28,7 @@ import com.couchbase.client.java.transactions.TransactionGetResult;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
@@ -115,7 +115,7 @@ public class CouchbaseTargetSystemAuditMarker implements TargetSystemAuditMarker
         private final TransactionManager<TransactionAttemptContext> txManager;
         private boolean autoCreate = true;
         private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
-        private String collectionName = CommunityPersistenceConstants.DEFAULT_ON_GOING_TASKS_STORE_NAME;
+        private String collectionName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
 
         public Builder(Cluster cluster, Bucket bucket, TransactionManager<TransactionAttemptContext> txManager) {
             this.cluster = cluster;

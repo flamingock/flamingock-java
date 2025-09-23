@@ -20,6 +20,7 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 
 import java.util.function.Function;
 
@@ -41,7 +42,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         extends AbstractTargetSystem<HOLDER>
         implements ContextInitializable {
 
-    protected String onGoingTasksRepositoryName = "flamingockOnGoingTasks";
+    protected String onGoingTasksRepositoryName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
     protected boolean autoCreate = true;
     protected TargetSystemAuditMarker markerRepository;
 

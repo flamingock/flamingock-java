@@ -38,7 +38,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @EnableFlamingock(pipelineFile = "flamingock/pipeline.yaml")

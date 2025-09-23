@@ -24,19 +24,15 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
-import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_CHANGE_ID;
-import static io.flamingock.internal.common.core.audit.AuditEntryField.KEY_STATE;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 
 /**
  * DynamoDB implementation of AuditStorage for real database testing.

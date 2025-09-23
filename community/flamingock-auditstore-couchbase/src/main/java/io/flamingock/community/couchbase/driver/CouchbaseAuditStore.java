@@ -20,7 +20,7 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import io.flamingock.community.couchbase.internal.CouchbaseLockService;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;

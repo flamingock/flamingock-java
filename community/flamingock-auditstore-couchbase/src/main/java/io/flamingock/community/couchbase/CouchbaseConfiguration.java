@@ -16,7 +16,7 @@
 package io.flamingock.community.couchbase;
 
 import com.couchbase.client.core.io.CollectionIdentifier;
-import io.flamingock.internal.core.store.audit.community.CommunityPersistenceConstants;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.store.audit.community.CommunityAuditStoreConfigurable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 

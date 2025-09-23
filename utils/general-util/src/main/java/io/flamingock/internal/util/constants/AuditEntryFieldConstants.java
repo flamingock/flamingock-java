@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.audit;
+package io.flamingock.internal.util.constants;
 
-public class AuditEntryField {
+public class AuditEntryFieldConstants {
     public static final String KEY_EXECUTION_ID = "executionId";
     public static final String KEY_STAGE_ID = "stageId";
     public static final String KEY_CHANGE_ID = "changeId";
@@ -23,7 +23,7 @@ public class AuditEntryField {
     public static final String KEY_TIMESTAMP = "timestamp";
     public static final String KEY_STATE = "state";
     public static final String KEY_TYPE = "type";
-    public static final String KEY_CHANGEUNIT_CLASS = "changeUnitClass";
+    public static final String KEY_CHANGE_CLASS = "changeClass";
     public static final String KEY_INVOKED_METHOD = "invokedMethod";
     public static final String KEY_METADATA = "metadata";
     public static final String KEY_EXECUTION_MILLIS = "executionMillis";
