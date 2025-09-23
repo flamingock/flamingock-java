@@ -38,34 +38,34 @@ class TemplateLoadedTaskBuilderTest {
 
     // Simple test template implementation
     public static class TestChangeTemplate implements ChangeTemplate<Object, Object, Object> {
-        
+
         @Override
         public void setChangeId(String changeId) {}
-        
+
         @Override
         public void setTransactional(boolean isTransactional) {}
-        
+
         @Override
         public void setConfiguration(Object configuration) {}
-        
+
         @Override
         public void setApplyPayload(Object applyPayload) {}
 
         @Override
         public void setRollbackPayload(Object rollbackPayload) {}
-        
+
         @Override
         public Class<Object> getConfigurationClass() { return Object.class; }
-        
+
         @Override
         public Class<Object> getApplyPayloadClass() { return Object.class; }
 
         @Override
         public Class<Object> getRollbackPayloadClass() { return Object.class; }
-        
+
         @Override
         public Collection<Class<?>> getReflectiveClasses() { return Collections.emptyList(); }
-        
+
         @Apply
         public void execute(Object config, Object execution, Object context) {
             // Test implementation
@@ -225,7 +225,7 @@ class TemplateLoadedTaskBuilderTest {
     }
 
     @Test
-    @DisplayName("Should build with order from fileName when orderInContent is empty string")
+    @DisplayName("Should throw exception when orderInContent is empty string")
     void shouldBuildWithOrderFromFileNameWhenOrderInContentIsEmptyString() {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
@@ -245,10 +245,11 @@ class TemplateLoadedTaskBuilderTest {
                     .setRollback(new Object());
 
             // When
-            TemplateLoadedChangeUnit result = builder.build();
+            FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
             // Then
-            assertEquals("004", result.getOrder().orElse(null));
+            assertEquals("ChangeUnit[test-id] Order mismatch: value in template order field='' does not match order in fileName='004'",
+                exception.getMessage());
         }
     }
 

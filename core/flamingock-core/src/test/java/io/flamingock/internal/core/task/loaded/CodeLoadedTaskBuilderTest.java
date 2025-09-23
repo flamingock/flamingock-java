@@ -124,7 +124,7 @@ class CodeLoadedTaskBuilderTest {
     }
 
     @Test
-    @DisplayName("Should build with order from source when orderInContent is empty string")
+    @DisplayName("Should throw exception when orderInContent is empty string")
     void shouldBuildWithOrderFromSourceWhenOrderInContentIsEmptyString() {
         // Given
         builder.setId("test-id")
@@ -134,14 +134,16 @@ class CodeLoadedTaskBuilderTest {
                 .setTransactional(true)
                 .setSystem(false);
 
-        // When & Then
-        // This will throw ClassNotFoundException, but order validation happens first
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> builder.build());
-        assertInstanceOf(ClassNotFoundException.class, exception.getCause());
+        // When
+        FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
+
+        // Then
+        assertEquals("ChangeUnit[test-id] Order mismatch: @ChangeUnit(order='') does not match order in className='004'",
+            exception.getMessage());
     }
 
     @Test
-    @DisplayName("Should build with order from source when orderInContent is blank string")
+    @DisplayName("Should throw exception when orderInContent is blank string")
     void shouldBuildWithOrderFromSourceWhenOrderInContentIsBlankString() {
         // Given
         builder.setId("test-id")
@@ -151,10 +153,12 @@ class CodeLoadedTaskBuilderTest {
                 .setTransactional(true)
                 .setSystem(false);
 
-        // When & Then
-        // This will throw ClassNotFoundException, but order validation happens first
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> builder.build());
-        assertInstanceOf(ClassNotFoundException.class, exception.getCause());
+        // When
+        FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
+
+        // Then
+        assertEquals("ChangeUnit[test-id] Order mismatch: @ChangeUnit(order='   ') does not match order in className='005'",
+            exception.getMessage());
     }
 
     @Test

@@ -27,8 +27,8 @@ public final class LoadedChangeUnitUtil {
 
     // For template files: must start with _order_ (e.g., _002_whatever.yaml)
     private static final String SIMPLE_FILE_ORDER_REGEX = "^_([^_]+)_";
-    
-    // For class names: must have _order_ at the beginning of the class name after package 
+
+    // For class names: must have _order_ at the beginning of the class name after package
     // (e.g., com.mycompany.mypackage._002_mychange or com.mycompany.OuterClass$_002_innerchange)
     private static final String FILE_WITH_PACKAGE_ORDER_REGEX = "[.$]_([^_]+)_";
 
@@ -56,7 +56,7 @@ public final class LoadedChangeUnitUtil {
                                           String orderInContent,
                                           String fileName,
                                           boolean isCodeBased) {
-        boolean hasOrderInContent = orderInContent != null && !orderInContent.trim().isEmpty();
+        boolean hasOrderInContent = orderInContent != null && !orderInContent.equals("NULL_VALUE");
         String orderFromFileName = getOrderFromFileName(fileName, isCodeBased);
 
         if (hasOrderInContent) {

@@ -59,7 +59,7 @@ public @interface Change {
      *
      * @return the execution order string
      */
-    String order();
+    String order() default "NULL_VALUE";
 
     /**
      * Author of this change. Required for audit trail and accountability.
