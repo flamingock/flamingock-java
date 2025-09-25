@@ -15,13 +15,12 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.common.core.error.FlamingockException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class LoadedChangeUnitUtil {
+public final class LoadedChangeUtil {
 
 
 
@@ -32,27 +31,27 @@ public final class LoadedChangeUnitUtil {
     // (e.g., com.mycompany.mypackage._002_mychange or com.mycompany.OuterClass$_002_innerchange)
     private static final String FILE_WITH_PACKAGE_ORDER_REGEX = "[.$]_([^_]+)_";
 
-    private LoadedChangeUnitUtil() {
+    private LoadedChangeUtil() {
     }
 
     /**
-     * For TemplateLoadedChangeUnit - validates order from template file name
+     * For TemplateLoadedChange - validates order from template file name
      */
-    public static String getMatchedOrderFromFile(String changeUnitId, String orderInContent, String fileName) {
-        return getMatchedOrder(changeUnitId, orderInContent, fileName, false);
+    public static String getMatchedOrderFromFile(String changeId, String orderInContent, String fileName) {
+        return getMatchedOrder(changeId, orderInContent, fileName, false);
     }
 
     /**
-     * For CodeLoadedChangeUnit - validates order from class name
+     * For CodeLoadedChange - validates order from class name
      */
-    public static String getMatchedOrderFromClassName(String changeUnitId, String orderInAnnotation, String className) {
-        return getMatchedOrder(changeUnitId, orderInAnnotation, className, true);
+    public static String getMatchedOrderFromClassName(String changeId, String orderInAnnotation, String className) {
+        return getMatchedOrder(changeId, orderInAnnotation, className, true);
     }
 
     /**
      * Common validation logic for both template files and class names
      */
-    private static String getMatchedOrder(String changeUnitId,
+    private static String getMatchedOrder(String changeId,
                                           String orderInContent,
                                           String fileName,
                                           boolean isCodeBased) {
@@ -64,7 +63,7 @@ public final class LoadedChangeUnitUtil {
                 if (orderInContent.equals(orderFromFileName)) {
                     return orderInContent;
                 } else {
-                    throw mismatchOrderException(changeUnitId, orderInContent, isCodeBased, orderFromFileName);
+                    throw mismatchOrderException(changeId, orderInContent, isCodeBased, orderFromFileName);
                 }
             } else {
                 return orderInContent;
@@ -73,34 +72,34 @@ public final class LoadedChangeUnitUtil {
             if (orderFromFileName != null) {
                 return orderFromFileName;
             } else {
-                throw missingOrderException(changeUnitId, isCodeBased);
+                throw missingOrderException(changeId, isCodeBased);
             }
         }
     }
 
-    private static FlamingockException mismatchOrderException(String changeUnitId, String orderInContent, boolean isCodeBased, String orderInFileName) {
+    private static FlamingockException mismatchOrderException(String changeId, String orderInContent, boolean isCodeBased, String orderInFileName) {
 
         String orderInContentText;
         String fileType;
         if(isCodeBased) {
-            orderInContentText = String.format("@ChangeUnit(order='%s')", orderInContent);
+            orderInContentText = String.format("@Change(order='%s')", orderInContent);
             fileType = "className";
         } else {
             orderInContentText = String.format("value in template order field='%s'", orderInContent);
             fileType = "fileName";
         }
 
-        return new FlamingockException(String.format("ChangeUnit[%s] Order mismatch: %s does not match order in %s='%s'",
-                changeUnitId, orderInContentText, fileType, orderInFileName));
+        return new FlamingockException(String.format("Change[%s] Order mismatch: %s does not match order in %s='%s'",
+                changeId, orderInContentText, fileType, orderInFileName));
     }
 
-    private static FlamingockException missingOrderException(String changeUnitId, boolean isCodeBased) {
+    private static FlamingockException missingOrderException(String changeId, boolean isCodeBased) {
 
         String contentType;
         String fileType;
         String fileExt;
         if(isCodeBased) {
-            contentType = "@ChangeUnit annotation";
+            contentType = "@Change annotation";
             fileType = "className";
             fileExt = "java";
         } else {
@@ -109,8 +108,8 @@ public final class LoadedChangeUnitUtil {
             fileExt = "yaml";
         }
 
-        return new FlamingockException(String.format("ChangeUnit[%s] Order is required: order must be present in the %s or in the %s(e.g. _0001_%s.%s). If present in both, they must have the same value.",
-                changeUnitId, contentType, fileType, changeUnitId, fileExt));
+        return new FlamingockException(String.format("Change[%s] Order is required: order must be present in the %s or in the %s(e.g. _0001_%s.%s). If present in both, they must have the same value.",
+                changeId, contentType, fileType, changeId, fileExt));
     }
 
     private static String getOrderFromFileName(String fileName, boolean withPackage) {

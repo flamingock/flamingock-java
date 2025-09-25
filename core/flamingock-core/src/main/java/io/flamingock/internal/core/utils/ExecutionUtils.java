@@ -40,14 +40,14 @@ public final class ExecutionUtils {
     }
 
     /**
-     * We need this generic method, although currently it only calls `isChangeUnit`, but in the future there will
-     * more annotations, so `isChangeUnit` will be only one of them.
+     * We need this generic method, although currently it only calls `isChange`, but in the future there will
+     * more annotations, so `isChange` will be only one of them.
      */
     public static boolean isExecutableClass(Class<?> clazz) {
-        return isChangeUnit(clazz);
+        return isChange(clazz);
     }
 
-    public static boolean isChangeUnit(Class<?> clazz) {
+    public static boolean isChange(Class<?> clazz) {
         return clazz.isAnnotationPresent(CHANGE_UNIT_CLASS);
     }
 

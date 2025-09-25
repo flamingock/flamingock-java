@@ -17,7 +17,6 @@ package io.flamingock.community.dynamodb;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
-//import io.flamingock.oss.driver.dynamodb.internal.mongock.ChangeEntryDynamoDB;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
@@ -49,16 +48,4 @@ public class DynamoDBTestHelper {
                 .map(AuditEntryEntity::toAuditEntry)
                 .collect(Collectors.toList());
     }
-
-//    public List<ChangeEntryDynamoDB> getChangeEntriesSorted(String auditLogTable) {
-//        return dynamoDBUtil.getEnhancedClient().table(auditLogTable, TableSchema.fromBean(ChangeEntryDynamoDB.class))
-//                .scan(ScanEnhancedRequest.builder()
-//                        .consistentRead(true)
-//                        .build()
-//                )
-//                .items()
-//                .stream()
-//                .sorted(Comparator.comparing(ChangeEntryDynamoDB::getTimestamp))
-//                .collect(Collectors.toList());
-//    }
 }

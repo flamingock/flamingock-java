@@ -80,21 +80,21 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
     private static final Logger logger = FlamingockLoggerFactory.getLogger("SimpleTxStrategy");
 
 
-    public SimpleTxChangeProcessStrategy(ExecutableTask changeUnit,
+    public SimpleTxChangeProcessStrategy(ExecutableTask change,
                                          ExecutionContext executionContext,
                                          TransactionalTargetSystemOps targetSystemOps,
                                          AuditStoreStepOperations auditStoreOperations,
                                          TaskSummarizer summarizer,
                                          LockGuardProxyFactory proxyFactory,
                                          ContextResolver baseContext) {
-        super(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
+        super(change, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
     }
 
     @Override
     protected TaskSummary doApplyChange() {
-        logger.debug("Executing transactional task [change={}]", changeUnit.getId());
+        logger.debug("Executing transactional task [change={}]", change.getId());
 
-        StartStep startStep = new StartStep(changeUnit);
+        StartStep startStep = new StartStep(change);
 
         ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext);
         
@@ -102,7 +102,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         ExecutionStep changeResult = targetSystemOps.applyChangeTransactional(executionRuntime -> {
             ExecutionStep changeAppliedResult = executableStep.execute(executionRuntime);
             if(changeAppliedResult.isSuccessStep()) {
-                targetSystemOps.markApplied(changeUnit);
+                targetSystemOps.markApplied(change);
             }
             return changeAppliedResult;
         }, buildExecutionRuntime());
@@ -111,7 +111,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         if(changeResult.isSuccessStep()) {
             if(afterAudit instanceof CompletedSuccessStep) {
                 // Success: change applied and audited, clear marker
-                targetSystemOps.clearMark(changeUnit.getId());
+                targetSystemOps.clearMark(change.getId());
                 return summarizer.setSuccessful().getSummary();
             } else {
                 // Change applied but audit failed - leave marker for recovery
@@ -139,8 +139,8 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
 
     protected void auditAndLogAutoRollback() {
-        stepLogger.logAutoRollback(changeUnit, 0);
-        CompleteAutoRolledBackStep rolledBackStep = new CompleteAutoRolledBackStep(changeUnit, true);
+        stepLogger.logAutoRollback(change, 0);
+        CompleteAutoRolledBackStep rolledBackStep = new CompleteAutoRolledBackStep(change, true);
         auditAndLogAutoRollback(rolledBackStep, executionContext);
     }
 }

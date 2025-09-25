@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.e2e;
 
-import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.e2e.changes.CustomTargetSystemChange;
 import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
@@ -77,7 +77,7 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -123,7 +123,7 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -153,7 +153,7 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
                     )
             );
 
@@ -184,8 +184,8 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
-                            new CodeChangeUnitTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
+                            new CodeChangeTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
                     )
             );
 
@@ -245,8 +245,8 @@ class AuditPersistenceE2ETest {
         // Using the new AuditTestSupport API - this replaces all the MockedStatic boilerplate!
         AuditTestSupport.withTestKit(testKit)
             
-            .GIVEN_ChangeUnits(
-                new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+            .GIVEN_Changes(
+                new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
             )
             .WHEN(() -> {
                 // The actual test execution code - no more MockedStatic management needed!
@@ -273,9 +273,9 @@ class AuditPersistenceE2ETest {
         // NEW WAY: Clean, readable, no boilerplate
         AuditTestSupport.withTestKit(testKit)
             
-            .GIVEN_ChangeUnits(
-                new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
-                new CodeChangeUnitTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
+            .GIVEN_Changes(
+                new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
+                new CodeChangeTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
             )
             .WHEN(() -> {
                 assertDoesNotThrow(() -> {

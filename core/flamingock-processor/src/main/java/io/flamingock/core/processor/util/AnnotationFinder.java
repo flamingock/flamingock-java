@@ -18,7 +18,7 @@ package io.flamingock.core.processor.util;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
 
 import javax.annotation.processing.RoundEnvironment;
@@ -37,11 +37,11 @@ public final class AnnotationFinder {
         this.logger = logger;
     }
 
-    public Map<String, List<AbstractPreviewTask>> getCodedChangeUnitsMapByPackage() {
-        logger.info("Searching for code-based changes (Java classes annotated with @ChangeUnit annotation)");
-        Collection<CodePreviewChangeUnit> allChanges = new LinkedList<>(findAnnotatedChanges());
+    public Map<String, List<AbstractPreviewTask>> getCodedChangesMapByPackage() {
+        logger.info("Searching for code-based changes (Java classes annotated with @Change annotation)");
+        Collection<CodePreviewChange> allChanges = new LinkedList<>(findAnnotatedChanges());
         Map<String, List<AbstractPreviewTask>> mapByPackage = new HashMap<>();
-        for(CodePreviewChangeUnit item: allChanges) {
+        for(CodePreviewChange item: allChanges) {
             mapByPackage.compute(item.getSourcePackage(), (key, descriptors) -> {
                 List<AbstractPreviewTask> newDescriptors;
                 if(descriptors != null) {
@@ -67,19 +67,19 @@ public final class AnnotationFinder {
                 .orElse(null);
     }
 
-    private Collection<CodePreviewChangeUnit> findAnnotatedChanges() {
+    private Collection<CodePreviewChange> findAnnotatedChanges() {
         return roundEnv.getElementsAnnotatedWith(Change.class)
                 .stream()
                 .filter(e -> e.getKind() == ElementKind.CLASS)
                 .map(e -> (TypeElement) e)
-                .map(this::buildCodePreviewChangeUnit)
+                .map(this::buildCodePreviewChange)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    private CodePreviewChangeUnit buildCodePreviewChangeUnit(TypeElement typeElement) {
+    private CodePreviewChange buildCodePreviewChange(TypeElement typeElement) {
         return Optional.ofNullable(PreviewTaskBuilder.getCodeBuilder(typeElement).build())
-                .map(CodePreviewChangeUnit.class::cast)
+                .map(CodePreviewChange.class::cast)
                 .orElse(null);
     }
 }

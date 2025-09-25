@@ -112,9 +112,9 @@ This is a multi-module Gradle project using Kotlin DSL.
 - **Critical**: Hierarchical context MUST be built before driver initialization
 
 **Pipeline Architecture**: Change execution organized in stages:
-- `LoadedPipeline` - Executable pipeline with stages and change units
+- `LoadedPipeline` - Executable pipeline with stages and changes
 - `pipeline.yaml` - Declarative pipeline definition in `src/test/resources/flamingock/`
-- Stages contain change units which are atomic migration operations
+- Stages contain changes which are atomic migration operations
 
 **AuditStore System**: Database/system-specific implementations:
 - `AuditStore` interface provides `ConnectionEngine` for specific technologies
@@ -130,7 +130,7 @@ This is a multi-module Gradle project using Kotlin DSL.
 
 **Core Modules** (`core/`):
 - `flamingock-core` - Core engine and orchestration logic
-- `flamingock-core-api` - Public API annotations (`@ChangeUnit`, `@Execution`)
+- `flamingock-core-api` - Public API annotations (`@Change`, `@Execution`)
 - `flamingock-core-commons` - Shared internal utilities
 - `flamingock-processor` - Annotation processor for pipeline generation
 - `flamingock-graalvm` - GraalVM native image support
@@ -155,7 +155,7 @@ This is a multi-module Gradle project using Kotlin DSL.
 
 ### Key Patterns
 
-**Change Units**: Atomic migration operations annotated with `@ChangeUnit`:
+**Changes**: Atomic migration operations annotated with `@Change`:
 - `id` - Unique identifier for tracking
 - `order` - Execution sequence (can be auto-generated)
 - `author` - Change author

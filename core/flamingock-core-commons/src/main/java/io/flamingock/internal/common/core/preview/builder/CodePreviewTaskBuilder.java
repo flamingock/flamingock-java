@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -41,7 +41,7 @@ import java.util.Optional;
 
 
 //TODO how to set transactional and runAlways
-public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewChangeUnit> {
+public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewChange> {
 
     private String id;
     private String order;
@@ -132,19 +132,19 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     }
 
     CodePreviewTaskBuilder setTypeElement(TypeElement typeElement) {
-        Change changeUnitAnnotation = typeElement.getAnnotation(Change.class);
+        Change changeAnnotation = typeElement.getAnnotation(Change.class);
         TargetSystem targetSystemAnnotation = typeElement.getAnnotation(TargetSystem.class);
         Recovery recoveryAnnotation = typeElement.getAnnotation(Recovery.class);
-        if(changeUnitAnnotation != null) {
-            setId(changeUnitAnnotation.id());
-            setOrder(changeUnitAnnotation.order());
-            setAuthor(changeUnitAnnotation.author());
+        if(changeAnnotation != null) {
+            setId(changeAnnotation.id());
+            setOrder(changeAnnotation.order());
+            setAuthor(changeAnnotation.author());
             setSourceClassPath(typeElement.getQualifiedName().toString());
             setExecutionMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
             setRollbackMethod(getAnnotatedMethodInfo(typeElement, Rollback.class).orElse(null));
             setBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, BeforeExecution.class).orElse(null));
             setRollbackBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, RollbackBeforeExecution.class).orElse(null));
-            setTransactional(changeUnitAnnotation.transactional());
+            setTransactional(changeAnnotation.transactional());
             setSystem(false);
         }
         if(targetSystemAnnotation != null) {
@@ -161,13 +161,13 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
 
 
     @Override
-    public CodePreviewChangeUnit build() {
+    public CodePreviewChange build() {
         return getCodePreviewChange();
     }
 
     @NotNull
-    private CodePreviewChangeUnit getCodePreviewChange() {
-        return new CodePreviewChangeUnit(
+    private CodePreviewChange getCodePreviewChange() {
+        return new CodePreviewChange(
                 id,
                 order,
                 author,

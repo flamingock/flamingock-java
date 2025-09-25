@@ -18,11 +18,11 @@ package io.flamingock.internal.common.core.error;
 import java.time.Duration;
 
 /**
- * Exception thrown when a ChangeUnit execution fails.
+ * Exception thrown when a Change execution fails.
  * 
  * <p>This exception provides rich context about the failed change execution including:
  * <ul>
- *   <li>Change unit ID and stage information</li>
+ *   <li>Change ID and stage information</li>
  *   <li>Execution mode (transactional, non-transactional, shared-transactional)</li>
  *   <li>Execution duration for performance analysis</li>
  *   <li>Target system information</li>
@@ -30,7 +30,7 @@ import java.time.Duration;
  * </ul>
  * 
  * <p>This exception should be used instead of generic {@link FlamingockException} 
- * when change unit execution fails, as it provides much better debugging context.
+ * when change execution fails, as it provides much better debugging context.
  * 
  * @since 6.0.0
  */
@@ -46,7 +46,7 @@ public class ChangeExecutionException extends FlamingockException {
      * Creates a new ChangeExecutionException with full execution context.
      *
      * @param message descriptive error message
-     * @param changeId the ID of the failed change unit
+     * @param changeId the ID of the failed change
      * @param stageName the name of the stage containing the change
      * @param executionMode the execution mode (e.g., "transactional", "non-transactional")
      * @param executionDuration how long the change took before failing
@@ -72,7 +72,7 @@ public class ChangeExecutionException extends FlamingockException {
      * Creates a new ChangeExecutionException with minimal context (for backward compatibility).
      *
      * @param message descriptive error message
-     * @param changeId the ID of the failed change unit
+     * @param changeId the ID of the failed change
      * @param cause the underlying exception that caused the failure
      */
     public ChangeExecutionException(String message, String changeId, Throwable cause) {
@@ -118,7 +118,7 @@ public class ChangeExecutionException extends FlamingockException {
     }
 
     /**
-     * @return the ID of the failed change unit
+     * @return the ID of the failed change
      */
     public String getChangeId() {
         return changeId;

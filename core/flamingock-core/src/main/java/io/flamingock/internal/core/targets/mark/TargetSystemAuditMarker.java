@@ -22,7 +22,7 @@ import java.util.Set;
 
 /**
  * Local repository that persists lightweight {@link TargetSystemAuditMark} entries indicating that a
- * ChangeUnit has been successfully applied on a transactional Target System.
+ * Change has been successfully applied on a transactional Target System.
  * <p>
  * This repository acts as a <em>local advisory source of truth</em> used during reconciliation with the
  * remote Audit Store (e.g., in the Cloud edition). Its purpose is to reduce false negatives caused by
@@ -75,17 +75,17 @@ public interface TargetSystemAuditMarker {
     void mark(TargetSystemAuditMark auditMark);
 
     /**
-     * Convenience method to record that the given ChangeUnit has been applied on the local
+     * Convenience method to record that the given Change has been applied on the local
      * Target System. Equivalent to calling {@link #mark(TargetSystemAuditMark)} with a mark of type
      * {@link TargetSystemAuditMarkType#APPLIED}.
      * <p>
      * Implementations should ensure this operation is idempotent. The write operation must
      * participate in the same transaction as the Target System operation that is being confirmed.
      *
-     * @param changeUnit the applied change to be marked locally.
+     * @param change the applied change to be marked locally.
      * @throws FlamingockException if the operation fails (e.g., storage unavailable).
      */
-    default void markApplied(ExecutableTask changeUnit) {
-        mark(new TargetSystemAuditMark(changeUnit.getId(), TargetSystemAuditMarkType.APPLIED));
+    default void markApplied(ExecutableTask change) {
+        mark(new TargetSystemAuditMark(change.getId(), TargetSystemAuditMarkType.APPLIED));
     }
 }

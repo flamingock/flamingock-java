@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
@@ -44,68 +44,68 @@ class SpringProfileFilterTemplateTaskTest {
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[] and taskProfiles=[]")
     void trueIfActiveProfilesEmptyAndNotAnnotated() {
-        assertTrue(new SpringbootProfileFilter().filter(getTemplateLoadedChangeUnit()));
+        assertTrue(new SpringbootProfileFilter().filter(getTemplateLoadedChange()));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1]")
     void trueIfActiveProfilesAndAnnotatedWhenMatched() {
-        assertTrue(new SpringbootProfileFilter("P1").filter(getTemplateLoadedChangeUnit("P1")));
+        assertTrue(new SpringbootProfileFilter("P1").filter(getTemplateLoadedChange("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1,P2] and taskProfiles=[P1]")
     void trueIfActiveProfilesContainAnnotatedProfile() {
-        assertTrue(new SpringbootProfileFilter("P1", "P2").filter(getTemplateLoadedChangeUnit("P1")));
+        assertTrue(new SpringbootProfileFilter("P1", "P2").filter(getTemplateLoadedChange("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1,P2]")
     void trueIfAnnotatedProfilesContainActiveProfile() {
-        assertTrue(new SpringbootProfileFilter("P1").filter(getTemplateLoadedChangeUnit("P1,P2")));
+        assertTrue(new SpringbootProfileFilter("P1").filter(getTemplateLoadedChange("P1,P2")));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P2] and taskProfiles=[!P1]")
     void trueIfAnnotatedProfileIsNegativeP1AndActiveProfileIsP2() {
-        assertTrue(new SpringbootProfileFilter("P2").filter(getTemplateLoadedChangeUnit("!P1")));
+        assertTrue(new SpringbootProfileFilter("P2").filter(getTemplateLoadedChange("!P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[!P1]")
     void trueIfActiveProfileEmptyAndTaskProfileNegativeP1() {
-        assertTrue(new SpringbootProfileFilter().filter(getTemplateLoadedChangeUnit("!P1")));
+        assertTrue(new SpringbootProfileFilter().filter(getTemplateLoadedChange("!P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[P1]")
     void falseIfActiveProfileEmptyAndTaskProfileP1() {
-        assertFalse(new SpringbootProfileFilter().filter(getTemplateLoadedChangeUnit("P1")));
+        assertFalse(new SpringbootProfileFilter().filter(getTemplateLoadedChange("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P2] and taskProfiles=[P1]")
     void falseIfActiveProfileAndTaskProfileDontMatch() {
-        assertFalse(new SpringbootProfileFilter("P2").filter(getTemplateLoadedChangeUnit("P1")));
+        assertFalse(new SpringbootProfileFilter("P2").filter(getTemplateLoadedChange("P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1AndTaskProfileNegativeP1() {
-        assertFalse(new SpringbootProfileFilter("P1").filter(getTemplateLoadedChangeUnit("!P1")));
+        assertFalse(new SpringbootProfileFilter("P1").filter(getTemplateLoadedChange("!P1")));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1,P2] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1P2AndTaskProfileNegativeP1() {
-        assertFalse(new SpringbootProfileFilter("P1", "P2").filter(getTemplateLoadedChangeUnit("!P1")));
+        assertFalse(new SpringbootProfileFilter("P1", "P2").filter(getTemplateLoadedChange("!P1")));
     }
 
-    private AbstractLoadedTask getTemplateLoadedChangeUnit() {
-        return getTemplateLoadedChangeUnit(null);
+    private AbstractLoadedTask getTemplateLoadedChange() {
+        return getTemplateLoadedChange(null);
     }
 
-    private AbstractLoadedTask getTemplateLoadedChangeUnit(String profiles) {
+    private AbstractLoadedTask getTemplateLoadedChange(String profiles) {
 
         ChangeTemplateFileContent changeFileDescriptor = new ChangeTemplateFileContent(
                 "template-base-change-id",
@@ -121,7 +121,7 @@ class SpringProfileFilterTemplateTaskTest {
                 RecoveryDescriptor.getDefault()
         );
 
-        TemplatePreviewChangeUnit preview = PreviewTaskBuilder.getTemplateBuilder("TemplateBase.yaml", changeFileDescriptor).build();
+        TemplatePreviewChange preview = PreviewTaskBuilder.getTemplateBuilder("TemplateBase.yaml", changeFileDescriptor).build();
 
         return LoadedTaskBuilder.getInstance(preview).build();
 

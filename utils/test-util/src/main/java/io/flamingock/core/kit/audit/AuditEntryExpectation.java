@@ -240,10 +240,10 @@ public class AuditEntryExpectation {
     }
     
     /**
-     * Sets both className and methodName from a change unit class.
+     * Sets both className and methodName from a change class.
      * Extracts the className from the class itself and finds the method annotated with @Execution.
      * 
-     * @param clazz the change unit class
+     * @param clazz the change class
      * @return this expectation for method chaining
      */
     public AuditEntryExpectation withClass(Class<?> clazz) {

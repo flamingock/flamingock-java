@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Transactional change unit for multiple changes test.
+ * Transactional change for multiple changes test.
  */
 @Change(id = "test3-multi-tx-change", order = "004", transactional = true, author = "aperezdieppa")
 @TargetSystem(id = "elasticsearch")

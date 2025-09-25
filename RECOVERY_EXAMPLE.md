@@ -1,9 +1,9 @@
 # Recovery Feature Usage Examples
 
-## Code-Based ChangeUnit with Recovery
+## Code-Based Change with Recovery
 
 ```java
-@ChangeUnit(id = "example-change-with-retry", order = "001", author = "developer")
+@Change(id = "example-change-with-retry", order = "001", author = "developer")
 @Recovery(strategy = RecoveryStrategy.ALWAYS_RETRY)
 public class ExampleChangeWithRetry {
 
@@ -21,7 +21,7 @@ public class ExampleChangeWithRetry {
 ```
 
 ```java
-@ChangeUnit(id = "example-change-manual", order = "002", author = "developer")
+@Change(id = "example-change-manual", order = "002", author = "developer")
 @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)  // This is the default
 public class ExampleChangeWithManualIntervention {
 
@@ -34,7 +34,7 @@ public class ExampleChangeWithManualIntervention {
 ```
 
 ```java
-@ChangeUnit(id = "example-change-default", order = "003", author = "developer")
+@Change(id = "example-change-default", order = "003", author = "developer")
 // No @Recovery annotation = defaults to MANUAL_INTERVENTION
 public class ExampleChangeWithDefaultRecovery {
 
@@ -46,14 +46,14 @@ public class ExampleChangeWithDefaultRecovery {
 }
 ```
 
-## Template-Based ChangeUnit with Recovery
+## Template-Based Change with Recovery
 
 Create a YAML file `src/test/resources/flamingock/pipeline.yaml`:
 
 ```yaml
 stages:
   - name: "example-stage"
-    changeUnits:
+    changes:
       - id: "template-change-retry"
         order: "001"
         template: "io.flamingock.template.mongodb.MongoChangeTemplate"

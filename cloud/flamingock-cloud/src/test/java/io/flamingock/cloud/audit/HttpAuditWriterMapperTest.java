@@ -32,13 +32,13 @@ class HttpAuditWriterMapperTest {
     // Test classes for different recovery strategies
     @Change(id = "test-manual", order = "001", author = "aperezdieppa")
     @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
-    static class TestManualInterventionChangeUnit {
+    static class TestManualInterventionChange {
         @Apply
         public void execute() {}
     }
 
     @Change(id = "test-default", order = "001", author = "aperezdieppa")
-    static class TestDefaultRecoveryChangeUnit {
+    static class TestDefaultRecoveryChange {
         @Apply
         public void execute() {}
     }
@@ -46,7 +46,7 @@ class HttpAuditWriterMapperTest {
     @Test
     void shouldIncludeTxTypeInRequest() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChange.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -77,7 +77,7 @@ class HttpAuditWriterMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChange.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(

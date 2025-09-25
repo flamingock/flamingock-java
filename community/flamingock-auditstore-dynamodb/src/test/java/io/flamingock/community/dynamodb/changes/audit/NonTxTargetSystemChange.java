@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 /**
- * ChangeUnit that produces NON_TX txStrategy via non-transactional DefaultTargetSystem.
+ * Change that produces NON_TX txStrategy via non-transactional DefaultTargetSystem.
  * Uses custom target system for testing targetSystemId persistence.
  */
 @TargetSystem(id = "non-tx-system")

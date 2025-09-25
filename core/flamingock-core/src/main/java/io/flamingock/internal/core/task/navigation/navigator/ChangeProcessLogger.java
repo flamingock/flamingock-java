@@ -65,9 +65,9 @@ public class ChangeProcessLogger {
         }
     }
 
-    public void logAutoRollback(ExecutableTask executableChangeUnit, long duration) {
+    public void logAutoRollback(ExecutableTask executableChange, long duration) {
         String formattedDuration = formatDuration(duration);
-        logger.info("ROLLED_BACK [change={}, duration={}]", executableChangeUnit.getId(), formattedDuration);
+        logger.info("ROLLED_BACK [change={}, duration={}]", executableChange.getId(), formattedDuration);
     }
 
     public void logManualRollbackResult(ManualRolledBackStep rolledBack) {
@@ -96,16 +96,16 @@ public class ChangeProcessLogger {
         logAuditResult(auditResult, id, START_DESC);
     }
 
-    public void logAuditExecutionResult(Result auditResult, TaskDescriptor changeUnit) {
-        logAuditResult(auditResult, changeUnit.getId(), EXECUTION_DESC);
+    public void logAuditExecutionResult(Result auditResult, TaskDescriptor change) {
+        logAuditResult(auditResult, change.getId(), EXECUTION_DESC);
     }
 
-    public void logAuditManualRollbackResult(Result auditResult, TaskDescriptor changeUnit) {
-        logAuditResult(auditResult, changeUnit.getId(), MANUAL_ROLLBACK_DESC);
+    public void logAuditManualRollbackResult(Result auditResult, TaskDescriptor change) {
+        logAuditResult(auditResult, change.getId(), MANUAL_ROLLBACK_DESC);
     }
 
-    public void logAuditAutoRollbackResult(Result auditResult, TaskDescriptor changeUnit) {
-        logAuditResult(auditResult, changeUnit.getId(), AUTO_ROLLBACK_DESC);
+    public void logAuditAutoRollbackResult(Result auditResult, TaskDescriptor change) {
+        logAuditResult(auditResult, change.getId(), AUTO_ROLLBACK_DESC);
     }
     
     private String formatDuration(long durationMs) {

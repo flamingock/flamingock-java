@@ -20,12 +20,12 @@ import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.importer.ImporterTemplateFactory;
 import io.flamingock.importer.mongodb.MongoDBImporterChangeTemplate;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -33,11 +33,11 @@ import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
+import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
@@ -73,9 +73,9 @@ public class RegistrationFeature implements Feature {
         registerClassForReflection(PreviewPipeline.class.getName());
         registerClassForReflection(PreviewStage.class.getName());
         registerClassForReflection(SystemPreviewStage.class.getName());
-        registerClassForReflection(CodePreviewChangeUnit.class.getName());
+        registerClassForReflection(CodePreviewChange.class.getName());
         registerClassForReflection(PreviewMethod.class);
-        registerClassForReflection(TemplatePreviewChangeUnit.class.getName());
+        registerClassForReflection(TemplatePreviewChange.class.getName());
         registerClassForReflection(FlamingockMetadata.class.getName());
         registerClassForReflection(TargetSystemDescriptor.class.getName());
         registerClassForReflection(RecoveryDescriptor.class.getName());
@@ -85,9 +85,9 @@ public class RegistrationFeature implements Feature {
         registerClassForReflection(AbstractLoadedStage.class.getName());
         registerClassForReflection(AbstractLoadedTask.class.getName());
         registerClassForReflection(AbstractReflectionLoadedTask.class.getName());
-        registerClassForReflection(AbstractLoadedChangeUnit.class.getName());
-        registerClassForReflection(CodeLoadedChangeUnit.class.getName());
-        registerClassForReflection(TemplateLoadedChangeUnit.class.getName());
+        registerClassForReflection(AbstractLoadedChange.class.getName());
+        registerClassForReflection(CodeLoadedChange.class.getName());
+        registerClassForReflection(TemplateLoadedChange.class.getName());
 
         //others
         registerClassForReflection(CoderResult.class.getName());
@@ -99,9 +99,9 @@ public class RegistrationFeature implements Feature {
 
     private static void initializeInternalClassesAtBuildTime() {
         logger.startInitializationProcess("internal classes");
-        initializeClassAtBuildTime(CodeLoadedChangeUnit.class);
-        initializeClassAtBuildTime(AbstractLoadedChangeUnit.class);
-        initializeClassAtBuildTime(TemplateLoadedChangeUnit.class);
+        initializeClassAtBuildTime(CodeLoadedChange.class);
+        initializeClassAtBuildTime(AbstractLoadedChange.class);
+        initializeClassAtBuildTime(TemplateLoadedChange.class);
         initializeClassAtBuildTime(ChangeTemplateManager.class);
         initializeClassAtBuildTime(ImporterTemplateFactory.class);
         initializeClassAtBuildTime(RecoveryDescriptor.class);

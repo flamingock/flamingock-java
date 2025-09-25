@@ -42,7 +42,7 @@ import java.util.UUID;
 public interface ContextConfigurable<HOLDER> {
 
     /**
-     * Manually adds a dependency to be used in the change units, which can be retrieved by its own type.
+     * Manually adds a dependency to be used in the changes, which can be retrieved by its own type.
      *
      * @param instance the dependency instance
      * @return fluent builder
@@ -50,7 +50,7 @@ public interface ContextConfigurable<HOLDER> {
     HOLDER addDependency(Object instance);
 
     /**
-     * Manually adds a dependency to be used in the change units, which can be retrieved by a name.
+     * Manually adds a dependency to be used in the changes, which can be retrieved by a name.
      *
      * @param name     name under which the dependency will be registered
      * @param instance the dependency instance
@@ -59,7 +59,7 @@ public interface ContextConfigurable<HOLDER> {
     HOLDER addDependency(String name, Object instance);
 
     /**
-     * Manually adds a dependency to be used in the change units, which can be retrieved by a type.
+     * Manually adds a dependency to be used in the changes, which can be retrieved by a type.
      *
      * @param type     type under which the dependency will be registered
      * @param instance the dependency instance
@@ -68,7 +68,7 @@ public interface ContextConfigurable<HOLDER> {
     HOLDER addDependency(Class<?> type, Object instance);
 
     /**
-     * Manually adds a dependency to be used in the change units, retrievable by both name and type.
+     * Manually adds a dependency to be used in the changes, retrievable by both name and type.
      *
      * @param name     name under which the dependency will be registered
      * @param type     type under which the dependency will be registered

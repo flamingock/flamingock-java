@@ -72,23 +72,23 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
     private static final Logger logger = FlamingockLoggerFactory.getLogger("NonTxStrategy");
 
 
-    public NonTxChangeProcessStrategy(ExecutableTask changeUnit,
+    public NonTxChangeProcessStrategy(ExecutableTask change,
                                       ExecutionContext executionContext,
                                       TargetSystemOps targetSystem,
                                       AuditStoreStepOperations auditStoreOperations,
                                       TaskSummarizer summarizer,
                                       LockGuardProxyFactory proxyFactory,
                                       ContextResolver baseContext) {
-        super(changeUnit, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
+        super(change, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
     }
 
     @Override
     protected TaskSummary doApplyChange() {
-        StartStep startStep = new StartStep(changeUnit);
+        StartStep startStep = new StartStep(change);
 
         ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext);
 
-        logger.debug("Executing non-transactional task [change={}]", changeUnit.getId());
+        logger.debug("Executing non-transactional task [change={}]", change.getId());
         
         ExecutionStep changeAppliedStep = targetSystemOps.applyChange(executableStep::execute, buildExecutionRuntime());
 

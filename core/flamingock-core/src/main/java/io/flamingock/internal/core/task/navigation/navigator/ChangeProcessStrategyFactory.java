@@ -56,7 +56,7 @@ public class ChangeProcessStrategyFactory {
 
     private final TargetSystemManager targetSystemManager;
 
-    protected ExecutableTask changeUnit;
+    protected ExecutableTask change;
 
     protected LifecycleAuditWriter auditWriter;
 
@@ -72,8 +72,8 @@ public class ChangeProcessStrategyFactory {
         this.targetSystemManager = targetSystemManager;
     }
 
-    public ChangeProcessStrategyFactory setChangeUnit(ExecutableTask changeUnit) {
-        this.changeUnit = changeUnit;
+    public ChangeProcessStrategyFactory setChange(ExecutableTask change) {
+        this.change = change;
         return this;
     }
 
@@ -105,26 +105,26 @@ public class ChangeProcessStrategyFactory {
 
     public ChangeProcessStrategy build() {
 
-        changeLogger.logChangeExecutionStart(changeUnit.getId());
+        changeLogger.logChangeExecutionStart(change.getId());
         
-        TargetSystemOps targetSystemOps = targetSystemManager.getTargetSystem(changeUnit.getTargetSystem());
+        TargetSystemOps targetSystemOps = targetSystemManager.getTargetSystem(change.getTargetSystem());
         
         // Log target system resolution
-        changeLogger.logTargetSystemResolved(changeUnit.getId(), changeUnit.getTargetSystem());
+        changeLogger.logTargetSystemResolved(change.getId(), change.getTargetSystem());
 
         LockGuardProxyFactory lockGuardProxyFactory = LockGuardProxyFactory.withLockAndNonGuardedClasses(lock, nonGuardedTypes);
 
-        AuditTxType auditTxType = getAuditTxStrategy(changeUnit, targetSystemOps);
+        AuditTxType auditTxType = getAuditTxStrategy(change, targetSystemOps);
 
         AuditStoreStepOperations auditStoreOps = new AuditStoreStepOperations(auditWriter, auditTxType, targetSystemOps.getId());
 
         return getStrategy(
-                changeUnit,
+                change,
                 targetSystemOps,
                 auditStoreOps,
                 baseContext,
                 executionContext,
-                new TaskSummarizer(changeUnit),
+                new TaskSummarizer(change),
                 lockGuardProxyFactory
         );
     }
@@ -132,10 +132,10 @@ public class ChangeProcessStrategyFactory {
     /**
      * Creates the appropriate change process strategy based on target system characteristics.
      *
-     * <p>Strategy selection considers both the change unit's transactional requirements
+     * <p>Strategy selection considers both the change's transactional requirements
      * and the target system's operation type to ensure optimal execution patterns.
      *
-     * @param changeUnit           The change to be applied
+     * @param change               The change to be applied
      * @param targetSystemOps      Target system operations interface
      * @param auditStoreOps        AuditStoreOperations interface
      * @param baseContext          Base dependency resolution context
@@ -144,7 +144,7 @@ public class ChangeProcessStrategyFactory {
      * @param proxyFactory         Lock guard proxy factory
      * @return Configured strategy instance appropriate for the target system
      */
-    public static ChangeProcessStrategy getStrategy(ExecutableTask changeUnit,
+    public static ChangeProcessStrategy getStrategy(ExecutableTask change,
                                                     TargetSystemOps targetSystemOps,
                                                     AuditStoreStepOperations auditStoreOps,
                                                     ContextResolver baseContext,
@@ -153,32 +153,32 @@ public class ChangeProcessStrategyFactory {
                                                     LockGuardProxyFactory proxyFactory) {
 
 
-        if(!changeUnit.isTransactional()) {
-            changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "NON_TX");
-            return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+        if(!change.isTransactional()) {
+            changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "NON_TX");
+            return new NonTxChangeProcessStrategy(change, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
         }
 
         switch (targetSystemOps.getOperationType()) {
             case NON_TX:
-                changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "NON_TX");
-                return new NonTxChangeProcessStrategy(changeUnit, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+                changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "NON_TX");
+                return new NonTxChangeProcessStrategy(change, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
 
             case TX_NON_SYNC:
             case TX_AUDIT_STORE_SYNC:
-                changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "TX");
+                changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "TX");
                 TransactionalTargetSystemOps txTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
-                return new SimpleTxChangeProcessStrategy(changeUnit, executionContext, txTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+                return new SimpleTxChangeProcessStrategy(change, executionContext, txTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
 
             case TX_AUDIT_STORE_SHARED:
             default:
-                changeLogger.logStrategyApplication(changeUnit.getId(), targetSystemOps.getId(), "TX");
+                changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "TX");
                 TransactionalTargetSystemOps sharedTxTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
-                return new SharedTxChangeProcessStrategy(changeUnit, executionContext, sharedTxTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+                return new SharedTxChangeProcessStrategy(change, executionContext, sharedTxTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
         }
     }
 
-    private static AuditTxType getAuditTxStrategy(ExecutableTask changeUnit, TargetSystemOps targetSystem) {
-        if(!changeUnit.isTransactional()) {
+    private static AuditTxType getAuditTxStrategy(ExecutableTask change, TargetSystemOps targetSystem) {
+        if(!change.isTransactional()) {
             return AuditTxType.NON_TX;
         }
         switch (targetSystem.getOperationType()) {

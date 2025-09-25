@@ -27,28 +27,28 @@ import java.util.List;
 import java.util.Optional;
 
 
-public class TemplateLoadedChangeUnit extends AbstractLoadedChangeUnit {
+public class TemplateLoadedChange extends AbstractLoadedChange {
 
     private final List<String> profiles;
     private final Object configuration;
     private final Object apply;
     private final Object rollback;
 
-    TemplateLoadedChangeUnit(String changeUnitFileName,
-                             String id,
-                             String order,
-                             String author,
-                             Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
-                             List<String> profiles,
-                             boolean transactional,
-                             boolean runAlways,
-                             boolean systemTask,
-                             Object configuration,
-                             Object apply,
-                             Object rollback,
-                             TargetSystemDescriptor targetSystem,
-                             RecoveryDescriptor recovery) {
-        super(changeUnitFileName, id, order, author, templateClass, runAlways, transactional, systemTask, targetSystem, recovery);
+    TemplateLoadedChange(String changeFileName,
+                         String id,
+                         String order,
+                         String author,
+                         Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
+                         List<String> profiles,
+                         boolean transactional,
+                         boolean runAlways,
+                         boolean systemTask,
+                         Object configuration,
+                         Object apply,
+                         Object rollback,
+                         TargetSystemDescriptor targetSystem,
+                         RecoveryDescriptor recovery) {
+        super(changeFileName, id, order, author, templateClass, runAlways, transactional, systemTask, targetSystem, recovery);
         this.profiles = profiles;
         this.transactional = transactional;
         this.configuration = configuration;

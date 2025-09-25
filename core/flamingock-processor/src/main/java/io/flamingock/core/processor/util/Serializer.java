@@ -18,7 +18,7 @@ package io.flamingock.core.processor.util;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.common.core.metadata.Constants;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -72,7 +72,7 @@ public class Serializer {
     private static void serializeClassesFromStage(Writer writer, PreviewStage stage) {
         for (TaskDescriptor task : stage.getTasks()) {
 
-            if(CodePreviewChangeUnit.class.isAssignableFrom(task.getClass())) {
+            if(CodePreviewChange.class.isAssignableFrom(task.getClass())) {
                 try {
                     writer.write(task.getSource());
                     writer.write(System.lineSeparator());

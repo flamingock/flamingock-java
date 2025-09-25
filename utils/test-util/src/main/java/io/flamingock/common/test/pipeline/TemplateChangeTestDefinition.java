@@ -16,13 +16,13 @@
 package io.flamingock.common.test.pipeline;
 
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.Collections;
 
-public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
+public class TemplateChangeTestDefinition extends ChangeTestDefinition {
 
 
     private final String fileName;
@@ -33,26 +33,26 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
     private final String targetSystem;
 
 
-    public TemplateChangeUnitTestDefinition(String fileName,
-                                            String id,
-                                            String order,
-                                            String templateName,
-                                            boolean transactional,
-                                            Object configuration,
-                                            Object apply,
-                                            Object rollback) {
+    public TemplateChangeTestDefinition(String fileName,
+                                        String id,
+                                        String order,
+                                        String templateName,
+                                        boolean transactional,
+                                        Object configuration,
+                                        Object apply,
+                                        Object rollback) {
         this(fileName, id, order, templateName, transactional, configuration, apply, rollback, null);
     }
 
-    public TemplateChangeUnitTestDefinition(String fileName,
-                                            String id,
-                                            String order,
-                                            String templateName,
-                                            boolean transactional,
-                                            Object configuration,
-                                            Object apply,
-                                            Object rollback,
-                                            String targetSystem) {
+    public TemplateChangeTestDefinition(String fileName,
+                                        String id,
+                                        String order,
+                                        String templateName,
+                                        boolean transactional,
+                                        Object configuration,
+                                        Object apply,
+                                        Object rollback,
+                                        String targetSystem) {
         super(id, order, transactional);
         this.fileName = fileName;
         this.templateName = templateName;
@@ -65,7 +65,7 @@ public class TemplateChangeUnitTestDefinition extends ChangeUnitTestDefinition {
 
     @Override
     public AbstractPreviewTask toPreview() {
-        return new TemplatePreviewChangeUnit(
+        return new TemplatePreviewChange(
                 fileName,
                 getId(),
                 getOrder(),

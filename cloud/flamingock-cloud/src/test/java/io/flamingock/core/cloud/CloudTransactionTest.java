@@ -145,10 +145,10 @@ public class CloudTransactionTest {
         verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).listAll();
         verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template", TargetSystemAuditMarkType.APPLIED));
 
-        ArgumentCaptor<String> changeUnitIdValuesCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> changeIdValuesCaptor = ArgumentCaptor.forClass(String.class);
         verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template-2", TargetSystemAuditMarkType.APPLIED));
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clearMark(changeUnitIdValuesCaptor.capture());
-        List<String> allValues = changeUnitIdValuesCaptor.getAllValues();
+        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clearMark(changeIdValuesCaptor.capture());
+        List<String> allValues = changeIdValuesCaptor.getAllValues();
 
         Assertions.assertEquals("create-persons-table-from-template", allValues.get(0));
         Assertions.assertEquals("create-persons-table-from-template-2", allValues.get(1));

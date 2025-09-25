@@ -20,14 +20,14 @@ import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.List;
 
-public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
+public class CodeChangeTestDefinition extends ChangeTestDefinition {
 
 
     private final String className;
@@ -38,57 +38,57 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
     private final List<Class<?>> rollbackParameters;
     private final String author;
 
-    public CodeChangeUnitTestDefinition(Class<?> changeUnitClass,
-                                        List<Class<?>> executionParameters,
-                                        List<Class<?>> rollbackParameters) {
+    public CodeChangeTestDefinition(Class<?> changeClass,
+                                    List<Class<?>> executionParameters,
+                                    List<Class<?>> rollbackParameters) {
         this(
-                changeUnitClass.getAnnotation(Change.class),
-                changeUnitClass.getAnnotation(TargetSystem.class),
-                changeUnitClass.getAnnotation(Recovery.class),
-                changeUnitClass.getName(),
+                changeClass.getAnnotation(Change.class),
+                changeClass.getAnnotation(TargetSystem.class),
+                changeClass.getAnnotation(Recovery.class),
+                changeClass.getName(),
                 executionParameters,
                 rollbackParameters
         );
     }
 
-    public CodeChangeUnitTestDefinition(Class<?> changeUnitClass,
-                                        List<Class<?>> executionParameters) {
+    public CodeChangeTestDefinition(Class<?> changeClass,
+                                    List<Class<?>> executionParameters) {
         this(
-                changeUnitClass.getAnnotation(Change.class),
-                changeUnitClass.getAnnotation(TargetSystem.class),
-                changeUnitClass.getAnnotation(Recovery.class),
-                changeUnitClass.getName(),
+                changeClass.getAnnotation(Change.class),
+                changeClass.getAnnotation(TargetSystem.class),
+                changeClass.getAnnotation(Recovery.class),
+                changeClass.getName(),
                 executionParameters,
                 null
         );
     }
 
-    private CodeChangeUnitTestDefinition(Change changeUnitAnn,
-                                         TargetSystem targetSystemAnn,
-                                         Recovery recoveryAnn,
-                                         String className,
-                                         List<Class<?>> executionParameters,
-                                         List<Class<?>> rollbackParameters) {
-        this(changeUnitAnn.id(),
-                changeUnitAnn.order(),
-                changeUnitAnn.author(),
+    private CodeChangeTestDefinition(Change changeAnn,
+                                     TargetSystem targetSystemAnn,
+                                     Recovery recoveryAnn,
+                                     String className,
+                                     List<Class<?>> executionParameters,
+                                     List<Class<?>> rollbackParameters) {
+        this(changeAnn.id(),
+                changeAnn.order(),
+                changeAnn.author(),
                 className,
                 targetSystemAnn != null ? targetSystemAnn.id() : null,
-                changeUnitAnn.transactional(),
+                changeAnn.transactional(),
                 RecoveryDescriptor.fromStrategy(recoveryAnn != null ? recoveryAnn.strategy() : null),
                 executionParameters,
                 rollbackParameters);
     }
 
-    public CodeChangeUnitTestDefinition(String id,
-                                        String order,
-                                        String author,
-                                        String className,
-                                        String targetSystem,
-                                        boolean transactional,
-                                        RecoveryDescriptor recovery,
-                                        List<Class<?>> executionParameters,
-                                        List<Class<?>> rollbackParameters) {
+    public CodeChangeTestDefinition(String id,
+                                    String order,
+                                    String author,
+                                    String className,
+                                    String targetSystem,
+                                    boolean transactional,
+                                    RecoveryDescriptor recovery,
+                                    List<Class<?>> executionParameters,
+                                    List<Class<?>> rollbackParameters) {
         super(id, order, transactional);
         this.targetSystem = targetSystem;
         this.recovery = recovery;
@@ -110,7 +110,7 @@ public class CodeChangeUnitTestDefinition extends ChangeUnitTestDefinition {
         }
 
         List<String> executionParameterNames = CollectionUtil.getClassNames(executionParameters);
-        return new CodePreviewChangeUnit(
+        return new CodePreviewChange(
                 getId(),
                 getOrder(),
                 author, // Default author for tests

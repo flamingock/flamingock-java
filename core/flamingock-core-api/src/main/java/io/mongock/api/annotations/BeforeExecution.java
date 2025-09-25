@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * For old classes, this annotation can remain. It won't be removed from the legacy library.
- * For new classes, another ChangeUnit should be created to cover this logic
+ * For new classes, another Change should be created to cover this logic
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

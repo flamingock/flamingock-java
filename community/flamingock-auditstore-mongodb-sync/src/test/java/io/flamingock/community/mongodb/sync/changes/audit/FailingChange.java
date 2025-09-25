@@ -19,7 +19,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 /**
- * Change unit that intentionally fails to test error audit scenarios.
+ * Change that intentionally fails to test error audit scenarios.
  * Used for testing audit persistence of error fields like errorTrace.
  */
 @TargetSystem(id = "mongodb")

@@ -18,7 +18,7 @@ package io.flamingock.api.template;
 /**
  * Interface representing a reusable change template with configuration of type {@code CONFIG}.
  *
- * <p>This interface is commonly implemented by classes that act as templates for Change Units
+ * <p>This interface is commonly implemented by classes that act as templates for Changes
  * where a specific configuration needs to be injected and managed independently.
  */
 public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD> extends ReflectionMetadataProvider {

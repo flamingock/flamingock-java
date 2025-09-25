@@ -170,7 +170,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
         if (!duplicates.isEmpty()) {
             String duplicateIdsString = String.join(", ", duplicates);
-            String message = String.format("Duplicate changeUnit IDs found in stage: %s", duplicateIdsString);
+            String message = String.format("Duplicate change IDs found in stage: %s", duplicateIdsString);
             return Optional.of(new ValidationError(message, name, "stage"));
         } else {
             return Optional.empty();

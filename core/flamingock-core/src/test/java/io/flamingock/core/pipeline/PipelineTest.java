@@ -17,7 +17,7 @@ package io.flamingock.core.pipeline;
 
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -104,7 +104,7 @@ public class PipelineTest {
     void shouldThrowExceptionWhenTaskHasInvalidOrderFormat() {
         PreviewMethod executionMethod = new PreviewMethod("execute", Collections.emptyList());
 
-        CodePreviewChangeUnit taskWithInvalidOrder1 = new CodePreviewChangeUnit(
+        CodePreviewChange taskWithInvalidOrder1 = new CodePreviewChange(
                 "task-with-invalid-order-1",
                 "12", // Too short (only 2 digits)
                 "test-author",
@@ -119,7 +119,7 @@ public class PipelineTest {
                 null,
                 RecoveryDescriptor.getDefault());
 
-        CodePreviewChangeUnit taskWithInvalidOrder2 = new CodePreviewChangeUnit(
+        CodePreviewChange taskWithInvalidOrder2 = new CodePreviewChange(
                 "task-with-invalid-order-3",
                 "abc", // Non-numeric
                 "test-author",
@@ -158,7 +158,7 @@ public class PipelineTest {
     void shouldValidateSuccessfullyWhenTasksHaveValidOrderFormats() {
         PreviewMethod executionMethod = new PreviewMethod("execute", Collections.emptyList());
 
-        CodePreviewChangeUnit taskWithValidOrder1 = new CodePreviewChangeUnit(
+        CodePreviewChange taskWithValidOrder1 = new CodePreviewChange(
                 "task-with-valid-order-1",
                 "001", // Valid 3-digit format
                 "test-author",
@@ -173,7 +173,7 @@ public class PipelineTest {
                 null,
                 RecoveryDescriptor.getDefault());
 
-        CodePreviewChangeUnit taskWithValidOrder2 = new CodePreviewChangeUnit(
+        CodePreviewChange taskWithValidOrder2 = new CodePreviewChange(
                 "task-with-valid-order-2",
                 "999", // Valid 3-digit format
                 "test-author",
@@ -188,7 +188,7 @@ public class PipelineTest {
                 null,
                 RecoveryDescriptor.getDefault());
 
-        CodePreviewChangeUnit taskWithValidOrder3 = new CodePreviewChangeUnit(
+        CodePreviewChange taskWithValidOrder3 = new CodePreviewChange(
                 "task-with-valid-order-3",
                 "0010", // Valid 4-digit format
                 "test-author",
@@ -203,7 +203,7 @@ public class PipelineTest {
                 null,
                 RecoveryDescriptor.getDefault());
 
-        CodePreviewChangeUnit taskWithValidOrder4 = new CodePreviewChangeUnit(
+        CodePreviewChange taskWithValidOrder4 = new CodePreviewChange(
                 "task-with-valid-order-4",
                 "9999", // Valid 4-digit format
                 "test-author",
@@ -235,12 +235,12 @@ public class PipelineTest {
     }
 
     @Test
-    @DisplayName("Should throw an exception when there are duplicate ChangeUnit IDs across stages")
-    void shouldThrowExceptionWhenDuplicateChangeUnitIds() {
+    @DisplayName("Should throw an exception when there are duplicate Change IDs across stages")
+    void shouldThrowExceptionWhenDuplicateChangeIds() {
         // Create a preview method for execution
         PreviewMethod executionMethod = new PreviewMethod("execute", Collections.emptyList());
 
-        CodePreviewChangeUnit task1 = new CodePreviewChangeUnit(
+        CodePreviewChange task1 = new CodePreviewChange(
                 "duplicate-id",
                 "001",
                 "test-author",
@@ -255,7 +255,7 @@ public class PipelineTest {
                 null,
                 RecoveryDescriptor.getDefault());
 
-        CodePreviewChangeUnit task2 = new CodePreviewChangeUnit(
+        CodePreviewChange task2 = new CodePreviewChange(
                 "unique-id",
                 "002",
                 "test-author",
@@ -270,7 +270,7 @@ public class PipelineTest {
                 null,
                 RecoveryDescriptor.getDefault());
 
-        CodePreviewChangeUnit task3 = new CodePreviewChangeUnit(
+        CodePreviewChange task3 = new CodePreviewChange(
                 "duplicate-id",
                 "003",
                 "test-author",
@@ -303,8 +303,8 @@ public class PipelineTest {
                 .build();
 
         FlamingockException exception = Assertions.assertThrows(FlamingockException.class, pipeline::validate);
-        Assertions.assertTrue(exception.getMessage().contains("Duplicate changeUnit IDs found across stages"));
-        Assertions.assertTrue(exception.getMessage().contains("Duplicate changeUnit IDs found across stages: duplicate-id"));
+        Assertions.assertTrue(exception.getMessage().contains("Duplicate change IDs found across stages"));
+        Assertions.assertTrue(exception.getMessage().contains("Duplicate change IDs found across stages: duplicate-id"));
     }
 
 }

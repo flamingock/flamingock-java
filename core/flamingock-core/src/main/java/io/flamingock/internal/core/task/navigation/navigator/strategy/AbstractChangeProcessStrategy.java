@@ -77,7 +77,7 @@ import java.time.LocalDateTime;
 public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemOps> implements ChangeProcessStrategy {
     protected static final ChangeProcessLogger stepLogger = new ChangeProcessLogger();
 
-    protected final ExecutableTask changeUnit;
+    protected final ExecutableTask change;
 
     protected final TS_OPS targetSystemOps;
 
@@ -93,7 +93,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
     protected final LocalDateTime auditTime;
 
 
-    protected AbstractChangeProcessStrategy(ExecutableTask changeUnit,
+    protected AbstractChangeProcessStrategy(ExecutableTask change,
                                             ExecutionContext executionContext,
                                             TS_OPS targetSystemOps,
                                             AuditStoreStepOperations auditStoreOperations,
@@ -101,7 +101,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
                                             LockGuardProxyFactory proxyFactory,
                                             ContextResolver baseContext,
                                             LocalDateTime auditTime) {
-        this.changeUnit = changeUnit;
+        this.change = change;
         this.executionContext = executionContext;
         this.targetSystemOps = targetSystemOps;
         this.summarizer = summarizer;
@@ -113,12 +113,12 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
 
 
     public final TaskSummary applyChange() {
-        if (!changeUnit.isAlreadyApplied()) {
+        if (!change.isAlreadyApplied()) {
             return doApplyChange();
         } else {
-            stepLogger.logSkippedExecution(changeUnit.getId());
+            stepLogger.logSkippedExecution(change.getId());
             return summarizer
-                    .add(new CompletedAlreadyAppliedStep(changeUnit))
+                    .add(new CompletedAlreadyAppliedStep(change))
                     .setSuccessful()
                     .getSummary();
         }
@@ -192,10 +192,10 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
      * @return Configured execution runtime
      */
     protected ExecutionRuntime buildExecutionRuntime() {
-        Context changeUnitSessionContext = new PriorityContext(new SimpleContext(), baseContext);
+        Context changeSessionContext = new PriorityContext(new SimpleContext(), baseContext);
         return ExecutionRuntime.builder()
-                .setSessionId(changeUnit.getId())
-                .setDependencyContext(changeUnitSessionContext)
+                .setSessionId(change.getId())
+                .setDependencyContext(changeSessionContext)
                 .setLockGuardProxyFactory(lockProxyFactory)
                 .build();
     }

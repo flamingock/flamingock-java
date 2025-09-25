@@ -53,7 +53,7 @@ import java.util.function.Function;
  * Base implementation for all target systems in Flamingock.
  * <p>
  * Provides common functionality for managing target-system-specific context,
- * including dependencies and properties that will be available to change units
+ * including dependencies and properties that will be available to changes
  * during execution.
  * <p>
  * Subclasses should override {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)}

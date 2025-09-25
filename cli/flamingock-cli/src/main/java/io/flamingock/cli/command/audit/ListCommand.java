@@ -92,9 +92,9 @@ public class ListCommand implements Runnable {
                 entries = auditService.listAuditEntriesSince(sinceDate);
                 listType = "Audit Entries since " + since;
             } else {
-                // Default: snapshot view (latest per changeUnit)
+                // Default: snapshot view (latest per change)
                 entries = auditService.listAuditEntriesSnapshot();
-                listType = "Audit Entries Snapshot (Latest per Change Unit)";
+                listType = "Audit Entries Snapshot (Latest per Change)";
             }
 
             

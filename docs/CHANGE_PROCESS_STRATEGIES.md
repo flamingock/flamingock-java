@@ -144,7 +144,7 @@ The `ChangeProcessStrategyFactory` selects strategies based on:
 
 ```mermaid
 flowchart TD
-    A[Change Unit] --> B{Is Transactional?}
+    A[Change] --> B{Is Transactional?}
     B -->|No| C[NonTxChangeProcessStrategy]
     B -->|Yes| D{Operation Type}
     D -->|NON_TX| C

@@ -19,19 +19,19 @@ import io.flamingock.api.StageType;
 
 public @interface Stage {
     /**
-     * Specifies the location where change units are found. This field is mandatory.
+     * Specifies the location where changes are found. This field is mandatory.
      *
      * <p>The location format determines how it's interpreted:
      * <ul>
      *   <li><b>Package name:</b> Contains dots and no slashes (e.g., "com.example.migrations") -
-     *       Used to scan for annotated change units in the specified package</li>
+     *       Used to scan for annotated changes in the specified package</li>
      *   <li><b>Resource directory (relative):</b> Starts with "resources/" (e.g., "resources/db/migrations") -
-     *       Used to scan for template-based change units in the specified resources directory</li>
+     *       Used to scan for template-based changes in the specified resources directory</li>
      *   <li><b>Resource directory (absolute):</b> Starts with "/" (e.g., "/absolute/path/to/templates") -
-     *       Used to scan for template-based change units in the specified absolute path</li>
+     *       Used to scan for template-based changes in the specified absolute path</li>
      * </ul>
      *
-     * @return the location where change units are found (mandatory)
+     * @return the location where changes are found (mandatory)
      */
     String location();
 

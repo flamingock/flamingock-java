@@ -24,10 +24,10 @@ A lightweight command-line interface for Flamingock audit operations in communit
 # List conflicted audit entries
 ./flamingock-cli-dist/flamingock audit list
 
-# Mark change unit as applied
+# Mark change as applied
 ./flamingock-cli-dist/flamingock audit mark --change-id ch1 --state APPLIED
 
-# Mark change unit as rolled back
+# Mark change as rolled back
 ./flamingock-cli-dist/flamingock audit mark --change-id ch2 --state ROLLED_BACK
 
 # Use custom configuration file
@@ -156,16 +156,16 @@ client.markAsRolledBack(changeId);
 
 ### `flamingock audit list`
 Lists all conflicted audit entries showing:
-- Change unit ID, execution ID, stage ID
+- Change ID, execution ID, stage ID
 - Author, state, type, class, method
 - Execution time, hostname, timestamps
 - Error traces (if any)
 
 ### `flamingock audit mark`
-Marks a change unit with a specific state:
+Marks a change with a specific state:
 - **`--state APPLIED`** - Marks as successfully applied
 - **`--state ROLLED_BACK`** - Marks as rolled back
-- **`--change-id <id>`** - Required change unit identifier
+- **`--change-id <id>`** - Required change identifier
 
 ## Error Handling
 - **Configuration errors**: Missing files, invalid YAML, multiple databases

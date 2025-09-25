@@ -16,16 +16,16 @@
 package io.flamingock.internal.common.core.recovery;
 
 /**
- * Result of fixing an audit issue for a change unit.
+ * Result of fixing an audit issue for a change.
  */
 public enum FixResult {
     /**
-     * Fix was successfully applied to the change unit.
+     * Fix was successfully applied to the change.
      */
     APPLIED,
     
     /**
-     * Change unit has healthy audit state, nothing to fix.
+     * Change has healthy audit state, nothing to fix.
      */
     NO_ISSUE_FOUND
 }

@@ -24,10 +24,10 @@ import java.util.Optional;
 
 public interface AuditIssueManager {
     /**
-     * Get detailed information about a specific change unit that has issues.
+     * Get detailed information about a specific change that has issues.
      * This includes full audit history, error messages, and execution attempts.
      *
-     * @param changeId the change unit ID to inspect
+     * @param changeId the change ID to inspect
      * @return detailed issue information including all audit entries, error details, etc.
      */
     Optional<AuditEntryIssue> getAuditIssueByChange(String changeId);
@@ -39,10 +39,10 @@ public interface AuditIssueManager {
     List<AuditEntryIssue> getAuditIssues();
 
     /**
-     * Resolves an audit issue for the given change unit by marking it as
+     * Resolves an audit issue for the given change by marking it as
      * either {@link Resolution#APPLIED} or {@link Resolution#ROLLED_BACK}.
      *
-     * @param changeId the change unit identifier
+     * @param changeId the change identifier
      * @param resolution how the issue should be resolved
      * @return result of the fix operation
      */

@@ -18,8 +18,8 @@ package io.flamingock.springboot;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
+import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 import org.springframework.context.annotation.Profile;
 
 import java.util.Arrays;
@@ -49,11 +49,11 @@ public class SpringbootProfileFilter implements TaskFilter {
     }
 
     private boolean filter(AbstractReflectionLoadedTask reflectionDescriptor) {
-        if (TemplateLoadedChangeUnit.class.isAssignableFrom(reflectionDescriptor.getClass())) {
-            return filterTemplateChangeUnit((TemplateLoadedChangeUnit) reflectionDescriptor);
+        if (TemplateLoadedChange.class.isAssignableFrom(reflectionDescriptor.getClass())) {
+            return filterTemplateChange((TemplateLoadedChange) reflectionDescriptor);
 
-        } else if (CodeLoadedChangeUnit.class.isAssignableFrom(reflectionDescriptor.getClass())) {
-            return filterCodeChangeUnit((CodeLoadedChangeUnit) reflectionDescriptor);
+        } else if (CodeLoadedChange.class.isAssignableFrom(reflectionDescriptor.getClass())) {
+            return filterCodeChange((CodeLoadedChange) reflectionDescriptor);
 
         } else {
             String message = String.format(
@@ -65,12 +65,12 @@ public class SpringbootProfileFilter implements TaskFilter {
 
     }
 
-    private boolean filterTemplateChangeUnit(TemplateLoadedChangeUnit reflectionDescriptor) {
+    private boolean filterTemplateChange(TemplateLoadedChange reflectionDescriptor) {
         return filterProfiles(reflectionDescriptor.getProfiles());
     }
 
 
-    private boolean filterCodeChangeUnit(CodeLoadedChangeUnit reflectionDescriptor) {
+    private boolean filterCodeChange(CodeLoadedChange reflectionDescriptor) {
         Class<?> sourceClass = reflectionDescriptor.getImplementationClass();
         if (!sourceClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches

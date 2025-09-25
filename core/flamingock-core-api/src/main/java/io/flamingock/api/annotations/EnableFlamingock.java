@@ -116,7 +116,7 @@ public @interface EnableFlamingock {
 
     /**
      * Defines the pipeline stages.
-     * Each stage represents a logical grouping of changeUnits that execute in sequence.
+     * Each stage represents a logical grouping of changes that execute in sequence.
      *
      * <p>Mutually exclusive with {@link #pipelineFile()}. When using stages,
      * do not specify a pipeline file.

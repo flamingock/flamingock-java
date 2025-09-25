@@ -32,7 +32,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
     @Apply
     public void execute(MongoDatabase db, @Nullable ClientSession clientSession) {
         if (this.isTransactional && clientSession == null) {
-            throw new IllegalArgumentException(String.format("Transactional changeUnit[%s] requires transactional ecosystem with ClientSession", changeId));
+            throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
         }
         executeOp(db, applyPayload, clientSession);
     }
@@ -40,7 +40,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
     @Rollback
     public void rollback(MongoDatabase db, @Nullable ClientSession clientSession) {
         if (this.isTransactional && clientSession == null) {
-            throw new IllegalArgumentException(String.format("Transactional changeUnit[%s] requires transactional ecosystem with ClientSession", changeId));
+            throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
         }
         executeOp(db, rollbackPayload, clientSession);
     }

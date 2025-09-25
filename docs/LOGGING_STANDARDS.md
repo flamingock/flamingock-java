@@ -9,7 +9,7 @@ This document establishes consistent logging patterns across the Flamingock code
 - **Transaction failures** (commit/rollback failures)
 - **Lock acquisition failures** when `throwExceptionIfCannotObtainLock=true`
 - **Critical system failures** that prevent operation completion
-- **Change unit execution failures**
+- **Change execution failures**
 - **Target system initialization failures**
 
 ### WARN  
@@ -27,7 +27,7 @@ This document establishes consistent logging patterns across the Flamingock code
 
 ### DEBUG
 - **Transaction lifecycle** (start, commit, rollback success)
-- **Change unit execution details**
+- **Change execution details**
 - **Lock refresh operations**
 - **Context building and dependency resolution**
 - **Template processing**
@@ -93,8 +93,8 @@ Primary_failure_description [context] with nested cause details
 - TRACE for daemon heartbeat (reduce noise)
 
 ### Change Execution  
-- ERROR for change unit failures with rich context
-- INFO for change unit completion with performance data
+- ERROR for change failures with rich context
+- INFO for change completion with performance data
 - DEBUG for execution lifecycle details
 - Structured context: change ID, stage, execution mode, duration, target system
 
@@ -116,7 +116,7 @@ Primary_failure_description [context] with nested cause details
 All ERROR level logging should use specific exceptions with rich context:
 - `DatabaseTransactionException` for transaction failures
 - `LockAcquisitionException` for lock failures  
-- `ChangeExecutionException` for change unit failures
+- `ChangeExecutionException` for change failures
 - `TargetSystemException` for target system issues
 
 These exceptions automatically provide structured message formatting and programmatic access to failure context.

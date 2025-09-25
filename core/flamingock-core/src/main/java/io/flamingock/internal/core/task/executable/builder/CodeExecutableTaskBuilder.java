@@ -19,7 +19,7 @@ import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.executable.ReflectionExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 
 import java.lang.reflect.Method;
@@ -29,31 +29,31 @@ import java.util.Optional;
 
 
 /**
- * Factory for ChangeUnit classes
+ * Factory for Change classes
  */
-public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoadedChangeUnit> {
+public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoadedChange> {
     private static final CodeExecutableTaskBuilder instance = new CodeExecutableTaskBuilder();
 
     private String stageName;
     private ChangeAction changeAction;
-    private CodeLoadedChangeUnit loadedTask;
+    private CodeLoadedChange loadedTask;
 
     static CodeExecutableTaskBuilder getInstance() {
         return instance;
     }
 
     public static boolean supports(AbstractLoadedTask loadedTask) {
-        return CodeLoadedChangeUnit.class.isAssignableFrom(loadedTask.getClass());
+        return CodeLoadedChange.class.isAssignableFrom(loadedTask.getClass());
     }
 
 
     @Override
-    public CodeLoadedChangeUnit cast(AbstractLoadedTask loadedTask) {
-        return (CodeLoadedChangeUnit)loadedTask;
+    public CodeLoadedChange cast(AbstractLoadedTask loadedTask) {
+        return (CodeLoadedChange)loadedTask;
     }
 
     @Override
-    public CodeExecutableTaskBuilder setLoadedTask(CodeLoadedChangeUnit loadedTask) {
+    public CodeExecutableTaskBuilder setLoadedTask(CodeLoadedChange loadedTask) {
         this.loadedTask = loadedTask;
         return this;
     }
@@ -79,13 +79,13 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
      * New ChangeAction-based method for building tasks.
      */
     private List<ReflectionExecutableTask<AbstractReflectionLoadedTask>> getTasksFromReflection(String stageName,
-                                                                                                CodeLoadedChangeUnit loadedTask,
+                                                                                                CodeLoadedChange loadedTask,
                                                                                                 ChangeAction action) {
         return buildTasksInternal(stageName, loadedTask, action);
     }
 
     private List<ReflectionExecutableTask<AbstractReflectionLoadedTask>> buildTasksInternal(String stageName,
-                                                                                            CodeLoadedChangeUnit loadedTask,
+                                                                                            CodeLoadedChange loadedTask,
                                                                                             ChangeAction action) {
         Method executionMethod = loadedTask.getExecutionMethod();
 
@@ -115,7 +115,7 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
                                                                                                         ReflectionExecutableTask<AbstractReflectionLoadedTask> baseTask,
                                                                                                         ChangeAction action) {
         //Creates a new LoadedTask, based on the main one, but with the "beforeExecution id, also based on the main one"
-        CodeLoadedChangeUnit loadedTask = LoadedTaskBuilder
+        CodeLoadedChange loadedTask = LoadedTaskBuilder
                 .getCodeBuilderInstance(baseTask.getDescriptor().getImplementationClass())
                 .setBeforeExecution(true)
                 .setTransactional(false)

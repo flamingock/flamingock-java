@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Non-transactional change unit for second run test.
+ * Non-transactional change for second run test.
  */
 @Change(id = "test5-second-run-change", order = "005", transactional = false, author = "aperezdieppa")
 @TargetSystem(id = "stripe-api")

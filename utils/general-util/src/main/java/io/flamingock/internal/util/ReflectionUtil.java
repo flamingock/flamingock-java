@@ -242,7 +242,7 @@ public final class ReflectionUtil {
                 .findFirst();
     }
 
-    //TODO expand this beyond ChangeUnit
+    //TODO expand this beyond Change
     @SuppressWarnings("unchecked")
     public static Collection<Class<?>> loadAnnotatedClassesFromPackage(String packagePath, Class<? extends Annotation>... annotations) {
         Reflections reflections = new Reflections(packagePath);

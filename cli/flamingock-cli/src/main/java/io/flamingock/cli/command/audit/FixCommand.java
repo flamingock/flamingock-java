@@ -28,7 +28,7 @@ import picocli.CommandLine.ParentCommand;
 
 @Command(
     name = "fix",
-    description = "Fix audit state for a change unit with inconsistent audit"
+    description = "Fix audit state for a change with inconsistent audit"
 )
 public class FixCommand implements Runnable {
     
@@ -37,7 +37,7 @@ public class FixCommand implements Runnable {
     @ParentCommand
     private AuditCommand parent;
 
-    @Option(names = {"-c", "--change-id"}, required = true, description = "ChangeUnit ID to fix")
+    @Option(names = {"-c", "--change-id"}, required = true, description = "Change ID to fix")
     private String changeId;
 
     @Option(names = {"-r", "--resolution"}, required = true, description = "Resolution state: APPLIED or ROLLED_BACK")
@@ -62,7 +62,7 @@ public class FixCommand implements Runnable {
             // Handle different results with appropriate messaging
             switch (result) {
                 case APPLIED:
-                    System.out.println("✅ Successfully fixed audit state for change unit '" + changeId + "'");
+                    System.out.println("✅ Successfully fixed audit state for change '" + changeId + "'");
                     System.out.println("   Resolution applied: " + resolution);
                     
                     if (resolution == Resolution.ROLLED_BACK) {
@@ -71,9 +71,9 @@ public class FixCommand implements Runnable {
                     break;
                     
                 case NO_ISSUE_FOUND:
-                    System.out.println("⚠️  Fix not applied for change unit '" + changeId + "'");
+                    System.out.println("⚠️  Fix not applied for change '" + changeId + "'");
                     System.out.println("   Reason: The audit state is already consistent and healthy.");
-                    System.out.println("   No action required - change unit has no issues to fix.");
+                    System.out.println("   No action required - change has no issues to fix.");
                     break;
                     
                 default:

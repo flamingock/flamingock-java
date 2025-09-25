@@ -37,11 +37,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedTask {
+public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask {
 
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("ChangeUnit");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Change");
     /**
-     * Regex pattern for validating the order field in ChangeUnits.
+     * Regex pattern for validating the order field in Changes.
      * The pattern matches strings like "001", "999", "0010", "9999".
      * It requires at least 3 digits with leading zeros.
      * Empty is not allowed
@@ -51,16 +51,16 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
     private final Set<ChangeCategory> categories;
 
 
-    protected AbstractLoadedChangeUnit(String fileName,
-                                       String id,
-                                       String order,
-                                       String author,
-                                       Class<?> implementationClass,
-                                       boolean runAlways,
-                                       boolean transactional,
-                                       boolean system,
-                                       TargetSystemDescriptor targetSystem,
-                                       RecoveryDescriptor recovery) {
+    protected AbstractLoadedChange(String fileName,
+                                   String id,
+                                   String order,
+                                   String author,
+                                   Class<?> implementationClass,
+                                   boolean runAlways,
+                                   boolean transactional,
+                                   boolean system,
+                                   TargetSystemDescriptor targetSystem,
+                                   RecoveryDescriptor recovery) {
         super(fileName, id, order, author, implementationClass, runAlways, transactional, system, targetSystem, recovery);
 
         this.categories = ReflectionUtil.findAllAnnotations(implementationClass, Categories.class).stream()
@@ -76,7 +76,7 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
             return ReflectionUtil.getConstructorWithAnnotationPreference(getImplementationClass(), FlamingockConstructor.class);
         } catch (ReflectionUtil.MultipleAnnotatedConstructorsFound ex) {
             throw new FlamingockException("Found multiple constructors for class[%s] annotated with %s." +
-                    " Annotate the one you want Flamingock to use to instantiate your changeUnit",
+                    " Annotate the one you want Flamingock to use to instantiate your change",
                     getSource(),
                     FlamingockConstructor.class.getName());
         } catch (ReflectionUtil.MultipleConstructorsFound ex) {
@@ -122,18 +122,18 @@ public abstract class AbstractLoadedChangeUnit extends AbstractReflectionLoadedT
         String order = getOrder().orElse(null);
         if(context.getSortType().isSorted()) {
             if (order == null || order.isEmpty()) {
-                return Optional.of(new ValidationError("ChangeUnit in a sorted stage but no order value was provided", id, "changeUnit"));
+                return Optional.of(new ValidationError("Change in a sorted stage but no order value was provided", id, "change"));
             }
 
             if(context.getSortType() == StageValidationContext.SortType.SEQUENTIAL_FORMATTED) {
                 if (!ORDER_PATTERN.matcher(order).matches()) {
-                    String message = String.format("Invalid order field format in changeUnit[%s]. Order must match pattern: %s", id, ORDER_REG_EXP);
+                    String message = String.format("Invalid order field format in change[%s]. Order must match pattern: %s", id, ORDER_REG_EXP);
                     return Optional.of(new ValidationError(message, id, "task"));
                 }
             }
 
         } else if(order != null) {
-            logger.warn("ChangeUnit[{}] is in an auto-sorted stage but order value was provided - order will be ignored and managed automatically by Flamingock", id);
+            logger.warn("Change[{}] is in an auto-sorted stage but order value was provided - order will be ignored and managed automatically by Flamingock", id);
 
         }
         return Optional.empty();

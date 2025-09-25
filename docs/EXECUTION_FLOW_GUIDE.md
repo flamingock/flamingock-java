@@ -219,7 +219,7 @@ Flamingock's transaction handling is sophisticated and context-aware.
 
 A task executes within a transaction when **all** conditions are met:
 1. **TransactionWrapper available** - AuditStore supports transactions
-2. **Task configured as transactional** - `@ChangeUnit(transactional = true)` (default)
+2. **Task configured as transactional** - `@Change(transactional = true)` (default)
 3. **Database supports transactions** - Not all databases/operations are transactional
 
 #### Rollback Strategies
@@ -230,7 +230,7 @@ A task executes within a transaction when **all** conditions are met:
 - Used for transaction-managed failures
 
 **Manual Rollback** (Application-Level):
-- Developer-defined rollback methods in change units
+- Developer-defined rollback methods in changes
 - Used for non-transactional executions
 - Required for custom cleanup logic
 
@@ -250,7 +250,7 @@ A task executes within a transaction when **all** conditions are met:
 
 ### 1. **Context Hierarchy Enables Integration**
 
-The hierarchical context system is Flamingock's primary integration mechanism. It allows external frameworks (Spring Boot, CDI, etc.) to contribute dependencies that change units can access through dependency injection.
+The hierarchical context system is Flamingock's primary integration mechanism. It allows external frameworks (Spring Boot, CDI, etc.) to contribute dependencies that changes can access through dependency injection.
 
 ### 2. **Audit-First Architecture**
 

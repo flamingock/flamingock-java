@@ -143,7 +143,7 @@ flamingock audit fix -c <change-id>
 # View all audit entries
 flamingock audit list
 
-# Check specific change unit
+# Check specific change
 flamingock audit get -c user-migration-v2
 
 # Export as JSON for processing

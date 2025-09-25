@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Change unit that produces TX_SEPARATE_NO_MARKER txStrategy via MongoDBSyncTargetSystem with different MongoClient.
+ * Change that produces TX_SEPARATE_NO_MARKER txStrategy via MongoDBSyncTargetSystem with different MongoClient.
  * Used for testing audit persistence of TX_SEPARATE_NO_MARKER transaction type.
  */
 @TargetSystem(id = "tx-separate-system")

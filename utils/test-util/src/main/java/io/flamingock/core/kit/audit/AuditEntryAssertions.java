@@ -168,7 +168,7 @@ public class AuditEntryAssertions {
      * @param expectedAuthor expected author
      * @param expectedState expected audit entry state
      */
-    //TODO add author check, when CodeChangeUnitTestDefinition adds it
+    //TODO add author check, when CodeChangeTestDefinition adds it
     public static void assertBasicFields(AuditEntry entry, String expectedTaskId, String expectedAuthor, 
                                        AuditEntry.Status expectedState) {
         assertNotNull(entry, "Audit entry should not be null");

@@ -21,18 +21,18 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class LoadedChangeUnitUtilTest {
+class LoadedChangeUtilTest {
 
     @Test
     @DisplayName("Should return orderInContent when orderInContent is present and no order in fileName")
     void shouldReturnOrderInContentWhenOrderInContentPresentAndNoOrderInFileName() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "001";
         String fileName = "test-file.yml";
 
         // When
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName);
+        String result = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName);
 
         // Then
         assertEquals("001", result);
@@ -42,12 +42,12 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should return orderInContent when orderInContent matches order in fileName")
     void shouldReturnOrderInContentWhenOrderInContentMatchesOrderInFileName() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "001";
         String fileName = "_001_test-file.yml";
 
         // When
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName);
+        String result = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName);
 
         // Then
         assertEquals("001", result);
@@ -57,16 +57,16 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should throw exception when orderInContent does not match order in fileName")
     void shouldThrowExceptionWhenOrderInContentDoesNotMatchOrderInFileName() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "001";
         String fileName = "_002_test-file.yml";
 
         // When & Then
         FlamingockException exception = assertThrows(FlamingockException.class, () ->
-            LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName)
+            LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName)
         );
 
-        assertEquals("ChangeUnit[test-id] Order mismatch: value in template order field='001' does not match order in fileName='002'",
+        assertEquals("Change[test-id] Order mismatch: value in template order field='001' does not match order in fileName='002'",
                 exception.getMessage());
     }
 
@@ -74,12 +74,12 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should return order from fileName when orderInContent is null and order in fileName is present")
     void shouldReturnOrderFromFileNameWhenOrderInContentIsNullAndOrderInFileNameIsPresent() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = null;
         String fileName = "_003_test-file.yml";
 
         // When
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName);
+        String result = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName);
 
         // Then
         assertEquals("003", result);
@@ -89,17 +89,17 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should throw exception when orderInContent is empty and order in fileName is present")
     void shouldReturnOrderFromFileNameWhenOrderInContentIsEmptyAndOrderInFileNameIsPresent() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "";
         String fileName = "_004_test-file.yml";
 
         // When
         FlamingockException exception = assertThrows(FlamingockException.class, () ->
-            LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName)
+            LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName)
         );
 
         // Then
-        assertEquals("ChangeUnit[test-id] Order mismatch: value in template order field='' does not match order in fileName='004'",
+        assertEquals("Change[test-id] Order mismatch: value in template order field='' does not match order in fileName='004'",
             exception.getMessage());
     }
 
@@ -107,17 +107,17 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should return order from fileName when orderInContent is blank and order in fileName is present")
     void shouldReturnOrderFromFileNameWhenOrderInContentIsBlankAndOrderInFileNameIsPresent() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "   ";
         String fileName = "_005_test-file.yml";
 
         // When
         FlamingockException exception = assertThrows(FlamingockException.class, () ->
-            LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName)
+            LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName)
         );
 
         // Then
-        assertEquals("ChangeUnit[test-id] Order mismatch: value in template order field='   ' does not match order in fileName='005'",
+        assertEquals("Change[test-id] Order mismatch: value in template order field='   ' does not match order in fileName='005'",
             exception.getMessage());
     }
 
@@ -125,16 +125,16 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should throw exception when both orderInContent and order in fileName are missing")
     void shouldThrowExceptionWhenBothOrderInContentAndOrderInFileNameAreMissing() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = null;
         String fileName = "test-file.yml";
 
         // When & Then
         FlamingockException exception = assertThrows(FlamingockException.class, () ->
-            LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName)
+            LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName)
         );
 
-        assertEquals("ChangeUnit[test-id] Order is required: order must be present in the template order field or in the fileName(e.g. _0001_test-id.yaml). If present in both, they must have the same value.",
+        assertEquals("Change[test-id] Order is required: order must be present in the template order field or in the fileName(e.g. _0001_test-id.yaml). If present in both, they must have the same value.",
                 exception.getMessage());
     }
 
@@ -143,12 +143,12 @@ class LoadedChangeUnitUtilTest {
     //TODO: review this behavior - should it throw or return empty?
     void shouldThrowExceptionWhenOrderInContentIsEmptyAndNoOrderInFileName() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "";
         String fileName = "test-file.yml";
 
         // When
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName);
+        String result = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName);
 
         // Then
         assertEquals("", result);
@@ -158,22 +158,22 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should extract order from fileName with template format (order at beginning)")
     void shouldExtractOrderFromFileNameWithTemplateFormat() {
         // Test template file name formats - order must be at the beginning
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
 
         // Template format - order at beginning
-        String result1 = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, null, "_001_migration.sql");
+        String result1 = LoadedChangeUtil.getMatchedOrderFromFile(changeId, null, "_001_migration.sql");
         assertEquals("001", result1);
 
         // Template format with extension
-        String result2 = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, null, "_002_create-users.yaml");
+        String result2 = LoadedChangeUtil.getMatchedOrderFromFile(changeId, null, "_002_create-users.yaml");
         assertEquals("002", result2);
 
         // Non-numeric order at beginning
-        String result3 = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, null, "_alpha_migration.yml");
+        String result3 = LoadedChangeUtil.getMatchedOrderFromFile(changeId, null, "_alpha_migration.yml");
         assertEquals("alpha", result3);
 
         // Complex order at beginning
-        String result4 = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, null, "_v1.2.3_update-schema.yml");
+        String result4 = LoadedChangeUtil.getMatchedOrderFromFile(changeId, null, "_v1.2.3_update-schema.yml");
         assertEquals("v1.2.3", result4);
     }
 
@@ -181,15 +181,15 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should NOT extract order from fileName when order is not at beginning")
     void shouldNotExtractOrderFromFileNameWhenOrderIsNotAtBeginning() {
         // Test cases where order is not at the beginning - should not match
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "001";
 
         // Order in middle - should use orderInContent
-        String result1 = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, "migration_002_something.sql");
+        String result1 = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, "migration_002_something.sql");
         assertEquals("001", result1);
 
         // Order at end - should use orderInContent
-        String result2 = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, "migration_something_003_.sql");
+        String result2 = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, "migration_something_003_.sql");
         assertEquals("001", result2);
     }
 
@@ -197,18 +197,18 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should extract order from className with package format")
     void shouldExtractOrderFromClassNameWithPackageFormat() {
         // Test class name formats - order must be at the beginning of class name after package
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
 
         // Class format with package
-        String result1 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.mycompany.mypackage._001_MyChangeUnit");
+        String result1 = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, null, "com.mycompany.mypackage._001_MyChange");
         assertEquals("001", result1);
 
         // Class format with deeper package
-        String result2 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.example.migrations.v1._002_CreateUsersTable");
+        String result2 = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, null, "com.example.migrations.v1._002_CreateUsersTable");
         assertEquals("002", result2);
 
         // Non-numeric order
-        String result3 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.mycompany._alpha_Migration");
+        String result3 = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, null, "com.mycompany._alpha_Migration");
         assertEquals("alpha", result3);
     }
 
@@ -216,22 +216,22 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should extract order from inner class names (with $ separator)")
     void shouldExtractOrderFromInnerClassNames() {
         // Test inner class formats - order must be at the beginning of inner class name after $ separator
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
 
         // Inner class format
-        String result1 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilderTest$_100_noOrderInAnnotation");
+        String result1 = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, null, "io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilderTest$_100_noOrderInAnnotation");
         assertEquals("100", result1);
 
         // Inner class with deeper nesting
-        String result2 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.example.test.OuterClass$InnerClass$_002_DeepInnerChangeUnit");
+        String result2 = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, null, "com.example.test.OuterClass$InnerClass$_002_DeepInnerChange");
         assertEquals("002", result2);
 
         // Static inner class with version order
-        String result3 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.mycompany.MyTest$_v1.2.3_StaticInnerChangeUnit");
+        String result3 = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, null, "com.mycompany.MyTest$_v1.2.3_StaticInnerChange");
         assertEquals("v1.2.3", result3);
 
         // Multiple inner classes
-        String result4 = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, null, "com.example.OuterTest$MiddleClass$_alpha_InnerMostChangeUnit");
+        String result4 = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, null, "com.example.OuterTest$MiddleClass$_alpha_InnerMostChange");
         assertEquals("alpha", result4);
     }
 
@@ -239,11 +239,11 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should handle inner class orderInAnnotation matching")
     void shouldHandleInnerClassOrderInAnnotationMatching() {
         // Test when annotation order matches inner class name order
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInAnnotation = "100";
         String className = "io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilderTest$_100_noOrderInAnnotation";
 
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, orderInAnnotation, className);
+        String result = LoadedChangeUtil.getMatchedOrderFromClassName(changeId, orderInAnnotation, className);
         assertEquals("100", result);
     }
 
@@ -251,15 +251,15 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should throw exception when inner class order does not match annotation")
     void shouldThrowExceptionWhenInnerClassOrderDoesNotMatchAnnotation() {
         // Test when annotation order does not match inner class name order
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInAnnotation = "200";
         String className = "io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilderTest$_100_noOrderInAnnotation";
 
         FlamingockException exception = assertThrows(FlamingockException.class, () ->
-            LoadedChangeUnitUtil.getMatchedOrderFromClassName(changeUnitId, orderInAnnotation, className)
+            LoadedChangeUtil.getMatchedOrderFromClassName(changeId, orderInAnnotation, className)
         );
 
-        assertEquals("ChangeUnit[test-id] Order mismatch: @ChangeUnit(order='200') does not match order in className='100'",
+        assertEquals("Change[test-id] Order mismatch: @Change(order='200') does not match order in className='100'",
                 exception.getMessage());
     }
 
@@ -267,12 +267,12 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should handle null fileName gracefully")
     void shouldHandleNullFileNameGracefully() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "001";
         String fileName = null;
 
         // When
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName);
+        String result = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName);
 
         // Then
         assertEquals("001", result);
@@ -282,28 +282,28 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should throw exception when fileName is null and orderInContent is missing")
     void shouldThrowExceptionWhenFileNameIsNullAndOrderInContentIsMissing() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = null;
         String fileName = null;
 
         // When & Then
         FlamingockException exception = assertThrows(FlamingockException.class, () ->
-            LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName)
+            LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName)
         );
 
-        assertTrue(exception.getMessage().contains("ChangeUnit[test-id] Order is required"));
+        assertTrue(exception.getMessage().contains("Change[test-id] Order is required"));
     }
 
     @Test
     @DisplayName("Should handle multiple underscores in fileName correctly")
     void shouldHandleMultipleUnderscoresInFileName() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = null;
         String fileName = "_001_migration_with_underscores.yml";
 
         // When
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName);
+        String result = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName);
 
         // Then
         assertEquals("001", result); // Should extract order from beginning
@@ -313,12 +313,12 @@ class LoadedChangeUnitUtilTest {
     @DisplayName("Should handle fileName without proper underscore pattern")
     void shouldHandleFileNameWithoutProperUnderscorePattern() {
         // Given
-        String changeUnitId = "test-id";
+        String changeId = "test-id";
         String orderInContent = "001";
         String fileName = "migration_incomplete";
 
         // When
-        String result = LoadedChangeUnitUtil.getMatchedOrderFromFile(changeUnitId, orderInContent, fileName);
+        String result = LoadedChangeUtil.getMatchedOrderFromFile(changeId, orderInContent, fileName);
 
         // Then
         assertEquals("001", result); // Should return orderInContent since no valid pattern in fileName

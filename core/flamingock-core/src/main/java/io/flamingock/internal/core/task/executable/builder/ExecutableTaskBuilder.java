@@ -18,8 +18,8 @@ package io.flamingock.internal.core.task.executable.builder;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
+import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 
 import java.util.List;
 
@@ -45,12 +45,12 @@ public interface ExecutableTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
         if(TemplateExecutableTaskBuilder.supports(loadedTask)) {
             TemplateExecutableTaskBuilder templateBuilder = TemplateExecutableTaskBuilder.getInstance();
-            TemplateLoadedChangeUnit castedTask = templateBuilder.cast(loadedTask);
+            TemplateLoadedChange castedTask = templateBuilder.cast(loadedTask);
             return templateBuilder.setLoadedTask(castedTask);
 
         } else if(CodeExecutableTaskBuilder.supports(loadedTask)) {
             CodeExecutableTaskBuilder codeBuilder = CodeExecutableTaskBuilder.getInstance();
-            CodeLoadedChangeUnit castedTask = codeBuilder.cast(loadedTask);
+            CodeLoadedChange castedTask = codeBuilder.cast(loadedTask);
             return codeBuilder.setLoadedTask(castedTask);
 
         } else {

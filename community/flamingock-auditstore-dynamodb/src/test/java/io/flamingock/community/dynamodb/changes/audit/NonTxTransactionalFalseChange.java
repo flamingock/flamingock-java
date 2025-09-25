@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 /**
- * ChangeUnit that produces NON_TX txStrategy via transactional=false.
+ * Change that produces NON_TX txStrategy via transactional=false.
  * Used for testing audit persistence of transaction type determination.
  */
 @TargetSystem(id = "dynamodb")

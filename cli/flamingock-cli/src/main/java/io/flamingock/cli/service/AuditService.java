@@ -54,9 +54,9 @@ public class AuditService {
     }
 
     /**
-     * Get snapshot view - latest state per changeUnit (DEFAULT)
+     * Get snapshot view - latest state per change (DEFAULT)
      *
-     * @return list of audit entries representing the latest state of each change unit
+     * @return list of audit entries representing the latest state of each change
      */
     public List<AuditEntry> listAuditEntriesSnapshot() {
         return opsClient.getAuditSnapshot();
@@ -98,9 +98,9 @@ public class AuditService {
         return opsClient.fixAuditIssue(changeId.trim(), resolution);
     }
     /**
-     * Get detailed information about a specific change unit that has issues.
+     * Get detailed information about a specific change that has issues.
      *
-     * @param changeId the change unit ID to inspect
+     * @param changeId the change ID to inspect
      * @return detailed issue information including all audit entries, error details, etc.
      */
     public Optional<AuditEntryIssue> getAuditEntryIssue(String changeId) {

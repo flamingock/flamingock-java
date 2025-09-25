@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import org.jetbrains.annotations.NotNull;
 
 public class PipelineHelper {
-    private static final String errorTemplate = "importing changeUnit with id[%s] from database. It must be imported  to a flamingock stage";
+    private static final String errorTemplate = "importing change with id[%s] from database. It must be imported  to a flamingock stage";
 
     private final PipelineDescriptor pipelineDescriptor;
 

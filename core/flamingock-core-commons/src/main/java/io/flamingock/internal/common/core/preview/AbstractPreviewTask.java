@@ -23,8 +23,8 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = CodePreviewChangeUnit.class, name = "codePreviewChangeUnit"),
-        @JsonSubTypes.Type(value = TemplatePreviewChangeUnit.class, name = "templatePreviewChangeUnit")
+        @JsonSubTypes.Type(value = CodePreviewChange.class, name = "codePreviewChange"),
+        @JsonSubTypes.Type(value = TemplatePreviewChange.class, name = "templatePreviewChange")
 })
 public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
 

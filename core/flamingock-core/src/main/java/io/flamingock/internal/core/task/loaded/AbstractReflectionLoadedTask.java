@@ -23,22 +23,22 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import java.util.Optional;
 
 /**
- * Abstract base class for loaded tasks that use Java reflection to execute changeUnits.
+ * Abstract base class for loaded tasks that use Java reflection to execute changes.
  * 
- * <p>This class serves as the foundation for both code-based and template-based changeUnits,
+ * <p>This class serves as the foundation for both code-based and template-based changes,
  * providing common reflection-based execution capabilities. It handles the distinction between
  * the source file (where the change is defined) and the implementation class (where the logic resides).</p>
  * 
- * <h2>ChangeUnit Types</h2>
+ * <h2>Change Types</h2>
  * <ul>
- *     <li><b>Code-based:</b> ChangeUnits defined directly in Java classes with {@code @ChangeUnit} annotation</li>
- *     <li><b>Template-based:</b> ChangeUnits defined in YAML/JSON templates that reference implementation ChangeTemplate classes</li>
+ *     <li><b>Code-based:</b> Changes defined directly in Java classes with {@code @Change} annotation</li>
+ *     <li><b>Template-based:</b> Changes defined in YAML/JSON templates that reference implementation ChangeTemplate classes</li>
  * </ul>
  * 
  * <h2>Reflection Usage</h2>
  * <p>This class uses reflection to:</p>
  * <ul>
- *     <li>Instantiate changeUnit classes via constructor</li>
+ *     <li>Instantiate change classes via constructor</li>
  *     <li>Invoke execution methods (annotated with {@code @Execution})</li>
  *     <li>Optionally invoke rollback methods (annotated with {@code @RollbackExecution})</li>
  * </ul>
@@ -46,7 +46,7 @@ import java.util.Optional;
  * <h2>Subclass Responsibilities</h2>
  * <p>Concrete implementations must provide:</p>
  * <ul>
- *     <li>{@link #getConstructor()} - Constructor for instantiating the changeUnit</li>
+ *     <li>{@link #getConstructor()} - Constructor for instantiating the change</li>
  *     <li>{@link #getExecutionMethod()} - Method to execute the change</li>
  *     <li>{@link #getRollbackMethod()} - Optional method for rollback operations</li>
  * </ul>
@@ -58,12 +58,12 @@ import java.util.Optional;
 public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
 
     /**
-     * The source file name where this changeUnit is defined.
+     * The source file name where this change is defined.
      * 
-     * <p>This represents the original source of the changeUnit definition:</p>
+     * <p>This represents the original source of the change definition:</p>
      * <ul>
      *     <li><b>Template-based:</b> The YAML/JSON template file name (e.g., "create-users.yaml")</li>
-     *     <li><b>Code-based:</b> The Java class name containing the {@code @ChangeUnit} annotation</li>
+     *     <li><b>Code-based:</b> The Java class name containing the {@code @Change} annotation</li>
      * </ul>
      * 
      * <p>Note: This may differ from the {@link #implementationClass} in template-based scenarios
@@ -72,14 +72,14 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
     protected  final String fileName;
 
     /**
-     * The Java class that contains the actual changeUnit execution logic.
+     * The Java class that contains the actual change execution logic.
      * 
      * <p>This class is used for reflection-based instantiation and method invocation:</p>
      * <ul>
      *     <li><b>Template-based:</b> A class implementing {@code ChangeTemplate} interface, 
      *         referenced by the template file</li>
      *     <li><b>Code-based:</b> The same class as indicated by {@link #fileName}, 
-     *         containing {@code @ChangeUnit} annotation</li>
+     *         containing {@code @Change} annotation</li>
      * </ul>
      * 
      * <p>This class must have:</p>
@@ -107,7 +107,7 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
     }
 
     /**
-     * Returns the source file name where this changeUnit is defined.
+     * Returns the source file name where this change is defined.
      * 
      * @return the file name (template file for template-based, class name for code-based)
      * @see #fileName
@@ -117,7 +117,7 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
     }
 
     /**
-     * Returns the Java class containing the changeUnit execution logic.
+     * Returns the Java class containing the change execution logic.
      * 
      * @return the implementation class used for reflection-based execution
      * @see #implementationClass
@@ -127,17 +127,17 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
     }
 
     /**
-     * Returns the constructor to be used for instantiating the changeUnit class.
+     * Returns the constructor to be used for instantiating the change class.
      * 
      * <p>The constructor should be accessible and may require dependency injection
-     * parameters based on the changeUnit's requirements.</p>
+     * parameters based on the change's requirements.</p>
      * 
      * @return the constructor for creating instances of the implementation class
      */
     public abstract Constructor<?> getConstructor();
 
     /**
-     * Returns the method to be invoked for executing the changeUnit.
+     * Returns the method to be invoked for executing the change.
      * 
      * <p>This method typically:</p>
      * <ul>
@@ -146,12 +146,12 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
      *     <li>May accept dependency-injected parameters</li>
      * </ul>
      * 
-     * @return the method to execute the changeUnit logic
+     * @return the method to execute the change logic
      */
     public abstract Method getExecutionMethod();
 
     /**
-     * Returns the optional method to be invoked for rolling back the changeUnit.
+     * Returns the optional method to be invoked for rolling back the change.
      * 
      * <p>This method, if present:</p>
      * <ul>

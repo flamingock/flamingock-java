@@ -4,7 +4,7 @@ This document shows real-world examples of what users will see in their logs dur
 
 ## 1. Happy Path - Successful Execution
 
-**Scenario**: 3 change units execute successfully in a transactional pipeline
+**Scenario**: 3 changes execute successfully in a transactional pipeline
 
 ### Application Logs
 ```
@@ -48,7 +48,7 @@ Task: seed-admin-user
 
 ## 2. Database Transaction Failure
 
-**Scenario**: Second change unit fails due to database constraint violation, triggers rollback
+**Scenario**: Second change fails due to database constraint violation, triggers rollback
 
 ### Application Logs
 ```
@@ -344,7 +344,7 @@ INFO  - Finished Flamingock process successfully
 
 ### 🔍 **Debugging Benefits**  
 1. **Transaction Traceability**: Full transaction lifecycle with timing
-2. **Change Unit Context**: Execution mode, target system, stage information
+2. **Change Context**: Execution mode, target system, stage information
 3. **Rollback Status**: Clear indication of rollback success/failure
 4. **Lock Management**: Lock key tracking and daemon lifecycle
 

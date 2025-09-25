@@ -18,8 +18,8 @@ package io.flamingock.internal.common.core.task;
 import java.util.Objects;
 
 /**
- * Descriptor that references a target system from a change unit or task.
- * This is a reference to link the change unit to a target system defined elsewhere,
+ * Descriptor that references a target system from a change or task.
+ * This is a reference to link the change to a target system defined elsewhere,
  * not the actual target system definition itself.
  */
 public class TargetSystemDescriptor {

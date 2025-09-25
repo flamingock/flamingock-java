@@ -129,8 +129,8 @@ import java.util.Set;
  * <h2>Supported Annotations</h2>
  * <ul>
  *     <li>{@link EnableFlamingock} - Mandatory pipeline configuration</li>
- *     <li>{@link Change} - Represents a change unit defined within the code</li>
- *     <li>io.mongock.api.annotations.ChangeUnit - Legacy change unit support</li>
+ *     <li>{@link Change} - Represents a change defined within the code</li>
+ *     <li>io.mongock.api.annotations.ChangeUnit - Legacy change support</li>
  * </ul>
  *
  * @author Antonio
@@ -199,7 +199,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger);
         EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation();
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
-                annotationFinder.getCodedChangeUnitsMapByPackage(),
+                annotationFinder.getCodedChangesMapByPackage(),
                 flamingockAnnotation
         );
         Serializer serializer = new Serializer(processingEnv, logger);
@@ -211,9 +211,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
-    private PreviewPipeline getPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, EnableFlamingock pipelineAnnotation) {
-        if (codedChangeUnitsByPackage == null) {
-            codedChangeUnitsByPackage = new HashMap<>();
+    private PreviewPipeline getPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, EnableFlamingock pipelineAnnotation) {
+        if (codedChangesByPackage == null) {
+            codedChangesByPackage = new HashMap<>();
         }
 
         if (pipelineAnnotation == null) {
@@ -240,10 +240,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         if (hasFileInAnnotation) {
             logger.info("Reading flamingock pipeline from file specified in @EnableFlamingock annotation: '" + pipelineAnnotation.pipelineFile() + "'");
             File specifiedPipelineFile = resolvePipelineFile(pipelineAnnotation.pipelineFile());
-            return buildPipelineFromSpecifiedFile(specifiedPipelineFile, codedChangeUnitsByPackage);
+            return buildPipelineFromSpecifiedFile(specifiedPipelineFile, codedChangesByPackage);
         } else {
             logger.info("Reading flamingock pipeline from @EnableFlamingock annotation stages configuration");
-            return buildPipelineFromAnnotation(pipelineAnnotation, codedChangeUnitsByPackage);
+            return buildPipelineFromAnnotation(pipelineAnnotation, codedChangesByPackage);
         }
     }
 
@@ -336,16 +336,16 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation, Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage) {
+    private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation, Map<String, List<AbstractPreviewTask>> codedChangesByPackage) {
         List<PreviewStage> stages = new ArrayList<>();
         SystemPreviewStage systemStage = null;
 
         for (Stage stageAnnotation : pipelineAnnotation.stages()) {
             if (stageAnnotation.type() == StageType.SYSTEM) {
                 // Handle system stage separately to maintain internal architecture
-                systemStage = mapAnnotationToSystemStage(codedChangeUnitsByPackage, stageAnnotation);
+                systemStage = mapAnnotationToSystemStage(codedChangesByPackage, stageAnnotation);
             } else {
-                PreviewStage stage = mapAnnotationToStage(codedChangeUnitsByPackage, stageAnnotation);
+                PreviewStage stage = mapAnnotationToStage(codedChangesByPackage, stageAnnotation);
                 stages.add(stage);
             }
         }
@@ -358,7 +358,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 : new PreviewPipeline(stages);
     }
 
-    private SystemPreviewStage mapAnnotationToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Stage stageAnnotation) {
+    private SystemPreviewStage mapAnnotationToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Stage stageAnnotation) {
         String location = stageAnnotation.location();
 
         if (location == null || location.trim().isEmpty()) {
@@ -367,11 +367,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeUnitClasses = null;
+        Collection<AbstractPreviewTask> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;
-            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+            changeClasses = codedChangesByPackage.get(sourcesPackage);
         } else {
             resourcesDir = processResourceLocation(location);
         }
@@ -384,11 +384,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
                 .setResourcesDir(resourcesDir)
-                .setChanges(changeUnitClasses)
+                .setChanges(changeClasses)
                 .build();
     }
 
-    private PreviewStage mapAnnotationToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Stage stageAnnotation) {
+    private PreviewStage mapAnnotationToStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Stage stageAnnotation) {
         String location = stageAnnotation.location();
 
         if (location == null || location.trim().isEmpty()) {
@@ -397,11 +397,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeUnitClasses = null;
+        Collection<AbstractPreviewTask> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;
-            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+            changeClasses = codedChangesByPackage.get(sourcesPackage);
         } else {
             resourcesDir = processResourceLocation(location);
         }
@@ -419,7 +419,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
                 .setResourcesDir(resourcesDir)
-                .setChanges(changeUnitClasses)
+                .setChanges(changeClasses)
                 .build();
     }
 
@@ -483,7 +483,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return null;
     }
 
-    private PreviewPipeline buildPipelineFromSpecifiedFile(File file, Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage) {
+    private PreviewPipeline buildPipelineFromSpecifiedFile(File file, Map<String, List<AbstractPreviewTask>> codedChangesByPackage) {
 
         try (InputStream inputStream = Files.newInputStream(file.toPath())) {
             Yaml yaml = new Yaml();
@@ -504,9 +504,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 
                 if (stageType == StageType.SYSTEM) {
                     // Handle system stage separately to maintain internal architecture
-                    systemStage = mapToSystemStage(codedChangeUnitsByPackage, stageMap);
+                    systemStage = mapToSystemStage(codedChangesByPackage, stageMap);
                 } else {
-                    PreviewStage stage = mapToStage(codedChangeUnitsByPackage, stageMap);
+                    PreviewStage stage = mapToStage(codedChangesByPackage, stageMap);
                     stages.add(stage);
                 }
             }
@@ -524,20 +524,20 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     }
 
-    private SystemPreviewStage mapToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> stageMap) {
+    private SystemPreviewStage mapToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Map<String, String> stageMap) {
         String location = stageMap.get("location");
 
         if (location == null || location.trim().isEmpty()) {
-            throw new RuntimeException("System stage in YAML pipeline requires a 'location' field. Please specify the location where change units are found.");
+            throw new RuntimeException("System stage in YAML pipeline requires a 'location' field. Please specify the location where changes are found.");
         }
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeUnitClasses = null;
+        Collection<AbstractPreviewTask> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;
-            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+            changeClasses = codedChangesByPackage.get(sourcesPackage);
         } else {
             resourcesDir = processResourceLocation(location);
         }
@@ -550,25 +550,25 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
                 .setResourcesDir(resourcesDir)
-                .setChanges(changeUnitClasses)
+                .setChanges(changeClasses)
                 .build();
     }
 
-    private PreviewStage mapToStage(Map<String, List<AbstractPreviewTask>> codedChangeUnitsByPackage, Map<String, String> stageMap) {
+    private PreviewStage mapToStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Map<String, String> stageMap) {
 
         String location = stageMap.get("location");
 
         if (location == null || location.trim().isEmpty()) {
-            throw new RuntimeException("Stage in YAML pipeline requires a 'location' field. Please specify the location where change units are found.");
+            throw new RuntimeException("Stage in YAML pipeline requires a 'location' field. Please specify the location where changes are found.");
         }
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeUnitClasses = null;
+        Collection<AbstractPreviewTask> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;
-            changeUnitClasses = codedChangeUnitsByPackage.get(sourcesPackage);
+            changeClasses = codedChangesByPackage.get(sourcesPackage);
         } else {
             resourcesDir = processResourceLocation(location);
         }
@@ -585,7 +585,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .setSourcesPackage(sourcesPackage)
                 .setResourcesRoot(resourcesRoot)
                 .setResourcesDir(resourcesDir)
-                .setChanges(changeUnitClasses)
+                .setChanges(changeClasses)
                 .build();
     }
 

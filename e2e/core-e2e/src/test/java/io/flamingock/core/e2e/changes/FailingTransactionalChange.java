@@ -21,7 +21,7 @@ import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Failing transactional change unit for testing error handling and rollback scenarios.
+ * Failing transactional change for testing error handling and rollback scenarios.
  */
 @TargetSystem(id = "salesforce")
 @Change(id = "test4-failing-tx-change", order = "006", transactional = true, author = "aperezdieppa")

@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Change unit that produces NON_TX txStrategy via non-transactional DefaultTargetSystem.
+ * Change that produces NON_TX txStrategy via non-transactional DefaultTargetSystem.
  * Used for testing audit persistence of NON_TX transaction type with custom target system.
  */
 @TargetSystem(id = "non-tx-system")

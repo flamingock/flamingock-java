@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.kit.audit;
 
-import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.processor.util.Deserializer;
@@ -40,7 +40,7 @@ public class AuditTestSupport {
 
     private final TestKit testKit;
     private AuditTestHelper auditHelper;
-    private CodeChangeUnitTestDefinition[] changeUnits;
+    private CodeChangeTestDefinition[] changes;
     private Runnable testCode;
     private AuditEntryExpectation[] expectedAudits;
 
@@ -54,13 +54,13 @@ public class AuditTestSupport {
     }
     
     /**
-     * Configures the change units to include in the mocked pipeline.
+     * Configures the changes to include in the mocked pipeline.
      * 
-     * @param changeUnits varargs array of CodeChangeUnitTestDefinition instances
+     * @param changes varargs array of CodeTestDefinition instances
      * @return this builder for method chaining
      */
-    public AuditTestSupport GIVEN_ChangeUnits(CodeChangeUnitTestDefinition... changeUnits) {
-        this.changeUnits = changeUnits;
+    public AuditTestSupport GIVEN_Changes(CodeChangeTestDefinition... changes) {
+        this.changes = changes;
         return this;
     }
     
@@ -95,7 +95,7 @@ public class AuditTestSupport {
      * 
      * <p>This method:</p>
      * <ul>
-     *   <li>Sets up Deserializer mock with configured change units</li>
+     *   <li>Sets up Deserializer mock with configured changes</li>
      *   <li>Executes the test code</li>
      *   <li>Verifies audit sequence if configured</li>
      *   <li>Ensures proper cleanup of MockedStatic</li>
@@ -107,17 +107,17 @@ public class AuditTestSupport {
         if (auditHelper == null) {
             throw new IllegalStateException("AuditHelper must be configured");
         }
-        if (changeUnits == null || changeUnits.length == 0) {
-            throw new IllegalStateException("Change units must be configured");
+        if (changes == null || changes.length == 0) {
+            throw new IllegalStateException("Changes must be configured");
         }
         if (testCode == null) {
             throw new IllegalStateException("Test code must be configured");
         }
         
         try (MockedStatic<Deserializer> mockedDeserializer = Mockito.mockStatic(Deserializer.class)) {
-            // Set up the Deserializer mock with the configured change units
+            // Set up the Deserializer mock with the configured changes
             mockedDeserializer.when(Deserializer::readPreviewPipelineFromFile)
-                .thenReturn(PipelineTestHelper.getPreviewPipeline(changeUnits));
+                .thenReturn(PipelineTestHelper.getPreviewPipeline(changes));
             
             // Execute the test code
             testCode.run();

@@ -22,7 +22,7 @@ import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Non-transactional change unit configured with ALWAYS_RETRY recovery strategy.
+ * Non-transactional change configured with ALWAYS_RETRY recovery strategy.
  * Used for testing recovery behavior when changes are in inconsistent states
  * but should be retried automatically instead of requiring manual intervention.
  */

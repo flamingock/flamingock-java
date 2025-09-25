@@ -19,7 +19,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 /**
- * Change unit that produces NON_TX txStrategy via transactional=false annotation.
+ * Change that produces NON_TX txStrategy via transactional=false annotation.
  * Used for testing audit persistence of NON_TX transaction type.
  */
 @TargetSystem(id = "mongodb")

@@ -98,7 +98,7 @@ class TemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChangeUnit result = builder.build();
+            TemplateLoadedChange result = builder.build();
 
             // Then
             assertEquals("001", result.getOrder().orElse(null));
@@ -128,7 +128,7 @@ class TemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChangeUnit result = builder.build();
+            TemplateLoadedChange result = builder.build();
 
             // Then
             assertEquals("002", result.getOrder().orElse(null));
@@ -158,7 +158,7 @@ class TemplateLoadedTaskBuilderTest {
                     .setRollback(new Object());
 
             // When
-            TemplateLoadedChangeUnit result = builder.build();
+            TemplateLoadedChange result = builder.build();
 
             // Then
             assertEquals("003", result.getOrder().orElse(null));
@@ -191,7 +191,7 @@ class TemplateLoadedTaskBuilderTest {
             FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
 
-            assertEquals("ChangeUnit[test-id] Order mismatch: value in template order field='001' does not match order in fileName='002'",
+            assertEquals("Change[test-id] Order mismatch: value in template order field='001' does not match order in fileName='002'",
                     exception.getMessage());
         }
     }
@@ -219,7 +219,7 @@ class TemplateLoadedTaskBuilderTest {
             // When & Then
             FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
-            assertEquals("ChangeUnit[test-id] Order is required: order must be present in the template order field or in the fileName(e.g. _0001_test-id.yaml). If present in both, they must have the same value.",
+            assertEquals("Change[test-id] Order is required: order must be present in the template order field or in the fileName(e.g. _0001_test-id.yaml). If present in both, they must have the same value.",
                     exception.getMessage());
         }
     }
@@ -248,7 +248,7 @@ class TemplateLoadedTaskBuilderTest {
             FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
             // Then
-            assertEquals("ChangeUnit[test-id] Order mismatch: value in template order field='' does not match order in fileName='004'",
+            assertEquals("Change[test-id] Order mismatch: value in template order field='' does not match order in fileName='004'",
                 exception.getMessage());
         }
     }

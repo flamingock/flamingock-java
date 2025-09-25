@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.util.List;
 
-public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
+public class TemplatePreviewChange extends AbstractPreviewTask {
 
     private String fileName;
     private List<String> profiles;
@@ -28,24 +28,24 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
     private Object apply;
     private Object rollback;
 
-    public TemplatePreviewChangeUnit() {}
+    public TemplatePreviewChange() {}
 
     //TODO add apply and rollbackMethod
     //TODO add configurationSetter and validation method
-    public TemplatePreviewChangeUnit(String fileName,
-                                     String id,
-                                     String order,
-                                     String author,
-                                     String templateName,
-                                     List<String> profiles,
-                                     boolean transactional,
-                                     boolean runAlways,
-                                     boolean system,
-                                     Object configuration,
-                                     Object apply,
-                                     Object rollback,
-                                     TargetSystemDescriptor targetSystem,
-                                     RecoveryDescriptor recovery) {
+    public TemplatePreviewChange(String fileName,
+                                 String id,
+                                 String order,
+                                 String author,
+                                 String templateName,
+                                 List<String> profiles,
+                                 boolean transactional,
+                                 boolean runAlways,
+                                 boolean system,
+                                 Object configuration,
+                                 Object apply,
+                                 Object rollback,
+                                 TargetSystemDescriptor targetSystem,
+                                 RecoveryDescriptor recovery) {
         super(id, order, author, templateName, runAlways, transactional, system, targetSystem, recovery);
         this.fileName = fileName;
         this.profiles = profiles;
@@ -100,7 +100,7 @@ public class TemplatePreviewChangeUnit extends AbstractPreviewTask {
 
     @Override
     public String toString() {
-        return "TemplatePreviewChangeUnit{" + "profiles=" + profiles +
+        return "TemplatePreviewChange{" + "profiles=" + profiles +
                 ", configuration=" + configuration +
                 ", apply=" + apply +
                 ", rollback=" + rollback +

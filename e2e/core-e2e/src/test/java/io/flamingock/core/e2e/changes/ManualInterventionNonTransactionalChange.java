@@ -22,7 +22,7 @@ import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Non-transactional change unit configured with explicit MANUAL_INTERVENTION recovery strategy.
+ * Non-transactional change configured with explicit MANUAL_INTERVENTION recovery strategy.
  * Used for testing recovery behavior when changes are in inconsistent states
  * and should require explicit manual intervention (same as default behavior).
  */

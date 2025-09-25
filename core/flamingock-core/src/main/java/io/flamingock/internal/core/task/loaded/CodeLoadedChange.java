@@ -29,17 +29,17 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
-    CodeLoadedChangeUnit(String id,
-                         String order,
-                         String author,
-                         Class<?> changeUnitClass,
-                         boolean runAlways,
-                         boolean transactional,
-                         boolean systemTask,
-                         TargetSystemDescriptor targetSystem,
-                         RecoveryDescriptor recovery) {
-        super(changeUnitClass.getSimpleName(), id, order, author, changeUnitClass, runAlways, transactional, systemTask, targetSystem, recovery);
+public class CodeLoadedChange extends AbstractLoadedChange {
+    CodeLoadedChange(String id,
+                     String order,
+                     String author,
+                     Class<?> changeClass,
+                     boolean runAlways,
+                     boolean transactional,
+                     boolean systemTask,
+                     TargetSystemDescriptor targetSystem,
+                     RecoveryDescriptor recovery) {
+        super(changeClass.getSimpleName(), id, order, author, changeClass, runAlways, transactional, systemTask, targetSystem, recovery);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
         Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Apply.class);
         return firstAnnotatedMethod
                 .orElseThrow(() -> new IllegalArgumentException(String.format(
-                        "Executable changeUnit[%s] without %s method",
+                        "Executable change[%s] without %s method",
                         getSource(),
                         Apply.class.getName())));
     }
@@ -84,7 +84,7 @@ public class CodeLoadedChangeUnit extends AbstractLoadedChangeUnit {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", CodeLoadedChangeUnit.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", CodeLoadedChange.class.getSimpleName() + "[", "]")
                 .add("source=" + source)
                 .add("sourceClass=" + getSource())
                 .add("sourceName='" + getSource() + "'")

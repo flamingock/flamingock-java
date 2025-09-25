@@ -17,7 +17,7 @@ package io.flamingock.common.test.pipeline;
 
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 
-public abstract class ChangeUnitTestDefinition {
+public abstract class ChangeTestDefinition {
 
 
     private final String id;
@@ -25,9 +25,9 @@ public abstract class ChangeUnitTestDefinition {
     private final boolean transactional;
 
 
-    public ChangeUnitTestDefinition(String id,
-                                    String order,
-                                    boolean transactional) {
+    public ChangeTestDefinition(String id,
+                                String order,
+                                boolean transactional) {
         this.id = id;
         this.order = order;
         this.transactional = transactional;

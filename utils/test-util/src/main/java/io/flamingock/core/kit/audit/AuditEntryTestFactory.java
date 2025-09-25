@@ -33,12 +33,12 @@ import java.util.UUID;
  *
  * <p><strong>Usage Example:</strong></p>
  * <pre>{@code
- * // Create an audit entry for recovery testing with specific ChangeUnit class
+ * // Create an audit entry for recovery testing with specific Change class
  * AuditEntry entry = AuditEntryTestFactory.createTestAuditEntry(
  *     "my-change-id",
  *     AuditEntry.Status.STARTED,
  *     AuditTxType.NON_TX,
- *     MyChangeUnit.class
+ *     MyChange.class
  * );
  * testKit.getAuditStorage().addAuditEntry(entry);
  * }</pre>
@@ -46,35 +46,35 @@ import java.util.UUID;
 public class AuditEntryTestFactory {
 
     /**
-     * Extracts the recovery strategy from a ChangeUnit class using reflection.
+     * Extracts the recovery strategy from a Change class using reflection.
      * 
-     * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
+     * @param changeClass the Change class to extract recovery strategy from
      * @return the recovery strategy from @Recovery annotation, or MANUAL_INTERVENTION if not present
      */
-    public static RecoveryStrategy extractRecoveryStrategy(Class<?> changeUnitClass) {
-        if (changeUnitClass != null && changeUnitClass.isAnnotationPresent(Recovery.class)) {
-            Recovery recoveryAnnotation = changeUnitClass.getAnnotation(Recovery.class);
+    public static RecoveryStrategy extractRecoveryStrategy(Class<?> changeClass) {
+        if (changeClass != null && changeClass.isAnnotationPresent(Recovery.class)) {
+            Recovery recoveryAnnotation = changeClass.getAnnotation(Recovery.class);
             return recoveryAnnotation.strategy();
         }
         return RecoveryStrategy.MANUAL_INTERVENTION;
     }
 
     /**
-     * Creates a test audit entry with specific state and transaction type, extracting recovery strategy from the ChangeUnit class.
+     * Creates a test audit entry with specific state and transaction type, extracting recovery strategy from the Change class.
      *
      * <p>This method creates a fully populated AuditEntry suitable for testing
      * scenarios, particularly recovery testing where specific audit states need
      * to be pre-inserted into storage. The recovery strategy is automatically
-     * extracted from the ChangeUnit class's @Recovery annotation.</p>
+     * extracted from the Change class's @Recovery annotation.</p>
      *
-     * @param changeId the change ID for the audit entry (typically the @ChangeUnit id)
+     * @param changeId the change ID for the audit entry (typically the @Change id)
      * @param status   the audit status (STARTED, APPLIED, EXECUTION_FAILED, etc.)
      * @param txStrategy   the transaction type (NON_TX, TX_SHARED, etc.)
-     * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
+     * @param changeClass the Change class to extract recovery strategy from
      * @return a properly configured AuditEntry for testing
      */
-    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, Class<?> changeUnitClass) {
-        RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
+    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, Class<?> changeClass) {
+        RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeClass);
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
@@ -128,18 +128,18 @@ public class AuditEntryTestFactory {
     }
 
     /**
-     * Creates a test audit entry with NON_TX transaction type, extracting recovery strategy from the ChangeUnit class.
+     * Creates a test audit entry with NON_TX transaction type, extracting recovery strategy from the Change class.
      *
      * <p>Convenience method for the common case of creating non-transactional
      * audit entries for testing.</p>
      *
      * @param changeId the change ID for the audit entry
      * @param status   the audit status
-     * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
+     * @param changeClass the Change class to extract recovery strategy from
      * @return a non-transactional AuditEntry for testing
      */
-    public static AuditEntry createNonTxTestAuditEntry(String changeId, AuditEntry.Status status, Class<?> changeUnitClass) {
-        return createTestAuditEntry(changeId, status, AuditTxType.NON_TX, changeUnitClass);
+    public static AuditEntry createNonTxTestAuditEntry(String changeId, AuditEntry.Status status, Class<?> changeClass) {
+        return createTestAuditEntry(changeId, status, AuditTxType.NON_TX, changeClass);
     }
 
     /**
@@ -151,18 +151,18 @@ public class AuditEntryTestFactory {
     }
 
     /**
-     * Creates a test audit entry with TX_SHARED transaction type, extracting recovery strategy from the ChangeUnit class.
+     * Creates a test audit entry with TX_SHARED transaction type, extracting recovery strategy from the Change class.
      *
      * <p>Convenience method for creating shared transactional audit entries
      * where the target system is the same as the audit store.</p>
      *
      * @param changeId the change ID for the audit entry
      * @param status   the audit status
-     * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
+     * @param changeClass the Change class to extract recovery strategy from
      * @return a shared transactional AuditEntry for testing
      */
-    public static AuditEntry createSharedTxTestAuditEntry(String changeId, AuditEntry.Status status, Class<?> changeUnitClass) {
-        return createTestAuditEntry(changeId, status, AuditTxType.TX_SHARED, changeUnitClass);
+    public static AuditEntry createSharedTxTestAuditEntry(String changeId, AuditEntry.Status status, Class<?> changeClass) {
+        return createTestAuditEntry(changeId, status, AuditTxType.TX_SHARED, changeClass);
     }
 
     /**
@@ -174,18 +174,18 @@ public class AuditEntryTestFactory {
     }
 
     /**
-     * Creates a test audit entry with TX_SEPARATE_WITH_MARKER transaction type, extracting recovery strategy from the ChangeUnit class.
+     * Creates a test audit entry with TX_SEPARATE_WITH_MARKER transaction type, extracting recovery strategy from the Change class.
      *
      * <p>Convenience method for creating separate transactional audit entries
      * with markers, where the target system differs from the audit store.</p>
      *
      * @param changeId the change ID for the audit entry
      * @param status   the audit status
-     * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
+     * @param changeClass the Change class to extract recovery strategy from
      * @return a separate transactional AuditEntry with marker for testing
      */
-    public static AuditEntry createSeparateTxWithMarkerTestAuditEntry(String changeId, AuditEntry.Status status, Class<?> changeUnitClass) {
-        return createTestAuditEntry(changeId, status, AuditTxType.TX_SEPARATE_WITH_MARKER, changeUnitClass);
+    public static AuditEntry createSeparateTxWithMarkerTestAuditEntry(String changeId, AuditEntry.Status status, Class<?> changeClass) {
+        return createTestAuditEntry(changeId, status, AuditTxType.TX_SEPARATE_WITH_MARKER, changeClass);
     }
 
     /**
@@ -197,21 +197,21 @@ public class AuditEntryTestFactory {
     }
 
     /**
-     * Creates a test audit entry with specific state, transaction type, and target system ID, extracting recovery strategy from the ChangeUnit class.
+     * Creates a test audit entry with specific state, transaction type, and target system ID, extracting recovery strategy from the Change class.
      *
      * <p>This method provides full control over all key parameters including the
      * target system ID, useful for testing scenarios where specific target systems
      * need to be verified in audit logs.</p>
      *
-     * @param changeId       the change ID for the audit entry (typically the @ChangeUnit id)
+     * @param changeId       the change ID for the audit entry (typically the @Change id)
      * @param status         the audit status (STARTED, APPLIED, EXECUTION_FAILED, etc.)
      * @param txStrategy         the transaction type (NON_TX, TX_SHARED, etc.)
      * @param targetSystemId the target system identifier
-     * @param changeUnitClass the ChangeUnit class to extract recovery strategy from
+     * @param changeClass the Change class to extract recovery strategy from
      * @return a properly configured AuditEntry for testing with specified target system
      */
-    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, String targetSystemId, Class<?> changeUnitClass) {
-        RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeUnitClass);
+    public static AuditEntry createTestAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, String targetSystemId, Class<?> changeClass) {
+        RecoveryStrategy recoveryStrategy = extractRecoveryStrategy(changeClass);
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
@@ -266,10 +266,10 @@ public class AuditEntryTestFactory {
     /**
      * Creates a test audit entry with specific state, transaction type, and recovery strategy.
      *
-     * @param changeId         the unique identifier for the change unit
+     * @param changeId         the unique identifier for the change
      * @param status           the audit entry status (STARTED, APPLIED, etc.)
      * @param txStrategy           the transaction type (NON_TX, TX_SHARED, etc.)
-     * @param recoveryStrategy the recovery strategy for this change unit
+     * @param recoveryStrategy the recovery strategy for this change
      * @return a properly configured AuditEntry for testing with specified recovery strategy
      */
     public static AuditEntry createTestAuditEntryWithRecoveryStrategy(String changeId, AuditEntry.Status status, AuditTxType txStrategy, String recoveryStrategy) {

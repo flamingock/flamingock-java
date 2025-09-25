@@ -18,7 +18,7 @@ package io.flamingock.community.mongodb.sync;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.community.mongodb.sync.changes.audit.NonTxTargetSystemChange;
 import io.flamingock.community.mongodb.sync.changes.audit.NonTxTransactionalFalseChange;
 import io.flamingock.community.mongodb.sync.changes.audit.TxSeparateAndSameMongoClientChange;
@@ -90,8 +90,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
 
         // Given-When-Then - Test MongoDB audit persistence with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList())
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList())
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -126,9 +126,9 @@ class MongoDBSyncAuditPersistenceE2ETest {
     void testNonTxScenarios() {
         // Given-When-Then - Test NON_TX scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList()),
-                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.emptyList())
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(NonTxTargetSystemChange.class, Collections.emptyList())
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -169,15 +169,15 @@ class MongoDBSyncAuditPersistenceE2ETest {
     }
 
     @Test
-    @DisplayName("Should persist TX_SHARED txStrategy when targetSystem not defined in changeUnit")
+    @DisplayName("Should persist TX_SHARED txStrategy when targetSystem not defined in change")
     void testTxSharedScenarios() {
         MongoDBSyncTargetSystem sharedTargetSystem = new MongoDBSyncTargetSystem("tx-shared-system", sharedMongoClient, "test"); // Same MongoClient as audit storage
 
 
         // Given-When-Then - Test TX_SHARED scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Collections.emptyList())
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Collections.emptyList())
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -211,8 +211,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
 
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Collections.emptyList())
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Collections.emptyList())
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -247,8 +247,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
 
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSeparateChange.class, Collections.emptyList())
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSeparateChange.class, Collections.emptyList())
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -282,10 +282,10 @@ class MongoDBSyncAuditPersistenceE2ETest {
 
         // Given-When-Then - Test multiple target system configurations with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Collections.emptyList()),
-                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.emptyList()),
-                        new CodeChangeUnitTestDefinition(TxSeparateChange.class, Collections.emptyList())
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(NonTxTargetSystemChange.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(TxSeparateChange.class, Collections.emptyList())
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -320,10 +320,10 @@ class MongoDBSyncAuditPersistenceE2ETest {
 
 
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList()),
-                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Collections.emptyList()),
-                        new CodeChangeUnitTestDefinition(TxSeparateChange.class, Collections.emptyList())
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(TxSeparateChange.class, Collections.emptyList())
                 ).WHEN(() -> assertDoesNotThrow(() -> {
                     MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
                     testKit.createBuilder()

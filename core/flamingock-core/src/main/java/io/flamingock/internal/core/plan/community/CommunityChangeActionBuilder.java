@@ -45,28 +45,28 @@ public class CommunityChangeActionBuilder {
      * This method analyzes each change's audit state and transaction type
      * to determine the appropriate action (APPLY, SKIP, MANUAL_INTERVENTION).
      *
-     * @param changeUnits the list of available change units
+     * @param changes the list of available changes
      * @param auditSnapshot the audit status containing change states and transaction info
      * @return a StageActionPlan with actions for each change
      * @throws ManualInterventionRequiredException
      *         if any changes require manual intervention
      */
-    public static ChangeActionMap build(Collection<AbstractLoadedTask> changeUnits, Map<String, AuditEntry> auditSnapshot) {
+    public static ChangeActionMap build(Collection<AbstractLoadedTask> changes, Map<String, AuditEntry> auditSnapshot) {
         Map<String, ChangeAction> actionMap = new HashMap<>();
-        for(AbstractLoadedTask changeUnit: changeUnits) {
-            AuditEntry auditEntry = auditSnapshot.get(changeUnit.getId());
+        for(AbstractLoadedTask change: changes) {
+            AuditEntry auditEntry = auditSnapshot.get(change.getId());
             if (auditEntry == null || auditEntry.getState() == null) {
                 // No audit entry found - first execution
                 AuditTxType txStrategy = auditEntry != null ? auditEntry.getTxType() : null;
                 log.info("Change[{}] in state='unknown' (TxType={}) -> Action={} | Reason: {}",
-                        changeUnit.getId(),
+                        change.getId(),
                         txStrategy != null ? txStrategy : "unknown",
                         ChangeAction.APPLY,
                         "No previous audit entry found (first execution)");
-                actionMap.put(changeUnit.getId(), ChangeAction.APPLY);
+                actionMap.put(change.getId(), ChangeAction.APPLY);
             } else {
                 ChangeAction action = ChangeActionResolver.resolve(auditEntry);
-                actionMap.put(changeUnit.getId(), action);
+                actionMap.put(change.getId(), action);
 
             }
         }

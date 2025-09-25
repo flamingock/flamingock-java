@@ -35,7 +35,7 @@ import static io.flamingock.cli.util.ASCIIColors.inViolet;
 @Command(
         name = "list",
         aliases = {"ls"},
-        description = "List all current issues (change units with inconsistent audits)"
+        description = "List all current issues (changes with inconsistent audits)"
 )
 public class ListIssueCommand implements Runnable {
 
@@ -65,7 +65,7 @@ public class ListIssueCommand implements Runnable {
 
             // Display results
             if (issues.isEmpty()) {
-                System.out.println("\n✅ No issues found! All change units are in consistent state.\n");
+                System.out.println("\n✅ No issues found! All changes are in consistent state.\n");
             } else {
                 if (json) {
                     // Output in JSON format
@@ -73,7 +73,7 @@ public class ListIssueCommand implements Runnable {
                     formatter.printIssueList(issues);
                 } else {
                     // Output as table
-                    System.out.println("\nCurrent Issues (Change Units with Inconsistent Audits):");
+                    System.out.println("\nCurrent Issues (Changes with Inconsistent Audits):");
                     System.out.println("========================================================");
                     System.out.println();
 

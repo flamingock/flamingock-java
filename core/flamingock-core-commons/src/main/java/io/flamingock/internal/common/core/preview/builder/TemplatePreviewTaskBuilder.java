@@ -16,7 +16,7 @@
 package io.flamingock.internal.common.core.preview.builder;
 
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewChangeUnit> {
+class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewChange> {
 
     private String fileName;
     private String id;
@@ -114,10 +114,10 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     }
 
     @Override
-    public TemplatePreviewChangeUnit build() {
+    public TemplatePreviewChange build() {
 
         List<String> profiles = getProfiles();
-        return new TemplatePreviewChangeUnit(
+        return new TemplatePreviewChange(
                 fileName,
                 id,
                 order,

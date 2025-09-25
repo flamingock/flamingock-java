@@ -17,7 +17,7 @@ package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -26,11 +26,11 @@ import org.slf4j.Logger;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoadedChangeUnit> {
+public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoadedChange> {
     private final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
 
     public TemplateExecutableTask(String stageName,
-                                  TemplateLoadedChangeUnit descriptor,
+                                  TemplateLoadedChange descriptor,
                                   ChangeAction action,
                                   Method executionMethod,
                                   Method rollbackMethod) {
@@ -39,8 +39,8 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
 
     @Override
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
-        logger.debug("Starting execution of changeUnit[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
-        logger.debug("changeUnit[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
+        logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
+        logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
         Object instance = executionRuntime.getInstance(descriptor.getConstructor());
         ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
         changeTemplateInstance.setTransactional(descriptor.isTransactional());
@@ -80,7 +80,7 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
                     setConfigurationMethod,
                     FileUtil.getFromMap(parameterClass, data));
         } else if(Void.class != parameterClass ) {
-            logger.warn("No '{}' section provided for template-based changeUnit[{}] of type[{}]", setterName, descriptor.getId(), descriptor.getTemplateClass().getName());
+            logger.warn("No '{}' section provided for template-based change[{}] of type[{}]", setterName, descriptor.getId(), descriptor.getTemplateClass().getName());
         }
 
     }

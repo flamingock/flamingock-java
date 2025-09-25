@@ -16,7 +16,7 @@
 package io.flamingock.springboot;
 
 import io.flamingock.api.annotations.Change;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,64 +30,64 @@ class SpringProfileFilterCodeTaskTest {
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[] and taskProfiles=[]")
     void trueIfActiveProfilesEmptyAndNotAnnotated() {
-        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChangeUnit(NotAnnotated.class)));
+        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChange(NotAnnotated.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1]")
     void trueIfActiveProfilesAndAnnotatedWhenMatched() {
-        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChangeUnit(P1.class)));
+        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1,P2] and taskProfiles=[P1]")
     void trueIfActiveProfilesContainAnnotatedProfile() {
-        assertTrue(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChangeUnit(P1.class)));
+        assertTrue(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChange(P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1,P2]")
     void trueIfAnnotatedProfilesContainActiveProfile() {
-        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChangeUnit(P1AndP2.class)));
+        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(P1AndP2.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P2] and taskProfiles=[!P1]")
     void trueIfAnnotatedProfileIsNegativeP1AndActiveProfileIsP2() {
-        assertTrue(new SpringbootProfileFilter("P2").filter(getCodeLoadedChangeUnit(NotP1.class)));
+        assertTrue(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(NotP1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[!P1]")
     void trueIfActiveProfileEmptyAndTaskProfileNegativeP1() {
-        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChangeUnit(NotP1.class)));
+        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChange(NotP1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[P1]")
     void falseIfActiveProfileEmptyAndTaskProfileP1() {
-        assertFalse(new SpringbootProfileFilter().filter(getCodeLoadedChangeUnit(P1.class)));
+        assertFalse(new SpringbootProfileFilter().filter(getCodeLoadedChange(P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P2] and taskProfiles=[P1]")
     void falseIfActiveProfileAndTaskProfileDontMatch() {
-        assertFalse(new SpringbootProfileFilter("P2").filter(getCodeLoadedChangeUnit(P1.class)));
+        assertFalse(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1AndTaskProfileNegativeP1() {
-        assertFalse(new SpringbootProfileFilter("P1").filter(getCodeLoadedChangeUnit(NotP1.class)));
+        assertFalse(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(NotP1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1,P2] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1P2AndTaskProfileNegativeP1() {
-        assertFalse(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChangeUnit(NotP1.class)));
+        assertFalse(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChange(NotP1.class)));
     }
 
-    private CodeLoadedChangeUnit getCodeLoadedChangeUnit(Class<?> sourceClass) {
+    private CodeLoadedChange getCodeLoadedChange(Class<?> sourceClass) {
         return LoadedTaskBuilder.getCodeBuilderInstance(sourceClass).build();
     }
 

@@ -16,8 +16,8 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
@@ -29,10 +29,10 @@ public interface LoadedTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
     static LoadedTaskBuilder<?> getInstance(AbstractPreviewTask previewTask) {
         if (TemplateLoadedTaskBuilder.supportsPreview(previewTask)) {
-            return  TemplateLoadedTaskBuilder.getInstanceFromPreview((TemplatePreviewChangeUnit) previewTask);
+            return  TemplateLoadedTaskBuilder.getInstanceFromPreview((TemplatePreviewChange) previewTask);
 
         } else if (CodeLoadedTaskBuilder.supportsPreview(previewTask)) {
-            return CodeLoadedTaskBuilder.getInstanceFromPreview((CodePreviewChangeUnit) previewTask);
+            return CodeLoadedTaskBuilder.getInstanceFromPreview((CodePreviewChange) previewTask);
 
         }
         throw new RuntimeException("Not implemented build from preview to loaded");

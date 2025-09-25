@@ -21,7 +21,7 @@ import io.flamingock.api.RecoveryStrategy;
 import java.util.Objects;
 
 /**
- * Descriptor that holds recovery strategy configuration for a change unit or task.
+ * Descriptor that holds recovery strategy configuration for a change or task.
  * This encapsulates the recovery strategy to allow for future extensions.
  */
 public class RecoveryDescriptor {

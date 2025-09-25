@@ -109,7 +109,7 @@ public class TargetSystemManager implements ContextInitializable {
         if (id == null || !targetSystemMap.containsKey(id)) {
             String availableTargetSystems = String.join(", ", targetSystemMap.keySet());
             String message = String.format(
-                    "ChangeUnit requires a valid targetSystem. Found: [%s]. Available target systems: [%s]",
+                    "Change requires a valid targetSystem. Found: [%s]. Available target systems: [%s]",
                     id, availableTargetSystems
             );
             logger.error(message);

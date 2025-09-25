@@ -19,22 +19,22 @@ import io.flamingock.internal.util.StringUtil;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
-public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChangeUnit> {
+public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange> {
 
     private String id;
     private String orderInContent;
     private String author;
-    private String changeUnitClass;
+    private String changeClass;
     private boolean isRunAlways;
     private boolean isTransactional;
     private boolean isSystem;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
-    private boolean isBeforeExecution;//only for old change units
+    private boolean isBeforeExecution;//only for legacy ChangeUnits
 
     private CodeLoadedTaskBuilder() {
     }
@@ -43,7 +43,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return new CodeLoadedTaskBuilder();
     }
 
-    static CodeLoadedTaskBuilder getInstanceFromPreview(CodePreviewChangeUnit preview) {
+    static CodeLoadedTaskBuilder getInstanceFromPreview(CodePreviewChange preview) {
         return getInstance().setPreview(preview);
     }
 
@@ -52,7 +52,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     public static boolean supportsPreview(AbstractPreviewTask previewTask) {
-        return CodePreviewChangeUnit.class.isAssignableFrom(previewTask.getClass());
+        return CodePreviewChange.class.isAssignableFrom(previewTask.getClass());
     }
 
     public static boolean supportsSourceClass(Class<?> sourceClass) {
@@ -61,11 +61,11 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
 
-    private CodeLoadedTaskBuilder setPreview(CodePreviewChangeUnit preview) {
+    private CodeLoadedTaskBuilder setPreview(CodePreviewChange preview) {
         setId(preview.getId());
         setOrderInContent(preview.getOrder().orElse(null));
         setAuthor(preview.getAuthor());
-        setChangeUnitClass(preview.getSource());
+        setChangeClass(preview.getSource());
         setRunAlways(preview.isRunAlways());
         setTransactional(preview.isTransactional());
         setSystem(preview.isSystem());
@@ -81,7 +81,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
         } else {
             throw new IllegalArgumentException(String.format(
-                    "Change unit class[%s] should be annotate with %s",
+                    "Change class[%s] should be annotate with %s",
                     sourceClass.getName(),
                     Change.class.getName()
             ));
@@ -115,8 +115,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setChangeUnitClass(String changeUnitClass) {
-        this.changeUnitClass = changeUnitClass;
+    public CodeLoadedTaskBuilder setChangeClass(String changeClass) {
+        this.changeClass = changeClass;
         return this;
     }
 
@@ -141,16 +141,16 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     @Override
-    public CodeLoadedChangeUnit build() {
+    public CodeLoadedChange build() {
 
         try {
 
-            String order = LoadedChangeUnitUtil.getMatchedOrderFromClassName(id, orderInContent, changeUnitClass);
-            return new CodeLoadedChangeUnit(
+            String order = LoadedChangeUtil.getMatchedOrderFromClassName(id, orderInContent, changeClass);
+            return new CodeLoadedChange(
                     isBeforeExecution ? StringUtil.getBeforeExecutionId(id) : id,
                     order,
                     author,
-                    Class.forName(changeUnitClass),
+                    Class.forName(changeClass),
                     isRunAlways,
                     isTransactional,
                     isSystem,
@@ -166,7 +166,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setId(annotation.id());
         setOrderInContent(annotation.order());
         setAuthor(annotation.author());
-        setChangeUnitClass(sourceClass.getName());
+        setChangeClass(sourceClass.getName());
         setTransactional(annotation.transactional());
         setSystem(false);
         setRecoveryFromClass(sourceClass);

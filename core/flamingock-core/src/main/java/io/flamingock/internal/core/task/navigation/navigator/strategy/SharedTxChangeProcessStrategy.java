@@ -77,24 +77,24 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
     private static final Void UNUSED = null;
     private static final Logger logger = FlamingockLoggerFactory.getLogger("SharedTxStrategy");
 
-    public SharedTxChangeProcessStrategy(ExecutableTask changeUnit,
+    public SharedTxChangeProcessStrategy(ExecutableTask change,
                                          ExecutionContext executionContext,
                                          TransactionalTargetSystemOps targetSystemOps,
                                          AuditStoreStepOperations auditStoreOperations,
                                          TaskSummarizer summarizer,
                                          LockGuardProxyFactory proxyFactory,
                                          ContextResolver baseContext) {
-        super(changeUnit, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
+        super(change, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
     }
 
     @Override
     protected TaskSummary doApplyChange() {
-        logger.debug("Executing shared-transactional task [change={}]", changeUnit.getId());
+        logger.debug("Executing shared-transactional task [change={}]", change.getId());
 
         Wrapper<ExecutionStep> executionStep = new Wrapper<>(null);
         // Execute change and audit within single transaction
         AfterExecutionAuditStep changeExecutionAndAudit = targetSystemOps.applyChangeTransactional(executionRuntime -> {
-            ExecutableStep executableStep = auditAndLogStartExecution(new StartStep(changeUnit), executionContext);
+            ExecutableStep executableStep = auditAndLogStartExecution(new StartStep(change), executionContext);
             executionStep.setValue(executableStep.execute(executionRuntime));
             return auditAndLogExecution(executionStep.getValue());
         }, buildExecutionRuntime());
@@ -123,7 +123,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         if(!changeExecution.isSuccessStep()) {
             summarizer.clear();
             targetSystemOps.<Void>applyChangeTransactional(executionRuntime -> {
-                auditAndLogStartExecution(new StartStep(changeUnit), executionContext);
+                auditAndLogStartExecution(new StartStep(change), executionContext);
                 auditAndLogExecution(changeExecution);
                 auditAndLogAutoRollback();
                 return UNUSED;
@@ -145,8 +145,8 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
 
     protected void auditAndLogAutoRollback() {
-        stepLogger.logAutoRollback(changeUnit, 0);
-        CompleteAutoRolledBackStep rolledBackStep = new CompleteAutoRolledBackStep(changeUnit, true);
+        stepLogger.logAutoRollback(change, 0);
+        CompleteAutoRolledBackStep rolledBackStep = new CompleteAutoRolledBackStep(change, true);
         auditAndLogAutoRollback(rolledBackStep, executionContext);
     }
 }

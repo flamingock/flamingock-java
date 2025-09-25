@@ -19,7 +19,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.community.mongodb.sync.changes._001_create_client_collection_happy;
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_non_transactional;
 import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
@@ -104,10 +104,10 @@ class MongoDBSyncAuditStoreTest {
     void happyPathWithDefaultRepositoryNames() {
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                        new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
-                        new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                        new CodeChangeTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                        new CodeChangeTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
@@ -135,10 +135,10 @@ class MongoDBSyncAuditStoreTest {
     void happyPathWithTransaction() {
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                        new CodeChangeUnitTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
-                        new CodeChangeUnitTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                        new CodeChangeTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class)),
+                        new CodeChangeTestDefinition(_003_insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
@@ -170,10 +170,10 @@ class MongoDBSyncAuditStoreTest {
     void failedWithTransaction() {
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
-                        new CodeChangeUnitTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
-                        new CodeChangeUnitTestDefinition(_003_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(MongoDatabase.class)),
+                        new CodeChangeTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
+                        new CodeChangeTestDefinition(_003_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()

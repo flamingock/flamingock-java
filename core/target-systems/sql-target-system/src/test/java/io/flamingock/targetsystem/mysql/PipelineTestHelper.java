@@ -22,7 +22,7 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.api.annotations.Change;
-import io.flamingock.internal.common.core.preview.CodePreviewChangeUnit;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -53,9 +53,9 @@ public class PipelineTestHelper {
     }
 
     /**
-     * Builds a {@link PreviewPipeline} composed of a single {@link PreviewStage} containing one or more {@link CodePreviewChangeUnit}s.
+     * Builds a {@link PreviewPipeline} composed of a single {@link PreviewStage} containing one or more {@link CodePreviewChange}s.
      * <p>
-     * Each change unit is derived from a {@link Pair} where:
+     * Each change is derived from a {@link Pair} where:
      * <ul>
      *   <li>The first item is the {@link Class} annotated with {@link Change}</li>
      *   <li>The second item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Execution}</li>
@@ -68,7 +68,7 @@ public class PipelineTestHelper {
     @SafeVarargs
     public static PreviewPipeline getPreviewPipeline(String stageName, Trio<Class<?>, List<Class<?>>, List<Class<?>>>... changeDefinitions) {
 
-        List<CodePreviewChangeUnit> tasks = Arrays.stream(changeDefinitions)
+        List<CodePreviewChange> tasks = Arrays.stream(changeDefinitions)
                 .map(trio -> {
                     Function<Class<?>, ChangeInfo> extractor = infoExtractor;
                     ChangeInfo changeInfo = extractor.apply(trio.getFirst());
@@ -79,8 +79,8 @@ public class PipelineTestHelper {
                         rollbackBeforeExecution = new PreviewMethod("rollbackBeforeExecution", getParameterTypes(trio.getThird()));
                     }
 
-                    List<CodePreviewChangeUnit> changes = new ArrayList<>();
-                    changes.add(new CodePreviewChangeUnit(
+                    List<CodePreviewChange> changes = new ArrayList<>();
+                    changes.add(new CodePreviewChange(
                             changeInfo.getChangeId(),
                             changeInfo.getOrder(),
                             changeInfo.getAuthor(),

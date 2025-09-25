@@ -229,7 +229,7 @@ public class PreviewStage {
 
         /**
          * Sets the collection of source root directories (e.g., {@code src/main/java}, {@code src/main/kotlin}).
-         * Used in conjunction with {@link #setSourcesPackage(String)} to locate YAML change units.
+         * Used in conjunction with {@link #setSourcesPackage(String)} to locate YAML changes.
          *
          * @param sourcesRoots collection of source root paths
          * @return this builder instance
@@ -240,7 +240,7 @@ public class PreviewStage {
         }
 
         /**
-         * Sets the fully qualified package name where YAML change units reside (e.g., {@code com.example.changes}).
+         * Sets the fully qualified package name where YAML changes reside (e.g., {@code com.example.changes}).
          * Must be used together with {@link #setSourcesRoots(Collection)}.
          *
          * @param sourcesPackage the package name
@@ -277,7 +277,7 @@ public class PreviewStage {
         /**
          * Sets a collection of {@link AbstractPreviewTask} implementations directly.
          *
-         * @param changes the collection of change unit task classes
+         * @param changes the collection of change task classes
          * @return this builder instance
          */
         public AbstractBuilder<T> setChanges(Collection<? extends AbstractPreviewTask> changes) {
@@ -300,7 +300,7 @@ public class PreviewStage {
          * Builds and returns a new {@link PreviewStage} instance based on the configured parameters.
          *
          * @return a new {@code PreviewStage}
-         * @throws RuntimeException if the name is not set or no change units are provided
+         * @throws RuntimeException if the name is not set or no changes are provided
          */
         public T build() {
 
@@ -325,16 +325,16 @@ public class PreviewStage {
                 throw new RuntimeException("Stage requires name");
             }
 
-            Collection<? extends AbstractPreviewTask> changeUnitClassesList = changes != null
+            Collection<? extends AbstractPreviewTask> changeClassesList = changes != null
                     ? changes
                     : Collections.emptyList();
 
-            if (resourcesDirectories.isEmpty() && changeUnitClassesList.isEmpty()) {
-                throw new RuntimeException("No changeUnits provided for stage: " + name);
+            if (resourcesDirectories.isEmpty() && changeClassesList.isEmpty()) {
+                throw new RuntimeException("No changes provided for stage: " + name);
             }
 
             Collection<AbstractPreviewTask> templatedTasksDescriptors = getTemplatedTaskDescriptors(resourcesDirectories);
-            Collection<AbstractPreviewTask> allDescriptors = Stream.concat(templatedTasksDescriptors.stream(), changeUnitClassesList.stream())
+            Collection<AbstractPreviewTask> allDescriptors = Stream.concat(templatedTasksDescriptors.stream(), changeClassesList.stream())
                     .collect(Collectors.toList());
 
 

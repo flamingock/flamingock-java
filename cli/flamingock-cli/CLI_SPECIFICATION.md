@@ -14,7 +14,7 @@ flamingock [command] [operation] [options]
   - The CLI only parses input, calls `OpsClient`, and formats output.
   
 - Default behavior: 
-  - `flamingock audit list` (with no flags) → shows the **current snapshot** (latest state per changeUnit). 
+  - `flamingock audit list` (with no flags) → shows the **current snapshot** (latest state per change). 
   - Flags modify or filter the behavior.
 
 ---
@@ -50,7 +50,7 @@ flamingock audit list --limit 50 --page 2
 
 ### 2. `audit mark`
 
-Forcefully mark a given **changeUnit** with a new state.
+Forcefully mark a given **change** with a new state.
 
 **Base command:**
 ```
@@ -58,7 +58,7 @@ flamingock audit mark --change-unit <id> --state <state>
 ```
 
 **Options:**
-- `--change-unit <id>` / `-c <id>` → the changeUnitId (required) 
+- `--change-unit <id>` / `-c <id>` → the changeId (required) 
 - `--state <state>` / `-s <state>` → the state to mark (`APPLIED` or `ROLLED_BACK`) (required) 
 
 **Examples:**
@@ -82,14 +82,14 @@ flamingock audit mark -c CU123 -s ROLLED_BACK
 - Command structure: `flamingock [command] [operation] [options]`
 - For now, only the `audit` command is implemented with: 
   - `list` (default snapshot, optional filters `--issues`, `--history`, `--since`, pagination) 
-  - `mark` (force a state for a changeUnit)
+  - `mark` (force a state for a change)
 - The CLI is a thin layer: config → build OpsClient → call → format result.
 
 ---
 
 ## Implementation Notes
 
-- **Default behavior change**: The `audit list` command now shows a **snapshot view** (latest state per changeUnit) by default, not just conflicted entries.
+- **Default behavior change**: The `audit list` command now shows a **snapshot view** (latest state per change) by default, not just conflicted entries.
 - **History flag**: Use `--history` to get the full chronological audit history.
 - **Issues flag**: Use `--issues` to filter for only entries with problems.
 - **Since flag**: Use `--since` with ISO-8601 format to filter by date.

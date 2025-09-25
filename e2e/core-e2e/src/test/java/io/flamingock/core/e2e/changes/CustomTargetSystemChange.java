@@ -20,8 +20,8 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 
 /**
- * Change unit that uses a custom target system for testing targetSystemId persistence.
- * This change unit is bound to the "custom-target-system" target system.
+ * Change that uses a custom target system for testing targetSystemId persistence.
+ * This change is bound to the "custom-target-system" target system.
  */
 @TargetSystem(id = "custom-target-system")
 @Change(id = "test-custom-target-change", order = "002", transactional = false, author = "aperezdieppa")

@@ -33,7 +33,7 @@ import java.util.function.Function;
  * <p>
  * Transaction-scoped dependencies (e.g., database sessions, transaction handles)
  * should be injected into the runtime after starting the transaction, making them
- * available to the change unit during execution.
+ * available to the change during execution.
  */
 public interface TransactionWrapper {
 

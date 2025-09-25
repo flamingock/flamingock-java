@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.e2e;
 
-import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.e2e.changes.FailingTransactionalChange;
 import io.flamingock.core.e2e.changes.MultiTest1NonTransactionalChange;
@@ -58,7 +58,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -92,7 +92,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -123,8 +123,8 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(MultiTest1NonTransactionalChange.class, Collections.emptyList()),
-                            new CodeChangeUnitTestDefinition(MultiTest2TransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(MultiTest1NonTransactionalChange.class, Collections.emptyList()),
+                            new CodeChangeTestDefinition(MultiTest2TransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -155,7 +155,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(FailingTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(FailingTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -189,7 +189,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SecondRunNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SecondRunNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 

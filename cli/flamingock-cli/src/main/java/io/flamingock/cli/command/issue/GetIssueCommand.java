@@ -44,7 +44,7 @@ public class GetIssueCommand implements Runnable {
     @ParentCommand
     private IssueCommand parent;
 
-    @Option(names = {"-c", "--change-id"}, required = false, description = "ChangeUnit ID to inspect (optional - shows next issue if not specified)")
+    @Option(names = {"-c", "--change-id"}, required = false, description = "Change ID to inspect (optional - shows next issue if not specified)")
     private String changeId;
 
     @Option(names = {"-j", "--json"}, description = "Output results in JSON format")
@@ -76,7 +76,7 @@ public class GetIssueCommand implements Runnable {
                 if (auditEntryIssueOpt.isPresent()) {
                     issueToShow = auditEntryIssueOpt.get();
                 } else {
-                    System.err.println("Error: There is no issue with changeUnit: " + changeId);
+                    System.err.println("Error: There is no issue with change: " + changeId);
                     return;
                 }
             } else {
@@ -85,7 +85,7 @@ public class GetIssueCommand implements Runnable {
                 List<AuditEntryIssue> issues = auditService.listAuditEntriesWithIssues();
                 
                 if (issues.isEmpty()) {
-                    System.out.println("\n✅ No issues found! All change units are in consistent state.\n");
+                    System.out.println("\n✅ No issues found! All changes are in consistent state.\n");
                     return;
                 } else {
                     issueToShow = issues.get(0);  // Get the first issue

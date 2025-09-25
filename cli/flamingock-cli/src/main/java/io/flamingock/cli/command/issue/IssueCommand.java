@@ -21,7 +21,7 @@ import picocli.CommandLine.ParentCommand;
 
 @Command(
     name = "issue",
-    description = "Issue operations for problematic change units",
+    description = "Issue operations for problematic changes",
     subcommands = {
         ListIssueCommand.class,
         GetIssueCommand.class

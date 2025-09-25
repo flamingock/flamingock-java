@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.e2e;
 
-import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.e2e.changes.AlwaysRetryNonTransactionalChange;
 import io.flamingock.core.e2e.changes.ManualInterventionNonTransactionalChange;
@@ -115,7 +115,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -148,7 +148,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -181,7 +181,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -214,7 +214,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -247,7 +247,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -296,7 +296,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -327,7 +327,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -358,7 +358,7 @@ class RecoveryE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -459,16 +459,16 @@ class RecoveryE2ETest {
     private void testForRetry(String changeId,
                               AuditEntry.Status previousState,
                               AuditTxType txStrategy,
-                              Class<?> changeUnitClass,
+                              Class<?> changeClass,
                               AuditEntryExpectation... expectedAuditSequence) {
         // Given - Pre-insert audit entry
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeUnitClass);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(changeUnitClass, Collections.emptyList())
+                            new CodeChangeTestDefinition(changeClass, Collections.emptyList())
                     )
             );
 
@@ -493,16 +493,16 @@ class RecoveryE2ETest {
     private void testForManualInterventionException(String changeId,
                                                     AuditEntry.Status previousState,
                                                     AuditTxType txStrategy,
-                                                    Class<?> changeUnitClass,
+                                                    Class<?> changeClass,
                                                     AuditEntryExpectation... expectedAuditSequence) {
         // Given - Pre-insert audit entry
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeUnitClass);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeUnitTestDefinition(changeUnitClass, Collections.emptyList())
+                            new CodeChangeTestDefinition(changeClass, Collections.emptyList())
                     )
             );
 

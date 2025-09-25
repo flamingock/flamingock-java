@@ -20,7 +20,7 @@ import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import io.flamingock.common.test.pipeline.CodeChangeUnitTestDefinition;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.core.kit.audit.AuditTestSupport;
@@ -93,8 +93,8 @@ class DynamoDBAuditPersistenceE2ETest {
         // When-Then - Complete audit verification within AuditTestSupport framework
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -134,9 +134,9 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given-When-Then - Test NON_TX scenarios
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -183,9 +183,9 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given-When-Then - Test NON_TX scenarios
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChangeNoDependencies.class, Collections.singletonList(DynamoDbClient.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(NonTxTargetSystemChangeNoDependencies.class, Collections.singletonList(DynamoDbClient.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -231,8 +231,8 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given-When-Then - Test TX_SHARED scenarios
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -268,8 +268,8 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -305,8 +305,8 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -339,10 +339,10 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given-When-Then - Test multiple target system configurations with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                        new CodeChangeUnitTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -379,10 +379,10 @@ class DynamoDBAuditPersistenceE2ETest {
         // Given-When-Then - Test comprehensive txStrategy scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
 
-                .GIVEN_ChangeUnits(
-                        new CodeChangeUnitTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeUnitTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                        new CodeChangeUnitTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                .GIVEN_Changes(
+                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {

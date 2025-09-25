@@ -25,7 +25,7 @@ import java.util.function.Function;
  * <p>
  * Extends {@link TargetSystemOps} to add transactional change execution
  * and audit marking capabilities. This interface is used by the execution
- * engine when processing change units marked as transactional.
+ * engine when processing changes marked as transactional.
  * <p>
  * Implementations typically wrap a {@link io.flamingock.internal.core.targets.TransactionalTargetSystem}
  * instance and delegate operations to it.

@@ -65,11 +65,11 @@ public class PipelinePreProcessorTest {
     void shouldCreateCorrectPipelineStructureForAnnotationConfiguration() throws Exception {
         // Given - create annotation with stages including system stage
         EnableFlamingock annotation = createMockAnnotationWithStages();
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         
         // When - build pipeline from annotation using processor logic
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changeUnits);
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changes);
         
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
@@ -107,11 +107,11 @@ public class PipelinePreProcessorTest {
         // Given - create pipeline YAML file
         createPipelineYamlFile();
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         
         // When - build pipeline from file using processor logic
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        PreviewPipeline pipeline = buildPipelineFromFile(processor, annotation, changeUnits);
+        PreviewPipeline pipeline = buildPipelineFromFile(processor, annotation, changes);
         
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
@@ -139,12 +139,12 @@ public class PipelinePreProcessorTest {
     void shouldThrowErrorForInvalidAnnotationConfiguration() throws Exception {
         // Given - create invalid @EnableFlamingock annotation (neither file nor stages)
         EnableFlamingock invalidAnnotation = createMockAnnotationWithNeitherFileNorStages();
-        Map<String, List<AbstractPreviewTask>> changeUnits = new HashMap<>();
+        Map<String, List<AbstractPreviewTask>> changes = new HashMap<>();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When & Then - should throw RuntimeException from the main validation method
         Exception exception = assertThrows(Exception.class, () -> 
-            callGetPipelineFromProcessChanges(processor, changeUnits, invalidAnnotation));
+            callGetPipelineFromProcessChanges(processor, changes, invalidAnnotation));
         
         // Check if it's wrapped in InvocationTargetException
         Throwable cause = exception.getCause();
@@ -165,9 +165,9 @@ public class PipelinePreProcessorTest {
     void shouldCreatePipelineWithCorrectObjectStructure() throws Exception {
         // Given - create a pipeline
         EnableFlamingock annotation = createMockAnnotationWithStages();
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changeUnits);
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changes);
         
         // Then - verify object structure (testing the actual objects, not JSON)
         assertNotNull(pipeline, "Pipeline should be created");
@@ -198,12 +198,12 @@ public class PipelinePreProcessorTest {
                 createMockStage("", StageType.DEFAULT, "com.example.migrations")
             )
             .build();
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When & Then - should throw RuntimeException
         Exception exception = assertThrows(Exception.class, () -> 
-            callGetPipelineFromProcessChanges(processor, changeUnits, annotation));
+            callGetPipelineFromProcessChanges(processor, changes, annotation));
         
         Throwable cause = exception.getCause();
         if (cause instanceof RuntimeException) {
@@ -229,12 +229,12 @@ public class PipelinePreProcessorTest {
                 createMockStage("", StageType.DEFAULT, "com.example.migrations")
             )
             .build();
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When & Then - should throw RuntimeException
         Exception exception = assertThrows(Exception.class, () -> 
-            callGetPipelineFromProcessChanges(processor, changeUnits, annotation));
+            callGetPipelineFromProcessChanges(processor, changes, annotation));
         
         Throwable cause = exception.getCause();
         if (cause instanceof RuntimeException) {
@@ -260,11 +260,11 @@ public class PipelinePreProcessorTest {
                 createMockStage("", StageType.DEFAULT, "com.example.migrations3")
             )
             .build();
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When - build pipeline (should not throw exception)
-        PreviewPipeline pipeline = callGetPipelineFromProcessChanges(processor, changeUnits, annotation);
+        PreviewPipeline pipeline = callGetPipelineFromProcessChanges(processor, changes, annotation);
         
         // Then - verify multiple default stages are allowed
         assertNotNull(pipeline, "Pipeline should be created");
@@ -286,11 +286,11 @@ public class PipelinePreProcessorTest {
                 createMockStage("", StageType.DEFAULT, "com.example.cleanup")
             )
             .build();
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When - build pipeline from annotation
-        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changeUnits);
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changes);
         
         // Then - verify stages are sorted by type priority
         assertNotNull(pipeline, "Pipeline should be created");
@@ -330,11 +330,11 @@ public class PipelinePreProcessorTest {
         Files.write(pipelineFile, yamlContent.getBytes());
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When - build pipeline from file
-        PreviewPipeline pipeline = buildPipelineFromFile(processor, annotation, changeUnits);
+        PreviewPipeline pipeline = buildPipelineFromFile(processor, annotation, changes);
         
         // Then - verify stages are sorted by type priority
         assertNotNull(pipeline, "Pipeline should be created");
@@ -375,12 +375,12 @@ public class PipelinePreProcessorTest {
         Files.write(pipelineFile, yamlContent.getBytes());
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
-        Map<String, List<AbstractPreviewTask>> changeUnits = createMockChangeUnitsMap();
+        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When & Then - should throw RuntimeException
         Exception exception = assertThrows(Exception.class, () -> 
-            callGetPipelineFromProcessChanges(processor, changeUnits, annotation));
+            callGetPipelineFromProcessChanges(processor, changes, annotation));
         
         Throwable cause = exception.getCause();
         if (cause instanceof RuntimeException) {
@@ -393,7 +393,7 @@ public class PipelinePreProcessorTest {
     }
 
     // Helper methods using reflection to test the internal pipeline building logic
-    private PreviewPipeline buildPipelineFromAnnotation(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changeUnits) throws Exception {
+    private PreviewPipeline buildPipelineFromAnnotation(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changes) throws Exception {
         // Set up minimal processor state
         setProcessorField(processor, "resourcesRoot", tempDir.toString());
         setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
@@ -405,10 +405,10 @@ public class PipelinePreProcessorTest {
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
             "buildPipelineFromAnnotation", EnableFlamingock.class, Map.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, annotation, changeUnits);
+        return (PreviewPipeline) method.invoke(processor, annotation, changes);
     }
 
-    private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewTask>> changeUnits, EnableFlamingock annotation) throws Exception {
+    private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewTask>> changes, EnableFlamingock annotation) throws Exception {
         // Set up minimal processor state
         setProcessorField(processor, "resourcesRoot", tempDir.toString());
         setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
@@ -420,10 +420,10 @@ public class PipelinePreProcessorTest {
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
             "getPipelineFromProcessChanges", Map.class, EnableFlamingock.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, changeUnits, annotation);
+        return (PreviewPipeline) method.invoke(processor, changes, annotation);
     }
 
-    private PreviewPipeline buildPipelineFromFile(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changeUnits) throws Exception {
+    private PreviewPipeline buildPipelineFromFile(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changes) throws Exception {
         // Set up minimal processor state
         setProcessorField(processor, "resourcesRoot", tempDir.toString());
         setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
@@ -437,7 +437,7 @@ public class PipelinePreProcessorTest {
         method.setAccessible(true);
         
         File pipelineFile = tempDir.resolve("pipeline.yaml").toFile();
-        return (PreviewPipeline) method.invoke(processor, pipelineFile, changeUnits);
+        return (PreviewPipeline) method.invoke(processor, pipelineFile, changes);
     }
 
     private void setProcessorField(FlamingockAnnotationProcessor processor, String fieldName, Object value) throws Exception {
@@ -515,7 +515,7 @@ public class PipelinePreProcessorTest {
         Files.write(pipelineFile, yamlContent.getBytes());
     }
 
-    private Map<String, List<AbstractPreviewTask>> createMockChangeUnitsMap() {
+    private Map<String, List<AbstractPreviewTask>> createMockChangesMap() {
         Map<String, List<AbstractPreviewTask>> map = new HashMap<>();
         // Create mock tasks for each package so stages can be built
         AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-author", "test-source", false, true, false, null, RecoveryDescriptor.getDefault()) {};

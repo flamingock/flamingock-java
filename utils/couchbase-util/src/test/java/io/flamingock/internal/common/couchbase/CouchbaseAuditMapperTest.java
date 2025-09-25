@@ -34,20 +34,20 @@ class CouchbaseAuditMapperTest {
     // Test classes for different recovery strategies
     @Change(id = "test-manual", order = "001", author = "aperezdieppa")
     @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
-    static class TestManualInterventionChangeUnit {
+    static class TestManualInterventionChange {
         @Apply
         public void execute() {}
     }
 
     @Change(id = "test-always-retry", order = "001", author = "aperezdieppa")
     @Recovery(strategy = RecoveryStrategy.ALWAYS_RETRY)
-    static class TestAlwaysRetryChangeUnit {
+    static class TestAlwaysRetryChange {
         @Apply
         public void execute() {}
     }
 
     @Change(id = "test-default", order = "001", author = "aperezdieppa")
-    static class TestDefaultRecoveryChangeUnit {
+    static class TestDefaultRecoveryChange {
         @Apply
         public void execute() {}
     }
@@ -55,7 +55,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -68,7 +68,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -82,7 +82,7 @@ class CouchbaseAuditMapperTest {
     void shouldSerializeAndDeserializeTargetSystemId() {
         // Given
         String expectedTargetSystemId = "custom-target-system";
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -95,7 +95,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldHandleNullTargetSystemId() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, null, TestDefaultRecoveryChangeUnit.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, null, TestDefaultRecoveryChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -109,7 +109,7 @@ class CouchbaseAuditMapperTest {
     void shouldHandleAllTxTypes() {
         for (AuditTxType txStrategy : AuditTxType.values()) {
             // Given
-            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txStrategy, TestManualInterventionChangeUnit.class);
+            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txStrategy, TestManualInterventionChange.class);
 
             // When
             JsonObject document = mapper.toDocument(original);

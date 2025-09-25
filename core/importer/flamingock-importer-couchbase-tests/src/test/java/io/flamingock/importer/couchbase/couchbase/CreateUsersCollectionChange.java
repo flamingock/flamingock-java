@@ -24,7 +24,7 @@ import io.flamingock.api.annotations.Apply;
 import java.util.Collections;
 
 @Change(id = "create-users-collection", order = "001", author = "importer", transactional = false)
-public class CreateUsersCollectionChangeUnit {
+public class CreateUsersCollectionChange {
 
     @Apply
     public void execution(Bucket bucket) {

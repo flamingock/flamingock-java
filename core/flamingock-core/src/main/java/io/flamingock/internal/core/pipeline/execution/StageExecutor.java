@@ -72,19 +72,19 @@ public class StageExecutor {
         ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
 
         try {
-            logger.debug("Processing change units [stage={} context={}]", stageName, executionContext.getExecutionId());
+            logger.debug("Processing changes [stage={} context={}]", stageName, executionContext.getExecutionId());
             
             getTasksStream(executableStage)
-                    .map(changeProcessFactory::setChangeUnit)
+                    .map(changeProcessFactory::setChange)
                     .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
                     .peek(taskSummary -> {
                         summary.addSummary(taskSummary);
                         if (taskSummary.isFailed()) {
-                            logger.error("Change unit failed [change={} stage={}]", 
+                            logger.error("Change failed [change={} stage={}]", 
                                        taskSummary.getId(), stageName);
                         } else {
-                            logger.debug("Change unit completed successfully [change={} stage={}]", 
+                            logger.debug("Change completed successfully [change={} stage={}]", 
                                        taskSummary.getId(), stageName);
                         }
                     })

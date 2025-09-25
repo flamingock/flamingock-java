@@ -154,7 +154,7 @@ public class LoadedPipeline implements PipelineDescriptor {
         if (!duplicateIds.isEmpty()) {
             String duplicateIdsString = String.join(", ", duplicateIds);
             return Optional.of(new ValidationError(
-                    "Duplicate changeUnit IDs found across stages: " + duplicateIdsString,
+                    "Duplicate change IDs found across stages: " + duplicateIdsString,
                     "pipeline",
                     "pipeline"
             ));

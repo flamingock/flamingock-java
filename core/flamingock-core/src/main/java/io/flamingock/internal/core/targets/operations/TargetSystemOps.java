@@ -43,7 +43,7 @@ public interface TargetSystemOps extends TargetSystem {
     /**
      * Applies a change operation to this target system.
      * <p>
-     * This method coordinates the execution of a change unit by:
+     * This method coordinates the execution of a change by:
      * <ul>
      *   <li>Injecting session-scoped dependencies via the target system</li>
      *   <li>Executing the change function with the enhanced runtime</li>

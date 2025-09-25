@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 
 
 /**
- * Marks a class as a change unit that encapsulates a system evolution operation.
+ * Marks a class as a change that encapsulates a system evolution operation.
  * Each change represents an atomic, versioned modification to your distributed system.
  *
  * <p>Example usage:

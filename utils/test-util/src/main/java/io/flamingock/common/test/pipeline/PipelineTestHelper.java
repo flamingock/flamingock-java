@@ -40,21 +40,21 @@ public class PipelineTestHelper {
                 .collect(Collectors.toList());
     }
 
-    public static void testWithMockedPipeline(List<ChangeUnitTestDefinition> changeUnitTestDefinitions,
+    public static void testWithMockedPipeline(List<ChangeTestDefinition> changeTestDefinitions,
                       Runnable testOperation) {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(changeUnitTestDefinitions)
+                    PipelineTestHelper.getPreviewPipeline(changeTestDefinitions)
             );
             testOperation.run();
         }
     }
 
 
-    public static PreviewPipeline getPreviewPipeline(String stageName, List<ChangeUnitTestDefinition> changeDefinitions) {
+    public static PreviewPipeline getPreviewPipeline(String stageName, List<ChangeTestDefinition> changeDefinitions) {
 
         List<AbstractPreviewTask> tasks = changeDefinitions.stream()
-                .map(ChangeUnitTestDefinition::toPreview)
+                .map(ChangeTestDefinition::toPreview)
                 .collect(Collectors.toList());
 
         PreviewStage stage = new PreviewStage(
@@ -69,15 +69,15 @@ public class PipelineTestHelper {
         return new PreviewPipeline(Collections.singletonList(stage));
     }
 
-    public static PreviewPipeline getPreviewPipeline(String stageName, ChangeUnitTestDefinition... changeDefinitions) {
+    public static PreviewPipeline getPreviewPipeline(String stageName, ChangeTestDefinition... changeDefinitions) {
         return getPreviewPipeline(stageName, Arrays.asList(changeDefinitions));
     }
 
-    public static PreviewPipeline getPreviewPipeline(ChangeUnitTestDefinition... changeDefinitions) {
+    public static PreviewPipeline getPreviewPipeline(ChangeTestDefinition... changeDefinitions) {
         return getPreviewPipeline(Arrays.asList(changeDefinitions));
     }
 
-    public static PreviewPipeline getPreviewPipeline(List<ChangeUnitTestDefinition> changeDefinitions) {
+    public static PreviewPipeline getPreviewPipeline(List<ChangeTestDefinition> changeDefinitions) {
         return getPreviewPipeline("default-stage-name", changeDefinitions);
     }
 }

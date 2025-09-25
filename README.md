@@ -82,8 +82,8 @@ No more fragile scripts or untracked console changes. With CaC:
 - **Change-as-Code (CaC)**: Treat changes to databases, queues, APIs, or configs as code — versioned, executable, and auditable.
 - **Unified system evolution**: Orchestrate changes across your full stack: event schemas, feature flags, databases, S3, SaaS APIs, and more.
 - **Programmatic or declarative**: Write changes in Java/Kotlin or define them in YAML using official or custom templates.
-- **Startup-Time synchronization**: Apply versioned ChangeUnits when your app starts — keeping deployments consistent and safe.
-- **Audit logging & rollback**: Every change is recorded externally; rollback logic is built into each ChangeUnit.
+- **Startup-Time synchronization**: Apply versioned Changes when your app starts — keeping deployments consistent and safe.
+- **Audit logging & rollback**: Every change is recorded externally; rollback logic is built into each Change.
 - **Multi-stage workflows**: Organize and execute your changes in coordinated, stage-based flows across instances.
 - **Native GraalVM support**: Compatible with native image builds for fast startup and low memory usage.
 - **Cloud-ready, OSS-Core**: Use locally, self-host, or plug into our managed Cloud — all powered by the same open source core.

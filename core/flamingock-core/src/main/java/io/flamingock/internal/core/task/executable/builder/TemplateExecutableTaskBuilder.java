@@ -18,7 +18,7 @@ package io.flamingock.internal.core.task.executable.builder;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChangeUnit;
+import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -28,31 +28,31 @@ import java.util.List;
 
 
 /**
- * Factory for ChangeUnit classes
+ * Factory for Change classes
  */
-public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<TemplateLoadedChangeUnit> {
+public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<TemplateLoadedChange> {
     private final static Logger logger = FlamingockLoggerFactory.getLogger("TemplateBuilder");
 
     private static final TemplateExecutableTaskBuilder instance = new TemplateExecutableTaskBuilder();
     private String stageName;
     private ChangeAction changeAction;
-    private TemplateLoadedChangeUnit loadedTask;
+    private TemplateLoadedChange loadedTask;
 
     static TemplateExecutableTaskBuilder getInstance() {
         return instance;
     }
 
     public static boolean supports(AbstractLoadedTask loadedTask) {
-        return TemplateLoadedChangeUnit.class.isAssignableFrom(loadedTask.getClass());
+        return TemplateLoadedChange.class.isAssignableFrom(loadedTask.getClass());
     }
 
     @Override
-    public TemplateLoadedChangeUnit cast(AbstractLoadedTask loadedTask) {
-        return (TemplateLoadedChangeUnit) loadedTask;
+    public TemplateLoadedChange cast(AbstractLoadedTask loadedTask) {
+        return (TemplateLoadedChange) loadedTask;
     }
 
     @Override
-    public TemplateExecutableTaskBuilder setLoadedTask(TemplateLoadedChangeUnit loadedTask) {
+    public TemplateExecutableTaskBuilder setLoadedTask(TemplateLoadedChange loadedTask) {
         this.loadedTask = loadedTask;
         return this;
     }
@@ -80,28 +80,28 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
      * New ChangeAction-based method for building tasks.
      */
     private TemplateExecutableTask getTasksFromReflection(String stageName,
-                                                          TemplateLoadedChangeUnit loadedTask,
+                                                          TemplateLoadedChange loadedTask,
                                                           ChangeAction action) {
         return buildTask(stageName, loadedTask, action);
     }
 
     private TemplateExecutableTask buildTask(String stageName,
-                                           TemplateLoadedChangeUnit loadedTask,
+                                           TemplateLoadedChange loadedTask,
                                            ChangeAction action) {
         Method rollbackMethod = null;
         if (loadedTask.getRollback() != null) {
             rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
             if (rollbackMethod != null) {
-                logger.trace("ChangeUnit[{}] provides rollback in configuration", loadedTask.getId());
+                logger.trace("Change[{}] provides rollback in configuration", loadedTask.getId());
             } else {
-                logger.warn("ChangeUnit[{}] provides rollback in configuration, but based on a template[{}] not supporting manual rollback",
+                logger.warn("Change[{}] provides rollback in configuration, but based on a template[{}] not supporting manual rollback",
                         loadedTask.getId(),
                         loadedTask.getSource()
                 );
             }
         } else {
             if (loadedTask.getRollbackMethod().isPresent()) {
-                logger.warn("ChangeUnit[{}] does not provide rollback, but based on a template[{}] support manual rollback",
+                logger.warn("Change[{}] does not provide rollback, but based on a template[{}] support manual rollback",
                         loadedTask.getId(),
                         loadedTask.getSource()
                 );

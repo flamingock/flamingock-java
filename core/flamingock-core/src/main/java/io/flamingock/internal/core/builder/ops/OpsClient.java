@@ -47,7 +47,7 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
 
     @Override
     public List<AuditEntry> getAuditSnapshot() {
-        logger.debug("Getting audit entries snapshot (latest per changeUnit)");
+        logger.debug("Getting audit entries snapshot (latest per change)");
         return auditPersistence.getSnapshotList();
     }
 
@@ -75,7 +75,7 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
     @Override
     // TODO: This needs to be done under the lok
     public FixResult fixAuditIssue(String changeId, Resolution resolution) {
-        logger.debug("ChangeUnit[{}] marked as {}", changeId, resolution);
+        logger.debug("Change[{}] marked as {}", changeId, resolution);
 
         Optional<AuditEntryIssue> auditIssue = getAuditIssueByChange(changeId);
         if (!auditIssue.isPresent()) {

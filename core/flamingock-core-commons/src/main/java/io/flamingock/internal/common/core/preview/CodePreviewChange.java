@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.beans.Transient;
 
-public class CodePreviewChangeUnit extends AbstractPreviewTask {
+public class CodePreviewChange extends AbstractPreviewTask {
     private PreviewMethod executionMethodName;
     private PreviewMethod rollbackMethodName;
     private PreviewMethod beforeExecutionMethodName;
@@ -28,23 +28,23 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
 
     private String sourcePackage;
 
-    public CodePreviewChangeUnit() {
+    public CodePreviewChange() {
         super();
     }
 
-    public CodePreviewChangeUnit(String id,
-                                 String order,
-                                 String author,
-                                 String sourceClassPath,
-                                 PreviewMethod executionMethodPreview,
-                                 PreviewMethod rollbackMethodPreview,
-                                 PreviewMethod beforeExecutionMethodPreview,
-                                 PreviewMethod rollbackBeforeExecutionMethodPreview,
-                                 boolean runAlways,
-                                 boolean transactional,
-                                 boolean system,
-                                 TargetSystemDescriptor targetSystem,
-                                 RecoveryDescriptor recovery) {
+    public CodePreviewChange(String id,
+                             String order,
+                             String author,
+                             String sourceClassPath,
+                             PreviewMethod executionMethodPreview,
+                             PreviewMethod rollbackMethodPreview,
+                             PreviewMethod beforeExecutionMethodPreview,
+                             PreviewMethod rollbackBeforeExecutionMethodPreview,
+                             boolean runAlways,
+                             boolean transactional,
+                             boolean system,
+                             TargetSystemDescriptor targetSystem,
+                             RecoveryDescriptor recovery) {
         super(id, order, author, sourceClassPath, runAlways, transactional, system, targetSystem, recovery);
         this.executionMethodName = executionMethodPreview;
         this.rollbackMethodName = rollbackMethodPreview;
@@ -98,7 +98,7 @@ public class CodePreviewChangeUnit extends AbstractPreviewTask {
 
     @Override
     public String toString() {
-        return "PreviewChangeUnit{" +
+        return "PreviewChange{" +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +
                 ", author='" + author + '\'' +

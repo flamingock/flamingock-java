@@ -23,9 +23,9 @@ import java.util.List;
 public interface AuditSnapshotReader {
 
     /**
-     * Get snapshot view - latest state per changeUnit (DEFAULT behavior)
+     * Get snapshot view - latest state per change (DEFAULT behavior)
      *
-     * @return List of latest audit entries per changeUnit
+     * @return List of latest audit entries per change
      */
     List<AuditEntry> getAuditSnapshot();
 

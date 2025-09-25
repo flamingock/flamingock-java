@@ -24,8 +24,8 @@ import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import java.util.List;
 
 /**
- * This changeUnit imports the Mongock data in the database to Flamingock(local or cloud).
- * Although we could have just one ChangeUnit for importing
+ * This change imports the Mongock data in the database to Flamingock(local or cloud).
+ * Although we could have just one Change for importing
  * - Mongock            to Flamingock local
  * - Mongock            to Flamingock CLoud
  * - Flamingock local   to Flamingock cloud
@@ -57,7 +57,7 @@ public final class ImporterExecutor {
         if(importConfiguration.isFailOnEmptyOrigin() &&  auditEntries.isEmpty()) {
             throw new FlamingockException(
                     String.format("No audit entries found when importing from '%s'. " +
-                                    "Set 'failOnEmptyOrigin=false' in the import changeUnit to disable this validation.",
+                                    "Set 'failOnEmptyOrigin=false' in the import change to disable this validation.",
                             importConfiguration.getOrigin())
             );
         }

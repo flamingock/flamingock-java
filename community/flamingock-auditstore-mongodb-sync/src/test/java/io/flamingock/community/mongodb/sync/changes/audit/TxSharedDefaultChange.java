@@ -19,7 +19,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
 /**
- * Change unit that produces TX_SHARED txStrategy via default behavior.
+ * Change that produces TX_SHARED txStrategy via default behavior.
  * Used for testing audit persistence of TX_SHARED transaction type.
  */
 @TargetSystem(id = "mongodb")
