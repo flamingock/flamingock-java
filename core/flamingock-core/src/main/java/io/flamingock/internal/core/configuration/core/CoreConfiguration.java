@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.flamingock.internal.util.Constants.DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
-import static io.flamingock.internal.util.Constants.DEFAULT_MIGRATION_AUTHOR;
 import static io.flamingock.internal.util.Constants.DEFAULT_QUIT_TRYING_AFTER_MILLIS;
 import static io.flamingock.internal.util.Constants.DEFAULT_TRY_FREQUENCY_MILLIS;
 
@@ -32,7 +31,7 @@ public class CoreConfiguration implements CoreConfigurable {
 
 
     /**
-     * If false, will disable Mongock. Default true
+     * If false, will disable Flamingock. Default true
      */
     private boolean enabled = true;
 
@@ -42,17 +41,9 @@ public class CoreConfiguration implements CoreConfigurable {
     private String serviceIdentifier = null;
 
     /**
-     * Map for custom data you want to attach to your migration
+     * Map for custom data you want to attach to your change
      */
     private Map<String, Object> metadata = new HashMap<>();
-
-    /**
-     * From version 5, author is not a mandatory field, but still needed for backward compatibility. This is why Mongock
-     * has provided this field, so you can set the author once and forget about it.
-     * <p>
-     * Default value: default_author
-     */
-    private String defaultAuthor = DEFAULT_MIGRATION_AUTHOR;
 
     public LockConfiguration getLockConfiguration() {
         return lockConfiguration;
@@ -157,7 +148,7 @@ public class CoreConfiguration implements CoreConfigurable {
         private long lockAcquiredForMillis = DEFAULT_LOCK_ACQUIRED_FOR_MILLIS;
 
         /**
-         * The time after what Mongock will quit trying to acquire the lock in case it's acquired by another process.
+         * The time after what Flamingock will quit trying to acquire the lock in case it's acquired by another process.
          * Default 3 minutes.
          * Minimum 0, which means won't wait whatsoever.
          */
@@ -165,14 +156,14 @@ public class CoreConfiguration implements CoreConfigurable {
 
         /**
          * In case the lock is held by another process, it indicates the frequency to try to acquire it.
-         * Regardless of this value, the longest Mongock will wait if until the current lock's expiration.
+         * Regardless of this value, the longest Flamingock will wait if until the current lock's expiration.
          * Default 1 second.
          * Minimum 500 millis.
          */
         private long lockTryFrequencyMillis = DEFAULT_TRY_FREQUENCY_MILLIS;
 
         /**
-         * Flamingock will throw MongockException if lock can not be obtained. Default true
+         * Flamingock will throw FlamingockException if lock can not be obtained. Default true
          */
         private boolean throwExceptionIfCannotObtainLock = true;
 

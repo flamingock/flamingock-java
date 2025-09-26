@@ -37,7 +37,7 @@ public class LockGuardProxyFactory implements GuardProxyFactory {
 
     static {
         ProxyFactory.nameGenerator = new ProxyFactory.UniqueName() {
-            private final String sep = Constants.PROXY_MONGOCK_PREFIX + Integer.toHexString(this.hashCode() & 0xfff) + "_";
+            private final String sep = Constants.PROXY_FLAMINGOCK_PREFIX + Integer.toHexString(this.hashCode() & 0xfff) + "_";
             private int counter = 0;
 
             @Override

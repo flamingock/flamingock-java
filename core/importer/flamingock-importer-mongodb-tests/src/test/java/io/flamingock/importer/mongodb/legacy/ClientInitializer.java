@@ -19,7 +19,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.mongock.api.annotations.BeforeExecution;
 
-@Change(id = "client-initializer", order = "1", author = "mongock")
+@Change(id = "client-initializer", order = "1", author = "flamingock-team")
 public class ClientInitializer {
 
     @BeforeExecution

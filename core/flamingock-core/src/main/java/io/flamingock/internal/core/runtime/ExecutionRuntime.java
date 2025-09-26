@@ -176,9 +176,9 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
 
     private static String getParameterType(Object obj) {
         String className = obj != null ? obj.getClass().getName() : "{null argument}";
-        int mongockProxyPrefixIndex = className.indexOf(Constants.PROXY_MONGOCK_PREFIX);
-        if (mongockProxyPrefixIndex > 0) {
-            return className.substring(0, mongockProxyPrefixIndex);
+        int flamingockProxyPrefixIndex = className.indexOf(Constants.PROXY_FLAMINGOCK_PREFIX);
+        if (flamingockProxyPrefixIndex > 0) {
+            return className.substring(0, flamingockProxyPrefixIndex);
         } else {
             return className;
         }
