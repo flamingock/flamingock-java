@@ -27,6 +27,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
+
 /**
  * MongoDB implementation of LockStorage for real database testing.
  * Only depends on MongoDB client/database and core Flamingock classes.
@@ -34,19 +36,14 @@ import java.util.Map;
  */
 public class MongoDBSyncLockStorage implements LockStorage {
 
-    private static final String LOCK_COLLECTION_NAME = "flamingockLocks";
-    private static final String METADATA_COLLECTION_NAME = "flamingockLockMetadata";
-
-    private final MongoDatabase database;
     private final MongoCollection<Document> lockCollection;
     private final MongoCollection<Document> metadataCollection;
 
     public MongoDBSyncLockStorage(MongoDatabase database) {
-        this(database, LOCK_COLLECTION_NAME);
+        this(database, DEFAULT_LOCK_STORE_NAME);
     }
 
     public MongoDBSyncLockStorage(MongoDatabase database, String lockCollectionName) {
-        this.database = database;
         this.lockCollection = database.getCollection(lockCollectionName);
         this.metadataCollection = database.getCollection(lockCollectionName + "Metadata");
     }
