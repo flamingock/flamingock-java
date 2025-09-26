@@ -137,7 +137,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         Recovery recoveryAnnotation = typeElement.getAnnotation(Recovery.class);
         if(changeAnnotation != null) {
             setId(changeAnnotation.id());
-            setOrder(changeAnnotation.order());
+            setOrder(null);//TODO replace with order from class
             setAuthor(changeAnnotation.author());
             setSourceClassPath(typeElement.getQualifiedName().toString());
             setExecutionMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));

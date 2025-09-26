@@ -15,8 +15,8 @@
  */
 package io.flamingock.core.cloud;
 
-import io.flamingock.core.cloud.changes.CloudChange1;
-import io.flamingock.core.cloud.changes.CloudChange2;
+import io.flamingock.core.cloud.changes._001__CloudChange1;
+import io.flamingock.core.cloud.changes._002__CloudChange2;
 import io.flamingock.core.cloud.utils.TestCloudTargetSystem;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
@@ -74,7 +74,7 @@ public class CloudTransactionTest {
                 AuditEntryMatcher(
                 "create-persons-table-from-template",
                 AuditEntryRequest.Status.APPLIED,
-                CloudChange1.class.getName(),
+                _001__CloudChange1.class.getName(),
                 "execution"
         ));
         auditEntries.add(new
@@ -82,7 +82,7 @@ public class CloudTransactionTest {
                 AuditEntryMatcher(
                 "create-persons-table-from-template-2",
                 AuditEntryRequest.Status.APPLIED,
-                CloudChange2.class.getName(),
+                _002__CloudChange2.class.getName(),
                 "execution"
         ));
     }

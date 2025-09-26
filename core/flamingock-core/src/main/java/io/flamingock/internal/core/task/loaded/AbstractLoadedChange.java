@@ -42,11 +42,12 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Change");
     /**
      * Regex pattern for validating the order field in Changes.
-     * The pattern matches strings like "001", "999", "0010", "9999".
-     * It requires at least 3 digits with leading zeros.
+     * The pattern requires at least 3 alphanumeric characters (a-z, A-Z, 0-9) anywhere in the string.
+     * Can contain any other characters (underscores, dots, hyphens, etc.) along with the alphanumeric chars.
+     * Examples: "abc", "123", "V1_2_3", "001abc", "release_1_2_beta", "20250925_01_migrationWithUnderscores"
      * Empty is not allowed
      */
-    private final static String ORDER_REG_EXP = "^\\d{3,}$";
+    private final static String ORDER_REG_EXP = "^(?=(?:[^a-zA-Z0-9]*[a-zA-Z0-9]){3}).+$";
     private final static Pattern ORDER_PATTERN = Pattern.compile(ORDER_REG_EXP);
     private final Set<ChangeCategory> categories;
 

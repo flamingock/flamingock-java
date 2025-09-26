@@ -145,7 +145,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
         try {
 
-            String order = LoadedChangeUtil.getMatchedOrderFromClassName(id, orderInContent, changeClass);
+            String order = ChangeOrderUtil.getMatchedOrderFromClassName(id, orderInContent, changeClass);
             return new CodeLoadedChange(
                     isBeforeExecution ? StringUtil.getBeforeExecutionId(id) : id,
                     order,
@@ -164,7 +164,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
     private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, Change annotation) {
         setId(annotation.id());
-        setOrderInContent(annotation.order());
+        setOrderInContent(null);//TODO replace with order from class
         setAuthor(annotation.author());
         setChangeClass(sourceClass.getName());
         setTransactional(annotation.transactional());

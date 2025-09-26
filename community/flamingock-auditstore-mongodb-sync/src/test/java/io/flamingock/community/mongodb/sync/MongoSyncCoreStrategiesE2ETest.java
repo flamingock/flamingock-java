@@ -20,10 +20,10 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
-import io.flamingock.community.mongodb.sync.changes._001_create_client_collection_happy;
-import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_non_transactional;
-import io.flamingock.community.mongodb.sync.changes._002_insert_federico_happy_transactional;
-import io.flamingock.community.mongodb.sync.changes._003_insert_jorge_failed_non_transactional_rollback;
+import io.flamingock.community.mongodb.sync.changes._001__create_client_collection_happy;
+import io.flamingock.community.mongodb.sync.changes._002__insert_federico_happy_non_transactional;
+import io.flamingock.community.mongodb.sync.changes._002__insert_federico_happy_transactional;
+import io.flamingock.community.mongodb.sync.changes._003__insert_jorge_failed_non_transactional_rollback;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.community.mongodb.sync.driver.MongoDBSyncAuditStore;
@@ -93,8 +93,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
         // Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList()),
-                        new CodeChangeTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.emptyList())
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
@@ -120,8 +120,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
         // Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList()),
-                        new CodeChangeTestDefinition(_002_insert_federico_happy_transactional.class, Collections.emptyList())
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
@@ -147,8 +147,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
         // Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList()),
-                        new CodeChangeTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.emptyList())
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
@@ -174,8 +174,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
         // Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList()),
-                        new CodeChangeTestDefinition(_003_insert_jorge_failed_non_transactional_rollback.class, Collections.emptyList())
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList()),
+                        new CodeChangeTestDefinition(_003__insert_jorge_failed_non_transactional_rollback.class, Collections.emptyList())
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
@@ -204,7 +204,7 @@ class MongoDBSyncCoreStrategiesE2ETest {
         // Given-When-Then - First execution
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList())
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
                         .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
@@ -225,7 +225,7 @@ class MongoDBSyncCoreStrategiesE2ETest {
 
         AuditTestSupport.withTestKit(secondRunKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.emptyList())
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList())
                 )
                 .WHEN(() -> secondRunKit.createBuilder()
                         .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))

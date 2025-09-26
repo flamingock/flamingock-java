@@ -129,22 +129,22 @@ class SpringProfileFilterTemplateTaskTest {
 
     public static abstract class TemplateSimulate implements ChangeTemplate<Void, Object, Object> {}
 
-    @Change(id = "not-annotated", order = "000", author = "aperezdieppa")
-    public static class NotAnnotated {
+    @Change(id = "not-annotated", author = "aperezdieppa")
+    public static class _000__NotAnnotated {
     }
 
     @Profile("P1")
-    @Change(id = "annotated-p1", order = "001", author = "aperezdieppa")
-    public static class P1 {
+    @Change(id = "annotated-p1", author = "aperezdieppa")
+    public static class _001__P1 {
     }
 
     @Profile("!P1")
-    @Change(id = "annotated-!-p1", order = "002", author = "aperezdieppa")
-    public static class NotP1 {
+    @Change(id = "annotated-!-p1", author = "aperezdieppa")
+    public static class _002__NotP1 {
     }
 
     @Profile({"P1", "P2"})
-    @Change(id = "annotated-p1-p2", order = "003", author = "aperezdieppa")
-    public static class P1AndP2 {
+    @Change(id = "annotated-p1-p2", author = "aperezdieppa")
+    public static class _003__P1AndP2 {
     }
 }

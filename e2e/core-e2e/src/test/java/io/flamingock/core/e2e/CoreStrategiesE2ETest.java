@@ -17,12 +17,12 @@ package io.flamingock.core.e2e;
 
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.core.e2e.changes.FailingTransactionalChange;
-import io.flamingock.core.e2e.changes.MultiTest1NonTransactionalChange;
-import io.flamingock.core.e2e.changes.MultiTest2TransactionalChange;
-import io.flamingock.core.e2e.changes.SecondRunNonTransactionalChange;
-import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
-import io.flamingock.core.e2e.changes.SimpleTransactionalChange;
+import io.flamingock.core.e2e.changes._006__FailingTransactionalChange;
+import io.flamingock.core.e2e.changes._003__MultiTest1NonTransactionalChange;
+import io.flamingock.core.e2e.changes._004__MultiTest2TransactionalChange;
+import io.flamingock.core.e2e.changes._005__SecondRunNonTransactionalChange;
+import io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange;
+import io.flamingock.core.e2e.changes._002__SimpleTransactionalChange;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.processor.util.Deserializer;
@@ -58,7 +58,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -92,7 +92,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_002__SimpleTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -123,8 +123,8 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(MultiTest1NonTransactionalChange.class, Collections.emptyList()),
-                            new CodeChangeTestDefinition(MultiTest2TransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_003__MultiTest1NonTransactionalChange.class, Collections.emptyList()),
+                            new CodeChangeTestDefinition(_004__MultiTest2TransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -155,7 +155,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(FailingTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_006__FailingTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -189,7 +189,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SecondRunNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_005__SecondRunNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 

@@ -17,10 +17,10 @@ package io.flamingock.targetsystem.mysql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.flamingock.targetsystem.mysql.changes.happypath.HappyCreateClientsTableChange;
-import io.flamingock.targetsystem.mysql.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.targetsystem.mysql.changes.unhappypath.UnhappyCreateClientsTableChange;
-import io.flamingock.targetsystem.mysql.changes.unhappypath.UnhappyInsertClientsChange;
+import io.flamingock.targetsystem.mysql.changes.happypath._001__HappyCreateClientsTableChange;
+import io.flamingock.targetsystem.mysql.changes.happypath._002__HappyInsertClientsChange;
+import io.flamingock.targetsystem.mysql.changes.unhappypath._001__UnhappyCreateClientsTableChange;
+import io.flamingock.targetsystem.mysql.changes.unhappypath._002__UnhappyInsertClientsChange;
 import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
@@ -134,8 +134,8 @@ public class SqlTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-table", HappyCreateClientsTableChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-table", _001__HappyCreateClientsTableChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -153,8 +153,8 @@ public class SqlTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
+                    new Trio<>(_001__HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
             ));
 
             SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts", dataSource);
@@ -181,8 +181,8 @@ public class SqlTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-table", UnhappyCreateClientsTableChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", UnhappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-table", _001__UnhappyCreateClientsTableChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -201,8 +201,8 @@ public class SqlTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(UnhappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
-                    new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
+                    new Trio<>(_001__UnhappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
+                    new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
             ));
             SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts", dataSource);
 
@@ -230,8 +230,8 @@ public class SqlTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-table", HappyCreateClientsTableChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-table", _001__HappyCreateClientsTableChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -250,8 +250,8 @@ public class SqlTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
+                    new Trio<>(_001__HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
             ));
             SqlTargetSystem targetSystem = new SqlTargetSystem("mysql-ts", dataSource);
 

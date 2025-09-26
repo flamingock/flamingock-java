@@ -117,7 +117,7 @@ class TemplateLoadedTaskBuilderTest {
 
             builder.setId("test-id")
                     .setOrderInContent(null)
-                    .setFileName("_002_test-file.yml")
+                    .setFileName("_002__test-file.yml")
                     .setTemplateName("test-template")
                     .setRunAlways(false)
                     .setTransactional(true)
@@ -133,7 +133,7 @@ class TemplateLoadedTaskBuilderTest {
             // Then
             assertEquals("002", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
-            assertEquals("_002_test-file.yml", result.getFileName());
+            assertEquals("_002__test-file.yml", result.getFileName());
         }
     }
 
@@ -147,7 +147,7 @@ class TemplateLoadedTaskBuilderTest {
 
             builder.setId("test-id")
                     .setOrderInContent("003")
-                    .setFileName("_003_test-file.yml")
+                    .setFileName("_003__test-file.yml")
                     .setTemplateName("test-template")
                     .setRunAlways(false);
             builder.setProfiles(Arrays.asList("test"));
@@ -163,7 +163,7 @@ class TemplateLoadedTaskBuilderTest {
             // Then
             assertEquals("003", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
-            assertEquals("_003_test-file.yml", result.getFileName());
+            assertEquals("_003__test-file.yml", result.getFileName());
         }
     }
 
@@ -177,7 +177,7 @@ class TemplateLoadedTaskBuilderTest {
 
             builder.setId("test-id")
                     .setOrderInContent("001")
-                    .setFileName("_002_test-file.yml")
+                    .setFileName("_002__test-file.yml")
                     .setTemplateName("test-template")
                     .setRunAlways(false);
             builder.setProfiles(Collections.singletonList("test"));
@@ -219,7 +219,7 @@ class TemplateLoadedTaskBuilderTest {
             // When & Then
             FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
-            assertEquals("Change[test-id] Order is required: order must be present in the template order field or in the fileName(e.g. _0001_test-id.yaml). If present in both, they must have the same value.",
+            assertEquals("Change[test-id] Order is required: order must be present in the template order field or in the fileName(e.g. _0001__test-id.yaml). If present in both, they must have the same value.",
                     exception.getMessage());
         }
     }
@@ -234,7 +234,7 @@ class TemplateLoadedTaskBuilderTest {
 
             builder.setId("test-id")
                     .setOrderInContent("")
-                    .setFileName("_004_test-file.yml")
+                    .setFileName("_004__test-file.yml")
                     .setTemplateName("test-template")
                     .setRunAlways(false);
             builder.setProfiles(Arrays.asList("test"));

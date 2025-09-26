@@ -106,7 +106,7 @@ public class PipelineTest {
 
         CodePreviewChange taskWithInvalidOrder1 = new CodePreviewChange(
                 "task-with-invalid-order-1",
-                "12", // Too short (only 2 digits)
+                "12", // Too short (only 2 alphanumeric characters)
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -120,8 +120,8 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault());
 
         CodePreviewChange taskWithInvalidOrder2 = new CodePreviewChange(
-                "task-with-invalid-order-3",
-                "abc", // Non-numeric
+                "task-with-invalid-order-2",
+                "a_", // Only 1 alphanumeric character
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -160,7 +160,7 @@ public class PipelineTest {
 
         CodePreviewChange taskWithValidOrder1 = new CodePreviewChange(
                 "task-with-valid-order-1",
-                "001", // Valid 3-digit format
+                "001", // Valid 3 alphanumeric characters
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -175,7 +175,7 @@ public class PipelineTest {
 
         CodePreviewChange taskWithValidOrder2 = new CodePreviewChange(
                 "task-with-valid-order-2",
-                "999", // Valid 3-digit format
+                "abc", // Valid 3 alphanumeric characters
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -190,7 +190,7 @@ public class PipelineTest {
 
         CodePreviewChange taskWithValidOrder3 = new CodePreviewChange(
                 "task-with-valid-order-3",
-                "0010", // Valid 4-digit format
+                "V1_2_3", // Valid with underscores and alphanumeric chars
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -205,7 +205,7 @@ public class PipelineTest {
 
         CodePreviewChange taskWithValidOrder4 = new CodePreviewChange(
                 "task-with-valid-order-4",
-                "9999", // Valid 4-digit format
+                "20250925_01_migration", // Valid complex format
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -242,7 +242,7 @@ public class PipelineTest {
 
         CodePreviewChange task1 = new CodePreviewChange(
                 "duplicate-id",
-                "001",
+                "001", // Valid: 3 alphanumeric characters
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -257,7 +257,7 @@ public class PipelineTest {
 
         CodePreviewChange task2 = new CodePreviewChange(
                 "unique-id",
-                "002",
+                "002", // Valid: 3 alphanumeric characters
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,
@@ -272,7 +272,7 @@ public class PipelineTest {
 
         CodePreviewChange task3 = new CodePreviewChange(
                 "duplicate-id",
-                "003",
+                "003", // Valid: 3 alphanumeric characters
                 "test-author",
                 PipelineTest.class.getName(),
                 executionMethod,

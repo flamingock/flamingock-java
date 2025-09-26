@@ -32,22 +32,22 @@ class CouchbaseAuditMapperTest {
     private final CouchbaseAuditMapper mapper = new CouchbaseAuditMapper();
 
     // Test classes for different recovery strategies
-    @Change(id = "test-manual", order = "001", author = "aperezdieppa")
+    @Change(id = "test-manual", author = "aperezdieppa")
     @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
-    static class TestManualInterventionChange {
+    static class _001__TestManualInterventionChange {
         @Apply
         public void execute() {}
     }
 
-    @Change(id = "test-always-retry", order = "001", author = "aperezdieppa")
+    @Change(id = "test-always-retry", author = "aperezdieppa")
     @Recovery(strategy = RecoveryStrategy.ALWAYS_RETRY)
-    static class TestAlwaysRetryChange {
+    static class _001__TestAlwaysRetryChange {
         @Apply
         public void execute() {}
     }
 
-    @Change(id = "test-default", order = "001", author = "aperezdieppa")
-    static class TestDefaultRecoveryChange {
+    @Change(id = "test-default", author = "aperezdieppa")
+    static class _001__TestDefaultRecoveryChange {
         @Apply
         public void execute() {}
     }
@@ -55,7 +55,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldSerializeAndDeserializeTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChange.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, _001__TestManualInterventionChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -68,7 +68,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChange.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, _001__TestDefaultRecoveryChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -82,7 +82,7 @@ class CouchbaseAuditMapperTest {
     void shouldSerializeAndDeserializeTargetSystemId() {
         // Given
         String expectedTargetSystemId = "custom-target-system";
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, expectedTargetSystemId, TestManualInterventionChange.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, expectedTargetSystemId, _001__TestManualInterventionChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -95,7 +95,7 @@ class CouchbaseAuditMapperTest {
     @Test
     void shouldHandleNullTargetSystemId() {
         // Given
-        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, null, TestDefaultRecoveryChange.class);
+        AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.NON_TX, null, _001__TestDefaultRecoveryChange.class);
 
         // When
         JsonObject document = mapper.toDocument(original);
@@ -109,7 +109,7 @@ class CouchbaseAuditMapperTest {
     void shouldHandleAllTxTypes() {
         for (AuditTxType txStrategy : AuditTxType.values()) {
             // Given
-            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txStrategy, TestManualInterventionChange.class);
+            AuditEntry original = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, txStrategy, _001__TestManualInterventionChange.class);
 
             // When
             JsonObject document = mapper.toDocument(original);

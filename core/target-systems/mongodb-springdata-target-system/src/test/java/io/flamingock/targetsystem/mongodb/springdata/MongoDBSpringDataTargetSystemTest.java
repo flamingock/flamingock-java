@@ -21,10 +21,10 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.targets.TargetSystem;
-import io.flamingock.targetsystem.mongodb.springdata.changes.happypath.HappyCreateClientsCollectionChange;
-import io.flamingock.targetsystem.mongodb.springdata.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.targetsystem.mongodb.springdata.changes.unhappypath.UnhappyCreateClientsCollectionChange;
-import io.flamingock.targetsystem.mongodb.springdata.changes.unhappypath.UnhappyInsertClientsChange;
+import io.flamingock.targetsystem.mongodb.springdata.changes.happypath._001__HappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.mongodb.springdata.changes.happypath._002__HappyInsertClientsChange;
+import io.flamingock.targetsystem.mongodb.springdata.changes.unhappypath._001__UnhappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.mongodb.springdata.changes.unhappypath._002__UnhappyInsertClientsChange;
 import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
@@ -138,8 +138,8 @@ public class MongoDBSpringDataTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -158,8 +158,8 @@ public class MongoDBSpringDataTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
+                    new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
 
 
@@ -189,8 +189,8 @@ public class MongoDBSpringDataTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", UnhappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", UnhappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__UnhappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -211,8 +211,8 @@ public class MongoDBSpringDataTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(UnhappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
-                    new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
+                    new Trio<>(_001__UnhappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
 
             TargetSystem mongoDBTargetSystem = new MongoDBSpringDataTargetSystem("mongodb-ts", mongoTemplate).addDependency(testDatabase);
@@ -246,8 +246,8 @@ public class MongoDBSpringDataTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -272,8 +272,8 @@ public class MongoDBSpringDataTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
+                    new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
             ));
             TargetSystem mongoDBTargetSystem = new MongoDBSpringDataTargetSystem("mongodb-ts", mongoTemplate).addDependency(testDatabase);
 

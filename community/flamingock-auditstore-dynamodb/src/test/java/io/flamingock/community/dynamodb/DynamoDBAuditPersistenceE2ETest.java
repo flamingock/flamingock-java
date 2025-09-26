@@ -94,7 +94,7 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class))
+                        new CodeChangeTestDefinition(_001__NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -110,7 +110,7 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withTaskId(changeId)
                                 .withState(AuditEntry.Status.STARTED)
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("dynamodb")
@@ -119,7 +119,7 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withTaskId(changeId)
                                 .withState(AuditEntry.Status.APPLIED)
                                 .withType(AuditEntry.ExecutionType.EXECUTION)
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("dynamodb")
@@ -135,8 +135,8 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class))
+                        new CodeChangeTestDefinition(_001__NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_003__NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -152,24 +152,24 @@ class DynamoDBAuditPersistenceE2ETest {
                 .THEN_VerifyAuditSequenceStrict(
                         // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
                         STARTED("non-tx-transactional-false")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("dynamodb"),
                         APPLIED("non-tx-transactional-false")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("dynamodb"),
 
                         // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
                         STARTED("non-tx-target-system")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._003__NonTxTargetSystemChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system"),
                         APPLIED("non-tx-target-system")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._003__NonTxTargetSystemChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system")
@@ -184,8 +184,8 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(NonTxTargetSystemChangeNoDependencies.class, Collections.singletonList(DynamoDbClient.class))
+                        new CodeChangeTestDefinition(_001__NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_002__NonTxTargetSystemChangeNoDependencies.class, Collections.singletonList(DynamoDbClient.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -200,24 +200,24 @@ class DynamoDBAuditPersistenceE2ETest {
                 .THEN_VerifyAuditSequenceStrict(
                         // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
                         STARTED("non-tx-transactional-false")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("dynamodb"),
                         APPLIED("non-tx-transactional-false")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTransactionalFalseChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("dynamodb"),
 
                         // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
                         STARTED("non-tx-target-system")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChangeNoDependencies")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._002__NonTxTargetSystemChangeNoDependencies")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system"),
                         APPLIED("non-tx-target-system")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.NonTxTargetSystemChangeNoDependencies")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._002__NonTxTargetSystemChangeNoDependencies")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system")
@@ -232,7 +232,7 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                        new CodeChangeTestDefinition(_002__TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -248,12 +248,12 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-shared-default")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._002__TxSharedDefaultChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("dynamodb"),
                         APPLIED("tx-shared-default")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSharedDefaultChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._002__TxSharedDefaultChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("dynamodb")
@@ -269,7 +269,7 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                        new CodeChangeTestDefinition(_005__TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -283,12 +283,12 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-separate-no-marker")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._005__TxSeparateAndSameMongoClientChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system"),
                         APPLIED("tx-separate-no-marker")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._005__TxSeparateAndSameMongoClientChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system")
@@ -306,7 +306,7 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                        new CodeChangeTestDefinition(_005__TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -320,12 +320,12 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-separate-no-marker")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._005__TxSeparateAndSameMongoClientChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system"),
                         APPLIED("tx-separate-no-marker")
-                                .withClassName("io.flamingock.community.dynamodb.changes.audit.TxSeparateAndSameMongoClientChange")
+                                .withClassName("io.flamingock.community.dynamodb.changes.audit._005__TxSeparateAndSameMongoClientChange")
                                 .withMethodName("execution")
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system")
@@ -340,9 +340,9 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                        new CodeChangeTestDefinition(NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                        new CodeChangeTestDefinition(_002__TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeTestDefinition(_003__NonTxTargetSystemChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_005__TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
@@ -380,9 +380,9 @@ class DynamoDBAuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
 
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                        new CodeChangeTestDefinition(TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
+                        new CodeChangeTestDefinition(_001__NonTxTransactionalFalseChange.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_002__TxSharedDefaultChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeTestDefinition(_005__TxSeparateAndSameMongoClientChange.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class))
                 )
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {

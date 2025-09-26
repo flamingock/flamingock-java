@@ -18,10 +18,10 @@ package io.flamingock.targetsystem.dynamodb;
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.flamingock.targetsystem.dynamodb.changes.common.UserEntity;
-import io.flamingock.targetsystem.dynamodb.changes.happypath.HappyCreateTableClientsChange;
-import io.flamingock.targetsystem.dynamodb.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.targetsystem.dynamodb.changes.unhappypath.UnhappyCreateTableClientsChange;
-import io.flamingock.targetsystem.dynamodb.changes.unhappypath.UnhappyInsertionClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.happypath._001__HappyCreateTableClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.happypath._002__HappyInsertClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.unhappypath._001__UnhappyCreateTableClientsChange;
+import io.flamingock.targetsystem.dynamodb.changes.unhappypath._002__UnhappyInsertionClientsChange;
 import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
@@ -140,8 +140,8 @@ public class DynamoDBCloudTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-table-clients", HappyCreateTableClientsChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -163,8 +163,8 @@ public class DynamoDBCloudTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
+                    new Trio<>(_001__HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             flamingockBuilder
                     .addTargetSystem(dynamoTargetSystem)
@@ -198,8 +198,8 @@ public class DynamoDBCloudTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("unhappy-create-table-clients", UnhappyCreateTableClientsChange.class.getName(), "execution", false)
-                        .addTask("unhappy-insert-clients", UnhappyInsertionClientsChange.class.getName(), "execution", true)
+                        .addTask("unhappy-create-table-clients", _001__UnhappyCreateTableClientsChange.class.getName(), "execution", false)
+                        .addTask("unhappy-insert-clients", _002__UnhappyInsertionClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -223,8 +223,8 @@ public class DynamoDBCloudTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(UnhappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(UnhappyInsertionClientsChange.class, Collections.singletonList(DynamoDbClient.class))
+                    new Trio<>(_001__UnhappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002__UnhappyInsertionClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             Runner runner = flamingockBuilder
                     .addTargetSystem(dynamoTargetSystem)
@@ -258,8 +258,8 @@ public class DynamoDBCloudTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-table-clients", HappyCreateTableClientsChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -283,8 +283,8 @@ public class DynamoDBCloudTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
+                    new Trio<>(_001__HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
             ));
             flamingockBuilder
                     .addTargetSystem(dynamoTargetSystem)

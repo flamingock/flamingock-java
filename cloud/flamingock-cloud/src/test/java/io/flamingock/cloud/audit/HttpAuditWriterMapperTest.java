@@ -30,15 +30,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class HttpAuditWriterMapperTest {
 
     // Test classes for different recovery strategies
-    @Change(id = "test-manual", order = "001", author = "aperezdieppa")
+    @Change(id = "test-manual", author = "aperezdieppa")
     @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
-    static class TestManualInterventionChange {
+    static class _001__TestManualInterventionChange {
         @Apply
         public void execute() {}
     }
 
-    @Change(id = "test-default", order = "001", author = "aperezdieppa")
-    static class TestDefaultRecoveryChange {
+    @Change(id = "test-default", author = "aperezdieppa")
+    static class _001__TestDefaultRecoveryChange {
         @Apply
         public void execute() {}
     }
@@ -46,7 +46,7 @@ class HttpAuditWriterMapperTest {
     @Test
     void shouldIncludeTxTypeInRequest() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, TestManualInterventionChange.class);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, _001__TestManualInterventionChange.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -77,7 +77,7 @@ class HttpAuditWriterMapperTest {
     @Test
     void shouldHandleNullTxType() {
         // Given
-        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, TestDefaultRecoveryChange.class);
+        AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, _001__TestDefaultRecoveryChange.class);
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(

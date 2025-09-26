@@ -24,6 +24,7 @@ import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.core.task.loaded.ChangeOrderUtil;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import org.jetbrains.annotations.NotNull;
@@ -37,11 +38,14 @@ import java.util.stream.Collectors;
 
 public class PipelineTestHelper {
 
+
     private static final Function<Class<?>, ChangeInfo> infoExtractor = c -> {
         Change ann = c.getAnnotation(Change.class);
         TargetSystem targetSystemAnn = c.getAnnotation(TargetSystem.class);
         String targetSystemId = targetSystemAnn != null ? targetSystemAnn.id() : null;
-        return new ChangeInfo(ann.id(), ann.order(), ann.author(), targetSystemId, ann.transactional());
+        String changeId = ann.id();
+        String order = ChangeOrderUtil.getMatchedOrderFromClassName(changeId, null, c.getName());
+        return new ChangeInfo(changeId, order, ann.author(), targetSystemId, ann.transactional());
     };
 
     @NotNull

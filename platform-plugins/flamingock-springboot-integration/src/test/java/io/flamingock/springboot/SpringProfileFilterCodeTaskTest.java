@@ -30,83 +30,83 @@ class SpringProfileFilterCodeTaskTest {
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[] and taskProfiles=[]")
     void trueIfActiveProfilesEmptyAndNotAnnotated() {
-        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChange(NotAnnotated.class)));
+        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChange(_000__NotAnnotated.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1]")
     void trueIfActiveProfilesAndAnnotatedWhenMatched() {
-        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(P1.class)));
+        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(_001__P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1,P2] and taskProfiles=[P1]")
     void trueIfActiveProfilesContainAnnotatedProfile() {
-        assertTrue(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChange(P1.class)));
+        assertTrue(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChange(_001__P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P1] and taskProfiles=[P1,P2]")
     void trueIfAnnotatedProfilesContainActiveProfile() {
-        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(P1AndP2.class)));
+        assertTrue(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(_003__P1AndP2.class)));
     }
 
     @Test
     @DisplayName("SHOULD return true WHEN activeProfiles=[P2] and taskProfiles=[!P1]")
     void trueIfAnnotatedProfileIsNegativeP1AndActiveProfileIsP2() {
-        assertTrue(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(NotP1.class)));
+        assertTrue(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(_002__NotP1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[!P1]")
     void trueIfActiveProfileEmptyAndTaskProfileNegativeP1() {
-        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChange(NotP1.class)));
+        assertTrue(new SpringbootProfileFilter().filter(getCodeLoadedChange(_002__NotP1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[] and taskProfiles=[P1]")
     void falseIfActiveProfileEmptyAndTaskProfileP1() {
-        assertFalse(new SpringbootProfileFilter().filter(getCodeLoadedChange(P1.class)));
+        assertFalse(new SpringbootProfileFilter().filter(getCodeLoadedChange(_001__P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P2] and taskProfiles=[P1]")
     void falseIfActiveProfileAndTaskProfileDontMatch() {
-        assertFalse(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(P1.class)));
+        assertFalse(new SpringbootProfileFilter("P2").filter(getCodeLoadedChange(_001__P1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1AndTaskProfileNegativeP1() {
-        assertFalse(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(NotP1.class)));
+        assertFalse(new SpringbootProfileFilter("P1").filter(getCodeLoadedChange(_002__NotP1.class)));
     }
 
     @Test
     @DisplayName("SHOULD return false WHEN activeProfiles=[P1,P2] and taskProfiles=[!P1]")
     void falseIfActiveProfileIsP1P2AndTaskProfileNegativeP1() {
-        assertFalse(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChange(NotP1.class)));
+        assertFalse(new SpringbootProfileFilter("P1", "P2").filter(getCodeLoadedChange(_002__NotP1.class)));
     }
 
     private CodeLoadedChange getCodeLoadedChange(Class<?> sourceClass) {
         return LoadedTaskBuilder.getCodeBuilderInstance(sourceClass).build();
     }
 
-    @Change(id="not-annotated", order = "000", author = "aperezdieppa")
-    public static class NotAnnotated {
+    @Change(id="not-annotated", author = "aperezdieppa")
+    public static class _000__NotAnnotated {
     }
 
     @Profile("P1")
-    @Change(id="annotated-p1", order = "001", author = "aperezdieppa")
-    public static class P1 {
+    @Change(id="annotated-p1", author = "aperezdieppa")
+    public static class _001__P1 {
     }
 
     @Profile("!P1")
-    @Change(id="annotated-!-p1", order = "002", author = "aperezdieppa")
-    public static class NotP1 {
+    @Change(id="annotated-!-p1", author = "aperezdieppa")
+    public static class _002__NotP1 {
     }
 
     @Profile({"P1", "P2"})
-    @Change(id="annotated-p1-p2", order = "003", author = "aperezdieppa")
-    public static class P1AndP2 {
+    @Change(id="annotated-p1-p2", author = "aperezdieppa")
+    public static class _003__P1AndP2 {
     }
 }

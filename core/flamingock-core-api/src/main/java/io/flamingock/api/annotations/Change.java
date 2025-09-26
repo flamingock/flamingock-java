@@ -51,15 +51,15 @@ public @interface Change {
      */
     String id();
 
-    /**
-     * Execution order for this change. Changes are applied in lexicographical order.
-     * Minimum 4 characters required. Recommended format: date-based with index (e.g., "2024-05-19-001").
-     * This format provides optimal sorting, clarity, and sequential indexing within the same day.
-     * Alternative formats like zero-padded numbers ("0001", "0002") are also supported.
-     *
-     * @return the execution order string
-     */
-    String order() default "NULL_VALUE";
+//    /**
+//     * Execution order for this change. Changes are applied in lexicographical order.
+//     * Minimum 4 characters required. Recommended format: date-based with index (e.g., "2024-05-19-001").
+//     * This format provides optimal sorting, clarity, and sequential indexing within the same day.
+//     * Alternative formats like zero-padded numbers ("0001", "0002") are also supported.
+//     *
+//     * @return the execution order string
+//     */
+//    String order() default "NULL_VALUE";
 
     /**
      * Author of this change. Required for audit trail and accountability.

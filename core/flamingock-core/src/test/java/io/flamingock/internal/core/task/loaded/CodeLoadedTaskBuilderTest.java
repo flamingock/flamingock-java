@@ -58,7 +58,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrderInContent(null)
-                .setChangeClass("com.mypackage._002_MyClass")
+                .setChangeClass("com.mypackage._002__MyClass")
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -76,7 +76,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrderInContent("002")
-                .setChangeClass("java.lang._002_Test") // This will extract "002" from class name
+                .setChangeClass("java.lang._002__Test") // This will extract "002" from class name
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -93,7 +93,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrderInContent("001")
-                .setChangeClass("com.mypackage._002_MyClass")
+                .setChangeClass("com.mypackage._002__MyClass")
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -119,7 +119,7 @@ class CodeLoadedTaskBuilderTest {
         // When & Then
         FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
-        assertEquals("Change[test-id] Order is required: order must be present in the @Change annotation or in the className(e.g. _0001_test-id.java). If present in both, they must have the same value.",
+        assertEquals("Change[test-id] Order is required: order must be present in the @Change annotation or in the className(e.g. _0001__test-id.java). If present in both, they must have the same value.",
                 exception.getMessage());
     }
 
@@ -129,7 +129,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrderInContent("")
-                .setChangeClass("com.mypackage._004_MyClass")
+                .setChangeClass("com.mypackage._004__MyClass")
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -148,7 +148,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrderInContent("   ")
-                .setChangeClass("com.mypackage._005_MyClass")
+                .setChangeClass("com.mypackage._005__MyClass")
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -206,15 +206,15 @@ class CodeLoadedTaskBuilderTest {
     }
 
     // Test class with Change annotation for testing setFromFlamingockChangeAnnotation
-    @Change(id = "annotation-test", order = "100", transactional = false, author = "aperezdieppa")
-    static class TestChangeClass {
+    @Change(id = "annotation-test", transactional = false, author = "aperezdieppa")
+    static class _100__TestChangeClass {
     }
 
     @Test
     @DisplayName("Should build from annotated class correctly")
     void shouldBuildFromAnnotatedClassCorrectly() {
         // Given
-        CodeLoadedTaskBuilder builderFromClass = CodeLoadedTaskBuilder.getInstanceFromClass(TestChangeClass.class);
+        CodeLoadedTaskBuilder builderFromClass = CodeLoadedTaskBuilder.getInstanceFromClass(_100__TestChangeClass.class);
 
         // When
         CodeLoadedChange result = builderFromClass.build();
@@ -222,7 +222,7 @@ class CodeLoadedTaskBuilderTest {
         // Then
         assertEquals("annotation-test", result.getId());
         assertEquals("100", result.getOrder().orElse(null));
-        assertEquals(TestChangeClass.class, result.getImplementationClass());
+        assertEquals(_100__TestChangeClass.class, result.getImplementationClass());
         assertFalse(result.isRunAlways()); // Default is false since not specified in annotation
         assertFalse(result.isTransactional()); // Explicitly set to false in annotation
         assertFalse(result.isSystem());
@@ -232,19 +232,19 @@ class CodeLoadedTaskBuilderTest {
     @DisplayName("Should support annotated class check")
     void shouldSupportAnnotatedClassCheck() {
         // When & Then
-        assertTrue(CodeLoadedTaskBuilder.supportsSourceClass(TestChangeClass.class));
+        assertTrue(CodeLoadedTaskBuilder.supportsSourceClass(_100__TestChangeClass.class));
         assertFalse(CodeLoadedTaskBuilder.supportsSourceClass(String.class));
     }
 
-    @Change(id = "no-order-in_annotation", order = "0001", author = "aperezdieppa")
-    static class _0001_anotherChange {
+    @Change(id = "no-order-in_annotation", author = "aperezdieppa")
+    static class _0001__anotherChange {
     }
 
     @Test
     @DisplayName("Should build from annotated class correctly")
     void shouldBuildFromAnnotatedClassCorrectlyWhenOrderInAnnotationNull() {
         // Given
-        CodeLoadedTaskBuilder builderFromClass = CodeLoadedTaskBuilder.getInstanceFromClass(_0001_anotherChange.class);
+        CodeLoadedTaskBuilder builderFromClass = CodeLoadedTaskBuilder.getInstanceFromClass(_0001__anotherChange.class);
 
         // When
         CodeLoadedChange result = builderFromClass.build();
@@ -252,7 +252,7 @@ class CodeLoadedTaskBuilderTest {
         // Then
         assertEquals("no-order-in_annotation", result.getId());
         assertEquals("0001", result.getOrder().orElse(null));
-        assertEquals(_0001_anotherChange.class, result.getImplementationClass());
+        assertEquals(_0001__anotherChange.class, result.getImplementationClass());
     }
 
 }

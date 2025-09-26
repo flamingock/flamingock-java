@@ -17,9 +17,9 @@ package io.flamingock.core.e2e;
 
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.core.e2e.changes.AlwaysRetryNonTransactionalChange;
-import io.flamingock.core.e2e.changes.ManualInterventionNonTransactionalChange;
-import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
+import io.flamingock.core.e2e.changes._001__AlwaysRetryNonTransactionalChange;
+import io.flamingock.core.e2e.changes._001__ManualInterventionNonTransactionalChange;
+import io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange;
 import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.core.kit.audit.AuditTestHelper;
@@ -78,7 +78,7 @@ class RecoveryE2ETest {
         testForManualInterventionException(changeId,
                 AuditEntry.Status.STARTED,
                 AuditTxType.NON_TX,
-                SimpleNonTransactionalChange.class,
+                _001__SimpleNonTransactionalChange.class,
                 STARTED(changeId));
     }
 
@@ -89,7 +89,7 @@ class RecoveryE2ETest {
         testForManualInterventionException(changeId,
                 AuditEntry.Status.FAILED,
                 AuditTxType.NON_TX,
-                SimpleNonTransactionalChange.class,
+                _001__SimpleNonTransactionalChange.class,
                 FAILED(changeId));
     }
 
@@ -100,7 +100,7 @@ class RecoveryE2ETest {
         testForRetry(changeId,
                 AuditEntry.Status.FAILED,
                 AuditTxType.TX_SEPARATE_NO_MARKER,
-                SimpleNonTransactionalChange.class,
+                _001__SimpleNonTransactionalChange.class,
                 FAILED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
@@ -109,13 +109,13 @@ class RecoveryE2ETest {
     void testExecutionFailedTxSharedSuccessfulExecution() {
         // Given - Pre-insert audit entry with EXECUTION_FAILED state and TX_SHARED type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.FAILED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.FAILED, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -142,13 +142,13 @@ class RecoveryE2ETest {
     void testRolledBackNonTxSuccessfulExecution() {
         // Given - Pre-insert audit entry with ROLLED_BACK state and NON_TX type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -175,13 +175,13 @@ class RecoveryE2ETest {
     void testRolledBackTxSeparateNoMarkerSuccessfulExecution() {
         // Given - Pre-insert audit entry with ROLLED_BACK state and TX_SEPARATE_NO_MARKER type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SEPARATE_NO_MARKER, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SEPARATE_NO_MARKER, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -208,13 +208,13 @@ class RecoveryE2ETest {
     void testRolledBackTxSharedSuccessfulExecution() {
         // Given - Pre-insert audit entry with ROLLED_BACK state and TX_SHARED type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -241,13 +241,13 @@ class RecoveryE2ETest {
     void testRollbackFailedNonTxRequiresManualIntervention() {
         // Given - Pre-insert audit entry with ROLLBACK_FAILED state and NON_TX type  
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLBACK_FAILED, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLBACK_FAILED, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -290,13 +290,13 @@ class RecoveryE2ETest {
     void testAppliedNonTxDoNothing() {
         // Given - Pre-insert audit entry with APPLIED state and NON_TX type
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.NON_TX, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -321,13 +321,13 @@ class RecoveryE2ETest {
     void testAppliedTxSeparateNoMarkerDoNothing() {
         // Given - Pre-insert audit entry with APPLIED state and TX_SEPARATE_NO_MARKER type
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SEPARATE_NO_MARKER, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SEPARATE_NO_MARKER, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -352,13 +352,13 @@ class RecoveryE2ETest {
     void testAppliedTxSharedDoNothing() {
         // Given - Pre-insert audit entry with APPLIED state and TX_SHARED type
         String changeId = "test1-non-tx-change";
-        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, SimpleNonTransactionalChange.class);
+        AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -389,7 +389,7 @@ class RecoveryE2ETest {
         testForRetry(changeId,
                 AuditEntry.Status.STARTED,
                 AuditTxType.NON_TX,
-                AlwaysRetryNonTransactionalChange.class,
+                _001__AlwaysRetryNonTransactionalChange.class,
                 STARTED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
@@ -400,7 +400,7 @@ class RecoveryE2ETest {
         testForRetry(changeId,
                 AuditEntry.Status.FAILED,
                 AuditTxType.NON_TX,
-                AlwaysRetryNonTransactionalChange.class,
+                _001__AlwaysRetryNonTransactionalChange.class,
                 FAILED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
@@ -411,7 +411,7 @@ class RecoveryE2ETest {
         testForRetry(changeId,
                 AuditEntry.Status.ROLLBACK_FAILED,
                 AuditTxType.NON_TX,
-                AlwaysRetryNonTransactionalChange.class,
+                _001__AlwaysRetryNonTransactionalChange.class,
                 ROLLBACK_FAILED(changeId), STARTED(changeId), APPLIED(changeId));
     }
 
@@ -426,7 +426,7 @@ class RecoveryE2ETest {
         testForManualInterventionException(changeId,
                 AuditEntry.Status.STARTED,
                 AuditTxType.NON_TX,
-                ManualInterventionNonTransactionalChange.class,
+                _001__ManualInterventionNonTransactionalChange.class,
                 STARTED(changeId));
     }
 
@@ -437,7 +437,7 @@ class RecoveryE2ETest {
         testForManualInterventionException(changeId,
                 AuditEntry.Status.FAILED,
                 AuditTxType.NON_TX,
-                ManualInterventionNonTransactionalChange.class,
+                _001__ManualInterventionNonTransactionalChange.class,
                 FAILED(changeId));
     }
 
@@ -448,7 +448,7 @@ class RecoveryE2ETest {
         testForManualInterventionException(changeId,
                 AuditEntry.Status.ROLLBACK_FAILED,
                 AuditTxType.NON_TX,
-                ManualInterventionNonTransactionalChange.class,
+                _001__ManualInterventionNonTransactionalChange.class,
                 ROLLBACK_FAILED(changeId));
     }
 

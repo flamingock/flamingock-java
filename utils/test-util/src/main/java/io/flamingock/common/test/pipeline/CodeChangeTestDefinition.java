@@ -17,6 +17,7 @@ package io.flamingock.common.test.pipeline;
 
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.core.task.loaded.ChangeOrderUtil;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
@@ -70,7 +71,7 @@ public class CodeChangeTestDefinition extends ChangeTestDefinition {
                                      List<Class<?>> executionParameters,
                                      List<Class<?>> rollbackParameters) {
         this(changeAnn.id(),
-                changeAnn.order(),
+                ChangeOrderUtil.getMatchedOrderFromClassName(changeAnn.id(), null, className),
                 changeAnn.author(),
                 className,
                 targetSystemAnn != null ? targetSystemAnn.id() : null,

@@ -17,8 +17,8 @@ package io.flamingock.core.e2e;
 
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.core.e2e.changes.CustomTargetSystemChange;
-import io.flamingock.core.e2e.changes.SimpleNonTransactionalChange;
+import io.flamingock.core.e2e.changes._002__CustomTargetSystemChange;
+import io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange;
 import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
@@ -77,7 +77,7 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -96,7 +96,7 @@ class AuditPersistenceE2ETest {
         AuditEntryExpectation startedExpected = STARTED(changeId)
                 .withAuthor("aperezdieppa")
                 .withType(AuditEntry.ExecutionType.EXECUTION)
-                .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
+                .withClass(io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange.class)
                 .withTxType(AuditTxType.NON_TX)
                 .withTargetSystemId("kafka")
                 .withSystemChange(false)
@@ -105,7 +105,7 @@ class AuditPersistenceE2ETest {
         AuditEntryExpectation appliedExpected = APPLIED(changeId)
                 .withAuthor("aperezdieppa")
                 .withType(AuditEntry.ExecutionType.EXECUTION)
-                .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
+                .withClass(io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange.class)
                 .withTxType(AuditTxType.NON_TX)
                 .withTargetSystemId("kafka")
                 .withSystemChange(false)
@@ -123,7 +123,7 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
@@ -153,7 +153,7 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_002__CustomTargetSystemChange.class, Collections.emptyList())
                     )
             );
 
@@ -184,8 +184,8 @@ class AuditPersistenceE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
-                            new CodeChangeTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList()),
+                            new CodeChangeTestDefinition(_002__CustomTargetSystemChange.class, Collections.emptyList())
                     )
             );
 
@@ -210,13 +210,13 @@ class AuditPersistenceE2ETest {
                 STARTED(changeId1)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
+                        .withClass(io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
                 APPLIED(changeId1)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(io.flamingock.core.e2e.changes.SimpleNonTransactionalChange.class)
+                        .withClass(io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
 
@@ -224,13 +224,13 @@ class AuditPersistenceE2ETest {
                 STARTED(changeId2)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(io.flamingock.core.e2e.changes.CustomTargetSystemChange.class)
+                        .withClass(io.flamingock.core.e2e.changes._002__CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system"),
                 APPLIED(changeId2)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(io.flamingock.core.e2e.changes.CustomTargetSystemChange.class)
+                        .withClass(io.flamingock.core.e2e.changes._002__CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system")
         );
@@ -246,7 +246,7 @@ class AuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
             
             .GIVEN_Changes(
-                new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList())
+                new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
             )
             .WHEN(() -> {
                 // The actual test execution code - no more MockedStatic management needed!
@@ -274,8 +274,8 @@ class AuditPersistenceE2ETest {
         AuditTestSupport.withTestKit(testKit)
             
             .GIVEN_Changes(
-                new CodeChangeTestDefinition(SimpleNonTransactionalChange.class, Collections.emptyList()),
-                new CodeChangeTestDefinition(CustomTargetSystemChange.class, Collections.emptyList())
+                new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList()),
+                new CodeChangeTestDefinition(_002__CustomTargetSystemChange.class, Collections.emptyList())
             )
             .WHEN(() -> {
                 assertDoesNotThrow(() -> {
@@ -291,13 +291,13 @@ class AuditPersistenceE2ETest {
                 STARTED(changeId1)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(SimpleNonTransactionalChange.class)
+                        .withClass(_001__SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
                 APPLIED(changeId1)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(SimpleNonTransactionalChange.class)
+                        .withClass(_001__SimpleNonTransactionalChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("kafka"),
                 
@@ -305,13 +305,13 @@ class AuditPersistenceE2ETest {
                 STARTED(changeId2)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(CustomTargetSystemChange.class)
+                        .withClass(_002__CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system"),
                 APPLIED(changeId2)
                         .withAuthor("aperezdieppa")
                         .withType(AuditEntry.ExecutionType.EXECUTION)
-                        .withClass(CustomTargetSystemChange.class)
+                        .withClass(_002__CustomTargetSystemChange.class)
                         .withTxType(AuditTxType.NON_TX)
                         .withTargetSystemId("custom-target-system")
             )

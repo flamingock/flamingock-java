@@ -35,10 +35,10 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.util.Trio;
-import io.flamingock.targetsystem.couchbase.changes.happypath.HappyCreateClientsCollectionChange;
-import io.flamingock.targetsystem.couchbase.changes.happypath.HappyInsertClientsChange;
-import io.flamingock.targetsystem.couchbase.changes.unhappypath.UnhappyCreateClientsCollectionChange;
-import io.flamingock.targetsystem.couchbase.changes.unhappypath.UnhappyInsertClientsChange;
+import io.flamingock.targetsystem.couchbase.changes.happypath._001__HappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.couchbase.changes.happypath._002__HappyInsertClientsChange;
+import io.flamingock.targetsystem.couchbase.changes.unhappypath._001__UnhappyCreateClientsCollectionChange;
+import io.flamingock.targetsystem.couchbase.changes.unhappypath._002__UnhappyInsertClientsChange;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -147,8 +147,8 @@ public class CouchbaseTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -167,8 +167,8 @@ public class CouchbaseTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
+                    new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
             ));
 
 
@@ -198,8 +198,8 @@ public class CouchbaseTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", UnhappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", UnhappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__UnhappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -220,8 +220,8 @@ public class CouchbaseTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(UnhappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
-                    new Trio<>(UnhappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
+                    new Trio<>(_001__UnhappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
+                    new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
             ));
 
             TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME);
@@ -254,8 +254,8 @@ public class CouchbaseTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
         );
 
         //GIVEN
@@ -277,8 +277,8 @@ public class CouchbaseTargetSystemTest {
             //WHEN
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
-                    new Trio<>(HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
-                    new Trio<>(HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
+                    new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
+                    new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
             ));
 
             TargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase-ts", cluster, BUCKET_NAME);

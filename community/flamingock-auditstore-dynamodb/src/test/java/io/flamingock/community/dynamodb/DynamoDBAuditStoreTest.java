@@ -17,11 +17,11 @@ package io.flamingock.community.dynamodb;
 
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
-import io.flamingock.community.dynamodb.changes._001_create_client_collection_happy;
-import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_non_transactional;
-import io.flamingock.community.dynamodb.changes._002_insert_federico_happy_transactional;
-import io.flamingock.community.dynamodb.changes._003_insert_jorge_failed_transactional_non_rollback;
-import io.flamingock.community.dynamodb.changes._004_insert_jorge_happy_transactional;
+import io.flamingock.community.dynamodb.changes._001__create_client_collection_happy;
+import io.flamingock.community.dynamodb.changes._002__insert_federico_happy_non_transactional;
+import io.flamingock.community.dynamodb.changes._002__insert_federico_happy_transactional;
+import io.flamingock.community.dynamodb.changes._003__insert_jorge_failed_transactional_non_rollback;
+import io.flamingock.community.dynamodb.changes._004__insert_jorge_happy_transactional;
 import io.flamingock.community.dynamodb.changes.common.UserEntity;
 import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import io.flamingock.core.kit.audit.AuditTestHelper;
@@ -98,9 +98,9 @@ class DynamoDBAuditStoreTest {
         // Given-When
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                        new CodeChangeTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeTestDefinition(_004__insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(new DynamoDBAuditStore(client))
@@ -124,9 +124,9 @@ class DynamoDBAuditStoreTest {
         // Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                        new CodeChangeTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeTestDefinition(_004__insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     // Run pipeline twice to verify repeated execution
                     FlamingockFactory.getCommunityBuilder()
@@ -170,9 +170,9 @@ class DynamoDBAuditStoreTest {
         // Given-When-Then - Test failure scenario with audit verification
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(_002_insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(_003_insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_003__insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     assertThrows(PipelineExecutionException.class, () -> {
                         FlamingockFactory.getCommunityBuilder()
@@ -234,9 +234,9 @@ class DynamoDBAuditStoreTest {
 
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
-                        new CodeChangeTestDefinition(_001_create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
-                        new CodeChangeTestDefinition(_002_insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
-                        new CodeChangeTestDefinition(_004_insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
+                        new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
+                        new CodeChangeTestDefinition(_002__insert_federico_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)),
+                        new CodeChangeTestDefinition(_004__insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
                             .setAuditStore(new DynamoDBAuditStore(client)

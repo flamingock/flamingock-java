@@ -20,6 +20,10 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.community.couchbase.changes.failedWithoutRollback._001__create_index;
+import io.flamingock.community.couchbase.changes.failedWithoutRollback._002__insert_document;
+import io.flamingock.community.couchbase.changes.failedWithoutRollback._003__execution_with_exception;
+import io.flamingock.community.couchbase.changes.happyPath._003__insert_another_document;
 import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import io.flamingock.core.processor.util.Deserializer;
@@ -87,9 +91,9 @@ class CouchbaseAuditStoreTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(io.flamingock.community.couchbase.changes.happyPath._001_create_index.class, Collections.singletonList(Collection.class)),
-                    new Trio<>(io.flamingock.community.couchbase.changes.happyPath._002_insert_document.class, Collections.singletonList(Collection.class)),
-                    new Trio<>(io.flamingock.community.couchbase.changes.happyPath._003_insert_another_document.class, Collections.singletonList(Collection.class)))
+                    new Trio<>(io.flamingock.community.couchbase.changes.happyPath._001__create_index.class, Collections.singletonList(Collection.class)),
+                    new Trio<>(io.flamingock.community.couchbase.changes.happyPath._002__insert_document.class, Collections.singletonList(Collection.class)),
+                    new Trio<>(_003__insert_another_document.class, Collections.singletonList(Collection.class)))
             );
 
             FlamingockFactory.getCommunityBuilder()
@@ -133,9 +137,9 @@ class CouchbaseAuditStoreTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._001_create_index.class, Collections.singletonList(Collection.class)),
-                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._002_insert_document.class, Collections.singletonList(Collection.class)),
-                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._003_execution_with_exception.class, Collections.singletonList(Collection.class)))
+                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._001__create_index.class, Collections.singletonList(Collection.class)),
+                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._002__insert_document.class, Collections.singletonList(Collection.class)),
+                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._003__execution_with_exception.class, Collections.singletonList(Collection.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
@@ -178,9 +182,9 @@ class CouchbaseAuditStoreTest {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithoutRollback._001_create_index.class, Collections.singletonList(Collection.class)),
-                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithoutRollback._002_insert_document.class, Collections.singletonList(Collection.class)),
-                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithoutRollback._003_execution_with_exception.class, Collections.singletonList(Collection.class)))
+                    new Trio<>(_001__create_index.class, Collections.singletonList(Collection.class)),
+                    new Trio<>(_002__insert_document.class, Collections.singletonList(Collection.class)),
+                    new Trio<>(_003__execution_with_exception.class, Collections.singletonList(Collection.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {
