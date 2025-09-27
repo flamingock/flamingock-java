@@ -41,7 +41,7 @@ import java.util.List;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@EnableFlamingock(pipelineFile = "flamingock/pipeline.yaml")
+@EnableFlamingock(configFile = "flamingock/pipeline.yaml")
 @Testcontainers
 class MongoChangeTemplateTest {
 

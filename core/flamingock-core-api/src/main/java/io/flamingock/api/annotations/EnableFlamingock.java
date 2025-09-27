@@ -32,9 +32,9 @@ import java.lang.annotation.Target;
  * The annotation supports two mutually exclusive pipeline configuration modes:
  *
  * <h3>1. File-based Configuration</h3>
- * Use {@link #pipelineFile()} to reference a YAML pipeline definition:
+ * Use {@link #configFile()} to reference a YAML pipeline definition:
  * <pre>
- * &#64;EnableFlamingock(pipelineFile = "config/pipeline.yaml")
+ * &#64;EnableFlamingock(configFile = "config/pipeline.yaml")
  * public class MyMigrationConfig {
  *     // Configuration class
  * }
@@ -99,7 +99,7 @@ import java.lang.annotation.Target;
  *
  * <h2>Validation Rules</h2>
  * <ul>
- *     <li>Either {@link #pipelineFile()} OR {@link #stages()} must be specified (mutually exclusive)</li>
+ *     <li>Either {@link #configFile()} OR {@link #stages()} must be specified (mutually exclusive)</li>
  *     <li>At least one configuration mode must be provided</li>
  *     <li>Maximum of 1 stage with type {@code StageType.SYSTEM} is allowed</li>
  *     <li>Maximum of 1 stage with type {@code StageType.LEGACY} is allowed</li>
@@ -118,7 +118,7 @@ public @interface EnableFlamingock {
      * Defines the pipeline stages.
      * Each stage represents a logical grouping of changes that execute in sequence.
      *
-     * <p>Mutually exclusive with {@link #pipelineFile()}. When using stages,
+     * <p>Mutually exclusive with {@link #configFile()}. When using stages,
      * do not specify a pipeline file.
      *
      * <p>Stage type restrictions:
@@ -158,12 +158,12 @@ public @interface EnableFlamingock {
      *
      * <p>Example:
      * <pre>
-     * pipelineFile = "config/flamingock-pipeline.yaml"
+     * configFile = "config/flamingock-pipeline.yaml"
      * </pre>
      *
      * @return the pipeline file path, or empty string for annotation-based configuration
      */
-    String pipelineFile() default "";
+    String configFile() default "";
 
     /**
      * Controls how Flamingock integrates with application frameworks.

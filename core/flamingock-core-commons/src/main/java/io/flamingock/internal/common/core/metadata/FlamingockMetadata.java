@@ -21,15 +21,15 @@ public class FlamingockMetadata {
     
     private PreviewPipeline pipeline;
     private String setup;
-    private String pipelineFile;
+    private String configFile;
     
     public FlamingockMetadata() {
     }
     
-    public FlamingockMetadata(PreviewPipeline pipeline, String setup, String pipelineFile) {
+    public FlamingockMetadata(PreviewPipeline pipeline, String setup, String configFile) {
         this.pipeline = pipeline;
         this.setup = setup;
-        this.pipelineFile = pipelineFile;
+        this.configFile = configFile;
     }
     
     public PreviewPipeline getPipeline() {
@@ -49,18 +49,18 @@ public class FlamingockMetadata {
     }
     
     public String getPipelineFile() {
-        return pipelineFile;
+        return configFile;
     }
     
-    public void setPipelineFile(String pipelineFile) {
-        this.pipelineFile = pipelineFile;
+    public void setPipelineFile(String configFile) {
+        this.configFile = configFile;
     }
 
     @Override
     public String toString() {
         return "FlamingockMetadata{" + "pipeline=" + pipeline +
                 ", setup='" + setup + '\'' +
-                ", pipelineFile='" + pipelineFile + '\'' +
+                ", configFile='" + configFile + '\'' +
                 '}';
     }
 }

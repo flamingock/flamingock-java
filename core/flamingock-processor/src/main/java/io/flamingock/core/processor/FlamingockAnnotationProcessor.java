@@ -58,32 +58,32 @@ import java.util.Set;
  * <h2>@Flamingock Annotation Configuration</h2>
  * The processor supports two mutually exclusive configuration modes:
  * <ul>
- *     <li><b>File-based configuration:</b> Uses {@code pipelineFile} to reference a YAML pipeline definition</li>
+ *     <li><b>File-based configuration:</b> Uses {@code configFile} to reference a YAML pipeline definition</li>
  *     <li><b>Annotation-based configuration:</b> Uses {@code stages} array to define the pipeline inline</li>
  * </ul>
  *
  * <h3>Pipeline File Resolution</h3>
- * When using {@code pipelineFile}, the processor provides resource resolution
+ * When using {@code configFile}, the processor provides resource resolution
  * supporting multiple file locations:
  *
  * <h4>Examples:</h4>
  * <pre>{@code
  * // Absolute file path - highest priority
- * &#64;EnableFlamingock(pipelineFile = "/path/to/external/pipeline.yaml")
+ * &#64;EnableFlamingock(configFile = "/path/to/external/pipeline.yaml")
  * // Uses direct file system path
  *
  * // Relative file path - second priority (relative to working directory)
- * &#64;EnableFlamingock(pipelineFile = "config/flamingock-pipeline.yaml")
+ * &#64;EnableFlamingock(configFile = "config/flamingock-pipeline.yaml")
  * // Resolves relative to current working directory, NOT as classpath resource
  *
  * // Classpath resource - fallback if file doesn't exist relative to working directory
- * &#64;EnableFlamingock(pipelineFile = "flamingock/pipeline.yaml")
+ * &#64;EnableFlamingock(configFile = "flamingock/pipeline.yaml")
  * // If "flamingock/pipeline.yaml" doesn't exist in working directory,
  * // then tries: src/main/resources/flamingock/pipeline.yaml
  * // then tries: src/test/resources/flamingock/pipeline.yaml
  *
  * // Resource with explicit "resources/" prefix (automatically stripped)
- * &#64;EnableFlamingock(pipelineFile = "resources/flamingock/pipeline.yaml")
+ * &#64;EnableFlamingock(configFile = "resources/flamingock/pipeline.yaml")
  * // First tries: "resources/flamingock/pipeline.yaml" relative to working directory
  * // If not found, strips "resources/" prefix and tries classpath resolution:
  * // src/main/resources/flamingock/pipeline.yaml or src/test/resources/flamingock/pipeline.yaml
@@ -91,9 +91,9 @@ import java.util.Set;
  *
  * <h4>Resolution Order (stops at first match):</h4>
  * <ol>
- *     <li><b>Direct file path:</b> {@code [pipelineFile]} (absolute or relative to working directory)</li>
- *     <li><b>Main resources:</b> {@code src/main/resources/[pipelineFile]}</li>
- *     <li><b>Test resources:</b> {@code src/test/resources/[pipelineFile]}</li>
+ *     <li><b>Direct file path:</b> {@code [configFile]} (absolute or relative to working directory)</li>
+ *     <li><b>Main resources:</b> {@code src/main/resources/[configFile]}</li>
+ *     <li><b>Test resources:</b> {@code src/test/resources/[configFile]}</li>
  *     <li><b>Main resources (stripped):</b> If path starts with "resources/", strips prefix and tries {@code src/main/resources/[remaining-path]}</li>
  *     <li><b>Test resources (stripped):</b> If path starts with "resources/", strips prefix and tries {@code src/test/resources/[remaining-path]}</li>
  * </ol>
@@ -120,7 +120,7 @@ import java.util.Set;
  * <h2>Validation Rules</h2>
  * <ul>
  *     <li>@EnableFlamingock annotation is mandatory</li>
- *     <li>Must specify either {@code pipelineFile} OR {@code stages} (mutually exclusive)</li>
+ *     <li>Must specify either {@code configFile} OR {@code stages} (mutually exclusive)</li>
  *     <li>Maximum of 1 stage with type {@code StageType.SYSTEM} is allowed</li>
  *     <li>Maximum of 1 stage with type {@code StageType.LEGACY} is allowed</li>
  *     <li>Unlimited stages with type {@code StageType.DEFAULT} are allowed</li>
@@ -204,8 +204,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         );
         Serializer serializer = new Serializer(processingEnv, logger);
         String setup = flamingockAnnotation.setup().toString();
-        String pipelineFile = flamingockAnnotation.pipelineFile();
-        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, setup, pipelineFile);
+        String configFile = flamingockAnnotation.configFile();
+        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, setup, configFile);
         serializer.serializeFullPipeline(flamingockMetadata);
         logger.info("Finished processing annotated classes and generating metadata.");
         return true;
@@ -220,16 +220,16 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline.");
         }
 
-        boolean hasFileInAnnotation = !pipelineAnnotation.pipelineFile().isEmpty();
+        boolean hasFileInAnnotation = !pipelineAnnotation.configFile().isEmpty();
         boolean hasStagesInAnnotation = pipelineAnnotation.stages().length > 0;
 
         // Validate mutually exclusive modes
         if (hasFileInAnnotation && hasStagesInAnnotation) {
-            throw new RuntimeException("@EnableFlamingock annotation cannot have both pipelineFile and stages configured. Choose one: either specify pipelineFile OR stages.");
+            throw new RuntimeException("@EnableFlamingock annotation cannot have both configFile and stages configured. Choose one: either specify configFile OR stages.");
         }
 
         if (!hasFileInAnnotation && !hasStagesInAnnotation) {
-            throw new RuntimeException("@EnableFlamingock annotation must specify either pipelineFile OR stages configuration.");
+            throw new RuntimeException("@EnableFlamingock annotation must specify either configFile OR stages configuration.");
         }
 
         // Validate stage type restrictions when using annotation-based configuration
@@ -238,8 +238,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         if (hasFileInAnnotation) {
-            logger.info("Reading flamingock pipeline from file specified in @EnableFlamingock annotation: '" + pipelineAnnotation.pipelineFile() + "'");
-            File specifiedPipelineFile = resolvePipelineFile(pipelineAnnotation.pipelineFile());
+            logger.info("Reading flamingock pipeline from file specified in @EnableFlamingock annotation: '" + pipelineAnnotation.configFile() + "'");
+            File specifiedPipelineFile = resolvePipelineFile(pipelineAnnotation.configFile());
             return buildPipelineFromSpecifiedFile(specifiedPipelineFile, codedChangesByPackage);
         } else {
             logger.info("Reading flamingock pipeline from @EnableFlamingock annotation stages configuration");
@@ -428,29 +428,29 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
      * Resolves a pipeline file path from the @EnableFlamingock annotation, supporting both absolute file paths
      * and classpath resources. This method provides resource resolution for the Flamingock library.
      *
-     * @param pipelineFilePath the file path specified in the @EnableFlamingock annotation
+     * @param configFilePath the file path specified in the @EnableFlamingock annotation
      * @return a File object representing the resolved pipeline file
      * @throws RuntimeException if the file cannot be found in any of the supported locations
      */
-    private File resolvePipelineFile(String pipelineFilePath) {
+    private File resolvePipelineFile(String configFilePath) {
         List<File> searchedFiles = new ArrayList<>();
 
         // Try direct file path first (absolute or relative to current working directory)
-        File result = tryResolveFile(new File(pipelineFilePath), "direct file path", searchedFiles);
+        File result = tryResolveFile(new File(configFilePath), "direct file path", searchedFiles);
         if (result != null) return result;
 
         // Try as classpath resource in main resources
-        result = tryResolveFile(new File(resourcesRoot + "/" + pipelineFilePath), "main resources", searchedFiles);
+        result = tryResolveFile(new File(resourcesRoot + "/" + configFilePath), "main resources", searchedFiles);
         if (result != null) return result;
 
         // Try as classpath resource in test resources (for annotation processing during tests)
         String testResourcesRoot = resourcesRoot.replace("src/main/resources", "src/test/resources");
-        result = tryResolveFile(new File(testResourcesRoot + "/" + pipelineFilePath), "test resources", searchedFiles);
+        result = tryResolveFile(new File(testResourcesRoot + "/" + configFilePath), "test resources", searchedFiles);
         if (result != null) return result;
 
         // Try with "resources/" prefix stripped (handle cases like "resources/flamingock/pipeline.yaml")
-        if (pipelineFilePath.startsWith("resources/")) {
-            String pathWithoutResourcesPrefix = pipelineFilePath.substring("resources/".length());
+        if (configFilePath.startsWith("resources/")) {
+            String pathWithoutResourcesPrefix = configFilePath.substring("resources/".length());
 
             // Try in main resources without "resources/" prefix
             result = tryResolveFile(new File(resourcesRoot + "/" + pathWithoutResourcesPrefix), "main resources (stripped resources/ prefix)", searchedFiles);
@@ -468,7 +468,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         throw new RuntimeException(
-                "Pipeline file specified in @EnableFlamingock annotation does not exist: " + pipelineFilePath + "\n" +
+                "Pipeline file specified in @EnableFlamingock annotation does not exist: " + configFilePath + "\n" +
                         searchedLocations
         );
     }

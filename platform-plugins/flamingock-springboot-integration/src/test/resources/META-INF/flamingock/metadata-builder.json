@@ -11,5 +11,5 @@
     ]
   },
   "setup": "BUILDER",
-  "pipelineFile": ""
+  "configFile": ""
 }

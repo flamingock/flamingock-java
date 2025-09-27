@@ -149,10 +149,10 @@ public class PipelinePreProcessorTest {
         // Check if it's wrapped in InvocationTargetException
         Throwable cause = exception.getCause();
         if (cause instanceof RuntimeException) {
-            assertTrue(cause.getMessage().contains("must specify either pipelineFile OR stages"),
+            assertTrue(cause.getMessage().contains("must specify either configFile OR stages"),
                     "Should have error about missing configuration");
         } else {
-            assertTrue(exception.getMessage().contains("must specify either pipelineFile OR stages"),
+            assertTrue(exception.getMessage().contains("must specify either configFile OR stages"),
                     "Should have error about missing configuration");
         }
     }
@@ -320,14 +320,14 @@ public class PipelinePreProcessorTest {
     @DisplayName("Should order YAML stages by type priority: LEGACY before DEFAULT")
     void shouldOrderYamlStagesByTypePriorityLegacyBeforeDefault() throws Exception {
         // Given - create YAML file with stages in reverse order (DEFAULT first, LEGACY second)
-        Path pipelineFile = tempDir.resolve("pipeline.yaml");
+        Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
             "    - location: com.example.migrations\n" +
             "    - location: com.example.init\n" +
             "      type: legacy\n" +
             "    - location: com.example.cleanup\n";
-        Files.write(pipelineFile, yamlContent.getBytes());
+        Files.write(configFile, yamlContent.getBytes());
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
@@ -364,7 +364,7 @@ public class PipelinePreProcessorTest {
     @DisplayName("Should throw error for multiple SYSTEM stages in YAML configuration")
     void shouldThrowErrorForMultipleSystemStagesInYaml() throws Exception {
         // Given - create YAML file with multiple system stages
-        Path pipelineFile = tempDir.resolve("pipeline.yaml");
+        Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
             "    - location: com.example.system1\n" +
@@ -372,7 +372,7 @@ public class PipelinePreProcessorTest {
             "    - location: com.example.system2\n" +
             "      type: importer\n" +
             "    - location: com.example.changes\n";
-        Files.write(pipelineFile, yamlContent.getBytes());
+        Files.write(configFile, yamlContent.getBytes());
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
@@ -436,8 +436,8 @@ public class PipelinePreProcessorTest {
             "buildPipelineFromSpecifiedFile", File.class, Map.class);
         method.setAccessible(true);
         
-        File pipelineFile = tempDir.resolve("pipeline.yaml").toFile();
-        return (PreviewPipeline) method.invoke(processor, pipelineFile, changes);
+        File configFile = tempDir.resolve("pipeline.yaml").toFile();
+        return (PreviewPipeline) method.invoke(processor, configFile, changes);
     }
 
     private void setProcessorField(FlamingockAnnotationProcessor processor, String fieldName, Object value) throws Exception {
@@ -506,13 +506,13 @@ public class PipelinePreProcessorTest {
     }
 
     private void createPipelineYamlFile() throws IOException {
-        Path pipelineFile = tempDir.resolve("pipeline.yaml");
+        Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
             "    - location: com.example.system\n" +
             "      type: importer\n" +
             "    - location: com.example.changes\n";
-        Files.write(pipelineFile, yamlContent.getBytes());
+        Files.write(configFile, yamlContent.getBytes());
     }
 
     private Map<String, List<AbstractPreviewTask>> createMockChangesMap() {
@@ -569,22 +569,22 @@ public class PipelinePreProcessorTest {
 
     private static class MockFlamingockBuilder {
         private Stage[] stages = new Stage[0];
-        private String pipelineFile = "";
+        private String configFile = "";
 
         public MockFlamingockBuilder withStages(Stage... stages) {
             this.stages = stages;
             return this;
         }
 
-        public MockFlamingockBuilder withPipelineFile(String pipelineFile) {
-            this.pipelineFile = pipelineFile;
+        public MockFlamingockBuilder withPipelineFile(String configFile) {
+            this.configFile = configFile;
             return this;
         }
 
         public EnableFlamingock build() {
             return new EnableFlamingock() {
                 @Override public Stage[] stages() { return stages; }
-                @Override public String pipelineFile() { return pipelineFile; }
+                @Override public String configFile() { return configFile; }
                 @Override public io.flamingock.api.SetupType setup() { return io.flamingock.api.SetupType.DEFAULT; }
                 @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return EnableFlamingock.class; }
             };

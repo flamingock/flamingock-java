@@ -270,10 +270,10 @@ class ResolvePipelineFileTest {
         java.nio.file.Files.write(file.toPath(), yamlContent.getBytes());
     }
 
-    private File invokeResolvePipelineFile(String pipelineFilePath) throws Exception {
+    private File invokeResolvePipelineFile(String configFilePath) throws Exception {
         Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod("resolvePipelineFile", String.class);
         method.setAccessible(true);
-        return (File) method.invoke(processor, pipelineFilePath);
+        return (File) method.invoke(processor, configFilePath);
     }
 
     private void setPrivateField(String fieldName, Object value) throws Exception {
