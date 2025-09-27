@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -197,7 +198,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger);
-        EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation();
+        EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation()
+                .orElseThrow(() -> new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline."));
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
                 annotationFinder.getCodedChangesMapByPackage(),
                 flamingockAnnotation
@@ -216,26 +218,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             codedChangesByPackage = new HashMap<>();
         }
 
-        if (pipelineAnnotation == null) {
-            throw new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline.");
-        }
-
         boolean hasFileInAnnotation = !pipelineAnnotation.configFile().isEmpty();
         boolean hasStagesInAnnotation = pipelineAnnotation.stages().length > 0;
 
         // Validate mutually exclusive modes
-        if (hasFileInAnnotation && hasStagesInAnnotation) {
-            throw new RuntimeException("@EnableFlamingock annotation cannot have both configFile and stages configured. Choose one: either specify configFile OR stages.");
-        }
-
-        if (!hasFileInAnnotation && !hasStagesInAnnotation) {
-            throw new RuntimeException("@EnableFlamingock annotation must specify either configFile OR stages configuration.");
-        }
-
-        // Validate stage type restrictions when using annotation-based configuration
-        if (hasStagesInAnnotation) {
-            validateStageTypes(pipelineAnnotation.stages());
-        }
+        validateConfiguration(pipelineAnnotation, hasFileInAnnotation, hasStagesInAnnotation);
 
         if (hasFileInAnnotation) {
             logger.info("Reading flamingock pipeline from file specified in @EnableFlamingock annotation: '" + pipelineAnnotation.configFile() + "'");
@@ -675,6 +662,21 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return location != null && location.startsWith("resources/")
                 ? location.substring("resources/".length())
                 : location;
+    }
+
+    private void validateConfiguration(EnableFlamingock pipelineAnnotation, boolean hasFileInAnnotation, boolean hasStagesInAnnotation) {
+        if (hasFileInAnnotation && hasStagesInAnnotation) {
+            throw new RuntimeException("@EnableFlamingock annotation cannot have both configFile and stages configured. Choose one: either specify configFile OR stages.");
+        }
+
+        if (!hasFileInAnnotation && !hasStagesInAnnotation) {
+            throw new RuntimeException("@EnableFlamingock annotation must specify either configFile OR stages configuration.");
+        }
+
+        // Validate stage type restrictions when using annotation-based configuration
+        if (hasStagesInAnnotation) {
+            validateStageTypes(pipelineAnnotation.stages());
+        }
     }
 
 }

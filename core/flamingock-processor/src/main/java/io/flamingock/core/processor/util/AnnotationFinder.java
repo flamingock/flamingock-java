@@ -56,15 +56,14 @@ public final class AnnotationFinder {
         return mapByPackage;
     }
 
-    public EnableFlamingock getPipelineAnnotation() {
+    public Optional<EnableFlamingock> getPipelineAnnotation() {
         logger.info("Searching for @EnableFlamingock annotation");
         return roundEnv.getElementsAnnotatedWith(EnableFlamingock.class)
                 .stream()
                 .filter(e -> e.getKind() == ElementKind.CLASS)
                 .map(e -> (TypeElement) e)
                 .map(e -> e.getAnnotation(EnableFlamingock.class))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     private Collection<CodePreviewChange> findAnnotatedChanges() {
