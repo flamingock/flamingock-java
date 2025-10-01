@@ -6,8 +6,9 @@
 <h3 align="center">Auditable, versioned changes across distributed systems.</h3>
 <p align="center">Evolve queues, DBs, APIs, configs, resources and more — governed, auditable, applied at startup in lockstep.</p>
 
-<p align="center"><small><a href="https://github.com/flamingock/mongock-legacy?tab=readme-ov-file#%EF%B8%8F-mongock-is-deprecated">Coming from Mongock?</a></small></p>
-<br />
+[//]: # (<p align="center"><small><a href="https://github.com/flamingock/mongock-legacy?tab=readme-ov-file#%EF%B8%8F-mongock-is-deprecated">Coming from Mongock?</a></small></p>)
+
+[//]: # (<br />)
 
 <p align="center">
   <a href="https://central.sonatype.com/search?q=io.flamingock">
@@ -83,8 +84,9 @@ No more fragile scripts or untracked console changes. With CaC:
 
 ## 🚀 Getting Started
 
-- Read the [quick start tutorial](https://docs.flamingock.io/docs/overview/quick-start).
-- Explore real-world usage in the [examples repo](https://github.com/flamingock/flamingock-examples).
+- Read the [quick start tutorial](https://docs.flamingock.io/get-started/quick-start).
+
+[//]: # (- Explore real-world usage in the [examples repo]&#40;https://github.com/flamingock/flamingock-examples&#41;.)
 
 <br />
 
