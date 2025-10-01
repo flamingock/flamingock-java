@@ -3,12 +3,11 @@
 
 flamingock:
   service-identifier: "flamingock-cli"
-  # MongoDB Configuration (uncomment and modify to use)
-  # audit:
-  #  mongodb:
-  #    connection-string: "mongodb://localhost:27017"
-  #    database: "test"
-  #    collection: "flamingockAuditLog"  # Optional, defaults to "flamingockAuditLog"
+  audit:
+    mongodb:
+      connection-string: "mongodb://localhost:27017"
+      database: "test"
+      collection: "flamingockAuditLog"  # Optional, defaults to "flamingockAuditLog"
 
   # DynamoDB Configuration (uncomment and modify to use)
   # audit:
