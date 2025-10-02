@@ -3,19 +3,17 @@
 
 flamingock:
   service-identifier: "flamingock-cli"
-  
-  # MongoDB Configuration (uncomment and modify to use)
-  # audit:
-  #   mongodb:
-  #     connection-string: "mongodb://localhost:27017"
-  #     database: "myapp"
-  #     collection: "flamingock_audit"  # Optional, defaults to "flamingock_audit"
-  
-  # DynamoDB Configuration (uncomment and modify to use)  
+  audit:
+    mongodb:
+      connection-string: "mongodb://localhost:27017"
+      database: "test"
+      collection: "flamingockAuditLog"  # Optional, defaults to "flamingockAuditLog"
+
+  # DynamoDB Configuration (uncomment and modify to use)
   # audit:
   #   dynamodb:
   #     region: "us-east-1"
-  #     table: "flamingock-audit"      # Optional, defaults to "flamingock-audit"
+  #     table: "flamingockAuditLog"      # Optional, defaults to "flamingockAuditLog"
   #     # endpoint: "http://localhost:8000"  # Optional for local DynamoDB
   #     # access-key: "your-access-key"      # Optional if using IAM roles
   #     # secret-key: "your-secret-key"      # Optional if using IAM roles
