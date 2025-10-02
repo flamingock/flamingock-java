@@ -102,7 +102,7 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
             FailedAfterExecutionAuditStep failedAfterExecutionAudit = (FailedAfterExecutionAuditStep)afterAudit;
             rollbackActualChangeAndChain(failedAfterExecutionAudit, executionContext);
             TaskSummary summary = summarizer.setFailed().getSummary();
-            return new FailedChangeProcessResult(change.getId(), summary, null);
+            return new FailedChangeProcessResult(change.getId(), summary, failedAfterExecutionAudit.getMainError());
         } else {
             return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
         }

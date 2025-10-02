@@ -35,7 +35,7 @@ public final class FailedExecutionStep extends ExecutionStep implements FailedWi
     }
 
     @Override
-    public Throwable getStepError() {
+    public Throwable getMainError() {
         return errorOnApply;
     }
 

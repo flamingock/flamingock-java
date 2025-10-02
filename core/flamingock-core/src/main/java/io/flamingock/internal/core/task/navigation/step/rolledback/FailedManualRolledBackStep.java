@@ -29,7 +29,7 @@ public final class FailedManualRolledBackStep extends ManualRolledBackStep imple
     }
 
     @Override
-    public Throwable getStepError() {
+    public Throwable getMainError() {
         return error;
     }
 

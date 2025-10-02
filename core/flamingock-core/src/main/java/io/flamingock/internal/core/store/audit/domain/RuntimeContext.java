@@ -139,7 +139,7 @@ public final class RuntimeContext {
         private void setResult(TaskStep taskStep) {
             if (taskStep instanceof FailedWithErrorStep) {
                 executionResult = ExecutionResult.FAILED;
-                error = ((FailedWithErrorStep) taskStep).getStepError();
+                error = ((FailedWithErrorStep) taskStep).getMainError();
             } else {
                 executionResult = ExecutionResult.SUCCESS;
                 error = null;

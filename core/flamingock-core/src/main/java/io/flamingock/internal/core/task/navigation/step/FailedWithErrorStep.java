@@ -16,5 +16,5 @@
 package io.flamingock.internal.core.task.navigation.step;
 
 public interface FailedWithErrorStep extends FailedStep {
-    Throwable getStepError();
+    Throwable getMainError();
 }

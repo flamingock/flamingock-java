@@ -28,7 +28,7 @@ public final class CompletedFailedAtRollbackAuditStep extends CompletedFailedMan
     }
 
     @Override
-    public Throwable getStepError() {
+    public Throwable getMainError() {
         return errorAtRollbackAudit;
     }
 

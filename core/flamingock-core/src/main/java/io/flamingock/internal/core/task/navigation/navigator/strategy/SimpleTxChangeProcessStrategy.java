@@ -29,6 +29,7 @@ import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.complete.CompletedSuccessStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
@@ -111,19 +112,24 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
         AfterExecutionAuditStep afterAudit = auditAndLogExecution(changeResult);
         if(changeResult.isSuccessStep()) {
-            if(afterAudit instanceof CompletedSuccessStep) {
+            if(afterAudit instanceof FailedAfterExecutionAuditStep) {
+                // Change applied but audit failed - leave marker for recovery
+                Throwable mainError = ((FailedAfterExecutionAuditStep)afterAudit)
+                        .getMainError();
+                return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
+            } else {
                 // Success: change applied and audited, clear marker
                 targetSystemOps.clearMark(change.getId());
                 return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
-            } else {
-                // Change applied but audit failed - leave marker for recovery
-                return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), null);
             }
+
         } else {
             // Change execution failed - transaction automatically rolled back
+            Throwable mainError = ((FailedAfterExecutionAuditStep)afterAudit)
+                    .getMainError();
             auditAndLogAutoRollback();
             rollbackChain((RollableFailedStep) afterAudit, executionContext);
-            return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), null);
+            return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
         }
     }
 

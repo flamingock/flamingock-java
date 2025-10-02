@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.step.afteraudit;
 
+import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.SuccessableStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class FailedAfterExecutionAuditStep extends AfterExecutionAuditStep
-        implements SuccessableStep, RollableFailedStep {
+        implements SuccessableStep, RollableFailedStep, FailedWithErrorStep {
 
     public static FailedAfterExecutionAuditStep fromFailedApply(ExecutableTask task, Throwable errorOnApply, Result auditResult) {
         if (auditResult instanceof Result.Error) {

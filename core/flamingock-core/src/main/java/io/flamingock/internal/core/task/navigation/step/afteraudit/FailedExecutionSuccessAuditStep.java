@@ -28,4 +28,9 @@ public final class FailedExecutionSuccessAuditStep extends FailedAfterExecutionA
     public Throwable getErrorOnApply() {
         return errorOnApply;
     }
+
+    @Override
+    public Throwable getMainError() {
+        return getErrorOnApply();
+    }
 }

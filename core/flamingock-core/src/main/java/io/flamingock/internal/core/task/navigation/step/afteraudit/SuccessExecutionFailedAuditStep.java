@@ -29,11 +29,11 @@ implements FailedWithErrorStep {
     }
 
     public Throwable getErrorOnAudit() {
-        return getStepError();
+        return errorOnAudit;
     }
 
     @Override
-    public Throwable getStepError() {
-        return errorOnAudit;
+    public Throwable getMainError() {
+        return getErrorOnAudit();
     }
 }
