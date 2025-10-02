@@ -19,16 +19,17 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 
 public class StageExecutionException extends FlamingockException {
 
-    private final StageSummary summary;
-
-
-    public StageExecutionException(StageSummary summary) {
-        super("\n\n" + summary.getPretty() + "\n");
-        this.summary = summary;
+    public static StageExecutionException fromExisting(Throwable exception, StageSummary summary) {
+        Throwable cause = exception.getCause();
+        return (exception instanceof FlamingockException) && cause != null
+                ? new StageExecutionException(cause, summary)
+                : new StageExecutionException(exception, summary);
     }
 
-    public StageExecutionException(Throwable throwable, StageSummary summary) {
-        super(throwable);
+    private final StageSummary summary;
+
+    private StageExecutionException(Throwable cause, StageSummary summary) {
+        super(cause);
         this.summary = summary;
     }
 

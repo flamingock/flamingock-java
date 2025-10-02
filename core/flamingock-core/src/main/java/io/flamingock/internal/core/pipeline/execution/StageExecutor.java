@@ -23,6 +23,7 @@ import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
@@ -91,11 +92,12 @@ public class StageExecutor {
                     })
                     .filter(ChangeProcessResult::isFailed)
                     .findFirst()
+                    .map(processResult -> (FailedChangeProcessResult)processResult)
                     .ifPresent(failedResult -> {
                         Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
                         logger.debug("Stage execution failed [stage={} duration={} failed_change={}]",
                                    stageName, formatDuration(stageDuration), failedResult.getChangeId());
-                        throw new StageExecutionException(summary);
+                        throw StageExecutionException.fromExisting(failedResult.getException(), summary);
                     });
 
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
@@ -103,15 +105,12 @@ public class StageExecutor {
                        stageName, formatDuration(stageDuration), taskCount);
 
         } catch (StageExecutionException stageExecutionException) {
-            Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-            logger.debug("Stage execution failed [stage={} duration={}]",
-                       stageName, formatDuration(stageDuration));
             throw stageExecutionException;
         } catch (Throwable throwable) {
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
             logger.debug("Stage execution failed with unexpected error [stage={} duration={} error={}]",
                        stageName, formatDuration(stageDuration), throwable.getMessage(), throwable);
-            throw new StageExecutionException(throwable, summary);
+            throw StageExecutionException.fromExisting(throwable, summary);
         }
 
         return new Output(summary);

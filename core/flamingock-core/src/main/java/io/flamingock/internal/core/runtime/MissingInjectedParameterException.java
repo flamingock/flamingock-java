@@ -24,7 +24,7 @@ public class MissingInjectedParameterException extends FlamingockException {
   private final String name;
 
   public MissingInjectedParameterException(Class<?> wrongParameter, String name) {
-    super();
+    super(buildMessage(wrongParameter, name));
     this.wrongParameter = wrongParameter;
     this.name = name;
   }
@@ -37,12 +37,11 @@ public class MissingInjectedParameterException extends FlamingockException {
     return name;
   }
 
-  @Override
-  public String getMessage() {
+  private static String buildMessage(Class<?> wrongParameter, String name) {
 
 
     StringBuilder sb = new StringBuilder("Wrong parameter[")
-        .append(getWrongParameter().getSimpleName())
+        .append(wrongParameter.getSimpleName())
         .append("]");
     if (name != null) {
       sb.append(" with name: ")

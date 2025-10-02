@@ -39,15 +39,19 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
 
     @Override
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
-        logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
-        logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
-        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
-        ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
-        changeTemplateInstance.setTransactional(descriptor.isTransactional());
-        setExecutionData(executionRuntime, changeTemplateInstance, "Configuration");
-        setExecutionData(executionRuntime, changeTemplateInstance, "ApplyPayload");
-        setExecutionData(executionRuntime, changeTemplateInstance, "RollbackPayload");
-        executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+        try {
+            logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
+            logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
+            Object instance = executionRuntime.getInstance(descriptor.getConstructor());
+            ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
+            changeTemplateInstance.setTransactional(descriptor.isTransactional());
+            setExecutionData(executionRuntime, changeTemplateInstance, "Configuration");
+            setExecutionData(executionRuntime, changeTemplateInstance, "ApplyPayload");
+            setExecutionData(executionRuntime, changeTemplateInstance, "RollbackPayload");
+            executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+        } catch (Throwable ex) {
+            throw new ChangeExecutionException(this.getId(), ex);
+        }
     }
 
 

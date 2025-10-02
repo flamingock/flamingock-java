@@ -19,15 +19,17 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 
 public class PipelineExecutionException extends FlamingockException {
 
+    public static PipelineExecutionException fromExisting(Throwable exception, PipelineSummary summary) {
+        Throwable cause = exception.getCause();
+        return (exception instanceof FlamingockException) && cause != null
+                ? new PipelineExecutionException(cause, summary)
+                : new PipelineExecutionException(exception, summary);
+    }
+
     private final PipelineSummary summary;
 
 
-    public PipelineExecutionException(PipelineSummary summary) {
-        super("\n\n" + summary.getPretty() + "\n");
-        this.summary = summary;
-    }
-
-    public PipelineExecutionException(Throwable throwable, PipelineSummary summary) {
+    private PipelineExecutionException(Throwable throwable, PipelineSummary summary) {
         super(throwable);
         this.summary = summary;
     }
