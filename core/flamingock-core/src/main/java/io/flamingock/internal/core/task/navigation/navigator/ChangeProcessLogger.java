@@ -60,8 +60,8 @@ public class ChangeProcessLogger {
             logger.info("APPLIED [change={}, duration={}]", taskId, duration);
         } else if (executionStep instanceof FailedExecutionStep) {
             FailedExecutionStep failed = (FailedExecutionStep) executionStep;
-            logger.error("FAILED [change={}, duration={}, error={}]", 
-                        taskId, duration, failed.getError().getMessage(), failed.getError());
+            logger.error("FAILED [change={}, duration={}, error={}]",
+                        taskId, duration, failed.getError().getMessage());
         }
     }
 
@@ -77,7 +77,7 @@ public class ChangeProcessLogger {
         if (rolledBack instanceof FailedManualRolledBackStep) {
             FailedManualRolledBackStep failed = (FailedManualRolledBackStep) rolledBack;
             logger.error("ROLLBACK_FAILED [change={}, duration={}, error={}]", 
-                        taskId, duration, failed.getError().getMessage(), failed.getError());
+                        taskId, duration, failed.getError().getMessage());
         } else {
             logger.info("ROLLED_BACK [change={}, duration={}]", taskId, duration);
         }
