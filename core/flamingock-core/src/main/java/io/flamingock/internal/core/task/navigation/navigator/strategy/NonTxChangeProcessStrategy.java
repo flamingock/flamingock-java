@@ -22,7 +22,9 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.AuditStoreStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
@@ -83,7 +85,7 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
     }
 
     @Override
-    protected TaskSummary doApplyChange() {
+    protected ChangeProcessResult doApplyChange() {
         StartStep startStep = new StartStep(change);
 
         ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext);
@@ -96,9 +98,10 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
 
         if (afterAudit instanceof RollableFailedStep) {
             rollbackActualChangeAndChain((RollableFailedStep) afterAudit, executionContext);
-            return summarizer.setFailed().getSummary();
+            TaskSummary summary = summarizer.setFailed().getSummary();
+            return new FailedChangeProcessResult(change.getId(), summary, null);
         } else {
-            return summarizer.setSuccessful().getSummary();
+            return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
         }
     }
 

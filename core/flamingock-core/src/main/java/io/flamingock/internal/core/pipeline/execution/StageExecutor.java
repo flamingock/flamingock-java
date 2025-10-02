@@ -23,6 +23,7 @@ import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
@@ -78,22 +79,22 @@ public class StageExecutor {
                     .map(changeProcessFactory::setChange)
                     .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
-                    .peek(taskSummary -> {
-                        summary.addSummary(taskSummary);
-                        if (taskSummary.isFailed()) {
+                    .peek(result -> {
+                        summary.addSummary(result.getSummary());
+                        if (result.isFailed()) {
                             logger.error("Change failed [change={} stage={}]", 
-                                       taskSummary.getId(), stageName);
+                                       result.getChangeId(), stageName);
                         } else {
                             logger.debug("Change completed successfully [change={} stage={}]", 
-                                       taskSummary.getId(), stageName);
+                                       result.getChangeId(), stageName);
                         }
                     })
-                    .filter(TaskSummary::isFailed)
+                    .filter(ChangeProcessResult::isFailed)
                     .findFirst()
-                    .ifPresent(failed -> {
+                    .ifPresent(failedResult -> {
                         Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
                         logger.debug("Stage execution failed [stage={} duration={} failed_change={}]",
-                                   stageName, formatDuration(stageDuration), failed.getId());
+                                   stageName, formatDuration(stageDuration), failedResult.getChangeId());
                         throw new StageExecutionException(summary);
                     });
 

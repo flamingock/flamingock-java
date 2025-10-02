@@ -19,5 +19,5 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 
 public interface ChangeProcessStrategy {
 
-    TaskSummary applyChange();
+    ChangeProcessResult applyChange();
 }
