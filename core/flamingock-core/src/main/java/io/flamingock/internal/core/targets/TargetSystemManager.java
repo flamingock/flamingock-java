@@ -112,7 +112,7 @@ public class TargetSystemManager implements ContextInitializable {
                     "Change requires a valid targetSystem. Found: [%s]. Available target systems: [%s]",
                     id, availableTargetSystems
             );
-            logger.error(message);
+            logger.debug(message);
             throw new FlamingockException(message);
         } else {
             AbstractTargetSystem<?> targetSystem = targetSystemMap.get(id);

@@ -70,7 +70,7 @@ public class SqlTxWrapper implements TransactionWrapper {
                 
             } catch (Exception e) {
                 Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
-                logger.error("Transaction failed, attempting rollback [duration={} error={}]", 
+                logger.debug("Transaction failed, attempting rollback [duration={} error={}]",
                            formatDuration(failureDuration), e.getMessage());
                 
                 DatabaseTransactionException.RollbackStatus rollbackStatus;
@@ -81,7 +81,7 @@ public class SqlTxWrapper implements TransactionWrapper {
                               formatDuration(failureDuration));
                 } catch (SQLException rollbackEx) {
                     rollbackStatus = DatabaseTransactionException.RollbackStatus.FAILED;
-                    logger.error("Transaction rollback failed [duration={} rollback_error={}]", 
+                    logger.debug("Transaction rollback failed [duration={} rollback_error={}]",
                                formatDuration(failureDuration), rollbackEx.getMessage(), rollbackEx);
                 }
                 
@@ -101,7 +101,7 @@ public class SqlTxWrapper implements TransactionWrapper {
                 try {
                     connection.setAutoCommit(originalAutoCommit);
                 } catch (SQLException setAutoCommitEx) {
-                    logger.error("Failed to restore autoCommit to {} [connection={}]", 
+                    logger.warn("Failed to restore autoCommit to {} [connection={}]",
                                originalAutoCommit, connectionInfo, setAutoCommitEx);
                 }
             }

@@ -72,7 +72,7 @@ public class MongoDBSpringDataTxWrapper implements TransactionWrapper {
 
                 } catch (Exception e) {
                     Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
-                    logger.error("MongoDB Spring Data transaction failed, marking for rollback [duration={} error={}]",
+                    logger.debug("MongoDB Spring Data transaction failed, marking for rollback [duration={} error={}]",
                                formatDuration(failureDuration), e.getMessage());
                     status.setRollbackOnly();
 

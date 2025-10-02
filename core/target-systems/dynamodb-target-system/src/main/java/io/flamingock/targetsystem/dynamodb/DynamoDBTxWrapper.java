@@ -81,7 +81,7 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
                         .map(reason -> String.format("%s: %s", reason.code(), reason.message()))
                         .collect(Collectors.joining(", "));
                     
-                    logger.error("DynamoDB transaction cancelled [duration={} reasons={}]", 
+                    logger.debug("DynamoDB transaction cancelled [duration={} reasons={}]",
                                formatDuration(transactionDuration), cancellationReasons);
                     
                     throw new DatabaseTransactionException(
@@ -96,7 +96,7 @@ public class DynamoDBTxWrapper implements TransactionWrapper {
                         ex
                     );
                 } catch (Exception ex) {
-                    logger.error("DynamoDB transaction failed during commit [duration={} error={}]", 
+                    logger.debug("DynamoDB transaction failed during commit [duration={} error={}]",
                                formatDuration(transactionDuration), ex.getMessage());
                     
                     throw new DatabaseTransactionException(

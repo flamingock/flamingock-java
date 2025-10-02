@@ -92,7 +92,7 @@ public class StageExecutor {
                     .findFirst()
                     .ifPresent(failed -> {
                         Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-                        logger.error("Stage execution failed [stage={} duration={} failed_change={}]", 
+                        logger.debug("Stage execution failed [stage={} duration={} failed_change={}]",
                                    stageName, formatDuration(stageDuration), failed.getId());
                         throw new StageExecutionException(summary);
                     });
@@ -103,12 +103,12 @@ public class StageExecutor {
 
         } catch (StageExecutionException stageExecutionException) {
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-            logger.error("Stage execution failed [stage={} duration={}]", 
+            logger.debug("Stage execution failed [stage={} duration={}]",
                        stageName, formatDuration(stageDuration));
             throw stageExecutionException;
         } catch (Throwable throwable) {
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-            logger.error("Stage execution failed with unexpected error [stage={} duration={} error={}]", 
+            logger.debug("Stage execution failed with unexpected error [stage={} duration={} error={}]",
                        stageName, formatDuration(stageDuration), throwable.getMessage(), throwable);
             throw new StageExecutionException(throwable, summary);
         }

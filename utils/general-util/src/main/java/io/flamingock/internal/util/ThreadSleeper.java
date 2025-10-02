@@ -70,7 +70,7 @@ public class ThreadSleeper {
             Thread.sleep(timeToSleep);
             logger.info("Woke up");
         } catch (InterruptedException ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.warn(ex.getMessage(), ex);
             Thread.currentThread().interrupt();
         }
     }

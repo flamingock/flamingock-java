@@ -111,7 +111,7 @@ public class PipelineRunner implements Runner {
                 eventPublisher.publish(new StageFailedEvent(exception));
                 eventPublisher.publish(new PipelineFailedEvent(exception));
                 if (throwExceptionIfCannotObtainLock) {
-                    logger.error("Required process lock not acquired - ABORTING OPERATION", exception);
+                    logger.debug("Required process lock not acquired - ABORTING OPERATION", exception);
                     throw exception;
                 } else {
                     logger.warn("Process lock not acquired but throwExceptionIfCannotObtainLock=false - CONTINUING WITHOUT LOCK", exception);
@@ -166,7 +166,7 @@ public class PipelineRunner implements Runner {
 
     private FlamingockException processAndGetFlamingockException(Throwable generalException) throws FlamingockException {
         FlamingockException exception = generalException instanceof FlamingockException ? (FlamingockException) generalException : new FlamingockException(generalException);
-        logger.error("Error executing the process. ABORTED OPERATION", exception);
+        logger.debug("Error executing the process. ABORTED OPERATION", exception);
         eventPublisher.publish(new StageFailedEvent(exception));
         eventPublisher.publish(new PipelineFailedEvent(exception));
         return exception;
