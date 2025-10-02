@@ -15,26 +15,26 @@
  */
 package io.flamingock.internal.core.task.navigation.step.execution;
 
+import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.complete.CompletedSuccessStep;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.util.Result;
 
-public final class SuccessExecutionStep extends ExecutionStep {
-    public static SuccessExecutionStep instance(ExecutableStep initialStep, long executionTimeMillis) {
-        return new SuccessExecutionStep(initialStep.getTask(), executionTimeMillis);
+public final class SuccessApplyStep extends ExecutionStep {
+    public static SuccessApplyStep instance(ExecutableStep initialStep, long executionTimeMillis) {
+        return new SuccessApplyStep(initialStep.getTask(), executionTimeMillis);
     }
 
-    private SuccessExecutionStep(ExecutableTask task, long executionTimeMillis) {
+    private SuccessApplyStep(ExecutableTask task, long executionTimeMillis) {
         super(task, true, executionTimeMillis);
     }
 
     @Override
-    public AfterExecutionAuditStep applyAuditResult(Result auditResult) {
-        return auditResult.isOk()
-                ? CompletedSuccessStep.fromSuccessExecution(this)
-                : FailedAfterExecutionAuditStep.instance(task, auditResult);
+    public AfterExecutionAuditStep withAuditResult(Result auditResult) {
+        return auditResult.isError()
+                ? FailedAfterExecutionAuditStep.fromSuccessApply(task, (Result.Error) auditResult)
+                : CompletedSuccessStep.fromSuccessExecution(this);
     }
 }

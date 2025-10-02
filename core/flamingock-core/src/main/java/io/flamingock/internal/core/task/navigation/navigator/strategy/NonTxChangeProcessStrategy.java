@@ -29,6 +29,7 @@ import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -96,16 +97,19 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
 
         AfterExecutionAuditStep afterAudit = auditAndLogExecution(changeAppliedStep);
 
-        if (afterAudit instanceof RollableFailedStep) {
-            rollbackActualChangeAndChain((RollableFailedStep) afterAudit, executionContext);
+
+        if(afterAudit instanceof FailedAfterExecutionAuditStep) {
+            FailedAfterExecutionAuditStep failedAfterExecutionAudit = (FailedAfterExecutionAuditStep)afterAudit;
+            rollbackActualChangeAndChain(failedAfterExecutionAudit, executionContext);
             TaskSummary summary = summarizer.setFailed().getSummary();
             return new FailedChangeProcessResult(change.getId(), summary, null);
         } else {
             return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
         }
+
     }
 
-    private void rollbackActualChangeAndChain(RollableFailedStep rollableFailedStep, ExecutionContext executionContext) {
+    private void rollbackActualChangeAndChain(FailedAfterExecutionAuditStep rollableFailedStep, ExecutionContext executionContext) {
         rollableFailedStep.getRollbackSteps().forEach(rollableStep -> {
             ManualRolledBackStep rolledBack = rollableStep.rollback(buildExecutionRuntime());
             stepLogger.logManualRollbackResult(rolledBack);

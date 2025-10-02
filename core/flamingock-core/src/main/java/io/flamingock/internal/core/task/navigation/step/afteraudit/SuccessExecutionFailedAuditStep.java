@@ -15,22 +15,25 @@
  */
 package io.flamingock.internal.core.task.navigation.step.afteraudit;
 
-import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
 
-public final class FailedAuditExecutionStep extends FailedAfterExecutionAuditStep implements FailedWithErrorStep {
+public final class SuccessExecutionFailedAuditStep extends FailedAfterExecutionAuditStep
+implements FailedWithErrorStep {
 
-    private final Throwable error;
+    private final Throwable errorOnAudit;
 
-    FailedAuditExecutionStep(ExecutableTask task, Throwable error) {
+    SuccessExecutionFailedAuditStep(ExecutableTask task, Throwable errorOnAudit) {
         super(task, false);
-        this.error = error;
+        this.errorOnAudit = errorOnAudit;
+    }
+
+    public Throwable getErrorOnAudit() {
+        return getStepError();
     }
 
     @Override
-    public Throwable getError() {
-        return error;
+    public Throwable getStepError() {
+        return errorOnAudit;
     }
-
-
 }

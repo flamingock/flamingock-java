@@ -165,7 +165,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, auditTime);
 
         stepLogger.logAuditExecutionResult(auditResult, executionStep.getLoadedTask());
-        AfterExecutionAuditStep afterExecutionAudit = executionStep.applyAuditResult(auditResult);
+        AfterExecutionAuditStep afterExecutionAudit = executionStep.withAuditResult(auditResult);
         summarizer.add(afterExecutionAudit);
         return afterExecutionAudit;
     }

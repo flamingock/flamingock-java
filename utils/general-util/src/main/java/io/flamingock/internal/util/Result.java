@@ -30,8 +30,8 @@ public abstract class Result {
     private Result() {
     }
 
-    public final boolean isOk() {
-        return this instanceof Ok;
+    public final boolean isError() {
+        return this instanceof Error;
     }
 
 

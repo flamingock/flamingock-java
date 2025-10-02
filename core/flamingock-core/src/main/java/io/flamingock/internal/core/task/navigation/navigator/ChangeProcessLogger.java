@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.execution.FailedExecutionStep;
-import io.flamingock.internal.core.task.navigation.step.execution.SuccessExecutionStep;
+import io.flamingock.internal.core.task.navigation.step.execution.SuccessApplyStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.FailedManualRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.util.Result;
@@ -56,12 +56,12 @@ public class ChangeProcessLogger {
         String taskId = executionStep.getTask().getId();
         String duration = formatDuration(executionStep.getDuration());
         
-        if (executionStep instanceof SuccessExecutionStep) {
+        if (executionStep instanceof SuccessApplyStep) {
             logger.info("APPLIED [change={}, duration={}]", taskId, duration);
         } else if (executionStep instanceof FailedExecutionStep) {
             FailedExecutionStep failed = (FailedExecutionStep) executionStep;
             logger.error("FAILED [change={}, duration={}, error={}]",
-                        taskId, duration, failed.getError().getMessage());
+                        taskId, duration, failed.getStepError().getMessage());
         }
     }
 
@@ -77,7 +77,7 @@ public class ChangeProcessLogger {
         if (rolledBack instanceof FailedManualRolledBackStep) {
             FailedManualRolledBackStep failed = (FailedManualRolledBackStep) rolledBack;
             logger.error("ROLLBACK_FAILED [change={}, duration={}, error={}]", 
-                        taskId, duration, failed.getError().getMessage());
+                        taskId, duration, failed.getStepError().getMessage());
         } else {
             logger.info("ROLLED_BACK [change={}, duration={}]", taskId, duration);
         }

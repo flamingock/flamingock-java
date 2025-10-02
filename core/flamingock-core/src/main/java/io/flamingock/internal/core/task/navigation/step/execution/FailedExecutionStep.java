@@ -17,31 +17,31 @@ package io.flamingock.internal.core.task.navigation.step.execution;
 
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
-import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.util.Result;
 
 public final class FailedExecutionStep extends ExecutionStep implements FailedWithErrorStep {
-    private final Throwable throwable;
 
     public static FailedExecutionStep instance(ExecutableStep initialStep, long executionTimeMillis, Throwable throwable) {
         return new FailedExecutionStep(initialStep.getTask(), executionTimeMillis, throwable);
     }
 
-    private FailedExecutionStep(ExecutableTask task, long executionTimeMillis, Throwable throwable) {
+    private final Throwable errorOnApply;
+
+    private FailedExecutionStep(ExecutableTask task, long executionTimeMillis, Throwable errorOnApply) {
         super(task, false, executionTimeMillis);
-        this.throwable = throwable;
+        this.errorOnApply = errorOnApply;
     }
 
     @Override
-    public Throwable getError() {
-        return throwable;
+    public Throwable getStepError() {
+        return errorOnApply;
     }
 
     @Override
-    public AfterExecutionAuditStep applyAuditResult(Result auditResult) {
-        return FailedAfterExecutionAuditStep.instance(task, auditResult);
+    public FailedAfterExecutionAuditStep withAuditResult(Result auditResult) {
+        return FailedAfterExecutionAuditStep.fromFailedApply(task, errorOnApply, auditResult);
     }
 
 }
