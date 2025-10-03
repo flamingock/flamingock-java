@@ -46,12 +46,39 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
         this.databaseName = databaseName;
     }
 
+    public MongoDBSyncTargetSystem withReadConcern(ReadConcern readConcern) {
+        this.readConcern = readConcern;
+        return this;
+    }
+
+    public MongoDBSyncTargetSystem withReadPreference(ReadPreference readPreference) {
+        this.readPreference = readPreference;
+        return this;
+    }
+
+    public MongoDBSyncTargetSystem withWriteConcern(WriteConcern writeConcern) {
+        this.writeConcern = writeConcern;
+        return this;
+    }
+
     public MongoClient getClient() {
         return mongoClient;
     }
 
     public MongoDatabase getDatabase() {
         return database;
+    }
+
+    public WriteConcern getWriteConcern() {
+        return writeConcern;
+    }
+
+    public ReadConcern getReadConcern() {
+        return readConcern;
+    }
+
+    public ReadPreference getReadPreference() {
+        return readPreference;
     }
 
     public TransactionManager<ClientSession> getTxManager() {
@@ -62,7 +89,10 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
     public void initialize(ContextResolver baseContext) {
         this.validate();
         targetSystemContext.addDependency(mongoClient);
-        database = mongoClient.getDatabase(databaseName);
+        database = mongoClient.getDatabase(databaseName)
+            .withReadConcern(readConcern)
+            .withReadPreference(readPreference)
+            .withWriteConcern(writeConcern);
         targetSystemContext.addDependency(database);
 
         TransactionManager<ClientSession> txManager = new TransactionManager<>(mongoClient::startSession);
