@@ -30,8 +30,12 @@ public class FlamingockException extends RuntimeException {
     super(message);
   }
 
-  public FlamingockException(String formattedMessage, Object... args) {
-    super(String.format(formattedMessage, args));
+  public FlamingockException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public FlamingockException(String message, Object... args) {
+    super(String.format(message, args));
   }
 
 }

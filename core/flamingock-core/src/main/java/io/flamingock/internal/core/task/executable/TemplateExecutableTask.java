@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -50,7 +51,7 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
             setExecutionData(executionRuntime, changeTemplateInstance, "RollbackPayload");
             executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {
-            throw new ChangeExecutionException(this.getId(), ex);
+            throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
         }
     }
 

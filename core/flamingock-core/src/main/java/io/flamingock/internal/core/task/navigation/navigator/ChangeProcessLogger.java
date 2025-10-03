@@ -35,17 +35,17 @@ public class ChangeProcessLogger {
     private static final String MANUAL_ROLLBACK_DESC = "manual-rollback";
     private static final String AUTO_ROLLBACK_DESC = "auto-rollback";
 
-    public void logChangeExecutionStart(String changeId) {
-        logger.info("Starting change execution [change= {}]", changeId);
+    public void logStartChangeProcessStrategy(String changeId) {
+        logger.debug("Starting change process strategy build [change= {}]", changeId);
     }
-    
+
     public void logTargetSystemResolved(String changeId, TargetSystemDescriptor targetSystem) {
         String targetSystemId = targetSystem != null ? targetSystem.getId() : null;
         logger.debug("Target system resolved [change= {}, targetSystem= {}]", changeId, targetSystemId);
     }
     
     public void logStrategyApplication(String changeId, String targetSystemId, String strategyType) {
-        logger.info("Applying change [change= {}, target= {}, strategy= {}]", changeId, targetSystemId, strategyType);
+        logger.info("Starting change [change= {}, target= {}, strategy= {}]", changeId, targetSystemId, strategyType);
     }
 
     public void logSkippedExecution(String changeId) {
