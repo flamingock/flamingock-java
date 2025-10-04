@@ -22,11 +22,14 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.AuditStoreStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.complete.CompletedSuccessStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
@@ -88,7 +91,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
     }
 
     @Override
-    protected TaskSummary doApplyChange() {
+    protected ChangeProcessResult doApplyChange() {
         logger.debug("Executing shared-transactional task [change={}]", change.getId());
 
         Wrapper<ExecutionStep> executionStep = new Wrapper<>(null);
@@ -99,15 +102,18 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
             return auditAndLogExecution(executionStep.getValue());
         }, buildExecutionRuntime());
 
-        if(changeExecutionAndAudit instanceof CompletedSuccessStep) {
-            // Success: both change and audit committed atomically
-            return summarizer.setSuccessful().getSummary();
-        } else {
-            // Failure: attempt detailed failure audit in separate transaction
+        if(changeExecutionAndAudit instanceof FailedAfterExecutionAuditStep) {
+            // Failure:this means nothing was persisted(all or nothing)
             auditIfExecutionFailure(executionStep);
+            Throwable mainError = ((FailedAfterExecutionAuditStep)changeExecutionAndAudit)
+                    .getMainError();
             rollbackChain((RollableFailedStep) changeExecutionAndAudit, executionContext);
-            return summarizer.setFailed().getSummary();
+            return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
+        } else {
+            // Success: both change and audit committed atomically
+            return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
         }
+
     }
 
 

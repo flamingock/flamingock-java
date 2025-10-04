@@ -64,7 +64,6 @@ public final class ChangeActionResolver {
                     return MANUAL_INTERVENTION;
                 }
 
-            case MANUAL_MARKED_AS_ROLLED_BACK:
             case FAILED:
                 if (txStrategy == null || txStrategy == AuditTxType.NON_TX) {
                     if (auditEntry.getRecoveryStrategy().isAlwaysRetry()) {
@@ -85,6 +84,7 @@ public final class ChangeActionResolver {
                     return APPLY;
                 }
 
+            case MANUAL_MARKED_AS_ROLLED_BACK:
             case ROLLED_BACK:
                 log.debug("Change[{}] in state='{}}' (TxType={}}) -> Action={}} | Reason: {}",
                         auditEntry.getTaskId(), status, txStrategy, APPLY,

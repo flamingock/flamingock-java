@@ -229,7 +229,7 @@ public class Lock {
                     TimeUtil.millisToMinutes(sleepingMillis));
             Thread.sleep(sleepingMillis);
         } catch (InterruptedException ex) {
-            logger.error("ERROR acquiring the lock", ex);
+            logger.warn("ERROR acquiring the lock", ex);
             Thread.currentThread().interrupt();
         }
     }
