@@ -16,12 +16,12 @@
 package io.flamingock.internal.core.task.navigation.step.complete;
 
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
-import io.flamingock.internal.core.task.navigation.step.execution.SuccessExecutionStep;
+import io.flamingock.internal.core.task.navigation.step.execution.SuccessApplyStep;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 
 public final class CompletedSuccessStep extends AfterExecutionAuditStep {
 
-    public static CompletedSuccessStep fromSuccessExecution(SuccessExecutionStep appliedStep) {
+    public static CompletedSuccessStep fromSuccessExecution(SuccessApplyStep appliedStep) {
         return new CompletedSuccessStep(appliedStep.getTask());
     }
 

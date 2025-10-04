@@ -15,12 +15,7 @@
  */
 package io.flamingock.internal.core.runner;
 
-import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.plan.ExecutionPlan;
-import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.core.store.lock.Lock;
-import io.flamingock.internal.core.store.lock.LockException;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.PipelineFailedEvent;
@@ -29,13 +24,18 @@ import io.flamingock.internal.core.event.model.impl.StageCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.StageFailedEvent;
 import io.flamingock.internal.core.event.model.impl.StageStartedEvent;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
-import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.execution.StageSummary;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
+import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.plan.ExecutionPlan;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
+import io.flamingock.internal.core.store.lock.Lock;
+import io.flamingock.internal.core.store.lock.LockException;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -82,6 +82,15 @@ public class PipelineRunner implements Runner {
         this.finalizer = finalizer;
     }
 
+    private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
+        pipeline.validate();
+        List<AbstractLoadedStage> stages = new ArrayList<>();
+        if (pipeline.getSystemStage().isPresent()) {
+            stages.add(pipeline.getSystemStage().get());
+        }
+        stages.addAll(pipeline.getStages());
+        return stages;
+    }
 
     private void run(LoadedPipeline pipeline) throws FlamingockException {
 
@@ -93,7 +102,7 @@ public class PipelineRunner implements Runner {
                 // Validate execution plan for manual intervention requirements
                 // This centralized validation ensures both community and cloud paths are validated
                 execution.validate();
-                
+
                 if (pipelineSummary == null) {
                     pipelineSummary = new PipelineSummary(execution.getPipeline());
                 }
@@ -111,7 +120,7 @@ public class PipelineRunner implements Runner {
                 eventPublisher.publish(new StageFailedEvent(exception));
                 eventPublisher.publish(new PipelineFailedEvent(exception));
                 if (throwExceptionIfCannotObtainLock) {
-                    logger.error("Required process lock not acquired - ABORTING OPERATION", exception);
+                    logger.debug("Required process lock not acquired - ABORTING OPERATION", exception);
                     throw exception;
                 } else {
                     logger.warn("Process lock not acquired but throwExceptionIfCannotObtainLock=false - CONTINUING WITHOUT LOCK", exception);
@@ -121,7 +130,7 @@ public class PipelineRunner implements Runner {
                 //if it's a StageExecutionException, we can safely assume the stage started its
                 //execution, therefor the pipelinesSummary is initialised
                 requireNonNull(pipelineSummary).merge(e.getSummary());
-                throw new PipelineExecutionException(pipelineSummary);
+                throw PipelineExecutionException.fromExisting(e.getCause(), pipelineSummary);
             }
         } while (true);
 
@@ -130,17 +139,6 @@ public class PipelineRunner implements Runner {
 
         eventPublisher.publish(new PipelineCompletedEvent());
     }
-
-    private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
-        pipeline.validate();
-        List<AbstractLoadedStage> stages = new ArrayList<>();
-        if(pipeline.getSystemStage().isPresent()) {
-            stages.add(pipeline.getSystemStage().get());
-        }
-        stages.addAll(pipeline.getStages());
-        return stages;
-    }
-
 
     private StageSummary runStage(String executionId, Lock lock, ExecutableStage executableStage) {
         try {
@@ -164,12 +162,24 @@ public class PipelineRunner implements Runner {
         return executionOutput.getSummary();
     }
 
-    private FlamingockException processAndGetFlamingockException(Throwable generalException) throws FlamingockException {
-        FlamingockException exception = generalException instanceof FlamingockException ? (FlamingockException) generalException : new FlamingockException(generalException);
-        logger.error("Error executing the process. ABORTED OPERATION", exception);
-        eventPublisher.publish(new StageFailedEvent(exception));
-        eventPublisher.publish(new PipelineFailedEvent(exception));
-        return exception;
+    private FlamingockException processAndGetFlamingockException(Throwable exception) throws FlamingockException {
+        FlamingockException flamingockException;
+        if (exception instanceof PipelineExecutionException) {
+            PipelineExecutionException pipelineException = (PipelineExecutionException) exception;
+            if (pipelineException.getCause() instanceof FlamingockException) {
+                flamingockException = (FlamingockException) pipelineException.getCause();
+            } else {
+                flamingockException = (PipelineExecutionException) exception;
+            }
+        } else if (exception instanceof FlamingockException) {
+            flamingockException = (FlamingockException) exception;
+        } else {
+            flamingockException = new FlamingockException(exception);
+        }
+        logger.debug("Error executing the process. ABORTED OPERATION", exception);
+        eventPublisher.publish(new StageFailedEvent(flamingockException));
+        eventPublisher.publish(new PipelineFailedEvent(flamingockException));
+        return flamingockException;
     }
 
     @Override

@@ -22,10 +22,6 @@ package io.flamingock.internal.common.core.error;
 public class FlamingockException extends RuntimeException {
 
 
-  public FlamingockException() {
-    super();
-  }
-
   public FlamingockException(Throwable cause) {
     super(cause);
   }
@@ -34,16 +30,12 @@ public class FlamingockException extends RuntimeException {
     super(message);
   }
 
-  public FlamingockException(String formattedMessage, Object... args) {
-    super(String.format(formattedMessage, args));
-  }
-
-  public FlamingockException(Throwable cause, String formattedMessage, Object... args) {
-    this(String.format(formattedMessage, args), cause);
-  }
-
-  public FlamingockException(Throwable cause, String message) {
+  public FlamingockException(String message, Throwable cause) {
     super(message, cause);
+  }
+
+  public FlamingockException(String message, Object... args) {
+    super(String.format(message, args));
   }
 
 }

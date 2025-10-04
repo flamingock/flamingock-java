@@ -74,7 +74,7 @@ public class MongoDBSyncTxWrapper implements TransactionWrapper {
 
             } catch (Exception e) {
                 Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
-                logger.error("MongoDB transaction failed, attempting rollback [duration={} error={}]",
+                logger.debug("MongoDB transaction failed, attempting rollback [duration={} error={}]",
                            formatDuration(failureDuration), e.getMessage());
 
                 DatabaseTransactionException.RollbackStatus rollbackStatus;
@@ -85,7 +85,7 @@ public class MongoDBSyncTxWrapper implements TransactionWrapper {
                               formatDuration(failureDuration));
                 } catch (Exception rollbackEx) {
                     rollbackStatus = DatabaseTransactionException.RollbackStatus.FAILED;
-                    logger.error("Transaction rollback failed [duration={} rollback_error={}]",
+                    logger.debug("Transaction rollback failed [duration={} rollback_error={}]",
                                formatDuration(failureDuration), rollbackEx.getMessage(), rollbackEx);
                 }
 

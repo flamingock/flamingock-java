@@ -23,6 +23,8 @@ import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
@@ -78,23 +80,24 @@ public class StageExecutor {
                     .map(changeProcessFactory::setChange)
                     .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
-                    .peek(taskSummary -> {
-                        summary.addSummary(taskSummary);
-                        if (taskSummary.isFailed()) {
+                    .peek(result -> {
+                        summary.addSummary(result.getSummary());
+                        if (result.isFailed()) {
                             logger.error("Change failed [change={} stage={}]", 
-                                       taskSummary.getId(), stageName);
+                                       result.getChangeId(), stageName);
                         } else {
                             logger.debug("Change completed successfully [change={} stage={}]", 
-                                       taskSummary.getId(), stageName);
+                                       result.getChangeId(), stageName);
                         }
                     })
-                    .filter(TaskSummary::isFailed)
+                    .filter(ChangeProcessResult::isFailed)
                     .findFirst()
-                    .ifPresent(failed -> {
+                    .map(processResult -> (FailedChangeProcessResult)processResult)
+                    .ifPresent(failedResult -> {
                         Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-                        logger.error("Stage execution failed [stage={} duration={} failed_change={}]", 
-                                   stageName, formatDuration(stageDuration), failed.getId());
-                        throw new StageExecutionException(summary);
+                        logger.debug("Stage execution failed [stage={} duration={} failed_change={}]",
+                                   stageName, formatDuration(stageDuration), failedResult.getChangeId());
+                        throw StageExecutionException.fromExisting(failedResult.getException(), summary);
                     });
 
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
@@ -102,15 +105,12 @@ public class StageExecutor {
                        stageName, formatDuration(stageDuration), taskCount);
 
         } catch (StageExecutionException stageExecutionException) {
-            Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-            logger.error("Stage execution failed [stage={} duration={}]", 
-                       stageName, formatDuration(stageDuration));
             throw stageExecutionException;
         } catch (Throwable throwable) {
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-            logger.error("Stage execution failed with unexpected error [stage={} duration={} error={}]", 
+            logger.debug("Stage execution failed with unexpected error [stage={} duration={} error={}]",
                        stageName, formatDuration(stageDuration), throwable.getMessage(), throwable);
-            throw new StageExecutionException(throwable, summary);
+            throw StageExecutionException.fromExisting(throwable, summary);
         }
 
         return new Output(summary);

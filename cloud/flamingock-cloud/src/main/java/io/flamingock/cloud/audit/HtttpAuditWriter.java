@@ -76,7 +76,7 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                     .execute();
             return Result.OK();
         } catch (Throwable throwable) {
-            logger.error("Error writing audit [{}]  :\n{}", auditEntry.getTaskId(), throwable.toString());
+            logger.debug("Error writing audit [{}]  :\n{}", auditEntry.getTaskId(), throwable.toString());
             return new Result.Error(throwable);
         }
 

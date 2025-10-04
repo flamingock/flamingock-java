@@ -26,7 +26,4 @@ public class LockException extends FlamingockException {
     super(s);
   }
 
-  public LockException() {
-    super();
-  }
 }

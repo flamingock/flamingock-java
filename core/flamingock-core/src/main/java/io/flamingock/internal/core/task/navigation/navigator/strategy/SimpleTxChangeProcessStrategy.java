@@ -22,11 +22,14 @@ import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.AuditStoreStepOperations;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.complete.CompletedSuccessStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
@@ -91,7 +94,7 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
     }
 
     @Override
-    protected TaskSummary doApplyChange() {
+    protected ChangeProcessResult doApplyChange() {
         logger.debug("Executing transactional task [change={}]", change.getId());
 
         StartStep startStep = new StartStep(change);
@@ -109,19 +112,24 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
         AfterExecutionAuditStep afterAudit = auditAndLogExecution(changeResult);
         if(changeResult.isSuccessStep()) {
-            if(afterAudit instanceof CompletedSuccessStep) {
+            if(afterAudit instanceof FailedAfterExecutionAuditStep) {
+                // Change applied but audit failed - leave marker for recovery
+                Throwable mainError = ((FailedAfterExecutionAuditStep)afterAudit)
+                        .getMainError();
+                return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
+            } else {
                 // Success: change applied and audited, clear marker
                 targetSystemOps.clearMark(change.getId());
-                return summarizer.setSuccessful().getSummary();
-            } else {
-                // Change applied but audit failed - leave marker for recovery
-                return summarizer.setFailed().getSummary();
+                return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
             }
+
         } else {
             // Change execution failed - transaction automatically rolled back
+            Throwable mainError = ((FailedAfterExecutionAuditStep)afterAudit)
+                    .getMainError();
             auditAndLogAutoRollback();
             rollbackChain((RollableFailedStep) afterAudit, executionContext);
-            return summarizer.setFailed().getSummary();
+            return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
         }
     }
 

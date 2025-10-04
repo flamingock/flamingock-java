@@ -32,12 +32,11 @@ public abstract class ExecutionStep extends AbstractTaskStep implements Successa
         this.duration = duration;
     }
 
-
     public long getDuration() {
         return duration;
     }
 
-    public abstract AfterExecutionAuditStep applyAuditResult(Result saveResult);
+    public abstract AfterExecutionAuditStep withAuditResult(Result saveResult);
 
     @Override
     public final boolean isSuccessStep() {

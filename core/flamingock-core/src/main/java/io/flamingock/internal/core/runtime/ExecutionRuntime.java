@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import javax.inject.Named;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -118,7 +119,14 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
         try {
             return method.invoke(instance, parameters);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            if(e instanceof FlamingockException) {
+                throw (FlamingockException)e;
+            } else {
+                throw  e instanceof InvocationTargetException
+                ? new FlamingockException(((InvocationTargetException)e).getTargetException())
+                : new FlamingockException(e);
+
+            }
         }
     }
 

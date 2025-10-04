@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
+import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -75,7 +76,11 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
 
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
         Object instance = executionRuntime.getInstance(descriptor.getConstructor());
-        executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+        try {
+            executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+        } catch (Throwable ex) {
+            throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
+        }
     }
 
     @Override

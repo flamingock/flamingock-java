@@ -105,7 +105,7 @@ public class ChangeProcessStrategyFactory {
 
     public ChangeProcessStrategy build() {
 
-        changeLogger.logChangeExecutionStart(change.getId());
+        changeLogger.logStartChangeProcessStrategy(change.getId());
         
         TargetSystemOps targetSystemOps = targetSystemManager.getTargetSystem(change.getTargetSystem());
         

@@ -26,6 +26,7 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessLogger;
 import io.flamingock.internal.core.task.navigation.navigator.AuditStoreStepOperations;
@@ -112,15 +113,16 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
     }
 
 
-    public final TaskSummary applyChange() {
+    public final ChangeProcessResult applyChange() {
         if (!change.isAlreadyApplied()) {
             return doApplyChange();
         } else {
             stepLogger.logSkippedExecution(change.getId());
-            return summarizer
+            TaskSummary summary = summarizer
                     .add(new CompletedAlreadyAppliedStep(change))
                     .setSuccessful()
                     .getSummary();
+            return new ChangeProcessResult(change.getId(), summary);
         }
     }
 
@@ -132,7 +134,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
      * 
      * @return Task execution summary with success/failure status and step details
      */
-    abstract protected TaskSummary doApplyChange();
+    abstract protected ChangeProcessResult doApplyChange();
 
     /**
      * Audits and logs the start of change execution.
@@ -163,7 +165,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, auditTime);
 
         stepLogger.logAuditExecutionResult(auditResult, executionStep.getLoadedTask());
-        AfterExecutionAuditStep afterExecutionAudit = executionStep.applyAuditResult(auditResult);
+        AfterExecutionAuditStep afterExecutionAudit = executionStep.withAuditResult(auditResult);
         summarizer.add(afterExecutionAudit);
         return afterExecutionAudit;
     }
