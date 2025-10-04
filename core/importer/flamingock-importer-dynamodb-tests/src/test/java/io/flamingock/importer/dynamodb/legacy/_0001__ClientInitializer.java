@@ -19,8 +19,8 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.mongock.api.annotations.BeforeExecution;
 
-@Change(id = "client-updater", author = "mongock")
-public class _2__ClientUpdater {
+@Change(id = "client-initializer", author = "mongock")
+public class _0001__ClientInitializer {
 
     @BeforeExecution
     public void beforeExecution() {

@@ -86,7 +86,7 @@ class TemplateLoadedTaskBuilderTest {
                     .thenReturn(Optional.of(TestChangeTemplate.class));
 
             builder.setId("test-id")
-                    .setOrderInContent("001")
+                    .setOrder("001")
                     .setFileName("test-file.yml")
                     .setTemplateName("test-template")
                     .setRunAlways(false)
@@ -116,8 +116,8 @@ class TemplateLoadedTaskBuilderTest {
                     .thenReturn(Optional.of(TestChangeTemplate.class));
 
             builder.setId("test-id")
-                    .setOrderInContent(null)
-                    .setFileName("_002__test-file.yml")
+                    .setOrder("0002")
+                    .setFileName("_0002__test-file.yml")
                     .setTemplateName("test-template")
                     .setRunAlways(false)
                     .setTransactional(true)
@@ -131,9 +131,9 @@ class TemplateLoadedTaskBuilderTest {
             TemplateLoadedChange result = builder.build();
 
             // Then
-            assertEquals("002", result.getOrder().orElse(null));
+            assertEquals("0002", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
-            assertEquals("_002__test-file.yml", result.getFileName());
+            assertEquals("_0002__test-file.yml", result.getFileName());
         }
     }
 
@@ -146,7 +146,7 @@ class TemplateLoadedTaskBuilderTest {
                     .thenReturn(Optional.of(TestChangeTemplate.class));
 
             builder.setId("test-id")
-                    .setOrderInContent("003")
+                    .setOrder("003")
                     .setFileName("_003__test-file.yml")
                     .setTemplateName("test-template")
                     .setRunAlways(false);
@@ -168,92 +168,6 @@ class TemplateLoadedTaskBuilderTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when orderInContent does not match order in fileName")
-    void shouldThrowExceptionWhenOrderInContentDoesNotMatchOrderInFileName() {
-        // Given
-        try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
-            mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(TestChangeTemplate.class));
-
-            builder.setId("test-id")
-                    .setOrderInContent("001")
-                    .setFileName("_002__test-file.yml")
-                    .setTemplateName("test-template")
-                    .setRunAlways(false);
-            builder.setProfiles(Collections.singletonList("test"));
-            builder.setTransactional(true)
-                    .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
-
-            // When & Then
-            FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
-
-
-            assertEquals("Change[test-id] Order mismatch: value in template order field='001' does not match order in fileName='002'",
-                    exception.getMessage());
-        }
-    }
-
-    @Test
-    @DisplayName("Should throw exception when both orderInContent and order in fileName are missing")
-    void shouldThrowExceptionWhenBothOrderInContentAndOrderInFileNameAreMissing() {
-        // Given
-        try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
-            mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(TestChangeTemplate.class));
-
-            builder.setId("test-id")
-                    .setOrderInContent(null)
-                    .setFileName("test-file.yml")
-                    .setTemplateName("test-template")
-                    .setRunAlways(false);
-            builder.setProfiles(Arrays.asList("test"));
-            builder.setTransactional(true)
-                    .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
-
-            // When & Then
-            FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
-
-            assertEquals("Change[test-id] Order is required: order must be present in the template order field or in the fileName(e.g. _0001__test-id.yaml). If present in both, they must have the same value.",
-                    exception.getMessage());
-        }
-    }
-
-    @Test
-    @DisplayName("Should throw exception when orderInContent is empty string")
-    void shouldBuildWithOrderFromFileNameWhenOrderInContentIsEmptyString() {
-        // Given
-        try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
-            mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(TestChangeTemplate.class));
-
-            builder.setId("test-id")
-                    .setOrderInContent("")
-                    .setFileName("_004__test-file.yml")
-                    .setTemplateName("test-template")
-                    .setRunAlways(false);
-            builder.setProfiles(Arrays.asList("test"));
-            builder.setTransactional(true)
-                    .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
-
-            // When
-            FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
-
-            // Then
-            assertEquals("Change[test-id] Order mismatch: value in template order field='' does not match order in fileName='004'",
-                exception.getMessage());
-        }
-    }
-
-    @Test
     @DisplayName("Should throw exception when template is not found")
     void shouldThrowExceptionWhenTemplateIsNotFound() {
         // Given
@@ -262,7 +176,7 @@ class TemplateLoadedTaskBuilderTest {
                     .thenReturn(Optional.empty());
 
             builder.setId("test-id")
-                    .setOrderInContent("001")
+                    .setOrder("001")
                     .setFileName("test-file.yml")
                     .setTemplateName("unknown-template");
 

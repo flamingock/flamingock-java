@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2023 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.mongodb.legacy;
+package io.flamingock.importer.couchbase.legacy;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.mongock.api.annotations.BeforeExecution;
 
-@Change(id = "client-initializer", author = "flamingock-team")
-public class _1__ClientInitializer {
+@Change(id = "client-initializer", author = "mongock", transactional = false)
+public class _0001__ClientInitializer {
 
     @BeforeExecution
     public void beforeExecution() {

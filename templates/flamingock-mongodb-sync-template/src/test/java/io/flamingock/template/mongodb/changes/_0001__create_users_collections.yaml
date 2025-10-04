@@ -1,5 +1,4 @@
 id: create-users-collection-with-index
-order: 0001
 transactional: false
 template: MongoChangeTemplate
 targetSystem:

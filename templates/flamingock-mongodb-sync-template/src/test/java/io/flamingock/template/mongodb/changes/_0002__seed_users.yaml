@@ -1,5 +1,4 @@
 id: seed-users
-order: 0002
 transactional: true
 template: MongoChangeTemplate
 targetSystem:

@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.internal.common.core.preview.ChangeOrderExtractor;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Recovery;
@@ -63,7 +64,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
     private CodeLoadedTaskBuilder setPreview(CodePreviewChange preview) {
         setId(preview.getId());
-        setOrderInContent(preview.getOrder().orElse(null));
+        setOrder(preview.getOrder().orElse(null));
         setAuthor(preview.getAuthor());
         setChangeClass(preview.getSource());
         setRunAlways(preview.isRunAlways());
@@ -105,7 +106,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setOrderInContent(String orderInContent) {
+    public CodeLoadedTaskBuilder setOrder(String orderInContent) {
         this.orderInContent = orderInContent;
         return this;
     }
@@ -163,8 +164,9 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, Change annotation) {
-        setId(annotation.id());
-        setOrderInContent(null);//TODO replace with order from class
+        String changeId = annotation.id();
+        setId(changeId);
+        setOrder(ChangeOrderExtractor.extractOrderFromClassName(changeId, sourceClass.getName()));
         setAuthor(annotation.author());
         setChangeClass(sourceClass.getName());
         setTransactional(annotation.transactional());
