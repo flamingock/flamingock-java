@@ -82,7 +82,7 @@ if (project != rootProject) {
                 }
                 prerelease {
                     enabled.set(true)
-                    pattern.set(".*-(beta|snapshot|alpha)\\$")
+                    pattern.set("^(0\\..*|.*-(beta\\.?\\d*|snapshot\\.?\\d*|alpha\\.?\\d*|rc\\.?\\d*|RC\\.?\\d*)\$)")
                 }
                 changelog {
                     enabled.set(true)
