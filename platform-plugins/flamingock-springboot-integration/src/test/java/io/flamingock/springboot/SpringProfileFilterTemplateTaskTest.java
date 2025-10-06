@@ -109,7 +109,6 @@ class SpringProfileFilterTemplateTaskTest {
 
         ChangeTemplateFileContent changeFileDescriptor = new ChangeTemplateFileContent(
                 "template-base-change-id",
-                "1",
                 "test-author",
                 TemplateSimulate.class.getSimpleName(),
                 profiles,
@@ -121,7 +120,7 @@ class SpringProfileFilterTemplateTaskTest {
                 RecoveryDescriptor.getDefault()
         );
 
-        TemplatePreviewChange preview = PreviewTaskBuilder.getTemplateBuilder("TemplateBase.yaml", changeFileDescriptor).build();
+        TemplatePreviewChange preview = PreviewTaskBuilder.getTemplateBuilder("_0001__ChangeUsingTemplate.yaml", changeFileDescriptor).build();
 
         return LoadedTaskBuilder.getInstance(preview).build();
 

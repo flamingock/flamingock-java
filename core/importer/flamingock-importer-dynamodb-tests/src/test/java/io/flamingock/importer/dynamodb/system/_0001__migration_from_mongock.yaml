@@ -1,5 +1,4 @@
 id: migration-from-mongock
-order: 0001
 transactional: false
 template: DynamoDBImporterChangeTemplate
 configuration:

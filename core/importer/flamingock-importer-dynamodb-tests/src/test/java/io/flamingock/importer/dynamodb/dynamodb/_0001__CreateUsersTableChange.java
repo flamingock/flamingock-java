@@ -21,7 +21,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 @Change(id = "create-users-table", author = "importer")
-public class _001__CreateUsersTableChange {
+public class _0001__CreateUsersTableChange {
 
     @Apply
     public void execution(DynamoDbClient dynamoDBClient) {

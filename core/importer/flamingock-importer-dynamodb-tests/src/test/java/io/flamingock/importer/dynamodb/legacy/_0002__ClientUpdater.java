@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.couchbase.legacy;
+package io.flamingock.importer.dynamodb.legacy;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.mongock.api.annotations.BeforeExecution;
 
-@Change(id = "client-initializer", author = "mongock", transactional = false)
-public class _1__ClientInitializer {
+@Change(id = "client-updater", author = "mongock")
+public class _0002__ClientUpdater {
 
     @BeforeExecution
     public void beforeExecution() {

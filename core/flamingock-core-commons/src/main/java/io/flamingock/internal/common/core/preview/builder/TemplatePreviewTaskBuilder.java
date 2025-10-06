@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.common.core.preview.builder;
 
+import io.flamingock.internal.common.core.preview.ChangeOrderExtractor;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
@@ -31,7 +32,6 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
 
     private String fileName;
     private String id;
-    private String order;
     private String author;
     private String templateClassPath;
     private String profilesString;
@@ -62,11 +62,6 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
 
     public TemplatePreviewTaskBuilder setId(String id) {
         this.id = id;
-        return this;
-    }
-
-    public TemplatePreviewTaskBuilder setOrder(String order) {
-        this.order = order;
         return this;
     }
 
@@ -117,6 +112,8 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     public TemplatePreviewChange build() {
 
         List<String> profiles = getProfiles();
+        String order = ChangeOrderExtractor.extractOrderFromFile(id, fileName);
+
         return new TemplatePreviewChange(
                 fileName,
                 id,
@@ -147,8 +144,9 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
 
 
     TemplatePreviewTaskBuilder setFromDefinition(ChangeTemplateFileContent templateTaskDescriptor) {
+        //fileName is set in "setFileName" method
+        //order is extract from the fileName in the "build" method
         setId(templateTaskDescriptor.getId());
-        setOrder(templateTaskDescriptor.getOrder());
         setAuthor(templateTaskDescriptor.getAuthor());
         setTemplate(templateTaskDescriptor.getTemplate());
         setProfilesString(templateTaskDescriptor.getProfiles());

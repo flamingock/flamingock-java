@@ -20,7 +20,6 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 public class ChangeTemplateFileContent {
     private String id;
-    private String order;
     private String author;
     private String template;
     private String profiles; //colon-separated list of profiles
@@ -35,7 +34,6 @@ public class ChangeTemplateFileContent {
     }
 
     public ChangeTemplateFileContent(String id,
-                                     String order,
                                      String author,
                                      String template,
                                      String profiles,
@@ -46,7 +44,6 @@ public class ChangeTemplateFileContent {
                                      TargetSystemDescriptor targetSystem,
                                      RecoveryDescriptor recovery) {
         this.id = id;
-        this.order = order;
         this.author = author;
         this.template = template;
         this.profiles = profiles;
@@ -65,14 +62,6 @@ public class ChangeTemplateFileContent {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getOrder() {
-        return order;
-    }
-
-    public void setOrder(String order) {
-        this.order = order;
     }
 
     public String getAuthor() {
@@ -98,7 +87,6 @@ public class ChangeTemplateFileContent {
     public void setProfiles(String profiles) {
         this.profiles = profiles;
     }
-
 
     public Boolean getTransactional() {
         return transactional;

@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.common.core.preview.ChangeOrderExtractor;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
@@ -135,11 +136,15 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         Change changeAnnotation = typeElement.getAnnotation(Change.class);
         TargetSystem targetSystemAnnotation = typeElement.getAnnotation(TargetSystem.class);
         Recovery recoveryAnnotation = typeElement.getAnnotation(Recovery.class);
+
         if(changeAnnotation != null) {
-            setId(changeAnnotation.id());
-            setOrder(null);//TODO replace with order from class
+            String changeId = changeAnnotation.id();
+            String classPath = typeElement.getQualifiedName().toString();
+            String order = ChangeOrderExtractor.extractOrderFromClassName(changeId, classPath);
+            setId(changeId);
+            setOrder(order);
             setAuthor(changeAnnotation.author());
-            setSourceClassPath(typeElement.getQualifiedName().toString());
+            setSourceClassPath(classPath);
             setExecutionMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
             setRollbackMethod(getAnnotatedMethodInfo(typeElement, Rollback.class).orElse(null));
             setBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, BeforeExecution.class).orElse(null));
