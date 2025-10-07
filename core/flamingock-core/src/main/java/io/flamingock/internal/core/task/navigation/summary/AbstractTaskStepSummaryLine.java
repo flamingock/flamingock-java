@@ -87,7 +87,7 @@ public abstract class AbstractTaskStepSummaryLine implements StepSummaryLine {
 
         @Override
         public String getPretty() {
-            return String.format("\tStarted\t\t\t\t%s", getPrettyResult());
+            return String.format("\tStarted\t\t\t%s", getPrettyResult());
         }
 
     }
