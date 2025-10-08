@@ -30,7 +30,7 @@ val projectsToRelease = if (module != null) {
     val cloudProjects = project.extra["cloudProjects"] as Set<String>
     val communityProjects = project.extra["communityProjects"] as Set<String>
     val pluginProjects = project.extra["pluginProjects"] as Set<String>
-    val transactionerProjects = project.extra["transactionerProjects"] as Set<String>
+    val targetSystemProjects = project.extra["targetSystemProjects"] as Set<String>
     val templateProjects = project.extra["templateProjects"] as Set<String>
     val utilProjects = project.extra["utilProjects"] as Set<String>
 
@@ -39,7 +39,7 @@ val projectsToRelease = if (module != null) {
         "cloud" -> cloudProjects
         "community" -> communityProjects
         "plugins" -> pluginProjects
-        "transactioners" -> transactionerProjects
+        "targetSystems" -> targetSystemProjects
         "templates" -> templateProjects
         "utils" -> utilProjects
         "all" -> allProjects
