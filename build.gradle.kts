@@ -16,7 +16,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "0.0.42-beta"
+    version = "0.0.43-beta"
 
     repositories {
         mavenCentral()
@@ -24,6 +24,8 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "flamingock.project-structure")
-    apply(plugin = "flamingock.release-management")
+    if (project.file("build.gradle.kts").exists()) {
+        apply(plugin = "flamingock.project-structure")
+        apply(plugin = "flamingock.release-management")
+    }
 }

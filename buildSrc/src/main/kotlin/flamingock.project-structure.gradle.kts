@@ -9,8 +9,7 @@ val coreProjects = setOf(
     "flamingock-core-commons",
     "flamingock-core-api",
     "flamingock-processor",
-    "flamingock-graalvm",
-//    "flamingock-cli"
+    "flamingock-graalvm"
 )
 
 val cloudProjects = setOf(
@@ -22,7 +21,6 @@ val communityProjects = setOf(
     "flamingock-community-bom",
     "flamingock-community",
     "flamingock-auditstore-mongodb-sync",
-    "flamingock-auditstore-mongodb-springdata",
     "flamingock-auditstore-couchbase",
     "flamingock-auditstore-dynamodb",
     "flamingock-importer"
@@ -32,10 +30,13 @@ val pluginProjects = setOf(
     "flamingock-springboot-integration"
 )
 
-val transactionerProjects = setOf(
-    "sql-target-system",
+val targetSystemProjects = setOf(
+    "nontransactional-target-system",
     "mongodb-sync-target-system",
-    "dynamodb-transactioner"
+    "mongodb-springdata-target-system",
+    "sql-target-system",
+    "dynamodb-target-system",
+    "couchbase-target-system"
 )
 
 val templateProjects = setOf(
@@ -47,10 +48,11 @@ val utilProjects = setOf(
     "general-util",
     "test-util",
     "mongodb-util",
-    "dynamodb-util"
+    "dynamodb-util",
+    "couchbase-util"
 )
 
-val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + transactionerProjects + templateProjects + utilProjects
+val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + templateProjects + utilProjects
 
 // Project classification utilities
 fun Project.isBomModule(): Boolean = name.endsWith("-bom")
@@ -62,7 +64,7 @@ fun Project.getProjectCategory(): String? = when (name) {
     in cloudProjects -> "cloud"
     in communityProjects -> "community"
     in pluginProjects -> "plugins"
-    in transactionerProjects -> "transactioners"
+    in targetSystemProjects -> "targetSystems"
     in templateProjects -> "templates"
     in utilProjects -> "utils"
     else -> null
@@ -74,7 +76,7 @@ fun getProjectsForBundle(bundle: String?): Set<String> = when (bundle) {
     "cloud" -> cloudProjects
     "community" -> communityProjects
     "plugins" -> pluginProjects
-    "transactioners" -> transactionerProjects
+    "targetSystems" -> targetSystemProjects
     "templates" -> templateProjects
     "utils" -> utilProjects
     "all" -> allProjects
@@ -86,7 +88,7 @@ extra["coreProjects"] = coreProjects
 extra["cloudProjects"] = cloudProjects
 extra["communityProjects"] = communityProjects
 extra["pluginProjects"] = pluginProjects
-extra["transactionerProjects"] = transactionerProjects
+extra["targetSystemProjects"] = targetSystemProjects
 extra["templateProjects"] = templateProjects
 extra["utilProjects"] = utilProjects
 extra["allProjects"] = allProjects
