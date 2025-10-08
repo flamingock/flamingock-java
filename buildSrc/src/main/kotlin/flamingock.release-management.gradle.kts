@@ -48,6 +48,12 @@ val projectsToRelease = if (module != null) {
 }
 
 // JReleaser configuration
+jreleaser {
+    project {
+        inceptionYear.set("2024")
+        authors.set(setOf("dieppa", "osantana", "bercianor", "dfrigolet"))
+    }
+}
 if (project != rootProject) {
     tasks.named("jreleaserRelease") {
         enabled = false
