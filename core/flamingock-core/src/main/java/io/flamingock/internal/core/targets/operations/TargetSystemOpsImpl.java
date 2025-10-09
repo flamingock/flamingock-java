@@ -42,6 +42,12 @@ public class TargetSystemOpsImpl implements TargetSystemOps {
     }
 
     @Override
+    public final <T> T rollbackChange(Function<ExecutionRuntime, T> changeRollbacker, ExecutionRuntime executionRuntime) {
+        executionRuntime.addContextLayer(targetSystem.getContext());
+        return targetSystem.rollbackChange(changeRollbacker, executionRuntime);
+    }
+
+    @Override
     public String getId() {
         return targetSystem.getId();
     }

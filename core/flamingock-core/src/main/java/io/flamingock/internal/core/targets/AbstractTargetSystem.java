@@ -100,6 +100,24 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
     }
 
     /**
+     * Rolls back (reverts) a previously applied change with session-scoped dependency injection.
+     * <p>
+     * This method is the entry point for non-transactional rollback execution.
+     * It calls {@link #enhanceExecutionRuntime(ExecutionRuntime, boolean)} to allow
+     * subclasses to inject session-scoped dependencies before executing the rollback.
+     *
+     * @param <T>               the return type of the rollback operation
+     * @param changeRollbacker  the function that executes the actual rollback
+     * @param executionRuntime  the runtime context for dependency resolution
+     * @return the result of the rollback operation
+     */
+    public final <T> T rollbackChange(Function<ExecutionRuntime, T> changeRollbacker, ExecutionRuntime executionRuntime) {
+        enhanceExecutionRuntime(executionRuntime, false);
+        return changeRollbacker.apply(executionRuntime);
+    }
+
+
+    /**
      * Hook for injecting session-scoped dependencies into the execution runtime.
      * <p>
      * Subclasses should override this method to inject resources that need to be

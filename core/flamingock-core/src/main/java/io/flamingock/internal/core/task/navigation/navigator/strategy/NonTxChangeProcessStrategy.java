@@ -111,7 +111,7 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
 
     private void rollbackActualChangeAndChain(FailedAfterExecutionAuditStep rollableFailedStep, ExecutionContext executionContext) {
         rollableFailedStep.getRollbackSteps().forEach(rollableStep -> {
-            ManualRolledBackStep rolledBack = rollableStep.rollback(buildExecutionRuntime());
+            ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
             stepLogger.logManualRollbackResult(rolledBack);
             summarizer.add(rolledBack);
             auditAndLogManualRollback(rolledBack, executionContext);

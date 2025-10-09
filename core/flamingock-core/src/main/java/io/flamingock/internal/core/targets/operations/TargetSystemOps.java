@@ -56,4 +56,23 @@ public interface TargetSystemOps extends TargetSystem {
      */
     <T> T applyChange(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime);
 
+    /**
+     * Rolls back (reverts) a previously applied change in this target system.
+     * <p>
+     * This method coordinates the execution of a rollback by:
+     * <ul>
+     *   <li>Injecting session-scoped dependencies via the target system</li>
+     *   <li>Executing the rollback function with the enhanced runtime</li>
+     * </ul>
+     * <p>
+     * Implementations should strive for idempotency: invoking the rollback more than
+     * once should not produce side effects beyond the first successful revert.
+     *
+     * @param <T>               the return type of the rollback operation
+     * @param changeRollbacker  the function that executes the actual rollback
+     * @param executionRuntime  the runtime context for dependency resolution
+     * @return the result of the rollback operation
+     */
+    <T> T rollbackChange(Function<ExecutionRuntime, T> changeRollbacker, ExecutionRuntime executionRuntime);
+
 }

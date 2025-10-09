@@ -142,7 +142,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         rollableFailedStep.getRollbackSteps()
                 .stream().skip(1)
                 .forEach(rollableStep -> {
-                    ManualRolledBackStep rolledBack = rollableStep.rollback(buildExecutionRuntime());
+                    ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
                     stepLogger.logManualRollbackResult(rolledBack);
                     summarizer.add(rolledBack);
                     auditAndLogManualRollback(rolledBack, executionContext);
