@@ -40,8 +40,7 @@ val targetSystemProjects = setOf(
 )
 
 val templateProjects = setOf(
-    "flamingock-sql-template",
-    "flamingock-mongodb-sync-template"
+    "flamingock-sql-template"
 )
 
 val utilProjects = setOf(
