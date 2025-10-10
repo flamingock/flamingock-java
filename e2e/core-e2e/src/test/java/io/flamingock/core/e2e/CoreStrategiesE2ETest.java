@@ -234,7 +234,7 @@ class CoreStrategiesE2ETest {
 
         Counter counter = new Counter();
 
-        NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem( "kafka")
+        NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka")
                 .addDependency(counter);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -244,14 +244,15 @@ class CoreStrategiesE2ETest {
                     )
             );
 
-            try {
+            PipelineExecutionException exception = assertThrows(PipelineExecutionException.class, () -> {
                 testKit.createBuilder()
                         .addTargetSystem(targetSystem)
                         .build()
                         .run();
-            } catch (PipelineExecutionException e) {
-                // Exception is expected, do not fail the test
-            }
+            });
+
+            assertNotNull(exception);
+            assertTrue(exception.getMessage().contains("Intentional failure"));
         }
 
         assertTrue(counter.isExecuted(), "Counter.executed should be true after execution");
