@@ -15,10 +15,7 @@
  */
 package io.flamingock.core.e2e.changes;
 
-import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Change;
-import io.flamingock.api.annotations.Rollback;
-import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.api.annotations.*;
 import io.flamingock.core.e2e.helpers.Counter;
 
 import javax.inject.Named;
@@ -32,13 +29,13 @@ import javax.inject.Named;
 public class _007__SimpleNonTransactionalChangeWithError {
 
     @Apply
-    public void execution(Counter counter) {
+    public void execution(@NonLockGuarded Counter counter) {
         counter.setExecuted(true);
         throw new RuntimeException("Intentional failure");
     }
 
     @Rollback
-    public void rollback(Counter counter) {
+    public void rollback(@NonLockGuarded Counter counter) {
         counter.setRollbacked(true);
         System.out.println("Rolling back failing transactional change");
     }
