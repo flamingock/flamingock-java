@@ -17,12 +17,8 @@ package io.flamingock.core.e2e;
 
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.core.e2e.changes._006__FailingTransactionalChange;
-import io.flamingock.core.e2e.changes._003__MultiTest1NonTransactionalChange;
-import io.flamingock.core.e2e.changes._004__MultiTest2TransactionalChange;
-import io.flamingock.core.e2e.changes._005__SecondRunNonTransactionalChange;
-import io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange;
-import io.flamingock.core.e2e.changes._002__SimpleTransactionalChange;
+import io.flamingock.core.e2e.changes.*;
+import io.flamingock.core.e2e.helpers.Counter;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.core.processor.util.Deserializer;
@@ -42,8 +38,7 @@ import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.ROLLED_BACK;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class CoreStrategiesE2ETest {
@@ -228,6 +223,45 @@ class CoreStrategiesE2ETest {
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test5-second-run-change"),
                 APPLIED("test5-second-run-change")
+        );
+    }
+
+    @Test
+    @DisplayName("Should inject dependencies in rollback for NON-TX change")
+    void testDependencyInjectionInRollbackForNonTxChange() {
+        InMemoryTestKit testKit = InMemoryTestKit.create();
+        AuditTestHelper auditHelper = testKit.getAuditHelper();
+
+        Counter counter = new Counter();
+
+        NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka")
+                .addDependency(counter);
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeTestDefinition(_007__SimpleNonTransactionalChangeWithError.class, Collections.emptyList())
+                    )
+            );
+
+            PipelineExecutionException exception = assertThrows(PipelineExecutionException.class, () -> {
+                testKit.createBuilder()
+                        .addTargetSystem(targetSystem)
+                        .build()
+                        .run();
+            });
+
+            assertNotNull(exception);
+            assertTrue(exception.getMessage().contains("Intentional failure"));
+        }
+
+        assertTrue(counter.isExecuted(), "Counter.executed should be true after execution");
+        assertTrue(counter.isRollbacked(), "Counter.rollbacked should be true after rollback");
+
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("test1-non-tx-change"),
+                FAILED("test1-non-tx-change"),
+                ROLLED_BACK("test1-non-tx-change")
         );
     }
 }
