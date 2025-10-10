@@ -254,8 +254,8 @@ class CoreStrategiesE2ETest {
             }
         }
 
-        assertTrue(counter.executed, "Counter.executed should be true after execution");
-        assertTrue(counter.rollbacked, "Counter.rollbacked should be true after rollback");
+        assertTrue(counter.isExecuted(), "Counter.executed should be true after execution");
+        assertTrue(counter.isRollbacked(), "Counter.rollbacked should be true after rollback");
 
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test1-non-tx-change"),

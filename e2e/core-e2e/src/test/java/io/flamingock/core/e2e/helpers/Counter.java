@@ -17,6 +17,23 @@
 package io.flamingock.core.e2e.helpers;
 
 public class Counter {
-    public boolean executed = false;
-    public boolean rollbacked = false;
+    private boolean executed = false;
+    private boolean rollbacked = false;
+
+    public boolean isExecuted() {
+        return executed;
+    }
+
+    public void setExecuted(boolean executed) {
+        this.executed = executed;
+    }
+
+    public boolean isRollbacked() {
+        return rollbacked;
+    }
+
+    public void setRollbacked(boolean rollbacked) {
+        this.rollbacked = rollbacked;
+    }
 }
+

@@ -33,13 +33,13 @@ public class _007__SimpleNonTransactionalChangeWithError {
 
     @Apply
     public void execution(Counter counter) {
-        counter.executed = true;
+        counter.setExecuted(true);
         throw new RuntimeException("Intentional failure");
     }
 
     @Rollback
     public void rollback(Counter counter) {
-        counter.rollbacked = true;
+        counter.setRollbacked(true);
         System.out.println("Rolling back failing transactional change");
     }
 }
