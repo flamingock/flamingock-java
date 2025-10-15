@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.utils.extendsFrom
 dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
+    implementation(project(":utils:sql-util"))
 
     //Test
     testImplementation("org.testcontainers:mysql:1.19.0")

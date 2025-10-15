@@ -16,6 +16,8 @@
 package io.flamingock.targetsystem.mysql;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.sql.SqlAuditMarkerDialectUtils;
+import io.flamingock.internal.common.sql.SqlVendor;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
@@ -37,22 +39,25 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
     private final String tableName;
     private final DataSource dataSource;
     private final TransactionManager<Connection> txManager;
+    private final SqlAuditMarkerDialectUtils dialectUtils;
 
     public static Builder builder(DataSource dataSource, TransactionManager<Connection> txManager) {
         return new Builder(dataSource, txManager);
     }
 
-    public SqlTargetSystemAuditMarker(DataSource dataSource,
+    private SqlTargetSystemAuditMarker(DataSource dataSource,
                                       String tableName,
-                                      TransactionManager<Connection> txManager) {
+                                      TransactionManager<Connection> txManager,
+                                      SqlAuditMarkerDialectUtils dialectUtils) {
         this.dataSource = dataSource;
         this.tableName = tableName;
         this.txManager = txManager;
+        this.dialectUtils = dialectUtils;
     }
 
     @Override
     public Set<TargetSystemAuditMark> listAll() {
-        String sql = String.format("SELECT task_id, operation FROM %s", tableName);
+        String sql = dialectUtils.getListAllSqlString(tableName);
 
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -73,7 +78,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
 
     @Override
     public void clearMark(String changeId) {
-        String sql = String.format("DELETE FROM %s WHERE task_id = ?", tableName);
+        String sql = dialectUtils.getClearMarkSqlString(tableName);
         try (Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, changeId);
@@ -85,9 +90,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
 
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
-        String sql = String.format(
-                "INSERT INTO %s (task_id, operation) VALUES (?, ?) " +
-                        "ON DUPLICATE KEY UPDATE operation = VALUES(operation)", tableName);
+        String sql = dialectUtils.getMarkSqlString(tableName);
         Connection connection = txManager.getSessionOrThrow(auditMark.getTaskId());
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, auditMark.getTaskId());
@@ -104,12 +107,14 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
     public static class Builder {
         private final DataSource dataSource;
         private final TransactionManager<Connection> txManager;
+        private SqlAuditMarkerDialectUtils dialectUtils;
         private String tableName = "FLAMINGOCK_ONGOING_TASKS";
         private boolean autoCreate = true;
 
         public Builder(DataSource dataSource, TransactionManager<Connection> txManager) {
             this.dataSource = dataSource;
             this.txManager = txManager;
+            this.dialectUtils = new SqlAuditMarkerDialectUtils(dataSource);
         }
 
         public Builder withTableName(String tableName) {
@@ -122,11 +127,16 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
             return this;
         }
 
+        public Builder withVendor(SqlVendor vendor) {
+            this.dialectUtils = new SqlAuditMarkerDialectUtils(vendor);
+            return this;
+        }
+
         public SqlTargetSystemAuditMarker build() {
             if (autoCreate) {
                 createTableIfNotExists();
             }
-            return new SqlTargetSystemAuditMarker(dataSource, tableName, txManager);
+            return new SqlTargetSystemAuditMarker(dataSource, tableName, txManager, dialectUtils);
         }
 
         private void createTableIfNotExists() {
@@ -136,11 +146,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
                 DatabaseMetaData meta = connection.getMetaData();
                 ResultSet resultSet = meta.getTables(null, null, tableName, new String[]{"TABLE"});
                 if (!resultSet.next()) {
-                    String createTableSql = String.format(
-                            "CREATE TABLE %s (" +
-                                    "task_id VARCHAR(255) PRIMARY KEY, " +
-                                    "operation VARCHAR(50) NOT NULL" +
-                                    ")", tableName);
+                    String createTableSql = dialectUtils.getCreateTableSqlString(tableName);
                     statement.executeUpdate(createTableSql);
                 }
             } catch (SQLException ex) {
