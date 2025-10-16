@@ -24,13 +24,49 @@ public class AbstractSqlDialectHelper {
 
     public AbstractSqlDialectHelper(DataSource dataSource) {
         try {
-            sqlDialect = SqlDialect.fromDatabaseProductName(dataSource.getConnection().getMetaData().getDatabaseProductName().toLowerCase());
+            sqlDialect = fromDatabaseProductName(dataSource.getConnection().getMetaData().getDatabaseProductName());
         } catch (SQLException e) {
-            throw new RuntimeException("Could not obtain the ProductName from the DataSource", e);
+            throw new IllegalStateException("Unable to obtain database product name from DataSource", e);
         }
     }
 
     public AbstractSqlDialectHelper(SqlDialect sqlDialect) {
         this.sqlDialect = sqlDialect;
+    }
+
+    private SqlDialect fromDatabaseProductName(String productName) {
+        if (productName == null) {
+            throw new IllegalArgumentException("Database product name is null; cannot determine SQL dialect.");
+        }
+        String v = productName.toLowerCase();
+        if (v.contains("mysql")) {
+            return SqlDialect.MYSQL;
+        } else if (v.contains("mariadb")) {
+            return SqlDialect.MARIADB;
+        } else if (v.contains("postgresql")) {
+            return SqlDialect.POSTGRESQL;
+        } else if (v.contains("sqlite")) {
+            return SqlDialect.SQLITE;
+        } else if (v.contains("h2")) {
+            return SqlDialect.H2;
+        } else if (v.contains("hsqldb")) {
+            return SqlDialect.HSQLDB;
+        } else if (v.contains("derby")) {
+            return SqlDialect.DERBY;
+        } else if (v.contains("sql server")) {
+            return SqlDialect.SQLSERVER;
+        } else if (v.contains("sybase")) {
+            return SqlDialect.SYBASE;
+        } else if (v.contains("firebird")) {
+            return SqlDialect.FIREBIRD;
+        } else if (v.contains("informix")) {
+            return SqlDialect.INFORMIX;
+        } else if (v.contains("oracle")) {
+            return SqlDialect.ORACLE;
+        } else if (v.contains("db2")) {
+            return SqlDialect.DB2;
+        } else {
+            throw new IllegalArgumentException("Unsupported SQL dialect: " + productName);
+        }
     }
 }

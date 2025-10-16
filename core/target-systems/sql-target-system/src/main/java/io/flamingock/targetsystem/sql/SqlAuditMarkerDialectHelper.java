@@ -83,7 +83,6 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
                 return String.format(
                     "INSERT INTO %s (task_id, operation) VALUES (?, ?) ON DUPLICATE KEY UPDATE operation = ?",
                     tableName);
-            case UNKNOWN:
             default:
                 throw new UnsupportedOperationException("Dialect not supported for upsert: " + sqlDialect.name());
         }
@@ -113,7 +112,6 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
                 return String.format(
                     "CREATE TABLE %s (task_id VARCHAR(255) NOT NULL PRIMARY KEY, operation VARCHAR(50) NOT NULL)",
                     tableName);
-            case UNKNOWN:
             default:
                 throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
         }

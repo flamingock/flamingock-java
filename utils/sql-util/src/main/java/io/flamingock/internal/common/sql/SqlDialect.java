@@ -29,41 +29,4 @@ public enum SqlDialect {
     INFORMIX,
     ORACLE,
     DB2,
-    UNKNOWN;
-
-    public static SqlDialect fromDatabaseProductName(String productName) {
-        if (productName == null) {
-            return UNKNOWN;
-        }
-        String v = productName.toLowerCase();
-        if (v.contains("mysql")) {
-            return MYSQL;
-        } else if (v.contains("mariadb")) {
-            return MARIADB;
-        } else if (v.contains("postgresql")) {
-            return POSTGRESQL;
-        } else if (v.contains("sqlite")) {
-            return SQLITE;
-        } else if (v.contains("h2")) {
-            return H2;
-        } else if (v.contains("hsqldb")) {
-            return HSQLDB;
-        } else if (v.contains("derby")) {
-            return DERBY;
-        } else if (v.contains("sql server")) {
-            return SQLSERVER;
-        } else if (v.contains("sybase")) {
-            return SYBASE;
-        } else if (v.contains("firebird")) {
-            return FIREBIRD;
-        } else if (v.contains("informix")) {
-            return INFORMIX;
-        } else if (v.contains("oracle")) {
-            return ORACLE;
-        } else if (v.contains("db2")) {
-            return DB2;
-        } else {
-            return UNKNOWN;
-        }
-    }
 }
