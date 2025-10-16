@@ -63,6 +63,10 @@ include("community:flamingock-auditstore-dynamodb")
 project(":community:flamingock-auditstore-dynamodb").name = "flamingock-auditstore-dynamodb"
 project(":community:flamingock-auditstore-dynamodb").projectDir = file("community/flamingock-auditstore-dynamodb")
 
+include("community:flamingock-auditstore-sql")
+project(":community:flamingock-auditstore-sql").name = "flamingock-auditstore-sql"
+project(":community:flamingock-auditstore-sql").projectDir = file("community/flamingock-auditstore-sql")
+
 //////////////////////////////////////
 // PLUGINS
 //////////////////////////////////////
@@ -174,3 +178,5 @@ project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
 include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
+
+include("community:flamingock-auditstore-sql")
