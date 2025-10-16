@@ -13,31 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.mysql.changes.unhappypath;
+package io.flamingock.targetsystem.sql.changes.unhappypath;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 
-
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 @TargetSystem( id = "mysql-ts")
-@Change(id = "create-clients-table", transactional = false, author = "aperezdieppa")
-public class _001__UnhappyCreateClientsTableChange {
+@Change(id = "insert-clients", author = "aperezdieppa")
+public class _002__UnhappyInsertClientsChange {
 
     @Apply
     public void execution(Connection connection) throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(
-                    "CREATE TABLE client_table (" +
-                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                            "name VARCHAR(255) NOT NULL, " +
-                            "email VARCHAR(255) UNIQUE NOT NULL" +
-                            ")"
-            );
+        // This will fail due to intentional error
+        throw new RuntimeException("Intentional failure for testing rollback");
+    }
+
+    @Rollback
+    public void rollback(Connection connection) throws SQLException {
+        String sql = "DELETE FROM client_table WHERE email = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "john.doe@example.com");
+            stmt.executeUpdate();
         }
     }
 }

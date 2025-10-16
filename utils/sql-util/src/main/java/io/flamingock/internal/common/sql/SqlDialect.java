@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.common.sql;
 
-public enum SqlVendor {
+public enum SqlDialect {
     MYSQL,
     MARIADB,
     POSTGRESQL,
@@ -31,11 +31,11 @@ public enum SqlVendor {
     DB2,
     UNKNOWN;
 
-    public static SqlVendor fromString(String vendor) {
-        if (vendor == null) {
+    public static SqlDialect fromDatabaseProductName(String productName) {
+        if (productName == null) {
             return UNKNOWN;
         }
-        String v = vendor.toLowerCase();
+        String v = productName.toLowerCase();
         if (v.contains("mysql")) {
             return MYSQL;
         } else if (v.contains("mariadb")) {

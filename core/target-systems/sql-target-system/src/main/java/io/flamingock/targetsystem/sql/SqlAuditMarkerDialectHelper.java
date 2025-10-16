@@ -13,25 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.sql;
+package io.flamingock.targetsystem.sql;
 
-import java.sql.SQLException;
+import io.flamingock.internal.common.sql.AbstractSqlDialectHelper;
+import io.flamingock.internal.common.sql.SqlDialect;
+
 import javax.sql.DataSource;
 
-public final class SqlAuditMarkerDialectUtils {
+public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper {
 
-    private final SqlVendor vendor;
-
-    public SqlAuditMarkerDialectUtils(DataSource dataSource) {
-        try {
-            vendor = SqlVendor.fromString(dataSource.getConnection().getMetaData().getDatabaseProductName());
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not obtain the vendor from the DataSource", e);
-        }
+    public SqlAuditMarkerDialectHelper(DataSource dataSource) {
+        super(dataSource);
     }
 
-    public SqlAuditMarkerDialectUtils(SqlVendor vendor) {
-        this.vendor = vendor;
+    public SqlAuditMarkerDialectHelper(SqlDialect dialect) {
+        super(dialect);
     }
 
     public String getListAllSqlString(String tableName) {
@@ -43,7 +39,7 @@ public final class SqlAuditMarkerDialectUtils {
     }
 
     public String getMarkSqlString(String tableName) {
-        switch (vendor) {
+        switch (sqlDialect) {
             case MYSQL:
             case MARIADB:
                 return String.format(
@@ -89,12 +85,12 @@ public final class SqlAuditMarkerDialectUtils {
                     tableName);
             case UNKNOWN:
             default:
-                throw new UnsupportedOperationException("Vendor not supported for upsert: " + vendor.name());
+                throw new UnsupportedOperationException("Dialect not supported for upsert: " + sqlDialect.name());
         }
     }
 
     public String getCreateTableSqlString(String tableName) {
-        switch (vendor) {
+        switch (sqlDialect) {
             case MYSQL:
             case MARIADB:
             case POSTGRESQL:
@@ -119,7 +115,7 @@ public final class SqlAuditMarkerDialectUtils {
                     tableName);
             case UNKNOWN:
             default:
-                throw new UnsupportedOperationException("Vendor not supported for CREATE TABLE: " + vendor.name());
+                throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
         }
     }
 }

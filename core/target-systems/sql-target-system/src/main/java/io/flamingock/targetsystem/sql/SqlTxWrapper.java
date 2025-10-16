@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.mysql;
+package io.flamingock.targetsystem.sql;
 
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.error.DatabaseTransactionException;
@@ -42,21 +42,21 @@ public class SqlTxWrapper implements TransactionWrapper {
     @Override
     public <T> T wrapInTransaction(ExecutionRuntime executionRuntime, Function<ExecutionRuntime, T> operation) {
         LocalDateTime transactionStart = LocalDateTime.now();
-        
+
         try (Connection connection = txManager.startSession(executionRuntime.getSessionId())) {
             boolean originalAutoCommit = connection.getAutoCommit();
             String isolationLevel = getIsolationLevelName(connection.getTransactionIsolation());
             String connectionInfo = getConnectionInfo(connection);
-            
+
             logger.debug("Starting SQL transaction [isolation={} connection={}]", isolationLevel, connectionInfo);
-            
+
             try {
                 connection.setAutoCommit(false);
                 executionRuntime.addDependency(new Dependency(connection));
-                
+
                 T result = operation.apply(executionRuntime);
                 Duration transactionDuration = Duration.between(transactionStart, LocalDateTime.now());
-                
+
                 if (result instanceof FailedStep) {
                     logger.info("Rolling back transaction due to failed step [duration={}]", formatDuration(transactionDuration));
                     connection.rollback();
@@ -67,24 +67,24 @@ public class SqlTxWrapper implements TransactionWrapper {
                     logger.debug("Transaction commit completed successfully [duration={}]", formatDuration(transactionDuration));
                 }
                 return result;
-                
+
             } catch (Exception e) {
                 Duration failureDuration = Duration.between(transactionStart, LocalDateTime.now());
                 logger.debug("Transaction failed, attempting rollback [duration={} error={}]",
                            formatDuration(failureDuration), e.getMessage());
-                
+
                 DatabaseTransactionException.RollbackStatus rollbackStatus;
                 try {
                     connection.rollback();
                     rollbackStatus = DatabaseTransactionException.RollbackStatus.SUCCESS;
-                    logger.info("Transaction rollback completed successfully after failure [duration={}]", 
+                    logger.info("Transaction rollback completed successfully after failure [duration={}]",
                               formatDuration(failureDuration));
                 } catch (SQLException rollbackEx) {
                     rollbackStatus = DatabaseTransactionException.RollbackStatus.FAILED;
                     logger.debug("Transaction rollback failed [duration={} rollback_error={}]",
                                formatDuration(failureDuration), rollbackEx.getMessage(), rollbackEx);
                 }
-                
+
                 throw new DatabaseTransactionException(
                     "SQL transaction failed during operation execution",
                     DatabaseTransactionException.TransactionState.FAILED,
@@ -96,7 +96,7 @@ public class SqlTxWrapper implements TransactionWrapper {
                     connectionInfo,
                     e
                 );
-                
+
             } finally {
                 try {
                     connection.setAutoCommit(originalAutoCommit);
@@ -121,7 +121,7 @@ public class SqlTxWrapper implements TransactionWrapper {
             );
         }
     }
-    
+
     private String getIsolationLevelName(int isolationLevel) {
         switch (isolationLevel) {
             case Connection.TRANSACTION_READ_UNCOMMITTED: return "READ_UNCOMMITTED";
@@ -131,16 +131,16 @@ public class SqlTxWrapper implements TransactionWrapper {
             default: return "UNKNOWN(" + isolationLevel + ")";
         }
     }
-    
+
     private String getConnectionInfo(Connection connection) {
         try {
-            return String.format("%s@%s", connection.getMetaData().getUserName(), 
+            return String.format("%s@%s", connection.getMetaData().getUserName(),
                                connection.getMetaData().getURL());
         } catch (SQLException e) {
             return "connection_info_unavailable";
         }
     }
-    
+
     private String formatDuration(Duration duration) {
         long millis = duration.toMillis();
         if (millis < 1000) {
