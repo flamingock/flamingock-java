@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.mysql.changes.happypath;
+package io.flamingock.targetsystem.sql.changes.happypath;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;

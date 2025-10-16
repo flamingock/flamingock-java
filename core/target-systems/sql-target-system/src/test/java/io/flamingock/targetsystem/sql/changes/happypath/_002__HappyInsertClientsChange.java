@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.mysql.changes.unhappypath;
+package io.flamingock.targetsystem.sql.changes.happypath;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
@@ -26,19 +25,14 @@ import java.sql.SQLException;
 
 @TargetSystem( id = "mysql-ts")
 @Change(id = "insert-clients", author = "aperezdieppa")
-public class _002__UnhappyInsertClientsChange {
+public class _002__HappyInsertClientsChange {
 
     @Apply
     public void execution(Connection connection) throws SQLException {
-        // This will fail due to intentional error
-        throw new RuntimeException("Intentional failure for testing rollback");
-    }
-
-    @Rollback
-    public void rollback(Connection connection) throws SQLException {
-        String sql = "DELETE FROM client_table WHERE email = ?";
+        String sql = "INSERT INTO client_table (name, email) VALUES (?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, "john.doe@example.com");
+            stmt.setString(1, "John Doe");
+            stmt.setString(2, "john.doe@example.com");
             stmt.executeUpdate();
         }
     }
