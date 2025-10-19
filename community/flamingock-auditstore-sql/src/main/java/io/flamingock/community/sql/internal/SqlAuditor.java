@@ -17,6 +17,7 @@ package io.flamingock.community.sql.internal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 
@@ -30,27 +31,20 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
     private final DataSource dataSource;
     private final String auditTableName;
     private final boolean autoCreate;
+    private final SqlAuditorDialectHelper dialectHelper;
 
     public SqlAuditor(DataSource dataSource, String auditTableName, boolean autoCreate) {
         this.dataSource = dataSource;
         this.auditTableName = auditTableName;
         this.autoCreate = autoCreate;
+        this.dialectHelper = new SqlAuditorDialectHelper(dataSource);
     }
 
     public void initialize() {
         if (autoCreate) {
             try (Connection conn = dataSource.getConnection();
                  Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS " + auditTableName + " (" +
-                                "id BIGINT AUTO_INCREMENT PRIMARY KEY," +
-                                "execution_id VARCHAR(255)," +
-                                "author VARCHAR(255)," +
-                                "task_id VARCHAR(255)," +
-                                "state VARCHAR(255)," +
-                                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                                ")"
-                );
+                stmt.executeUpdate(dialectHelper.getCreateTableSqlString(auditTableName));
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to initialize audit table", e);
             }
@@ -61,12 +55,26 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
     public Result writeEntry(AuditEntry auditEntry) {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO " + auditTableName + " (execution_id, author, task_id, state, created_at) VALUES (?, ?, ?, ?, ?)")) {
+                     dialectHelper.getInsertSqlString(auditTableName))) {
             ps.setString(1, auditEntry.getExecutionId());
-            ps.setString(2, auditEntry.getAuthor());
+            ps.setString(2, auditEntry.getStageId());
             ps.setString(3, auditEntry.getTaskId());
-            ps.setString(4, auditEntry.getState().name());
+            ps.setString(4, auditEntry.getAuthor());
             ps.setTimestamp(5, Timestamp.valueOf(auditEntry.getCreatedAt()));
+            ps.setString(6, auditEntry.getState() != null ? auditEntry.getState().name() : null);
+            ps.setString(7, auditEntry.getClassName());
+            ps.setString(8, auditEntry.getMethodName());
+            ps.setString(9, auditEntry.getMetadata() != null ? auditEntry.getMetadata().toString() : null);
+            ps.setLong(10, auditEntry.getExecutionMillis());
+            ps.setString(11, auditEntry.getExecutionHostname());
+            ps.setString(12, auditEntry.getErrorTrace());
+            ps.setString(13, auditEntry.getType() != null ? auditEntry.getType().name() : null);
+            ps.setString(14, auditEntry.getTxType() != null ? auditEntry.getTxType().name() : null);
+            ps.setString(15, auditEntry.getTargetSystemId());
+            ps.setString(16, auditEntry.getOrder());
+            ps.setString(17, auditEntry.getRecoveryStrategy() != null ? auditEntry.getRecoveryStrategy().name() : null);
+            ps.setObject(18, auditEntry.getTransactionFlag());
+            ps.setObject(19, auditEntry.getSystemChange());
             ps.executeUpdate();
             return Result.OK();
         } catch (SQLException e) {
@@ -79,16 +87,28 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
         List<AuditEntry> entries = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT execution_id, author, task_id, state, created_at FROM " + auditTableName + " ORDER BY created_at DESC")) {
+             ResultSet rs = stmt.executeQuery(dialectHelper.getSelectHistorySqlString(auditTableName))) {
             while (rs.next()) {
                 AuditEntry entry = new AuditEntry(
                         rs.getString("execution_id"),
-                        null,
+                        rs.getString("stage_id"),
                         rs.getString("task_id"),
                         rs.getString("author"),
                         rs.getTimestamp("created_at").toLocalDateTime(),
-                        AuditEntry.Status.valueOf(rs.getString("state")),
-                        null, null, null, 0L, null, null, false, null, null
+                        rs.getString("state") != null ? AuditEntry.Status.valueOf(rs.getString("state")) : null,
+                        rs.getString("type") != null ? AuditEntry.ExecutionType.valueOf(rs.getString("type")) : null,
+                        rs.getString("class_name"),
+                        rs.getString("method_name"),
+                        rs.getLong("execution_millis"),
+                        rs.getString("execution_hostname"),
+                        rs.getString("metadata"),
+                        rs.getBoolean("system_change"),
+                        rs.getString("error_trace"),
+                        AuditTxType.fromString(rs.getString("tx_type")),
+                        rs.getString("target_system_id"),
+                        rs.getString("order_col"),
+                        rs.getString("recovery_strategy") != null ? io.flamingock.api.RecoveryStrategy.valueOf(rs.getString("recovery_strategy")) : null,
+                        rs.getObject("transaction_flag") != null ? rs.getBoolean("transaction_flag") : null
                 );
                 entries.add(entry);
             }

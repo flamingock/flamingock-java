@@ -1,6 +1,7 @@
 dependencies {
     api(project(":core:flamingock-core"))
     api(project(":core:target-systems:sql-target-system"))
+    implementation(project(":utils:sql-util"))
 
     testImplementation("mysql:mysql-connector-java:8.0.33")
     testImplementation(project(":utils:test-util"))

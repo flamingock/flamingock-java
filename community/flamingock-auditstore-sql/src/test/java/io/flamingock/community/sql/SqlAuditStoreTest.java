@@ -23,7 +23,7 @@ import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.targetsystem.mysql.SqlTargetSystem;
+import io.flamingock.targetsystem.sql.SqlTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

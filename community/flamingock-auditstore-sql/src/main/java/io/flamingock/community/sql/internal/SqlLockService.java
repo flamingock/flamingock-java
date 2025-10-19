@@ -32,9 +32,11 @@ public class SqlLockService implements CommunityLockService {
     private static final String DEFAULT_LOCK_STORE_NAME = "flamingockLock";
     private final DataSource dataSource;
     private String lockRepositoryName = DEFAULT_LOCK_STORE_NAME;
+    private final SqlLockDialectHelper dialectHelper;
 
     public SqlLockService(DataSource dataSource) {
         this.dataSource = dataSource;
+        this.dialectHelper = new SqlLockDialectHelper(dataSource);
     }
 
     public SqlLockService withLockRepositoryName(String lockRepositoryName) {
@@ -46,14 +48,7 @@ public class SqlLockService implements CommunityLockService {
         if (autoCreate) {
             try (Connection conn = dataSource.getConnection();
                  Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS " + lockRepositoryName + " (" +
-                                "`key` VARCHAR(255) PRIMARY KEY," +
-                                "status VARCHAR(32)," +
-                                "owner VARCHAR(255)," +
-                                "expires_at TIMESTAMP" +
-                                ")"
-                );
+                stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to initialize lock table", e);
             }
@@ -125,7 +120,7 @@ public class SqlLockService implements CommunityLockService {
                     String existingOwner = rs.getString("owner");
                     if (existingOwner.equals(owner.toString())) {
                         try (PreparedStatement delete = conn.prepareStatement(
-                                "DELETE FROM " + lockRepositoryName + " WHERE `key` = ?")) {
+                                dialectHelper.getDeleteLockSqlString(lockRepositoryName))) {
                             delete.setString(1, keyStr);
                             delete.executeUpdate();
                         }
@@ -139,7 +134,7 @@ public class SqlLockService implements CommunityLockService {
 
     private CommunityLockEntry getLockEntry(Connection conn, String key) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT `key`, status, owner, expires_at FROM " + lockRepositoryName + " WHERE `key` = ?")) {
+                dialectHelper.getSelectLockSqlString(lockRepositoryName))) {
             ps.setString(1, key);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -157,8 +152,7 @@ public class SqlLockService implements CommunityLockService {
 
     private void upsertLockEntry(Connection conn, String key, String owner, LocalDateTime expiresAt) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO " + lockRepositoryName + " (`key`, status, owner, expires_at) VALUES (?, ?, ?, ?) " +
-                        "ON DUPLICATE KEY UPDATE status = VALUES(status), owner = VALUES(owner), expires_at = VALUES(expires_at)")) {
+                dialectHelper.getInsertOrUpdateLockSqlString(lockRepositoryName))) {
             ps.setString(1, key);
             ps.setString(2, LockStatus.LOCK_HELD.name());
             ps.setString(3, owner);
