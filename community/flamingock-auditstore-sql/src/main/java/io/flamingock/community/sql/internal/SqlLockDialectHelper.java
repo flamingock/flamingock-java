@@ -80,7 +80,17 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
     }
 
     public String getSelectLockSqlString(String tableName) {
-        return String.format("SELECT `key`, status, owner, expires_at FROM %s WHERE `key` = ?", tableName);
+        switch (sqlDialect) {
+            case POSTGRESQL:
+                return String.format("SELECT \"key\", status, owner, expires_at FROM %s WHERE \"key\" = ?", tableName);
+            case SQLSERVER:
+            case SYBASE:
+                return String.format("SELECT [key], status, owner, expires_at FROM %s WITH (UPDLOCK, ROWLOCK) WHERE [key] = ?", tableName);
+            case ORACLE:
+                return String.format("SELECT \"key\", status, owner, expires_at FROM %s WHERE \"key\" = ? FOR UPDATE", tableName);
+            default:
+                return String.format("SELECT `key`, status, owner, expires_at FROM %s WHERE `key` = ?", tableName);
+        }
     }
 
     public String getInsertOrUpdateLockSqlString(String tableName) {
@@ -104,11 +114,14 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             case SQLSERVER:
             case SYBASE:
                 return String.format(
-                        "MERGE INTO %s AS target USING (SELECT ? AS [key], ? AS status, ? AS owner, ? AS expires_at) AS source " +
-                                "ON (target.[key] = source.[key]) " +
-                                "WHEN MATCHED THEN UPDATE SET status = source.status, owner = source.owner, expires_at = source.expires_at " +
-                                "WHEN NOT MATCHED THEN INSERT ([key], status, owner, expires_at) VALUES (source.[key], source.status, source.owner, source.expires_at);",
-                        tableName);
+                        "BEGIN TRANSACTION; " +
+                                "UPDATE %s SET status = ?, owner = ?, expires_at = ? WHERE [key] = ?; " +
+                                "IF @@ROWCOUNT = 0 " +
+                                "BEGIN " +
+                                "INSERT INTO %s ([key], status, owner, expires_at) VALUES (?, ?, ?, ?) " +
+                                "END; " +
+                                "COMMIT TRANSACTION;",
+                        tableName, tableName);
             case ORACLE:
                 return String.format(
                         "MERGE INTO %s t USING (SELECT ? AS \"key\", ? AS status, ? AS owner, ? AS expires_at FROM dual) s " +
@@ -141,5 +154,8 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
     public String getDeleteLockSqlString(String tableName) {
         return String.format("DELETE FROM %s WHERE `key` = ?", tableName);
     }
-}
 
+    public SqlDialect getSqlDialect() {
+        return sqlDialect;
+    }
+}

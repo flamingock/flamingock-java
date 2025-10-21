@@ -19,20 +19,21 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.community.sql.driver.SqlAuditStore;
 import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.targetsystem.sql.SqlTargetSystem;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.containers.*;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -40,322 +41,594 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 class SqlAuditStoreTest {
 
-    private static DataSource dataSource;
+    static Stream<Arguments> dialectProvider() {
+        return Stream.of(
+                Arguments.of(SqlDialect.MYSQL, "mysql"),
+                Arguments.of(SqlDialect.SQLSERVER, "sqlserver"),
+                Arguments.of(SqlDialect.ORACLE, "oracle"),
+                Arguments.of(SqlDialect.POSTGRESQL, "postgresql")
+        );
+    }
 
-    @Container
-    public static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb")
-            .withUsername("testuser")
-            .withPassword("testpass");
+    private TestContext setupTest(SqlDialect sqlDialect, String dialectName) throws SQLException {
+        JdbcDatabaseContainer<?> container = createContainer(dialectName);
+        container.start();
 
-    @BeforeEach
-    void setUp() throws SQLException {
-        if (dataSource instanceof HikariDataSource) {
-            ((HikariDataSource) dataSource).close();
-        }
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(mysqlContainer.getJdbcUrl());
-        config.setUsername(mysqlContainer.getUsername());
-        config.setPassword(mysqlContainer.getPassword());
-        config.setDriverClassName(mysqlContainer.getDriverClassName());
-        dataSource = new HikariDataSource(config);
+        config.setJdbcUrl(container.getJdbcUrl());
+        config.setUsername(container.getUsername());
+        config.setPassword(container.getPassword());
+        config.setDriverClassName(container.getDriverClassName());
+        DataSource dataSource = new HikariDataSource(config);
 
-        try (Connection conn = dataSource.getConnection()) {
-            conn.createStatement().execute("DROP TABLE IF EXISTS flamingockAuditLog");
-            conn.createStatement().execute("DROP TABLE IF EXISTS test_table");
-            conn.createStatement().execute("DROP TABLE IF EXISTS flamingockLock");
-            conn.createStatement().execute(
-                    "CREATE TABLE test_table (" +
-                            "id VARCHAR(255) PRIMARY KEY, " +
-                            "name VARCHAR(255), " +
-                            "field1 VARCHAR(255), " +
-                            "field2 VARCHAR(255))"
-            );
-            conn.createStatement().execute(
-                    "CREATE TABLE flamingockLock (" +
-                            "`key` VARCHAR(255) PRIMARY KEY, " +
-                            "status VARCHAR(32), " +
-                            "owner VARCHAR(255), " +
-                            "expires_at TIMESTAMP)"
-            );
+        createTables(dataSource, sqlDialect);
+
+        return new TestContext(dataSource, container, sqlDialect);
+    }
+
+    private void tearDown(TestContext context) throws SQLException {
+        if (context.dataSource instanceof HikariDataSource) {
+            ((HikariDataSource) context.dataSource).close();
+        }
+        if (context.container != null) {
+            context.container.stop();
         }
     }
 
-    @AfterEach
-    void tearDown() throws SQLException {
+    private JdbcDatabaseContainer<?> createContainer(String dialectName) {
+        switch (dialectName) {
+            case "mysql":
+                return new MySQLContainer<>("mysql:8.0")
+                        .withDatabaseName("testdb")
+                        .withUsername("testuser")
+                        .withPassword("testpass");
+            case "sqlserver":
+                return new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
+                        .acceptLicense()
+                        .withPassword("TestPass123!");
+            case "oracle":
+                OracleContainer oracleContainer = new OracleContainer(
+                        DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
+                                .asCompatibleSubstituteFor("gvenzl/oracle-xe"))
+                        .withPassword("oracle123")
+                        .withSharedMemorySize(1073741824L)
+                        .withStartupTimeoutSeconds(900)
+                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+
+                return new OracleContainer(
+                        DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
+                                .asCompatibleSubstituteFor("gvenzl/oracle-xe")) {
+                    @Override
+                    public String getDatabaseName() {
+                        return "FREEPDB1";
+                    }
+                }
+                        .withPassword("oracle123")
+                        .withSharedMemorySize(1073741824L)
+                        .withStartupTimeoutSeconds(900)
+                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+            case "postgresql":
+                return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
+                        .withDatabaseName("testdb")
+                        .withUsername("test")
+                        .withPassword("test");
+            default:
+                throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
+        }
+    }
+
+    private void createTables(DataSource dataSource, SqlDialect dialect) throws SQLException {
         try (Connection conn = dataSource.getConnection()) {
-            // Drop index if exists
-            try (ResultSet rs = conn.getMetaData().getIndexInfo(null, null, "test_table", false, false)) {
+            dropTablesIfExist(conn, dialect);
+
+            String createTestTable = getCreateTestTableSql(dialect);
+            conn.createStatement().execute(createTestTable);
+
+            String createLockTable = getCreateLockTableSql(dialect);
+            conn.createStatement().execute(createLockTable);
+        }
+    }
+
+    private void dropTablesIfExist(Connection conn, SqlDialect dialect) throws SQLException {
+        String[] tables = {"flamingockAuditLog", "test_table", "flamingockLock"};
+        for (String table : tables) {
+            try {
+                String dropSql = getDropTableSql(table, dialect);
+                conn.createStatement().execute(dropSql);
+            } catch (SQLException e) {
+                // Ignore if table doesn't exist
+            }
+        }
+    }
+
+    private String getDropTableSql(String tableName, SqlDialect dialect) {
+        if (dialect == SqlDialect.ORACLE) {
+            return "DROP TABLE " + tableName + " CASCADE CONSTRAINTS";
+        }
+        return "DROP TABLE IF EXISTS " + tableName;
+    }
+
+    private String getCreateTestTableSql(SqlDialect dialect) {
+        switch (dialect) {
+            case MYSQL:
+            case SQLSERVER:
+                return "CREATE TABLE test_table (" +
+                        "id VARCHAR(255) PRIMARY KEY, " +
+                        "name VARCHAR(255), " +
+                        "field1 VARCHAR(255), " +
+                        "field2 VARCHAR(255))";
+            case POSTGRESQL:
+                return "CREATE TABLE test_table (" +
+                        "id VARCHAR(255) PRIMARY KEY," +
+                        "name VARCHAR(255)," +
+                        "field1 VARCHAR(255)," +
+                        "field2 VARCHAR(255))";
+            case ORACLE:
+                return "CREATE TABLE test_table (" +
+                        "id VARCHAR2(255) PRIMARY KEY, " +
+                        "name VARCHAR2(255), " +
+                        "field1 VARCHAR2(255), " +
+                        "field2 VARCHAR2(255))";
+            default:
+                throw new UnsupportedOperationException("Dialect not supported: " + dialect);
+        }
+    }
+
+    private String getCreateLockTableSql(SqlDialect dialect) {
+        switch (dialect) {
+            case MYSQL:
+                return "CREATE TABLE flamingockLock (" +
+                        "`key` VARCHAR(255) PRIMARY KEY, " +
+                        "status VARCHAR(32), " +
+                        "owner VARCHAR(255), " +
+                        "expires_at TIMESTAMP)";
+            case POSTGRESQL:
+                return "CREATE TABLE flamingockLock (" +
+                        "\"key\" VARCHAR(255) PRIMARY KEY," +
+                        "status VARCHAR(32)," +
+                        "owner VARCHAR(255)," +
+                        "expires_at TIMESTAMP)";
+            case SQLSERVER:
+                return "CREATE TABLE flamingockLock (" +
+                        "[key] VARCHAR(255) PRIMARY KEY, " +
+                        "status VARCHAR(32), " +
+                        "owner VARCHAR(255), " +
+                        "expires_at DATETIME)";
+            case ORACLE:
+                return "CREATE TABLE flamingockLock (" +
+                        "\"key\" VARCHAR2(255) PRIMARY KEY, " +
+                        "status VARCHAR2(32), " +
+                        "owner VARCHAR2(255), " +
+                        "expires_at TIMESTAMP)";
+            default:
+                throw new UnsupportedOperationException("Dialect not supported: " + dialect);
+        }
+    }
+
+    private Class<?>[] getChangeClasses(String dialectName, String scenario) {
+        switch (dialectName) {
+            case "mysql":
+                if ("happyPath".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.mysql.happyPath._001__create_index.class,
+                            io.flamingock.community.sql.changes.mysql.happyPath._002__insert_document.class,
+                            io.flamingock.community.sql.changes.mysql.happyPath._003__insert_another_document.class
+                    };
+                } else if ("failedWithRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.mysql.failedWithRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.mysql.failedWithRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.mysql.failedWithRollback._003__execution_with_exception.class
+                    };
+                } else if ("failedWithoutRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.mysql.failedWithoutRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.mysql.failedWithoutRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.mysql.failedWithoutRollback._003__execution_with_exception.class
+                    };
+                }
+                break;
+            case "sqlserver":
+                if ("happyPath".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.sqlserver.happyPath._001__create_index.class,
+                            io.flamingock.community.sql.changes.sqlserver.happyPath._002__insert_document.class,
+                            io.flamingock.community.sql.changes.sqlserver.happyPath._003__insert_another_document.class
+                    };
+                } else if ("failedWithRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.sqlserver.failedWithRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.sqlserver.failedWithRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.sqlserver.failedWithRollback._003__execution_with_exception.class
+                    };
+                } else if ("failedWithoutRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.sqlserver.failedWithoutRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.sqlserver.failedWithoutRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.sqlserver.failedWithoutRollback._003__execution_with_exception.class
+                    };
+                }
+                break;
+            case "oracle":
+                if ("happyPath".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.oracle.happyPath._001__create_index.class,
+                            io.flamingock.community.sql.changes.oracle.happyPath._002__insert_document.class,
+                            io.flamingock.community.sql.changes.oracle.happyPath._003__insert_another_document.class
+                    };
+                } else if ("failedWithRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.oracle.failedWithRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.oracle.failedWithRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.oracle.failedWithRollback._003__execution_with_exception.class
+                    };
+                } else if ("failedWithoutRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.oracle.failedWithoutRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.oracle.failedWithoutRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.oracle.failedWithoutRollback._003__execution_with_exception.class
+                    };
+                }
+                break;
+            case "postgresql":
+                if ("happyPath".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.postgresql.happyPath._001__create_index.class,
+                            io.flamingock.community.sql.changes.postgresql.happyPath._002__insert_document.class,
+                            io.flamingock.community.sql.changes.postgresql.happyPath._003__insert_another_document.class
+                    };
+                } else if ("failedWithRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.postgresql.failedWithRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.postgresql.failedWithRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.postgresql.failedWithRollback._003__execution_with_exception.class
+                    };
+                } else if ("failedWithoutRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.postgresql.failedWithoutRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.postgresql.failedWithoutRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.postgresql.failedWithoutRollback._003__execution_with_exception.class
+                    };
+                }
+                break;
+        }
+        throw new IllegalArgumentException("Unsupported dialect/scenario: " + dialectName + "/" + scenario);
+    }
+
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
+    @DisplayName("When standalone runs the driver should persist the audit logs and the test data")
+    void happyPathWithMockedPipeline(SqlDialect sqlDialect, String dialectName) throws Exception {
+        TestContext context = setupTest(sqlDialect, dialectName);
+        try {
+            try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+                Class<?>[] changeClasses = getChangeClasses(dialectName, "happyPath");
+
+                mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                        new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
+                        new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
+                        new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
+                ));
+
+                SqlAuditStore auditStore = new SqlAuditStore(context.dataSource);
+                SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+
+                FlamingockFactory.getCommunityBuilder()
+                        .setAuditStore(auditStore)
+                        .addTargetSystem(targetSystem)
+                        .build()
+                        .run();
+            }
+
+            // Verify audit logs
+            try (Connection conn = context.dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(
+                         "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
+                 ResultSet rs = ps.executeQuery()) {
+
+                String[] expectedTaskIds = {"create-index", "insert-document", "insert-another-document"};
+                int recordCount = 0;
+                int startedCount = 0;
+                int appliedCount = 0;
+
                 while (rs.next()) {
-                    String idxName = rs.getString("INDEX_NAME");
-                    if ("idx_standalone_index".equals(idxName)) {
-                        conn.createStatement().execute("DROP INDEX idx_standalone_index ON test_table");
-                        break;
+                    String taskId = rs.getString("task_id");
+                    String state = rs.getString("state");
+                    assertTrue(
+                            java.util.Arrays.asList(expectedTaskIds).contains(taskId),
+                            "Unexpected task_id: " + taskId
+                    );
+                    assertTrue(
+                            state.equals("STARTED") || state.equals("APPLIED"),
+                            "Unexpected state: " + state
+                    );
+                    if (state.equals("STARTED")) startedCount++;
+                    if (state.equals("APPLIED")) appliedCount++;
+                    recordCount++;
+                }
+
+                assertEquals(6, recordCount, "Audit log should have 6 records");
+                assertEquals(3, startedCount, "Should have 3 STARTED records");
+                assertEquals(3, appliedCount, "Should have 3 APPLIED records");
+            }
+
+            // Verify test data
+            try (Connection conn = context.dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
+                ps.setString(1, "test-client-Federico");
+                try (ResultSet rs = ps.executeQuery()) {
+                    assertTrue(rs.next());
+                    assertEquals("Federico", rs.getString("name"));
+                }
+                ps.setString(1, "test-client-Jorge");
+                try (ResultSet rs = ps.executeQuery()) {
+                    assertTrue(rs.next());
+                    assertEquals("Jorge", rs.getString("name"));
+                }
+            }
+        } finally {
+            tearDown(context);
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
+    @DisplayName("When standalone runs the driver and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
+    void failedWithRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
+        TestContext context = setupTest(sqlDialect, dialectName);
+        try {
+            try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+                Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithRollback");
+
+                mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                        new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
+                        new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
+                        new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
+                ));
+
+                SqlAuditStore auditStore = new SqlAuditStore(context.dataSource);
+                SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+
+                assertThrows(PipelineExecutionException.class, () -> {
+                    FlamingockFactory.getCommunityBuilder()
+                            .setAuditStore(auditStore)
+                            .addTargetSystem(targetSystem)
+                            .build()
+                            .run();
+                });
+
+                // Verify audit sequence
+                try (Connection conn = context.dataSource.getConnection();
+                     PreparedStatement ps = conn.prepareStatement(
+                             "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
+                     ResultSet rs = ps.executeQuery()) {
+
+                    assertTrue(rs.next());
+                    assertEquals("create-index", rs.getString("task_id"));
+                    assertEquals("STARTED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("create-index", rs.getString("task_id"));
+                    assertEquals("APPLIED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("insert-document", rs.getString("task_id"));
+                    assertEquals("STARTED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("insert-document", rs.getString("task_id"));
+                    assertEquals("APPLIED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("execution-with-exception", rs.getString("task_id"));
+                    assertEquals("STARTED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("execution-with-exception", rs.getString("task_id"));
+                    assertEquals("FAILED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("execution-with-exception", rs.getString("task_id"));
+                    assertEquals("ROLLED_BACK", rs.getString("state"));
+
+                    assertFalse(rs.next());
+                }
+
+                // Verify index exists
+                verifyIndexExists(context);
+
+                // Verify partial data
+                try (Connection conn = context.dataSource.getConnection();
+                     PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
+                    ps.setString(1, "test-client-Federico");
+                    try (ResultSet rs = ps.executeQuery()) {
+                        assertTrue(rs.next());
+                        assertEquals("Federico", rs.getString("name"));
+                    }
+                }
+
+                try (Connection conn = context.dataSource.getConnection();
+                     PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
+                    ps.setString(1, "test-client-Jorge");
+                    try (ResultSet rs = ps.executeQuery()) {
+                        assertFalse(rs.next());
                     }
                 }
             }
-            conn.createStatement().execute("DROP TABLE IF EXISTS test_table");
-            conn.createStatement().execute("DROP TABLE IF EXISTS flamingockLock");
-            conn.createStatement().execute("DROP TABLE IF EXISTS flamingockAuditLog");
-        }
-        if (dataSource instanceof HikariDataSource) {
-            ((HikariDataSource) dataSource).close();
+        } finally {
+            tearDown(context);
         }
     }
 
-    @Test
-    @DisplayName("When standalone runs the driver should persist the audit logs and the test data")
-    void happyPathWithMockedPipeline() throws Exception {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(io.flamingock.community.sql.changes.happyPath._001__create_index.class, Collections.singletonList(Connection.class), null),
-                    new Trio<>(io.flamingock.community.sql.changes.happyPath._002__insert_document.class, Collections.singletonList(Connection.class), null),
-                    new Trio<>(io.flamingock.community.sql.changes.happyPath._003__insert_another_document.class, Collections.singletonList(Connection.class), null)
-            ));
+    @ParameterizedTest
+    @MethodSource("dialectProvider")
+    @DisplayName("When standalone runs the driver and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
+    void failedWithoutRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
+        TestContext context = setupTest(sqlDialect, dialectName);
+        try {
+            try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+                Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithoutRollback");
 
-            SqlAuditStore auditStore = new SqlAuditStore(dataSource);
-            SqlTargetSystem targetSystem = new SqlTargetSystem("sql", dataSource);
+                mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+                        new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
+                        new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
+                        new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
+                ));
 
-            FlamingockFactory.getCommunityBuilder()
-                    .setAuditStore(auditStore)
-                    .addTargetSystem(targetSystem)
-                    .build()
-                    .run();
-        }
+                SqlAuditStore auditStore = new SqlAuditStore(context.dataSource);
+                SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
-             ResultSet rs = ps.executeQuery()) {
+                assertThrows(PipelineExecutionException.class, () -> {
+                    FlamingockFactory.getCommunityBuilder()
+                            .setAuditStore(auditStore)
+                            .addTargetSystem(targetSystem)
+                            .build()
+                            .run();
+                });
 
-            String[] expectedTaskIds = {"create-index", "insert-document", "insert-another-document"};
-            int recordCount = 0;
-            int startedCount = 0;
-            int appliedCount = 0;
+                // Verify audit sequence
+                try (Connection conn = context.dataSource.getConnection();
+                     PreparedStatement ps = conn.prepareStatement(
+                             "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
+                     ResultSet rs = ps.executeQuery()) {
 
-            while (rs.next()) {
-                String taskId = rs.getString("task_id");
-                String state = rs.getString("state");
-                assertTrue(
-                        java.util.Arrays.asList(expectedTaskIds).contains(taskId),
-                        "Unexpected task_id: " + taskId
-                );
-                assertTrue(
-                        state.equals("STARTED") || state.equals("APPLIED"),
-                        "Unexpected state: " + state
-                );
-                if (state.equals("STARTED")) startedCount++;
-                if (state.equals("APPLIED")) appliedCount++;
-                recordCount++;
+                    assertTrue(rs.next());
+                    assertEquals("create-index", rs.getString("task_id"));
+                    assertEquals("STARTED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("create-index", rs.getString("task_id"));
+                    assertEquals("APPLIED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("insert-document", rs.getString("task_id"));
+                    assertEquals("STARTED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("insert-document", rs.getString("task_id"));
+                    assertEquals("APPLIED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("execution-with-exception", rs.getString("task_id"));
+                    assertEquals("STARTED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("execution-with-exception", rs.getString("task_id"));
+                    assertEquals("FAILED", rs.getString("state"));
+
+                    assertTrue(rs.next());
+                    assertEquals("execution-with-exception", rs.getString("task_id"));
+                    assertEquals("ROLLED_BACK", rs.getString("state"));
+
+                    assertFalse(rs.next());
+                }
+
+                // Verify index exists and data state
+                verifyIndexExists(context);
+                verifyPartialDataState(context);
             }
-
-            assertEquals(6, recordCount, "Audit log should have 6 records");
-            assertEquals(3, startedCount, "Should have 3 STARTED records");
-            assertEquals(3, appliedCount, "Should have 3 APPLIED records");
+        } finally {
+            tearDown(context);
         }
+    }
 
-        try (Connection conn = dataSource.getConnection();
+    private void verifyIndexExists(TestContext context) throws SQLException {
+        try (Connection conn = context.dataSource.getConnection()) {
+            String indexCheckSql = getIndexCheckSql(context.dialect);
+            try (PreparedStatement ps = conn.prepareStatement(indexCheckSql)) {
+                switch (context.dialect) {
+                    case ORACLE:
+                        ps.setString(1, "IDX_STANDALONE_INDEX");
+                        ps.setString(2, "TEST_TABLE");
+                        break;
+                    case POSTGRESQL:
+                        ps.setString(1, "idx_standalone_index");
+                        break;
+                    case MYSQL:
+                    case MARIADB:
+                        ps.setString(1, "test_table");
+                        ps.setString(2, "idx_standalone_index");
+                        break;
+                    case SQLSERVER:
+                    case SYBASE:
+                        ps.setString(1, "idx_standalone_index");
+                        break;
+                    case H2:
+                    case HSQLDB:
+                    case DERBY:
+                    case SQLITE:
+                        ps.setString(1, "idx_standalone_index");
+                        break;
+                    default:
+                        ps.setString(1, "idx_standalone_index");
+                        break;
+                }
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    boolean indexExists = rs.next();
+                    assertTrue(indexExists, "Index idx_standalone_index should exist");
+                }
+            }
+        }
+    }
+
+    private String getIndexCheckSql(SqlDialect dialect) {
+        switch (dialect) {
+            case POSTGRESQL:
+                return "SELECT indexname FROM pg_indexes WHERE indexname = ?";
+            case MYSQL:
+            case MARIADB:
+                return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_NAME = ? AND INDEX_NAME = ?";
+            case ORACLE:
+                return "SELECT INDEX_NAME FROM USER_INDEXES WHERE INDEX_NAME = ? AND TABLE_NAME = ?";
+            case SQLSERVER:
+            case SYBASE:
+                return "SELECT name FROM sys.indexes WHERE name = ?";
+            case H2:
+            case HSQLDB:
+            case DERBY:
+            case SQLITE:
+                return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
+            default:
+                return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
+        }
+    }
+
+    private void verifyPartialDataState(TestContext context) throws SQLException {
+        try (Connection conn = context.dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
             ps.setString(1, "test-client-Federico");
             try (ResultSet rs = ps.executeQuery()) {
                 assertTrue(rs.next());
                 assertEquals("Federico", rs.getString("name"));
             }
+        }
+
+        try (Connection conn = context.dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
             ps.setString(1, "test-client-Jorge");
             try (ResultSet rs = ps.executeQuery()) {
-                assertTrue(rs.next());
-                assertEquals("Jorge", rs.getString("name"));
+                assertFalse(rs.next());
             }
         }
     }
 
+    private static class TestContext {
+        final DataSource dataSource;
+        final JdbcDatabaseContainer<?> container;
+        final SqlDialect dialect;
 
-    @Test
-    @DisplayName("When standalone runs the driver and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
-    void failedWithRollback() throws Exception {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(io.flamingock.community.sql.changes.failedWithRollback._001__create_index.class, Collections.singletonList(Connection.class), null),
-                            new Trio<>(io.flamingock.community.sql.changes.failedWithRollback._002__insert_document.class, Collections.singletonList(Connection.class), null),
-                            new Trio<>(io.flamingock.community.sql.changes.failedWithRollback._003__execution_with_exception.class, Collections.singletonList(Connection.class), null)
-                    )
-            );
-
-            SqlAuditStore auditStore = new SqlAuditStore(dataSource);
-            SqlTargetSystem targetSystem = new SqlTargetSystem("sql", dataSource);
-
-            assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setAuditStore(auditStore)
-                        .addTargetSystem(targetSystem)
-                        .build()
-                        .run();
-            });
-
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(
-                         "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
-                 ResultSet rs = ps.executeQuery()) {
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
-                assertEquals("FAILED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
-                assertEquals("ROLLED_BACK", rs.getString("state"));
-
-                assertFalse(rs.next());
-            }
-
-
-            try (Connection conn = dataSource.getConnection();
-                 ResultSet rs = conn.getMetaData().getIndexInfo(null, null, "test_table", false, false)) {
-                boolean found = false;
-                while (rs.next()) {
-                    if ("idx_standalone_index".equals(rs.getString("INDEX_NAME"))) {
-                        found = true;
-                        break;
-                    }
-                }
-                assertTrue(found, "Index idx_standalone_index should exist");
-            }
-
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-                ps.setString(1, "test-client-Federico");
-                try (ResultSet rs = ps.executeQuery()) {
-                    assertTrue(rs.next());
-                    assertEquals("Federico", rs.getString("name"));
-                }
-            }
-
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-                ps.setString(1, "test-client-Jorge");
-                try (ResultSet rs = ps.executeQuery()) {
-                    assertFalse(rs.next());
-                }
-            }
-
-        }
-    }
-
-    @Test
-    @DisplayName("When standalone runs the driver and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
-    void failedWithoutRollback() throws SQLException {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
-                    PipelineTestHelper.getPreviewPipeline(
-                            new Trio<>(io.flamingock.community.sql.changes.failedWithoutRollback._001__create_index.class, Collections.singletonList(Connection.class), null),
-                            new Trio<>(io.flamingock.community.sql.changes.failedWithoutRollback._002__insert_document.class, Collections.singletonList(Connection.class), null),
-                            new Trio<>(io.flamingock.community.sql.changes.failedWithoutRollback._003__execution_with_exception.class, Collections.singletonList(Connection.class), null)
-                    )
-            );
-
-            SqlAuditStore auditStore = new SqlAuditStore(dataSource);
-            SqlTargetSystem targetSystem = new SqlTargetSystem("sql", dataSource);
-
-            assertThrows(PipelineExecutionException.class, () -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setAuditStore(auditStore)
-                        .addTargetSystem(targetSystem)
-                        .build()
-                        .run();
-            });
-
-
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(
-                         "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
-                 ResultSet rs = ps.executeQuery()) {
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
-                assertEquals("FAILED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
-                assertEquals("ROLLED_BACK", rs.getString("state"));
-
-                assertFalse(rs.next());
-            }
-
-            try (Connection conn = dataSource.getConnection();
-                 ResultSet rs = conn.getMetaData().getIndexInfo(null, null, "test_table", false, false)) {
-                boolean found = false;
-                while (rs.next()) {
-                    if ("idx_standalone_index".equals(rs.getString("INDEX_NAME"))) {
-                        found = true;
-                        break;
-                    }
-                }
-                assertTrue(found, "Index idx_standalone_index should exist");
-            }
-
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-                ps.setString(1, "test-client-Federico");
-                try (ResultSet rs = ps.executeQuery()) {
-                    assertTrue(rs.next());
-                    assertEquals("Federico", rs.getString("name"));
-                }
-            }
-
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-                ps.setString(1, "test-client-Jorge");
-                try (ResultSet rs = ps.executeQuery()) {
-                    assertFalse(rs.next());
-                }
-            }
+        TestContext(DataSource dataSource, JdbcDatabaseContainer<?> container, SqlDialect dialect) {
+            this.dataSource = dataSource;
+            this.container = container;
+            this.dialect = dialect;
         }
     }
 }

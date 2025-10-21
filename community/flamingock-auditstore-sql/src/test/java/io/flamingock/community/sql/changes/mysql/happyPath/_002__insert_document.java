@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.sql.changes.failedWithoutRollback;
+package io.flamingock.community.sql.changes.mysql.happyPath;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
@@ -21,14 +21,13 @@ import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 @TargetSystem(id = "sql")
 @Change(id = "insert-document", author = "aperezdieppa")
 public class _002__insert_document {
 
     @Apply
-    public void execution(Connection connection) throws SQLException {
+    public void execution(Connection connection) throws Exception {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
             ps.setString(1, "test-client-Federico");

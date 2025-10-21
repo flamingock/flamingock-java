@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.sql.changes.failedWithRollback;
+package io.flamingock.community.sql.changes.sqlserver.failedWithoutRollback;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
-import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
@@ -25,7 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @TargetSystem(id = "sql")
-@Change(id = "insert-document", transactional = false, author = "aperezdieppa")
+@Change(id = "insert-document", author = "aperezdieppa")
 public class _002__insert_document {
 
     @Apply
@@ -34,15 +33,6 @@ public class _002__insert_document {
                 "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
             ps.setString(1, "test-client-Federico");
             ps.setString(2, "Federico");
-            ps.executeUpdate();
-        }
-    }
-
-    @Rollback
-    public void rollbackExecution(Connection connection) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "DELETE FROM test_table WHERE id = ?")) {
-            ps.setString(1, "test-client-Federico");
             ps.executeUpdate();
         }
     }

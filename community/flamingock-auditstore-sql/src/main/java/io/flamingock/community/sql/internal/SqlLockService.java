@@ -15,6 +15,7 @@
  */
 package io.flamingock.community.sql.internal;
 
+import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
 import io.flamingock.internal.core.store.lock.LockAcquisition;
@@ -59,15 +60,28 @@ public class SqlLockService implements CommunityLockService {
     public LockAcquisition upsert(LockKey key, RunnerId owner, long leaseMillis) {
         String keyStr = key.toString();
         LocalDateTime expiresAt = LocalDateTime.now().plusNanos(leaseMillis * 1_000_000);
+
         try (Connection conn = dataSource.getConnection()) {
-            CommunityLockEntry existing = getLockEntry(conn, keyStr);
-            if (existing == null ||
-                    owner.toString().equals(existing.getOwner()) ||
-                    LocalDateTime.now().isAfter(existing.getExpiresAt())) {
-                upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
-            } else {
-                throw new LockServiceException("upsert", keyStr,
-                        "Still locked by " + existing.getOwner() + " until " + existing.getExpiresAt());
+            conn.setAutoCommit(false);
+            try {
+                CommunityLockEntry existing = getLockEntry(conn, keyStr);
+                if (existing == null ||
+                        owner.toString().equals(existing.getOwner()) ||
+                        LocalDateTime.now().isAfter(existing.getExpiresAt())) {
+                    upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
+                    if (dialectHelper.getSqlDialect() != SqlDialect.SQLSERVER && dialectHelper.getSqlDialect() != SqlDialect.SYBASE) {
+                        conn.commit();
+                    }
+                } else {
+                    conn.rollback();
+                    throw new LockServiceException("upsert", keyStr,
+                            "Still locked by " + existing.getOwner() + " until " + existing.getExpiresAt());
+                }
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             throw new LockServiceException("upsert", keyStr, e.getMessage());
@@ -79,13 +93,26 @@ public class SqlLockService implements CommunityLockService {
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
         String keyStr = key.toString();
         LocalDateTime expiresAt = LocalDateTime.now().plusNanos(leaseMillis * 1_000_000);
+
         try (Connection conn = dataSource.getConnection()) {
-            CommunityLockEntry existing = getLockEntry(conn, keyStr);
-            if (existing != null && owner.toString().equals(existing.getOwner())) {
-                upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
-            } else {
-                throw new LockServiceException("extendLock", keyStr,
-                        "Lock belongs to " + (existing != null ? existing.getOwner() : "none"));
+            conn.setAutoCommit(false);
+            try {
+                CommunityLockEntry existing = getLockEntry(conn, keyStr);
+                if (existing != null && owner.toString().equals(existing.getOwner())) {
+                    upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
+                    if (dialectHelper.getSqlDialect() != SqlDialect.SQLSERVER && dialectHelper.getSqlDialect() != SqlDialect.SYBASE) {
+                        conn.commit();
+                    }
+                } else {
+                    conn.rollback();
+                    throw new LockServiceException("extendLock", keyStr,
+                            "Lock belongs to " + (existing != null ? existing.getOwner() : "none"));
+                }
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             throw new LockServiceException("extendLock", keyStr, e.getMessage());
@@ -139,7 +166,7 @@ public class SqlLockService implements CommunityLockService {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new CommunityLockEntry(
-                            rs.getString("key"),
+                            rs.getString(1), // key column
                             LockStatus.valueOf(rs.getString("status")),
                             rs.getString("owner"),
                             rs.getTimestamp("expires_at").toLocalDateTime()
@@ -151,13 +178,30 @@ public class SqlLockService implements CommunityLockService {
     }
 
     private void upsertLockEntry(Connection conn, String key, String owner, LocalDateTime expiresAt) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(
-                dialectHelper.getInsertOrUpdateLockSqlString(lockRepositoryName))) {
-            ps.setString(1, key);
-            ps.setString(2, LockStatus.LOCK_HELD.name());
-            ps.setString(3, owner);
-            ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
-            ps.executeUpdate();
+        String sql = dialectHelper.getInsertOrUpdateLockSqlString(lockRepositoryName);
+
+        if (dialectHelper.getSqlDialect() == SqlDialect.SQLSERVER || dialectHelper.getSqlDialect() == SqlDialect.SYBASE) {
+            // For SQL Server, the SQL already contains transaction management
+            try (Statement stmt = conn.createStatement()) {
+                String formattedSql = sql.replace("?", "'" + LockStatus.LOCK_HELD.name() + "'")
+                        .replaceFirst("'[^']*'", "'" + LockStatus.LOCK_HELD.name() + "'")
+                        .replaceFirst("'[^']*'", "'" + owner + "'")
+                        .replaceFirst("'[^']*'", "'" + Timestamp.valueOf(expiresAt) + "'")
+                        .replaceFirst("'[^']*'", "'" + key + "'")
+                        .replaceFirst("'[^']*'", "'" + key + "'")
+                        .replaceFirst("'[^']*'", "'" + LockStatus.LOCK_HELD.name() + "'")
+                        .replaceFirst("'[^']*'", "'" + owner + "'")
+                        .replaceFirst("'[^']*'", "'" + Timestamp.valueOf(expiresAt) + "'");
+                stmt.execute(formattedSql);
+            }
+        } else {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, key);
+                ps.setString(2, LockStatus.LOCK_HELD.name());
+                ps.setString(3, owner);
+                ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
+                ps.executeUpdate();
+            }
         }
     }
 }

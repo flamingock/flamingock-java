@@ -13,24 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.sql.changes.failedWithRollback;
+package io.flamingock.community.sql.changes.mysql.failedWithoutRollback;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 @TargetSystem(id = "sql")
-@Change(id = "create-index", transactional = false, author = "aperezdieppa")
-public class _001__create_index {
+@Change(id = "execution-with-exception", author = "aperezdieppa")
+public class _003__execution_with_exception {
 
-	@Apply
-	public void execution(Connection connection) throws SQLException {
-		try (Statement stmt = connection.createStatement()) {
-			stmt.executeUpdate("CREATE INDEX idx_standalone_index ON test_table(field1, field2)");
-		}
-	}
+    @Apply
+    public void execution(Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
+            ps.setString(1, "test-client-Jorge");
+            ps.setString(2, "Jorge");
+            ps.executeUpdate();
+        }
+        throw new RuntimeException("test");
+    }
 }

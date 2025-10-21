@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.sql.changes.happyPath;
+package io.flamingock.community.sql.changes.postgresql.failedWithoutRollback;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.TargetSystem;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 @TargetSystem(id = "sql")
-@Change(id = "insert-another-document", author = "aperezdieppa")
-public class _003__insert_another_document {
+@Change(id = "create-index", transactional = false, author = "aperezdieppa")
+public class _001__create_index {
 
-    @Apply
-    public void execution(Connection connection) throws Exception {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
-            ps.setString(1, "test-client-Jorge");
-            ps.setString(2, "Jorge");
-            ps.executeUpdate();
-        }
-    }
+	@Apply
+	public void execution(Connection connection) throws SQLException {
+		try (Statement stmt = connection.createStatement()) {
+			stmt.executeUpdate("CREATE INDEX IF NOT EXISTS idx_standalone_index ON test_table(field1, field2)");
+		}
+	}
 }

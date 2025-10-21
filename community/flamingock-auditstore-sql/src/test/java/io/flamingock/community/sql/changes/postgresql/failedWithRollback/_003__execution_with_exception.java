@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.community.sql.changes.failedWithRollback;
+package io.flamingock.community.sql.changes.postgresql.failedWithRollback;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;

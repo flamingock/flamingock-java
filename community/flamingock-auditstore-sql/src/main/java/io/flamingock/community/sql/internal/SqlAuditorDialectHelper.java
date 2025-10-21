@@ -30,153 +30,138 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
         super(dialect);
     }
 
-    private static final String COMMON_COLUMNS =
-            "execution_id VARCHAR(255), " +
-                    "stage_id VARCHAR(255), " +
-                    "task_id VARCHAR(255), " +
-                    "author VARCHAR(255), " +
-                    "created_at %s, " +
-                    "state VARCHAR(255), " +
-                    "class_name VARCHAR(255), " +
-                    "method_name VARCHAR(255), " +
-                    "metadata %s, " +
-                    "execution_millis BIGINT, " +
-                    "execution_hostname VARCHAR(255), " +
-                    "error_trace %s, " +
-                    "type VARCHAR(50), " +
-                    "tx_type VARCHAR(50), " +
-                    "target_system_id VARCHAR(255), " +
-                    "order_col VARCHAR(50), " +
-                    "recovery_strategy VARCHAR(50), " +
-                    "transaction_flag %s, " +
-                    "system_change %s";
-
-    private String getCreatedAtType() {
-        switch (sqlDialect) {
-            case SQLSERVER:
-            case SYBASE:
-                return "DATETIME DEFAULT GETDATE()";
-            case INFORMIX:
-                return "DATETIME YEAR TO SECOND DEFAULT CURRENT YEAR TO SECOND";
-            case ORACLE:
-            case POSTGRESQL:
-            case MYSQL:
-            case MARIADB:
-            case SQLITE:
-            case H2:
-            case HSQLDB:
-            case DERBY:
-            case FIREBIRD:
-                return "TIMESTAMP DEFAULT CURRENT_TIMESTAMP";
-            case DB2:
-                return "TIMESTAMP DEFAULT CURRENT TIMESTAMP";
-            default:
-                return "TIMESTAMP";
-        }
-    }
-
-    private String getMetadataType() {
-        switch (sqlDialect) {
-            case ORACLE:
-            case DB2:
-                return "CLOB";
-            case FIREBIRD:
-                return "BLOB SUB_TYPE TEXT";
-            default:
-                return "TEXT";
-        }
-    }
-
-    private String getErrorTraceType() {
-        switch (sqlDialect) {
-            case ORACLE:
-            case DB2:
-                return "CLOB";
-            case FIREBIRD:
-                return "BLOB SUB_TYPE TEXT";
-            default:
-                return "TEXT";
-        }
-    }
-
-    private String getBooleanType() {
-        switch (sqlDialect) {
-            case SQLSERVER:
-            case SYBASE:
-                return "BIT";
-            case ORACLE:
-            case DB2:
-            case FIREBIRD:
-            case INFORMIX:
-                return "SMALLINT";
-            default:
-                return "BOOLEAN";
-        }
-    }
-
     public String getCreateTableSqlString(String tableName) {
-        String columns = String.format(COMMON_COLUMNS,
-                getCreatedAtType(),
-                getMetadataType(),
-                getErrorTraceType(),
-                getBooleanType(),
-                getBooleanType());
-
         switch (sqlDialect) {
             case MYSQL:
             case MARIADB:
-                return String.format(
-                        "CREATE TABLE IF NOT EXISTS %s (" +
-                                "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
-                                columns +
-                                ")", tableName);
-            case POSTGRESQL:
-                return String.format(
-                        "CREATE TABLE IF NOT EXISTS %s (" +
-                                "id SERIAL PRIMARY KEY, " +
-                                columns +
-                                ")", tableName);
             case SQLITE:
             case H2:
             case HSQLDB:
             case DERBY:
+            case FIREBIRD:
+            case INFORMIX:
                 return String.format(
                         "CREATE TABLE IF NOT EXISTS %s (" +
-                                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                columns +
+                                "id %s PRIMARY KEY, " +
+                                "execution_id VARCHAR(255), " +
+                                "stage_id VARCHAR(255), " +
+                                "task_id VARCHAR(255), " +
+                                "author VARCHAR(255), " +
+                                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                                "state VARCHAR(255), " +
+                                "class_name VARCHAR(255), " +
+                                "method_name VARCHAR(255), " +
+                                "metadata %s, " +
+                                "execution_millis %s, " +
+                                "execution_hostname VARCHAR(255), " +
+                                "error_trace %s, " +
+                                "type VARCHAR(50), " +
+                                "tx_type VARCHAR(50), " +
+                                "target_system_id VARCHAR(255), " +
+                                "order_col VARCHAR(50), " +
+                                "recovery_strategy VARCHAR(50), " +
+                                "transaction_flag %s, " +
+                                "system_change %s" +
+                                ")", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
+            case POSTGRESQL:
+                return String.format(
+                        "CREATE TABLE IF NOT EXISTS %s (" +
+                                "id SERIAL PRIMARY KEY," +
+                                "execution_id VARCHAR(255)," +
+                                "stage_id VARCHAR(255)," +
+                                "task_id VARCHAR(255)," +
+                                "author VARCHAR(255)," +
+                                "created_at TIMESTAMP," +
+                                "state VARCHAR(32)," +
+                                "class_name VARCHAR(255)," +
+                                "method_name VARCHAR(255)," +
+                                "metadata TEXT," +
+                                "execution_millis BIGINT," +
+                                "execution_hostname VARCHAR(255)," +
+                                "error_trace TEXT," +
+                                "type VARCHAR(32)," +
+                                "tx_type VARCHAR(32)," +
+                                "target_system_id VARCHAR(255)," +
+                                "order_col VARCHAR(255)," +
+                                "recovery_strategy VARCHAR(32)," +
+                                "transaction_flag BOOLEAN," +
+                                "system_change BOOLEAN" +
                                 ")", tableName);
+
             case SQLSERVER:
             case SYBASE:
                 return String.format(
                         "IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='%s' AND xtype='U') " +
                                 "CREATE TABLE %s (" +
-                                "id BIGINT IDENTITY(1,1) PRIMARY KEY, " +
-                                columns +
-                                ")", tableName, tableName);
+                                "id %s PRIMARY KEY, " +
+                                "execution_id VARCHAR(255), " +
+                                "stage_id VARCHAR(255), " +
+                                "task_id VARCHAR(255), " +
+                                "author VARCHAR(255), " +
+                                "created_at DATETIME DEFAULT GETDATE(), " +
+                                "state VARCHAR(255), " +
+                                "class_name VARCHAR(255), " +
+                                "method_name VARCHAR(255), " +
+                                "metadata %s, " +
+                                "execution_millis %s, " +
+                                "execution_hostname VARCHAR(255), " +
+                                "error_trace %s, " +
+                                "type VARCHAR(50), " +
+                                "tx_type VARCHAR(50), " +
+                                "target_system_id VARCHAR(255), " +
+                                "order_col VARCHAR(50), " +
+                                "recovery_strategy VARCHAR(50), " +
+                                "transaction_flag %s, " +
+                                "system_change %s" +
+                                ")", tableName, tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
             case ORACLE:
                 return String.format(
                         "BEGIN EXECUTE IMMEDIATE 'CREATE TABLE %s (" +
-                                "id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, " +
-                                columns +
-                                ")'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;", tableName);
+                                "id %s PRIMARY KEY, " +
+                                "execution_id VARCHAR2(255), " +
+                                "stage_id VARCHAR2(255), " +
+                                "task_id VARCHAR2(255), " +
+                                "author VARCHAR2(255), " +
+                                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                                "state VARCHAR2(255), " +
+                                "class_name VARCHAR2(255), " +
+                                "method_name VARCHAR2(255), " +
+                                "metadata %s, " +
+                                "execution_millis %s, " +
+                                "execution_hostname VARCHAR2(255), " +
+                                "error_trace %s, " +
+                                "type VARCHAR2(50), " +
+                                "tx_type VARCHAR2(50), " +
+                                "target_system_id VARCHAR2(255), " +
+                                "order_col VARCHAR2(50), " +
+                                "recovery_strategy VARCHAR2(50), " +
+                                "transaction_flag %s, " +
+                                "system_change %s" +
+                                ")'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
             case DB2:
                 return String.format(
                         "CREATE TABLE %s (" +
-                                "id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, " +
-                                columns +
-                                ")", tableName);
-            case FIREBIRD:
-                return String.format(
-                        "CREATE TABLE %s (" +
-                                "id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, " +
-                                columns +
-                                ")", tableName);
-            case INFORMIX:
-                return String.format(
-                        "CREATE TABLE %s (" +
-                                "id SERIAL PRIMARY KEY, " +
-                                columns +
-                                ")", tableName);
+                                "id %s PRIMARY KEY, " +
+                                "execution_id VARCHAR(255), " +
+                                "stage_id VARCHAR(255), " +
+                                "task_id VARCHAR(255), " +
+                                "author VARCHAR(255), " +
+                                "created_at TIMESTAMP DEFAULT CURRENT TIMESTAMP, " +
+                                "state VARCHAR(255), " +
+                                "class_name VARCHAR(255), " +
+                                "method_name VARCHAR(255), " +
+                                "metadata %s, " +
+                                "execution_millis %s, " +
+                                "execution_hostname VARCHAR(255), " +
+                                "error_trace %s, " +
+                                "type VARCHAR(50), " +
+                                "tx_type VARCHAR(50), " +
+                                "target_system_id VARCHAR(255), " +
+                                "order_col VARCHAR(50), " +
+                                "recovery_strategy VARCHAR(50), " +
+                                "transaction_flag %s, " +
+                                "system_change %s" +
+                                ")", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
             default:
                 throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
         }
@@ -184,20 +169,96 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
 
     public String getInsertSqlString(String tableName) {
         return String.format(
-                "INSERT INTO %s (" +
-                        "execution_id, stage_id, task_id, author, created_at, state, class_name, method_name, metadata, " +
-                        "execution_millis, execution_hostname, error_trace, type, tx_type, target_system_id, order_col, " +
-                        "recovery_strategy, transaction_flag, system_change" +
-                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                tableName);
+                "INSERT INTO %s (execution_id, stage_id, task_id, author, created_at, state, class_name, method_name, metadata, execution_millis, execution_hostname, error_trace, type, tx_type, target_system_id, order_col, recovery_strategy, transaction_flag, system_change) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", tableName);
     }
 
     public String getSelectHistorySqlString(String tableName) {
-        return String.format(
-                "SELECT execution_id, stage_id, task_id, author, created_at, state, class_name, method_name, metadata, " +
-                        "execution_millis, execution_hostname, error_trace, type, tx_type, target_system_id, order_col, " +
-                        "recovery_strategy, transaction_flag, system_change " +
-                        "FROM %s ORDER BY created_at DESC",
-                tableName);
+        return String.format("SELECT * FROM %s ORDER BY id ASC", tableName);
+    }
+
+    private String getAutoIncrementType() {
+        switch (sqlDialect) {
+            case POSTGRESQL:
+                return "BIGSERIAL";
+            case SQLITE:
+            case H2:
+            case HSQLDB:
+            case DERBY:
+            case DB2:
+            case FIREBIRD:
+                return "BIGINT GENERATED BY DEFAULT AS IDENTITY";
+            case SQLSERVER:
+            case SYBASE:
+                return "BIGINT IDENTITY(1,1)";
+            case ORACLE:
+                return "NUMBER GENERATED BY DEFAULT AS IDENTITY";
+            case INFORMIX:
+                return "SERIAL8";
+            case MYSQL:
+            case MARIADB:
+            default:
+                return "BIGINT AUTO_INCREMENT";
+        }
+    }
+
+    private String getClobType() {
+        switch (sqlDialect) {
+            case MYSQL:
+            case MARIADB:
+                return "LONGTEXT";
+            case SQLITE:
+            case H2:
+            case HSQLDB:
+            case DERBY:
+            case FIREBIRD:
+            case INFORMIX:
+            case ORACLE:
+            case DB2:
+                return "CLOB";
+            case SQLSERVER:
+            case SYBASE:
+                return "NVARCHAR(MAX)";
+            case POSTGRESQL:
+            default:
+                return "TEXT";
+        }
+    }
+
+    private String getBigIntType() {
+        switch (sqlDialect) {
+            case ORACLE:
+                return "NUMBER(19)";
+            default:
+                return "BIGINT";
+        }
+    }
+
+    private String getBooleanType() {
+        switch (sqlDialect) {
+            case MYSQL:
+            case MARIADB:
+                return "TINYINT(1)";
+            case POSTGRESQL:
+            case H2:
+            case HSQLDB:
+            case DERBY:
+            case FIREBIRD:
+            case INFORMIX:
+                return "BOOLEAN";
+            case SQLITE:
+                return "INTEGER";
+            case SQLSERVER:
+            case SYBASE:
+                return "BIT";
+            case ORACLE:
+                return "NUMBER(1)";
+            default:
+                return "SMALLINT";
+        }
+    }
+
+    public SqlDialect getSqlDialect() {
+        return sqlDialect;
     }
 }
