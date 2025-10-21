@@ -53,12 +53,13 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.MYSQL, "mysql"),
                 Arguments.of(SqlDialect.SQLSERVER, "sqlserver"),
                 Arguments.of(SqlDialect.ORACLE, "oracle"),
-                Arguments.of(SqlDialect.POSTGRESQL, "postgresql")
+                Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
+                Arguments.of(SqlDialect.MARIADB, "mariadb")
         );
     }
 
     private TestContext setupTest(SqlDialect sqlDialect, String dialectName) throws SQLException {
-        JdbcDatabaseContainer<?> container = createContainer(dialectName);
+        JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
         container.start();
 
         HikariConfig config = new HikariConfig();
@@ -68,7 +69,7 @@ class SqlAuditStoreTest {
         config.setDriverClassName(container.getDriverClassName());
         DataSource dataSource = new HikariDataSource(config);
 
-        createTables(dataSource, sqlDialect);
+        SqlAuditTestHelper.createTables(dataSource, sqlDialect);
 
         return new TestContext(dataSource, container, sqlDialect);
     }
@@ -119,102 +120,20 @@ class SqlAuditStoreTest {
                         .withDatabaseName("testdb")
                         .withUsername("test")
                         .withPassword("test");
+            case "mariadb":
+                return new MariaDBContainer<>("mariadb:11.3.2")
+                        .withDatabaseName("testdb")
+                        .withUsername("testuser")
+                        .withPassword("testpass");
             default:
                 throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
-        }
-    }
-
-    private void createTables(DataSource dataSource, SqlDialect dialect) throws SQLException {
-        try (Connection conn = dataSource.getConnection()) {
-            dropTablesIfExist(conn, dialect);
-
-            String createTestTable = getCreateTestTableSql(dialect);
-            conn.createStatement().execute(createTestTable);
-
-            String createLockTable = getCreateLockTableSql(dialect);
-            conn.createStatement().execute(createLockTable);
-        }
-    }
-
-    private void dropTablesIfExist(Connection conn, SqlDialect dialect) throws SQLException {
-        String[] tables = {"flamingockAuditLog", "test_table", "flamingockLock"};
-        for (String table : tables) {
-            try {
-                String dropSql = getDropTableSql(table, dialect);
-                conn.createStatement().execute(dropSql);
-            } catch (SQLException e) {
-                // Ignore if table doesn't exist
-            }
-        }
-    }
-
-    private String getDropTableSql(String tableName, SqlDialect dialect) {
-        if (dialect == SqlDialect.ORACLE) {
-            return "DROP TABLE " + tableName + " CASCADE CONSTRAINTS";
-        }
-        return "DROP TABLE IF EXISTS " + tableName;
-    }
-
-    private String getCreateTestTableSql(SqlDialect dialect) {
-        switch (dialect) {
-            case MYSQL:
-            case SQLSERVER:
-                return "CREATE TABLE test_table (" +
-                        "id VARCHAR(255) PRIMARY KEY, " +
-                        "name VARCHAR(255), " +
-                        "field1 VARCHAR(255), " +
-                        "field2 VARCHAR(255))";
-            case POSTGRESQL:
-                return "CREATE TABLE test_table (" +
-                        "id VARCHAR(255) PRIMARY KEY," +
-                        "name VARCHAR(255)," +
-                        "field1 VARCHAR(255)," +
-                        "field2 VARCHAR(255))";
-            case ORACLE:
-                return "CREATE TABLE test_table (" +
-                        "id VARCHAR2(255) PRIMARY KEY, " +
-                        "name VARCHAR2(255), " +
-                        "field1 VARCHAR2(255), " +
-                        "field2 VARCHAR2(255))";
-            default:
-                throw new UnsupportedOperationException("Dialect not supported: " + dialect);
-        }
-    }
-
-    private String getCreateLockTableSql(SqlDialect dialect) {
-        switch (dialect) {
-            case MYSQL:
-                return "CREATE TABLE flamingockLock (" +
-                        "`key` VARCHAR(255) PRIMARY KEY, " +
-                        "status VARCHAR(32), " +
-                        "owner VARCHAR(255), " +
-                        "expires_at TIMESTAMP)";
-            case POSTGRESQL:
-                return "CREATE TABLE flamingockLock (" +
-                        "\"key\" VARCHAR(255) PRIMARY KEY," +
-                        "status VARCHAR(32)," +
-                        "owner VARCHAR(255)," +
-                        "expires_at TIMESTAMP)";
-            case SQLSERVER:
-                return "CREATE TABLE flamingockLock (" +
-                        "[key] VARCHAR(255) PRIMARY KEY, " +
-                        "status VARCHAR(32), " +
-                        "owner VARCHAR(255), " +
-                        "expires_at DATETIME)";
-            case ORACLE:
-                return "CREATE TABLE flamingockLock (" +
-                        "\"key\" VARCHAR2(255) PRIMARY KEY, " +
-                        "status VARCHAR2(32), " +
-                        "owner VARCHAR2(255), " +
-                        "expires_at TIMESTAMP)";
-            default:
-                throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }
     }
 
     private Class<?>[] getChangeClasses(String dialectName, String scenario) {
         switch (dialectName) {
             case "mysql":
+            case "mariadb":
                 if ("happyPath".equals(scenario)) {
                     return new Class<?>[]{
                             io.flamingock.community.sql.changes.mysql.happyPath._001__create_index.class,
@@ -442,7 +361,7 @@ class SqlAuditStoreTest {
                 }
 
                 // Verify index exists
-                verifyIndexExists(context);
+                SqlAuditTestHelper.verifyIndexExists(context);
 
                 // Verify partial data
                 try (Connection conn = context.dataSource.getConnection();
@@ -531,73 +450,11 @@ class SqlAuditStoreTest {
                 }
 
                 // Verify index exists and data state
-                verifyIndexExists(context);
+                SqlAuditTestHelper.verifyIndexExists(context);
                 verifyPartialDataState(context);
             }
         } finally {
             tearDown(context);
-        }
-    }
-
-    private void verifyIndexExists(TestContext context) throws SQLException {
-        try (Connection conn = context.dataSource.getConnection()) {
-            String indexCheckSql = getIndexCheckSql(context.dialect);
-            try (PreparedStatement ps = conn.prepareStatement(indexCheckSql)) {
-                switch (context.dialect) {
-                    case ORACLE:
-                        ps.setString(1, "IDX_STANDALONE_INDEX");
-                        ps.setString(2, "TEST_TABLE");
-                        break;
-                    case POSTGRESQL:
-                        ps.setString(1, "idx_standalone_index");
-                        break;
-                    case MYSQL:
-                    case MARIADB:
-                        ps.setString(1, "test_table");
-                        ps.setString(2, "idx_standalone_index");
-                        break;
-                    case SQLSERVER:
-                    case SYBASE:
-                        ps.setString(1, "idx_standalone_index");
-                        break;
-                    case H2:
-                    case HSQLDB:
-                    case DERBY:
-                    case SQLITE:
-                        ps.setString(1, "idx_standalone_index");
-                        break;
-                    default:
-                        ps.setString(1, "idx_standalone_index");
-                        break;
-                }
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    boolean indexExists = rs.next();
-                    assertTrue(indexExists, "Index idx_standalone_index should exist");
-                }
-            }
-        }
-    }
-
-    private String getIndexCheckSql(SqlDialect dialect) {
-        switch (dialect) {
-            case POSTGRESQL:
-                return "SELECT indexname FROM pg_indexes WHERE indexname = ?";
-            case MYSQL:
-            case MARIADB:
-                return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_NAME = ? AND INDEX_NAME = ?";
-            case ORACLE:
-                return "SELECT INDEX_NAME FROM USER_INDEXES WHERE INDEX_NAME = ? AND TABLE_NAME = ?";
-            case SQLSERVER:
-            case SYBASE:
-                return "SELECT name FROM sys.indexes WHERE name = ?";
-            case H2:
-            case HSQLDB:
-            case DERBY:
-            case SQLITE:
-                return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
-            default:
-                return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
         }
     }
 
@@ -617,18 +474,6 @@ class SqlAuditStoreTest {
             try (ResultSet rs = ps.executeQuery()) {
                 assertFalse(rs.next());
             }
-        }
-    }
-
-    private static class TestContext {
-        final DataSource dataSource;
-        final JdbcDatabaseContainer<?> container;
-        final SqlDialect dialect;
-
-        TestContext(DataSource dataSource, JdbcDatabaseContainer<?> container, SqlDialect dialect) {
-            this.dataSource = dataSource;
-            this.container = container;
-            this.dialect = dialect;
         }
     }
 }
