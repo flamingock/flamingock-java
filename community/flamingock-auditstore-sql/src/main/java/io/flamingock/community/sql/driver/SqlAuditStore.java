@@ -77,6 +77,7 @@ public class SqlAuditStore implements CommunityAuditStore {
     public synchronized CommunityLockService getLockService() {
         if (lockService == null) {
             lockService = new SqlLockService(dataSource, lockRepositoryName, autoCreate);
+            lockService.initialize(autoCreate);
         }
         return lockService;
     }

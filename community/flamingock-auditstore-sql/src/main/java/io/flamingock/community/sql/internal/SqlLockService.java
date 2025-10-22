@@ -39,14 +39,6 @@ public class SqlLockService implements CommunityLockService {
         this.dataSource = dataSource;
         this.lockRepositoryName = lockRepositoryName;
         this.dialectHelper = new SqlLockDialectHelper(dataSource);
-        if (autoCreate) {
-            try (Connection conn = dataSource.getConnection();
-                 Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to initialize lock table", e);
-            }
-        }
     }
 
     public void initialize(boolean autoCreate) {
@@ -59,6 +51,7 @@ public class SqlLockService implements CommunityLockService {
             }
         }
     }
+
 
     @Override
     public LockAcquisition upsert(LockKey key, RunnerId owner, long leaseMillis) {
