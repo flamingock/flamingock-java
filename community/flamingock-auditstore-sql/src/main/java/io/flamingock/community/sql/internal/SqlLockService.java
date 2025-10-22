@@ -32,17 +32,21 @@ public class SqlLockService implements CommunityLockService {
 
     private static final String DEFAULT_LOCK_STORE_NAME = "flamingockLock";
     private final DataSource dataSource;
-    private String lockRepositoryName = DEFAULT_LOCK_STORE_NAME;
+    private final String lockRepositoryName;
     private final SqlLockDialectHelper dialectHelper;
 
-    public SqlLockService(DataSource dataSource) {
+    public SqlLockService(DataSource dataSource, String lockRepositoryName, boolean autoCreate) {
         this.dataSource = dataSource;
-        this.dialectHelper = new SqlLockDialectHelper(dataSource);
-    }
-
-    public SqlLockService withLockRepositoryName(String lockRepositoryName) {
         this.lockRepositoryName = lockRepositoryName;
-        return this;
+        this.dialectHelper = new SqlLockDialectHelper(dataSource);
+        if (autoCreate) {
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to initialize lock table", e);
+            }
+        }
     }
 
     public void initialize(boolean autoCreate) {
@@ -178,30 +182,6 @@ public class SqlLockService implements CommunityLockService {
     }
 
     private void upsertLockEntry(Connection conn, String key, String owner, LocalDateTime expiresAt) throws SQLException {
-        String sql = dialectHelper.getInsertOrUpdateLockSqlString(lockRepositoryName);
-
-        if (dialectHelper.getSqlDialect() == SqlDialect.SQLSERVER || dialectHelper.getSqlDialect() == SqlDialect.SYBASE) {
-            // For SQL Server, the SQL already contains transaction management
-            try (Statement stmt = conn.createStatement()) {
-                String formattedSql = sql.replace("?", "'" + LockStatus.LOCK_HELD.name() + "'")
-                        .replaceFirst("'[^']*'", "'" + LockStatus.LOCK_HELD.name() + "'")
-                        .replaceFirst("'[^']*'", "'" + owner + "'")
-                        .replaceFirst("'[^']*'", "'" + Timestamp.valueOf(expiresAt) + "'")
-                        .replaceFirst("'[^']*'", "'" + key + "'")
-                        .replaceFirst("'[^']*'", "'" + key + "'")
-                        .replaceFirst("'[^']*'", "'" + LockStatus.LOCK_HELD.name() + "'")
-                        .replaceFirst("'[^']*'", "'" + owner + "'")
-                        .replaceFirst("'[^']*'", "'" + Timestamp.valueOf(expiresAt) + "'");
-                stmt.execute(formattedSql);
-            }
-        } else {
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, key);
-                ps.setString(2, LockStatus.LOCK_HELD.name());
-                ps.setString(3, owner);
-                ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
-                ps.executeUpdate();
-            }
-        }
+        dialectHelper.upsertLockEntry(conn, lockRepositoryName, key, owner, expiresAt);
     }
 }

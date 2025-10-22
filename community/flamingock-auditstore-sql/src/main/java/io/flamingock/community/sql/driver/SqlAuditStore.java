@@ -35,6 +35,7 @@ public class SqlAuditStore implements CommunityAuditStore {
     private SqlAuditPersistence persistence;
     private SqlLockService lockService;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+    private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
     private boolean autoCreate = true;
 
     public SqlAuditStore(DataSource dataSource) {
@@ -43,6 +44,11 @@ public class SqlAuditStore implements CommunityAuditStore {
 
     public SqlAuditStore withAuditRepositoryName(String auditRepositoryName) {
         this.auditRepositoryName = auditRepositoryName;
+        return this;
+    }
+
+    public SqlAuditStore withLockRepositoryName(String lockRepositoryName) {
+        this.lockRepositoryName = lockRepositoryName;
         return this;
     }
 
@@ -70,7 +76,7 @@ public class SqlAuditStore implements CommunityAuditStore {
     @Override
     public synchronized CommunityLockService getLockService() {
         if (lockService == null) {
-            lockService = new SqlLockService(dataSource);
+            lockService = new SqlLockService(dataSource, lockRepositoryName, autoCreate);
         }
         return lockService;
     }

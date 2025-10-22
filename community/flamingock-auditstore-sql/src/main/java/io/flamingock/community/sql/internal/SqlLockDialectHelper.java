@@ -17,8 +17,12 @@ package io.flamingock.community.sql.internal;
 
 import io.flamingock.internal.common.sql.AbstractSqlDialectHelper;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.core.store.lock.LockStatus;
 
 import javax.sql.DataSource;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
 
@@ -32,9 +36,16 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
 
     public String getCreateTableSqlString(String tableName) {
         switch (sqlDialect) {
+            case POSTGRESQL:
+                return String.format(
+                        "CREATE TABLE IF NOT EXISTS %s (" +
+                                "\"key\" VARCHAR(255) PRIMARY KEY," +
+                                "status VARCHAR(32)," +
+                                "owner VARCHAR(255)," +
+                                "expires_at TIMESTAMP" +
+                                ")", tableName);
             case MYSQL:
             case MARIADB:
-            case POSTGRESQL:
             case SQLITE:
             case H2:
             case HSQLDB:
@@ -152,7 +163,38 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
     }
 
     public String getDeleteLockSqlString(String tableName) {
+        if (Objects.requireNonNull(sqlDialect) == SqlDialect.POSTGRESQL) {
+            return String.format("DELETE FROM %s WHERE \"key\" = ?", tableName);
+        }
         return String.format("DELETE FROM %s WHERE `key` = ?", tableName);
+    }
+
+    public void upsertLockEntry(Connection conn, String tableName, String key, String owner, LocalDateTime expiresAt) throws SQLException {
+        String sql = getInsertOrUpdateLockSqlString(tableName);
+
+        if (getSqlDialect() == SqlDialect.SQLSERVER || getSqlDialect() == SqlDialect.SYBASE) {
+            // For SQL Server/Sybase, use Statement and format SQL
+            try (Statement stmt = conn.createStatement()) {
+                String formattedSql = sql
+                        .replaceFirst("\\?", "'" + LockStatus.LOCK_HELD.name() + "'")
+                        .replaceFirst("\\?", "'" + owner + "'")
+                        .replaceFirst("\\?", "'" + Timestamp.valueOf(expiresAt) + "'")
+                        .replaceFirst("\\?", "'" + key + "'")
+                        .replaceFirst("\\?", "'" + key + "'")
+                        .replaceFirst("\\?", "'" + LockStatus.LOCK_HELD.name() + "'")
+                        .replaceFirst("\\?", "'" + owner + "'")
+                        .replaceFirst("\\?", "'" + Timestamp.valueOf(expiresAt) + "'");
+                stmt.execute(formattedSql);
+            }
+        } else {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, key);
+                ps.setString(2, LockStatus.LOCK_HELD.name());
+                ps.setString(3, owner);
+                ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
+                ps.executeUpdate();
+            }
+        }
     }
 
     public SqlDialect getSqlDialect() {
