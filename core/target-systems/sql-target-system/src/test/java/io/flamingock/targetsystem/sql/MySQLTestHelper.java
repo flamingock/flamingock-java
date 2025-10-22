@@ -103,7 +103,7 @@ public class MySQLTestHelper {
         checkOngoingTask(ongoingCount -> ongoingCount == 0);
     }
 
-    private void createOngoingTasksTableIfNotExists(Connection connection) throws SQLException {
+    public void createOngoingTasksTableIfNotExists(Connection connection) throws SQLException {
         DatabaseMetaData meta = connection.getMetaData();
         ResultSet resultSet = meta.getTables(null, null, ONGOING_TASKS_TABLE, new String[]{"TABLE"});
         if (!resultSet.next()) {

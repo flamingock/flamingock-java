@@ -49,7 +49,7 @@ public class AbstractSqlDialectHelper {
             return SqlDialect.SQLITE;
         } else if (v.contains("h2")) {
             return SqlDialect.H2;
-        } else if (v.contains("hsqldb")) {
+        } else if (v.contains("hsql")) {
             return SqlDialect.HSQLDB;
         } else if (v.contains("derby")) {
             return SqlDialect.DERBY;

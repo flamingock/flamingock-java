@@ -66,18 +66,21 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
                     tableName);
             case DB2:
                 return String.format(
-                    "MERGE INTO %s USING (SELECT ? AS task_id, ? AS operation FROM SYSIBM.SYSDUMMY1) AS src ON (%s.task_id = src.task_id) " +
-                        "WHEN MATCHED THEN UPDATE SET operation = src.operation WHEN NOT MATCHED THEN INSERT (task_id, operation) VALUES (src.task_id, src.operation)",
+                    "MERGE INTO %s AS t USING (SELECT ? AS task_id, ? AS operation FROM SYSIBM.SYSDUMMY1) AS s ON (t.task_id = s.task_id) " +
+                        "WHEN MATCHED THEN UPDATE SET operation = s.operation WHEN NOT MATCHED THEN INSERT (task_id, operation) VALUES (s.task_id, s.operation)",
                     tableName, tableName);
             case FIREBIRD:
                 return String.format(
                     "UPDATE OR INSERT INTO %s (task_id, operation) VALUES (?, ?) MATCHING (task_id)",
                     tableName);
             case H2:
-            case HSQLDB:
-            case DERBY:
                 return String.format(
                     "MERGE INTO %s (task_id, operation) KEY (task_id) VALUES (?, ?)",
+                    tableName);
+            case HSQLDB:
+                return String.format(
+                    "MERGE INTO %s AS t USING (VALUES(?,?)) AS s(task_id,operation) ON t.task_id = s.task_id " +
+                        "WHEN MATCHED THEN UPDATE SET t.operation = s.operation WHEN NOT MATCHED THEN INSERT (task_id, operation) VALUES (s.task_id, s.operation)",
                     tableName);
             case INFORMIX:
                 return String.format(
@@ -96,7 +99,6 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
             case SQLITE:
             case H2:
             case HSQLDB:
-            case DERBY:
             case SQLSERVER:
             case SYBASE:
             case FIREBIRD:
