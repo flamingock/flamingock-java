@@ -59,7 +59,8 @@ public class SqlAuditMarkerDialectHelperTest {
             case SQLSERVER:
             case SYBASE:
                 return new MSSQLServerContainer<>(DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-latest"))
-                    .withPassword("YourStrong!Passw0rd");
+                    .withPassword("YourStrong!Passw0rd")
+                    .acceptLicense();
             case ORACLE:
                 return new OracleContainer("gvenzl/oracle-free:slim-faststart")
                     .withDatabaseName("testdb")
@@ -142,7 +143,7 @@ public class SqlAuditMarkerDialectHelperTest {
     void addOngoingTaskMark(SqlDialect dialect) {
         JdbcDatabaseContainer<?> container = createContainerForDialect(dialect);
         Assumptions.assumeTrue(container != null ||
-                (dialect != SqlDialect.DERBY && dialect != SqlDialect.FIREBIRD && dialect != SqlDialect.INFORMIX),
+                (dialect != SqlDialect.FIREBIRD && dialect != SqlDialect.INFORMIX),
             "No Test support for " + dialect.name());
 
         try {
@@ -188,7 +189,7 @@ public class SqlAuditMarkerDialectHelperTest {
     void removeOngoingTaskMark(SqlDialect dialect) {
         JdbcDatabaseContainer<?> container = createContainerForDialect(dialect);
         Assumptions.assumeTrue(container != null ||
-                (dialect != SqlDialect.DERBY && dialect != SqlDialect.FIREBIRD && dialect != SqlDialect.INFORMIX),
+                (dialect != SqlDialect.FIREBIRD && dialect != SqlDialect.INFORMIX),
             "No Test support for " + dialect.name());
 
         try {

@@ -51,8 +51,6 @@ public class AbstractSqlDialectHelper {
             return SqlDialect.H2;
         } else if (v.contains("hsql")) {
             return SqlDialect.HSQLDB;
-        } else if (v.contains("derby")) {
-            return SqlDialect.DERBY;
         } else if (v.contains("sql server")) {
             return SqlDialect.SQLSERVER;
         } else if (v.contains("sybase")) {

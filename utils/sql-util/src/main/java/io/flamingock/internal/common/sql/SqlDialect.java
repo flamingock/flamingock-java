@@ -22,7 +22,6 @@ public enum SqlDialect {
     SQLITE,
     H2,
     HSQLDB,
-    DERBY,
     SQLSERVER,
     SYBASE,
     FIREBIRD,
