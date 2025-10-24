@@ -49,7 +49,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             case SQLITE:
             case H2:
             case HSQLDB:
-            case DERBY:
             case FIREBIRD:
             case INFORMIX:
                 return String.format(
@@ -142,7 +141,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                         tableName);
             case H2:
             case HSQLDB:
-            case DERBY:
                 return String.format(
                         "MERGE INTO %s (`key`, status, owner, expires_at) KEY (`key`) VALUES (?, ?, ?, ?)",
                         tableName);

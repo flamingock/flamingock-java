@@ -36,10 +36,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Collections;
 import java.util.stream.Stream;
 
@@ -54,11 +51,45 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.SQLSERVER, "sqlserver"),
                 Arguments.of(SqlDialect.ORACLE, "oracle"),
                 Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
-                Arguments.of(SqlDialect.MARIADB, "mariadb")
+                Arguments.of(SqlDialect.MARIADB, "mariadb"),
+                Arguments.of(SqlDialect.H2, "h2")
+                //Disabled due to issues with file-based databases in CI environments
+                //Arguments.of(SqlDialect.SQLITE, "sqlite")
         );
     }
 
     private TestContext setupTest(SqlDialect sqlDialect, String dialectName) throws SQLException {
+        if ("h2".equals(dialectName)) {
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
+            config.setUsername("sa");
+            config.setPassword("");
+            config.setDriverClassName("org.h2.Driver");
+            DataSource dataSource = new HikariDataSource(config);
+
+            SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+
+            return new TestContext(dataSource, null, sqlDialect);
+        }
+
+        if ("sqlite".equals(dialectName)) {
+            HikariConfig config = new HikariConfig();
+            String dbFile = "test_" + System.currentTimeMillis() + ".db";
+            config.setJdbcUrl("jdbc:sqlite:" + dbFile);
+            config.setDriverClassName("org.sqlite.JDBC");
+            config.setMaximumPoolSize(1);
+            config.setMinimumIdle(1);
+            config.setConnectionTimeout(30000);
+            config.setMaxLifetime(0);
+
+            config.setConnectionInitSql("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;");
+
+            DataSource dataSource = new HikariDataSource(config);
+            SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+
+            return new TestContext(dataSource, null, SqlDialect.SQLITE);
+        }
+
         JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
         container.start();
 
@@ -134,6 +165,8 @@ class SqlAuditStoreTest {
         switch (dialectName) {
             case "mysql":
             case "mariadb":
+            case "sqlite":
+            case "h2":
                 if ("happyPath".equals(scenario)) {
                     return new Class<?>[]{
                             io.flamingock.community.sql.changes.mysql.happyPath._001__create_index.class,

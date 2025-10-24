@@ -114,6 +114,9 @@ public class SqlAuditTestHelper {
             case MYSQL:
             case SQLSERVER:
             case MARIADB:
+            case SQLITE:
+            case H2:
+            case HSQLDB:
                 return "CREATE TABLE test_table (" +
                         "id VARCHAR(255) PRIMARY KEY, " +
                         "name VARCHAR(255), " +
@@ -140,6 +143,11 @@ public class SqlAuditTestHelper {
         switch (dialect) {
             case MYSQL:
             case MARIADB:
+            case SQLITE:
+            case H2:
+            case HSQLDB:
+            case FIREBIRD:
+            case INFORMIX:
                 return "CREATE TABLE flamingockLock (" +
                         "`key` VARCHAR(255) PRIMARY KEY, " +
                         "status VARCHAR(32), " +
@@ -207,12 +215,14 @@ public class SqlAuditTestHelper {
             case SQLSERVER:
             case SYBASE:
                 return "SELECT name FROM sys.indexes WHERE name = ?";
+            case SQLITE:
+                // SQLite uses sqlite_master for indexes
+                return "SELECT name FROM sqlite_master WHERE type='index' AND name = ?";
             case H2:
             case HSQLDB:
-            case DERBY:
-            case SQLITE:
             default:
                 return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
+
         }
     }
 
@@ -225,24 +235,19 @@ public class SqlAuditTestHelper {
                         ps.setString(1, "IDX_STANDALONE_INDEX");
                         ps.setString(2, "TEST_TABLE");
                         break;
-                    case POSTGRESQL:
-                        ps.setString(1, "idx_standalone_index");
-                        break;
                     case MYSQL:
                     case MARIADB:
                         ps.setString(1, "test_table");
                         ps.setString(2, "idx_standalone_index");
                         break;
-                    case SQLSERVER:
-                    case SYBASE:
-                        ps.setString(1, "idx_standalone_index");
-                        break;
                     case H2:
                     case HSQLDB:
-                    case DERBY:
-                    case SQLITE:
-                        ps.setString(1, "idx_standalone_index");
+                        ps.setString(1, "IDX_STANDALONE_INDEX");
                         break;
+                    case POSTGRESQL:
+                    case SQLSERVER:
+                    case SYBASE:
+                    case SQLITE:
                     default:
                         ps.setString(1, "idx_standalone_index");
                         break;
