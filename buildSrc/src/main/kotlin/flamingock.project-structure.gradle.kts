@@ -48,7 +48,8 @@ val utilProjects = setOf(
     "test-util",
     "mongodb-util",
     "dynamodb-util",
-    "couchbase-util"
+    "couchbase-util",
+    "sql-util"
 )
 
 val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + templateProjects + utilProjects
