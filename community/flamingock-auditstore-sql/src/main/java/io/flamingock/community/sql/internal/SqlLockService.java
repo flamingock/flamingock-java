@@ -30,12 +30,11 @@ import java.time.LocalDateTime;
 
 public class SqlLockService implements CommunityLockService {
 
-    private static final String DEFAULT_LOCK_STORE_NAME = "flamingockLock";
     private final DataSource dataSource;
     private final String lockRepositoryName;
     private final SqlLockDialectHelper dialectHelper;
 
-    public SqlLockService(DataSource dataSource, String lockRepositoryName, boolean autoCreate) {
+    public SqlLockService(DataSource dataSource, String lockRepositoryName) {
         this.dataSource = dataSource;
         this.lockRepositoryName = lockRepositoryName;
         this.dialectHelper = new SqlLockDialectHelper(dataSource);

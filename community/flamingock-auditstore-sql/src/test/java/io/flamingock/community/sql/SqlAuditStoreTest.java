@@ -31,6 +31,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.sqlite.SQLiteDataSource;
 import org.testcontainers.containers.*;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -52,9 +53,8 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.ORACLE, "oracle"),
                 Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
                 Arguments.of(SqlDialect.MARIADB, "mariadb"),
-                Arguments.of(SqlDialect.H2, "h2")
-                //Disabled due to issues with file-based databases in CI environments
-                //Arguments.of(SqlDialect.SQLITE, "sqlite")
+                Arguments.of(SqlDialect.H2, "h2"),
+                Arguments.of(SqlDialect.SQLITE, "sqlite")
         );
     }
 
@@ -73,21 +73,25 @@ class SqlAuditStoreTest {
         }
 
         if ("sqlite".equals(dialectName)) {
-            HikariConfig config = new HikariConfig();
             String dbFile = "test_" + System.currentTimeMillis() + ".db";
-            config.setJdbcUrl("jdbc:sqlite:" + dbFile);
-            config.setDriverClassName("org.sqlite.JDBC");
-            config.setMaximumPoolSize(1);
-            config.setMinimumIdle(1);
-            config.setConnectionTimeout(30000);
-            config.setMaxLifetime(0);
 
-            config.setConnectionInitSql("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;");
+            // Use a shared in-memory DB or file DB, but single connection
+            String jdbcUrl = "jdbc:sqlite:" + dbFile;
 
-            DataSource dataSource = new HikariDataSource(config);
-            SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+            // Create a single-connection DataSource for SQLite
+            SQLiteDataSource ds = new SQLiteDataSource();
+            ds.setUrl(jdbcUrl);
 
-            return new TestContext(dataSource, null, SqlDialect.SQLITE);
+            try (Connection conn = ds.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("PRAGMA journal_mode=WAL;");
+                stmt.execute("PRAGMA busy_timeout=5000;");
+            }
+
+            // Run table creation with this same DataSource
+            SqlAuditTestHelper.createTables(ds, sqlDialect);
+
+            return new TestContext(ds, null, SqlDialect.SQLITE);
         }
 
         JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
