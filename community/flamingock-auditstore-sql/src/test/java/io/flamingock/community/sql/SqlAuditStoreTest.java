@@ -25,7 +25,10 @@ import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.targetsystem.sql.SqlTargetSystem;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -39,12 +42,18 @@ import org.testcontainers.utility.DockerImageName;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Testcontainers
 class SqlAuditStoreTest {
+
+    private static final Map<String, JdbcDatabaseContainer<?>> containers = new HashMap<>();
+    private static final Map<String, DataSource> dataSources = new HashMap<>();
 
     static Stream<Arguments> dialectProvider() {
         return Stream.of(
@@ -56,6 +65,30 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.H2, "h2"),
                 Arguments.of(SqlDialect.SQLITE, "sqlite")
         );
+    }
+
+    @BeforeAll
+    void startContainers() {
+        for (Arguments arg : dialectProvider().toArray(Arguments[]::new)) {
+            SqlDialect dialect = (SqlDialect) arg.get()[0];
+            String dialectName = (String) arg.get()[1];
+            if (!"h2".equals(dialectName) && !"sqlite".equals(dialectName)) {
+                JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
+                container.start();
+                containers.put(dialectName, container);
+                dataSources.put(dialectName, SqlAuditTestHelper.createDataSource(container));
+            }
+        }
+    }
+
+    @AfterAll
+    void stopContainers() {
+        containers.values().forEach(JdbcDatabaseContainer::stop);
+        dataSources.values().forEach(ds -> {
+            if (ds instanceof HikariDataSource) {
+                ((HikariDataSource) ds).close();
+            }
+        });
     }
 
     private TestContext setupTest(SqlDialect sqlDialect, String dialectName) throws SQLException {
@@ -107,15 +140,6 @@ class SqlAuditStoreTest {
         SqlAuditTestHelper.createTables(dataSource, sqlDialect);
 
         return new TestContext(dataSource, container, sqlDialect);
-    }
-
-    private void tearDown(TestContext context) throws SQLException {
-        if (context.dataSource instanceof HikariDataSource) {
-            ((HikariDataSource) context.dataSource).close();
-        }
-        if (context.container != null) {
-            context.container.stop();
-        }
     }
 
     private JdbcDatabaseContainer<?> createContainer(String dialectName) {
@@ -263,8 +287,8 @@ class SqlAuditStoreTest {
     @DisplayName("When standalone runs the driver should persist the audit logs and the test data")
     void happyPathWithMockedPipeline(SqlDialect sqlDialect, String dialectName) throws Exception {
         TestContext context = setupTest(sqlDialect, dialectName);
-        try {
-            try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
                 Class<?>[] changeClasses = getChangeClasses(dialectName, "happyPath");
 
                 mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -329,9 +353,7 @@ class SqlAuditStoreTest {
                     assertEquals("Jorge", rs.getString("name"));
                 }
             }
-        } finally {
-            tearDown(context);
-        }
+
     }
 
     @ParameterizedTest
@@ -339,8 +361,8 @@ class SqlAuditStoreTest {
     @DisplayName("When standalone runs the driver and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
     void failedWithRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
         TestContext context = setupTest(sqlDialect, dialectName);
-        try {
-            try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
                 Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithRollback");
 
                 mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -418,9 +440,7 @@ class SqlAuditStoreTest {
                     }
                 }
             }
-        } finally {
-            tearDown(context);
-        }
+
     }
 
     @ParameterizedTest
@@ -428,8 +448,8 @@ class SqlAuditStoreTest {
     @DisplayName("When standalone runs the driver and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
     void failedWithoutRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
         TestContext context = setupTest(sqlDialect, dialectName);
-        try {
-            try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
                 Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithoutRollback");
 
                 mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -490,9 +510,7 @@ class SqlAuditStoreTest {
                 SqlAuditTestHelper.verifyIndexExists(context);
                 verifyPartialDataState(context);
             }
-        } finally {
-            tearDown(context);
-        }
+
     }
 
     private void verifyPartialDataState(TestContext context) throws SQLException {
