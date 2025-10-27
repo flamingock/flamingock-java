@@ -32,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SqlAuditTestHelper {
 
     public static JdbcDatabaseContainer<?> createContainer(String dialectName) {
+        boolean isCi = System.getenv("CI") != null || System.getenv("GITHUB_ACTIONS") != null;
+
         switch (dialectName) {
             case "mysql":
                 return new MySQLContainer<>("mysql:8.0")
@@ -51,8 +53,9 @@ public class SqlAuditTestHelper {
                         .withPassword("oracle123")
                         .withSharedMemorySize(1073741824L)
                         .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8")
-                        .withReuse(true);
+                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+
+                if (!isCi) oracleContainer.withReuse(true);
 
                 return new OracleContainer(
                         DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
