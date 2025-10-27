@@ -63,6 +63,10 @@ include("community:flamingock-auditstore-dynamodb")
 project(":community:flamingock-auditstore-dynamodb").name = "flamingock-auditstore-dynamodb"
 project(":community:flamingock-auditstore-dynamodb").projectDir = file("community/flamingock-auditstore-dynamodb")
 
+include("community:flamingock-auditstore-sql")
+project(":community:flamingock-auditstore-sql").name = "flamingock-auditstore-sql"
+project(":community:flamingock-auditstore-sql").projectDir = file("community/flamingock-auditstore-sql")
+
 //////////////////////////////////////
 // PLUGINS
 //////////////////////////////////////
