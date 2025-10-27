@@ -37,11 +37,13 @@ public class SqlAuditTestHelper {
                 return new MySQLContainer<>("mysql:8.0")
                         .withDatabaseName("testdb")
                         .withUsername("testuser")
-                        .withPassword("testpass");
+                        .withPassword("testpass")
+                        .withReuse(true);
             case "sqlserver":
                 return new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
                         .acceptLicense()
-                        .withPassword("TestPass123!");
+                        .withPassword("TestPass123!")
+                        .withReuse(true);
             case "oracle":
                 OracleContainer oracleContainer = new OracleContainer(
                         DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
@@ -49,7 +51,8 @@ public class SqlAuditTestHelper {
                         .withPassword("oracle123")
                         .withSharedMemorySize(1073741824L)
                         .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8")
+                        .withReuse(true);
 
                 return new OracleContainer(
                         DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
@@ -62,17 +65,20 @@ public class SqlAuditTestHelper {
                         .withPassword("oracle123")
                         .withSharedMemorySize(1073741824L)
                         .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8")
+                        .withReuse(true);
             case "postgresql":
                 return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
                         .withDatabaseName("testdb")
                         .withUsername("test")
-                        .withPassword("test");
+                        .withPassword("test")
+                        .withReuse(true);
             case "mariadb":
                 return new MariaDBContainer<>("mariadb:11.3.2")
                         .withDatabaseName("testdb")
                         .withUsername("testuser")
-                        .withPassword("testpass");
+                        .withPassword("testpass")
+                        .withReuse(true);
             default:
                 throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
         }
