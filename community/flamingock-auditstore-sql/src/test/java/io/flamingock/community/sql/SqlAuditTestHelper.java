@@ -19,6 +19,8 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.internal.common.sql.SqlDialect;
 import org.testcontainers.containers.*;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
@@ -26,10 +28,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SqlAuditTestHelper {
+
+    private static OracleContainer oracleInstance;
 
     public static JdbcDatabaseContainer<?> createContainer(String dialectName) {
         boolean isCi = System.getenv("CI") != null || System.getenv("GITHUB_ACTIONS") != null;
@@ -47,24 +52,28 @@ public class SqlAuditTestHelper {
                         .withPassword("TestPass123!")
                         .withReuse(true);
             case "oracle": {
-                OracleContainer oracle = new OracleContainer(
-                        DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
-                                .asCompatibleSubstituteFor("gvenzl/oracle-xe")) {
-                    @Override
-                    public String getDatabaseName() {
-                        return "FREEPDB1";
+                if (oracleInstance == null) {
+                    oracleInstance = new OracleContainer(
+                            DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
+                                    .asCompatibleSubstituteFor("gvenzl/oracle-xe")) {
+                        @Override
+                        public String getDatabaseName() {
+                            return "FREEPDB1";
+                        }
+                    }
+                            .withPassword("oracle123")
+                            .withSharedMemorySize(1073741824L)
+                            .withStartupTimeout(Duration.ofMinutes(20))
+                            .waitingFor(new WaitAllStrategy()
+                                    .withStrategy(Wait.forListeningPort())
+                                    .withStrategy(Wait.forLogMessage(".*DATABASE IS READY TO USE.*\\n", 1))
+                            )
+                            .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+                    if (!isCi) {
+                        oracleInstance.withReuse(true);
                     }
                 }
-                        .withPassword("oracle123")
-                        .withSharedMemorySize(1073741824L)
-                        .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
-
-                if (!isCi) {
-                    oracle.withReuse(true);
-                }
-
-                return oracle;
+                return oracleInstance;
             }
             case "postgresql":
                 return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
