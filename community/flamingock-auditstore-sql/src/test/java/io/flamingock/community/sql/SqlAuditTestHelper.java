@@ -46,18 +46,8 @@ public class SqlAuditTestHelper {
                         .acceptLicense()
                         .withPassword("TestPass123!")
                         .withReuse(true);
-            case "oracle":
-                OracleContainer oracleContainer = new OracleContainer(
-                        DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
-                                .asCompatibleSubstituteFor("gvenzl/oracle-xe"))
-                        .withPassword("oracle123")
-                        .withSharedMemorySize(1073741824L)
-                        .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
-
-                if (!isCi) oracleContainer.withReuse(true);
-
-                return new OracleContainer(
+            case "oracle": {
+                OracleContainer oracle = new OracleContainer(
                         DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
                                 .asCompatibleSubstituteFor("gvenzl/oracle-xe")) {
                     @Override
@@ -68,8 +58,14 @@ public class SqlAuditTestHelper {
                         .withPassword("oracle123")
                         .withSharedMemorySize(1073741824L)
                         .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8")
-                        .withReuse(true);
+                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+
+                if (!isCi) {
+                    oracle.withReuse(true);
+                }
+
+                return oracle;
+            }
             case "postgresql":
                 return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
                         .withDatabaseName("testdb")
