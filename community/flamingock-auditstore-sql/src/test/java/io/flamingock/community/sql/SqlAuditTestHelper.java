@@ -15,81 +15,24 @@
  */
 package io.flamingock.community.sql;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.internal.common.sql.SqlDialect;
 import org.testcontainers.containers.*;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
-import org.testcontainers.utility.DockerImageName;
-
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SqlAuditTestHelper {
 
-    private static OracleContainer oracleInstance;
-
     public static JdbcDatabaseContainer<?> createContainer(String dialectName) {
-        boolean isCi = System.getenv("CI") != null || System.getenv("GITHUB_ACTIONS") != null;
+        return SharedSqlContainers.getContainer(dialectName);
+    }
 
-        switch (dialectName) {
-            case "mysql":
-                return new MySQLContainer<>("mysql:8.0")
-                        .withDatabaseName("testdb")
-                        .withUsername("testuser")
-                        .withPassword("testpass")
-                        .withReuse(true);
-            case "sqlserver":
-                return new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
-                        .acceptLicense()
-                        .withPassword("TestPass123!")
-                        .withReuse(true);
-            case "oracle": {
-                if (oracleInstance == null) {
-                    oracleInstance = new OracleContainer(
-                            DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
-                                    .asCompatibleSubstituteFor("gvenzl/oracle-xe")) {
-                        @Override
-                        public String getDatabaseName() {
-                            return "FREEPDB1";
-                        }
-                    }
-                            .withPassword("oracle123")
-                            .withSharedMemorySize(1073741824L)
-                            .withStartupTimeout(Duration.ofMinutes(20))
-                            .waitingFor(new WaitAllStrategy()
-                                    .withStrategy(Wait.forListeningPort())
-                                    .withStrategy(Wait.forLogMessage(".*DATABASE IS READY TO USE.*\\n", 1))
-                            )
-                            .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
-                    if (!isCi) {
-                        oracleInstance.withReuse(true);
-                    }
-                }
-                return oracleInstance;
-            }
-            case "postgresql":
-                return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
-                        .withDatabaseName("testdb")
-                        .withUsername("test")
-                        .withPassword("test")
-                        .withReuse(true);
-            case "mariadb":
-                return new MariaDBContainer<>("mariadb:11.3.2")
-                        .withDatabaseName("testdb")
-                        .withUsername("testuser")
-                        .withPassword("testpass")
-                        .withReuse(true);
-            default:
-                throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
-        }
+    public static DataSource createDataSource(JdbcDatabaseContainer<?> container) {
+        return SharedSqlContainers.createDataSource(container);
     }
 
     public static void createTables(DataSource dataSource, SqlDialect dialect) throws SQLException {
@@ -188,15 +131,6 @@ public class SqlAuditTestHelper {
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }
-    }
-
-    public static DataSource createDataSource(JdbcDatabaseContainer<?> container) {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(container.getJdbcUrl());
-        config.setUsername(container.getUsername());
-        config.setPassword(container.getPassword());
-        config.setDriverClassName(container.getDriverClassName());
-        return new HikariDataSource(config);
     }
 
     public static void verifyPartialDataState(DataSource dataSource) throws SQLException {
