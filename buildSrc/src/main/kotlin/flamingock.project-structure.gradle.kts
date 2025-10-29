@@ -23,6 +23,7 @@ val communityProjects = setOf(
     "flamingock-auditstore-mongodb-sync",
     "flamingock-auditstore-couchbase",
     "flamingock-auditstore-dynamodb",
+    "flamingock-auditstore-sql",
     "flamingock-importer"
 )
 
