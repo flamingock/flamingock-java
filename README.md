@@ -36,7 +36,7 @@ No manual scripts. No drift. No surprises.
 
 <br />
 
-### 🧩 In plain English for developers
+## 🧩 In plain English for developers
 
 When you deploy an app, it often depends on things outside your code —  
 like a database schema, a queue, or a few configuration values.  
