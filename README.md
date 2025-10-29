@@ -29,6 +29,7 @@
 </p>
 
 **Flamingock** brings *Change-as-Code (CaC)* to your entire stack.  
+
 It applies **versioned, auditable changes** to the external systems your application depends on — such as schemas, message brokers, databases, APIs, cloud services, and any other external system your application needs.
 
 It runs **inside your application** (or via the **CLI**) — not in CI/CD — ensuring that every environment starts with the exact data, schema, and configuration it needs to run correctly.  
@@ -38,12 +39,12 @@ No manual scripts. No drift. No surprises.
 
 ## 🧩 In plain English for developers
 
-When you deploy an app, it often depends on things outside your code —  
-like a database schema, a queue, or a few configuration values.  
+When you deploy an app, it often depends on things outside your code —like a database schema, a queue, or a few configuration values.
+
 Normally, keeping all of those in sync across environments means extra scripts, manual fixes, or hoping nothing drifts.
 
-With **Flamingock**, your app and its changes travel together.  
-Every update runs in order and safely, as part of the app startup — no hidden steps or guesswork.  
+With **Flamingock**, your app and its changes travel together.Every update runs in order and safely, as part of the app startup — no hidden steps or guesswork.  
+
 If something goes wrong, Flamingock either recovers safely or stops before anything breaks.
 
 The result: each deployment behaves like a single, consistent package —  
