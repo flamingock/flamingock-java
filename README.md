@@ -41,12 +41,11 @@ No manual scripts. No drift. No surprises.
 
 When you deploy an app, it often depends on things outside your code —like a database schema, a queue, or a few configuration values. Normally, keeping all of those in sync across environments means extra scripts, manual fixes, or hoping nothing drifts.
 
-With **Flamingock**, your app and its changes travel together.Every update runs in order and safely, as part of the app startup — no hidden steps or guesswork.  
+With **Flamingock**, your app and its changes travel together. Every update runs in order and safely, as part of the app startup — no hidden steps or guesswork.  
 
 If something goes wrong, Flamingock either recovers safely or stops before anything breaks.
 
-**The result**: each deployment behaves like a single, consistent package —  
-your code and all its required changes evolve together, predictably and with peace of mind.
+**The result**: each deployment behaves like a single, consistent package — your code and all its required changes evolve together, predictably and with peace of mind.
 
 <br />
 
