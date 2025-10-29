@@ -44,6 +44,10 @@ public class SqlLockService implements CommunityLockService {
         if (autoCreate) {
             try (Connection conn = dataSource.getConnection();
                  Statement stmt = conn.createStatement()) {
+                // Enable pessimistic locking for HSQLDB
+                if (dialectHelper.getSqlDialect() == SqlDialect.HSQLDB) {
+                    stmt.execute("SET DATABASE TRANSACTION CONTROL LOCKS");
+                }
                 stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to initialize lock table", e);
@@ -51,11 +55,15 @@ public class SqlLockService implements CommunityLockService {
         }
     }
 
-
     @Override
     public LockAcquisition upsert(LockKey key, RunnerId owner, long leaseMillis) {
         String keyStr = key.toString();
         LocalDateTime expiresAt = LocalDateTime.now().plusNanos(leaseMillis * 1_000_000);
+
+        // For HSQLDB, use a retry mechanism with shorter intervals
+        if (dialectHelper.getSqlDialect() == SqlDialect.HSQLDB) {
+            return upsertWithRetry(keyStr, owner, expiresAt, leaseMillis);
+        }
 
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
@@ -65,7 +73,8 @@ public class SqlLockService implements CommunityLockService {
                         owner.toString().equals(existing.getOwner()) ||
                         LocalDateTime.now().isAfter(existing.getExpiresAt())) {
                     upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
-                    if (dialectHelper.getSqlDialect() != SqlDialect.SQLSERVER && dialectHelper.getSqlDialect() != SqlDialect.SYBASE) {
+                    if (dialectHelper.getSqlDialect() != SqlDialect.SQLSERVER &&
+                            dialectHelper.getSqlDialect() != SqlDialect.SYBASE) {
                         conn.commit();
                     }
                 } else {
@@ -85,6 +94,50 @@ public class SqlLockService implements CommunityLockService {
         return new LockAcquisition(owner, leaseMillis);
     }
 
+    private LockAcquisition upsertWithRetry(String keyStr, RunnerId owner, LocalDateTime expiresAt, long leaseMillis) {
+        int maxRetries = 50; // 5 seconds total (50 * 100ms)
+        int retryCount = 0;
+
+        while (retryCount < maxRetries) {
+            try (Connection conn = dataSource.getConnection()) {
+                conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+                conn.setAutoCommit(false);
+                try {
+                    CommunityLockEntry existing = getLockEntry(conn, keyStr);
+                    if (existing == null ||
+                            owner.toString().equals(existing.getOwner()) ||
+                            LocalDateTime.now().isAfter(existing.getExpiresAt())) {
+                        upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
+                        conn.commit();
+                        return new LockAcquisition(owner, leaseMillis);
+                    } else {
+                        conn.rollback();
+                        // Lock is held by someone else, wait and retry
+                        retryCount++;
+                        if (retryCount < maxRetries) {
+                            try {
+                                Thread.sleep(100); // 100ms between retries
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                throw new LockServiceException("upsert", keyStr, "Interrupted while waiting for lock");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    conn.rollback();
+                    throw e;
+                } finally {
+                    conn.setAutoCommit(true);
+                }
+            } catch (SQLException e) {
+                throw new LockServiceException("upsert", keyStr, e.getMessage());
+            }
+        }
+
+        throw new LockServiceException("upsert", keyStr, "Lock acquisition timeout after " + maxRetries + " retries");
+    }
+
+
     @Override
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
         String keyStr = key.toString();
@@ -96,7 +149,8 @@ public class SqlLockService implements CommunityLockService {
                 CommunityLockEntry existing = getLockEntry(conn, keyStr);
                 if (existing != null && owner.toString().equals(existing.getOwner())) {
                     upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
-                    if (dialectHelper.getSqlDialect() != SqlDialect.SQLSERVER && dialectHelper.getSqlDialect() != SqlDialect.SYBASE) {
+                    if (dialectHelper.getSqlDialect() != SqlDialect.SQLSERVER &&
+                            dialectHelper.getSqlDialect() != SqlDialect.SYBASE) {
                         conn.commit();
                     }
                 } else {
@@ -134,9 +188,10 @@ public class SqlLockService implements CommunityLockService {
     @Override
     public void releaseLock(LockKey lockKey, RunnerId owner) {
         String keyStr = lockKey.toString();
+        String selectSql = dialectHelper.getSelectForReleaseLockSqlString(lockRepositoryName);
+
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT owner FROM " + lockRepositoryName + " WHERE `key` = ?")) {
+             PreparedStatement ps = conn.prepareStatement(selectSql)) {
             ps.setString(1, keyStr);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

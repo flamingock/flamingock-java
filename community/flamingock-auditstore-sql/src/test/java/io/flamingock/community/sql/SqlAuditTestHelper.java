@@ -102,7 +102,6 @@ public class SqlAuditTestHelper {
             case MARIADB:
             case SQLITE:
             case H2:
-            case HSQLDB:
             case FIREBIRD:
             case INFORMIX:
                 return "CREATE TABLE flamingockLock (" +
@@ -128,6 +127,12 @@ public class SqlAuditTestHelper {
                         "status VARCHAR2(32), " +
                         "owner VARCHAR2(255), " +
                         "expires_at TIMESTAMP)";
+                case HSQLDB:
+                    return "CREATE TABLE flamingockLock (" +
+                            "\"key\" VARCHAR(255) PRIMARY KEY, " +
+                            "status VARCHAR(32), " +
+                            "owner VARCHAR(255), " +
+                            "expires_at TIMESTAMP)";
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }

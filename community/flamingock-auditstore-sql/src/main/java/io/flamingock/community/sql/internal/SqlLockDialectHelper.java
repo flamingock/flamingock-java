@@ -48,7 +48,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             case MARIADB:
             case SQLITE:
             case H2:
-            case HSQLDB:
             case FIREBIRD:
             case INFORMIX:
                 return String.format(
@@ -84,6 +83,14 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "owner VARCHAR(255)," +
                                 "expires_at TIMESTAMP" +
                                 ")", tableName);
+            case HSQLDB:
+                return String.format(
+                        "CREATE TABLE IF NOT EXISTS %s (" +
+                                "\"key\" VARCHAR(255) PRIMARY KEY, " +
+                                "status VARCHAR(32), " +
+                                "owner VARCHAR(255), " +
+                                "expires_at TIMESTAMP" +
+                                ")", tableName);
             default:
                 throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
         }
@@ -98,6 +105,8 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                 return String.format("SELECT [key], status, owner, expires_at FROM %s WITH (UPDLOCK, ROWLOCK) WHERE [key] = ?", tableName);
             case ORACLE:
                 return String.format("SELECT \"key\", status, owner, expires_at FROM %s WHERE \"key\" = ? FOR UPDATE", tableName);
+            case HSQLDB:
+                return String.format("SELECT \"key\", status, owner, expires_at FROM %s WHERE \"key\" = ?", tableName);
             default:
                 return String.format("SELECT `key`, status, owner, expires_at FROM %s WHERE `key` = ?", tableName);
         }
@@ -140,10 +149,16 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "WHEN NOT MATCHED THEN INSERT (\"key\", status, owner, expires_at) VALUES (s.\"key\", s.status, s.owner, s.expires_at)",
                         tableName);
             case H2:
-            case HSQLDB:
                 return String.format(
                         "MERGE INTO %s (`key`, status, owner, expires_at) KEY (`key`) VALUES (?, ?, ?, ?)",
                         tableName);
+            case HSQLDB:
+                return String.format(
+                        "MERGE INTO %s USING (VALUES (?, ?, ?, ?)) AS src (\"key\", status, owner, expires_at) " +
+                                "ON %s.\"key\" = src.\"key\" " +
+                                "WHEN MATCHED THEN UPDATE SET status = src.status, owner = src.owner, expires_at = src.expires_at " +
+                                "WHEN NOT MATCHED THEN INSERT (\"key\", status, owner, expires_at) VALUES (src.\"key\", src.status, src.owner, src.expires_at)",
+                        tableName, tableName);
             case DB2:
                 return String.format(
                         "MERGE INTO %s USING (SELECT ? AS \"key\", ? AS status, ? AS owner, ? AS expires_at FROM SYSIBM.SYSDUMMY1) AS src " +
@@ -161,7 +176,7 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
     }
 
     public String getDeleteLockSqlString(String tableName) {
-        if (Objects.requireNonNull(sqlDialect) == SqlDialect.POSTGRESQL) {
+        if (Objects.requireNonNull(sqlDialect) == SqlDialect.POSTGRESQL || Objects.requireNonNull(sqlDialect) == SqlDialect.HSQLDB) {
             return String.format("DELETE FROM %s WHERE \"key\" = ?", tableName);
         }
         return String.format("DELETE FROM %s WHERE `key` = ?", tableName);
@@ -192,6 +207,17 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                 ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
                 ps.executeUpdate();
             }
+        }
+    }
+
+    public String getSelectForReleaseLockSqlString(String tableName) {
+        switch (sqlDialect) {
+            case POSTGRESQL:
+            case ORACLE:
+            case HSQLDB:
+                return String.format("SELECT owner FROM %s WHERE \"key\" = ?", tableName);
+            default:
+                return String.format("SELECT owner FROM %s WHERE `key` = ?", tableName);
         }
     }
 

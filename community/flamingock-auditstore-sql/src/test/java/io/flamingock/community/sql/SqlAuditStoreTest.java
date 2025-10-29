@@ -62,7 +62,8 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
                 Arguments.of(SqlDialect.MARIADB, "mariadb"),
                 Arguments.of(SqlDialect.H2, "h2"),
-                Arguments.of(SqlDialect.SQLITE, "sqlite")
+                Arguments.of(SqlDialect.SQLITE, "sqlite"),
+                Arguments.of(SqlDialect.HSQLDB, "hsqldb")
         );
     }
 
@@ -71,7 +72,7 @@ class SqlAuditStoreTest {
         for (Arguments arg : dialectProvider().toArray(Arguments[]::new)) {
             SqlDialect dialect = (SqlDialect) arg.get()[0];
             String dialectName = (String) arg.get()[1];
-            if (!"h2".equals(dialectName) && !"sqlite".equals(dialectName)) {
+            if (!"h2".equals(dialectName) && !"sqlite".equals(dialectName) && !"hsqldb".equals(dialectName)) {
                 JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
                 container.start();
                 containers.put(dialectName, container);
@@ -126,6 +127,19 @@ class SqlAuditStoreTest {
             return new TestContext(ds, null, SqlDialect.SQLITE);
         }
 
+        if ("hsqldb".equals(dialectName)) {
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:hsqldb:mem:testdb");
+            config.setUsername("SA");
+            config.setPassword("");
+            config.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
+            DataSource dataSource = new HikariDataSource(config);
+
+            SqlAuditTestHelper.createTables(dataSource, sqlDialect);
+
+            return new TestContext(dataSource, null, sqlDialect);
+        }
+
         JdbcDatabaseContainer<?> container = SqlAuditTestHelper.createContainer(dialectName);
         container.start();
 
@@ -147,6 +161,7 @@ class SqlAuditStoreTest {
             case "mariadb":
             case "sqlite":
             case "h2":
+            case "hsqldb":
                 if ("happyPath".equals(scenario)) {
                     return new Class<?>[]{
                             io.flamingock.community.sql.changes.mysql.happyPath._001__create_index.class,
