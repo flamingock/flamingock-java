@@ -34,7 +34,7 @@ It applies **versioned, auditable changes** to the external systems your applica
 It runs **inside your application** (or via the **CLI**) — not in CI/CD — ensuring that every environment starts with the exact data, schema, and configuration it needs to run correctly.  
 No manual scripts. No drift. No surprises.
 
----
+<br />
 
 ### 🧩 In plain English for developers
 
@@ -49,7 +49,7 @@ If something goes wrong, Flamingock either recovers safely or stops before anyth
 The result: each deployment behaves like a single, consistent package —  
 your code and all its required changes evolve together, predictably and with peace of mind.
 
----
+<br />
 
 ## 💡 What Flamingock manages
 Flamingock focuses on **application-level changes** that your code requires to run safely:
@@ -63,7 +63,7 @@ Flamingock focuses on **application-level changes** that your code requires to r
 ### What Flamingock does *not* manage
 Flamingock is **not an infrastructure-as-code tool**. It does not provision servers, clusters, or networks — those belong in Terraform, Pulumi, or similar. Instead, Flamingock **complements them by handling the runtime changes your application depends on**.
 
----
+<br />
 
 ## 📦 Editions
 
@@ -75,7 +75,7 @@ Flamingock is open source at its core and powers three editions:
 
 > For inquiries about the Cloud or Self-Hosted editions, contact us at <a href="mailto:support@flamingock.io">support@flamingock.io</a>.
 
----
+<br />
 
 ## 💡 Introducing Change-as-Code (CaC)
 
@@ -93,7 +93,7 @@ No more fragile scripts or untracked console changes. With CaC:
 
 > Just like Infrastructure-as-Code reshaped provisioning, **Change-as-Code is redefining how systems evolve** — and Flamingock brings that principle to life.
 
----
+<br />
 
 ## 🚀 Getting started
 
@@ -107,7 +107,7 @@ annotationProcessor("io.flamingock:flamingock-processor:$latestVersion")
 - Read the [Quick Start guide](https://docs.flamingock.io/get-started/quick-start)
 - Explore [examples](https://github.com/flamingock/flamingock-java-examples)
 
----
+<br />
 
 ## 🔑 Key features
 
@@ -121,7 +121,7 @@ annotationProcessor("io.flamingock:flamingock-processor:$latestVersion")
 - **Native GraalVM support**: Fully compatible with native image builds for fast startup and low memory usage.
 - **Coordinated multi-environment workflows**: Manage complex change sequences across multiple environments or application instances.
 
----
+<br />
 
 ## 📘 Learn more
 
@@ -130,14 +130,14 @@ annotationProcessor("io.flamingock:flamingock-processor:$latestVersion")
 - [Core concepts](https://docs.flamingock.io/get-started/core-concepts)
 - [Why Change-as-Code matters](https://docs.flamingock.io/get-started/Change-as-Code)
 
----
+<br />
 
 ## 🤝 Contributing
 
 We welcome contributions from the community!  
 If you'd like to report a bug, suggest a feature, or open a pull request, check out our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
----
+<br />
 
 ## 📢 Get involved
 
@@ -145,7 +145,7 @@ If you'd like to report a bug, suggest a feature, or open a pull request, check 
 - Report issues in the [issue tracker](https://github.com/flamingock/flamingock-java/issues)
 - Join the conversation in [GitHub discussions](https://github.com/flamingock/flamingock-java/discussions)
 
----
+<br />
 
 ## 📜 License
 
