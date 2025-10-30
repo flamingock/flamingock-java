@@ -13,6 +13,7 @@ dependencies {
     api(project(":community:flamingock-auditstore-couchbase"))
     api(project(":community:flamingock-auditstore-dynamodb"))
     api(project(":community:flamingock-auditstore-mongodb-sync"))
+    api(project(":community:flamingock-auditstore-sql"))
 }
 
 description = "Community Edition aggregate module providing self-managed audit capabilities"
