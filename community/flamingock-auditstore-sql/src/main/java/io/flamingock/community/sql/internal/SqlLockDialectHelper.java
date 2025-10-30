@@ -78,12 +78,14 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 ")'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;", tableName);
             case DB2:
                 return String.format(
-                        "CREATE TABLE %s (" +
-                                "\"key\" VARCHAR(255) PRIMARY KEY," +
-                                "status VARCHAR(32)," +
-                                "owner VARCHAR(255)," +
-                                "expires_at TIMESTAMP" +
-                                ")", tableName);
+                        "BEGIN " +
+                                "DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END; " +
+                                "EXECUTE IMMEDIATE 'CREATE TABLE %s (" +
+                                "lock_key VARCHAR(255) NOT NULL PRIMARY KEY, " +
+                                "status VARCHAR(32), " +
+                                "owner VARCHAR(255), " +
+                                "expires_at TIMESTAMP)'; " +
+                                "END", tableName);
             default:
                 throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
         }
@@ -93,6 +95,9 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
         switch (sqlDialect) {
             case POSTGRESQL:
                 return String.format("SELECT \"key\", status, owner, expires_at FROM %s WHERE \"key\" = ?", tableName);
+            case DB2:
+                // Select lock_key as the first column (getLockEntry expects rs.getString(1) to be the key)
+                return String.format("SELECT lock_key, status, owner, expires_at FROM %s WHERE lock_key = ?", tableName);
             case SQLSERVER:
             case SYBASE:
                 return String.format("SELECT [key], status, owner, expires_at FROM %s WITH (UPDLOCK, ROWLOCK) WHERE [key] = ?", tableName);
@@ -145,12 +150,13 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                         "MERGE INTO %s (`key`, status, owner, expires_at) KEY (`key`) VALUES (?, ?, ?, ?)",
                         tableName);
             case DB2:
+                // Use a VALUES-derived table and a target alias for DB2 to avoid parsing issues
                 return String.format(
-                        "MERGE INTO %s USING (SELECT ? AS \"key\", ? AS status, ? AS owner, ? AS expires_at FROM SYSIBM.SYSDUMMY1) AS src " +
-                                "ON (%s.\"key\" = src.\"key\") " +
+                        "MERGE INTO %s tgt USING (VALUES (?, ?, ?, ?)) src(lock_key, status, owner, expires_at) " +
+                                "ON (tgt.lock_key = src.lock_key) " +
                                 "WHEN MATCHED THEN UPDATE SET status = src.status, owner = src.owner, expires_at = src.expires_at " +
-                                "WHEN NOT MATCHED THEN INSERT (\"key\", status, owner, expires_at) VALUES (src.\"key\", src.status, src.owner, src.expires_at)",
-                        tableName, tableName);
+                                "WHEN NOT MATCHED THEN INSERT (lock_key, status, owner, expires_at) VALUES (src.lock_key, src.status, src.owner, src.expires_at)",
+                        tableName);
             case FIREBIRD:
                 return String.format(
                         "UPDATE OR INSERT INTO %s (`key`, status, owner, expires_at) VALUES (?, ?, ?, ?) MATCHING (`key`)",
@@ -164,11 +170,40 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
         if (Objects.requireNonNull(sqlDialect) == SqlDialect.POSTGRESQL) {
             return String.format("DELETE FROM %s WHERE \"key\" = ?", tableName);
         }
+        if (sqlDialect == SqlDialect.DB2) {
+            return String.format("DELETE FROM %s WHERE lock_key = ?", tableName);
+        }
         return String.format("DELETE FROM %s WHERE `key` = ?", tableName);
     }
 
     public void upsertLockEntry(Connection conn, String tableName, String key, String owner, LocalDateTime expiresAt) throws SQLException {
         String sql = getInsertOrUpdateLockSqlString(tableName);
+
+        if (sqlDialect == SqlDialect.DB2) {
+            // UPDATE first
+            try (PreparedStatement update = conn.prepareStatement(
+                    "UPDATE " + tableName + " SET owner = ?, expires_at = ? WHERE lock_key = ?")) {
+                update.setString(1, owner);
+                update.setTimestamp(2, Timestamp.valueOf(expiresAt));
+                update.setString(3, key);
+                int updated = update.executeUpdate();
+                if (updated > 0) {
+                    return;
+                }
+            }
+
+            // If no row updated, try INSERT
+            try (PreparedStatement insert = conn.prepareStatement(
+                    "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)")) {
+                insert.setString(1, key);
+                // Use "LOCKED" string to avoid using a non-existing enum constant (previous "ACQUIRED" caused failures)
+                insert.setString(2, LockStatus.LOCK_HELD.name());
+                insert.setString(3, owner);
+                insert.setTimestamp(4, Timestamp.valueOf(expiresAt));
+                insert.executeUpdate();
+                return;
+            }
+        }
 
         if (getSqlDialect() == SqlDialect.SQLSERVER || getSqlDialect() == SqlDialect.SYBASE) {
             // For SQL Server/Sybase, use Statement and format SQL
@@ -186,6 +221,7 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             }
         } else {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                // For DB2 we use lock_key but callers pass key as first parameter - that's correct
                 ps.setString(1, key);
                 ps.setString(2, LockStatus.LOCK_HELD.name());
                 ps.setString(3, owner);

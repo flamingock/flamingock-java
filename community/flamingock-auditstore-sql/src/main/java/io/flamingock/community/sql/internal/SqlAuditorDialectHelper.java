@@ -138,28 +138,33 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 ")'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
             case DB2:
                 return String.format(
-                        "CREATE TABLE %s (" +
-                                "id %s PRIMARY KEY, " +
-                                "execution_id VARCHAR(255), " +
-                                "stage_id VARCHAR(255), " +
-                                "task_id VARCHAR(255), " +
-                                "author VARCHAR(255), " +
-                                "created_at TIMESTAMP DEFAULT CURRENT TIMESTAMP, " +
-                                "state VARCHAR(255), " +
-                                "class_name VARCHAR(255), " +
-                                "method_name VARCHAR(255), " +
-                                "metadata %s, " +
-                                "execution_millis %s, " +
-                                "execution_hostname VARCHAR(255), " +
-                                "error_trace %s, " +
-                                "type VARCHAR(50), " +
-                                "tx_type VARCHAR(50), " +
-                                "target_system_id VARCHAR(255), " +
-                                "order_col VARCHAR(50), " +
-                                "recovery_strategy VARCHAR(50), " +
-                                "transaction_flag %s, " +
-                                "system_change %s" +
-                                ")", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
+                        "BEGIN\n" +
+                                "  DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;\n" +
+                                "  EXECUTE IMMEDIATE 'CREATE TABLE %s (" +
+                                "id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1) PRIMARY KEY," +
+                                "execution_id VARCHAR(255)," +
+                                "stage_id VARCHAR(255)," +
+                                "task_id VARCHAR(255)," +
+                                "author VARCHAR(255)," +
+                                "created_at TIMESTAMP," +
+                                "state VARCHAR(32)," +
+                                "class_name VARCHAR(255)," +
+                                "method_name VARCHAR(255)," +
+                                "metadata CLOB," +
+                                "execution_millis BIGINT," +
+                                "execution_hostname VARCHAR(255)," +
+                                "error_trace CLOB," +
+                                "type VARCHAR(50)," +
+                                "tx_type VARCHAR(50)," +
+                                "target_system_id VARCHAR(255)," +
+                                "order_col VARCHAR(50)," +
+                                "recovery_strategy VARCHAR(50)," +
+                                "transaction_flag SMALLINT," +
+                                "system_change SMALLINT" +
+                                ")';\n" +
+                                "END",
+                        tableName);
+
             case SQLITE:
                 return String.format(
                         "CREATE TABLE IF NOT EXISTS %s (" +

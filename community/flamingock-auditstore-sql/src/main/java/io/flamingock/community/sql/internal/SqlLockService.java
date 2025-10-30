@@ -136,7 +136,7 @@ public class SqlLockService implements CommunityLockService {
         String keyStr = lockKey.toString();
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT owner FROM " + lockRepositoryName + " WHERE `key` = ?")) {
+                     dialectHelper.getSelectLockSqlString(lockRepositoryName))) {
             ps.setString(1, keyStr);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

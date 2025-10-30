@@ -210,6 +210,7 @@ class SqlAuditStoreTest {
                 }
                 break;
             case "postgresql":
+            case "db2":
                 if ("happyPath".equals(scenario)) {
                     return new Class<?>[]{
                             io.flamingock.community.sql.changes.postgresql.happyPath._001__create_index.class,

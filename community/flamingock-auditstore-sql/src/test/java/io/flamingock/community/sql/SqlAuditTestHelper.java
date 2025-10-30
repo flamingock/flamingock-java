@@ -91,6 +91,12 @@ public class SqlAuditTestHelper {
                         "name VARCHAR2(255), " +
                         "field1 VARCHAR2(255), " +
                         "field2 VARCHAR2(255))";
+            case DB2:
+                return "CREATE TABLE test_table (" +
+                        "id VARCHAR(255) PRIMARY KEY," +
+                        "name VARCHAR(255)," +
+                        "field1 VARCHAR(255)," +
+                        "field2 VARCHAR(255))";
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }
@@ -127,6 +133,13 @@ public class SqlAuditTestHelper {
                         "\"key\" VARCHAR2(255) PRIMARY KEY, " +
                         "status VARCHAR2(32), " +
                         "owner VARCHAR2(255), " +
+                        "expires_at TIMESTAMP)";
+            case DB2:
+                // Use lock_key in DB2 test DDL to match runtime helper and avoid reserved-key issues
+                return "CREATE TABLE flamingockLock (" +
+                        "lock_key VARCHAR(255) PRIMARY KEY, " +
+                        "status VARCHAR(32), " +
+                        "owner VARCHAR(255), " +
                         "expires_at TIMESTAMP)";
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
@@ -170,7 +183,6 @@ public class SqlAuditTestHelper {
             case HSQLDB:
             default:
                 return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
-
         }
     }
 
@@ -182,6 +194,9 @@ public class SqlAuditTestHelper {
                     case ORACLE:
                         ps.setString(1, "IDX_STANDALONE_INDEX");
                         ps.setString(2, "TEST_TABLE");
+                        break;
+                    case DB2:
+                        ps.setString(1, "IDX_STANDALONE_INDEX");
                         break;
                     case MYSQL:
                     case MARIADB:
