@@ -15,12 +15,8 @@
  */
 package io.flamingock.community.sql;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.internal.common.sql.SqlDialect;
 import org.testcontainers.containers.*;
-import org.testcontainers.utility.DockerImageName;
-
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -32,50 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SqlAuditTestHelper {
 
     public static JdbcDatabaseContainer<?> createContainer(String dialectName) {
-        switch (dialectName) {
-            case "mysql":
-                return new MySQLContainer<>("mysql:8.0")
-                        .withDatabaseName("testdb")
-                        .withUsername("testuser")
-                        .withPassword("testpass");
-            case "sqlserver":
-                return new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
-                        .acceptLicense()
-                        .withPassword("TestPass123!");
-            case "oracle":
-                OracleContainer oracleContainer = new OracleContainer(
-                        DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
-                                .asCompatibleSubstituteFor("gvenzl/oracle-xe"))
-                        .withPassword("oracle123")
-                        .withSharedMemorySize(1073741824L)
-                        .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
+        return SharedSqlContainers.getContainer(dialectName);
+    }
 
-                return new OracleContainer(
-                        DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart")
-                                .asCompatibleSubstituteFor("gvenzl/oracle-xe")) {
-                    @Override
-                    public String getDatabaseName() {
-                        return "FREEPDB1";
-                    }
-                }
-                        .withPassword("oracle123")
-                        .withSharedMemorySize(1073741824L)
-                        .withStartupTimeoutSeconds(900)
-                        .withEnv("ORACLE_CHARACTERSET", "AL32UTF8");
-            case "postgresql":
-                return new PostgreSQLContainer<>(DockerImageName.parse("postgres:15"))
-                        .withDatabaseName("testdb")
-                        .withUsername("test")
-                        .withPassword("test");
-            case "mariadb":
-                return new MariaDBContainer<>("mariadb:11.3.2")
-                        .withDatabaseName("testdb")
-                        .withUsername("testuser")
-                        .withPassword("testpass");
-            default:
-                throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
-        }
+    public static DataSource createDataSource(JdbcDatabaseContainer<?> container) {
+        return SharedSqlContainers.createDataSource(container);
     }
 
     public static void createTables(DataSource dataSource, SqlDialect dialect) throws SQLException {
@@ -134,6 +91,12 @@ public class SqlAuditTestHelper {
                         "name VARCHAR2(255), " +
                         "field1 VARCHAR2(255), " +
                         "field2 VARCHAR2(255))";
+            case DB2:
+                return "CREATE TABLE test_table (" +
+                        "id VARCHAR(255) PRIMARY KEY," +
+                        "name VARCHAR(255)," +
+                        "field1 VARCHAR(255)," +
+                        "field2 VARCHAR(255))";
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }
@@ -171,18 +134,16 @@ public class SqlAuditTestHelper {
                         "status VARCHAR2(32), " +
                         "owner VARCHAR2(255), " +
                         "expires_at TIMESTAMP)";
+            case DB2:
+                // Use lock_key in DB2 test DDL to match runtime helper and avoid reserved-key issues
+                return "CREATE TABLE flamingockLock (" +
+                        "lock_key VARCHAR(255) PRIMARY KEY, " +
+                        "status VARCHAR(32), " +
+                        "owner VARCHAR(255), " +
+                        "expires_at TIMESTAMP)";
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }
-    }
-
-    public static DataSource createDataSource(JdbcDatabaseContainer<?> container) {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(container.getJdbcUrl());
-        config.setUsername(container.getUsername());
-        config.setPassword(container.getPassword());
-        config.setDriverClassName(container.getDriverClassName());
-        return new HikariDataSource(config);
     }
 
     public static void verifyPartialDataState(DataSource dataSource) throws SQLException {
@@ -222,7 +183,6 @@ public class SqlAuditTestHelper {
             case HSQLDB:
             default:
                 return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
-
         }
     }
 
@@ -234,6 +194,9 @@ public class SqlAuditTestHelper {
                     case ORACLE:
                         ps.setString(1, "IDX_STANDALONE_INDEX");
                         ps.setString(2, "TEST_TABLE");
+                        break;
+                    case DB2:
+                        ps.setString(1, "IDX_STANDALONE_INDEX");
                         break;
                     case MYSQL:
                     case MARIADB:
