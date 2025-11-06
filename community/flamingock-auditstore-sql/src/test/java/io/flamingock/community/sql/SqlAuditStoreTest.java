@@ -26,6 +26,7 @@ import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.targetsystem.sql.SqlTargetSystem;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestInstance;
@@ -53,6 +54,7 @@ class SqlAuditStoreTest {
 
     private static final Map<String, JdbcDatabaseContainer<?>> containers = new HashMap<>();
     private static final Map<String, DataSource> dataSources = new HashMap<>();
+    private TestContext context;
 
     static Stream<Arguments> dialectProvider() {
         return Stream.of(
@@ -62,7 +64,8 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
                 Arguments.of(SqlDialect.MARIADB, "mariadb"),
                 Arguments.of(SqlDialect.H2, "h2"),
-                Arguments.of(SqlDialect.SQLITE, "sqlite")
+                Arguments.of(SqlDialect.SQLITE, "sqlite"),
+                Arguments.of(SqlDialect.INFORMIX, "informix")
         );
     }
 
@@ -77,6 +80,13 @@ class SqlAuditStoreTest {
                 containers.put(dialectName, container);
                 dataSources.put(dialectName, SqlAuditTestHelper.createDataSource(container));
             }
+        }
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        if (context != null) {
+            context.cleanup();
         }
     }
 
@@ -146,6 +156,7 @@ class SqlAuditStoreTest {
             case "mysql":
             case "mariadb":
             case "sqlite":
+                case "informix":
             case "h2":
                 if ("happyPath".equals(scenario)) {
                     return new Class<?>[]{
@@ -239,7 +250,7 @@ class SqlAuditStoreTest {
     @MethodSource("dialectProvider")
     @DisplayName("When standalone runs the driver should persist the audit logs and the test data")
     void happyPathWithMockedPipeline(SqlDialect sqlDialect, String dialectName) throws Exception {
-        TestContext context = setupTest(sqlDialect, dialectName);
+        context = setupTest(sqlDialect, dialectName);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             Class<?>[] changeClasses = getChangeClasses(dialectName, "happyPath");
@@ -313,7 +324,7 @@ class SqlAuditStoreTest {
     @MethodSource("dialectProvider")
     @DisplayName("When standalone runs the driver and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
     void failedWithRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
-        TestContext context = setupTest(sqlDialect, dialectName);
+        context = setupTest(sqlDialect, dialectName);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithRollback");
@@ -400,7 +411,7 @@ class SqlAuditStoreTest {
     @MethodSource("dialectProvider")
     @DisplayName("When standalone runs the driver and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
     void failedWithoutRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
-        TestContext context = setupTest(sqlDialect, dialectName);
+        context = setupTest(sqlDialect, dialectName);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithoutRollback");

@@ -18,6 +18,7 @@ package io.flamingock.community.sql.internal;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 
@@ -53,34 +54,52 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
 
     @Override
     public Result writeEntry(AuditEntry auditEntry) {
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     dialectHelper.getInsertSqlString(auditTableName))) {
-            ps.setString(1, auditEntry.getExecutionId());
-            ps.setString(2, auditEntry.getStageId());
-            ps.setString(3, auditEntry.getTaskId());
-            ps.setString(4, auditEntry.getAuthor());
-            ps.setTimestamp(5, Timestamp.valueOf(auditEntry.getCreatedAt()));
-            ps.setString(6, auditEntry.getState() != null ? auditEntry.getState().name() : null);
-            ps.setString(7, auditEntry.getClassName());
-            ps.setString(8, auditEntry.getMethodName());
-            ps.setString(9, auditEntry.getMetadata() != null ? auditEntry.getMetadata().toString() : null);
-            ps.setLong(10, auditEntry.getExecutionMillis());
-            ps.setString(11, auditEntry.getExecutionHostname());
-            ps.setString(12, auditEntry.getErrorTrace());
-            ps.setString(13, auditEntry.getType() != null ? auditEntry.getType().name() : null);
-            ps.setString(14, auditEntry.getTxType() != null ? auditEntry.getTxType().name() : null);
-            ps.setString(15, auditEntry.getTargetSystemId());
-            ps.setString(16, auditEntry.getOrder());
-            ps.setString(17, auditEntry.getRecoveryStrategy() != null ? auditEntry.getRecoveryStrategy().name() : null);
-            ps.setObject(18, auditEntry.getTransactionFlag());
-            ps.setObject(19, auditEntry.getSystemChange());
-            ps.executeUpdate();
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
+
+            // For Informix, ensure autoCommit is enabled for audit writes
+            if (dialectHelper.getSqlDialect() == SqlDialect.INFORMIX) {
+                conn.setAutoCommit(true);
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    dialectHelper.getInsertSqlString(auditTableName))) {
+                ps.setString(1, auditEntry.getExecutionId());
+                ps.setString(2, auditEntry.getStageId());
+                ps.setString(3, auditEntry.getTaskId());
+                ps.setString(4, auditEntry.getAuthor());
+                ps.setTimestamp(5, Timestamp.valueOf(auditEntry.getCreatedAt()));
+                ps.setString(6, auditEntry.getState() != null ? auditEntry.getState().name() : null);
+                ps.setString(7, auditEntry.getClassName());
+                ps.setString(8, auditEntry.getMethodName());
+                ps.setString(9, auditEntry.getMetadata() != null ? auditEntry.getMetadata().toString() : null);
+                ps.setLong(10, auditEntry.getExecutionMillis());
+                ps.setString(11, auditEntry.getExecutionHostname());
+                ps.setString(12, auditEntry.getErrorTrace());
+                ps.setString(13, auditEntry.getType() != null ? auditEntry.getType().name() : null);
+                ps.setString(14, auditEntry.getTxType() != null ? auditEntry.getTxType().name() : null);
+                ps.setString(15, auditEntry.getTargetSystemId());
+                ps.setString(16, auditEntry.getOrder());
+                ps.setString(17, auditEntry.getRecoveryStrategy() != null ? auditEntry.getRecoveryStrategy().name() : null);
+                ps.setObject(18, auditEntry.getTransactionFlag());
+                ps.setObject(19, auditEntry.getSystemChange());
+                ps.executeUpdate();
+            }
             return Result.OK();
         } catch (SQLException e) {
             return new Result.Error(e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    // Log but don't throw
+                }
+            }
         }
     }
+
 
     @Override
     public List<AuditEntry> getAuditHistory() {

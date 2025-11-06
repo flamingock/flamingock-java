@@ -15,10 +15,12 @@
  */
 package io.flamingock.community.sql;
 
+import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.internal.common.sql.SqlDialect;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 
 public class TestContext {
     final DataSource dataSource;
@@ -29,5 +31,11 @@ public class TestContext {
         this.dataSource = dataSource;
         this.container = container;
         this.dialect = dialect;
+    }
+
+    public void cleanup() throws SQLException {
+        if (dataSource instanceof HikariDataSource) {
+            ((HikariDataSource) dataSource).close();
+        }
     }
 }

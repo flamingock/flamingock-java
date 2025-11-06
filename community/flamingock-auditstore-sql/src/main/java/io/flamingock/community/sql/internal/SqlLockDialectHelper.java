@@ -50,7 +50,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             case H2:
             case HSQLDB:
             case FIREBIRD:
-            case INFORMIX:
                 return String.format(
                         "CREATE TABLE IF NOT EXISTS %s (" +
                                 "`key` VARCHAR(255) PRIMARY KEY," +
@@ -86,6 +85,14 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "owner VARCHAR(255), " +
                                 "expires_at TIMESTAMP)'; " +
                                 "END", tableName);
+            case INFORMIX:
+                return String.format(
+                        "CREATE TABLE %s (" +
+                                "lock_key VARCHAR(255) PRIMARY KEY, " +
+                                "status VARCHAR(32), " +
+                                "owner VARCHAR(255), " +
+                                "expires_at DATETIME YEAR TO FRACTION(3)" +
+                                ")", tableName);
             default:
                 throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
         }
@@ -103,6 +110,8 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                 return String.format("SELECT [key], status, owner, expires_at FROM %s WITH (UPDLOCK, ROWLOCK) WHERE [key] = ?", tableName);
             case ORACLE:
                 return String.format("SELECT \"key\", status, owner, expires_at FROM %s WHERE \"key\" = ? FOR UPDATE", tableName);
+            case INFORMIX:
+                return String.format("SELECT lock_key, status, owner, expires_at FROM %s WHERE lock_key = ?", tableName);
             default:
                 return String.format("SELECT `key`, status, owner, expires_at FROM %s WHERE `key` = ?", tableName);
         }
@@ -112,7 +121,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
         switch (sqlDialect) {
             case MYSQL:
             case MARIADB:
-            case INFORMIX:
                 return String.format(
                         "INSERT INTO %s (`key`, status, owner, expires_at) VALUES (?, ?, ?, ?) " +
                                 "ON DUPLICATE KEY UPDATE status = VALUES(status), owner = VALUES(owner), expires_at = VALUES(expires_at)",
@@ -161,6 +169,15 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                 return String.format(
                         "UPDATE OR INSERT INTO %s (`key`, status, owner, expires_at) VALUES (?, ?, ?, ?) MATCHING (`key`)",
                         tableName);
+            case INFORMIX:
+                // Informix doesn't support ON DUPLICATE KEY UPDATE
+                // Use a procedural approach similar to SQL Server
+                return String.format(
+                        "UPDATE %s SET status = ?, owner = ?, expires_at = ? WHERE lock_key = ?; " +
+                                "INSERT INTO %s (lock_key, status, owner, expires_at) " +
+                                "SELECT ?, ?, ?, ? FROM sysmaster:sysdual " +
+                                "WHERE NOT EXISTS (SELECT 1 FROM %s WHERE lock_key = ?)",
+                        tableName, tableName, tableName);
             default:
                 throw new UnsupportedOperationException("Dialect not supported for upsert: " + sqlDialect.name());
         }
@@ -170,7 +187,7 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
         if (Objects.requireNonNull(sqlDialect) == SqlDialect.POSTGRESQL) {
             return String.format("DELETE FROM %s WHERE \"key\" = ?", tableName);
         }
-        if (sqlDialect == SqlDialect.DB2) {
+        if (sqlDialect == SqlDialect.INFORMIX || sqlDialect == SqlDialect.DB2) {
             return String.format("DELETE FROM %s WHERE lock_key = ?", tableName);
         }
         return String.format("DELETE FROM %s WHERE `key` = ?", tableName);
@@ -196,13 +213,38 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             try (PreparedStatement insert = conn.prepareStatement(
                     "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)")) {
                 insert.setString(1, key);
-                // Use "LOCKED" string to avoid using a non-existing enum constant (previous "ACQUIRED" caused failures)
                 insert.setString(2, LockStatus.LOCK_HELD.name());
                 insert.setString(3, owner);
                 insert.setTimestamp(4, Timestamp.valueOf(expiresAt));
                 insert.executeUpdate();
-                return;
             }
+            return;
+        }
+
+        if (getSqlDialect() == SqlDialect.INFORMIX) {
+            // Try UPDATE first
+            try (PreparedStatement update = conn.prepareStatement(
+                    "UPDATE " + tableName + " SET status = ?, owner = ?, expires_at = ? WHERE lock_key = ?")) {
+                update.setString(1, LockStatus.LOCK_HELD.name());
+                update.setString(2, owner);
+                update.setTimestamp(3, Timestamp.valueOf(expiresAt));
+                update.setString(4, key);
+                int updated = update.executeUpdate();
+                if (updated > 0) {
+                    return;
+                }
+            }
+
+            // If no row updated, try INSERT
+            try (PreparedStatement insert = conn.prepareStatement(
+                    "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)")) {
+                insert.setString(1, key);
+                insert.setString(2, LockStatus.LOCK_HELD.name());
+                insert.setString(3, owner);
+                insert.setTimestamp(4, Timestamp.valueOf(expiresAt));
+                insert.executeUpdate();
+            }
+            return;
         }
 
         if (getSqlDialect() == SqlDialect.SQLSERVER || getSqlDialect() == SqlDialect.SYBASE) {
@@ -219,17 +261,19 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                         .replaceFirst("\\?", "'" + Timestamp.valueOf(expiresAt) + "'");
                 stmt.execute(formattedSql);
             }
-        } else {
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                // For DB2 we use lock_key but callers pass key as first parameter - that's correct
-                ps.setString(1, key);
-                ps.setString(2, LockStatus.LOCK_HELD.name());
-                ps.setString(3, owner);
-                ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
-                ps.executeUpdate();
-            }
+            return;
+        }
+
+        // Default case for other dialects
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, key);
+            ps.setString(2, LockStatus.LOCK_HELD.name());
+            ps.setString(3, owner);
+            ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
+            ps.executeUpdate();
         }
     }
+
 
     public SqlDialect getSqlDialect() {
         return sqlDialect;

@@ -15,16 +15,16 @@
  */
 package io.flamingock.community.sql;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.testcontainers.containers.*;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
+import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.sql.DataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 public final class SharedSqlContainers {
 
@@ -48,7 +48,7 @@ public final class SharedSqlContainers {
                 return c;
             }
             case "sqlserver": {
-                MSSQLServerContainer<?> c = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
+                MSSQLServerContainer<?> c = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-latest")
                         .acceptLicense()
                         .withPassword("TestPass123!");
                 if (!isCi) c.withReuse(true);
@@ -90,6 +90,8 @@ public final class SharedSqlContainers {
                 if (!isCi) c.withReuse(true);
                 return c;
             }
+            case "informix":
+                return new InformixContainer();
             default:
                 throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
         }
@@ -106,6 +108,17 @@ public final class SharedSqlContainers {
         config.setUsername(container.getUsername());
         config.setPassword(container.getPassword());
         config.setDriverClassName(container.getDriverClassName());
+
+        if (container instanceof InformixContainer) {
+            config.setMaximumPoolSize(5);
+            config.setMinimumIdle(2);
+            config.setConnectionTimeout(5000);
+            config.setIdleTimeout(60000);
+            config.setMaxLifetime(120000);
+            config.setLeakDetectionThreshold(10000);
+            config.setValidationTimeout(3000);
+        }
+
         return new HikariDataSource(config);
     }
 }

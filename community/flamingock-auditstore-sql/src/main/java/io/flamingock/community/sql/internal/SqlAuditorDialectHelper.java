@@ -37,7 +37,6 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
             case H2:
             case HSQLDB:
             case FIREBIRD:
-            case INFORMIX:
                 return String.format(
                         "CREATE TABLE IF NOT EXISTS %s (" +
                                 "id %s PRIMARY KEY, " +
@@ -189,6 +188,32 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "transaction_flag INTEGER, " +
                                 "system_change INTEGER" +
                                 ")", tableName);
+            case INFORMIX:
+                return String.format(
+                        "CREATE TABLE IF NOT EXISTS %s (" +
+                                "id SERIAL8 PRIMARY KEY, " +
+                                "execution_id VARCHAR(100), " +
+                                "stage_id VARCHAR(100), " +
+                                "task_id VARCHAR(100), " +
+                                "author VARCHAR(100), " +
+                                "created_at DATETIME YEAR TO FRACTION(3) DEFAULT CURRENT YEAR TO FRACTION(3), " +
+                                "state VARCHAR(50), " +
+                                "class_name VARCHAR(200), " +
+                                "method_name VARCHAR(100), " +
+                                "metadata LVARCHAR(8000), " +
+                                "execution_millis BIGINT, " +
+                                "execution_hostname VARCHAR(100), " +
+                                "error_trace LVARCHAR(8000), " +
+                                "type VARCHAR(50), " +
+                                "tx_type VARCHAR(50), " +
+                                "target_system_id VARCHAR(100), " +
+                                "order_col VARCHAR(50), " +
+                                "recovery_strategy VARCHAR(50), " +
+                                "transaction_flag BOOLEAN, " +
+                                "system_change BOOLEAN" +
+                                ")", tableName);
+
+
             default:
                 throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
         }
