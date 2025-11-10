@@ -92,6 +92,8 @@ public final class SharedSqlContainers {
             }
             case "informix":
                 return new InformixContainer();
+                case "sybase":
+                    return new SybaseContainer();
             default:
                 throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
         }

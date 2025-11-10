@@ -65,7 +65,8 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.MARIADB, "mariadb"),
                 Arguments.of(SqlDialect.H2, "h2"),
                 Arguments.of(SqlDialect.SQLITE, "sqlite"),
-                Arguments.of(SqlDialect.INFORMIX, "informix")
+                Arguments.of(SqlDialect.INFORMIX, "informix"),
+                Arguments.of(SqlDialect.SYBASE, "sybase")
         );
     }
 
@@ -179,6 +180,7 @@ class SqlAuditStoreTest {
                 }
                 break;
             case "sqlserver":
+                case "sybase":
                 if ("happyPath".equals(scenario)) {
                     return new Class<?>[]{
                             io.flamingock.community.sql.changes.sqlserver.happyPath._001__create_index.class,
