@@ -20,6 +20,7 @@ import java.util.Map;
 public class DatabaseConfig {
     private MongoDBConfig mongodb;
     private DynamoDBConfig dynamodb;
+    private CouchbaseConfig couchbase;
 
     public MongoDBConfig getMongodb() {
         return mongodb;
@@ -35,6 +36,14 @@ public class DatabaseConfig {
 
     public void setDynamodb(DynamoDBConfig dynamodb) {
         this.dynamodb = dynamodb;
+    }
+
+    public CouchbaseConfig getCouchbase() {
+        return couchbase;
+    }
+
+    public void setCouchbase(CouchbaseConfig couchbase) {
+        this.couchbase = couchbase;
     }
 
     public static class MongoDBConfig {
@@ -131,6 +140,54 @@ public class DatabaseConfig {
 
         public void setSecretKey(String secretKey) {
             this.secretKey = secretKey;
+        }
+
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+
+        public void setProperties(Map<String, String> properties) {
+            this.properties = properties;
+        }
+    }
+
+    public static class CouchbaseConfig {
+        private String bucketName;
+        private String endpoint;
+        private String username;
+        private String password;
+        private Map<String, String> properties;
+
+        public String getBucketName() {
+            return bucketName;
+        }
+
+        public void setBucketName(String bucketName) {
+            this.bucketName = bucketName;
+        }
+
+        public String getEndpoint() {
+            return endpoint;
+        }
+
+        public void setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
         }
 
         public Map<String, String> getProperties() {

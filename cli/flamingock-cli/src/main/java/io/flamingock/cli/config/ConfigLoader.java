@@ -41,7 +41,7 @@ public class ConfigLoader {
     @SuppressWarnings("unchecked")
     private static FlamingockConfig parseConfig(Map<String, Object> yamlData) {
         FlamingockConfig config = new FlamingockConfig();
-        
+
         Map<String, Object> flamingockData = (Map<String, Object>) yamlData.get("flamingock");
         if (flamingockData == null) {
             throw new IllegalArgumentException("Missing 'flamingock' section in configuration file");
@@ -56,7 +56,7 @@ public class ConfigLoader {
         Map<String, Object> auditData = (Map<String, Object>) flamingockData.get("audit");
         if (auditData != null) {
             DatabaseConfig databaseConfig = new DatabaseConfig();
-            
+
             // Parse MongoDB config
             Map<String, Object> mongoData = (Map<String, Object>) auditData.get("mongodb");
             if (mongoData != null) {
@@ -71,7 +71,7 @@ public class ConfigLoader {
                 }
                 databaseConfig.setMongodb(mongoConfig);
             }
-            
+
             // Parse DynamoDB config
             Map<String, Object> dynamoData = (Map<String, Object>) auditData.get("dynamodb");
             if (dynamoData != null) {
@@ -85,7 +85,21 @@ public class ConfigLoader {
                 }
                 databaseConfig.setDynamodb(dynamoConfig);
             }
-            
+
+            // Parse Couchbase config
+            Map<String, Object> couchbaseData = (Map<String, Object>) auditData.get("couchbase");
+            if (couchbaseData != null) {
+                DatabaseConfig.CouchbaseConfig couchbaseConfig = new DatabaseConfig.CouchbaseConfig();
+                couchbaseConfig.setBucketName((String) couchbaseData.get("bucket-name"));
+                couchbaseConfig.setEndpoint((String) couchbaseData.get("endpoint"));
+                couchbaseConfig.setUsername((String) couchbaseData.get("username"));
+                couchbaseConfig.setPassword((String) couchbaseData.get("password"));
+                if (couchbaseData.get("properties") != null) {
+                    couchbaseConfig.setProperties((Map<String, String>) couchbaseData.get("properties"));
+                }
+                databaseConfig.setCouchbase(couchbaseConfig);
+            }
+
             config.setAudit(databaseConfig);
         }
 
@@ -96,24 +110,27 @@ public class ConfigLoader {
         if (config.getAudit() == null) {
             throw new IllegalArgumentException("No audit configuration found");
         }
-        
+
         boolean hasMongoDB = config.getAudit().getMongodb() != null;
         boolean hasDynamoDB = config.getAudit().getDynamodb() != null;
-        
-        if (hasMongoDB && hasDynamoDB) {
+        boolean hasCouchbase = config.getAudit().getCouchbase() != null;
+
+        if (hasMongoDB && hasDynamoDB) { // TODO: Check if more than one DB is configured
             throw new IllegalArgumentException("Multiple database configurations found. Please configure only one database type.");
         }
-        
+
         if (hasMongoDB) {
             return DatabaseType.MONGODB;
         } else if (hasDynamoDB) {
             return DatabaseType.DYNAMODB;
+        } else if (hasCouchbase) {
+            return DatabaseType.COUCHBASE;
         } else {
-            throw new IllegalArgumentException("No supported database configuration found. Please configure MongoDB or DynamoDB.");
+            throw new IllegalArgumentException("No supported database configuration found. Please configure MongoDB, DynamoDB or Couchbase.");
         }
     }
 
     public enum DatabaseType {
-        MONGODB, DYNAMODB
+        MONGODB, DYNAMODB, COUCHBASE
     }
 }

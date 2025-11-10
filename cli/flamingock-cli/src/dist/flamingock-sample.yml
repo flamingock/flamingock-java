@@ -7,13 +7,22 @@ flamingock:
     mongodb:
       connection-string: "mongodb://localhost:27017"
       database: "test"
-      collection: "flamingockAuditLog"  # Optional, defaults to "flamingockAuditLog"
+      collection: "flamingockAuditLog"          # Optional, defaults to "flamingockAuditLog"
 
-  # DynamoDB Configuration (uncomment and modify to use)
-  # audit:
-  #   dynamodb:
-  #     region: "us-east-1"
-  #     table: "flamingockAuditLog"      # Optional, defaults to "flamingockAuditLog"
-  #     # endpoint: "http://localhost:8000"  # Optional for local DynamoDB
-  #     # access-key: "your-access-key"      # Optional if using IAM roles
-  #     # secret-key: "your-secret-key"      # Optional if using IAM roles
+    # DynamoDB Configuration (uncomment and modify to use)
+    # audit:
+    #   dynamodb:
+    #     region: "us-east-1"
+    #     table: "flamingockAuditLog"           # Optional, defaults to "flamingockAuditLog"
+    #     # endpoint: "http://localhost:8000"   # Optional for local DynamoDB
+    #     # access-key: "your-access-key"       # Optional if using IAM roles
+    #     # secret-key: "your-secret-key"       # Optional if using IAM roles
+
+    # Couchbase Configuration (uncomment and modify to use)
+    # audit:
+    #   couchbase:
+    #     endpoint: "http://localhost:8000"
+    #     username: "your-username"
+    #     password: "your-password"
+    #     bucket-name: "test"
+    #     table: "flamingockAuditLog"           # Optional, defaults to "flamingockAuditLog"

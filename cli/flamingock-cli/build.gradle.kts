@@ -23,6 +23,7 @@ dependencies {
     // Database clients (community edition)
     implementation("org.mongodb:mongodb-driver-sync:4.9.1")
     implementation("software.amazon.awssdk:dynamodb:2.20.0")
+    implementation ("com.couchbase.client:java-client:3.7.3")
 
     // SLF4J API - needed for interface compatibility (provided by flamingock-core)
     // implementation("org.slf4j:slf4j-api:1.7.36") // Already provided by core dependencies
@@ -36,6 +37,7 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("org.testcontainers:junit-jupiter:1.19.3")
     testImplementation("org.testcontainers:mongodb:1.19.3")
+    testImplementation("org.testcontainers:couchbase:1.21.3")
     testImplementation("com.github.stefanbirkner:system-lambda:1.2.1")
 
 }
