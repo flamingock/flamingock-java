@@ -88,7 +88,7 @@ val distImage by tasks.registering(Sync::class) {
         into("lib")
     }
     from("src/dist") {
-        into(".")
+        into("bin")
     }
 }
 
@@ -97,7 +97,9 @@ val distZip by tasks.registering(Zip::class) {
     description = "Builds the ZIP distribution"
     dependsOn(distImage)
 
-    from(distImage.get().destinationDir)
+    from(distImage.get().destinationDir) {
+        into("flamingock-cli")
+    }
 
     archiveBaseName.set("flamingock-cli")
     archiveVersion.set("")
@@ -111,7 +113,9 @@ val distTar by tasks.registering(Tar::class) {
     description = "Builds the TAR distribution"
     dependsOn(distImage)
 
-    from(distImage.get().destinationDir)
+    from(distImage.get().destinationDir) {
+        into("flamingock-cli")
+    }
 
     archiveBaseName.set("flamingock-cli")
     archiveVersion.set("")
