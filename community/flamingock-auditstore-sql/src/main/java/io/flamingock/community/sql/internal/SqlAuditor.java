@@ -47,6 +47,16 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
                  Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate(dialectHelper.getCreateTableSqlString(auditTableName));
             } catch (SQLException e) {
+                // Firebird throws an error when table already exists; ignore that specific case
+                if (dialectHelper.getSqlDialect() == io.flamingock.internal.common.sql.SqlDialect.FIREBIRD) {
+                    int errorCode = e.getErrorCode();
+                    String sqlState = e.getSQLState();
+                    String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+
+                    if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
+                        return;
+                    }
+                }
                 throw new RuntimeException("Failed to initialize audit table", e);
             }
         }

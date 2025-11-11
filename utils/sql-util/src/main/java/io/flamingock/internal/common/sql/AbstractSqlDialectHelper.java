@@ -53,7 +53,7 @@ public class AbstractSqlDialectHelper {
             return SqlDialect.HSQLDB;
         } else if (v.contains("sql server")) {
             return SqlDialect.SQLSERVER;
-        } else if (v.contains("sybase")) {
+        } else if (v.contains("sybase") || v.contains("adaptive server")) {
             return SqlDialect.SYBASE;
         } else if (v.contains("firebird")) {
             return SqlDialect.FIREBIRD;

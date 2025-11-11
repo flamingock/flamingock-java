@@ -44,12 +44,20 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "owner VARCHAR(255)," +
                                 "expires_at TIMESTAMP" +
                                 ")", tableName);
+            case FIREBIRD:
+                return String.format(
+                        "CREATE TABLE %s (" +
+                                "lock_key VARCHAR(255) PRIMARY KEY, " +
+                                "status VARCHAR(32), " +
+                                "owner VARCHAR(255), " +
+                                "expires_at TIMESTAMP" +
+                                ")",
+                        tableName);
             case MYSQL:
             case MARIADB:
             case SQLITE:
             case H2:
             case HSQLDB:
-            case FIREBIRD:
                 return String.format(
                         "CREATE TABLE IF NOT EXISTS %s (" +
                                 "`key` VARCHAR(255) PRIMARY KEY," +
@@ -58,7 +66,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "expires_at TIMESTAMP" +
                                 ")", tableName);
             case SQLSERVER:
-            case SYBASE:
                 return String.format(
                         "IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='%s' AND xtype='U') " +
                                 "CREATE TABLE %s (" +
@@ -67,6 +74,19 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "owner VARCHAR(255)," +
                                 "expires_at DATETIME" +
                                 ")", tableName, tableName);
+            case SYBASE:
+                return String.format(
+                        "IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='%s' AND type='U') " +
+                                "BEGIN " +
+                                "   EXEC('CREATE TABLE %s (" +
+                                "       lock_key VARCHAR(255) NOT NULL PRIMARY KEY, " +
+                                "       status VARCHAR(32), " +
+                                "       owner VARCHAR(255), " +
+                                "       expires_at DATETIME" +
+                                "   )') " +
+                                "END",
+                        tableName, tableName
+                );
             case ORACLE:
                 return String.format(
                         "BEGIN EXECUTE IMMEDIATE 'CREATE TABLE %s (" +
@@ -106,11 +126,18 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                 // Select lock_key as the first column (getLockEntry expects rs.getString(1) to be the key)
                 return String.format("SELECT lock_key, status, owner, expires_at FROM %s WHERE lock_key = ?", tableName);
             case SQLSERVER:
-            case SYBASE:
                 return String.format("SELECT [key], status, owner, expires_at FROM %s WITH (UPDLOCK, ROWLOCK) WHERE [key] = ?", tableName);
-            case ORACLE:
+            case SYBASE:
+                return String.format(
+                        "SELECT lock_key, status, owner, expires_at " +
+                                "FROM %s HOLDLOCK " +
+                                "WHERE lock_key = ?",
+                        tableName
+                );            case ORACLE:
                 return String.format("SELECT \"key\", status, owner, expires_at FROM %s WHERE \"key\" = ? FOR UPDATE", tableName);
             case INFORMIX:
+                return String.format("SELECT lock_key, status, owner, expires_at FROM %s WHERE lock_key = ?", tableName);
+            case FIREBIRD:
                 return String.format("SELECT lock_key, status, owner, expires_at FROM %s WHERE lock_key = ?", tableName);
             default:
                 return String.format("SELECT `key`, status, owner, expires_at FROM %s WHERE `key` = ?", tableName);
@@ -135,7 +162,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                         "INSERT OR REPLACE INTO %s (`key`, status, owner, expires_at) VALUES (?, ?, ?, ?)",
                         tableName);
             case SQLSERVER:
-            case SYBASE:
                 return String.format(
                         "BEGIN TRANSACTION; " +
                                 "UPDATE %s SET status = ?, owner = ?, expires_at = ? WHERE [key] = ?; " +
@@ -145,6 +171,17 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "END; " +
                                 "COMMIT TRANSACTION;",
                         tableName, tableName);
+            case SYBASE:
+                return String.format(
+                        "BEGIN TRAN " +
+                                "UPDATE %s SET status = ?, owner = ?, expires_at = ? WHERE lock_key = ?; " +
+                                "IF @@ROWCOUNT = 0 " +
+                                "BEGIN " +
+                                "   INSERT INTO %s (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?); " +
+                                "END " +
+                                "COMMIT TRAN",
+                        tableName, tableName
+                );
             case ORACLE:
                 return String.format(
                         "MERGE INTO %s t USING (SELECT ? AS \"key\", ? AS status, ? AS owner, ? AS expires_at FROM dual) s " +
@@ -166,9 +203,7 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "WHEN NOT MATCHED THEN INSERT (lock_key, status, owner, expires_at) VALUES (src.lock_key, src.status, src.owner, src.expires_at)",
                         tableName);
             case FIREBIRD:
-                return String.format(
-                        "UPDATE OR INSERT INTO %s (`key`, status, owner, expires_at) VALUES (?, ?, ?, ?) MATCHING (`key`)",
-                        tableName);
+                return String.format("UPDATE " + tableName + " SET status = ?, owner = ?, expires_at = ? WHERE lock_key = ?", tableName);
             case INFORMIX:
                 // Informix doesn't support ON DUPLICATE KEY UPDATE
                 // Use a procedural approach similar to SQL Server
@@ -188,6 +223,9 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             return String.format("DELETE FROM %s WHERE \"key\" = ?", tableName);
         }
         if (sqlDialect == SqlDialect.INFORMIX || sqlDialect == SqlDialect.DB2) {
+            return String.format("DELETE FROM %s WHERE lock_key = ?", tableName);
+        }
+        if (sqlDialect == SqlDialect.FIREBIRD) {
             return String.format("DELETE FROM %s WHERE lock_key = ?", tableName);
         }
         return String.format("DELETE FROM %s WHERE `key` = ?", tableName);
@@ -247,7 +285,7 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             return;
         }
 
-        if (getSqlDialect() == SqlDialect.SQLSERVER || getSqlDialect() == SqlDialect.SYBASE) {
+        if (getSqlDialect() == SqlDialect.SQLSERVER) {
             // For SQL Server/Sybase, use Statement and format SQL
             try (Statement stmt = conn.createStatement()) {
                 String formattedSql = sql
@@ -263,6 +301,42 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             }
             return;
         }
+
+        if (sqlDialect == SqlDialect.FIREBIRD) {
+            String updateSql = getInsertOrUpdateLockSqlString(tableName);
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                ps.setString(1, LockStatus.LOCK_HELD.name());
+                ps.setString(2, owner);
+                ps.setTimestamp(3, Timestamp.valueOf(expiresAt));
+                ps.setString(4, key);
+                int updated = ps.executeUpdate();
+                if (updated == 0) {
+                    String insertSql = "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)";
+                    try (PreparedStatement ins = conn.prepareStatement(insertSql)) {
+                        ins.setString(1, key);
+                        ins.setString(2, LockStatus.LOCK_HELD.name());
+                        ins.setString(3, owner);
+                        ins.setTimestamp(4, Timestamp.valueOf(expiresAt));
+                        ins.executeUpdate();
+                    }
+                }
+            }
+            return;
+        }
+
+        if (sqlDialect == SqlDialect.SYBASE) {
+            // The lock was already deleted in acquireLockQuery for Sybase
+            try (PreparedStatement insert = conn.prepareStatement(
+                    "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)")) {
+                insert.setString(1, key);
+                insert.setString(2, LockStatus.LOCK_HELD.name());
+                insert.setString(3, owner);
+                insert.setTimestamp(4, Timestamp.valueOf(expiresAt));
+                insert.executeUpdate();
+            }
+            return;
+        }
+
 
         // Default case for other dialects
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

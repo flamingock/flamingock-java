@@ -92,7 +92,17 @@ public final class SharedSqlContainers {
             }
             case "informix":
                 return new InformixContainer();
-            default:
+            case "firebird": {
+                FirebirdJdbcContainer c = new FirebirdJdbcContainer("jacobalberty/firebird:latest");
+                c.withEnv("FIREBIRD_DATABASE", "test.fdb")
+                        .withEnv("ISC_PASSWORD", "masterkey")
+                        .withEnv("FIREBIRD_CHARACTERSET", "UTF8");
+                if (!isCi) {
+                    c.withReuse(true);
+                }
+                return c;
+            }
+             default:
                 throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
         }
     }

@@ -25,11 +25,7 @@ import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.targetsystem.sql.SqlTargetSystem;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -65,7 +61,8 @@ class SqlAuditStoreTest {
                 Arguments.of(SqlDialect.MARIADB, "mariadb"),
                 Arguments.of(SqlDialect.H2, "h2"),
                 Arguments.of(SqlDialect.SQLITE, "sqlite"),
-                Arguments.of(SqlDialect.INFORMIX, "informix")
+                Arguments.of(SqlDialect.INFORMIX, "informix"),
+                Arguments.of(SqlDialect.FIREBIRD, "firebird")
         );
     }
 
@@ -217,6 +214,27 @@ class SqlAuditStoreTest {
                             io.flamingock.community.sql.changes.oracle.failedWithoutRollback._001__create_index.class,
                             io.flamingock.community.sql.changes.oracle.failedWithoutRollback._002__insert_document.class,
                             io.flamingock.community.sql.changes.oracle.failedWithoutRollback._003__execution_with_exception.class
+                    };
+                }
+                break;
+            case "firebird":
+                if ("happyPath".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.firebird.happyPath._001__create_index.class,
+                            io.flamingock.community.sql.changes.firebird.happyPath._002__insert_document.class,
+                            io.flamingock.community.sql.changes.firebird.happyPath._003__insert_another_document.class
+                    };
+                } else if ("failedWithRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.firebird.failedWithRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.firebird.failedWithRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.firebird.failedWithRollback._003__execution_with_exception.class
+                    };
+                } else if ("failedWithoutRollback".equals(scenario)) {
+                    return new Class<?>[]{
+                            io.flamingock.community.sql.changes.firebird.failedWithoutRollback._001__create_index.class,
+                            io.flamingock.community.sql.changes.firebird.failedWithoutRollback._002__insert_document.class,
+                            io.flamingock.community.sql.changes.firebird.failedWithoutRollback._003__execution_with_exception.class
                     };
                 }
                 break;

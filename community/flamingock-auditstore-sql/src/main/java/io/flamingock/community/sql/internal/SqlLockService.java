@@ -51,6 +51,16 @@ public class SqlLockService implements CommunityLockService {
                         (e.getErrorCode() == -310 || e.getSQLState() != null && e.getSQLState().startsWith("42S01"))) {
                     return;
                 }
+                // Firebird throws an error when table already exists; ignore that specific case
+                if (dialectHelper.getSqlDialect() == io.flamingock.internal.common.sql.SqlDialect.FIREBIRD) {
+                    int errorCode = e.getErrorCode();
+                    String sqlState = e.getSQLState();
+                    String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+
+                    if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
+                        return;
+                    }
+                }
                 throw new RuntimeException("Failed to initialize lock table", e);
             }
         }
@@ -67,17 +77,64 @@ public class SqlLockService implements CommunityLockService {
             conn = dataSource.getConnection();
 
             // For Informix, use shorter timeout and simpler transaction handling
-            conn.setAutoCommit(dialectHelper.getSqlDialect() == SqlDialect.INFORMIX);  // Avoid explicit transactions for Informix
+            // For Sybase we MUST disable auto-commit so HOLDLOCK works as intended
+            boolean isInformix = dialectHelper.getSqlDialect() == SqlDialect.INFORMIX;
+            boolean isSybase = dialectHelper.getSqlDialect() == SqlDialect.SYBASE;
+            conn.setAutoCommit(isInformix);  // Informix uses autocommit
+            if (isSybase) {
+                conn.setAutoCommit(false);   // IMPORTANT: disable autocommit for Sybase so HOLDLOCK works
+            }
 
             try {
+
+                if (isSybase) {
+                    // For Sybase, use HOLDLOCK to prevent race conditions during lock check
+                    String selectSql = "SELECT lock_key, status, owner, expires_at " +
+                            "FROM " + lockRepositoryName + " HOLDLOCK " +
+                            "WHERE lock_key = ?";
+
+                    CommunityLockEntry existing = null;
+                    try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+                        ps.setString(1, keyStr);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                existing = new CommunityLockEntry(
+                                        rs.getString("lock_key"),
+                                        LockStatus.valueOf(rs.getString("status")),
+                                        rs.getString("owner"),
+                                        rs.getTimestamp("expires_at").toLocalDateTime()
+                                );
+                            }
+                        }
+                    }
+
+                    if (existing == null ||
+                            owner.toString().equals(existing.getOwner()) ||
+                            LocalDateTime.now().isAfter(existing.getExpiresAt())) {
+                        // Delete existing lock first, then insert new one
+                        try (PreparedStatement delete = conn.prepareStatement(
+                                "DELETE FROM " + lockRepositoryName + " WHERE lock_key = ?")) {
+                            delete.setString(1, keyStr);
+                            delete.executeUpdate();
+                        }
+                        upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
+                        conn.commit();
+                    } else {
+                        conn.rollback();
+                        throw new LockServiceException("upsert", keyStr,
+                                "Still locked by " + existing.getOwner() + " until " + existing.getExpiresAt());
+                    }
+
+                    return new LockAcquisition(owner, leaseMillis);
+                }
+
                 CommunityLockEntry existing = getLockEntry(conn, keyStr);
                 if (existing == null ||
                         owner.toString().equals(existing.getOwner()) ||
                         LocalDateTime.now().isAfter(existing.getExpiresAt())) {
                     upsertLockEntry(conn, keyStr, owner.toString(), expiresAt);
-                    if (dialectHelper.getSqlDialect() != SqlDialect.SQLSERVER &&
-                            dialectHelper.getSqlDialect() != SqlDialect.SYBASE &&
-                            dialectHelper.getSqlDialect() != SqlDialect.INFORMIX) {
+                    // Commit for all dialects except Informix (which uses auto-commit above)
+                    if (dialectHelper.getSqlDialect() != SqlDialect.INFORMIX) {
                         conn.commit();
                     }
                 } else {
@@ -162,7 +219,6 @@ public class SqlLockService implements CommunityLockService {
         }
         return new LockAcquisition(owner, leaseMillis);
     }
-
 
     @Override
     public LockAcquisition getLock(LockKey lockKey) {
