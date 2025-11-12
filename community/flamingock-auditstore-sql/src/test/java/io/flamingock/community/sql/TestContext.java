@@ -35,7 +35,14 @@ public class TestContext {
 
     public void cleanup() throws SQLException {
         if (dataSource instanceof HikariDataSource) {
-            ((HikariDataSource) dataSource).close();
+            HikariDataSource hikariDS = (HikariDataSource) dataSource;
+            hikariDS.getHikariPoolMXBean().softEvictConnections();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            hikariDS.close();
         }
     }
 }

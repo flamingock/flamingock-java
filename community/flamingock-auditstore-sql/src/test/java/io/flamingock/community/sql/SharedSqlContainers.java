@@ -120,13 +120,16 @@ public final class SharedSqlContainers {
         config.setDriverClassName(container.getDriverClassName());
 
         if (container instanceof InformixContainer) {
-            config.setMaximumPoolSize(5);
-            config.setMinimumIdle(2);
-            config.setConnectionTimeout(5000);
-            config.setIdleTimeout(60000);
-            config.setMaxLifetime(120000);
-            config.setLeakDetectionThreshold(10000);
-            config.setValidationTimeout(3000);
+            config.setMaximumPoolSize(1);
+            config.setMinimumIdle(0);
+            config.setConnectionTimeout(30000);
+            config.setIdleTimeout(600000);
+            config.setMaxLifetime(1800000);
+            config.setLeakDetectionThreshold(0);
+            config.setValidationTimeout(5000);
+            config.setConnectionTestQuery("SELECT 1 FROM systables WHERE tabid=1");
+            config.setInitializationFailTimeout(-1);
+            config.setAutoCommit(true);
         }
 
         return new HikariDataSource(config);
