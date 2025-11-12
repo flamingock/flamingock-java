@@ -153,7 +153,8 @@ public class AuditService {
         // Create MongoDB clients
         MongoClient mongoClient = MongoClientFactory.createMongoClient(mongoConfig);
 
-        return new MongoDBSyncAuditStore(mongoClient, mongoConfig.getDatabase());
+        return new MongoDBSyncAuditStore(mongoClient, mongoConfig.getDatabase())
+            .withAuditRepositoryName(mongoConfig.getCollection());
     }
 
     private AuditStore<?> createDynamoAuditStore(Context context) {
@@ -162,7 +163,8 @@ public class AuditService {
         // Create DynamoDB client
         DynamoDbClient dynamoClient = DynamoDBClientFactory.createDynamoDBClient(dynamoConfig);
 
-        return new DynamoDBAuditStore(dynamoClient);
+        return new DynamoDBAuditStore(dynamoClient)
+            .withAuditRepositoryName(dynamoConfig.getTable());
     }
 
     private AuditStore<?> createCouchbaseAuditStore(Context context) {
@@ -171,6 +173,7 @@ public class AuditService {
         // Create Couchbase cluster
         Cluster couchbaseCluster = CouchbaseClusterFactory.createCouchbaseCluster(couchbaseConfig);
 
-        return new CouchbaseAuditStore(couchbaseCluster, couchbaseConfig.getBucketName());
+        return new CouchbaseAuditStore(couchbaseCluster, couchbaseConfig.getBucketName())
+            .withAuditRepositoryName(couchbaseConfig.getTable());
     }
 }

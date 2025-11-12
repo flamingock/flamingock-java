@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class ConfigLoader {
 
@@ -66,6 +67,7 @@ public class ConfigLoader {
                 mongoConfig.setHost((String) mongoData.get("host"));
                 mongoConfig.setUsername((String) mongoData.get("username"));
                 mongoConfig.setPassword((String) mongoData.get("password"));
+                mongoConfig.setCollection((String) mongoData.get("collection"));
                 if (mongoData.get("port") != null) {
                     mongoConfig.setPort((Integer) mongoData.get("port"));
                 }
@@ -80,6 +82,7 @@ public class ConfigLoader {
                 dynamoConfig.setEndpoint((String) dynamoData.get("endpoint"));
                 dynamoConfig.setAccessKey((String) dynamoData.get("access-key"));
                 dynamoConfig.setSecretKey((String) dynamoData.get("secret-key"));
+                dynamoConfig.setTable((String) dynamoData.get("table"));
                 if (dynamoData.get("properties") != null) {
                     dynamoConfig.setProperties((Map<String, String>) dynamoData.get("properties"));
                 }
@@ -94,6 +97,7 @@ public class ConfigLoader {
                 couchbaseConfig.setEndpoint((String) couchbaseData.get("endpoint"));
                 couchbaseConfig.setUsername((String) couchbaseData.get("username"));
                 couchbaseConfig.setPassword((String) couchbaseData.get("password"));
+                couchbaseConfig.setTable((String) couchbaseData.get("table"));
                 if (couchbaseData.get("properties") != null) {
                     couchbaseConfig.setProperties((Map<String, String>) couchbaseData.get("properties"));
                 }
@@ -115,7 +119,9 @@ public class ConfigLoader {
         boolean hasDynamoDB = config.getAudit().getDynamodb() != null;
         boolean hasCouchbase = config.getAudit().getCouchbase() != null;
 
-        if (hasMongoDB && hasDynamoDB) { // TODO: Check if more than one DB is configured
+        if (Stream.of(hasMongoDB, hasDynamoDB, hasCouchbase)
+            .filter(b -> b)
+            .count()==1) {
             throw new IllegalArgumentException("Multiple database configurations found. Please configure only one database type.");
         }
 

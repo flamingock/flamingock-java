@@ -53,6 +53,7 @@ public class DatabaseConfig {
         private Integer port;
         private String username;
         private String password;
+        private String collection;
 
         public String getConnectionString() {
             return connectionString;
@@ -101,6 +102,14 @@ public class DatabaseConfig {
         public void setPassword(String password) {
             this.password = password;
         }
+
+        public String getCollection() {
+            return collection;
+        }
+
+        public void setCollection(String collection) {
+            this.collection = collection;
+        }
     }
 
     public static class DynamoDBConfig {
@@ -108,6 +117,7 @@ public class DatabaseConfig {
         private String endpoint;
         private String accessKey;
         private String secretKey;
+        private String table;
         private Map<String, String> properties;
 
         public String getRegion() {
@@ -142,6 +152,14 @@ public class DatabaseConfig {
             this.secretKey = secretKey;
         }
 
+        public String getTable() {
+            return table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
+        }
+
         public Map<String, String> getProperties() {
             return properties;
         }
@@ -156,6 +174,7 @@ public class DatabaseConfig {
         private String endpoint;
         private String username;
         private String password;
+        private String table;
         private Map<String, String> properties;
 
         public String getBucketName() {
@@ -188,6 +207,14 @@ public class DatabaseConfig {
 
         public void setPassword(String password) {
             this.password = password;
+        }
+
+        public String getTable() {
+            return table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
         }
 
         public Map<String, String> getProperties() {
