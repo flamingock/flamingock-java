@@ -121,7 +121,7 @@ public class ConfigLoader {
 
         if (Stream.of(hasMongoDB, hasDynamoDB, hasCouchbase)
             .filter(b -> b)
-            .count()==1) {
+            .count()>1) {
             throw new IllegalArgumentException("Multiple database configurations found. Please configure only one database type.");
         }
 
