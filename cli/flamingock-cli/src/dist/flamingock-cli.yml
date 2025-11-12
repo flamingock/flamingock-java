@@ -1,5 +1,5 @@
 # Flamingock CLI Configuration Sample
-# Copy this file to flamingock.yml and modify as needed
+# Modify this file as needed
 
 flamingock:
   service-identifier: "flamingock-cli"

@@ -76,7 +76,7 @@ After building, `flamingock-cli-dist/` contains:
 - **`flamingock-cli.jar`** - Self-contained executable JAR with all dependencies
 - **`flamingock`** - Unix/Linux/macOS executable shell script
 - **`flamingock.bat`** - Windows executable batch file
-- **`flamingock.yml`** - Sample configuration file
+- **`flamingock-cli.yml`** - Sample configuration file
 
 ## Configuration
 
@@ -130,7 +130,7 @@ flamingock:
 
 ### Configuration File Resolution
 1. Command line argument: `--config /path/to/file.yml`
-2. Default: `flamingock.yml` in current directory
+2. Default: `flamingock-cli.yml` in bin directory
 
 ## Architecture
 

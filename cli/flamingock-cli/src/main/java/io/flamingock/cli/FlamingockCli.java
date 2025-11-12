@@ -47,26 +47,26 @@ import picocli.CommandLine.Option;
 )
 public class FlamingockCli implements Runnable {
 
-    @Option(names = {"-c", "--config"}, 
-            description = "Path to configuration file. Global option - must be placed before commands. (default: flamingock.yml)",
+    @Option(names = {"-c", "--config"},
+            description = "Path to configuration file. Global option - must be placed before commands. (default: flamingock-cli.yml)",
             order = 0)
-    private String configFile = "flamingock.yml";
-    
+    private String configFile = "flamingock-cli.yml";
+
     @Mixin
     private LoggingMixin loggingMixin;
 
     public static void main(String[] args) {
         FlamingockCli cli = new FlamingockCli();
         CommandLine cmd = new CommandLine(cli);
-        
+
         cmd.setExecutionStrategy(parseResult -> {
             cli.loggingMixin.initializeLogging();
             return new CommandLine.RunLast().execute(parseResult);
         });
-        
+
         // Use custom exception handler for better error messages
         cmd.setExecutionExceptionHandler(new CliExceptionHandler());
-        
+
         int exitCode = cmd.execute(args);
         System.exit(exitCode);
     }
@@ -75,11 +75,11 @@ public class FlamingockCli implements Runnable {
     public void run() {
         // Initialize logging when any command is about to run
         loggingMixin.initializeLogging();
-        
+
         // This runs when no subcommand is specified - show help
         new CommandLine(this).usage(System.out);
     }
-    
+
     public String getConfigFile() {
         return configFile;
     }
