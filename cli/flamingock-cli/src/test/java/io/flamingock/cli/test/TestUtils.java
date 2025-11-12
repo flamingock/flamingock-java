@@ -28,13 +28,13 @@ public class TestUtils {
     public static FlamingockConfig createMongoConfig() {
         FlamingockConfig config = new FlamingockConfig();
         config.setServiceIdentifier("test-service");
-        
+
         DatabaseConfig databaseConfig = new DatabaseConfig();
         DatabaseConfig.MongoDBConfig mongoConfig = new DatabaseConfig.MongoDBConfig();
         mongoConfig.setConnectionString("mongodb://localhost:27017");
         mongoConfig.setDatabase("test-db");
         databaseConfig.setMongodb(mongoConfig);
-        
+
         config.setAudit(databaseConfig);
         return config;
     }
@@ -42,7 +42,7 @@ public class TestUtils {
     public static FlamingockConfig createDynamoConfig() {
         FlamingockConfig config = new FlamingockConfig();
         config.setServiceIdentifier("test-service");
-        
+
         DatabaseConfig databaseConfig = new DatabaseConfig();
         DatabaseConfig.DynamoDBConfig dynamoConfig = new DatabaseConfig.DynamoDBConfig();
         dynamoConfig.setRegion("us-east-1");
@@ -50,7 +50,23 @@ public class TestUtils {
         dynamoConfig.setAccessKey("testKey");
         dynamoConfig.setSecretKey("testSecret");
         databaseConfig.setDynamodb(dynamoConfig);
-        
+
+        config.setAudit(databaseConfig);
+        return config;
+    }
+
+    public static FlamingockConfig createCouchbaseConfig() {
+        FlamingockConfig config = new FlamingockConfig();
+        config.setServiceIdentifier("test-service");
+
+        DatabaseConfig databaseConfig = new DatabaseConfig();
+        DatabaseConfig.CouchbaseConfig couchbaseConfig = new DatabaseConfig.CouchbaseConfig();
+        couchbaseConfig.setEndpoint("couchbase://localhost:12110");
+        couchbaseConfig.setUsername("test-user");
+        couchbaseConfig.setPassword("test-password");
+        couchbaseConfig.setBucketName("test-bucket");
+        databaseConfig.setCouchbase(couchbaseConfig);
+
         config.setAudit(databaseConfig);
         return config;
     }
@@ -58,7 +74,7 @@ public class TestUtils {
     public static List<AuditEntry> createSampleAuditEntries() {
         AuditEntry entry1 = new AuditEntry(
             "exec-001",
-            "stage-001", 
+            "stage-001",
             "change-001",
             "developer1",
             LocalDateTime.now().minusHours(1),
@@ -76,7 +92,7 @@ public class TestUtils {
         AuditEntry entry2 = new AuditEntry(
             "exec-002",
             "stage-002",
-            "change-002", 
+            "change-002",
             "developer2",
             LocalDateTime.now().minusMinutes(30),
             AuditEntry.Status.FAILED,
@@ -84,7 +100,7 @@ public class TestUtils {
             "com.example.Change002",
             "rollback",
             800,
-            "server2.example.com", 
+            "server2.example.com",
             null,
             false,
             "Connection timeout"
@@ -121,5 +137,16 @@ public class TestUtils {
                "      endpoint: \"http://localhost:8000\"\n" +
                "      access-key: \"testKey\"\n" +
                "      secret-key: \"testSecret\"\n";
+    }
+
+    public static String getValidCouchbaseYaml() {
+        return "flamingock:\n" +
+            "  service-identifier: \"test-cli\"\n" +
+            "  audit:\n" +
+            "    couchbase:\n" +
+            "      endpoint: \"couchbase://localhost:12110\"\n" +
+            "      username: \"test-user\"\n" +
+            "      password: \"test-password\"\n" +
+            "      bucket-name: \"test-bucket\"\n";
     }
 }
