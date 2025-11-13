@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _002__CustomTargetSystemChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully
         System.out.println("Executing change with custom target system");
     }

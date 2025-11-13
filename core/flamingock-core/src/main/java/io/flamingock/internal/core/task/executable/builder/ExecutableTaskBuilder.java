@@ -21,8 +21,6 @@ import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 
-import java.util.List;
-
 public interface ExecutableTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
     /**
@@ -31,9 +29,9 @@ public interface ExecutableTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
      * @param loadedTask the loaded task to build executable tasks from
      * @param stageName the name of the stage containing the task
      * @param action the change action to apply to the task
-     * @return list of executable tasks
+     * @return executable task
      */
-    static List<? extends ExecutableTask> build(AbstractLoadedTask loadedTask, String stageName, ChangeAction action) {
+    static ExecutableTask build(AbstractLoadedTask loadedTask, String stageName, ChangeAction action) {
         return getInstance(loadedTask)
                 .setStageName(stageName)
                 .setChangeAction(action)
@@ -75,11 +73,5 @@ public interface ExecutableTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
      */
     ExecutableTaskBuilder<?> setChangeAction(ChangeAction action);
 
-    /**
-     * It returns a list of classes because legacy ChangeUnits are potentially translated to more than one
-     * changeUnit(beforeExecution, etc)
-     * 
-     * @return list of executable tasks
-     */
-    List<? extends ExecutableTask> build();
+    ExecutableTask build();
 }

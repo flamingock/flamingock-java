@@ -27,7 +27,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _006__FailingChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Intentionally throw exception to test error audit
         throw new RuntimeException("Intentional failure for audit testing");
     }

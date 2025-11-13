@@ -29,14 +29,14 @@ import io.flamingock.api.annotations.Rollback;
 public class _003__insert_jorge_failed_non_transactional_rollback {
 
     @Apply
-    public void execution(MongoDatabase mongoDatabase) {
+    public void apply(MongoDatabase mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(new Document().append("name", "Jorge"));
         throw new RuntimeException("test");
     }
 
     @Rollback
-    public void rollbackExecution(MongoDatabase mongoDatabase) {
+    public void rollback(MongoDatabase mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.deleteOne(new Document().append("name", "Jorge"));
     }

@@ -48,7 +48,7 @@ public final class SharedSqlContainers {
                 return c;
             }
             case "sqlserver": {
-                MSSQLServerContainer<?> c = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04")
+                MSSQLServerContainer<?> c = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-latest")
                         .acceptLicense()
                         .withPassword("TestPass123!");
                 if (!isCi) c.withReuse(true);

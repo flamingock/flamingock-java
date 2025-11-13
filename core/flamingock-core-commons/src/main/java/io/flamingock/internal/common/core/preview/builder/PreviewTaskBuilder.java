@@ -29,14 +29,6 @@ public interface PreviewTaskBuilder<A extends AbstractPreviewTask> {
         return TemplatePreviewTaskBuilder.builder(templatedTaskDefinition).setFileName(fileName);
     }
 
-    static PreviewTaskBuilder<CodePreviewChange> getCodeBuilder(TypeElement typeElement) {
-        return CodePreviewTaskBuilder.builder(typeElement);
-    }
-
-    static CodePreviewTaskBuilder getCodeBuilder() {
-        return CodePreviewTaskBuilder.builder();
-    }
-
     A build();
 
 }

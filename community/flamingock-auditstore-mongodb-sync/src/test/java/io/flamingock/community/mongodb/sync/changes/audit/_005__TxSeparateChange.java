@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _005__TxSeparateChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully
         System.out.println("Executing TX_SEPARATE_NO_MARKER change via MongoDBSyncTargetSystem with different MongoClient");
     }

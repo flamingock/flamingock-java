@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.NonLockGuarded;
 public class _002__insert_document {
 
     @Apply
-    public void execution(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
+    public void apply(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
         ctx.insert(collection,"test-client-Federico", JsonObject.create().put("name", "Federico"));
     }
 }

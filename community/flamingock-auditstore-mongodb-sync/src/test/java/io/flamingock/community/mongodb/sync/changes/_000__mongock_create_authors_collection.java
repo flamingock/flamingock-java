@@ -53,7 +53,7 @@ public class _000__mongock_create_authors_collection {
 
     @Apply
     @Execution
-    public void execution(MongoDatabase mongoDatabase) {
+    public void apply(MongoDatabase mongoDatabase) {
 
         mongoDatabase.getCollection(CLIENTS_COLLECTION_NAME)
                 .insertMany(IntStream.range(0, INITIAL_CLIENTS)
@@ -63,7 +63,7 @@ public class _000__mongock_create_authors_collection {
 
     @Rollback
     @RollbackExecution
-    public void rollbackExecution(MongoDatabase mongoDatabase) {
+    public void rollback(MongoDatabase mongoDatabase) {
         mongoDatabase.getCollection(CLIENTS_COLLECTION_NAME).deleteMany(new Document());
     }
 

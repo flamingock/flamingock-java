@@ -18,7 +18,7 @@ package io.flamingock.core.kit.audit;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.kit.TestKit;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 

@@ -29,7 +29,7 @@ import org.bson.Document;
 public class _002__HappyInsertClientsChange {
 
     @Apply
-    public void execution(@NonLockGuarded MongoDatabase mongoDatabase, @NonLockGuarded ClientSession clientSession) {
+    public void apply(@NonLockGuarded MongoDatabase mongoDatabase, @NonLockGuarded ClientSession clientSession) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(clientSession, new Document().append("Name", "Federico"));
     }

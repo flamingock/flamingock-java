@@ -27,7 +27,7 @@ import java.sql.PreparedStatement;
 public class _002__insert_document {
 
     @Apply
-    public void execution(Connection connection) throws Exception {
+    public void apply(Connection connection) throws Exception {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
             ps.setString(1, "test-client-Federico");

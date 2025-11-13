@@ -26,7 +26,7 @@ import io.flamingock.community.couchbase.changes.failedWithoutRollback._003__exe
 import io.flamingock.community.couchbase.changes.happyPath._003__insert_another_document;
 import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
@@ -139,7 +139,7 @@ class CouchbaseAuditStoreTest {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._001__create_index.class, Collections.singletonList(Collection.class)),
                     new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._002__insert_document.class, Collections.singletonList(Collection.class)),
-                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._003__execution_with_exception.class, Collections.singletonList(Collection.class)))
+                    new Trio<>(io.flamingock.community.couchbase.changes.failedWithRollback._003__execution_with_exception.class, Collections.singletonList(Collection.class), Collections.singletonList(Collection.class)))
             );
 
             assertThrows(PipelineExecutionException.class, () -> {

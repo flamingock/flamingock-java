@@ -17,12 +17,16 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.util.ReflectionUtil;
 
+import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -135,7 +139,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
         Class<? extends ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
-        
+
+        Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
 
         return new TemplateLoadedChange(
                 fileName,
@@ -143,6 +148,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
                 order,
                 author,
                 templateClass,
+                constructor,
                 profiles,
                 transactional,
                 runAlways,

@@ -20,10 +20,10 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.AnnotationFinder;
-import io.flamingock.core.processor.util.LoggerPreProcessor;
-import io.flamingock.core.processor.util.Serializer;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
+import io.flamingock.internal.common.core.util.LoggerPreProcessor;
+import io.flamingock.internal.common.core.util.Serializer;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
@@ -48,8 +48,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Annotation processor for Flamingock that generates metadata files containing information
@@ -200,8 +200,13 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger);
         EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation()
                 .orElseThrow(() -> new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline."));
+        Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges();
+        List<CodePreviewChange> legacyChanges = allChanges.stream().filter(CodePreviewChange::isLegacy).collect(Collectors.toList());
+        List<CodePreviewChange> noLegacyChanges = allChanges.stream().filter(c -> !c.isLegacy()).collect(Collectors.toList());
+        Map<String, List<CodePreviewChange>> noLegacyChangesByPackage = getCodeChangesMapByPackage(noLegacyChanges);
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
-                annotationFinder.getCodedChangesMapByPackage(),
+                legacyChanges,
+                noLegacyChangesByPackage,
                 flamingockAnnotation
         );
         Serializer serializer = new Serializer(processingEnv, logger);
@@ -213,9 +218,26 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
-    private PreviewPipeline getPipelineFromProcessChanges(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, EnableFlamingock pipelineAnnotation) {
-        if (codedChangesByPackage == null) {
-            codedChangesByPackage = new HashMap<>();
+    private Map<String, List<CodePreviewChange>> getCodeChangesMapByPackage(Collection<CodePreviewChange> changes) {
+        Map<String, List<CodePreviewChange>> mapByPackage = new HashMap<>();
+        for(CodePreviewChange item: changes) {
+            mapByPackage.compute(item.getSourcePackage(), (key, descriptors) -> {
+                List<CodePreviewChange> newDescriptors;
+                if(descriptors != null) {
+                    newDescriptors = descriptors;
+                } else {
+                    newDescriptors = new ArrayList<>();
+                }
+                newDescriptors.add(item);
+                return newDescriptors;
+            });
+        }
+        return mapByPackage;
+    }
+
+    private PreviewPipeline getPipelineFromProcessChanges(List<CodePreviewChange> legacyCodedChanges, Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage, EnableFlamingock pipelineAnnotation) {
+        if (noLegacyCodedChangesByPackage == null) {
+            noLegacyCodedChangesByPackage = new HashMap<>();
         }
 
         boolean hasFileInAnnotation = !pipelineAnnotation.configFile().isEmpty();
@@ -227,10 +249,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         if (hasFileInAnnotation) {
             logger.info("Reading flamingock pipeline from file specified in @EnableFlamingock annotation: '" + pipelineAnnotation.configFile() + "'");
             File specifiedPipelineFile = resolvePipelineFile(pipelineAnnotation.configFile());
-            return buildPipelineFromSpecifiedFile(specifiedPipelineFile, codedChangesByPackage);
+            return buildPipelineFromSpecifiedFile(specifiedPipelineFile, legacyCodedChanges, noLegacyCodedChangesByPackage);
         } else {
             logger.info("Reading flamingock pipeline from @EnableFlamingock annotation stages configuration");
-            return buildPipelineFromAnnotation(pipelineAnnotation, codedChangesByPackage);
+            return buildPipelineFromAnnotation(pipelineAnnotation, legacyCodedChanges, noLegacyCodedChangesByPackage);
         }
     }
 
@@ -323,18 +345,24 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation, Map<String, List<AbstractPreviewTask>> codedChangesByPackage) {
+    private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation, List<CodePreviewChange> legacyCodedChanges, Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage) {
         List<PreviewStage> stages = new ArrayList<>();
         SystemPreviewStage systemStage = null;
 
         for (Stage stageAnnotation : pipelineAnnotation.stages()) {
             if (stageAnnotation.type() == StageType.SYSTEM) {
                 // Handle system stage separately to maintain internal architecture
-                systemStage = mapAnnotationToSystemStage(codedChangesByPackage, stageAnnotation);
+                systemStage = mapAnnotationToSystemStage(noLegacyCodedChangesByPackage, stageAnnotation);
             } else {
-                PreviewStage stage = mapAnnotationToStage(codedChangesByPackage, stageAnnotation);
+                PreviewStage stage = mapAnnotationToStage(noLegacyCodedChangesByPackage, stageAnnotation);
                 stages.add(stage);
             }
+        }
+
+        // Legacy Stage
+        PreviewStage legacyStage = buildLegacyStageIfNeeded(legacyCodedChanges);
+        if (legacyStage != null) {
+            stages.add(legacyStage);
         }
 
         // Sort stages by type priority: LEGACY stages first, then DEFAULT stages
@@ -345,7 +373,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 : new PreviewPipeline(stages);
     }
 
-    private SystemPreviewStage mapAnnotationToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Stage stageAnnotation) {
+    private SystemPreviewStage mapAnnotationToSystemStage(Map<String, List<CodePreviewChange>> codedChangesByPackage, Stage stageAnnotation) {
         String location = stageAnnotation.location();
 
         if (location == null || location.trim().isEmpty()) {
@@ -354,7 +382,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeClasses = null;
+        Collection<CodePreviewChange> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;
@@ -375,7 +403,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .build();
     }
 
-    private PreviewStage mapAnnotationToStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Stage stageAnnotation) {
+    private PreviewStage mapAnnotationToStage(Map<String, List<CodePreviewChange>> codedChangesByPackage, Stage stageAnnotation) {
         String location = stageAnnotation.location();
 
         if (location == null || location.trim().isEmpty()) {
@@ -384,7 +412,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeClasses = null;
+        Collection<CodePreviewChange> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;
@@ -408,6 +436,21 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .setResourcesDir(resourcesDir)
                 .setChanges(changeClasses)
                 .build();
+    }
+
+    private PreviewStage buildLegacyStageIfNeeded(List<CodePreviewChange> legacyChanges) {
+        if (legacyChanges != null && !legacyChanges.isEmpty()) {
+            return PreviewStage.defaultBuilder(StageType.LEGACY)
+                    .setName("legacy-stage")
+                    .setDescription("Flamingock legacy stage")
+                    .setSourcesRoots(sourceRoots)
+                    .setSourcesPackage(null) //TODO:
+                    .setResourcesRoot(resourcesRoot)
+                    .setResourcesDir(null) //TODO:
+                    .setChanges(legacyChanges)
+                    .build();
+        }
+        return null;
     }
 
 
@@ -470,7 +513,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return null;
     }
 
-    private PreviewPipeline buildPipelineFromSpecifiedFile(File file, Map<String, List<AbstractPreviewTask>> codedChangesByPackage) {
+    private PreviewPipeline buildPipelineFromSpecifiedFile(File file, List<CodePreviewChange> legacyCodedChanges, Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage) {
 
         try (InputStream inputStream = Files.newInputStream(file.toPath())) {
             Yaml yaml = new Yaml();
@@ -491,11 +534,17 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 
                 if (stageType == StageType.SYSTEM) {
                     // Handle system stage separately to maintain internal architecture
-                    systemStage = mapToSystemStage(codedChangesByPackage, stageMap);
+                    systemStage = mapToSystemStage(noLegacyCodedChangesByPackage, stageMap);
                 } else {
-                    PreviewStage stage = mapToStage(codedChangesByPackage, stageMap);
+                    PreviewStage stage = mapToStage(noLegacyCodedChangesByPackage, stageMap);
                     stages.add(stage);
                 }
+            }
+
+            // Legacy Stage
+            PreviewStage legacyStage = buildLegacyStageIfNeeded(legacyCodedChanges);
+            if (legacyStage != null) {
+                stages.add(legacyStage);
             }
 
             // Sort stages by type priority: LEGACY stages first, then DEFAULT stages
@@ -511,7 +560,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     }
 
-    private SystemPreviewStage mapToSystemStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Map<String, String> stageMap) {
+    private SystemPreviewStage mapToSystemStage(Map<String, List<CodePreviewChange>> codedChangesByPackage, Map<String, String> stageMap) {
         String location = stageMap.get("location");
 
         if (location == null || location.trim().isEmpty()) {
@@ -520,7 +569,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeClasses = null;
+        Collection<CodePreviewChange> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;
@@ -541,7 +590,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .build();
     }
 
-    private PreviewStage mapToStage(Map<String, List<AbstractPreviewTask>> codedChangesByPackage, Map<String, String> stageMap) {
+    private PreviewStage mapToStage(Map<String, List<CodePreviewChange>> codedChangesByPackage, Map<String, String> stageMap) {
 
         String location = stageMap.get("location");
 
@@ -551,7 +600,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         String sourcesPackage = null;
         String resourcesDir = null;
-        Collection<AbstractPreviewTask> changeClasses = null;
+        Collection<CodePreviewChange> changeClasses = null;
 
         if (isPackageName(location)) {
             sourcesPackage = location;

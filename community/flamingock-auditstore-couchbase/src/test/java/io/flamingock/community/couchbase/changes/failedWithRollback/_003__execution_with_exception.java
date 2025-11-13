@@ -27,13 +27,13 @@ import io.flamingock.api.annotations.Rollback;
 public class _003__execution_with_exception {
 
     @Apply
-    public void execution(Collection collection) {
+    public void apply(Collection collection) {
         collection.insert("test-client-Jorge", JsonObject.create().put("name", "Jorge"));
         throw new RuntimeException("test");
     }
 
     @Rollback
-    public void rollbackExecution(Collection collection) {
+    public void rollback(Collection collection) {
         collection.remove("test-client-Jorge");
     }
 }

@@ -29,7 +29,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class _001__NonTxTransactionalFalseChange {
 
     @Apply
-    public void execution(DynamoDbClient client) {
+    public void apply(DynamoDbClient client) {
         // Simple execution - this will be NON_TX due to transactional=false
         System.out.println("Executing NON_TX change via transactional=false");
     }

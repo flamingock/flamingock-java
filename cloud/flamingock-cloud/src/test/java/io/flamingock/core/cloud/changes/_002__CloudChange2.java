@@ -26,7 +26,7 @@ public class _002__CloudChange2 {
     public static final TaskExecutionChecker checker = new TaskExecutionChecker();
 
     @Apply
-    public void execution() {
+    public void apply() {
         checker.markExecution();
     }
 

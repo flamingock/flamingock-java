@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class _005__TxSeparateAndSameMongoClientChange {
 
     @Apply
-    public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
+    public void apply(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Transactional execution with different DynamoDbClient - this will be TX_SEPARATE_NO_MARKER
         System.out.println("Executing TX_SEPARATE_NO_MARKER change via DynamoDBTargetSystem with different DynamoDbClient");
     }

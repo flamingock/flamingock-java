@@ -31,7 +31,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class _003__insert_jorge_failed_transactional_rollback {
 
     @Apply
-    public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
+    public void apply(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         DynamoDbTable<UserEntity> table = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
                 .build()
@@ -42,7 +42,7 @@ public class _003__insert_jorge_failed_transactional_rollback {
     }
 
     @Rollback
-    public void rollbackExecution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
+    public void rollback(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Do nothing
         System.out.println("THIS SHOULD NOT BE CALLED");
     }

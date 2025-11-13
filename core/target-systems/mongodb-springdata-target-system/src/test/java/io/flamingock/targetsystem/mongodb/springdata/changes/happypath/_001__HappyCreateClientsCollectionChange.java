@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class _001__HappyCreateClientsCollectionChange {
 
     @Apply
-    public void execution(@NonLockGuarded MongoTemplate mongoTemplate) {
+    public void apply(@NonLockGuarded MongoTemplate mongoTemplate) {
         mongoTemplate.createCollection("clientCollection");
     }
 }

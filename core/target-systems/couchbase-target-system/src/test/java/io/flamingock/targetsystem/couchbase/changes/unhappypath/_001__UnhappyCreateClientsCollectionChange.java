@@ -29,7 +29,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _001__UnhappyCreateClientsCollectionChange {
 
     @Apply
-    public void execution(@NonLockGuarded Bucket bucket) {
+    public void apply(@NonLockGuarded Bucket bucket) {
         bucket.collections().createCollection(CollectionIdentifier.DEFAULT_SCOPE, "clientCollection");
         try { Thread.sleep(3000); } catch (Exception ignored) {}
         Collection collection = bucket.scope(CollectionIdentifier.DEFAULT_SCOPE).collection("clientCollection");

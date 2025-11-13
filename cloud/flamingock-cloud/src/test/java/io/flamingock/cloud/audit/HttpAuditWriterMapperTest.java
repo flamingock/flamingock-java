@@ -34,13 +34,13 @@ class HttpAuditWriterMapperTest {
     @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
     static class _001__TestManualInterventionChange {
         @Apply
-        public void execute() {}
+        public void apply() {}
     }
 
     @Change(id = "test-default", author = "aperezdieppa")
     static class _001__TestDefaultRecoveryChange {
         @Apply
-        public void execute() {}
+        public void apply() {}
     }
 
     @Test

@@ -36,7 +36,7 @@ import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.*;
@@ -138,8 +138,8 @@ public class MongoDBSpringDataTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -189,8 +189,8 @@ public class MongoDBSpringDataTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", _001__UnhappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__UnhappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -246,8 +246,8 @@ public class MongoDBSpringDataTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN

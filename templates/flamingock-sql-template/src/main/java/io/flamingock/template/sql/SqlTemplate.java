@@ -29,7 +29,7 @@ public class SqlTemplate extends AbstractChangeTemplate<Void, String, String> {
     }
 
     @Apply
-    public void execution(Connection connection) {
+    public void apply(Connection connection) {
         execute(connection, applyPayload);
     }
 
