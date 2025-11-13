@@ -213,7 +213,7 @@ curl http://localhost:8000/shell/
 **"Configuration file not found"**
 ```bash
 # Debug: Check working directory
-./gradlew :cli:flamingock-cli:debugCli --args="--config $PWD/flamingock-cli-dist/flamingock.yml audit list"
+./gradlew :cli:flamingock-cli:debugCli --args="--config $PWD/flamingock-cli-dist/flamingock-cli.yml audit list"
 ```
 
 **"Failed to create OpsClient"**
@@ -226,7 +226,7 @@ export JAVA_OPTS="-Dorg.mongodb.driver.level=DEBUG"
 **"Multiple database configurations"**
 ```bash
 # Validate YAML structure
-cat flamingock-cli-dist/flamingock.yml | grep -A5 "audit:"
+cat flamingock-cli-dist/flamingock-cli.yml | grep -A5 "audit:"
 ```
 
 #### Debug Log Analysis

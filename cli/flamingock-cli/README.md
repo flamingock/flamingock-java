@@ -47,7 +47,7 @@ cd flamingock-java
    ```bash
    # Linux/macOS
    tar -xzf flamingock-cli-{version}.tar.gz
-   
+
    # Windows (or use any ZIP tool)
    unzip flamingock-cli-{version}.zip
    ```
@@ -56,7 +56,7 @@ cd flamingock-java
    ```bash
    # Linux/macOS
    ./flamingock-cli-{version}/bin/flamingock --help
-   
+
    # Windows
    flamingock-cli-{version}\bin\flamingock.bat --help
    ```
@@ -81,18 +81,18 @@ java -jar flamingock-cli.jar --help
 
 ## Configuration
 
-Create a `flamingock.yml` configuration file (see `flamingock-sample.yml` for reference):
+Modify `flamingock-cli.yml` configuration file:
 
 ```yaml
 flamingock:
   service-identifier: "my-service"
-  
+
   # For MongoDB
   audit:
     mongodb:
       connection-string: "mongodb://localhost:27017"
       database: "myapp"
-  
+
   # For DynamoDB
   # audit:
   #   dynamodb:
@@ -112,7 +112,7 @@ flamingock audit list                    # List all audit entries
 flamingock audit get -c <change-id>      # Get specific audit entry
 flamingock audit fix -c <change-id>      # Fix audit issue
 
-# Issue operations  
+# Issue operations
 flamingock issue list                    # List all issues
 flamingock issue get                     # Get next issue (or specific with -c)
 flamingock issue get -c <change-id>      # Get specific issue
@@ -206,7 +206,7 @@ cli/flamingock-cli/
 │   │   ├── config/                     # Configuration handling
 │   │   └── util/                       # Utilities
 │   └── dist/                           # Distribution resources
-│       └── flamingock-sample.yml       # Sample configuration
+│       └── flamingock-cli.yml          # Sample configuration
 └── build.gradle.kts                    # Build configuration
 ```
 

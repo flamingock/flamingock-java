@@ -39,7 +39,7 @@ class SimpleCLITest {
     void shouldHaveAuditSubcommands() {
         // When
         CommandLine cmd = new CommandLine(new FlamingockCli());
-        
+
         // Then
         assertThat(cmd.getSubcommands()).containsKey("audit");
         CommandLine auditCmd = cmd.getSubcommands().get("audit");
@@ -52,13 +52,17 @@ class SimpleCLITest {
         // Given
         FlamingockConfig mongoConfig = TestUtils.createMongoConfig();
         FlamingockConfig dynamoConfig = TestUtils.createDynamoConfig();
+        FlamingockConfig couchbaseConfig = TestUtils.createCouchbaseConfig();
 
         // When/Then
         assertThat(ConfigLoader.detectDatabaseType(mongoConfig))
                 .isEqualTo(ConfigLoader.DatabaseType.MONGODB);
-        
+
         assertThat(ConfigLoader.detectDatabaseType(dynamoConfig))
                 .isEqualTo(ConfigLoader.DatabaseType.DYNAMODB);
+
+        assertThat(ConfigLoader.detectDatabaseType(couchbaseConfig))
+                .isEqualTo(ConfigLoader.DatabaseType.COUCHBASE);
     }
 
     @Test
@@ -66,6 +70,7 @@ class SimpleCLITest {
         // When
         FlamingockConfig mongoConfig = TestUtils.createMongoConfig();
         FlamingockConfig dynamoConfig = TestUtils.createDynamoConfig();
+        FlamingockConfig couchbaseoConfig = TestUtils.createCouchbaseConfig();
 
         // Then
         assertThat(mongoConfig).isNotNull();
@@ -75,5 +80,9 @@ class SimpleCLITest {
         assertThat(dynamoConfig).isNotNull();
         assertThat(dynamoConfig.getAudit().getDynamodb()).isNotNull();
         assertThat(dynamoConfig.getAudit().getDynamodb().getRegion()).isEqualTo("us-east-1");
+
+        assertThat(couchbaseoConfig).isNotNull();
+        assertThat(couchbaseoConfig.getAudit().getCouchbase()).isNotNull();
+        assertThat(couchbaseoConfig.getAudit().getCouchbase().getBucketName()).isEqualTo("test-bucket");
     }
 }
