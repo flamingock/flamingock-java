@@ -76,7 +76,7 @@ After building, `flamingock-cli-dist/` contains:
 - **`flamingock-cli.jar`** - Self-contained executable JAR with all dependencies
 - **`flamingock`** - Unix/Linux/macOS executable shell script
 - **`flamingock.bat`** - Windows executable batch file
-- **`flamingock.yml`** - Sample configuration file
+- **`flamingock-cli.yml`** - Sample configuration file
 
 ## Configuration
 
@@ -115,9 +115,22 @@ flamingock:
       # secret-key: "your-secret"          # Optional, uses AWS credential chain
 ```
 
+### Couchbase Example
+```yaml
+flamingock:
+  service-identifier: "flamingock-cli"
+  audit:
+    couchbase:
+      endpoint: "http://localhost:8000"
+      username: "your-username"
+      password: "your-password"
+      bucket-name: "test"
+      table: "flamingockAuditLog"           # Optional, defaults to "flamingockAuditLog"
+```
+
 ### Configuration File Resolution
 1. Command line argument: `--config /path/to/file.yml`
-2. Default: `flamingock.yml` in current directory
+2. Default: `flamingock-cli.yml` in bin directory
 
 ## Architecture
 
@@ -144,6 +157,7 @@ client.markAsRolledBack(changeId);
 ### Database Support
 - **MongoDB**: Uses MongoDB Sync driver (not Spring Data)
 - **DynamoDB**: Uses AWS SDK v2
+- **Couchbase**: Uses Couchbase driver v3.7.3
 - **Auto-detection**: Based on YAML configuration structure
 - **Validation**: Connection testing during client creation
 
@@ -179,12 +193,12 @@ Uses SLF4J with simple implementation for clean, professional output.
 ## Build System Integration
 
 ### Gradle Tasks
-| Task | Description |
-|------|-------------|
-| `:cli:flamingock-cli:build` | Full build with distribution |
-| `:cli:flamingock-cli:uberJar` | Create self-contained JAR only |
+| Task                                       | Description                      |
+|--------------------------------------------|----------------------------------|
+| `:cli:flamingock-cli:build`                | Full build with distribution     |
+| `:cli:flamingock-cli:uberJar`              | Create self-contained JAR only   |
 | `:cli:flamingock-cli:generateDistribution` | Generate executable scripts only |
-| `:cli:flamingock-cli:clean` | Remove all CLI artifacts |
+| `:cli:flamingock-cli:clean`                | Remove all CLI artifacts         |
 
 ### Automatic Distribution
 The build process automatically:
