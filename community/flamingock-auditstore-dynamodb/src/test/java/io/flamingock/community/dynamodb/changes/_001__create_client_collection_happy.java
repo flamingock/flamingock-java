@@ -33,7 +33,7 @@ public class _001__create_client_collection_happy {
     private final DynamoDBUtil dynamoDBUtil = new DynamoDBUtil();
 
     @Apply
-    public void execution(@NonLockGuarded DynamoDbClient client) {
+    public void apply(@NonLockGuarded DynamoDbClient client) {
 
         dynamoDBUtil.createTable(
                 client,

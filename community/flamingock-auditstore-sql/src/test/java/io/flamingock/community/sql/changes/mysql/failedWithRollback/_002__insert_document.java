@@ -29,7 +29,7 @@ import java.sql.SQLException;
 public class _002__insert_document {
 
     @Apply
-    public void execution(Connection connection) throws SQLException {
+    public void apply(Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
             ps.setString(1, "test-client-Federico");
@@ -39,7 +39,7 @@ public class _002__insert_document {
     }
 
     @Rollback
-    public void rollbackExecution(Connection connection) throws SQLException {
+    public void rollback(Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "DELETE FROM test_table WHERE id = ?")) {
             ps.setString(1, "test-client-Federico");

@@ -82,7 +82,7 @@ public class CloudAuditPersistenceTest {
                 "create-persons-table-from-template",
                 AuditEntryRequest.Status.APPLIED,
                 _001__CloudChange1.class.getName(),
-                "execution"
+                "apply"
         ));
         auditEntryExpectations.add(new
 
@@ -90,7 +90,7 @@ public class CloudAuditPersistenceTest {
                 "create-persons-table-from-template-2",
                 AuditEntryRequest.Status.APPLIED,
                 _002__CloudChange2.class.getName(),
-                "execution"
+                "apply"
         ));
     }
 

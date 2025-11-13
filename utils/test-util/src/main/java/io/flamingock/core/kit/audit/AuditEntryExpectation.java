@@ -241,7 +241,7 @@ public class AuditEntryExpectation {
     
     /**
      * Sets both className and methodName from a change class.
-     * Extracts the className from the class itself and finds the method annotated with @Execution.
+     * Extracts the className from the class itself and finds the method annotated with @Apply.
      * 
      * @param clazz the change class
      * @return this expectation for method chaining
@@ -249,7 +249,7 @@ public class AuditEntryExpectation {
     public AuditEntryExpectation withClass(Class<?> clazz) {
         this.expectedClassName = clazz.getName();
         
-        // Find the method annotated with @Execution
+        // Find the method annotated with @Apply
         java.lang.reflect.Method[] methods = clazz.getDeclaredMethods();
         for (java.lang.reflect.Method method : methods) {
             if (method.isAnnotationPresent(Apply.class)) {
@@ -258,7 +258,7 @@ public class AuditEntryExpectation {
             }
         }
         
-        throw new RuntimeException(String.format("Class[%s] should contain a method annotated with @Execution", expectedClassName));
+        throw new RuntimeException(String.format("Class[%s] should contain a method annotated with @Apply", expectedClassName));
     }
     
     public AuditEntryExpectation withMetadata(Object metadata) {

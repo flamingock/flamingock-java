@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.FlamingockConstructor;
 import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
@@ -49,6 +50,7 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
      */
     private final static String ORDER_REG_EXP = "^(?=(?:[^a-zA-Z0-9]*[a-zA-Z0-9]){3}).+$";
     private final static Pattern ORDER_PATTERN = Pattern.compile(ORDER_REG_EXP);
+    private final Constructor<?> constructor;
     private final Set<ChangeCategory> categories;
 
 
@@ -57,12 +59,16 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
                                    String order,
                                    String author,
                                    Class<?> implementationClass,
+                                   Constructor<?> constructor,
                                    boolean runAlways,
                                    boolean transactional,
                                    boolean system,
                                    TargetSystemDescriptor targetSystem,
-                                   RecoveryDescriptor recovery) {
-        super(fileName, id, order, author, implementationClass, runAlways, transactional, system, targetSystem, recovery);
+                                   RecoveryDescriptor recovery,
+                                   boolean legacy) {
+        super(fileName, id, order, author, implementationClass, runAlways, transactional, system, targetSystem, recovery, legacy);
+
+        this.constructor = constructor;
 
         this.categories = ReflectionUtil.findAllAnnotations(implementationClass, Categories.class).stream()
                 .map(Categories::value)
@@ -73,22 +79,7 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
 
     @Override
     public Constructor<?> getConstructor() {
-        try {
-            return ReflectionUtil.getConstructorWithAnnotationPreference(getImplementationClass(), FlamingockConstructor.class);
-        } catch (ReflectionUtil.MultipleAnnotatedConstructorsFound ex) {
-            throw new FlamingockException("Found multiple constructors for class[%s] annotated with %s." +
-                    " Annotate the one you want Flamingock to use to instantiate your change",
-                    getSource(),
-                    FlamingockConstructor.class.getName());
-        } catch (ReflectionUtil.MultipleConstructorsFound ex) {
-            throw new FlamingockException("Found multiple constructors, please provide at least one  for class[%s].\n" +
-                    "When more than one constructor, exactly one of them must be annotated. And it will be taken as default "
-                    , FlamingockConstructor.class.getSimpleName()
-                    , getSource()
-            );
-        } catch (ReflectionUtil.ConstructorNotFound ex) {
-            throw new FlamingockException("Cannot find a valid constructor for class[%s]", getSource());
-        }
+        return constructor;
     }
 
     @Override

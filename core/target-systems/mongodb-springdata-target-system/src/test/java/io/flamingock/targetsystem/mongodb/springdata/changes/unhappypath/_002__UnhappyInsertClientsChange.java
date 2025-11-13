@@ -30,7 +30,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class _002__UnhappyInsertClientsChange {
 
     @Apply
-    public void execution(@NonLockGuarded MongoTemplate mongoTemplate
+    public void apply(@NonLockGuarded MongoTemplate mongoTemplate
     ) {
         mongoTemplate.insert(new Document().append("name", "Should Have Been Rolled Back"), "clientCollection");
         throw new RuntimeException("Intended exception");

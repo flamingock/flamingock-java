@@ -21,7 +21,7 @@ import io.flamingock.core.e2e.changes.*;
 import io.flamingock.core.e2e.helpers.Counter;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
@@ -150,7 +150,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(_006__FailingTransactionalChange.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_006__FailingTransactionalChange.class, Collections.emptyList(), Collections.emptyList())
                     )
             );
 
@@ -240,7 +240,7 @@ class CoreStrategiesE2ETest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
-                            new CodeChangeTestDefinition(_007__SimpleNonTransactionalChangeWithError.class, Collections.emptyList())
+                            new CodeChangeTestDefinition(_007__SimpleNonTransactionalChangeWithError.class, Collections.singletonList(Counter.class), Collections.singletonList(Counter.class))
                     )
             );
 

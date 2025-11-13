@@ -21,9 +21,7 @@ public enum MongockChangeType {
   EXECUTION, BEFORE_EXECUTION;
 
   public AuditEntry.ExecutionType toAuditType() {
-    if (this == MongockChangeType.BEFORE_EXECUTION) {
-      return AuditEntry.ExecutionType.BEFORE_EXECUTION;
-    }
+    //TODO: remove
     return AuditEntry.ExecutionType.EXECUTION;
   }
 }

@@ -315,7 +315,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
 
     //TODO remove this
     public enum ExecutionType {
-        EXECUTION, BEFORE_EXECUTION;
+        EXECUTION;
 
         public AuditEntryRequest.ExecutionType toRequestExecutionType() {
             return AuditEntryRequest.ExecutionType.valueOf(name());

@@ -39,15 +39,15 @@ import java.util.Optional;
  * <p>This class uses reflection to:</p>
  * <ul>
  *     <li>Instantiate change classes via constructor</li>
- *     <li>Invoke execution methods (annotated with {@code @Execution})</li>
- *     <li>Optionally invoke rollback methods (annotated with {@code @RollbackExecution})</li>
+ *     <li>Invoke execution methods (annotated with {@code @Apply})</li>
+ *     <li>Optionally invoke rollback methods (annotated with {@code @Rollback})</li>
  * </ul>
  * 
  * <h2>Subclass Responsibilities</h2>
  * <p>Concrete implementations must provide:</p>
  * <ul>
  *     <li>{@link #getConstructor()} - Constructor for instantiating the change</li>
- *     <li>{@link #getExecutionMethod()} - Method to execute the change</li>
+ *     <li>{@link #getApplyMethod()} - Method to execute the change</li>
  *     <li>{@link #getRollbackMethod()} - Optional method for rollback operations</li>
  * </ul>
  * 
@@ -85,7 +85,7 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
      * <p>This class must have:</p>
      * <ul>
      *     <li>A constructor accessible via {@link #getConstructor()}</li>
-     *     <li>An execution method accessible via {@link #getExecutionMethod()}</li>
+     *     <li>An execution method accessible via {@link #getApplyMethod()}</li>
      *     <li>Optionally, a rollback method accessible via {@link #getRollbackMethod()}</li>
      * </ul>
      */
@@ -100,8 +100,9 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
                                         boolean transactional,
                                         boolean system,
                                         TargetSystemDescriptor targetSystem,
-                                        RecoveryDescriptor recovery) {
-        super(id, order, author, implementationClass.getName(), runAlways, transactional, system, targetSystem, recovery);
+                                        RecoveryDescriptor recovery,
+                                        boolean legacy) {
+        super(id, order, author, implementationClass.getName(), runAlways, transactional, system, targetSystem, recovery, legacy);
         this.fileName = fileName;
         this.implementationClass = implementationClass;
     }
@@ -141,21 +142,21 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
      * 
      * <p>This method typically:</p>
      * <ul>
-     *     <li>Is annotated with {@code @Execution}</li>
+     *     <li>Is annotated with {@code @Apply}</li>
      *     <li>Contains the main change logic</li>
      *     <li>May accept dependency-injected parameters</li>
      * </ul>
      * 
      * @return the method to execute the change logic
      */
-    public abstract Method getExecutionMethod();
+    public abstract Method getApplyMethod();
 
     /**
      * Returns the optional method to be invoked for rolling back the change.
      * 
      * <p>This method, if present:</p>
      * <ul>
-     *     <li>Is annotated with {@code @RollbackExecution}</li>
+     *     <li>Is annotated with {@code @Rollback}</li>
      *     <li>Contains logic to undo the changes made by the execution method</li>
      *     <li>May accept dependency-injected parameters</li>
      * </ul>

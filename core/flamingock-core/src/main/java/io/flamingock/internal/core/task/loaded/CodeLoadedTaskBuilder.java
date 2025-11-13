@@ -15,27 +15,39 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.FlamingockConstructor;
+import io.flamingock.api.annotations.Rollback;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.preview.ChangeOrderExtractor;
-import io.flamingock.internal.util.StringUtil;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.util.ReflectionUtil;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Optional;
 
 public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange> {
 
     private String id;
     private String orderInContent;
     private String author;
-    private String changeClass;
+    private String changeClassName;
+    private Constructor<?> constructor;
+    private Method applyMethod;
+    private Optional<Method> rollbackMethod;
     private boolean isRunAlways;
     private boolean isTransactional;
     private boolean isSystem;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
-    private boolean isBeforeExecution;//only for legacy ChangeUnits
+    private boolean legacy;
 
     private CodeLoadedTaskBuilder() {
     }
@@ -58,7 +70,6 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
 
     public static boolean supportsSourceClass(Class<?> sourceClass) {
         return sourceClass.isAnnotationPresent(Change.class);
-
     }
 
 
@@ -66,12 +77,16 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setId(preview.getId());
         setOrder(preview.getOrder().orElse(null));
         setAuthor(preview.getAuthor());
-        setChangeClass(preview.getSource());
+        setChangeClassName(preview.getSource());
+        setConstructor(getConstructorFromPreview(preview));
+        setApplyMethod(getApplyMethodFromPreview(preview));
+        setRollbackMethod(getRollbackMethodFromPreview(preview));
         setRunAlways(preview.isRunAlways());
         setTransactional(preview.isTransactional());
         setSystem(preview.isSystem());
         setTargetSystem(preview.getTargetSystem());
         setRecovery(preview.getRecovery());
+        setLegacy(preview.isLegacy());
         return this;
     }
 
@@ -116,8 +131,13 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setChangeClass(String changeClass) {
-        this.changeClass = changeClass;
+    public CodeLoadedTaskBuilder setChangeClassName(String changeClassName) {
+        this.changeClassName = changeClassName;
+        return this;
+    }
+
+    public CodeLoadedTaskBuilder setConstructor(Constructor<?> constructor) {
+        this.constructor = constructor;
         return this;
     }
 
@@ -136,31 +156,42 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setBeforeExecution(boolean beforeExecution) {
-        isBeforeExecution = beforeExecution;
+    public CodeLoadedTaskBuilder setApplyMethod(Method applyMethod) {
+        this.applyMethod = applyMethod;
+        return this;
+    }
+
+    public CodeLoadedTaskBuilder setRollbackMethod(Optional<Method> rollbackMethod) {
+        this.rollbackMethod = rollbackMethod;
+        return this;
+    }
+
+    public CodeLoadedTaskBuilder setLegacy(boolean legacy) {
+        this.legacy = legacy;
         return this;
     }
 
     @Override
     public CodeLoadedChange build() {
 
-        try {
+        Class<?> changeClass = getClassForName(changeClassName);
+        String order = ChangeOrderUtil.getMatchedOrderFromClassName(id, orderInContent, changeClassName);
 
-            String order = ChangeOrderUtil.getMatchedOrderFromClassName(id, orderInContent, changeClass);
-            return new CodeLoadedChange(
-                    isBeforeExecution ? StringUtil.getBeforeExecutionId(id) : id,
-                    order,
-                    author,
-                    Class.forName(changeClass),
-                    isRunAlways,
-                    isTransactional,
-                    isSystem,
-                    targetSystem,
-                    recovery
-            );
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        return new CodeLoadedChange(
+                id,
+                order,
+                author,
+                changeClass,
+                constructor,
+                applyMethod,
+                rollbackMethod,
+                isRunAlways,
+                isTransactional,
+                isSystem,
+                targetSystem,
+                recovery,
+                legacy
+        );
     }
 
     private void setFromFlamingockChangeAnnotation(Class<?> sourceClass, Change annotation) {
@@ -168,10 +199,14 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setId(changeId);
         setOrder(ChangeOrderExtractor.extractOrderFromClassName(changeId, sourceClass.getName()));
         setAuthor(annotation.author());
-        setChangeClass(sourceClass.getName());
+        setChangeClassName(sourceClass.getName());
+        setConstructor(getConstructor(sourceClass));
+        setApplyMethod(getApplyMethodFromAnnotation(sourceClass));
+        setRollbackMethod(getRollbackMethodFromAnnotation(sourceClass));
         setTransactional(annotation.transactional());
         setSystem(false);
         setRecoveryFromClass(sourceClass);
+        setLegacy(false);
     }
 
     private void setRecoveryFromClass(Class<?> sourceClass) {
@@ -180,6 +215,71 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
             setRecovery(RecoveryDescriptor.fromStrategy(recoveryAnnotation.strategy()));
         } else {
             setRecovery(RecoveryDescriptor.getDefault());
+        }
+    }
+
+    private Class<?> getClassForName(String clazzName) {
+        try {
+            return Class.forName(clazzName);
+        }
+        catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Constructor<?> getConstructorFromPreview(CodePreviewChange preview) {
+        Class<?> sourceClass = getClassForName(preview.getSource());
+        return ReflectionUtil
+                .getConstructorFromParameterTypeNames(sourceClass, preview.getPreviewConstructor().getParameterTypes());
+    }
+
+    private Method getApplyMethodFromPreview(CodePreviewChange preview) {
+        return getMethodFromNameAndParameters(preview.getSource(), preview.getApplyPreviewMethod().getName(), preview.getApplyPreviewMethod().getParameterTypes());
+    }
+
+    private Optional<Method> getRollbackMethodFromPreview(CodePreviewChange preview) {
+        if (preview.getRollbackPreviewMethod() == null) {
+            return Optional.empty();
+        }
+        else {
+            return Optional.ofNullable(getMethodFromNameAndParameters(preview.getSource(), preview.getRollbackPreviewMethod().getName(), preview.getRollbackPreviewMethod().getParameterTypes()));
+        }
+    }
+
+    private Method getMethodFromNameAndParameters(String sourceClassName, String methodName, List<String> methodParametersTypesNames) {
+        Class<?> sourceClass = getClassForName(sourceClassName);
+        return ReflectionUtil.getDeclaredMethodFromParameterTypeNames(sourceClass, methodName, methodParametersTypesNames);
+    }
+
+    private Method getApplyMethodFromAnnotation(Class<?> sourceClass) {
+        Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(sourceClass, Apply.class);
+        return firstAnnotatedMethod
+                .orElseThrow(() -> new IllegalArgumentException(String.format(
+                        "Executable change[%s] without %s method",
+                        sourceClass.getName(),
+                        Apply.class.getName())));
+    }
+
+    private Optional<Method> getRollbackMethodFromAnnotation(Class<?> sourceClass) {
+        return ReflectionUtil.findFirstAnnotatedMethod(sourceClass, Rollback.class);
+    }
+
+    private Constructor<?> getConstructor(Class<?> sourceClass) {
+        try {
+            return ReflectionUtil.getConstructorWithAnnotationPreference(sourceClass, FlamingockConstructor.class);
+        } catch (ReflectionUtil.MultipleAnnotatedConstructorsFound ex) {
+            throw new FlamingockException("Found multiple constructors for class[%s] annotated with %s." +
+                    " Annotate the one you want Flamingock to use to instantiate your change",
+                    sourceClass.getName(),
+                    FlamingockConstructor.class.getName());
+        } catch (ReflectionUtil.MultipleConstructorsFound ex) {
+            throw new FlamingockException("Found multiple constructors, please provide at least one for class[%s].\n" +
+                    "When more than one constructor, exactly one of them must be annotated with %s, and it will be taken as default "
+                    , sourceClass.getName()
+                    , FlamingockConstructor.class.getSimpleName()
+            );
+        } catch (ReflectionUtil.ConstructorNotFound ex) {
+            throw new FlamingockException("Cannot find a valid constructor for class[%s]", sourceClass.getName());
         }
     }
 

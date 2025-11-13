@@ -33,7 +33,7 @@ import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
 import org.junit.jupiter.api.*;
@@ -140,8 +140,8 @@ public class DynamoDBCloudTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -198,8 +198,8 @@ public class DynamoDBCloudTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("unhappy-create-table-clients", _001__UnhappyCreateTableClientsChange.class.getName(), "execution", false)
-                        .addTask("unhappy-insert-clients", _002__UnhappyInsertionClientsChange.class.getName(), "execution", true)
+                        .addTask("unhappy-create-table-clients", _001__UnhappyCreateTableClientsChange.class.getName(), "apply", false)
+                        .addTask("unhappy-insert-clients", _002__UnhappyInsertionClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -258,8 +258,8 @@ public class DynamoDBCloudTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN

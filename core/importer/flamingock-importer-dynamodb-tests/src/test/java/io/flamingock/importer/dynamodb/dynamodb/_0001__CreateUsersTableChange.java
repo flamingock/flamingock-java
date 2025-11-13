@@ -24,7 +24,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 public class _0001__CreateUsersTableChange {
 
     @Apply
-    public void execution(DynamoDbClient dynamoDBClient) {
+    public void apply(DynamoDbClient dynamoDBClient) {
         String tableName = "users";
         try {
             dynamoDBClient.createTable(CreateTableRequest.builder()

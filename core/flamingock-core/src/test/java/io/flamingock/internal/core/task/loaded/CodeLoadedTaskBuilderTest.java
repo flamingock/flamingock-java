@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.api.annotations.Change;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CodeLoadedTaskBuilderTest {
+
+    private class WithoutOrderTestClass {}
+    private class _002__MyClass {}
 
     private CodeLoadedTaskBuilder builder;
 
@@ -38,7 +42,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrder("001")
-                .setChangeClass("java.lang.String") // Using existing class for simplicity
+                .setChangeClassName(WithoutOrderTestClass.class.getName())
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -49,7 +53,7 @@ class CodeLoadedTaskBuilderTest {
         // Then
         assertEquals("001", result.getOrder().orElse(null));
         assertEquals("test-id", result.getId());
-        assertEquals(String.class, result.getImplementationClass());
+        assertEquals(WithoutOrderTestClass.class, result.getImplementationClass());
     }
 
     @Test
@@ -58,7 +62,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrder("001")
-                .setChangeClass("com.mypackage._002__MyClass")
+                .setChangeClassName(_002__MyClass.class.getName())
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -76,7 +80,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrder(null)
-                .setChangeClass("java.lang.String")
+                .setChangeClassName(WithoutOrderTestClass.class.getName())
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -94,7 +98,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrder("")
-                .setChangeClass("com.mypackage._004__MyClass")
+                .setChangeClassName(_002__MyClass.class.getName())
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -103,7 +107,7 @@ class CodeLoadedTaskBuilderTest {
         FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
         // Then
-        assertEquals("Change[test-id] Order mismatch: @Change(order='') does not match order in className='004'",
+        assertEquals("Change[test-id] Order mismatch: @Change(order='') does not match order in className='002'",
             exception.getMessage());
     }
 
@@ -113,7 +117,7 @@ class CodeLoadedTaskBuilderTest {
         // Given
         builder.setId("test-id")
                 .setOrder("   ")
-                .setChangeClass("com.mypackage._005__MyClass")
+                .setChangeClassName(_002__MyClass.class.getName())
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -122,7 +126,7 @@ class CodeLoadedTaskBuilderTest {
         FlamingockException exception = assertThrows(FlamingockException.class, () -> builder.build());
 
         // Then
-        assertEquals("Change[test-id] Order mismatch: @Change(order='   ') does not match order in className='005'",
+        assertEquals("Change[test-id] Order mismatch: @Change(order='   ') does not match order in className='002'",
             exception.getMessage());
     }
 
@@ -132,7 +136,7 @@ class CodeLoadedTaskBuilderTest {
         // Given - using a real class that exists
         builder.setId("test-id")
                 .setOrder("001")
-                .setChangeClass("java.lang.String")
+                .setChangeClassName(WithoutOrderTestClass.class.getName())
                 .setRunAlways(false)
                 .setTransactional(true)
                 .setSystem(false);
@@ -143,36 +147,19 @@ class CodeLoadedTaskBuilderTest {
         // Then
         assertEquals("001", result.getOrder().orElse(null));
         assertEquals("test-id", result.getId());
-        assertEquals(String.class, result.getImplementationClass());
+        assertEquals(WithoutOrderTestClass.class, result.getImplementationClass());
         assertFalse(result.isRunAlways());
         assertTrue(result.isTransactional());
         assertFalse(result.isSystem());
     }
 
-    @Test
-    @DisplayName("Should handle beforeExecution flag correctly")
-    void shouldHandleBeforeExecutionFlagCorrectly() {
-        // Given
-        builder.setId("test-id")
-                .setOrder("001")
-                .setChangeClass("java.lang.String")
-                .setBeforeExecution(true)
-                .setRunAlways(false)
-                .setTransactional(true)
-                .setSystem(false);
-
-        // When
-        CodeLoadedChange result = builder.build();
-
-        // Then
-        assertEquals("test-id_before", result.getId()); // Should append "_before" when beforeExecution is true
-        assertEquals("001", result.getOrder().orElse(null));
-        assertEquals(String.class, result.getImplementationClass());
-    }
-
     // Test class with Change annotation for testing setFromFlamingockChangeAnnotation
     @Change(id = "annotation-test", transactional = false, author = "aperezdieppa")
-    static class _100__TestChangeClass {
+    public static class _100__TestChangeClass {
+        @Apply
+        public void apply() {
+            // testing purpose
+        }
     }
 
     @Test
@@ -202,7 +189,11 @@ class CodeLoadedTaskBuilderTest {
     }
 
     @Change(id = "no-order-in_annotation", author = "aperezdieppa")
-    static class _0001__anotherChange {
+    public static class _0001__anotherChange {
+        @Apply
+        public void apply() {
+            // testing purpose
+        }
     }
 
     @Test

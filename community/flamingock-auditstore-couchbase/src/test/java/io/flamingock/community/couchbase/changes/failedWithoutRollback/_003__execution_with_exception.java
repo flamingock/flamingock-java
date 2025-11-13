@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.NonLockGuarded;
 public class _003__execution_with_exception {
 
     @Apply
-    public void execution(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
+    public void apply(Collection collection, @NonLockGuarded TransactionAttemptContext ctx) {
         ctx.insert(collection,"test-client-Jorge", JsonObject.create().put("name", "Jorge"));
         throw new RuntimeException("test");
     }

@@ -40,8 +40,9 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                                boolean transactional,
                                boolean system,
                                TargetSystemDescriptor targetSystem,
-                               RecoveryDescriptor recovery) {
-        super(id, order, author, source, runAlways, transactional, system, targetSystem, recovery);
+                               RecoveryDescriptor recovery,
+                               boolean legacy) {
+        super(id, order, author, source, runAlways, transactional, system, targetSystem, recovery, legacy);
     }
 
     @Override

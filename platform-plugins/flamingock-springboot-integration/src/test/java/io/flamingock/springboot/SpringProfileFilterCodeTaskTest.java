@@ -15,6 +15,7 @@
  */
 package io.flamingock.springboot;
 
+import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
@@ -93,20 +94,36 @@ class SpringProfileFilterCodeTaskTest {
 
     @Change(id="not-annotated", author = "aperezdieppa")
     public static class _000__NotAnnotated {
+        @Apply
+        public void apply() {
+            // testing purpose
+        }
     }
 
     @Profile("P1")
     @Change(id="annotated-p1", author = "aperezdieppa")
     public static class _001__P1 {
+        @Apply
+        public void apply() {
+            // testing purpose
+        }
     }
 
     @Profile("!P1")
     @Change(id="annotated-!-p1", author = "aperezdieppa")
     public static class _002__NotP1 {
+        @Apply
+        public void apply() {
+            // testing purpose
+        }
     }
 
     @Profile({"P1", "P2"})
     @Change(id="annotated-p1-p2", author = "aperezdieppa")
     public static class _003__P1AndP2 {
+        @Apply
+        public void apply() {
+            // testing purpose
+        }
     }
 }

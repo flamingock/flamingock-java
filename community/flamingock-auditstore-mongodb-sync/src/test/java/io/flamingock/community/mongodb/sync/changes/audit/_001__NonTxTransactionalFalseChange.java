@@ -27,7 +27,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _001__NonTxTransactionalFalseChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully
         System.out.println("Executing NON_TX change via transactional=false");
     }

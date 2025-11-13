@@ -70,6 +70,11 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
     }
 
     @Override
+    public boolean isLegacy() {
+        return descriptor.isLegacy();
+    }
+
+    @Override
     public String getSource() {
         return descriptor.getSource();
     }

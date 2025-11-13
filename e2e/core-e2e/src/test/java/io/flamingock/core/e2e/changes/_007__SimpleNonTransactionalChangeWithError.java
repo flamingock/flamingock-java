@@ -29,7 +29,7 @@ import javax.inject.Named;
 public class _007__SimpleNonTransactionalChangeWithError {
 
     @Apply
-    public void execution(@NonLockGuarded Counter counter) {
+    public void apply(@NonLockGuarded Counter counter) {
         counter.setExecuted(true);
         throw new RuntimeException("Intentional failure");
     }

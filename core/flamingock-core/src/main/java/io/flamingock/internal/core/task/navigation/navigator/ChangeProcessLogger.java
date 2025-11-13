@@ -31,7 +31,7 @@ public class ChangeProcessLogger {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("ChangeExecution");
 
     private static final String START_DESC = "start";
-    private static final String EXECUTION_DESC = "execution";
+    private static final String EXECUTION_DESC = "apply";
     private static final String MANUAL_ROLLBACK_DESC = "manual-rollback";
     private static final String AUTO_ROLLBACK_DESC = "auto-rollback";
 

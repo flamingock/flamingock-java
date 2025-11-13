@@ -17,6 +17,7 @@ package io.flamingock.common.test.pipeline;
 
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.core.task.loaded.ChangeOrderUtil;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.api.annotations.Change;
@@ -103,11 +104,9 @@ public class CodeChangeTestDefinition extends ChangeTestDefinition {
     @Override
     public AbstractPreviewTask toPreview() {
         PreviewMethod rollback = null;
-        PreviewMethod rollbackBeforeExecution = null;
         if (rollbackParameters != null) {
             List<String> rollbackParameterNames = CollectionUtil.getClassNames(rollbackParameters);
-            rollback = new PreviewMethod("rollbackExecution", rollbackParameterNames);
-            rollbackBeforeExecution = new PreviewMethod("rollbackBeforeExecution", rollbackParameterNames);
+            rollback = new PreviewMethod("rollback", rollbackParameterNames);
         }
 
         List<String> executionParameterNames = CollectionUtil.getClassNames(executionParameters);
@@ -116,15 +115,15 @@ public class CodeChangeTestDefinition extends ChangeTestDefinition {
                 getOrder(),
                 author, // Default author for tests
                 className,
-                new PreviewMethod("execution", executionParameterNames),
+                PreviewConstructor.getDefault(),
+                new PreviewMethod("apply", executionParameterNames),
                 rollback,
-                new PreviewMethod("beforeExecution", executionParameterNames),
-                rollbackBeforeExecution,
                 false,
                 isTransactional(),
                 false,
                 TargetSystemDescriptor.fromId(targetSystem),
-                recovery
+                recovery,
+                false
         );
     }
 

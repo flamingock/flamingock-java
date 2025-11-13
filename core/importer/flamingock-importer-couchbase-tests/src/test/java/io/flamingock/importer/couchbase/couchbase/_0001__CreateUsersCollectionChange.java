@@ -27,7 +27,7 @@ import java.util.Collections;
 public class _0001__CreateUsersCollectionChange {
 
     @Apply
-    public void execution(Bucket bucket) {
+    public void apply(Bucket bucket) {
         Collection collection = bucket.defaultCollection();
 
         JsonObject user = JsonObject.create()

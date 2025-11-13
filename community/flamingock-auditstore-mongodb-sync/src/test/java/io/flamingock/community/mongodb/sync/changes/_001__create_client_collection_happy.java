@@ -25,7 +25,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _001__create_client_collection_happy {
 
     @Apply
-    public void execution(MongoDatabase mongoDatabase) {
+    public void apply(MongoDatabase mongoDatabase) {
         mongoDatabase.createCollection("clientCollection");
     }
 }

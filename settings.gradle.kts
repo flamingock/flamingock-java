@@ -170,6 +170,13 @@ project(":core:importer:flamingock-importer-couchbase-tests").name = "flamingock
 project(":core:importer:flamingock-importer-couchbase-tests").projectDir = file("core/importer/flamingock-importer-couchbase-tests")
 
 //////////////////////////////////////
+// SUPPORT
+//////////////////////////////////////
+include("legacy:mongock-support")
+project(":legacy:mongock-support").name = "mongock-support"
+project(":legacy:mongock-support").projectDir = file("legacy/mongock-support")
+
+//////////////////////////////////////
 // CLI
 //////////////////////////////////////
 include("cli:flamingock-cli")

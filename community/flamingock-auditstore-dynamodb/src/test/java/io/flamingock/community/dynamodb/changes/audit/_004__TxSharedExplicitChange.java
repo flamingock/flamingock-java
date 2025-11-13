@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class _004__TxSharedExplicitChange {
 
     @Apply
-    public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
+    public void apply(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Transactional execution with explicit same DynamoDbClient - this will be TX_SHARED
         System.out.println("Executing TX_SHARED change via explicit DynamoDBTargetSystem with same DynamoDbClient");
     }

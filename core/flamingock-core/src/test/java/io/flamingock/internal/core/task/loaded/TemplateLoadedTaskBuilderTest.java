@@ -67,7 +67,7 @@ class TemplateLoadedTaskBuilderTest {
         public Collection<Class<?>> getReflectiveClasses() { return Collections.emptyList(); }
 
         @Apply
-        public void execute(Object config, Object execution, Object context) {
+        public void apply(Object config, Object execution, Object context) {
             // Test implementation
         }
     }

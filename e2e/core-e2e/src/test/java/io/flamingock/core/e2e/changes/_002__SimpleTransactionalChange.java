@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _002__SimpleTransactionalChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully in transaction
         System.out.println("Executing simple transactional change");
     }
