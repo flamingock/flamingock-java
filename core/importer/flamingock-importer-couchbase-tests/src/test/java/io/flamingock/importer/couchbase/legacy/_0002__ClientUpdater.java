@@ -17,18 +17,12 @@ package io.flamingock.importer.couchbase.legacy;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
-import io.mongock.api.annotations.BeforeExecution;
 
 @Change(id = "client-updater", author = "mongock", transactional = false)
 public class _0002__ClientUpdater {
 
-    @BeforeExecution
-    public void beforeExecution() {
-        System.out.println("Client Initializer");
-    }
-
     @Apply
-    public void execution() {
+    public void apply() {
         System.out.println("Client Initializer");
     }
 }

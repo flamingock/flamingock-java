@@ -29,7 +29,7 @@ import java.sql.SQLException;
 public class _002__UnhappyInsertClientsChange {
 
     @Apply
-    public void execution(Connection connection) throws SQLException {
+    public void apply(Connection connection) throws SQLException {
         // This will fail due to intentional error
         throw new RuntimeException("Intentional failure for testing rollback");
     }

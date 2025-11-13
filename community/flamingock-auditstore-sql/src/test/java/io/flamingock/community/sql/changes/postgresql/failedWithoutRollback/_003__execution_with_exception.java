@@ -28,7 +28,7 @@ import java.sql.SQLException;
 public class _003__execution_with_exception {
 
     @Apply
-    public void execution(Connection connection) throws SQLException {
+    public void apply(Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
             ps.setString(1, "test-client-Jorge");

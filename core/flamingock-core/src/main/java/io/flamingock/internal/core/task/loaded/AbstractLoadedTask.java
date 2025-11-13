@@ -39,13 +39,14 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
                               boolean transactional,
                               boolean system,
                               TargetSystemDescriptor targetSystem,
-                              RecoveryDescriptor recovery) {
-        super(id, order, author, implementationSourceName, runAlways, transactional, system, targetSystem, recovery);
+                              RecoveryDescriptor recovery,
+                              boolean legacy) {
+        super(id, order, author, implementationSourceName, runAlways, transactional, system, targetSystem, recovery, legacy);
     }
 
     public abstract Constructor<?> getConstructor();
 
-    public abstract Method getExecutionMethod();
+    public abstract Method getApplyMethod();
 
     public abstract Optional<Method> getRollbackMethod();
 

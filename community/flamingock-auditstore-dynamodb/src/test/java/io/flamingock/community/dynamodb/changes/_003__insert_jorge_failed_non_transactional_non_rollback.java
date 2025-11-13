@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class _003__insert_jorge_failed_non_transactional_non_rollback {
 
     @Apply
-    public void execution(DynamoDbClient client) {
+    public void apply(DynamoDbClient client) {
         DynamoDbTable<UserEntity> table = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
                 .build()

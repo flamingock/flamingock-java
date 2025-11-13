@@ -18,10 +18,12 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +41,7 @@ public class TemplateLoadedChange extends AbstractLoadedChange {
                          String order,
                          String author,
                          Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
+                         Constructor<?> constructor,
                          List<String> profiles,
                          boolean transactional,
                          boolean runAlways,
@@ -48,7 +51,7 @@ public class TemplateLoadedChange extends AbstractLoadedChange {
                          Object rollback,
                          TargetSystemDescriptor targetSystem,
                          RecoveryDescriptor recovery) {
-        super(changeFileName, id, order, author, templateClass, runAlways, transactional, systemTask, targetSystem, recovery);
+        super(changeFileName, id, order, author, templateClass, constructor, runAlways, transactional, systemTask, targetSystem, recovery, false);
         this.profiles = profiles;
         this.transactional = transactional;
         this.configuration = configuration;
@@ -79,7 +82,7 @@ public class TemplateLoadedChange extends AbstractLoadedChange {
     }
 
     @Override
-    public Method getExecutionMethod() {
+    public Method getApplyMethod() {
         return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Apply.class)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(
                         "Templated[%s] without %s method",

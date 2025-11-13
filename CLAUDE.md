@@ -130,7 +130,7 @@ This is a multi-module Gradle project using Kotlin DSL.
 
 **Core Modules** (`core/`):
 - `flamingock-core` - Core engine and orchestration logic
-- `flamingock-core-api` - Public API annotations (`@Change`, `@Execution`)
+- `flamingock-core-api` - Public API annotations (`@Change`, `@Apply`)
 - `flamingock-core-commons` - Shared internal utilities
 - `flamingock-processor` - Annotation processor for pipeline generation
 - `flamingock-graalvm` - GraalVM native image support

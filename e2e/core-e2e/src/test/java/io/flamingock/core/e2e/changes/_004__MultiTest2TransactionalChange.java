@@ -27,7 +27,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _004__MultiTest2TransactionalChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         System.out.println("Executing multi test 2 transactional change");
     }
 }

@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.configuration.core;
 
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
 import java.util.HashMap;

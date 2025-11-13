@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class _002__TxSharedDefaultChange {
 
     @Apply
-    public void execution(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
+    public void apply(DynamoDbClient client, TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder) {
         // Transactional execution - this will be TX_SHARED since same DynamoDbClient as audit storage
         System.out.println("Executing TX_SHARED change via default behavior");
     }

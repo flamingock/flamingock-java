@@ -39,6 +39,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     protected RecoveryDescriptor recovery;
 
+    protected boolean legacy;
+
     public AbstractTaskDescriptor(){}
 
     public AbstractTaskDescriptor(String id,
@@ -49,7 +51,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                                   boolean transactional,
                                   boolean system,
                                   TargetSystemDescriptor targetSystem,
-                                  RecoveryDescriptor recovery) {
+                                  RecoveryDescriptor recovery,
+                                  boolean legacy) {
         this.id = id;
         this.order = order;
         this.author = author;
@@ -59,6 +62,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         this.system = system;
         this.targetSystem = targetSystem;
         this.recovery = recovery;
+        this.legacy = legacy;
     }
 
     @Override
@@ -96,12 +100,19 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         return system;
     }
 
+    @Override
     public TargetSystemDescriptor getTargetSystem() {
         return targetSystem;
     }
 
+    @Override
     public RecoveryDescriptor getRecovery() {
         return recovery;
+    }
+
+    @Override
+    public boolean isLegacy() {
+        return legacy;
     }
 
     public void setId(String id) {
@@ -140,6 +151,10 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         this.recovery = recovery;
     }
 
+    public void setLegacy(boolean legacy) {
+        this.legacy = legacy;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -169,6 +184,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                 .add("sortable=" + isSortable())
                 .add("targetSystem=" + targetSystem)
                 .add("recovery=" + recovery)
+                .add("legacy=" + isLegacy())
                 .toString();
     }
 

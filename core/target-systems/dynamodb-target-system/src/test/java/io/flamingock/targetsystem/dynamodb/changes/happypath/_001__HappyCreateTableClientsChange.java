@@ -32,7 +32,7 @@ import static java.util.Collections.emptyList;
 public class _001__HappyCreateTableClientsChange {
 
     @Apply
-    public void execution(@NonLockGuarded DynamoDbClient client) {
+    public void apply(@NonLockGuarded DynamoDbClient client) {
 
         DynamoDBUtil dynamoDBUtil = new DynamoDBUtil(client);
 

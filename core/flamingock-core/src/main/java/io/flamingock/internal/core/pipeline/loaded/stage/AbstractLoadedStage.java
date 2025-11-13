@@ -86,7 +86,6 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
                     ChangeAction action = actionPlan.getActionFor(loadedTask.getId());
                     return ExecutableTaskBuilder.build(loadedTask, name, action);
                 })
-                .flatMap(Collection::stream)
                 .collect(Collectors.toCollection(LinkedList::new));
 
         return new ExecutableStage(name, tasks);

@@ -20,8 +20,7 @@ import io.flamingock.internal.common.core.audit.AuditTxType;
 
 public class AuditEntryRequest {
 
-    //TODO remove this
-    public enum ExecutionType {EXECUTION, BEFORE_EXECUTION}
+    public enum ExecutionType {EXECUTION}
 
     public enum Status {
         STARTED,

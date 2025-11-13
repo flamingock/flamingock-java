@@ -26,7 +26,7 @@ import java.util.Arrays;
 public class _001__create_index {
 
 	@Apply
-	public void execution(Collection collection) {
+	public void apply(Collection collection) {
 		collection.queryIndexes().createIndex("idx_standalone_index", Arrays.asList("field1", "field2"));
 	}
 }

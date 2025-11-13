@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _006__FailingTransactionalChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         System.out.println("Executing failing transactional change");
         throw new RuntimeException("Simulated execution failure");
     }

@@ -30,7 +30,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
     }
 
     @Apply
-    public void execute(MongoDatabase db, @Nullable ClientSession clientSession) {
+    public void apply(MongoDatabase db, @Nullable ClientSession clientSession) {
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
         }

@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _004__TxSeparateAndSameMongoClientChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully
         System.out.println("Executing TX_SHARED change via explicit MongoDBSyncTargetSystem with same MongoClient");
     }

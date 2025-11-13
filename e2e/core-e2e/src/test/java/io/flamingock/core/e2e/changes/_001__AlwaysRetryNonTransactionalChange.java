@@ -32,7 +32,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _001__AlwaysRetryNonTransactionalChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully on retry
         System.out.println("Executing always-retry non-transactional change");
     }

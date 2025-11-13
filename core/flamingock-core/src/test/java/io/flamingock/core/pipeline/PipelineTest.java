@@ -15,9 +15,13 @@
  */
 package io.flamingock.core.pipeline;
 
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -36,6 +40,19 @@ import java.util.Collections;
 
 public class PipelineTest {
     private static MockRunnerServerOld mockRunnerServer;
+
+    @Change(id = "pipeline-test-change", author = "flamingock-team")
+    public static class PipelineTestChange {
+        @Apply
+        public void apply() {
+            // no-op (testing purpose)
+        }
+
+        @Rollback
+        public void rollback() {
+            // no-op (testing purpose)
+        }
+    }
 
     @Test
     @DisplayName("Should throw an exception when Pipeline.validateAndGetLoadedStages() if no stages")
@@ -102,37 +119,37 @@ public class PipelineTest {
     @Test
     @DisplayName("Should throw an exception when a task has an invalid order format")
     void shouldThrowExceptionWhenTaskHasInvalidOrderFormat() {
-        PreviewMethod executionMethod = new PreviewMethod("execute", Collections.emptyList());
+        PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
 
         CodePreviewChange taskWithInvalidOrder1 = new CodePreviewChange(
                 "task-with-invalid-order-1",
                 "12", // Too short (only 2 alphanumeric characters)
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         CodePreviewChange taskWithInvalidOrder2 = new CodePreviewChange(
                 "task-with-invalid-order-2",
                 "a_", // Only 1 alphanumeric character
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
@@ -156,67 +173,67 @@ public class PipelineTest {
     @Test
     @DisplayName("Should validate successfully when tasks have valid order formats")
     void shouldValidateSuccessfullyWhenTasksHaveValidOrderFormats() {
-        PreviewMethod executionMethod = new PreviewMethod("execute", Collections.emptyList());
+        PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
 
         CodePreviewChange taskWithValidOrder1 = new CodePreviewChange(
                 "task-with-valid-order-1",
                 "001", // Valid 3 alphanumeric characters
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         CodePreviewChange taskWithValidOrder2 = new CodePreviewChange(
                 "task-with-valid-order-2",
                 "abc", // Valid 3 alphanumeric characters
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         CodePreviewChange taskWithValidOrder3 = new CodePreviewChange(
                 "task-with-valid-order-3",
                 "V1_2_3", // Valid with underscores and alphanumeric chars
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         CodePreviewChange taskWithValidOrder4 = new CodePreviewChange(
                 "task-with-valid-order-4",
                 "20250925_01_migration", // Valid complex format
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
@@ -238,52 +255,52 @@ public class PipelineTest {
     @DisplayName("Should throw an exception when there are duplicate Change IDs across stages")
     void shouldThrowExceptionWhenDuplicateChangeIds() {
         // Create a preview method for execution
-        PreviewMethod executionMethod = new PreviewMethod("execute", Collections.emptyList());
+        PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
 
         CodePreviewChange task1 = new CodePreviewChange(
                 "duplicate-id",
                 "001", // Valid: 3 alphanumeric characters
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         CodePreviewChange task2 = new CodePreviewChange(
                 "unique-id",
                 "002", // Valid: 3 alphanumeric characters
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         CodePreviewChange task3 = new CodePreviewChange(
                 "duplicate-id",
                 "003", // Valid: 3 alphanumeric characters
                 "test-author",
-                PipelineTest.class.getName(),
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
                 executionMethod,
-                null,
-                null,
                 null,
                 false,
                 true,
                 false,
                 null,
-                RecoveryDescriptor.getDefault());
+                RecoveryDescriptor.getDefault(),
+                false);
 
         PreviewStage stage1 = Mockito.mock(PreviewStage.class);
         Mockito.when(stage1.getType()).thenReturn(StageType.DEFAULT);

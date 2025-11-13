@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.core.processor.util;
+package io.flamingock.internal.common.core.util;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.flamingock.internal.util.JsonObjectMapper;

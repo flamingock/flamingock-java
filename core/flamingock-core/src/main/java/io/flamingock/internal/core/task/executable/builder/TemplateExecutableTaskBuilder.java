@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable.builder;
 
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
+import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
@@ -23,8 +24,6 @@ import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.List;
 
 
 /**
@@ -71,8 +70,8 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
 
 
     @Override
-    public List<TemplateExecutableTask> build() {
-        return Collections.singletonList(getTasksFromReflection(stageName, loadedTask, changeAction));
+    public ExecutableTask build() {
+        return getTasksFromReflection(stageName, loadedTask, changeAction);
     }
 
 
@@ -111,7 +110,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
                 stageName,
                 loadedTask,
                 action,
-                loadedTask.getExecutionMethod(),
+                loadedTask.getApplyMethod(),
                 rollbackMethod
         );
 

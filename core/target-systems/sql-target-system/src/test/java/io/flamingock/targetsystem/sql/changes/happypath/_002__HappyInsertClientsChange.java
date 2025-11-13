@@ -28,7 +28,7 @@ import java.sql.SQLException;
 public class _002__HappyInsertClientsChange {
 
     @Apply
-    public void execution(Connection connection) throws SQLException {
+    public void apply(Connection connection) throws SQLException {
         String sql = "INSERT INTO client_table (name, email) VALUES (?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, "John Doe");

@@ -7,13 +7,13 @@
 @Recovery(strategy = RecoveryStrategy.ALWAYS_RETRY)
 public class ExampleChangeWithRetry {
 
-    @Execution
-    public void execute() {
+    @Apply
+    public void apply() {
         // This change will be retried automatically if it fails
         System.out.println("Executing change that will be retried on failure");
     }
 
-    @RollbackExecution
+    @Rollback
     public void rollback() {
         System.out.println("Rolling back change");
     }
@@ -25,8 +25,8 @@ public class ExampleChangeWithRetry {
 @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)  // This is the default
 public class ExampleChangeWithManualIntervention {
 
-    @Execution
-    public void execute() {
+    @Apply
+    public void apply() {
         // This change requires manual intervention if it fails (default behavior)
         System.out.println("Executing change requiring manual intervention on failure");
     }
@@ -38,8 +38,8 @@ public class ExampleChangeWithManualIntervention {
 // No @Recovery annotation = defaults to MANUAL_INTERVENTION
 public class ExampleChangeWithDefaultRecovery {
 
-    @Execution
-    public void execute() {
+    @Apply
+    public void apply() {
         // This change defaults to manual intervention
         System.out.println("Executing change with default recovery strategy");
     }

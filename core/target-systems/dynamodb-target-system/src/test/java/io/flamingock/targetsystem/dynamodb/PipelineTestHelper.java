@@ -17,6 +17,7 @@ package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.core.task.loaded.ChangeOrderUtil;
@@ -62,8 +63,8 @@ public class PipelineTestHelper {
      * Each change is derived from a {@link Pair} where:
      * <ul>
      *   <li>The first item is the {@link Class} annotated with {@link Change}</li>
-     *   <li>The second item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Execution}</li>
-     *   <li>The third item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @RollbackExecution}</li>
+     *   <li>The second item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Apply}</li>
+     *   <li>The third item is a {@link List} of parameter types (as {@link Class}) expected by the method annotated with {@code @Rollback}</li>
      * </ul>
      *
      * @param changeDefinitions varargs of pairs containing change classes and their execution method parameters
@@ -77,10 +78,8 @@ public class PipelineTestHelper {
                     Function<Class<?>, ChangeInfo> extractor = infoExtractor;
                     ChangeInfo changeInfo = extractor.apply(trio.getFirst());
                     PreviewMethod rollback = null;
-                    PreviewMethod rollbackBeforeExecution = null;
                     if (trio.getThird() != null) {
-                        rollback = new PreviewMethod("rollbackExecution", getParameterTypes(trio.getThird()));
-                        rollbackBeforeExecution = new PreviewMethod("rollbackBeforeExecution", getParameterTypes(trio.getThird()));
+                        rollback = new PreviewMethod("rollback", getParameterTypes(trio.getThird()));
                     }
 
                     List<CodePreviewChange> changes = new ArrayList<>();
@@ -89,15 +88,15 @@ public class PipelineTestHelper {
                             changeInfo.getOrder(),
                             changeInfo.getAuthor(),
                             trio.getFirst().getName(),
-                            new PreviewMethod("execution", getParameterTypes(trio.getSecond())),
+                            PreviewConstructor.getDefault(),
+                            new PreviewMethod("apply", getParameterTypes(trio.getSecond())),
                             rollback,
-                            new PreviewMethod("beforeExecution", getParameterTypes(trio.getSecond())),
-                            rollbackBeforeExecution,
                             false,
                             changeInfo.transactional,
                             false,
                             changeInfo.targetSystem,
-                            RecoveryDescriptor.getDefault()
+                            RecoveryDescriptor.getDefault(),
+                            false
                     ));
                     return changes;
                 })

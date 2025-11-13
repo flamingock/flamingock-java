@@ -27,7 +27,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _002__TxSharedDefaultChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully
         System.out.println("Executing TX_SHARED change via default behavior");
     }

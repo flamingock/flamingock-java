@@ -46,7 +46,7 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
                                  Object rollback,
                                  TargetSystemDescriptor targetSystem,
                                  RecoveryDescriptor recovery) {
-        super(id, order, author, templateName, runAlways, transactional, system, targetSystem, recovery);
+        super(id, order, author, templateName, runAlways, transactional, system, targetSystem, recovery, false);
         this.fileName = fileName;
         this.profiles = profiles;
         this.configuration = configuration;

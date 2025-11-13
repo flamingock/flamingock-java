@@ -27,7 +27,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _003__MultiTest1NonTransactionalChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         System.out.println("Executing multi test 1 non-transactional change");
     }
 }

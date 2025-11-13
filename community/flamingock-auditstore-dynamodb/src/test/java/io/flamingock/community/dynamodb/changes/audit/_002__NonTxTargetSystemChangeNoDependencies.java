@@ -28,7 +28,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _002__NonTxTargetSystemChangeNoDependencies {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple execution - this will be NON_TX due to DefaultTargetSystem
         System.out.println("Executing NON_TX change via DefaultTargetSystem");
     }

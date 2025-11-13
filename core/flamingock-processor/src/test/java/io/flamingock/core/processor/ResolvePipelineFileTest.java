@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.processor;
 
-import io.flamingock.core.processor.util.LoggerPreProcessor;
+import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

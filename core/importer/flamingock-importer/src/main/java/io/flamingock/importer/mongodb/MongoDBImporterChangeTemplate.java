@@ -36,7 +36,7 @@ public class MongoDBImporterChangeTemplate extends AbstractImporterChangeTemplat
     }
 
     @Apply
-    public void execution(MongoDatabase db,
+    public void apply(MongoDatabase db,
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
         logger.info("Starting audit log migration from Mongock to Flamingock local audit store[MongoDB]");

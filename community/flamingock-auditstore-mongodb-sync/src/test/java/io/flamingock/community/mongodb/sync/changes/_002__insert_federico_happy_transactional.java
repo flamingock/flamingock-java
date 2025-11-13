@@ -28,7 +28,7 @@ import org.bson.Document;
 public class _002__insert_federico_happy_transactional {
 
     @Apply
-    public void execution(MongoDatabase mongoDatabase, ClientSession clientSession) {
+    public void apply(MongoDatabase mongoDatabase, ClientSession clientSession) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(clientSession, new Document().append("name", "Federico"));
     }

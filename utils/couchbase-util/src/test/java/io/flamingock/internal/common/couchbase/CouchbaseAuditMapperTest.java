@@ -36,20 +36,20 @@ class CouchbaseAuditMapperTest {
     @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
     static class _001__TestManualInterventionChange {
         @Apply
-        public void execute() {}
+        public void apply() {}
     }
 
     @Change(id = "test-always-retry", author = "aperezdieppa")
     @Recovery(strategy = RecoveryStrategy.ALWAYS_RETRY)
     static class _001__TestAlwaysRetryChange {
         @Apply
-        public void execute() {}
+        public void apply() {}
     }
 
     @Change(id = "test-default", author = "aperezdieppa")
     static class _001__TestDefaultRecoveryChange {
         @Apply
-        public void execute() {}
+        public void apply() {}
     }
 
     @Test

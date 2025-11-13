@@ -27,7 +27,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _005__SecondRunNonTransactionalChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         System.out.println("Executing second run non-transactional change");
     }
 }

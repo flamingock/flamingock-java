@@ -27,7 +27,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class _002__HappyInsertClientsChange {
 
     @Apply
-    public void execution(@NonLockGuarded MongoTemplate mongoTemplate) {
+    public void apply(@NonLockGuarded MongoTemplate mongoTemplate) {
         mongoTemplate.insert(new Document().append("Name", "Federico"), "clientCollection");
     }
 }

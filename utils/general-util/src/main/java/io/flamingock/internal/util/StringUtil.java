@@ -31,12 +31,6 @@ public final class StringUtil {
                 String.valueOf(UUID.randomUUID().getMostSignificantBits()).replace("-", ""));
     }
 
-    public static String getBeforeExecutionId(String baseId) {
-        return String.format("%s_%s", baseId, "before");
-    }
-
-
-
     public static String hostname() {
         return hostname("");
     }

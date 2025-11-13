@@ -27,12 +27,12 @@ import io.flamingock.api.annotations.Rollback;
 public class _002__insert_document {
 
     @Apply
-    public void execution(Collection collection) {
+    public void apply(Collection collection) {
         collection.insert("test-client-Federico", JsonObject.create().put("name", "Federico"));
     }
 
     @Rollback
-    public void rollbackExecution(Collection collection) {
+    public void rollback(Collection collection) {
         collection.remove("test-client-Federico");
     }
 }

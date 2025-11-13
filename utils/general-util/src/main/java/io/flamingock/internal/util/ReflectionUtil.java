@@ -17,6 +17,12 @@ package io.flamingock.internal.util;
 
 import org.reflections.Reflections;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -30,6 +36,7 @@ import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -242,6 +249,13 @@ public final class ReflectionUtil {
                 .findFirst();
     }
 
+    @SuppressWarnings("unchecked")
+    public static Optional<Method> findFirstMethodByName(Class<?> source, String methodName) {
+        return Arrays.stream(source.getMethods())
+                .filter(method -> method.getName().equals(methodName))
+                .findFirst();
+    }
+
     //TODO expand this beyond Change
     @SuppressWarnings("unchecked")
     public static Collection<Class<?>> loadAnnotatedClassesFromPackage(String packagePath, Class<? extends Annotation>... annotations) {
@@ -334,5 +348,252 @@ public final class ReflectionUtil {
     }
 
     public static class MultipleConstructorsFound extends RuntimeException {
+    }
+
+    public static ExecutableElement getConstructorWithAnnotationPreference(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
+        List<ExecutableElement> constructors = getConstructors(typeElement);
+        if (constructors.isEmpty()) {
+            throw new ReflectionUtil.ConstructorNotFound();
+        } else if (constructors.size() == 1) {
+            return constructors.get(0);
+        } else {
+            List<ExecutableElement> annotatedConstructors = filterAnnotatedConstructors(constructors, annotationClass);
+            if (annotatedConstructors.isEmpty()) {
+                throw new ReflectionUtil.MultipleConstructorsFound();
+            } else if (annotatedConstructors.size() == 1) {
+                return annotatedConstructors.get(0);
+            } else {
+                throw new ReflectionUtil.MultipleAnnotatedConstructorsFound();
+            }
+        }
+    }
+
+    public static List<ExecutableElement> filterAnnotatedConstructors(List<ExecutableElement> constructorElements, Class<? extends Annotation> annotationClass) {
+        return constructorElements
+                .stream()
+                .filter(constructor -> isConstructorAnnotationPresent(constructor, annotationClass))
+                .collect(Collectors.toList());
+    }
+
+    public static List<ExecutableElement> getConstructors(TypeElement typeElement) {
+        return typeElement.getEnclosedElements()
+                .stream()
+                .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
+                .map(e -> (ExecutableElement)e)
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isConstructorAnnotationPresent(Element constructorElement, Class<? extends Annotation> annotationClass) {
+        return constructorElement.getAnnotation(annotationClass) != null;
+    }
+
+    public static List<String> getParametersTypesQualifiedNames(ExecutableElement element) {
+        List<String> parameterTypes = new ArrayList<>();
+        for (VariableElement param : element.getParameters()) {
+            TypeMirror paramType = param.asType();
+            parameterTypes.add(paramType.toString()); // fully qualified name (e.g., java.lang.String)
+        }
+        return parameterTypes;
+    }
+
+
+    /**
+     * Finds the default constructor of a class
+     *
+     * @param targetClass       the class where the constructor is declared
+     * @return the matching constructor
+     */
+    public static Constructor<?> getDefaultConstructor(Class<?> targetClass) {
+        return getConstructorFromParameterTypeNames(targetClass, Collections.emptyList());
+    }
+
+    /**
+     * Finds a constructor that matches the provided parameter type names.
+     * - If parameterTypeNames is null/empty: return the default (no-arg) constructor,
+     *   whether implicit or explicit.
+     * - Otherwise: search only declared constructors.
+     *   * First, filter by same arity (parameter count).
+     *   * If exactly one remains, return it.
+     *   * If several remain, require an exact declared match by resolved types.
+     *
+     * @param targetClass       the class where the constructor is declared
+     * @param parameterTypeNames list of parameter type names (e.g., "java.lang.String", "int[]")
+     * @return the matching constructor
+     */
+    public static Constructor<?> getConstructorFromParameterTypeNames(
+            Class<?> targetClass,
+            List<String> parameterTypeNames) {
+
+        if (targetClass == null) {
+            throw new IllegalArgumentException("targetClass cannot be null");
+        }
+
+        // Case 1: default constructor (0 parameters)
+        if (parameterTypeNames == null || parameterTypeNames.isEmpty()) {
+            // Try explicit declared no-arg first
+            try {
+                return targetClass.getDeclaredConstructor();
+            } catch (NoSuchMethodException ignore) {
+                // If there is no declared one, try the implicit/public one (inherited allowed)
+                try {
+                    return targetClass.getConstructor();
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException("No default constructor (implicit or explicit) found in " + targetClass.getName(), e);
+                }
+            }
+        }
+
+        // Case 2: N > 0 parameters: search declared constructors only
+        final Constructor<?>[] declared = targetClass.getDeclaredConstructors();
+        final int paramCount = parameterTypeNames.size();
+
+        // Filter by arity
+        List<Constructor<?>> sameArity = Arrays.stream(declared)
+                .filter(c -> c.getParameterCount() == paramCount)
+                .collect(Collectors.toList());
+
+        if (sameArity.isEmpty()) {
+            throw new RuntimeException("No declared constructor in " + targetClass.getName()
+                    + " with parameter count = " + paramCount);
+        }
+        if (sameArity.size() == 1) {
+            return sameArity.get(0);
+        }
+
+        final Class<?>[] exactTypes = toClasses(parameterTypeNames);
+
+        try {
+            return targetClass.getDeclaredConstructor(exactTypes);
+        } catch (NoSuchMethodException e) {
+            String sig = "(" + Arrays.stream(exactTypes).map(Class::getTypeName).collect(Collectors.joining(", ")) + ")";
+            throw new RuntimeException("No declared constructor in " + targetClass.getName()
+                    + " exactly matching parameter types " + sig, e);
+        }
+    }
+
+    /**
+     * Finds a declared method by name using your 3-step heuristic:
+     *  1) Filter declared methods by name.
+     *     - If exactly one remains, return it.
+     *  2) Else, filter by parameter count == parameterTypeNames.size().
+     *     - If exactly one remains, return it.
+     *  3) Else, resolve the parameter type names to classes and call getDeclaredMethod(...)
+     *     for an exact type match. If not found, throw.
+     * Notes:
+     *  - Only declared methods are considered (no inheritance).
+     */
+    public static Method getDeclaredMethodFromParameterTypeNames(
+            Class<?> targetClass,
+            String methodName,
+            List<String> parameterTypeNames) {
+
+        if (targetClass == null) {
+            throw new RuntimeException("targetClass cannot be null");
+        }
+        if (methodName == null || methodName.isEmpty()) {
+            throw new RuntimeException("methodName cannot be null or empty");
+        }
+
+        // Step 1: by name
+        List<Method> sameName = Arrays.stream(targetClass.getDeclaredMethods())
+                .filter(m -> m.getName().equals(methodName))
+                .collect(Collectors.toList());
+
+        if (sameName.isEmpty()) {
+            throw new RuntimeException("No declared method named '" + methodName
+                    + "' found in " + targetClass.getName());
+        }
+        else if (sameName.size() == 1) {
+            return sameName.get(0);
+        }
+
+        // Step 2: by arity
+        final int paramCount = (parameterTypeNames == null) ? 0 : parameterTypeNames.size();
+        List<Method> sameArity = sameName.stream()
+                .filter(m -> m.getParameterCount() == paramCount)
+                .collect(Collectors.toList());
+
+        if (sameArity.isEmpty()) {
+            throw new RuntimeException("No declared method named '" + methodName
+                    + "' with parameter count = " + paramCount
+                    + " found in " + targetClass.getName());
+        }
+        else if (sameArity.size() == 1) {
+            return sameArity.get(0);
+        }
+
+        // Step 3: exact type match via getDeclaredMethod(...)
+        final Class<?>[] exactTypes = toClasses(parameterTypeNames);
+
+        try {
+            return targetClass.getDeclaredMethod(methodName, exactTypes);
+        } catch (NoSuchMethodException e) {
+            String sig = "(" + Arrays.stream(exactTypes).map(Class::getTypeName).collect(Collectors.joining(", ")) + ")";
+            throw new RuntimeException("No declared method named '" + methodName
+                    + "' exactly matching parameter types " + sig
+                    + " in " + targetClass.getName(), e);
+        }
+    }
+
+    private static Class<?>[] toClasses(List<String> names) {
+        if (names == null || names.isEmpty()) return new Class<?>[0];
+        Class<?>[] result = new Class<?>[names.size()];
+        for (int i = 0; i < names.size(); i++) {
+            result[i] = loadType(names.get(i).trim());
+        }
+        return result;
+    }
+
+    private static Class<?> loadType(String typeName) {
+        // Direct primitive
+        Class<?> primitive = getPrimitiveClassFromName(typeName);
+        if (primitive != null) return primitive;
+
+        // Handle array suffix "[]"
+        int dims = 0;
+        while (typeName.endsWith("[]")) {
+            dims++;
+            typeName = typeName.substring(0, typeName.length() - 2);
+        }
+
+        Class<?> base;
+        Class<?> primBase = getPrimitiveClassFromName(typeName);
+        if (primBase != null) {
+            base = primBase;
+        } else {
+            try {
+                base = Class.forName(typeName);
+            }
+            catch (ClassNotFoundException ignore) {
+                throw new RuntimeException("Class not found for parameter type name: " + typeName);
+            }
+        }
+
+        if (dims == 0) return base;
+
+        // Build multi-dimensional array type
+        int[] zeros = new int[dims];
+        Object array = Array.newInstance(base, zeros);
+        return array.getClass();
+    }
+
+    /**
+     * Returns the primitive Class for a given primitive name, or null if not a primitive name.
+     * Accepted names: boolean, byte, short, char, int, long, float, double, void
+     */
+    private static Class<?> getPrimitiveClassFromName(String name) {
+        if (name == null) return null;
+        switch (name) {
+            case "boolean": return boolean.class;
+            case "byte":    return byte.class;
+            case "short":   return short.class;
+            case "char":    return char.class;
+            case "int":     return int.class;
+            case "long":    return long.class;
+            case "float":   return float.class;
+            case "double":  return double.class;
+            case "void":    return void.class;
+            default:        return null;
+        }
     }
 }
