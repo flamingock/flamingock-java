@@ -152,7 +152,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     );
 
 
-    private static final boolean hasProcessed = false;
+    private static boolean hasProcessed = false;
 
     private String resourcesRoot = null;
     private List<String> sourceRoots = null;
@@ -215,6 +215,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, setup, configFile);
         serializer.serializeFullPipeline(flamingockMetadata);
         logger.info("Finished processing annotated classes and generating metadata.");
+        hasProcessed = true;
         return true;
     }
 
