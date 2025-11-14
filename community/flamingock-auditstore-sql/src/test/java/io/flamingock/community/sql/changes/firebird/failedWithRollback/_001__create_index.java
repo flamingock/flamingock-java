@@ -28,7 +28,7 @@ import java.sql.Statement;
 public class _001__create_index {
 
 	@Apply
-	public void execution(Connection connection) throws SQLException {
+	public void apply(Connection connection) throws SQLException {
 		try (Statement stmt = connection.createStatement()) {
 			stmt.execute(
 					"CREATE INDEX idx_standalone_index ON test_table " +
