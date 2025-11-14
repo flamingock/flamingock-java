@@ -16,7 +16,10 @@
 package io.flamingock.community.sql;
 
 import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
+
+import java.time.Duration;
 
 public class InformixContainer extends JdbcDatabaseContainer<InformixContainer> {
 
@@ -40,6 +43,12 @@ public class InformixContainer extends JdbcDatabaseContainer<InformixContainer> 
                         "onmode -wf USER_THREADS=100 && " +
                         "onspaces -c -S sbspace1 -p /opt/ibm/data/sbspace1 -o 0 -s 100000 && " +
                         "tail -f /dev/null");
+        withStartupTimeout(Duration.ofMinutes(5));
+        // Add health check
+        waitingFor(Wait.forLogMessage(".*Informix Dynamic Server Version.*\\n", 1)
+                .withStartupTimeout(Duration.ofMinutes(5)));
+        // Set shared memory for CI environments (avoid permission issues)
+        withSharedMemorySize(256 * 1024 * 1024L); // 256MB
     }
 
     @Override
