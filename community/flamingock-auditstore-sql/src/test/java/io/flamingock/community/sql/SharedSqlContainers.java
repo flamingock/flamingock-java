@@ -15,16 +15,16 @@
  */
 package io.flamingock.community.sql;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.testcontainers.containers.*;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
+import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.sql.DataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 public final class SharedSqlContainers {
 
@@ -90,7 +90,19 @@ public final class SharedSqlContainers {
                 if (!isCi) c.withReuse(true);
                 return c;
             }
-            default:
+            case "informix":
+                return new InformixContainer();
+            case "firebird": {
+                FirebirdJdbcContainer c = new FirebirdJdbcContainer("jacobalberty/firebird:latest");
+                c.withEnv("FIREBIRD_DATABASE", "test.fdb")
+                        .withEnv("ISC_PASSWORD", "masterkey")
+                        .withEnv("FIREBIRD_CHARACTERSET", "UTF8");
+                if (!isCi) {
+                    c.withReuse(true);
+                }
+                return c;
+            }
+             default:
                 throw new IllegalArgumentException("Unsupported dialect: " + dialectName);
         }
     }
@@ -106,6 +118,20 @@ public final class SharedSqlContainers {
         config.setUsername(container.getUsername());
         config.setPassword(container.getPassword());
         config.setDriverClassName(container.getDriverClassName());
+
+        if (container instanceof InformixContainer) {
+            config.setMaximumPoolSize(1);
+            config.setMinimumIdle(0);
+            config.setConnectionTimeout(30000);
+            config.setIdleTimeout(600000);
+            config.setMaxLifetime(1800000);
+            config.setLeakDetectionThreshold(0);
+            config.setValidationTimeout(5000);
+            config.setConnectionTestQuery("SELECT 1 FROM systables WHERE tabid=1");
+            config.setInitializationFailTimeout(-1);
+            config.setAutoCommit(true);
+        }
+
         return new HikariDataSource(config);
     }
 }

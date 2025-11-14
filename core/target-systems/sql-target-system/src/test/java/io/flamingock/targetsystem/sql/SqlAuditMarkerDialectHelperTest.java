@@ -98,12 +98,6 @@ public class SqlAuditMarkerDialectHelperTest {
                     config.setPassword("");
                     config.setDriverClassName("org.sqlite.JDBC");
                     break;
-                case HSQLDB:
-                    config.setJdbcUrl("jdbc:hsqldb:mem:testdb");
-                    config.setUsername("testuser");
-                    config.setPassword("");
-                    config.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
-                    break;
                 case DB2:
                     config.setJdbcUrl("jdbc:h2:mem:testdb;MODE=DB2;DB_CLOSE_DELAY=-1");
                     config.setUsername("testuser");

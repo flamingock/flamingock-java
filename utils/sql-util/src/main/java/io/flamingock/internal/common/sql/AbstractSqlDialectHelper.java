@@ -49,11 +49,12 @@ public class AbstractSqlDialectHelper {
             return SqlDialect.SQLITE;
         } else if (v.contains("h2")) {
             return SqlDialect.H2;
-        } else if (v.contains("hsql")) {
+        /*} else if (v.contains("hsql")) {
             return SqlDialect.HSQLDB;
+         */
         } else if (v.contains("sql server")) {
             return SqlDialect.SQLSERVER;
-        } else if (v.contains("sybase")) {
+        } else if (v.contains("sybase") || v.contains("adaptive server")) {
             return SqlDialect.SYBASE;
         } else if (v.contains("firebird")) {
             return SqlDialect.FIREBIRD;

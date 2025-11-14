@@ -16,7 +16,6 @@ dependencies {
     testImplementation("com.oracle.database.jdbc:ojdbc8:23.2.0.0")
     testImplementation("org.xerial:sqlite-jdbc:3.50.3.0")
     testImplementation("com.h2database:h2:2.2.220")
-    testImplementation("org.hsqldb:hsqldb:2.5.2")
     testImplementation("org.apache.derby:derbytools:10.15.2.0")
     testImplementation("org.firebirdsql.jdbc:jaybird:5.0.10.java8")
     testImplementation("org.testcontainers:junit-jupiter:1.18.3")

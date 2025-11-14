@@ -16,12 +16,10 @@
 package io.flamingock.community.sql;
 
 import io.flamingock.internal.common.sql.SqlDialect;
-import org.testcontainers.containers.*;
+import org.testcontainers.containers.JdbcDatabaseContainer;
+
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,6 +42,7 @@ public class SqlAuditTestHelper {
 
             String createLockTable = getCreateLockTableSql(dialect);
             conn.createStatement().execute(createLockTable);
+
         }
     }
 
@@ -63,6 +62,9 @@ public class SqlAuditTestHelper {
         if (dialect == SqlDialect.ORACLE) {
             return "DROP TABLE " + tableName + " CASCADE CONSTRAINTS";
         }
+        if (dialect == SqlDialect.FIREBIRD || dialect == SqlDialect.INFORMIX) {
+            return "DROP TABLE " + tableName;
+        }
         return "DROP TABLE IF EXISTS " + tableName;
     }
 
@@ -73,13 +75,14 @@ public class SqlAuditTestHelper {
             case MARIADB:
             case SQLITE:
             case H2:
-            case HSQLDB:
+            case FIREBIRD:
                 return "CREATE TABLE test_table (" +
                         "id VARCHAR(255) PRIMARY KEY, " +
                         "name VARCHAR(255), " +
                         "field1 VARCHAR(255), " +
                         "field2 VARCHAR(255))";
             case POSTGRESQL:
+            case DB2:
                 return "CREATE TABLE test_table (" +
                         "id VARCHAR(255) PRIMARY KEY," +
                         "name VARCHAR(255)," +
@@ -91,12 +94,14 @@ public class SqlAuditTestHelper {
                         "name VARCHAR2(255), " +
                         "field1 VARCHAR2(255), " +
                         "field2 VARCHAR2(255))";
-            case DB2:
+            case INFORMIX:
                 return "CREATE TABLE test_table (" +
-                        "id VARCHAR(255) PRIMARY KEY," +
-                        "name VARCHAR(255)," +
-                        "field1 VARCHAR(255)," +
-                        "field2 VARCHAR(255))";
+                        "id VARCHAR(100) PRIMARY KEY, " +
+                        "name VARCHAR(100), " +
+                        "field1 VARCHAR(100), " +
+                        "field2 VARCHAR(100))";
+
+
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }
@@ -108,9 +113,6 @@ public class SqlAuditTestHelper {
             case MARIADB:
             case SQLITE:
             case H2:
-            case HSQLDB:
-            case FIREBIRD:
-            case INFORMIX:
                 return "CREATE TABLE flamingockLock (" +
                         "`key` VARCHAR(255) PRIMARY KEY, " +
                         "status VARCHAR(32), " +
@@ -135,12 +137,26 @@ public class SqlAuditTestHelper {
                         "owner VARCHAR2(255), " +
                         "expires_at TIMESTAMP)";
             case DB2:
-                // Use lock_key in DB2 test DDL to match runtime helper and avoid reserved-key issues
                 return "CREATE TABLE flamingockLock (" +
                         "lock_key VARCHAR(255) PRIMARY KEY, " +
                         "status VARCHAR(32), " +
                         "owner VARCHAR(255), " +
                         "expires_at TIMESTAMP)";
+            case INFORMIX:
+                return "CREATE TABLE flamingockLock (" +
+                        "lock_key VARCHAR(255) PRIMARY KEY," +
+                        "status VARCHAR(32)," +
+                        "owner VARCHAR(255)," +
+                        "expires_at DATETIME YEAR TO FRACTION(3)" +
+                        ")";
+            case FIREBIRD:
+                return "CREATE TABLE flamingockLock (" +
+                        "lock_key VARCHAR(255) PRIMARY KEY," +
+                        "status VARCHAR(32)," +
+                        "owner VARCHAR(255)," +
+                        "expires_at TIMESTAMP" +
+                        ")";
+
             default:
                 throw new UnsupportedOperationException("Dialect not supported: " + dialect);
         }
@@ -179,8 +195,12 @@ public class SqlAuditTestHelper {
             case SQLITE:
                 // SQLite uses sqlite_master for indexes
                 return "SELECT name FROM sqlite_master WHERE type='index' AND name = ?";
+            case INFORMIX:
+                // Informix stores index names in sysindexes
+                return "SELECT idxname FROM sysindexes WHERE idxname = ?";
+            case FIREBIRD:
+                return "SELECT RDB$INDEX_NAME FROM RDB$INDICES WHERE RDB$INDEX_NAME = ?";
             case H2:
-            case HSQLDB:
             default:
                 return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
         }
@@ -195,6 +215,9 @@ public class SqlAuditTestHelper {
                         ps.setString(1, "IDX_STANDALONE_INDEX");
                         ps.setString(2, "TEST_TABLE");
                         break;
+                    case FIREBIRD:
+                        ps.setString(1, "IDX_STANDALONE_INDEX");
+                        break;
                     case DB2:
                         ps.setString(1, "IDX_STANDALONE_INDEX");
                         break;
@@ -203,8 +226,10 @@ public class SqlAuditTestHelper {
                         ps.setString(1, "test_table");
                         ps.setString(2, "idx_standalone_index");
                         break;
+                    case INFORMIX:
+                        ps.setString(1, "idx_standalone_index");
+                        break;
                     case H2:
-                    case HSQLDB:
                         ps.setString(1, "IDX_STANDALONE_INDEX");
                         break;
                     case POSTGRESQL:

@@ -19,6 +19,8 @@ dependencies {
     testImplementation("com.h2database:h2:2.2.224")
     testImplementation("org.mockito:mockito-inline:4.11.0")
     testImplementation("org.xerial:sqlite-jdbc:3.41.2.1")
+    testImplementation("com.ibm.informix:jdbc:4.50.10")
+    testImplementation("org.firebirdsql.jdbc:jaybird:4.0.10.java8")
 }
 
 description = "SQL audit store implementation for distributed change auditing"
