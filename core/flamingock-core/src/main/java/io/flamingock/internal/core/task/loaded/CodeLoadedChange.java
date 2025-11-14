@@ -15,65 +15,52 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.task.ChangeCategory;
-import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
-import io.mongock.api.annotations.BeforeExecution;
-import io.mongock.api.annotations.RollbackBeforeExecution;
 
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.StringJoiner;
 
 public class CodeLoadedChange extends AbstractLoadedChange {
+
+    private final Method applyMethod;
+    private final Optional<Method> rollbackMethod;
+
     CodeLoadedChange(String id,
                      String order,
                      String author,
                      Class<?> changeClass,
+                     Constructor<?> constructor,
+                     Method applyMethod,
+                     Optional<Method> rollbackMethod,
                      boolean runAlways,
                      boolean transactional,
                      boolean systemTask,
                      TargetSystemDescriptor targetSystem,
-                     RecoveryDescriptor recovery) {
-        super(changeClass.getSimpleName(), id, order, author, changeClass, runAlways, transactional, systemTask, targetSystem, recovery);
+                     RecoveryDescriptor recovery,
+                     boolean legacy) {
+        super(changeClass.getSimpleName(), id, order, author, changeClass, constructor, runAlways, transactional, systemTask, targetSystem, recovery, legacy);
+        this.applyMethod = applyMethod;
+        this.rollbackMethod = rollbackMethod;
     }
 
     @Override
-    public Method getExecutionMethod() {
-        Optional<Method> firstAnnotatedMethod = ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Apply.class);
-        return firstAnnotatedMethod
-                .orElseThrow(() -> new IllegalArgumentException(String.format(
-                        "Executable change[%s] without %s method",
-                        getSource(),
-                        Apply.class.getName())));
+    public Method getApplyMethod() {
+        return this.applyMethod;
     }
 
     @Override
     public Optional<Method> getRollbackMethod() {
-        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Rollback.class);
+        return this.rollbackMethod;
     }
 
     @Override
     public boolean hasCategory(ChangeCategory property) {
         return false;
     }
-
-    public Optional<Method> getBeforeExecutionMethod() {
-        return getMethodFromDeprecatedAnnotation(BeforeExecution.class);
-    }
-
-    public Optional<Method> getRollbackBeforeExecutionMethod() {
-        return getMethodFromDeprecatedAnnotation(RollbackBeforeExecution.class);
-    }
-
-    private Optional<Method> getMethodFromDeprecatedAnnotation(Class<? extends Annotation> annotation) {
-        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), annotation);
-    }
-
 
     @Override
     public String pretty() {

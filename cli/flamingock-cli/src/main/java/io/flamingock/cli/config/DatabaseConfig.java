@@ -20,6 +20,7 @@ import java.util.Map;
 public class DatabaseConfig {
     private MongoDBConfig mongodb;
     private DynamoDBConfig dynamodb;
+    private CouchbaseConfig couchbase;
 
     public MongoDBConfig getMongodb() {
         return mongodb;
@@ -37,6 +38,14 @@ public class DatabaseConfig {
         this.dynamodb = dynamodb;
     }
 
+    public CouchbaseConfig getCouchbase() {
+        return couchbase;
+    }
+
+    public void setCouchbase(CouchbaseConfig couchbase) {
+        this.couchbase = couchbase;
+    }
+
     public static class MongoDBConfig {
         private String connectionString;
         private String database;
@@ -44,6 +53,7 @@ public class DatabaseConfig {
         private Integer port;
         private String username;
         private String password;
+        private String collection;
 
         public String getConnectionString() {
             return connectionString;
@@ -92,6 +102,14 @@ public class DatabaseConfig {
         public void setPassword(String password) {
             this.password = password;
         }
+
+        public String getCollection() {
+            return collection;
+        }
+
+        public void setCollection(String collection) {
+            this.collection = collection;
+        }
     }
 
     public static class DynamoDBConfig {
@@ -99,6 +117,7 @@ public class DatabaseConfig {
         private String endpoint;
         private String accessKey;
         private String secretKey;
+        private String table;
         private Map<String, String> properties;
 
         public String getRegion() {
@@ -131,6 +150,71 @@ public class DatabaseConfig {
 
         public void setSecretKey(String secretKey) {
             this.secretKey = secretKey;
+        }
+
+        public String getTable() {
+            return table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
+        }
+
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+
+        public void setProperties(Map<String, String> properties) {
+            this.properties = properties;
+        }
+    }
+
+    public static class CouchbaseConfig {
+        private String bucketName;
+        private String endpoint;
+        private String username;
+        private String password;
+        private String table;
+        private Map<String, String> properties;
+
+        public String getBucketName() {
+            return bucketName;
+        }
+
+        public void setBucketName(String bucketName) {
+            this.bucketName = bucketName;
+        }
+
+        public String getEndpoint() {
+            return endpoint;
+        }
+
+        public void setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getTable() {
+            return table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
         }
 
         public Map<String, String> getProperties() {

@@ -18,7 +18,7 @@ package io.flamingock.community.sql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.community.sql.driver.SqlAuditStore;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
@@ -349,8 +349,8 @@ class SqlAuditStoreTest {
 
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
-                    new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
-                    new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
+                    new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class)),
+                    new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
             ));
 
             SqlAuditStore auditStore = new SqlAuditStore(context.dataSource);

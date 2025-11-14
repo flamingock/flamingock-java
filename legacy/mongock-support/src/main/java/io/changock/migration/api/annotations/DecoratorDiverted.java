@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.mongock.api.annotations;
+package io.changock.migration.api.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,10 +22,12 @@ import java.lang.annotation.Target;
 
 /**
  * For old classes, this annotation can remain. It won't be removed from the legacy library.
- * For new classes, use io.flamingock.core.api.annotations.RollbackBeforeExecution
+ * For new classes, please use io.flamingock.api.annotations
+ * @see io.flamingock.api.annotations.NonLockGuarded
  */
-@Target(ElementType.METHOD)
+@Deprecated
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RollbackBeforeExecution {
+public @interface DecoratorDiverted {
 
 }

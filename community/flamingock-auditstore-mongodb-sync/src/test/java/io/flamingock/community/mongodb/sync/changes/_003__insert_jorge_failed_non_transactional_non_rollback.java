@@ -27,7 +27,7 @@ import org.bson.Document;
 public class _003__insert_jorge_failed_non_transactional_non_rollback {
 
     @Apply
-    public void execution(MongoDatabase mongoDatabase) {
+    public void apply(MongoDatabase mongoDatabase) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("clientCollection");
         collection.insertOne(new Document().append("name", "Jorge"));
         throw new RuntimeException("test");

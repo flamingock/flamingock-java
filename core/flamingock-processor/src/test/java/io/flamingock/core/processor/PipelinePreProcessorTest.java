@@ -18,13 +18,12 @@ package io.flamingock.core.processor;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -400,12 +399,12 @@ public class PipelinePreProcessorTest {
         
         // Initialize logger field
         javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
-        setProcessorField(processor, "logger", new io.flamingock.core.processor.util.LoggerPreProcessor(mockEnv));
+        setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
         
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "buildPipelineFromAnnotation", EnableFlamingock.class, Map.class);
+            "buildPipelineFromAnnotation", EnableFlamingock.class, List.class, Map.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, annotation, changes);
+        return (PreviewPipeline) method.invoke(processor, annotation, Collections.emptyList(), changes);
     }
 
     private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewTask>> changes, EnableFlamingock annotation) throws Exception {
@@ -415,12 +414,12 @@ public class PipelinePreProcessorTest {
         
         // Initialize logger field
         javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
-        setProcessorField(processor, "logger", new io.flamingock.core.processor.util.LoggerPreProcessor(mockEnv));
+        setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
         
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "getPipelineFromProcessChanges", Map.class, EnableFlamingock.class);
+            "getPipelineFromProcessChanges", List.class, Map.class, EnableFlamingock.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, changes, annotation);
+        return (PreviewPipeline) method.invoke(processor, Collections.emptyList(), changes, annotation);
     }
 
     private PreviewPipeline buildPipelineFromFile(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changes) throws Exception {
@@ -430,14 +429,14 @@ public class PipelinePreProcessorTest {
         
         // Initialize logger field
         javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
-        setProcessorField(processor, "logger", new io.flamingock.core.processor.util.LoggerPreProcessor(mockEnv));
+        setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
         
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "buildPipelineFromSpecifiedFile", File.class, Map.class);
+            "buildPipelineFromSpecifiedFile", File.class, List.class, Map.class);
         method.setAccessible(true);
         
         File configFile = tempDir.resolve("pipeline.yaml").toFile();
-        return (PreviewPipeline) method.invoke(processor, configFile, changes);
+        return (PreviewPipeline) method.invoke(processor, configFile, Collections.emptyList(), changes);
     }
 
     private void setProcessorField(FlamingockAnnotationProcessor processor, String fieldName, Object value) throws Exception {
@@ -518,7 +517,7 @@ public class PipelinePreProcessorTest {
     private Map<String, List<AbstractPreviewTask>> createMockChangesMap() {
         Map<String, List<AbstractPreviewTask>> map = new HashMap<>();
         // Create mock tasks for each package so stages can be built
-        AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-author", "test-source", false, true, false, null, RecoveryDescriptor.getDefault()) {};
+        AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-author", "test-source", false, true, false, null, RecoveryDescriptor.getDefault(), false) {};
         
         map.put("com.example.system", Collections.singletonList(mockTask));
         map.put("com.example.system1", Collections.singletonList(mockTask));

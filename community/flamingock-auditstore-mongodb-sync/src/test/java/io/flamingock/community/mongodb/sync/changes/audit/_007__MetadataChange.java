@@ -27,7 +27,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _007__MetadataChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully
         // Metadata testing will be done through test configuration
         System.out.println("Executing change with metadata for audit testing");

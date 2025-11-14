@@ -15,11 +15,10 @@
  */
 package io.flamingock.core.processor.util;
 
-import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.discover.ChangeDiscoverer;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
-import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
+import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
@@ -37,25 +36,6 @@ public final class AnnotationFinder {
         this.logger = logger;
     }
 
-    public Map<String, List<AbstractPreviewTask>> getCodedChangesMapByPackage() {
-        logger.info("Searching for code-based changes (Java classes annotated with @Change annotation)");
-        Collection<CodePreviewChange> allChanges = new LinkedList<>(findAnnotatedChanges());
-        Map<String, List<AbstractPreviewTask>> mapByPackage = new HashMap<>();
-        for(CodePreviewChange item: allChanges) {
-            mapByPackage.compute(item.getSourcePackage(), (key, descriptors) -> {
-                List<AbstractPreviewTask> newDescriptors;
-                if(descriptors != null) {
-                    newDescriptors = descriptors;
-                } else {
-                    newDescriptors = new ArrayList<>();
-                }
-                newDescriptors.add(item);
-                return newDescriptors;
-            });
-        }
-        return mapByPackage;
-    }
-
     public Optional<EnableFlamingock> getPipelineAnnotation() {
         logger.info("Searching for @EnableFlamingock annotation");
         return roundEnv.getElementsAnnotatedWith(EnableFlamingock.class)
@@ -66,19 +46,36 @@ public final class AnnotationFinder {
                 .findFirst();
     }
 
-    private Collection<CodePreviewChange> findAnnotatedChanges() {
-        return roundEnv.getElementsAnnotatedWith(Change.class)
+    public Collection<CodePreviewChange> findAnnotatedChanges() {
+        logger.info("Searching for code-based changes");
+        return getAllChangeDiscoverers()
                 .stream()
-                .filter(e -> e.getKind() == ElementKind.CLASS)
-                .map(e -> (TypeElement) e)
-                .map(this::buildCodePreviewChange)
-                .filter(Objects::nonNull)
+                .peek(cd -> logger.info(String.format("Using %s for discover changes", cd.getClass().getName())))
+                .map(cd -> cd.findAnnotatedChanges(roundEnv, logger))
+                .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
-    private CodePreviewChange buildCodePreviewChange(TypeElement typeElement) {
-        return Optional.ofNullable(PreviewTaskBuilder.getCodeBuilder(typeElement).build())
-                .map(CodePreviewChange.class::cast)
-                .orElse(null);
+    private List<ChangeDiscoverer> getAllChangeDiscoverers() {
+        Set<String> seen = new LinkedHashSet<>();
+        List<ChangeDiscoverer> result = new ArrayList<>();
+
+        ClassLoader[] loaders = new ClassLoader[] {
+                Thread.currentThread().getContextClassLoader(),
+                ChangeDiscoverer.class.getClassLoader(),
+                ClassLoader.getSystemClassLoader()
+        };
+
+        for (ClassLoader cl : loaders) {
+            if (cl == null) continue;
+            ServiceLoader<ChangeDiscoverer> sl = ServiceLoader.load(ChangeDiscoverer.class, cl);
+            for (ChangeDiscoverer d : sl) {
+                if (seen.add(d.getClass().getName())) {
+                    result.add(d);
+                }
+            }
+        }
+        return result;
     }
+
 }

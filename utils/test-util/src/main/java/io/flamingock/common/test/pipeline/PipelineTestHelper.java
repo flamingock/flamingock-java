@@ -16,7 +16,7 @@
 package io.flamingock.common.test.pipeline;
 
 import io.flamingock.api.StageType;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;

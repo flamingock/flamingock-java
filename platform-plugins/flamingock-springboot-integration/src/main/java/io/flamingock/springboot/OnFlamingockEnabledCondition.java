@@ -16,7 +16,7 @@
 package io.flamingock.springboot;
 
 import io.flamingock.api.SetupType;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;

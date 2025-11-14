@@ -45,7 +45,6 @@ class SimpleConfigLoaderTest {
         assertThat(config.getAudit().getMongodb()).isNotNull();
         assertThat(config.getAudit().getMongodb().getConnectionString()).isEqualTo("mongodb://localhost:27017");
         assertThat(config.getAudit().getMongodb().getDatabase()).isEqualTo("test");
-        assertThat(config.getAudit().getDynamodb()).isNull();
     }
 
     @Test
@@ -63,7 +62,25 @@ class SimpleConfigLoaderTest {
         assertThat(config.getAudit().getDynamodb()).isNotNull();
         assertThat(config.getAudit().getDynamodb().getRegion()).isEqualTo("us-east-1");
         assertThat(config.getAudit().getDynamodb().getEndpoint()).isEqualTo("http://localhost:8000");
-        assertThat(config.getAudit().getMongodb()).isNull();
+    }
+
+    @Test
+    void shouldLoadValidCouchbaseConfiguration() throws IOException {
+        // Given
+        Path configFile = tempDir.resolve("couchbase-config.yml");
+        Files.write(configFile, TestUtils.getValidCouchbaseYaml().getBytes());
+
+        // When
+        FlamingockConfig config = ConfigLoader.loadConfig(configFile.toString());
+
+        // Then
+        assertThat(config.getServiceIdentifier()).isEqualTo("test-cli");
+        assertThat(config.getAudit()).isNotNull();
+        assertThat(config.getAudit().getCouchbase()).isNotNull();
+        assertThat(config.getAudit().getCouchbase().getEndpoint()).isEqualTo("couchbase://localhost:12110");
+        assertThat(config.getAudit().getCouchbase().getUsername()).isEqualTo("test-user");
+        assertThat(config.getAudit().getCouchbase().getPassword()).isEqualTo("test-password");
+        assertThat(config.getAudit().getCouchbase().getBucketName()).isEqualTo("test-bucket");
     }
 
     @Test
@@ -88,6 +105,18 @@ class SimpleConfigLoaderTest {
 
         // Then
         assertThat(type).isEqualTo(ConfigLoader.DatabaseType.DYNAMODB);
+    }
+
+    @Test
+    void shouldDetectCouchbaseType() throws IOException {
+        // Given
+        FlamingockConfig config = TestUtils.createCouchbaseConfig();
+
+        // When
+        ConfigLoader.DatabaseType type = ConfigLoader.detectDatabaseType(config);
+
+        // Then
+        assertThat(type).isEqualTo(ConfigLoader.DatabaseType.COUCHBASE);
     }
 
     @Test

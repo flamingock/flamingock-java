@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class _004__insert_jorge_happy_non_transactional {
 
     @Apply
-    public void execution(DynamoDbClient client) {
+    public void apply(DynamoDbClient client) {
         DynamoDbTable<UserEntity> table = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(client)
                 .build()

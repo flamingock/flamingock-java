@@ -15,6 +15,7 @@ dependencies {
         api("io.flamingock:flamingock-mongodb-sync-template:${version}")
         api("io.flamingock:flamingock-springboot-integration:${version}")
         api("io.flamingock:flamingock-graalvm:${version}")
+        api("io.flamingock:mongock-support:${version}")
     }
 }
 

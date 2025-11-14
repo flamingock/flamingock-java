@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * This class is a reflection version of the ExecutableTask.
  * <p>
- * It creates a new instance on demand in every execution(execution and rollback), because it's intended to be applied
+ * It creates a new instance on demand in every execution(apply and rollback), because it's intended to be applied
  * just once. The only case it will be potentially applied twice is if it fails, and in that case will only happen
  * once(in case of sequential execution) or very few times(in case or parallel execution and happen to fail multiple
  * concurrent tasks at the same time),because after that the process will abort.

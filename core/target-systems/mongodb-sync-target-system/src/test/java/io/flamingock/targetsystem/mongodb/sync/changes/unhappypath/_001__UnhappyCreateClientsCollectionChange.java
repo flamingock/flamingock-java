@@ -26,7 +26,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _001__UnhappyCreateClientsCollectionChange {
 
     @Apply
-    public void execution(@NonLockGuarded MongoDatabase mongoDatabase) {
+    public void apply(@NonLockGuarded MongoDatabase mongoDatabase) {
         mongoDatabase.createCollection("clientCollection");
     }
 }

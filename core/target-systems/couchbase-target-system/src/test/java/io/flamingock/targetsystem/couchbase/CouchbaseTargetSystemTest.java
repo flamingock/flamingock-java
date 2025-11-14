@@ -26,7 +26,7 @@ import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMoc
 import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
@@ -147,8 +147,8 @@ public class CouchbaseTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -198,8 +198,8 @@ public class CouchbaseTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", _001__UnhappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__UnhappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -254,8 +254,8 @@ public class CouchbaseTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "execution", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "execution", true)
+                        .addTask("create-clients-collection", _001__HappyCreateClientsCollectionChange.class.getName(), "apply", false)
+                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN

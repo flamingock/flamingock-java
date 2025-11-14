@@ -17,16 +17,18 @@ package io.flamingock.internal.common.core.preview.builder;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.FlamingockConstructor;
 import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.preview.ChangeOrderExtractor;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
-import io.mongock.api.annotations.BeforeExecution;
-import io.mongock.api.annotations.RollbackBeforeExecution;
+import io.flamingock.internal.util.ReflectionUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.lang.model.element.Element;
@@ -36,22 +38,24 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
-//TODO how to set transactional and runAlways
 public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewChange> {
 
     private String id;
     private String order;
     private String author;
     private String sourceClassPath;
-    private PreviewMethod executionMethod;
+    private PreviewConstructor constructor;
+    private PreviewMethod applyMethod;
     private PreviewMethod rollbackMethod;
-    private PreviewMethod beforeExecutionMethod;
-    private PreviewMethod rollbackBeforeExecutionMethod;
     private boolean runAlways = false;
     private boolean transactional;
     private boolean system;
@@ -61,11 +65,11 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private CodePreviewTaskBuilder() {
     }
 
-    static CodePreviewTaskBuilder builder() {
+    public static CodePreviewTaskBuilder builder() {
         return new CodePreviewTaskBuilder();
     }
 
-    static CodePreviewTaskBuilder builder(TypeElement typeElement) {
+    public static CodePreviewTaskBuilder builder(TypeElement typeElement) {
         return  builder().setTypeElement(typeElement);
     }
 
@@ -99,22 +103,19 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         return this;
     }
 
-    public CodePreviewTaskBuilder setExecutionMethod(PreviewMethod executionMethod) {
-        this.executionMethod = executionMethod;
+    public CodePreviewTaskBuilder setConstructor(PreviewConstructor constructor) {
+        this.constructor = constructor;
+        return this;
+    }
+
+    public CodePreviewTaskBuilder setApplyMethod(PreviewMethod executionMethod) {
+        this.applyMethod = executionMethod;
         return this;
     }
 
     public CodePreviewTaskBuilder setRollbackMethod(PreviewMethod rollbackMethod) {
         this.rollbackMethod = rollbackMethod;
         return this;
-    }
-
-    public void setBeforeExecutionMethod(PreviewMethod beforeExecutionMethod) {
-        this.beforeExecutionMethod = beforeExecutionMethod;
-    }
-
-    public void setRollbackBeforeExecutionMethod(PreviewMethod rollbackBeforeExecutionMethod) {
-        this.rollbackBeforeExecutionMethod = rollbackBeforeExecutionMethod;
     }
 
     public CodePreviewTaskBuilder setRunAlways(boolean runAlways) {
@@ -145,10 +146,10 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
             setOrder(order);
             setAuthor(changeAnnotation.author());
             setSourceClassPath(classPath);
-            setExecutionMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
+            setConstructor(getPreviewConstructor(typeElement));
+            setApplyMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
             setRollbackMethod(getAnnotatedMethodInfo(typeElement, Rollback.class).orElse(null));
-            setBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, BeforeExecution.class).orElse(null));
-            setRollbackBeforeExecutionMethod(getAnnotatedMethodInfo(typeElement, RollbackBeforeExecution.class).orElse(null));
+            setRunAlways(false); //TODO: how to set runAlways
             setTransactional(changeAnnotation.transactional());
             setSystem(false);
         }
@@ -177,15 +178,15 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
                 order,
                 author,
                 sourceClassPath,
-                executionMethod,
+                constructor,
+                applyMethod,
                 rollbackMethod,
-                beforeExecutionMethod,
-                rollbackBeforeExecutionMethod,
                 runAlways,
                 transactional,
                 system,
                 targetSystem,
-                recovery);
+                recovery,
+                false);
     }
 
     private Optional<PreviewMethod> getAnnotatedMethodInfo(TypeElement typeElement,
@@ -197,11 +198,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
                 ExecutableElement method = (ExecutableElement) enclosedElement;
                 String methodName = method.getSimpleName().toString();
 
-                List<String> parameterTypes = new ArrayList<>();
-                for (VariableElement param : method.getParameters()) {
-                    TypeMirror paramType = param.asType();
-                    parameterTypes.add(paramType.toString()); // fully qualified name (e.g., java.lang.String)
-                }
+                List<String> parameterTypes = ReflectionUtil.getParametersTypesQualifiedNames(method);
 
                 return Optional.of(new PreviewMethod(methodName, parameterTypes));
             }
@@ -210,4 +207,28 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         return Optional.empty();
     }
 
+    private PreviewConstructor getPreviewConstructor(TypeElement typeElement) {
+        ExecutableElement constructorElement = getConstructorElement(typeElement);
+        List<String> parameterTypes = ReflectionUtil.getParametersTypesQualifiedNames(constructorElement);
+        return new PreviewConstructor(parameterTypes);
+    }
+
+    private ExecutableElement getConstructorElement(TypeElement typeElement) {
+        try {
+            return ReflectionUtil.getConstructorWithAnnotationPreference(typeElement, FlamingockConstructor.class);
+        } catch (ReflectionUtil.MultipleAnnotatedConstructorsFound ex) {
+            throw new FlamingockException("Found multiple constructors for class[%s] annotated with %s." +
+                    " Annotate the one you want Flamingock to use to instantiate your change",
+                    typeElement.getQualifiedName(),
+                    FlamingockConstructor.class.getName());
+        } catch (ReflectionUtil.MultipleConstructorsFound ex) {
+            throw new FlamingockException("Found multiple constructors for class[%s].\n" +
+                    "When more than one constructor, exactly one of them must be annotated with %s, and it will be taken as default ",
+                    typeElement.getQualifiedName(),
+                    FlamingockConstructor.class.getSimpleName()
+            );
+        } catch (ReflectionUtil.ConstructorNotFound ex) {
+            throw new FlamingockException("Cannot find a valid constructor for class[%s]", typeElement.getQualifiedName());
+        }
+    }
 }

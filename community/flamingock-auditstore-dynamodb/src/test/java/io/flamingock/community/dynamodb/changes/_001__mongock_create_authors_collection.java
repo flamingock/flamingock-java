@@ -83,7 +83,7 @@ public class _001__mongock_create_authors_collection {
 
     @Apply
     @Execution
-    public void execution(DynamoDbClient client) {
+    public void apply(DynamoDbClient client) {
         final TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = TransactWriteItemsEnhancedRequest.builder();
 
         for (int i = 0; i < INITIAL_CLIENTS; i++)
@@ -94,7 +94,7 @@ public class _001__mongock_create_authors_collection {
 
     @Rollback
     @RollbackExecution
-    public void rollbackExecution(DynamoDbClient client) {
+    public void rollback(DynamoDbClient client) {
         final TransactWriteItemsEnhancedRequest.Builder writeRequestBuilder = TransactWriteItemsEnhancedRequest.builder();
 
         for (int i = 0; i < INITIAL_CLIENTS; i++)

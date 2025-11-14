@@ -2,7 +2,6 @@ val jacksonVersion = "2.16.0"
 
 dependencies {
     api(project(":core:flamingock-core-commons"))
-    api(project(":core:flamingock-processor"))
     api(project(":core:importer:flamingock-importer"))
     api(project(":utils:general-util"))
 
@@ -16,7 +15,6 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 
 
-//    testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":utils:test-util"))
 }
 

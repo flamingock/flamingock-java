@@ -37,7 +37,7 @@ public class CouchbaseImporterChangeTemplate extends AbstractImporterChangeTempl
     }
 
     @Apply
-    public void execution(Cluster cluster,
+    public void apply(Cluster cluster,
                           Bucket bucket, //TODO this is the main bucket, we need to provide a way to get a custom bucket (target system)
                           @NonLockGuarded AuditWriter auditWriter,
                           @NonLockGuarded PipelineDescriptor pipelineDescriptor) {

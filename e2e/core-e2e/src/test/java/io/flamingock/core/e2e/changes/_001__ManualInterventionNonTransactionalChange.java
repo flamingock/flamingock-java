@@ -32,7 +32,7 @@ import io.flamingock.api.annotations.TargetSystem;
 public class _001__ManualInterventionNonTransactionalChange {
 
     @Apply
-    public void execution() {
+    public void apply() {
         // Simple operation that completes successfully
         System.out.println("Executing manual-intervention non-transactional change");
     }

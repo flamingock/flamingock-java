@@ -15,13 +15,15 @@
  */
 package io.flamingock.cli.service;
 
+import com.couchbase.client.java.Cluster;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoDatabase;
 import io.flamingock.cli.config.ConfigLoader;
 import io.flamingock.cli.config.DatabaseConfig;
 import io.flamingock.cli.config.FlamingockConfig;
+import io.flamingock.cli.factory.CouchbaseClusterFactory;
 import io.flamingock.cli.factory.DynamoDBClientFactory;
 import io.flamingock.cli.factory.MongoClientFactory;
+import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
 import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import io.flamingock.community.mongodb.sync.driver.MongoDBSyncAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -138,6 +140,8 @@ public class AuditService {
                 return createMongoAuditStore(context);
             case DYNAMODB:
                 return createDynamoAuditStore(context);
+            case COUCHBASE:
+                return createCouchbaseAuditStore(context);
             default:
                 throw new IllegalStateException("Unsupported database type: " + databaseType);
         }
@@ -149,7 +153,8 @@ public class AuditService {
         // Create MongoDB clients
         MongoClient mongoClient = MongoClientFactory.createMongoClient(mongoConfig);
 
-        return new MongoDBSyncAuditStore(mongoClient, mongoConfig.getDatabase());
+        return new MongoDBSyncAuditStore(mongoClient, mongoConfig.getDatabase())
+            .withAuditRepositoryName(mongoConfig.getCollection());
     }
 
     private AuditStore<?> createDynamoAuditStore(Context context) {
@@ -158,6 +163,17 @@ public class AuditService {
         // Create DynamoDB client
         DynamoDbClient dynamoClient = DynamoDBClientFactory.createDynamoDBClient(dynamoConfig);
 
-        return new DynamoDBAuditStore(dynamoClient);
+        return new DynamoDBAuditStore(dynamoClient)
+            .withAuditRepositoryName(dynamoConfig.getTable());
+    }
+
+    private AuditStore<?> createCouchbaseAuditStore(Context context) {
+        DatabaseConfig.CouchbaseConfig couchbaseConfig = config.getAudit().getCouchbase();
+
+        // Create Couchbase cluster
+        Cluster couchbaseCluster = CouchbaseClusterFactory.createCouchbaseCluster(couchbaseConfig);
+
+        return new CouchbaseAuditStore(couchbaseCluster, couchbaseConfig.getBucketName())
+            .withAuditRepositoryName(couchbaseConfig.getTable());
     }
 }

@@ -24,7 +24,7 @@ import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
-import io.flamingock.core.processor.util.Deserializer;
+import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;

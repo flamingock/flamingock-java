@@ -29,7 +29,7 @@ import java.sql.SQLException;
 public class _002__insert_document {
 
     @Apply
-    public void execution(Connection connection) throws SQLException {
+    public void apply(Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO test_table (id, name) VALUES (?, ?)")) {
             ps.setString(1, "test-client-Federico");

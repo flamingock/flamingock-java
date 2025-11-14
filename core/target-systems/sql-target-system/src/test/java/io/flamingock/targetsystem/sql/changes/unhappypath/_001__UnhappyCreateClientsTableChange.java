@@ -29,7 +29,7 @@ import java.sql.Statement;
 public class _001__UnhappyCreateClientsTableChange {
 
     @Apply
-    public void execution(Connection connection) throws SQLException {
+    public void apply(Connection connection) throws SQLException {
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(
                     "CREATE TABLE client_table (" +

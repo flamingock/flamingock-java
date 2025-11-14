@@ -47,22 +47,6 @@ public class TaskExecutionChecker {
         history.add(TestTaskExecution.ROLLBACK_EXECUTION);
     }
 
-    public boolean isBeforeApplied() {
-        return history.contains(TestTaskExecution.BEFORE_EXECUTION);
-    }
-
-    public void markBeforeExecution() {
-        history.add(TestTaskExecution.BEFORE_EXECUTION);
-    }
-
-    public boolean isBeforeExecutionRolledBack() {
-        return history.contains(TestTaskExecution.ROLLBACK_BEFORE_EXECUTION);
-    }
-
-    public void markBeforeExecutionRollBack() {
-        history.add(TestTaskExecution.ROLLBACK_BEFORE_EXECUTION);
-    }
-
     public void checkOrderStrict(TestTaskExecution execution, TestTaskExecution... otherExecutions) {
         List<TestTaskExecution> allExecutions = new ArrayList<>();
         allExecutions.add(execution);

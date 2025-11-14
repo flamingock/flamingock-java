@@ -21,10 +21,10 @@ import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import java.beans.Transient;
 
 public class CodePreviewChange extends AbstractPreviewTask {
-    private PreviewMethod executionMethodName;
-    private PreviewMethod rollbackMethodName;
-    private PreviewMethod beforeExecutionMethodName;
-    private PreviewMethod rollbackBeforeExecutionMethodName;
+
+    private PreviewConstructor previewConstructor;
+    private PreviewMethod applyPreviewMethod;
+    private PreviewMethod rollbackPreviewMethod;
 
     private String sourcePackage;
 
@@ -36,53 +36,42 @@ public class CodePreviewChange extends AbstractPreviewTask {
                              String order,
                              String author,
                              String sourceClassPath,
-                             PreviewMethod executionMethodPreview,
-                             PreviewMethod rollbackMethodPreview,
-                             PreviewMethod beforeExecutionMethodPreview,
-                             PreviewMethod rollbackBeforeExecutionMethodPreview,
+                             PreviewConstructor previewConstructor,
+                             PreviewMethod applyPreviewMethod,
+                             PreviewMethod rollbackPreviewMethod,
                              boolean runAlways,
                              boolean transactional,
                              boolean system,
                              TargetSystemDescriptor targetSystem,
-                             RecoveryDescriptor recovery) {
-        super(id, order, author, sourceClassPath, runAlways, transactional, system, targetSystem, recovery);
-        this.executionMethodName = executionMethodPreview;
-        this.rollbackMethodName = rollbackMethodPreview;
-        this.beforeExecutionMethodName = beforeExecutionMethodPreview;
-        this.rollbackBeforeExecutionMethodName = rollbackBeforeExecutionMethodPreview;
+                             RecoveryDescriptor recovery,
+                             boolean legacy) {
+        super(id, order, author, sourceClassPath, runAlways, transactional, system, targetSystem, recovery, legacy);
+        this.previewConstructor = previewConstructor;
+        this.applyPreviewMethod = applyPreviewMethod;
+        this.rollbackPreviewMethod = rollbackPreviewMethod;
         this.sourcePackage = sourceClassPath.substring(0, sourceClassPath.lastIndexOf("."));
     }
 
-    public PreviewMethod getExecutionMethodName() {
-        return executionMethodName;
+    public PreviewConstructor getPreviewConstructor() { return previewConstructor; }
+
+    public void setPreviewConstructor(PreviewConstructor previewConstructor) {
+        this.previewConstructor = previewConstructor;
     }
 
-    public void setExecutionMethodName(PreviewMethod executionMethodName) {
-        this.executionMethodName = executionMethodName;
+    public PreviewMethod getApplyPreviewMethod() {
+        return applyPreviewMethod;
     }
 
-    public PreviewMethod getRollbackMethodName() {
-        return rollbackMethodName;
+    public void setApplyPreviewMethod(PreviewMethod applyPreviewMethod) {
+        this.applyPreviewMethod = applyPreviewMethod;
+    }
+
+    public PreviewMethod getRollbackPreviewMethod() {
+        return rollbackPreviewMethod;
     }
 
     public void setRollbackMethodName(PreviewMethod rollbackMethodName) {
-        this.rollbackMethodName = rollbackMethodName;
-    }
-
-    public PreviewMethod getBeforeExecutionMethodName() {
-        return beforeExecutionMethodName;
-    }
-
-    public void setBeforeExecutionMethodName(PreviewMethod beforeExecutionMethodName) {
-        this.beforeExecutionMethodName = beforeExecutionMethodName;
-    }
-
-    public PreviewMethod getRollbackBeforeExecutionMethodName() {
-        return rollbackBeforeExecutionMethodName;
-    }
-
-    public void setRollbackBeforeExecutionMethodName(PreviewMethod rollbackBeforeExecutionMethodName) {
-        this.rollbackBeforeExecutionMethodName = rollbackBeforeExecutionMethodName;
+        this.rollbackPreviewMethod = rollbackMethodName;
     }
 
     @Transient
