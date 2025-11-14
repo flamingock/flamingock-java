@@ -21,7 +21,8 @@ public enum SqlDialect {
     POSTGRESQL,
     SQLITE,
     H2,
-    HSQLDB,
+    //TODO implement
+    //HSQLDB,
     SQLSERVER,
     SYBASE,
     FIREBIRD,

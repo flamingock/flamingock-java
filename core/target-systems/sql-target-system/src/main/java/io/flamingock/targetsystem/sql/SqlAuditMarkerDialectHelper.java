@@ -77,11 +77,6 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
                 return String.format(
                     "MERGE INTO %s (task_id, operation) KEY (task_id) VALUES (?, ?)",
                     tableName);
-            case HSQLDB:
-                return String.format(
-                    "MERGE INTO %s AS t USING (VALUES(?,?)) AS s(task_id,operation) ON t.task_id = s.task_id " +
-                        "WHEN MATCHED THEN UPDATE SET t.operation = s.operation WHEN NOT MATCHED THEN INSERT (task_id, operation) VALUES (s.task_id, s.operation)",
-                    tableName);
             case INFORMIX:
                 return String.format(
                     "INSERT INTO %s (task_id, operation) VALUES (?, ?) ON DUPLICATE KEY UPDATE operation = ?",
@@ -98,7 +93,6 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
             case POSTGRESQL:
             case SQLITE:
             case H2:
-            case HSQLDB:
             case SQLSERVER:
             case SYBASE:
             case FIREBIRD:

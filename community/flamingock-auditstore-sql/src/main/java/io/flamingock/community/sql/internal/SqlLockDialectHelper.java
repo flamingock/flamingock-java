@@ -57,7 +57,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
             case MARIADB:
             case SQLITE:
             case H2:
-            case HSQLDB:
                 return String.format(
                         "CREATE TABLE IF NOT EXISTS %s (" +
                                 "`key` VARCHAR(255) PRIMARY KEY," +
@@ -190,7 +189,6 @@ public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
                                 "WHEN NOT MATCHED THEN INSERT (\"key\", status, owner, expires_at) VALUES (s.\"key\", s.status, s.owner, s.expires_at)",
                         tableName);
             case H2:
-            case HSQLDB:
                 return String.format(
                         "MERGE INTO %s (`key`, status, owner, expires_at) KEY (`key`) VALUES (?, ?, ?, ?)",
                         tableName);

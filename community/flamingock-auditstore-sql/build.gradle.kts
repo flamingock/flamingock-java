@@ -21,7 +21,6 @@ dependencies {
     testImplementation("org.xerial:sqlite-jdbc:3.41.2.1")
     testImplementation("com.ibm.informix:jdbc:4.50.10")
     testImplementation("org.firebirdsql.jdbc:jaybird:4.0.10.java8")
-    testImplementation("org.hsqldb:hsqldb:2.7.2")
 }
 
 description = "SQL audit store implementation for distributed change auditing"

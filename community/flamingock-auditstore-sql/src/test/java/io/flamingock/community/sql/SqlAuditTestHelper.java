@@ -75,7 +75,6 @@ public class SqlAuditTestHelper {
             case MARIADB:
             case SQLITE:
             case H2:
-            case HSQLDB:
             case FIREBIRD:
                 return "CREATE TABLE test_table (" +
                         "id VARCHAR(255) PRIMARY KEY, " +
@@ -114,7 +113,6 @@ public class SqlAuditTestHelper {
             case MARIADB:
             case SQLITE:
             case H2:
-            case HSQLDB:
                 return "CREATE TABLE flamingockLock (" +
                         "`key` VARCHAR(255) PRIMARY KEY, " +
                         "status VARCHAR(32), " +
@@ -203,7 +201,6 @@ public class SqlAuditTestHelper {
             case FIREBIRD:
                 return "SELECT RDB$INDEX_NAME FROM RDB$INDICES WHERE RDB$INDEX_NAME = ?";
             case H2:
-            case HSQLDB:
             default:
                 return "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE INDEX_NAME = ?";
         }
@@ -233,7 +230,6 @@ public class SqlAuditTestHelper {
                         ps.setString(1, "idx_standalone_index");
                         break;
                     case H2:
-                    case HSQLDB:
                         ps.setString(1, "IDX_STANDALONE_INDEX");
                         break;
                     case POSTGRESQL:
