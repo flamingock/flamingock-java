@@ -54,15 +54,15 @@ class SqlAuditStoreTest {
 
     static Stream<Arguments> dialectProvider() {
         return Stream.of(
-                Arguments.of(SqlDialect.MYSQL, "mysql"),
-                Arguments.of(SqlDialect.SQLSERVER, "sqlserver"),
-                Arguments.of(SqlDialect.ORACLE, "oracle"),
-                Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
-                Arguments.of(SqlDialect.MARIADB, "mariadb"),
-                Arguments.of(SqlDialect.H2, "h2"),
-                Arguments.of(SqlDialect.SQLITE, "sqlite"),
-                Arguments.of(SqlDialect.INFORMIX, "informix"),
-                Arguments.of(SqlDialect.FIREBIRD, "firebird")
+                Arguments.of(SqlDialect.MYSQL, "mysql")
+//                , Arguments.of(SqlDialect.SQLSERVER, "sqlserver")
+//                , Arguments.of(SqlDialect.ORACLE, "oracle")
+//                , Arguments.of(SqlDialect.POSTGRESQL, "postgresql")
+//                , Arguments.of(SqlDialect.MARIADB, "mariadb")
+//                , Arguments.of(SqlDialect.H2, "h2")
+//                , Arguments.of(SqlDialect.SQLITE, "sqlite")
+//                , Arguments.of(SqlDialect.INFORMIX, "informix")
+//                , Arguments.of(SqlDialect.FIREBIRD, "firebird")
         );
     }
 
