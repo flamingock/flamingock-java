@@ -37,9 +37,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,18 +52,29 @@ class SqlAuditStoreTest {
     private TestContext context;
 
     static Stream<Arguments> dialectProvider() {
-        return Stream.of(
-                Arguments.of(SqlDialect.MYSQL, "mysql")
-//                , Arguments.of(SqlDialect.SQLSERVER, "sqlserver")
-//                , Arguments.of(SqlDialect.ORACLE, "oracle")
-//                , Arguments.of(SqlDialect.POSTGRESQL, "postgresql")
-//                , Arguments.of(SqlDialect.MARIADB, "mariadb")
-//                , Arguments.of(SqlDialect.H2, "h2")
-//                , Arguments.of(SqlDialect.SQLITE, "sqlite")
-//                , Arguments.of(SqlDialect.INFORMIX, "informix")
-//                , Arguments.of(SqlDialect.FIREBIRD, "firebird")
+        String enabledDialects = System.getProperty("sql.test.dialects", "mysql");
+        Set<String> enabled = Arrays.stream(enabledDialects.split(","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        Stream<Arguments> allDialects = Stream.of(
+                Arguments.of(SqlDialect.MYSQL, "mysql"),
+                Arguments.of(SqlDialect.SQLSERVER, "sqlserver"),
+                Arguments.of(SqlDialect.ORACLE, "oracle"),
+                Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
+                Arguments.of(SqlDialect.MARIADB, "mariadb"),
+                Arguments.of(SqlDialect.H2, "h2"),
+                Arguments.of(SqlDialect.SQLITE, "sqlite"),
+                Arguments.of(SqlDialect.INFORMIX, "informix"),
+                Arguments.of(SqlDialect.FIREBIRD, "firebird")
         );
+
+        return allDialects.filter(args -> {
+            String dialectName = (String) args.get()[1];
+            return enabled.contains(dialectName);
+        });
     }
+
 
     @BeforeAll
     void startContainers() {

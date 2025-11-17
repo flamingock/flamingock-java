@@ -1,3 +1,5 @@
+import java.time.Duration
+
 dependencies {
     api(project(":core:flamingock-core"))
     api(project(":core:target-systems:sql-target-system"))
@@ -34,3 +36,25 @@ java {
 configurations.testImplementation {
     extendsFrom(configurations.compileOnly.get())
 }
+
+tasks.test {
+    // CI-specific configuration
+    val isCI = System.getenv("CI")?.toBoolean() ?: false
+    val enabledDialects = System.getProperty("sql.test.dialects") ?: if (isCI) "mysql" else "mysql,postgresql,mariadb"
+
+    systemProperty("sql.test.dialects", enabledDialects)
+
+    // Parallel execution control
+    maxParallelForks = if (isCI) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+
+    // Timeout for long-running database tests
+    if (isCI) {
+        timeout.set(Duration.ofMinutes(30))
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = false
+    }
+}
+

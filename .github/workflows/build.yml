@@ -16,4 +16,6 @@ jobs:
           github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
 
       - name: Unit and Integration tests
-        run: ./gradlew clean build
+        run: |
+          ./gradlew clean build \
+            -Psql.test.dialects=mysql
