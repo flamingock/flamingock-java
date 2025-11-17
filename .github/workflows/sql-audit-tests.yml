@@ -1,0 +1,48 @@
+name: SQL Audit Store Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      dialects:
+        description: 'Database dialects to test (comma-separated: mysql,postgresql,mariadb,sqlserver,oracle,informix,firebird,h2,sqlite)'
+        required: false
+        default: 'mysql,postgresql,mariadb'
+
+jobs:
+  test-sql-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run SQL Audit Store Tests
+        env:
+          ENABLED_DIALECTS: ${{ github.event.inputs.dialects || 'mysql,postgresql,mariadb' }}
+        run: |
+          ./gradlew :community:flamingock-auditstore-sql:test \
+            -Psql.test.dialects="${ENABLED_DIALECTS}" \
+            --info
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-audit-test-reports
+          path: |
+            community/flamingock-auditstore-sql/build/reports/tests/
+            community/flamingock-auditstore-sql/build/test-results/
+          retention-days: 7
