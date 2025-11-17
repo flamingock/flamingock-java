@@ -303,7 +303,6 @@ public class PreviewStage {
          * @throws RuntimeException if the name is not set or no changes are provided
          */
         public T build() {
-
             Collection<File> resourcesDirectories = new LinkedList<>();
 
             if (resourcesDir != null) {
@@ -320,6 +319,7 @@ public class PreviewStage {
                         .filter(FileUtil::isExistingDir)
                         .forEach(resourcesDirectories::add);
             }
+
 
             if (name == null || name.isEmpty()) {
                 throw new RuntimeException("Stage requires name");

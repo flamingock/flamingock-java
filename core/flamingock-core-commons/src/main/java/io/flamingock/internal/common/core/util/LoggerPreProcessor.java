@@ -24,8 +24,11 @@ public class LoggerPreProcessor {
 
     private final ProcessingEnvironment processingEnv;
 
+    private final boolean verboseEnabled;
+
     public LoggerPreProcessor(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
+        this.verboseEnabled = "true".equals(processingEnv.getOptions().get("flamingock.verbose"));
     }
 
     public void info(String message) {
@@ -38,5 +41,11 @@ public class LoggerPreProcessor {
 
     public void error(String message) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "\t" + logPrefix + message);
+    }
+
+    public void verbose(String message) {
+        if (verboseEnabled) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "\t " + logPrefix + message);
+        }
     }
 }
