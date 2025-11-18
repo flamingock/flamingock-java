@@ -231,6 +231,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     private PriorityContext buildContext() {
         logger.trace("injecting internal configuration");
         addDependency(coreConfiguration);
+        addDependency(targetSystemManager);
         updateContextSpecific();
         List<ContextResolver> dependencyContextsFromPlugins = pluginManager.getPlugins()
                 .stream()
