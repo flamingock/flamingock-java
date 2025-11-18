@@ -18,4 +18,4 @@ jobs:
       - name: Unit and Integration tests
         run: |
           ./gradlew clean build \
-            -Psql.test.dialects=mysql
+            -Psql.test.dialects=mysql,oracle

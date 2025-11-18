@@ -64,8 +64,9 @@ public final class SharedSqlContainers {
                     }
                 }
                         .withPassword("oracle123")
-                        .withSharedMemorySize(1073741824L)
-                        .withStartupTimeout(Duration.ofMinutes(20))
+                        .withSharedMemorySize(2147483648L)
+                        .withStartupTimeout(Duration.ofMinutes(10))
+                        .withStartupAttempts(2)
                         .waitingFor(new WaitAllStrategy()
                                 .withStrategy(Wait.forListeningPort())
                                 .withStrategy(Wait.forLogMessage(".*DATABASE IS READY TO USE.*\\n", 1))
