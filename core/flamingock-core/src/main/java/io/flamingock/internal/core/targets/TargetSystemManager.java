@@ -72,19 +72,6 @@ public class TargetSystemManager implements ContextInitializable {
 
 
     /**
-     * Registers the default {@link TargetSystem} to be returned when a specific ID is not found.
-     * <p>
-     * Also adds it to the general registry.
-     *
-     * @param defaultTargetSystem the default target system
-     * @throws IllegalArgumentException if the target system or its ID is null/blank
-     */
-    public void setAuditStoreTargetSystem(TargetSystem defaultTargetSystem) {
-        add(defaultTargetSystem);
-        this.auditStoreTargetSystem = (AbstractTargetSystem<?>) defaultTargetSystem;
-    }
-
-    /**
      * Returns the {@link TargetSystem} associated with the given descriptor.
      * 
      * @param tsd the target system descriptor
