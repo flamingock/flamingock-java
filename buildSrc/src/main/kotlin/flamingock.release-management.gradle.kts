@@ -105,7 +105,7 @@ if (project != rootProject) {
                     categoryTitleFormat.set("### {{categoryTitle}}")
                     format.set(
                         """|- {{commitShortHash}}
-                           |{{#commitIsConventional}}
+                           | {{#commitIsConventional}}
                            |{{#conventionalCommitIsBreakingChange}}:rotating_light: {{/conventionalCommitIsBreakingChange}}
                            |{{#conventionalCommitScope}}**{{conventionalCommitScope}}**: {{/conventionalCommitScope}}
                            |{{conventionalCommitDescription}}
@@ -113,7 +113,7 @@ if (project != rootProject) {
                            |{{/commitIsConventional}}
                            |{{^commitIsConventional}}{{commitTitle}}{{/commitIsConventional}}
                            |{{#commitHasIssues}}, closes{{#commitIssues}} {{issue}}{{/commitIssues}}{{/commitHasIssues}}
-                           |({{contributorName}})
+                           |{{#contributorName}} ({{contributorName}}){{/contributorName}}
                         |""".trimMargin().replace("\n", "").replace("\r", "")
                     )
                     contributors {
