@@ -17,11 +17,8 @@
   <a href="https://github.com/flamingock/flamingock-java/actions/workflows/release.yml">
     <img src="https://github.com/flamingock/flamingock-java/actions/workflows/release.yml/badge.svg" alt="Release" />
   </a>
-  <a href="https://github.com/flamingock/flamingock-java/actions/workflows/build-master.yml">
-    <img src="https://github.com/flamingock/flamingock-java/actions/workflows/build-master.yml/badge.svg" alt="Build Master" />
-  </a>
   <a href="https://github.com/flamingock/flamingock-java/actions/workflows/build.yml">
-    <img src="https://github.com/flamingock/flamingock-java/actions/workflows/build.yml/badge.svg" alt="Build Dev" />
+    <img src="https://github.com/flamingock/flamingock-java/actions/workflows/build.yml/badge.svg" alt="Build" />
   </a>
   <a href="LICENSE.md">
     <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License" />
