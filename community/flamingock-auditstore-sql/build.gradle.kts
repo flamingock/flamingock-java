@@ -40,7 +40,7 @@ configurations.testImplementation {
 tasks.test {
     // CI-specific configuration
     val isCI = System.getenv("CI")?.toBoolean() ?: false
-    val enabledDialects = System.getProperty("sql.test.dialects") ?: if (isCI) "mysql" else "mysql,postgresql,mariadb"
+    val enabledDialects = System.getProperty("sql.test.dialects") ?: if (isCI) "mysql,oracle" else "mysql,oracle,sqlserver"
 
     systemProperty("sql.test.dialects", enabledDialects)
 
