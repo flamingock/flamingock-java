@@ -14,9 +14,6 @@
   <a href="https://central.sonatype.com/search?q=io.flamingock">
     <img src="https://img.shields.io/maven-central/v/io.flamingock/flamingock-core" alt="Maven Version" />
   </a>
-  <a href="https://github.com/flamingock/flamingock-java/actions/workflows/release.yml">
-    <img src="https://github.com/flamingock/flamingock-java/actions/workflows/release.yml/badge.svg" alt="Release" />
-  </a>
   <a href="https://github.com/flamingock/flamingock-java/actions/workflows/build.yml">
     <img src="https://github.com/flamingock/flamingock-java/actions/workflows/build.yml/badge.svg" alt="Build" />
   </a>
