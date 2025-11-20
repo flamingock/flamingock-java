@@ -18,6 +18,7 @@ package io.flamingock.core.e2e.helpers;
 public class Counter {
     private boolean executed = false;
     private boolean rollbacked = false;
+    private String targetSystemId;
 
     public boolean isExecuted() {
         return executed;
@@ -33,6 +34,14 @@ public class Counter {
 
     public void setRollbacked(boolean rollbacked) {
         this.rollbacked = rollbacked;
+    }
+
+    public String getTargetSystemId() {
+        return targetSystemId;
+    }
+
+    public void setTargetSystemId(String targetSystemId) {
+        this.targetSystemId = targetSystemId;
     }
 }
 
