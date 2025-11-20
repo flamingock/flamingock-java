@@ -69,10 +69,12 @@ public abstract class AbstractTargetSystem<HOLDER extends AbstractTargetSystem<H
         ContextConfigurable<HOLDER> {
     private final String id;
 
-    protected Context targetSystemContext = new SimpleContext();
+    protected final Context targetSystemContext = new SimpleContext();
 
     public AbstractTargetSystem(String id) {
         this.id = id;
+        targetSystemContext.setProperty("change.targetSystem.id", id);
+
     }
 
     @Override
