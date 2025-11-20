@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.AnnotationFinder;
+import io.flamingock.core.processor.util.MetadataPropertiesLoader;
 import io.flamingock.core.processor.util.PathResolver;
 import io.flamingock.core.processor.util.ProjectRootDetector;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
@@ -212,7 +213,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         Serializer serializer = new Serializer(processingEnv, logger);
         String setup = flamingockAnnotation.setup().toString();
         String configFile = flamingockAnnotation.configFile();
-        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, setup, configFile);
+        Map<String, String> properties = MetadataPropertiesLoader.loadAllProperties(roundEnv, logger);
+        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, setup, configFile, properties);
         serializer.serializeFullPipeline(flamingockMetadata);
 
         // Generate summary - count all changes from the final pipeline (code-based + template-based)

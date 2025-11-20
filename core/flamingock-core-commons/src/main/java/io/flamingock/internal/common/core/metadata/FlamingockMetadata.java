@@ -17,19 +17,24 @@ package io.flamingock.internal.common.core.metadata;
 
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class FlamingockMetadata {
     
     private PreviewPipeline pipeline;
     private String setup;
     private String configFile;
+    private Map<String, String> properties;
     
     public FlamingockMetadata() {
     }
     
-    public FlamingockMetadata(PreviewPipeline pipeline, String setup, String configFile) {
+    public FlamingockMetadata(PreviewPipeline pipeline, String setup, String configFile, Map<String, String> properties) {
         this.pipeline = pipeline;
         this.setup = setup;
         this.configFile = configFile;
+        this.properties = properties != null ? properties : new HashMap<>();
     }
     
     public PreviewPipeline getPipeline() {
@@ -56,11 +61,28 @@ public class FlamingockMetadata {
         this.configFile = configFile;
     }
 
+    public String getConfigFile() {
+        return configFile;
+    }
+
+    public void setConfigFile(String configFile) {
+        this.configFile = configFile;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
+    }
+
     @Override
     public String toString() {
         return "FlamingockMetadata{" + "pipeline=" + pipeline +
                 ", setup='" + setup + '\'' +
                 ", configFile='" + configFile + '\'' +
+                ", properties=" + properties +
                 '}';
     }
 }

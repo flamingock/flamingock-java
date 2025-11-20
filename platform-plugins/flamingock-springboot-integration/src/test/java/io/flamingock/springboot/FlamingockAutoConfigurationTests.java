@@ -96,7 +96,7 @@ class FlamingockAutoConfigurationTests {
     void runnerBeanNotRegisteredWhenSetupBuilder() throws IOException {
         // replace the supplier so the Condition "sees" BUILDER
         OnFlamingockEnabledCondition.setMetadataSupplier(
-                () -> Optional.of(new FlamingockMetadata(null, "BUILDER", null))
+                () -> Optional.of(new FlamingockMetadata(null, "BUILDER", null, null))
         );
 
         contextEmpty().run(ctx -> assertThat(ctx).doesNotHaveBean("flamingock-runner"));
