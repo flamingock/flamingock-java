@@ -18,6 +18,7 @@ package io.flamingock.core.e2e;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.e2e.changes._008__TargetSystemManagerInjectionChange;
+import io.flamingock.core.e2e.changes._009__TargetSystemIdInjectionChange;
 import io.flamingock.core.e2e.helpers.Counter;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InMemoryTestKit;
@@ -30,9 +31,11 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -74,6 +77,46 @@ class BuilderE2ETest {
         auditHelper.verifyAuditSequenceStrict(
                 STARTED("test8-target-system-manager-injection"),
                 APPLIED("test8-target-system-manager-injection")
+        );
+    }
+
+    @Test
+    @DisplayName("Should inject target system ID as dependency in change via @Named annotation")
+    void shouldInjectTargetSystemIdInChange() {
+        // Given - Create isolated test kit with domain-separated helpers
+        InMemoryTestKit testKit = InMemoryTestKit.create();
+        AuditTestHelper auditHelper = testKit.getAuditHelper();
+
+        Counter counter = new Counter();
+
+        NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka")
+                .addDependency(counter);
+
+        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+                    PipelineTestHelper.getPreviewPipeline(
+                            new CodeChangeTestDefinition(
+                                    _009__TargetSystemIdInjectionChange.class,
+                                    Collections.singletonList(Counter.class)
+                            )
+                    )
+            );
+
+            // When - Execute using test builder
+            testKit.createBuilder()
+                    .addTargetSystem(targetSystem)
+                    .build()
+                    .run();
+        }
+
+        // Then - Verify that target system ID was successfully injected
+        assertTrue(counter.isExecuted(), "Counter.executed should be true, indicating target system ID was injected");
+        assertEquals("kafka", counter.getTargetSystemId(), "Target system ID should match the configured ID");
+
+        // Verify complete audit flow
+        auditHelper.verifyAuditSequenceStrict(
+                STARTED("test9-target-system-id-injection"),
+                APPLIED("test9-target-system-id-injection")
         );
     }
 }
