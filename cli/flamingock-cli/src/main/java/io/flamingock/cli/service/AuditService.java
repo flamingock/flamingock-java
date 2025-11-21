@@ -109,7 +109,7 @@ public class AuditService {
         if (changeId == null || changeId.trim().isEmpty()) {
             throw new IllegalArgumentException("Change ID is required");
         }
-        return opsClient.getAuditIssueByChange(changeId.trim());
+        return opsClient.getAuditIssueByChangeId(changeId.trim());
     }
 
     private OpsClient createOpsClient() {

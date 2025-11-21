@@ -16,6 +16,9 @@
 package io.flamingock.internal.core.builder.ops;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditHistoryReader;
+import io.flamingock.internal.common.core.audit.AuditIssueResolver;
+import io.flamingock.internal.common.core.audit.AuditSnapshotReader;
 import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.recovery.FixResult;
 import io.flamingock.internal.common.core.recovery.Resolution;
@@ -31,7 +34,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, AuditIssueManager {
+public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, AuditIssueResolver {
     private final Logger logger = FlamingockLoggerFactory.getLogger("OpsClient");
 
     private final AuditPersistence auditPersistence;
@@ -48,20 +51,20 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
     @Override
     public List<AuditEntry> getAuditSnapshot() {
         logger.debug("Getting audit entries snapshot (latest per change)");
-        return auditPersistence.getSnapshotList();
+        return auditPersistence.getAuditSnapshot();
     }
 
     @Override
     public List<AuditEntry> getAuditSnapshotSince(LocalDateTime since) {
         logger.debug("Getting audit entries since: {}", since);
-        return auditPersistence.getSnapshotList()
+        return auditPersistence.getAuditSnapshot()
                 .stream()
                 .filter(auditEntry -> !auditEntry.getCreatedAt().isBefore(since))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<AuditEntryIssue> getAuditIssueByChange(String changeId) {
+    public Optional<AuditEntryIssue> getAuditIssueByChangeId(String changeId) {
         logger.debug("Getting issue details for changeId: {}", changeId);
         return auditPersistence.getAuditIssueByChangeId(changeId);
     }
@@ -77,7 +80,7 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
     public FixResult fixAuditIssue(String changeId, Resolution resolution) {
         logger.debug("Change[{}] marked as {}", changeId, resolution);
 
-        Optional<AuditEntryIssue> auditIssue = getAuditIssueByChange(changeId);
+        Optional<AuditEntryIssue> auditIssue = getAuditIssueByChangeId(changeId);
         if (!auditIssue.isPresent()) {
             return FixResult.NO_ISSUE_FOUND;
         }

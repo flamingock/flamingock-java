@@ -13,36 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder.ops;
+package io.flamingock.internal.common.core.audit;
 
-import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.recovery.FixResult;
 import io.flamingock.internal.common.core.recovery.Resolution;
 
-import java.util.List;
-import java.util.Optional;
+public interface AuditIssueResolver extends AuditIssueReader {
 
-public interface AuditIssueManager {
-    /**
-     * Get detailed information about a specific change that has issues.
-     * This includes full audit history, error messages, and execution attempts.
-     *
-     * @param changeId the change ID to inspect
-     * @return detailed issue information including all audit entries, error details, etc.
-     */
-    Optional<AuditEntryIssue> getAuditIssueByChange(String changeId);
-
-    /**
-     * Get only entries with issues
-     * @return List of audit entries with problems/issues
-     */
-    List<AuditEntryIssue> getAuditIssues();
 
     /**
      * Resolves an audit issue for the given change by marking it as
      * either {@link Resolution#APPLIED} or {@link Resolution#ROLLED_BACK}.
      *
-     * @param changeId the change identifier
+     * @param changeId   the change identifier
      * @param resolution how the issue should be resolved
      * @return result of the fix operation
      */
