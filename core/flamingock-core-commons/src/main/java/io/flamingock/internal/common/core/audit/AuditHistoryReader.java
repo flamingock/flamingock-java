@@ -13,27 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder.ops;
+package io.flamingock.internal.common.core.audit;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
-public interface AuditSnapshotReader {
+public interface AuditHistoryReader {
 
     /**
-     * Get snapshot view - latest state per change (DEFAULT behavior)
+     * Get full chronological history
      *
-     * @return List of latest audit entries per change
+     * @return All audit entries ordered by timestamp
      */
-    List<AuditEntry> getAuditSnapshot();
-
-    /**
-     * Get entries since a specific date
-     *
-     * @param since The date to filter from
-     * @return List of audit entries after the specified date
-     */
-    List<AuditEntry> getAuditSnapshotSince(LocalDateTime since);
+    List<AuditEntry> getAuditHistory();
 }

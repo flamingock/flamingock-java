@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.core.targets;
 
+import io.flamingock.internal.common.core.audit.AuditHistoryReader;
+import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
@@ -22,6 +24,7 @@ import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -97,5 +100,34 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      * @return the transaction wrapper instance
      */
     abstract public TransactionWrapper getTxWrapper();
+
+    /**
+     * Returns an audit history reader for importing audit entries from external migration sources.
+     * <p>
+     * This method enables Flamingock to import audit history from legacy migration tools or other
+     * Flamingock installations, preventing re-execution of already-applied changes. The returned
+     * reader provides access to historical audit entries that can be written to Flamingock's audit store.
+     * <p>
+     * Common use cases include:
+     * <ul>
+     *     <li><strong>Mongock migration</strong>: Import Mongock change history when migrating from Mongock to Flamingock</li>
+     *     <li><strong>Community to Cloud migration</strong>: Import audit history from local database to Flamingock Cloud backend</li>
+     *     <li><strong>Future extensibility</strong>: Support for other migration tools (Liquibase, Flyway, etc.)</li>
+     * </ul>
+     * <p>
+     * The default implementation returns {@code Optional.empty()}, indicating no audit reader is available.
+     * Target system implementations should override this method to provide database-specific readers when
+     * migration support is needed.
+     *
+     * @param type the type of audit reader to retrieve (e.g., {@link AuditReaderType#MONGOCK})
+     * @return an {@link Optional} containing the audit history reader if supported for the given type,
+     *         or {@link Optional#empty()} if this target system does not support audit reading for the specified type
+     * @see AuditHistoryReader
+     * @see AuditReaderType
+     * @see io.flamingock.importer.ImporterAdapter
+     */
+    public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
+        return Optional.empty();
+    }
 
 }

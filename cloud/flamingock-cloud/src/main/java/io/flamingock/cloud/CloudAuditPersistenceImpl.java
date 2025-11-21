@@ -94,7 +94,7 @@ public final class CloudAuditPersistenceImpl implements CloudAuditPersistence, C
     }
 
     @Override
-    public List<AuditEntry> getSnapshotList() {
+    public List<AuditEntry> getAuditSnapshot() {
         throw new UnsupportedOperationException("getSnapshotList still not implemented for cloud edition");
     }
 
