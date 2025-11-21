@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder.ops;
-
-import io.flamingock.internal.common.core.audit.AuditEntry;
+package io.flamingock.internal.common.core.audit;
 
 import java.time.LocalDateTime;
 import java.util.List;
