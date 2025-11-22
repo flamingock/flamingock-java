@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.mongock.mongodb.legacy;
+package io.flamingock.importer.mongock.mongodb.changes;
 
-import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Change;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 
-@ChangeUnit(id = "client-updater", order = "2", author = "flamingock-team")
-public class MongockChange2 {
+@ChangeUnit(id = "client-initializer", order = "1", author = "flamingock-team")
+public class MongockChange1 {
 
     @Execution
     public void apply() {
