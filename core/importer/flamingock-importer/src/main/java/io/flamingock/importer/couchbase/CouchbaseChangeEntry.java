@@ -16,7 +16,7 @@
 package io.flamingock.importer.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.importer.mongock.MongockChangeState;
+import io.flamingock.importer.mongodb.MongockChangeState;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.time.Instant;

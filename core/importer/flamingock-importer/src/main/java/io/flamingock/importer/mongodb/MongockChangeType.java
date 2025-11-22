@@ -13,21 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.mongock;
+package io.flamingock.importer.mongodb;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
-public enum MongockChangeState {
-  EXECUTED, FAILED, ROLLED_BACK, ROLLBACK_FAILED, IGNORED;
+public enum MongockChangeType {
+  EXECUTION, BEFORE_EXECUTION;
 
-  public AuditEntry.Status toAuditStatus() {
-    switch (this) {
-      case FAILED: return AuditEntry.Status.FAILED;
-      case ROLLED_BACK: return AuditEntry.Status.ROLLED_BACK;
-      case ROLLBACK_FAILED: return AuditEntry.Status.ROLLBACK_FAILED;
-      case EXECUTED:
-      default: return AuditEntry.Status.APPLIED;
-    }
+  public AuditEntry.ExecutionType toAuditType() {
+    //TODO: remove
+    return AuditEntry.ExecutionType.EXECUTION;
   }
-
 }

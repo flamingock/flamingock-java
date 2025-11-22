@@ -15,9 +15,9 @@
  */
 package io.flamingock.common.test.mongock;
 
-import io.flamingock.importer.mongock.MongockChangeEntry;
-import io.flamingock.importer.mongock.MongockChangeState;
-import io.flamingock.importer.mongock.MongockChangeType;
+import io.flamingock.importer.mongodb.MongockChangeEntry;
+import io.flamingock.importer.mongodb.MongockChangeState;
+import io.flamingock.importer.mongodb.MongockChangeType;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

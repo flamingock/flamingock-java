@@ -16,10 +16,19 @@
 package io.flamingock.support.mongock.processor.discover;
 
 import com.github.cloudyrock.mongock.ChangeLog;
+import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.discover.ChangeDiscoverer;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
+import io.flamingock.internal.common.core.preview.PreviewMethod;
+import io.flamingock.internal.common.core.preview.builder.CodePreviewTaskBuilder;
+import io.flamingock.internal.common.core.task.RecoveryDescriptor;
+import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
+import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.support.mongock.MongockImportChange;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.support.mongock.internal.preview.builder.MongockCodePreviewChangeHelper;
 import io.mongock.api.annotations.ChangeUnit;
@@ -27,8 +36,8 @@ import io.mongock.api.annotations.ChangeUnit;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,7 +57,7 @@ public class MongockChangeDiscoverer implements ChangeDiscoverer {
 
         if (mongockSupportOpt.isPresent()) {
             logger.info("Searching for code-based changes (Java classes annotated with @ChangeUnit or @ChangeLog annotations)");
-            return Stream.concat(
+            List<CodePreviewChange> changes = Stream.concat(
                             roundEnv.getElementsAnnotatedWith(ChangeUnit.class).stream(),
                             roundEnv.getElementsAnnotatedWith(ChangeLog.class).stream()
                     )
@@ -58,10 +67,33 @@ public class MongockChangeDiscoverer implements ChangeDiscoverer {
                     .flatMap(List::stream)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
-        }
-        else {
+            changes.add(getImporterChange(mongockTargetSystemId));
+            return changes;
+        } else {
             throw new FlamingockException("@MongockSupport annotation must be provided when mongock-support module is present.");
         }
+    }
+
+    private CodePreviewChange getImporterChange(String targetSystemId) {
+        CodePreviewTaskBuilder builder = CodePreviewTaskBuilder.instance();
+        builder.setId("migration-mongock-to-flamingock-community");
+        builder.setOrder("00100");
+        builder.setAuthor("flamingock-team");
+        builder.setTargetSystem(new TargetSystemDescriptor(targetSystemId));
+        builder.setTransactional(true);
+        builder.setSystem(true);
+        builder.setRecovery(RecoveryDescriptor.getDefault());
+
+        builder.setSourceClassPath(MongockImportChange.class.getName());
+        builder.setConstructor(PreviewConstructor.getDefault());
+        List<String> applyParameterTypes = Arrays.asList(
+                String.class.getName(),
+                TargetSystemManager.class.getName(),
+                AuditWriter.class.getName(),
+                PipelineDescriptor.class.getName()
+        );
+        builder.setApplyMethod(new PreviewMethod("importHistory", applyParameterTypes));
+        return builder.build();
     }
 
     private Optional<MongockSupport> getMongockSupportAnnotation(RoundEnvironment roundEnv, LoggerPreProcessor logger) {

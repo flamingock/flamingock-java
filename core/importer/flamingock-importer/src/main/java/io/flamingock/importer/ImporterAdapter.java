@@ -15,12 +15,9 @@
  */
 package io.flamingock.importer;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 
-import java.util.List;
 
-public interface ImporterAdapter {
-
-    List<AuditEntry> getAuditEntries();
+public interface ImporterAdapter extends AuditHistoryReader {
 
 }

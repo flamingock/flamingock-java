@@ -75,28 +75,20 @@ public class PipelinePreProcessorTest {
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
         assertNotNull(pipeline.getStages(), "Pipeline should have stages");
-        assertEquals(2, pipeline.getStages().size(), "Should have 2 regular stages");
-        
+        assertEquals(1, pipeline.getStages().size(), "Should have 2 regular stages");
+
         // Verify system stage
         PreviewStage systemStage = pipeline.getSystemStage();
-        assertNotNull(systemStage, "Should have system stage");
-        assertEquals("com.example.system", systemStage.getSourcesPackage());
-        assertEquals("SystemStage", systemStage.getName());
+        assertNull(systemStage, "Should NOT have system stage");
         
         // Verify regular stages
         java.util.Collection<PreviewStage> stagesCollection = pipeline.getStages();
         PreviewStage[] stages = stagesCollection.toArray(new PreviewStage[0]);
-        assertEquals(2, stages.length, "Should have 2 regular stages");
-        
-        PreviewStage firstStage = stages[0];
-        assertEquals("init", firstStage.getName()); // Should be derived from location
-        assertEquals(StageType.LEGACY, firstStage.getType());
-        assertEquals("com.example.init", firstStage.getSourcesPackage());
-        
-        PreviewStage secondStage = stages[1];
-        assertEquals("migrations", secondStage.getName()); // Should be derived from location
-        assertEquals(StageType.DEFAULT, secondStage.getType());
-        assertEquals("com.example.migrations", secondStage.getSourcesPackage());
+
+        PreviewStage uniqueStage = stages[0];
+        assertEquals("migrations", uniqueStage.getName()); // Should be derived from location
+        assertEquals(StageType.DEFAULT, uniqueStage.getType());
+        assertEquals("com.example.migrations", uniqueStage.getSourcesPackage());
     }
 
     /**
@@ -117,19 +109,21 @@ public class PipelinePreProcessorTest {
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
         assertNotNull(pipeline.getStages(), "Pipeline should have stages");
-        assertEquals(1, pipeline.getStages().size(), "Should have 1 regular stage from file");
+        assertEquals(2, pipeline.getStages().size(), "Should have 2 regular stage from file");
         
         // Verify system stage
         PreviewStage systemStage = pipeline.getSystemStage();
-        assertNotNull(systemStage, "Should have system stage");
-        assertEquals("com.example.system", systemStage.getSourcesPackage());
-        assertEquals("SystemStage", systemStage.getName());
+        assertNull(systemStage, "Should NOT have system stage");
         
         // Verify regular stages
         PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
         PreviewStage stage = stages[0];
-        assertEquals("changes", stage.getName()); // Should be auto-derived from location
-        assertEquals("com.example.changes", stage.getSourcesPackage());
+        assertEquals("migrations", stage.getName()); // Should be auto-derived from location
+        assertEquals("com.example.migrations", stage.getSourcesPackage());
+
+        PreviewStage stage2 = stages[1];
+        assertEquals("changes", stage2.getName()); // Should be auto-derived from location
+        assertEquals("com.example.changes", stage2.getSourcesPackage());
     }
 
     /**
@@ -173,16 +167,15 @@ public class PipelinePreProcessorTest {
         // Then - verify object structure (testing the actual objects, not JSON)
         assertNotNull(pipeline, "Pipeline should be created");
         assertNotNull(pipeline.getStages(), "Pipeline should have stages");
-        assertEquals(2, pipeline.getStages().size(), "Pipeline should have 2 regular stages");
+        assertEquals(1, pipeline.getStages().size(), "Pipeline should have 1 regular stages");
         
         PreviewStage systemStage = pipeline.getSystemStage();
-        assertNotNull(systemStage, "Pipeline should have system stage");
-        assertEquals("com.example.system", systemStage.getSourcesPackage());
+        assertNull(systemStage, "Pipeline should NOT have system stage");
         
         PreviewStage[] stages = pipeline.getStages().toArray(new PreviewStage[0]);
         PreviewStage firstStage = stages[0];
-        assertEquals("init", firstStage.getName());
-        assertEquals(StageType.LEGACY, firstStage.getType());
+        assertEquals("migrations", firstStage.getName());
+        assertEquals(StageType.DEFAULT, firstStage.getType());
     }
 
     /**
@@ -445,9 +438,9 @@ public class PipelinePreProcessorTest {
         setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
         
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "buildPipelineFromAnnotation", EnableFlamingock.class, List.class, Map.class);
+            "buildPipelineFromAnnotation", EnableFlamingock.class, List.class, List.class, Map.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, annotation, Collections.emptyList(), changes);
+        return (PreviewPipeline) method.invoke(processor, annotation, Collections.emptyList(), Collections.emptyList(), changes);
     }
 
     private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewTask>> changes, EnableFlamingock annotation) throws Exception {
@@ -460,9 +453,9 @@ public class PipelinePreProcessorTest {
         setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
         
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "getPipelineFromProcessChanges", List.class, Map.class, EnableFlamingock.class);
+            "getPipelineFromProcessChanges", List.class, List.class, Map.class, EnableFlamingock.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, Collections.emptyList(), changes, annotation);
+        return (PreviewPipeline) method.invoke(processor, Collections.emptyList(), Collections.emptyList(), changes, annotation);
     }
 
     private PreviewPipeline buildPipelineFromFile(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changes) throws Exception {
@@ -475,11 +468,11 @@ public class PipelinePreProcessorTest {
         setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
         
         java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "buildPipelineFromSpecifiedFile", File.class, List.class, Map.class);
+            "buildPipelineFromSpecifiedFile", File.class, List.class, List.class, Map.class);
         method.setAccessible(true);
         
         File configFile = tempDir.resolve("pipeline.yaml").toFile();
-        return (PreviewPipeline) method.invoke(processor, configFile, Collections.emptyList(), changes);
+        return (PreviewPipeline) method.invoke(processor, configFile, Collections.emptyList(), Collections.emptyList(), changes);
     }
 
     private void setProcessorField(FlamingockAnnotationProcessor processor, String fieldName, Object value) throws Exception {
@@ -551,8 +544,7 @@ public class PipelinePreProcessorTest {
         Path configFile = tempDir.resolve("pipeline.yaml");
         String yamlContent = "pipeline:\n" +
             "  stages:\n" +
-            "    - location: com.example.system\n" +
-            "      type: importer\n" +
+            "    - location: com.example.migrations\n" +
             "    - location: com.example.changes\n";
         Files.write(configFile, yamlContent.getBytes());
     }
@@ -581,8 +573,6 @@ public class PipelinePreProcessorTest {
     private EnableFlamingock createMockAnnotationWithStages() {
         return new MockFlamingockBuilder()
             .withStages(
-                createMockStage("", StageType.SYSTEM, "com.example.system"),
-                createMockStage("", StageType.LEGACY, "com.example.init"),
                 createMockStage("", StageType.DEFAULT, "com.example.migrations")
             )
             .build();

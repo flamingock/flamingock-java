@@ -22,13 +22,14 @@ import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.PathResolver;
 import io.flamingock.core.processor.util.ProjectRootDetector;
-import io.flamingock.internal.common.core.preview.CodePreviewChange;
-import io.flamingock.internal.common.core.util.LoggerPreProcessor;
-import io.flamingock.internal.common.core.util.Serializer;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
+import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.util.LoggerPreProcessor;
+import io.flamingock.internal.common.core.util.Serializer;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -50,6 +51,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
@@ -202,12 +204,15 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation()
                 .orElseThrow(() -> new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline."));
         Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges();
+
+        List<CodePreviewChange> systemChanges = allChanges.stream().filter(TaskDescriptor::isSystem).collect(Collectors.toList());
         List<CodePreviewChange> legacyChanges = allChanges.stream().filter(CodePreviewChange::isLegacy).collect(Collectors.toList());
-        List<CodePreviewChange> noLegacyChanges = allChanges.stream().filter(c -> !c.isLegacy()).collect(Collectors.toList());
-        Map<String, List<CodePreviewChange>> noLegacyChangesByPackage = getCodeChangesMapByPackage(noLegacyChanges);
+        List<CodePreviewChange> standardChanges = allChanges.stream().filter(TaskDescriptor::isStandard).collect(Collectors.toList());
+
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
+                systemChanges,
                 legacyChanges,
-                noLegacyChangesByPackage,
+                getCodeChangesMapByPackage(standardChanges),
                 flamingockAnnotation
         );
 
@@ -238,10 +243,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private Map<String, List<CodePreviewChange>> getCodeChangesMapByPackage(Collection<CodePreviewChange> changes) {
         Map<String, List<CodePreviewChange>> mapByPackage = new HashMap<>();
-        for(CodePreviewChange item: changes) {
+        for (CodePreviewChange item : changes) {
             mapByPackage.compute(item.getSourcePackage(), (key, descriptors) -> {
                 List<CodePreviewChange> newDescriptors;
-                if(descriptors != null) {
+                if (descriptors != null) {
                     newDescriptors = descriptors;
                 } else {
                     newDescriptors = new ArrayList<>();
@@ -253,7 +258,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return mapByPackage;
     }
 
-    private PreviewPipeline getPipelineFromProcessChanges(List<CodePreviewChange> legacyCodedChanges, Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage, EnableFlamingock pipelineAnnotation) {
+    private PreviewPipeline getPipelineFromProcessChanges(List<CodePreviewChange> systemChanges,
+                                                          List<CodePreviewChange> legacyCodedChanges,
+                                                          Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage,
+                                                          EnableFlamingock pipelineAnnotation) {
         if (noLegacyCodedChangesByPackage == null) {
             noLegacyCodedChangesByPackage = new HashMap<>();
         }
@@ -267,10 +275,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         if (hasFileInAnnotation) {
             logger.info("Reading flamingock pipeline from file specified in @EnableFlamingock annotation: '" + pipelineAnnotation.configFile() + "'");
             File specifiedPipelineFile = resolvePipelineFile(pipelineAnnotation.configFile());
-            return buildPipelineFromSpecifiedFile(specifiedPipelineFile, legacyCodedChanges, noLegacyCodedChangesByPackage);
+            return buildPipelineFromSpecifiedFile(specifiedPipelineFile, systemChanges, legacyCodedChanges, noLegacyCodedChangesByPackage);
         } else {
             logger.info("Reading flamingock pipeline from @EnableFlamingock annotation stages configuration");
-            return buildPipelineFromAnnotation(pipelineAnnotation, legacyCodedChanges, noLegacyCodedChangesByPackage);
+            return buildPipelineFromAnnotation(pipelineAnnotation, systemChanges, legacyCodedChanges, noLegacyCodedChangesByPackage);
         }
     }
 
@@ -296,10 +304,14 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
      */
     private int getStageTypePriority(StageType stageType) {
         switch (stageType) {
-            case SYSTEM: return 0;
-            case LEGACY: return 1;
-            case DEFAULT: return 2;
-            default: return 3;
+            case SYSTEM:
+                return 0;
+            case LEGACY:
+                return 1;
+            case DEFAULT:
+                return 2;
+            default:
+                return 3;
         }
     }
 
@@ -318,7 +330,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         for (Stage stage : stages) {
             StageType stageType = stage.type();
-            
+
             if (stageType == StageType.SYSTEM) {
                 systemStageCount++;
                 if (systemStageCount > 1) {
@@ -348,7 +360,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         for (Map<String, String> stageMap : stageList) {
             StageType stageType = StageType.from(stageMap.get("type"));
-            
+
             if (stageType == StageType.SYSTEM) {
                 systemStageCount++;
                 if (systemStageCount > 1) {
@@ -363,69 +375,48 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation, List<CodePreviewChange> legacyCodedChanges, Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage) {
+    private PreviewPipeline buildPipelineFromAnnotation(EnableFlamingock pipelineAnnotation,
+                                                        List<CodePreviewChange> systemChanges,
+                                                        List<CodePreviewChange> legacyCodedChanges,
+                                                        Map<String, List<CodePreviewChange>> standardChangesByPackage) {
         List<PreviewStage> stages = new ArrayList<>();
-        SystemPreviewStage systemStage = null;
-
-        for (Stage stageAnnotation : pipelineAnnotation.stages()) {
-            if (stageAnnotation.type() == StageType.SYSTEM) {
-                // Handle system stage separately to maintain internal architecture
-                systemStage = mapAnnotationToSystemStage(noLegacyCodedChangesByPackage, stageAnnotation);
-            } else {
-                PreviewStage stage = mapAnnotationToStage(noLegacyCodedChangesByPackage, stageAnnotation);
-                stages.add(stage);
-            }
-        }
 
         // Legacy Stage
-        PreviewStage legacyStage = buildLegacyStageIfNeeded(legacyCodedChanges);
-        if (legacyStage != null) {
-            stages.add(legacyStage);
+        buildLegacyStageIfNeeded(legacyCodedChanges)
+                .ifPresent(stages::add);
+
+        // Standard Stage
+        for (Stage stageAnnotation : pipelineAnnotation.stages()) {
+            PreviewStage stage = mapAnnotationToStage(standardChangesByPackage, stageAnnotation);
+            stages.add(stage);
         }
 
         // Sort stages by type priority: LEGACY stages first, then DEFAULT stages
         stages.sort(this::compareStagesByTypePriority);
 
-        return systemStage != null
-                ? new PreviewPipeline(systemStage, stages)
-                : new PreviewPipeline(stages);
+        return buildSystemStageIfNeeded(systemChanges)
+                .map(systemPreviewStage -> new PreviewPipeline(systemPreviewStage, stages))
+                .orElseGet(() -> new PreviewPipeline(stages));
     }
 
-    private SystemPreviewStage mapAnnotationToSystemStage(Map<String, List<CodePreviewChange>> codedChangesByPackage, Stage stageAnnotation) {
-        String location = stageAnnotation.location();
-
-        if (location == null || location.trim().isEmpty()) {
-            throw new RuntimeException("@Stage annotation with type SYSTEM requires a location. Please specify the location field.");
-        }
-
-        logger.verbose("Building stage: SystemStage");
-
-        String sourcesPackage = null;
-        String resourcesDir = null;
-        Collection<CodePreviewChange> changeClasses = null;
-
-        if (PathResolver.isPackageName(location)) {
-            sourcesPackage = location;
-            changeClasses = codedChangesByPackage.get(sourcesPackage);
-            logger.verbose("Sources package: " + sourcesPackage);
-            if (changeClasses != null) {
-                logger.verbose("Found " + changeClasses.size() + " code-based changes in " + sourcesPackage);
-            }
+    private Optional<SystemPreviewStage> buildSystemStageIfNeeded(List<CodePreviewChange> systemChanges) {
+        if(!systemChanges.isEmpty()) {
+            logger.verbose("Building stage: SystemStage");
+            // For system stage, use hardcoded name, description, package and resource dir to maintain consistency
+            SystemPreviewStage systemStage = PreviewStage.systemBuilder()
+                    .setName("SystemStage")
+                    .setDescription("Dedicated stage for system-level changes")
+                    .setSourcesRoots(sourceRoots)
+                    .setSourcesPackage(null)
+                    .setResourcesRoot(resourcesRoot)
+                    .setResourcesDir(null)
+                    .setChanges(systemChanges)
+                    .build();
+            return Optional.of(systemStage);
         } else {
-            resourcesDir = PathResolver.processResourceLocation(location);
-            logger.verbose("Resources directory: " + resourcesDir);
+            return Optional.empty();
         }
 
-        // For system stage, use hardcoded name and description to maintain consistency
-        return PreviewStage.systemBuilder()
-                .setName("SystemStage")
-                .setDescription("Dedicated stage for system-level changes")
-                .setSourcesRoots(sourceRoots)
-                .setSourcesPackage(sourcesPackage)
-                .setResourcesRoot(resourcesRoot)
-                .setResourcesDir(resourcesDir)
-                .setChanges(changeClasses)
-                .build();
     }
 
     private PreviewStage mapAnnotationToStage(Map<String, List<CodePreviewChange>> codedChangesByPackage, Stage stageAnnotation) {
@@ -470,9 +461,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 .build();
     }
 
-    private PreviewStage buildLegacyStageIfNeeded(List<CodePreviewChange> legacyChanges) {
+    private Optional<PreviewStage> buildLegacyStageIfNeeded(List<CodePreviewChange> legacyChanges) {
         if (legacyChanges != null && !legacyChanges.isEmpty()) {
-            return PreviewStage.defaultBuilder(StageType.LEGACY)
+            PreviewStage flamingockLegacyStage = PreviewStage.defaultBuilder(StageType.LEGACY)
                     .setName("legacy-stage")
                     .setDescription("Flamingock legacy stage")
                     .setSourcesRoots(sourceRoots)
@@ -481,8 +472,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                     .setResourcesDir(null) //TODO:
                     .setChanges(legacyChanges)
                     .build();
+            return Optional.of(flamingockLegacyStage);
         }
-        return null;
+        return Optional.empty();
     }
 
 
@@ -545,7 +537,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return null;
     }
 
-    private PreviewPipeline buildPipelineFromSpecifiedFile(File file, List<CodePreviewChange> legacyCodedChanges, Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage) {
+    private PreviewPipeline buildPipelineFromSpecifiedFile(File file,
+                                                           List<CodePreviewChange> systemChanges,
+                                                           List<CodePreviewChange> legacyCodedChanges,
+                                                           Map<String, List<CodePreviewChange>> standardChangesByPackage) {
 
         try (InputStream inputStream = Files.newInputStream(file.toPath())) {
             Yaml yaml = new Yaml();
@@ -559,32 +554,23 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             validateStageTypesFromYaml(stageList);
 
             List<PreviewStage> stages = new ArrayList<>();
-            SystemPreviewStage systemStage = null;
+
 
             for (Map<String, String> stageMap : stageList) {
-                StageType stageType = StageType.from(stageMap.get("type"));
-                
-                if (stageType == StageType.SYSTEM) {
-                    // Handle system stage separately to maintain internal architecture
-                    systemStage = mapToSystemStage(noLegacyCodedChangesByPackage, stageMap);
-                } else {
-                    PreviewStage stage = mapToStage(noLegacyCodedChangesByPackage, stageMap);
-                    stages.add(stage);
-                }
+                PreviewStage stage = mapToStage(standardChangesByPackage, stageMap);
+                stages.add(stage);
             }
 
             // Legacy Stage
-            PreviewStage legacyStage = buildLegacyStageIfNeeded(legacyCodedChanges);
-            if (legacyStage != null) {
-                stages.add(legacyStage);
-            }
+            buildLegacyStageIfNeeded(legacyCodedChanges)
+                    .ifPresent(stages::add);
 
             // Sort stages by type priority: LEGACY stages first, then DEFAULT stages
             stages.sort(this::compareStagesByTypePriority);
 
-            return systemStage != null
-                    ? new PreviewPipeline(systemStage, stages)
-                    : new PreviewPipeline(stages);
+            return buildSystemStageIfNeeded(systemChanges)
+                    .map(systemPreviewStage -> new PreviewPipeline(systemPreviewStage, stages))
+                    .orElseGet(() -> new PreviewPipeline(stages));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -707,7 +693,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
         return resourcesDir;
     }
-
 
 
     private void validateConfiguration(EnableFlamingock pipelineAnnotation, boolean hasFileInAnnotation, boolean hasStagesInAnnotation) {

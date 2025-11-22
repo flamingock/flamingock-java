@@ -35,16 +35,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewChange> {
@@ -65,12 +58,12 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private CodePreviewTaskBuilder() {
     }
 
-    public static CodePreviewTaskBuilder builder() {
+    public static CodePreviewTaskBuilder instance() {
         return new CodePreviewTaskBuilder();
     }
 
-    public static CodePreviewTaskBuilder builder(TypeElement typeElement) {
-        return  builder().setTypeElement(typeElement);
+    public static CodePreviewTaskBuilder instance(TypeElement typeElement) {
+        return  instance().setTypeElement(typeElement);
     }
 
     public CodePreviewTaskBuilder setId(String id) {

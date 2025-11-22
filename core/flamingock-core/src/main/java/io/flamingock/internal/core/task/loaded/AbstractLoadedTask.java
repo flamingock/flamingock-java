@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 
 import java.util.Optional;
 
-public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implements Validatable<StageValidationContext>, ChangeCategoryAware {
+public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implements Validatable<StageValidationContext> {
 
     public AbstractLoadedTask(String id,
                               String order,
@@ -50,8 +50,6 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
 
     public abstract Optional<Method> getRollbackMethod();
 
-    @Override
-    public abstract boolean hasCategory(ChangeCategory property);
 
 
 }

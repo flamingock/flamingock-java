@@ -15,9 +15,6 @@
  */
 package io.flamingock.importer;
 
-import io.flamingock.importer.ImportConfiguration;
-import io.flamingock.importer.ImporterAdapter;
-import io.flamingock.importer.ImporterExecutor;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
@@ -41,7 +38,7 @@ public class ImporterExecutorTest {
         AuditWriter auditWriter = mock(AuditWriter.class);
         PipelineDescriptor pipelineDescriptor = mock(PipelineDescriptor.class);
         
-        when(importerAdapter.getAuditEntries()).thenReturn(Collections.emptyList());
+        when(importerAdapter.getAuditHistory()).thenReturn(Collections.emptyList());
         
         // When & Then
         FlamingockException exception = assertThrows(FlamingockException.class, 
@@ -60,7 +57,7 @@ public class ImporterExecutorTest {
         AuditWriter auditWriter = mock(AuditWriter.class);
         PipelineDescriptor pipelineDescriptor = mock(PipelineDescriptor.class);
         
-        when(importerAdapter.getAuditEntries()).thenReturn(Collections.emptyList());
+        when(importerAdapter.getAuditHistory()).thenReturn(Collections.emptyList());
         
         // When & Then
         assertDoesNotThrow(() -> ImporterExecutor.runImport(importerAdapter, importConfiguration, auditWriter, pipelineDescriptor));

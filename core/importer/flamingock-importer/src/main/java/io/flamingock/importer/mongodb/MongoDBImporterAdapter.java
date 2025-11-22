@@ -18,9 +18,6 @@ package io.flamingock.importer.mongodb;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.importer.ImporterAdapter;
-import io.flamingock.importer.mongock.MongockChangeEntry;
-import io.flamingock.importer.mongock.MongockChangeState;
-import io.flamingock.importer.mongock.MongockChangeType;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import org.bson.Document;
 
@@ -42,7 +39,7 @@ public class MongoDBImporterAdapter implements ImporterAdapter {
     }
 
     @Override
-    public List<AuditEntry> getAuditEntries() {
+    public List<AuditEntry> getAuditHistory() {
         return sourceCollection.find()
                 .into(new ArrayList<>())
                 .stream()

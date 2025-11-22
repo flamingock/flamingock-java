@@ -38,7 +38,7 @@ public class DynamoDBImporterAdapter implements ImporterAdapter {
     }
 
     @Override
-    public List<AuditEntry> getAuditEntries() {
+    public List<AuditEntry> getAuditHistory() {
         List<MongockDynamoDBAuditEntry> entries = StreamSupport
                 .stream(sourceTable.scan().items().spliterator(), false)
                 .collect(Collectors.toList());
