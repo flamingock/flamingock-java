@@ -15,6 +15,9 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
+import io.flamingock.importer.mongock.dynamodb.MongockImporterDynamoDB;
+import io.flamingock.internal.common.core.audit.AuditHistoryReader;
+import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
@@ -24,6 +27,12 @@ import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+import java.util.Objects;
+import java.util.Optional;
+
+import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
+import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 
 public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> {
 
@@ -73,5 +82,15 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     @Override
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
+    }
+
+
+    @Override
+    public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
+        if (Objects.requireNonNull(type) == MONGOCK) {
+            return Optional.of(new MongockImporterDynamoDB(client, DEFAULT_MONGOCK_ORIGIN));
+        } else {
+            return Optional.empty();
+        }
     }
 }

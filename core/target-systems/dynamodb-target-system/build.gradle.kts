@@ -1,7 +1,8 @@
 dependencies {
 
-    implementation(project(":utils:dynamodb-util"))
     api(project(":core:flamingock-core"))
+    implementation(project(":utils:dynamodb-util"))
+    implementation(project(":legacy:mongock-importer-dynamodb"))
 
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 

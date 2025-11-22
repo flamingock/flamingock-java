@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.mongock;
+package io.flamingock.importer.mongock.mongodb;
+
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.util.Date;
 
-public class MongockChangeEntry {
+public class MongockAuditEntry {
 
     protected String executionId;
     protected String changeId;
@@ -35,26 +37,26 @@ public class MongockChangeEntry {
     protected Date originalTimestamp;
 
 
-    public MongockChangeEntry(String executionId,
-                              String changeId,
-                              String author,
-                              Date timestamp,
-                              MongockChangeState state,
-                              MongockChangeType type,
-                              String changeLogClass,
-                              String changeSetMethod,
-                              Object metadata,
-                              long executionMillis,
-                              String executionHostname,
-                              String errorTrace,
-                              Boolean systemChange,
-                              Date originalTimestamp) {
+    public MongockAuditEntry(String executionId,
+                             String changeId,
+                             String author,
+                             Date timestamp,
+                             String state,
+                             String type,
+                             String changeLogClass,
+                             String changeSetMethod,
+                             Object metadata,
+                             long executionMillis,
+                             String executionHostname,
+                             String errorTrace,
+                             Boolean systemChange,
+                             Date originalTimestamp) {
         this.executionId = executionId;
         this.changeId = changeId;
         this.author = author;
         this.timestamp = timestamp;
-        this.state = state;
-        this.type = type;
+        this.state = MongockAuditEntry.MongockChangeState.valueOf(state);
+        this.type = MongockChangeType.valueOf(type);
         this.changeLogClass = changeLogClass;
         this.changeSetMethod = changeSetMethod;
         this.metadata = metadata;
@@ -97,20 +99,20 @@ public class MongockChangeEntry {
         this.timestamp = timestamp;
     }
 
-    public MongockChangeState getState() {
-        return state;
+    public AuditEntry.Status getState() {
+        return state.toAuditStatus();
     }
 
-    public void setState(MongockChangeState state) {
-        this.state = state;
+    public void setState(String state) {
+        this.state = MongockAuditEntry.MongockChangeState.valueOf(state);
     }
 
-    public MongockChangeType getType() {
-        return type;
+    public AuditEntry.ExecutionType getType() {
+        return type.toAuditType();
     }
 
-    public void setType(MongockChangeType type) {
-        this.type = type;
+    public void setType(String type) {
+        this.type = MongockChangeType.valueOf(type);
     }
 
     public String getChangeLogClass() {
@@ -176,4 +178,33 @@ public class MongockChangeEntry {
     public void setOriginalTimestamp(Date originalTimestamp) {
         this.originalTimestamp = originalTimestamp;
     }
+
+    public boolean shouldBeIgnored() {
+        return state == MongockAuditEntry.MongockChangeState.IGNORED;
+    }
+
+
+    public enum MongockChangeState {
+        EXECUTED, FAILED, ROLLED_BACK, ROLLBACK_FAILED, IGNORED;
+
+        public AuditEntry.Status toAuditStatus() {
+            switch (this) {
+                case FAILED: return AuditEntry.Status.FAILED;
+                case ROLLED_BACK: return AuditEntry.Status.ROLLED_BACK;
+                case ROLLBACK_FAILED: return AuditEntry.Status.ROLLBACK_FAILED;
+                case EXECUTED:
+                default: return AuditEntry.Status.APPLIED;
+            }
+        }
+    }
+
+    public enum MongockChangeType {
+        EXECUTION, BEFORE_EXECUTION;
+
+        public AuditEntry.ExecutionType toAuditType() {
+            //TODO: remove
+            return AuditEntry.ExecutionType.EXECUTION;
+        }
+    }
+
 }

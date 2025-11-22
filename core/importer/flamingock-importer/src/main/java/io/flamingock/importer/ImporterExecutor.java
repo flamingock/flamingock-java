@@ -15,7 +15,7 @@
  */
 package io.flamingock.importer;
 
-import io.flamingock.importer.util.PipelineHelper;
+import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.error.FlamingockException;
@@ -53,7 +53,7 @@ public final class ImporterExecutor {
                                  AuditWriter auditWriter,
                                  PipelineDescriptor pipelineDescriptor) {
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
-        List<AuditEntry> auditEntries = importerAdapter.getAuditEntries();
+        List<AuditEntry> auditEntries = importerAdapter.getAuditHistory();
         if(importConfiguration.isFailOnEmptyOrigin() &&  auditEntries.isEmpty()) {
             throw new FlamingockException(
                     String.format("No audit entries found when importing from '%s'. " +

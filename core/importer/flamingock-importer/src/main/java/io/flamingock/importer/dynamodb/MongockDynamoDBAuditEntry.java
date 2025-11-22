@@ -15,7 +15,7 @@
  */
 package io.flamingock.importer.dynamodb;
 
-import io.flamingock.importer.mongock.MongockChangeState;
+import io.flamingock.importer.mongodb.MongockChangeState;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
