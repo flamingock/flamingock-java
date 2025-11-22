@@ -17,6 +17,7 @@ package io.flamingock.importer.mongock.dynamodb.changes;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.TargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
 import software.amazon.awssdk.services.dynamodb.model.BillingMode;
@@ -27,6 +28,7 @@ import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 
 @Change(id = "create-users-table", author = "importer")
+@TargetSystem(id = "dynamodb-target-system")
 public class _0001__CreateUsersTableChange {
 
     @Apply

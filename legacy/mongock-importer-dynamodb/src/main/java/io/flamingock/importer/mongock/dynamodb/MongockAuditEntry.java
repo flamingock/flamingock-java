@@ -193,6 +193,8 @@ public class MongockAuditEntry {
         LocalDateTime ts = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
 
         MongockChangeState stateEnum = MongockChangeState.valueOf(state);
+        // Note: Mongock has BEFORE_EXECUTION and EXECUTION types, but Flamingock only has EXECUTION
+        // Both Mongock types are mapped to Flamingock EXECUTION type
         return new AuditEntry(
                 executionId,
                 null,
@@ -200,7 +202,7 @@ public class MongockAuditEntry {
                 author,
                 ts,
                 stateEnum.toAuditStatus(),
-                AuditEntry.ExecutionType.valueOf(type),
+                AuditEntry.ExecutionType.EXECUTION,
                 changeLogClass,
                 changeSetMethod,
                 executionMillis,
