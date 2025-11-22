@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.Stage;
 import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.dynamodb.kit.DynamoDBTableFactory;
 import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.runner.Runner;
@@ -37,15 +38,9 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
-import software.amazon.awssdk.services.dynamodb.model.BillingMode;
-import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
-import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
-import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException;
-import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 
 import java.net.URI;
 
@@ -86,95 +81,16 @@ public class DynamoDBImporterTest {
                 )
                 .build();
 
-        // Create Mongock origin table for migration
-        createMongockTable(DEFAULT_MONGOCK_ORIGIN);
-
-        // Create Flamingock audit and lock tables
-        createAuditTable(DEFAULT_AUDIT_STORE_NAME);
-        createLockTable(DEFAULT_LOCK_STORE_NAME);
+        // Create required tables using DynamoDBTableFactory
+        DynamoDBTableFactory.createMongockTable(client, DEFAULT_MONGOCK_ORIGIN);
+//        DynamoDBTableFactory.createAuditTable(client, DEFAULT_AUDIT_STORE_NAME);
+//        DynamoDBTableFactory.createLockTable(client, DEFAULT_LOCK_STORE_NAME);
 
         mongockTestHelper = new DynamoDBMongockTestHelper(client, DEFAULT_MONGOCK_ORIGIN);
 
         // Initialize TestKit for unified testing
         testKit = DynamoDBTestKit.create(client, new DynamoDBAuditStore(client));
         auditHelper = testKit.getAuditHelper();
-    }
-
-    private void createMongockTable(String tableName) {
-        try {
-            client.createTable(CreateTableRequest.builder()
-                    .tableName(tableName)
-                    .keySchema(
-                            KeySchemaElement.builder()
-                                    .attributeName("executionId")
-                                    .keyType(KeyType.HASH)
-                                    .build(),
-                            KeySchemaElement.builder()
-                                    .attributeName("changeId")
-                                    .keyType(KeyType.RANGE)
-                                    .build()
-                    )
-                    .attributeDefinitions(
-                            AttributeDefinition.builder()
-                                    .attributeName("executionId")
-                                    .attributeType(ScalarAttributeType.S)
-                                    .build(),
-                            AttributeDefinition.builder()
-                                    .attributeName("changeId")
-                                    .attributeType(ScalarAttributeType.S)
-                                    .build()
-                    )
-                    .billingMode(BillingMode.PAY_PER_REQUEST)
-                    .build());
-        } catch (ResourceInUseException ignored) {
-            // Table already exists, ignore
-        }
-    }
-
-    private void createAuditTable(String tableName) {
-        try {
-            client.createTable(CreateTableRequest.builder()
-                    .tableName(tableName)
-                    .keySchema(
-                            KeySchemaElement.builder()
-                                    .attributeName("partitionKey")
-                                    .keyType(KeyType.HASH)
-                                    .build()
-                    )
-                    .attributeDefinitions(
-                            AttributeDefinition.builder()
-                                    .attributeName("partitionKey")
-                                    .attributeType(ScalarAttributeType.S)
-                                    .build()
-                    )
-                    .billingMode(BillingMode.PAY_PER_REQUEST)
-                    .build());
-        } catch (ResourceInUseException ignored) {
-            // Table already exists, ignore
-        }
-    }
-
-    private void createLockTable(String tableName) {
-        try {
-            client.createTable(CreateTableRequest.builder()
-                    .tableName(tableName)
-                    .keySchema(
-                            KeySchemaElement.builder()
-                                    .attributeName("partitionKey")
-                                    .keyType(KeyType.HASH)
-                                    .build()
-                    )
-                    .attributeDefinitions(
-                            AttributeDefinition.builder()
-                                    .attributeName("partitionKey")
-                                    .attributeType(ScalarAttributeType.S)
-                                    .build()
-                    )
-                    .billingMode(BillingMode.PAY_PER_REQUEST)
-                    .build());
-        } catch (ResourceInUseException ignored) {
-            // Table already exists, ignore
-        }
     }
 
     @AfterEach
