@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ package io.flamingock.importer.mongock.dynamodb;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
-import io.flamingock.importer.dynamodb.MongockDynamoDBAuditEntry;
-import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.support.mongock.annotations.MongockSupport;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -36,16 +37,23 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
-import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
+import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException;
+import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 
 import java.net.URI;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
+import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
+import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -58,16 +66,13 @@ public class DynamoDBImporterTest {
     public static final GenericContainer<?> dynamoDBContainer = new GenericContainer<>("amazon/dynamodb-local:latest")
             .withExposedPorts(8000);
 
-    public static final String MONGOCK_CHANGE_LOGS = "mongockChangeLogs";
-
-
     private static DynamoDbClient client;
-    private DynamoDBTestHelper mongockChangeLogsHelper;
+    private DynamoDBMongockTestHelper mongockTestHelper;
+    private TestKit testKit;
+    private AuditTestHelper auditHelper;
 
-    @BeforeAll
-    static void beforeAll() {
-        dynamoDBContainer.start();
-
+    @BeforeEach
+    void setUp() {
         String endpoint = String.format("http://%s:%d",
                 dynamoDBContainer.getHost(),
                 dynamoDBContainer.getMappedPort(8000));
@@ -80,112 +85,152 @@ public class DynamoDBImporterTest {
                         )
                 )
                 .build();
+
+        // Create Mongock origin table for migration
+        createMongockTable(DEFAULT_MONGOCK_ORIGIN);
+
+        // Create Flamingock audit and lock tables
+        createAuditTable(DEFAULT_AUDIT_STORE_NAME);
+        createLockTable(DEFAULT_LOCK_STORE_NAME);
+
+        mongockTestHelper = new DynamoDBMongockTestHelper(client, DEFAULT_MONGOCK_ORIGIN);
+
+        // Initialize TestKit for unified testing
+        testKit = DynamoDBTestKit.create(client, new DynamoDBAuditStore(client));
+        auditHelper = testKit.getAuditHelper();
     }
 
-    @BeforeEach
-    void setUp() {
-        mongockChangeLogsHelper = new DynamoDBTestHelper(client, MONGOCK_CHANGE_LOGS);
-        mongockChangeLogsHelper.ensureTableExists();
-        mongockChangeLogsHelper.resetTable();
+    private void createMongockTable(String tableName) {
+        try {
+            client.createTable(CreateTableRequest.builder()
+                    .tableName(tableName)
+                    .keySchema(
+                            KeySchemaElement.builder()
+                                    .attributeName("executionId")
+                                    .keyType(KeyType.HASH)
+                                    .build(),
+                            KeySchemaElement.builder()
+                                    .attributeName("changeId")
+                                    .keyType(KeyType.RANGE)
+                                    .build()
+                    )
+                    .attributeDefinitions(
+                            AttributeDefinition.builder()
+                                    .attributeName("executionId")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build(),
+                            AttributeDefinition.builder()
+                                    .attributeName("changeId")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build()
+                    )
+                    .billingMode(BillingMode.PAY_PER_REQUEST)
+                    .build());
+        } catch (ResourceInUseException ignored) {
+            // Table already exists, ignore
+        }
+    }
 
-        new DynamoDBTestHelper(client, DEFAULT_AUDIT_STORE_NAME).ensureTableExists();
-        new DynamoDBTestHelper(client, DEFAULT_AUDIT_STORE_NAME).resetTable();
+    private void createAuditTable(String tableName) {
+        try {
+            client.createTable(CreateTableRequest.builder()
+                    .tableName(tableName)
+                    .keySchema(
+                            KeySchemaElement.builder()
+                                    .attributeName("partitionKey")
+                                    .keyType(KeyType.HASH)
+                                    .build()
+                    )
+                    .attributeDefinitions(
+                            AttributeDefinition.builder()
+                                    .attributeName("partitionKey")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build()
+                    )
+                    .billingMode(BillingMode.PAY_PER_REQUEST)
+                    .build());
+        } catch (ResourceInUseException ignored) {
+            // Table already exists, ignore
+        }
+    }
+
+    private void createLockTable(String tableName) {
+        try {
+            client.createTable(CreateTableRequest.builder()
+                    .tableName(tableName)
+                    .keySchema(
+                            KeySchemaElement.builder()
+                                    .attributeName("partitionKey")
+                                    .keyType(KeyType.HASH)
+                                    .build()
+                    )
+                    .attributeDefinitions(
+                            AttributeDefinition.builder()
+                                    .attributeName("partitionKey")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build()
+                    )
+                    .billingMode(BillingMode.PAY_PER_REQUEST)
+                    .build());
+        } catch (ResourceInUseException ignored) {
+            // Table already exists, ignore
+        }
+    }
+
+    @AfterEach
+    void tearDown() {
+        // DynamoDB local doesn't need explicit cleanup between tests
+        // Tables are automatically cleaned by Testcontainers on restart
+        client.close();
     }
 
     @Test
-    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void testImportDynamoDBChangeLogs() {
-        List<MongockDynamoDBAuditEntry> entries = Arrays.asList(
-                new MongockDynamoDBAuditEntry(
-                        "exec-1",
-                        "client-initializer",
-                        "author1",
-                        String.valueOf(Instant.now().toEpochMilli()),
-                        "EXECUTED",
-                        "EXECUTION",
-                        "io.flamingock.changelog.Class1",
-                        "method1",
-                        new HashMap<String, String>() {{
-                            put("meta1", "value1");
-                        }}.toString(),
-                        123L,
-                        "host1",
-                        null,
-                        true
-                ),
-                new MongockDynamoDBAuditEntry(
-                        "exec-1",
-                        "client-updater",
-                        "author1",
-                        String.valueOf(Instant.now().toEpochMilli()),
-                        "EXECUTED",
-                        "EXECUTION",
-                        "io.flamingock.changelog.Class2",
-                        "method1",
-                        new HashMap<String, String>() {{
-                            put("meta1", "value1");
-                        }}.toString(),
-                        123L,
-                        "host1",
-                        null,
-                        true
-                )
-        );
+        // Setup Mongock entries
+        mongockTestHelper.setupBasicScenario();
 
-        mongockChangeLogsHelper.insertChangeEntries(entries);
+        DynamoDBTargetSystem dynamodbTargetSystem = new DynamoDBTargetSystem("dynamodb-target-system", client);
 
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(new DynamoDBAuditStore(client))
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(dynamodbTargetSystem)
                 .build();
 
         flamingock.run();
 
-        List<AuditEntry> auditLog = new DynamoDBTestHelper(client, DEFAULT_AUDIT_STORE_NAME).getAuditEntriesSorted();
-        assertEquals(6, auditLog.size());
+        // Verify audit sequence: 9 total entries
+        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
+        auditHelper.verifyAuditSequenceStrict(
+                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("client-initializer_before"),
+                APPLIED("client-initializer"),
+                APPLIED("client-updater"),
 
-        for (AuditEntry entry : auditLog) {
-            System.out.println("executionId: " + entry.getExecutionId());
-            System.out.println("stageId: " + entry.getStageId());
-            System.out.println("taskId: " + entry.getTaskId());
-            System.out.println("author: " + entry.getAuthor());
-            System.out.println("createdAt: " + entry.getCreatedAt());
-            System.out.println("state: " + entry.getState());
-            System.out.println("type: " + entry.getType());
-            System.out.println("className: " + entry.getClassName());
-            System.out.println("methodName: " + entry.getMethodName());
-            System.out.println("executionMillis: " + entry.getExecutionMillis());
-            System.out.println("executionHostname: " + entry.getExecutionHostname());
-            System.out.println("metadata: " + entry.getMetadata());
-            System.out.println("systemChange: " + entry.getSystemChange());
-            System.out.println("errorTrace: " + entry.getErrorTrace());
-            System.out.println("txStrategy: " + entry.getTxType());
-            System.out.println("targetSystemId: " + entry.getTargetSystemId());
-            System.out.println("order: " + entry.getOrder());
-            System.out.println("-----");
-        }
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
 
-        AuditEntry entry1 = auditLog.stream()
-                .filter(e -> "client-updater".equals(e.getTaskId()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Entry with changeId 'client-updater' not found"));
-
-
-        assertEquals("client-updater", entry1.getTaskId());
-        assertEquals("author1", entry1.getAuthor());
-        assertEquals("exec-1", entry1.getExecutionId());
-        assertTrue(entry1.getSystemChange());
-
-        ScanResponse scanResponse = client.scan(
-                ScanRequest.builder().tableName(DEFAULT_AUDIT_STORE_NAME).build()
+                // Application stage - new change created by code
+                STARTED("create-users-table"),
+                APPLIED("create-users-table")
         );
-        assertTrue(scanResponse.count() > 0, "Audit table should not be empty");
+
+        // Validate actual table creation
+        assertTrue(client.listTables().tableNames().contains("users"), "Users table should exist");
+
+        // Verify table structure
+        DescribeTableResponse tableDescription = client.describeTable(
+                DescribeTableRequest.builder().tableName("users").build()
+        );
+        assertEquals("email", tableDescription.table().keySchema().get(0).attributeName());
+        assertEquals(KeyType.HASH, tableDescription.table().keySchema().get(0).keyType());
     }
 
     @Test
     @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void failIfEmptyOrigin() {
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(new DynamoDBAuditStore(client))
+        Runner flamingock = testKit.createBuilder()
                 .build();
 
         Assertions.assertThrows(FlamingockException.class, flamingock::run);
