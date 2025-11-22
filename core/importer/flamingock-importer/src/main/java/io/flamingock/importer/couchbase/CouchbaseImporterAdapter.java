@@ -43,7 +43,7 @@ public class CouchbaseImporterAdapter implements ImporterAdapter {
     }
 
     @Override
-    public List<AuditEntry> getAuditEntries() {
+    public List<AuditEntry> getAuditHistory() {
         QueryResult result = cluster.query(
                 String.format(
                         "SELECT `%s`.* FROM `%s`.`%s`.`%s` WHERE `_doctype` = $p1",

@@ -234,7 +234,11 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     }
 
     private Method getApplyMethodFromPreview(CodePreviewChange preview) {
-        return getMethodFromNameAndParameters(preview.getSource(), preview.getApplyPreviewMethod().getName(), preview.getApplyPreviewMethod().getParameterTypes());
+        try {
+            return getMethodFromNameAndParameters(preview.getSource(), preview.getApplyPreviewMethod().getName(), preview.getApplyPreviewMethod().getParameterTypes());
+        } catch (NullPointerException ex) {
+            throw ex;
+        }
     }
 
     private Optional<Method> getRollbackMethodFromPreview(CodePreviewChange preview) {

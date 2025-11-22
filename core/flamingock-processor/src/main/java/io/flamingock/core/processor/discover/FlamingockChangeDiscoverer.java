@@ -44,7 +44,7 @@ public class FlamingockChangeDiscoverer implements ChangeDiscoverer {
     }
 
     private CodePreviewChange buildCodePreviewChange(TypeElement typeElement) {
-        return Optional.ofNullable(CodePreviewTaskBuilder.builder(typeElement).build())
+        return Optional.ofNullable(CodePreviewTaskBuilder.instance(typeElement).build())
                 .map(CodePreviewChange.class::cast)
                 .orElse(null);
     }

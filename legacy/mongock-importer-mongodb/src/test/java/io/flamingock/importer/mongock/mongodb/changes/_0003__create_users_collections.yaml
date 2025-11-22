@@ -1,0 +1,9 @@
+id: create-users-collection-with-index
+#transactional: false
+template: MongoChangeTemplate
+targetSystem:
+  id: "mongodb-target-system"
+apply:
+  type: createCollection
+  collection: users
+

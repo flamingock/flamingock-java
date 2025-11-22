@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.mongock;
+package io.flamingock.importer.mongock.mongodb.legacy;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Change;
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
 
-public enum MongockChangeType {
-  EXECUTION, BEFORE_EXECUTION;
+@ChangeUnit(id = "client-updater", order = "2", author = "flamingock-team")
+public class MongockChange2 {
 
-  public AuditEntry.ExecutionType toAuditType() {
-    //TODO: remove
-    return AuditEntry.ExecutionType.EXECUTION;
-  }
+    @Execution
+    public void apply() {
+        System.out.println("Client Initializer");
+    }
 }

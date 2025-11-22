@@ -21,6 +21,7 @@ public final class Constants {
 
     public static final String FULL_GRAALVM_REFLECT_CLASSES_PATH = "META-INF/flamingock/reflection-classes.txt";
 
+    public static final String DEFAULT_MONGOCK_ORIGIN = "mongockChangeLog";
 
     private Constants() {}
 
