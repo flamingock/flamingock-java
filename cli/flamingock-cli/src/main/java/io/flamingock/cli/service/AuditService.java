@@ -23,9 +23,11 @@ import io.flamingock.cli.config.FlamingockConfig;
 import io.flamingock.cli.factory.CouchbaseClusterFactory;
 import io.flamingock.cli.factory.DynamoDBClientFactory;
 import io.flamingock.cli.factory.MongoClientFactory;
+import io.flamingock.cli.factory.SqlDataSourceFactory;
 import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
 import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
 import io.flamingock.community.mongodb.sync.driver.MongoDBSyncAuditStore;
+import io.flamingock.community.sql.driver.SqlAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.Dependency;
@@ -40,6 +42,7 @@ import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.store.AuditStore;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -142,6 +145,8 @@ public class AuditService {
                 return createDynamoAuditStore(context);
             case COUCHBASE:
                 return createCouchbaseAuditStore(context);
+            case SQL:
+                return createSqlAuditStore(context);
             default:
                 throw new IllegalStateException("Unsupported database type: " + databaseType);
         }
@@ -175,5 +180,15 @@ public class AuditService {
 
         return new CouchbaseAuditStore(couchbaseCluster, couchbaseConfig.getBucketName())
             .withAuditRepositoryName(couchbaseConfig.getTable());
+    }
+
+    private AuditStore<?> createSqlAuditStore(Context context) {
+        DatabaseConfig.SqlConfig sqlConfig = config.getAudit().getSql();
+
+        // Create Couchbase cluster
+        DataSource dataSource = SqlDataSourceFactory.createSqlDataSource(sqlConfig);
+
+        return new SqlAuditStore(dataSource)
+            .withAuditRepositoryName(sqlConfig.getTable());
     }
 }

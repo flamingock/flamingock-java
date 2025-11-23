@@ -21,6 +21,7 @@ import io.flamingock.cli.test.TestUtils;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
+import static io.flamingock.internal.common.sql.SqlDialect.SQLSERVER;
 import static org.assertj.core.api.Assertions.*;
 
 class SimpleCLITest {
@@ -53,6 +54,7 @@ class SimpleCLITest {
         FlamingockConfig mongoConfig = TestUtils.createMongoConfig();
         FlamingockConfig dynamoConfig = TestUtils.createDynamoConfig();
         FlamingockConfig couchbaseConfig = TestUtils.createCouchbaseConfig();
+        FlamingockConfig sqlConfig = TestUtils.createSqlConfig();
 
         // When/Then
         assertThat(ConfigLoader.detectDatabaseType(mongoConfig))
@@ -63,6 +65,9 @@ class SimpleCLITest {
 
         assertThat(ConfigLoader.detectDatabaseType(couchbaseConfig))
                 .isEqualTo(ConfigLoader.DatabaseType.COUCHBASE);
+
+        assertThat(ConfigLoader.detectDatabaseType(sqlConfig))
+                .isEqualTo(ConfigLoader.DatabaseType.SQL);
     }
 
     @Test
@@ -71,6 +76,7 @@ class SimpleCLITest {
         FlamingockConfig mongoConfig = TestUtils.createMongoConfig();
         FlamingockConfig dynamoConfig = TestUtils.createDynamoConfig();
         FlamingockConfig couchbaseoConfig = TestUtils.createCouchbaseConfig();
+        FlamingockConfig sqlConfig = TestUtils.createSqlConfig();
 
         // Then
         assertThat(mongoConfig).isNotNull();
@@ -84,5 +90,9 @@ class SimpleCLITest {
         assertThat(couchbaseoConfig).isNotNull();
         assertThat(couchbaseoConfig.getAudit().getCouchbase()).isNotNull();
         assertThat(couchbaseoConfig.getAudit().getCouchbase().getBucketName()).isEqualTo("test-bucket");
+
+        assertThat(sqlConfig).isNotNull();
+        assertThat(sqlConfig.getAudit().getSql()).isNotNull();
+        assertThat(sqlConfig.getAudit().getSql().getSqlDialect()).isEqualTo(SQLSERVER);
     }
 }

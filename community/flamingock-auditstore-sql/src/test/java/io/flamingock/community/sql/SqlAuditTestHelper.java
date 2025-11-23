@@ -16,6 +16,7 @@
 package io.flamingock.community.sql;
 
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.testContainers.SharedSqlContainers;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import javax.sql.DataSource;

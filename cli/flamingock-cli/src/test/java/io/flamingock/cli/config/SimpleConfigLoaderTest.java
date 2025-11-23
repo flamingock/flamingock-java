@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static io.flamingock.internal.common.sql.SqlDialect.SQLSERVER;
 import static org.assertj.core.api.Assertions.*;
 
 class SimpleConfigLoaderTest {
@@ -84,6 +85,25 @@ class SimpleConfigLoaderTest {
     }
 
     @Test
+    void shouldLoadValidSqlConfiguration() throws IOException {
+        // Given
+        Path configFile = tempDir.resolve("sql-config.yml");
+        Files.write(configFile, TestUtils.getValidSqlYaml().getBytes());
+
+        // When
+        FlamingockConfig config = ConfigLoader.loadConfig(configFile.toString());
+
+        // Then
+        assertThat(config.getServiceIdentifier()).isEqualTo("test-cli");
+        assertThat(config.getAudit()).isNotNull();
+        assertThat(config.getAudit().getSql()).isNotNull();
+        assertThat(config.getAudit().getSql().getEndpoint()).isEqualTo("jdbc:sqlserver://localhost:1433");
+        assertThat(config.getAudit().getSql().getUsername()).isEqualTo("test-user");
+        assertThat(config.getAudit().getSql().getPassword()).isEqualTo("test-password");
+        assertThat(config.getAudit().getSql().getSqlDialect()).isEqualTo(SQLSERVER);
+    }
+
+    @Test
     void shouldDetectMongoDBType() throws IOException {
         // Given
         FlamingockConfig config = TestUtils.createMongoConfig();
@@ -117,6 +137,18 @@ class SimpleConfigLoaderTest {
 
         // Then
         assertThat(type).isEqualTo(ConfigLoader.DatabaseType.COUCHBASE);
+    }
+
+    @Test
+    void shouldDetectSqlType() throws IOException {
+        // Given
+        FlamingockConfig config = TestUtils.createSqlConfig();
+
+        // When
+        ConfigLoader.DatabaseType type = ConfigLoader.detectDatabaseType(config);
+
+        // Then
+        assertThat(type).isEqualTo(ConfigLoader.DatabaseType.SQL);
     }
 
     @Test

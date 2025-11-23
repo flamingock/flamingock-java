@@ -10,6 +10,7 @@ description = "Command-line interface for Flamingock audit and issue management 
 dependencies {
     implementation(project(":core:flamingock-core"))
     implementation(project(":community:flamingock-community"))
+    implementation(project(":utils:sql-util"))
 
     // CLI framework
     implementation("info.picocli:picocli:4.7.5")
@@ -25,6 +26,20 @@ dependencies {
     implementation("software.amazon.awssdk:dynamodb:2.20.0")
     implementation ("com.couchbase.client:java-client:3.7.3")
 
+    // SQL drivers
+    implementation("mysql:mysql-connector-java:8.0.33")
+    implementation("com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre8")
+    implementation("com.oracle.database.jdbc:ojdbc8:21.9.0.0")
+    implementation("org.postgresql:postgresql:42.7.3")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
+    implementation("com.h2database:h2:2.2.224")
+    implementation("org.xerial:sqlite-jdbc:3.41.2.1")
+    implementation("com.ibm.informix:jdbc:4.50.10")
+    implementation("org.firebirdsql.jdbc:jaybird:4.0.10.java8")
+
+    // HikariCP for SQL database connection pooling
+    implementation("com.zaxxer:HikariCP:3.4.5")
+
     // SLF4J API - needed for interface compatibility (provided by flamingock-core)
     // implementation("org.slf4j:slf4j-api:1.7.36") // Already provided by core dependencies
 
@@ -37,8 +52,14 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("org.testcontainers:junit-jupiter:1.19.3")
     testImplementation("org.testcontainers:mongodb:1.19.3")
-    testImplementation("org.testcontainers:couchbase:1.21.3")
+    testImplementation("org.testcontainers:couchbase:1.19.3")
     testImplementation("com.github.stefanbirkner:system-lambda:1.2.1")
+    // SQL Testcontainers
+    testImplementation("org.testcontainers:mysql:1.19.3")
+    testImplementation("org.testcontainers:mssqlserver:1.19.3")
+    testImplementation("org.testcontainers:oracle-xe:1.19.3")
+    testImplementation("org.testcontainers:postgresql:1.19.3")
+    testImplementation("org.testcontainers:mariadb:1.19.3")
 
 }
 
@@ -50,6 +71,7 @@ val uberJar by tasks.registering(Jar::class) {
     archiveBaseName.set("flamingock-cli")
     archiveClassifier.set("uber")
     archiveVersion.set(project.version.toString())
+    isZip64 = true
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -63,7 +85,9 @@ val uberJar by tasks.registering(Jar::class) {
     dependsOn(configurations.runtimeClasspath)
     from({
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
-    })
+    }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    }
 }
 
 val createScripts by tasks.registering(CreateStartScripts::class) {
