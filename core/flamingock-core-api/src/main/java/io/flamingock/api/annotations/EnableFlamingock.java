@@ -209,4 +209,12 @@ public @interface EnableFlamingock {
      * @see SetupType
      */
     SetupType setup() default SetupType.DEFAULT;
+
+    /**
+     * If true, the annotation processor will validate that all code-based changes
+     * (classes annotated with @Change) are mapped to some stage. When unmapped changes
+     * are found and this flag is true, a RuntimeException is thrown. Default is false
+     * (only a warning is emitted).
+     */
+    boolean strictStageMapping() default false;
 }

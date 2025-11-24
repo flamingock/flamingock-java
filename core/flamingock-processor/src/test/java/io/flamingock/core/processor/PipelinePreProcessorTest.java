@@ -31,6 +31,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -391,6 +393,47 @@ public class PipelinePreProcessorTest {
         }
     }
 
+    @Test
+    @DisplayName("Should throw error when changes exist that are not mapped to any stage and mapping is strict")
+    void shouldThrowErrorForUnmappedChanges() throws Exception {
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+
+        // Prepare changes map with one mapped and one unmapped package (lists can be empty for this test)
+        Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
+        changesByPackage.put("com.example.migrations", Collections.emptyList());
+        changesByPackage.put("com.example.unmapped", Collections.emptyList()); // Unmapped
+
+        // Provide a non-empty changes list for the mapped stage so the builder doesn't throw
+        io.flamingock.internal.common.core.preview.CodePreviewChange mockChange = new io.flamingock.internal.common.core.preview.CodePreviewChange();
+
+        // Build a pipeline with a single stage covering com.example.migrations
+        PreviewStage mappedStage = PreviewStage.defaultBuilder(StageType.DEFAULT)
+                .setName("migrations")
+                .setSourcesPackage("com.example.migrations")
+                .setSourcesRoots(Collections.emptyList())
+                .setResourcesRoot("src/main/resources")
+                .setChanges(Collections.singletonList(mockChange)) // <- non-empty list
+                .build();
+
+        PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
+
+        // Invoke private validator by reflection and assert it throws (InvocationTargetException wraps the RuntimeException)
+        Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
+                "validateAllChangesAreMappedToStages", List.class, Map.class, PreviewPipeline.class, Boolean.class);
+        validator.setAccessible(true);
+
+        InvocationTargetException ex = assertThrows(InvocationTargetException.class, () ->
+                validator.invoke(processor, Collections.emptyList(), changesByPackage, pipeline, true));
+
+        Throwable cause = ex.getCause();
+        assertNotNull(cause, "Validator should throw a RuntimeException cause");
+        assertInstanceOf(RuntimeException.class, cause, "Cause should be RuntimeException");
+        assertTrue(cause.getMessage().contains("not mapped to any stage"), "Should have error about unmapped changes");
+        assertTrue(cause.getMessage().contains("com.example.unmapped"), "Should mention the unmapped package");
+    }
+
+
+
     // Helper methods using reflection to test the internal pipeline building logic
     private PreviewPipeline buildPipelineFromAnnotation(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changes) throws Exception {
         // Set up minimal processor state
@@ -585,6 +628,12 @@ public class PipelinePreProcessorTest {
                 @Override public Stage[] stages() { return stages; }
                 @Override public String configFile() { return configFile; }
                 @Override public io.flamingock.api.SetupType setup() { return io.flamingock.api.SetupType.DEFAULT; }
+
+                @Override
+                public boolean strictStageMapping() {
+                    return true;
+                }
+
                 @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return EnableFlamingock.class; }
             };
         }
