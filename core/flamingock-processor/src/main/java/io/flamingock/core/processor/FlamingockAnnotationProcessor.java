@@ -51,6 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 /**
@@ -209,6 +210,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 noLegacyChangesByPackage,
                 flamingockAnnotation
         );
+
+        validateAllChangesAreMappedToStages(legacyChanges, noLegacyChangesByPackage, pipeline, flamingockAnnotation.strictStageMapping());
+
         Serializer serializer = new Serializer(processingEnv, logger);
         String setup = flamingockAnnotation.setup().toString();
         String configFile = flamingockAnnotation.configFile();
@@ -721,4 +725,92 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
     }
 
+    /**
+     * Validates that code-based preview changes (non-legacy) are attached to some stage.
+     * It checks package names from the changes map against the pipeline stages' sourcesPackage
+     * (including the SYSTEM stage). If any stage does not represent any package, a RuntimeException is thrown.
+     *
+     * @param legacyCodedChanges legacy code changes (kept for completeness; not used for package mapping)
+     * @param noLegacyCodedChangesByPackage non-legacy changes grouped by source package
+     * @param pipeline built preview pipeline
+     * @param strictStageMapping if true, unmapped changes will throw an exception; if false, will log a warning
+     */
+    private void validateAllChangesAreMappedToStages(List<CodePreviewChange> legacyCodedChanges,
+                                                     Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage,
+                                                     PreviewPipeline pipeline,
+                                                     Boolean strictStageMapping) {
+        if (noLegacyCodedChangesByPackage == null || noLegacyCodedChangesByPackage.isEmpty()) {
+            return;
+        }
+
+        // Helper to test if a change package is covered by a stage package (exact or parent)
+        BiPredicate<String, String> covers = (stagePkg, changePkg) -> {
+            if (stagePkg == null || changePkg == null) return false;
+            return changePkg.equals(stagePkg) || changePkg.startsWith(stagePkg + ".");
+        };
+
+        List<String> unmapped = new ArrayList<>();
+
+        for (String pkg : noLegacyCodedChangesByPackage.keySet()) {
+            if (pkg == null) {
+                continue;
+            }
+            boolean matched = false;
+
+            // Check system stage
+            PreviewStage system = pipeline.getSystemStage();
+            if (system != null) {
+                String sysPkg = system.getSourcesPackage();
+                if (covers.test(sysPkg, pkg)) {
+                    matched = true;
+                } else if (system.getTasks() != null) {
+                    for (io.flamingock.internal.common.core.preview.AbstractPreviewTask task : system.getTasks()) {
+                        if (task instanceof CodePreviewChange) {
+                            String taskPkg = ((CodePreviewChange) task).getSourcePackage();
+                            if (covers.test(taskPkg, pkg)) {
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check regular stages
+            if (!matched && pipeline.getStages() != null) {
+                for (PreviewStage stage : pipeline.getStages()) {
+                    String stagePkg = stage.getSourcesPackage();
+                    if (covers.test(stagePkg, pkg)) {
+                        matched = true;
+                        break;
+                    }
+                    if (stage.getTasks() != null) {
+                        for (io.flamingock.internal.common.core.preview.AbstractPreviewTask task : stage.getTasks()) {
+                            if (task instanceof CodePreviewChange) {
+                                String taskPkg = ((CodePreviewChange) task).getSourcePackage();
+                                if (covers.test(taskPkg, pkg)) {
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (matched) break;
+                    }
+                }
+            }
+
+            if (!matched) {
+                unmapped.add(pkg);
+            }
+        }
+
+        if (!unmapped.isEmpty()) {
+            String message = "Changes are not mapped to any stage: " + String.join(", ", unmapped);
+            if (Boolean.TRUE.equals(strictStageMapping)) {
+                throw new RuntimeException(message);
+            } else {
+                logger.warn(message);
+            }
+        }
+    }
 }
