@@ -28,6 +28,8 @@ import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
+import io.flamingock.support.mongock.annotations.MongockSupport;
+import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -40,20 +42,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
-import static io.flamingock.api.StageType.LEGACY;
-import static io.flamingock.api.StageType.SYSTEM;
+import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@EnableFlamingock(
-        stages = {
-                @Stage(location = "io.flamingock.importer.couchbase.system", type = SYSTEM),
-                @Stage(location = "io.flamingock.importer.couchbase.legacy", type = LEGACY),
-                @Stage(location = "io.flamingock.importer.couchbase.couchbase")
-        }
-)
 @Testcontainers
+@MongockSupport(targetSystem = "couchbase-target-system")
+@EnableFlamingock(stages = {@Stage(location = "io.flamingock.importer.mongock.couchbase.changes")})
 public class CouchbaseImporterTest {
 
     public static final String FLAMINGOCK_BUCKET_NAME = "test";
@@ -62,7 +58,7 @@ public class CouchbaseImporterTest {
 
     public static final String MONGOCK_BUCKET_NAME = "test";
     public static final String MONGOCK_SCOPE_NAME = CollectionIdentifier.DEFAULT_SCOPE;
-    public static final String MONGOCK_COLLECTION_NAME = CollectionIdentifier.DEFAULT_COLLECTION;
+    public static final String MONGOCK_COLLECTION_NAME = DEFAULT_MONGOCK_ORIGIN;
 
 
     @Container
@@ -103,7 +99,6 @@ public class CouchbaseImporterTest {
     }
 
     @Test
-    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
     void testImporterIntegration() {
         Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
         JsonObject doc = JsonObject.create()
@@ -123,10 +118,13 @@ public class CouchbaseImporterTest {
                 .put("_doctype", "mongockChangeEntry");
         originCollection.upsert("change-1", doc);
 
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .setAuditStore(new CouchbaseAuditStore(cluster, FLAMINGOCK_BUCKET_NAME)
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
                 .build();
 
         flamingock.run();

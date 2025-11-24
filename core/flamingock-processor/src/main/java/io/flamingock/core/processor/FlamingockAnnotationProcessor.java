@@ -316,36 +316,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     }
 
     /**
-     * Validates that stage types conform to the restrictions:
-     * - Maximum 1 SYSTEM stage allowed
-     * - Maximum 1 LEGACY stage allowed
-     * - Unlimited DEFAULT stages allowed
-     *
-     * @param stages the stages to validate
-     * @throws RuntimeException if validation fails
-     */
-    private void validateStageTypes(Stage[] stages) {
-        int systemStageCount = 0;
-        int legacyStageCount = 0;
-
-        for (Stage stage : stages) {
-            StageType stageType = stage.type();
-
-            if (stageType == StageType.SYSTEM) {
-                systemStageCount++;
-                if (systemStageCount > 1) {
-                    throw new RuntimeException("Multiple SYSTEM stages are not allowed. Only one stage with type StageType.SYSTEM is permitted.");
-                }
-            } else if (stageType == StageType.LEGACY) {
-                legacyStageCount++;
-                if (legacyStageCount > 1) {
-                    throw new RuntimeException("Multiple LEGACY stages are not allowed. Only one stage with type StageType.LEGACY is permitted.");
-                }
-            }
-        }
-    }
-
-    /**
      * Validates that stage types from YAML conform to the restrictions:
      * - Maximum 1 SYSTEM stage allowed
      * - Maximum 1 LEGACY stage allowed
@@ -450,7 +420,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             logger.verbose("Resources directory: " + resourcesDir);
         }
 
-        return PreviewStage.defaultBuilder(stageAnnotation.type())
+        return PreviewStage.defaultBuilder(StageType.DEFAULT)
                 .setName(name)
                 .setDescription(stageAnnotation.description().isEmpty() ? null : stageAnnotation.description())
                 .setSourcesRoots(sourceRoots)
@@ -704,10 +674,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException("@EnableFlamingock annotation must specify either configFile OR stages configuration.");
         }
 
-        // Validate stage type restrictions when using annotation-based configuration
-        if (hasStagesInAnnotation) {
-            validateStageTypes(pipelineAnnotation.stages());
-        }
     }
 
     /**

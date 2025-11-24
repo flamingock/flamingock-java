@@ -65,7 +65,7 @@ public class MongockImportChange {
         if (targetSystemOps instanceof TransactionalTargetSystemOps) {
             legacyAuditReader = ((TransactionalTargetSystemOps) targetSystemOps).getAuditAuditReader(MONGOCK)
                     .orElseThrow(() -> {
-                        String message = "TargetSystem[%s], specified in @MongockSupport doesn't provide Mongock importing support";
+                        String message = String.format("TargetSystem[%s], specified in @MongockSupport doesn't provide Mongock importing support", targetSystemId);
                         return new FlamingockException(message);
                     });
         } else {

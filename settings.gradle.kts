@@ -159,22 +159,6 @@ include("core:importer:flamingock-importer")
 project(":core:importer:flamingock-importer").name = "flamingock-importer"
 project(":core:importer:flamingock-importer").projectDir = file("core/importer/flamingock-importer")
 
-include("core:importer:flamingock-importer-mongodb-tests")
-project(":core:importer:flamingock-importer-mongodb-tests").name = "flamingock-importer-mongodb-tests"
-project(":core:importer:flamingock-importer-mongodb-tests").projectDir =
-    file("core/importer/flamingock-importer-mongodb-tests")
-
-
-include("core:importer:flamingock-importer-dynamodb-tests")
-project(":core:importer:flamingock-importer-dynamodb-tests").name = "flamingock-importer-dynamodb-tests"
-project(":core:importer:flamingock-importer-dynamodb-tests").projectDir =
-    file("core/importer/flamingock-importer-dynamodb-tests")
-
-
-include("core:importer:flamingock-importer-couchbase-tests")
-project(":core:importer:flamingock-importer-couchbase-tests").name = "flamingock-importer-couchbase-tests"
-project(":core:importer:flamingock-importer-couchbase-tests").projectDir =
-    file("core/importer/flamingock-importer-couchbase-tests")
 
 //////////////////////////////////////
 // LEGACY

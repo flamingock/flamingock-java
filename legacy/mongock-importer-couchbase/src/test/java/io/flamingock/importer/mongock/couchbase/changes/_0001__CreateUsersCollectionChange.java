@@ -20,9 +20,11 @@ import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.TargetSystem;
 
 import java.util.Collections;
 
+@TargetSystem(id = "couchbase-target-system")
 @Change(id = "create-users-collection", author = "importer", transactional = false)
 public class _0001__CreateUsersCollectionChange {
 

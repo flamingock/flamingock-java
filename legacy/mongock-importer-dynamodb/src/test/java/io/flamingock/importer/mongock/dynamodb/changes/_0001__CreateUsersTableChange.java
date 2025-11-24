@@ -27,8 +27,8 @@ import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 
-@Change(id = "create-users-table", author = "importer")
 @TargetSystem(id = "dynamodb-target-system")
+@Change(id = "create-users-table", author = "importer")
 public class _0001__CreateUsersTableChange {
 
     @Apply

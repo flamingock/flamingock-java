@@ -15,14 +15,13 @@
  */
 package io.flamingock.importer.mongock.couchbase.changes;
 
-import io.flamingock.api.annotations.Change;
-import io.flamingock.api.annotations.Apply;
 import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
 
 @ChangeUnit(id = "client-updater", order = "2", author = "flamingock-team", transactional = false)
 public class MongockChange2 {
 
-    @Apply
+    @Execution
     public void apply() {
         System.out.println("Client Initializer");
     }

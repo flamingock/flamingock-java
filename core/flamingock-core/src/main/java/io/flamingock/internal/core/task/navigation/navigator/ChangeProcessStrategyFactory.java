@@ -108,7 +108,7 @@ public class ChangeProcessStrategyFactory {
 
         changeLogger.logStartChangeProcessStrategy(change.getId());
         
-        TargetSystemOps targetSystemOps = getTargetSystem(change.getId());
+        TargetSystemOps targetSystemOps = getTargetSystem();
         
         // Log target system resolution
         changeLogger.logTargetSystemResolved(change.getId(), change.getTargetSystem());
@@ -130,11 +130,11 @@ public class ChangeProcessStrategyFactory {
         );
     }
 
-    private TargetSystemOps getTargetSystem(String changeId) {
+    private TargetSystemOps getTargetSystem() {
         try {
             return targetSystemManager.getTargetSystem(change.getTargetSystem());
         } catch (Exception e) {
-            String message = String.format("Error in change [%s] : %s", changeId, e.getMessage());
+            String message = String.format("Error in change [%s] : %s", change.getId(), e.getMessage());
             throw new FlamingockException(message);
         }
     }
