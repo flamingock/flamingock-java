@@ -1,3 +1,5 @@
+package io.flamingock.common.test.mongock;
+
 /*
  * Copyright 2023 Flamingock (https://www.flamingock.io)
  *
@@ -13,11 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer;
 
-import io.flamingock.internal.common.core.audit.AuditHistoryReader;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
+public enum MongockChangeState {
+    EXECUTED, FAILED, ROLLED_BACK, ROLLBACK_FAILED, IGNORED;
 
-public interface ImporterAdapter extends AuditHistoryReader {
+    public AuditEntry.Status toAuditStatus() {
+        switch (this) {
+            case FAILED: return AuditEntry.Status.FAILED;
+            case ROLLED_BACK: return AuditEntry.Status.ROLLED_BACK;
+            case ROLLBACK_FAILED: return AuditEntry.Status.ROLLBACK_FAILED;
+            case EXECUTED:
+            default: return AuditEntry.Status.APPLIED;
+        }
+    }
 
 }

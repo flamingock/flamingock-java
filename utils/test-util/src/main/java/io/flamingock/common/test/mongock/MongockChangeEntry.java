@@ -1,3 +1,5 @@
+package io.flamingock.common.test.mongock;
+
 /*
  * Copyright 2023 Flamingock (https://www.flamingock.io)
  *
@@ -13,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.mongodb;
 
 import java.util.Date;
 

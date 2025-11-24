@@ -17,8 +17,6 @@ package io.flamingock.graalvm;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.importer.ImporterTemplateFactory;
-import io.flamingock.importer.mongodb.MongoDBImporterChangeTemplate;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -40,8 +38,8 @@ import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.graalvm.nativeimage.hosted.Feature;
-import org.graalvm.nativeimage.hosted.RuntimeReflection;
 import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
+import org.graalvm.nativeimage.hosted.RuntimeReflection;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.CoderResult;
@@ -51,17 +49,6 @@ import java.util.List;
 public class RegistrationFeature implements Feature {
 
     private static final Logger logger = new Logger();
-
-    @Override
-    public void beforeAnalysis(BeforeAnalysisAccess access) {
-        logger.startProcess("GraalVM classes registration and initialization");
-        initializeInternalClassesAtBuildTime();
-        initializeExternalClassesAtBuildTime();
-        registerInternalClasses();
-        registerTemplates();
-        registerUserClasses();
-        logger.finishedProcess("GraalVM classes registration and initialization");
-    }
 
     private static void registerInternalClasses() {
         logger.startRegistrationProcess("internal classes");
@@ -91,7 +78,6 @@ public class RegistrationFeature implements Feature {
 
         //others
         registerClassForReflection(CoderResult.class.getName());
-        registerClassForReflection(ImporterTemplateFactory.class.getName());
 
 
         logger.completedRegistrationProcess("internal classes");
@@ -103,10 +89,8 @@ public class RegistrationFeature implements Feature {
         initializeClassAtBuildTime(AbstractLoadedChange.class);
         initializeClassAtBuildTime(TemplateLoadedChange.class);
         initializeClassAtBuildTime(ChangeTemplateManager.class);
-        initializeClassAtBuildTime(ImporterTemplateFactory.class);
         initializeClassAtBuildTime(RecoveryDescriptor.class);
         initializeClassAtBuildTime(FlamingockLoggerFactory.class);
-        initializeClassAtBuildTime(MongoDBImporterChangeTemplate.class);
         logger.completeInitializationProcess("internal classes");
     }
 
@@ -116,25 +100,11 @@ public class RegistrationFeature implements Feature {
         logger.completeInitializationProcess("external classes");
     }
 
-
     private static void registerUserClasses() {
         logger.startRegistrationProcess("user classes");
         List<String> classesToRegister = FileUtil.getClassesForRegistration();
         classesToRegister.forEach(RegistrationFeature::registerClassForReflection);
         logger.completedRegistrationProcess("user classes");
-    }
-
-    private void registerTemplates() {
-        logger.startRegistrationProcess("templates");
-        registerClassForReflection(ChangeTemplateManager.class);
-        registerClassForReflection(ChangeTemplate.class);
-        registerClassForReflection(AbstractChangeTemplate.class);
-        ChangeTemplateManager.getTemplates().forEach(template -> {
-            registerClassForReflection(template.getClass());
-            template.getReflectiveClasses().forEach(RegistrationFeature::registerClassForReflection);
-        });
-
-        logger.completedRegistrationProcess("templates");
     }
 
     private static void registerClassForReflection(String className) {
@@ -157,6 +127,30 @@ public class RegistrationFeature implements Feature {
     private static void initializeClassAtBuildTime(Class<?> clazz) {
         logger.startClassInitialization(clazz);
         RuntimeClassInitialization.initializeAtBuildTime(clazz);
+    }
+
+    @Override
+    public void beforeAnalysis(BeforeAnalysisAccess access) {
+        logger.startProcess("GraalVM classes registration and initialization");
+        initializeInternalClassesAtBuildTime();
+        initializeExternalClassesAtBuildTime();
+        registerInternalClasses();
+        registerTemplates();
+        registerUserClasses();
+        logger.finishedProcess("GraalVM classes registration and initialization");
+    }
+
+    private void registerTemplates() {
+        logger.startRegistrationProcess("templates");
+        registerClassForReflection(ChangeTemplateManager.class);
+        registerClassForReflection(ChangeTemplate.class);
+        registerClassForReflection(AbstractChangeTemplate.class);
+        ChangeTemplateManager.getTemplates().forEach(template -> {
+            registerClassForReflection(template.getClass());
+            template.getReflectiveClasses().forEach(RegistrationFeature::registerClassForReflection);
+        });
+
+        logger.completedRegistrationProcess("templates");
     }
 
 

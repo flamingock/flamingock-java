@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.dynamodb;
+package io.flamingock.importer.mongock.dynamodb;
 
-import io.flamingock.importer.mongodb.MongockChangeState;
+import io.flamingock.importer.mongock.dynamodb.MongockChangeState;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;

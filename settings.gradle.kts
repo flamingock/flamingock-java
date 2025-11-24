@@ -153,14 +153,6 @@ project(":utils:sql-util").name = "sql-util"
 project(":utils:sql-util").projectDir = file("utils/sql-util")
 
 //////////////////////////////////////
-// IMPORTER
-//////////////////////////////////////
-include("core:importer:flamingock-importer")
-project(":core:importer:flamingock-importer").name = "flamingock-importer"
-project(":core:importer:flamingock-importer").projectDir = file("core/importer/flamingock-importer")
-
-
-//////////////////////////////////////
 // LEGACY
 //////////////////////////////////////
 include("legacy:mongock-support")

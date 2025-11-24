@@ -16,8 +16,8 @@
 package io.flamingock.importer.mongock.mongodb;
 
 import com.mongodb.client.MongoCollection;
+import io.flamingock.common.test.mongock.MongockChangeEntry;
 import io.flamingock.common.test.mongock.MongockTestHelper;
-import io.flamingock.importer.mongodb.MongockChangeEntry;
 import org.bson.Document;
 
 import java.util.ArrayList;
