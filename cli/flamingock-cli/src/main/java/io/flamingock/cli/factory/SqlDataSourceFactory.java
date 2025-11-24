@@ -35,19 +35,20 @@ public class SqlDataSourceFactory {
         }
 
         if (config.getEndpoint() == null) {
-            throw new IllegalArgumentException("JdbcUrl is required");
-        }
-
-        if (config.getUsername() == null) {
-            throw new IllegalArgumentException("Database username is required");
-        }
-
-        if (config.getPassword() == null) {
-            throw new IllegalArgumentException("Database password is required");
+            throw new IllegalArgumentException("Database endpoint is required");
         }
 
         if (config.getSqlDialect() == null) {
             throw new IllegalArgumentException("Sql dialect is required");
+        }
+
+        if (!SqlDialect.SQLITE.equals(config.getSqlDialect())) {
+            if (config.getUsername() == null) {
+                throw new IllegalArgumentException("Database username is required");
+            }
+            if (config.getPassword() == null) {
+                throw new IllegalArgumentException("Database password is required");
+            }
         }
 
         try {
@@ -66,30 +67,10 @@ public class SqlDataSourceFactory {
                 sqlDatasource = sqliteDatasource;
             } else {
                 HikariConfig datasourceConfig = new HikariConfig();
+                datasourceConfig.setJdbcUrl(config.getEndpoint());
+                datasourceConfig.setUsername(config.getUsername());
+                datasourceConfig.setPassword(config.getPassword());
                 datasourceConfig.setDriverClassName(config.getDriverClassName());
-
-                if (config.getSqlDialect().equals(SqlDialect.H2)) {
-                    datasourceConfig.setJdbcUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
-                    datasourceConfig.setUsername("sa");
-                    datasourceConfig.setPassword("");
-                } else {
-                    datasourceConfig.setJdbcUrl(config.getEndpoint());
-                    datasourceConfig.setUsername(config.getUsername());
-                    datasourceConfig.setPassword(config.getPassword());
-                }
-
-                if (config.getSqlDialect() == SqlDialect.INFORMIX) {
-                    datasourceConfig.setMaximumPoolSize(1);
-                    datasourceConfig.setMinimumIdle(0);
-                    datasourceConfig.setConnectionTimeout(30000);
-                    datasourceConfig.setIdleTimeout(600000);
-                    datasourceConfig.setMaxLifetime(1800000);
-                    datasourceConfig.setLeakDetectionThreshold(0);
-                    datasourceConfig.setValidationTimeout(5000);
-                    datasourceConfig.setConnectionTestQuery("SELECT 1 FROM systables WHERE tabid=1");
-                    datasourceConfig.setInitializationFailTimeout(-1);
-                    datasourceConfig.setAutoCommit(true);
-                }
 
                 sqlDatasource = new HikariDataSource(datasourceConfig);
             }
