@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
     compileOnly("com.couchbase.client:java-client:3.6.0")
+
+
     testImplementation(project(":core:importer:flamingock-importer"))
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":community:flamingock-auditstore-couchbase"))

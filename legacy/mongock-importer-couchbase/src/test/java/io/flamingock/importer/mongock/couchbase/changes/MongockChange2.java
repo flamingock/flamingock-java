@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.importer.couchbase.legacy;
+package io.flamingock.importer.mongock.couchbase.changes;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
+import io.mongock.api.annotations.ChangeUnit;
 
-@Change(id = "client-updater", author = "mongock", transactional = false)
-public class _0002__ClientUpdater {
+@ChangeUnit(id = "client-updater", order = "2", author = "flamingock-team", transactional = false)
+public class MongockChange2 {
 
     @Apply
     public void apply() {

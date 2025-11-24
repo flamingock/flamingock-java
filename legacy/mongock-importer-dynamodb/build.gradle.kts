@@ -22,11 +22,22 @@ dependencies {
 }
 
 
-description = "A MongoDB migration utility that imports Mongock’s execution history into Flamingock-Community’s audit store for smooth project upgrades."
+description = "A DynamoDB migration utility that imports Mongock’s execution history into Flamingock-Community’s audit store for smooth project upgrades."
 
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))
     }
+}
+tasks.withType<JavaCompile>().configureEach {
+    if (name.contains("Test", ignoreCase = true)) {
+        options.compilerArgs.addAll(listOf(
+            "-Asources=${projectDir}/src/test/java",
+            "-Aresources=${projectDir}/src/test/resources"
+        ))
+    }
+}
+configurations.testImplementation {
+    extendsFrom(configurations.compileOnly.get())
 }
