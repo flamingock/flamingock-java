@@ -50,7 +50,5 @@ public @interface Stage {
     String name() default "";
     
     String description() default "";
-    
-    StageType type() default StageType.DEFAULT;
 
 }

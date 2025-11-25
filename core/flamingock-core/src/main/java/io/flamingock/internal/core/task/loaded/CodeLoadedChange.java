@@ -58,11 +58,6 @@ public class CodeLoadedChange extends AbstractLoadedChange {
     }
 
     @Override
-    public boolean hasCategory(ChangeCategory property) {
-        return false;
-    }
-
-    @Override
     public String pretty() {
         String fromParent = super.pretty();
         return fromParent + String.format("\n\t\t[class: %s]", getSource());

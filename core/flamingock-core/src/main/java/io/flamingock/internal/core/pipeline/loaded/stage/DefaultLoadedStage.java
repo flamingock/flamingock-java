@@ -16,9 +16,8 @@
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
-import io.flamingock.api.task.ChangeCategory;
-import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.api.StageType;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
@@ -33,6 +32,8 @@ import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationC
  */
 public class DefaultLoadedStage extends AbstractLoadedStage {
 
+    private final static String INVALID_CHANGE_TYPE_MSG = "Invalid change detected: a non-standard change was found while processing a standard stage";
+
     private static final StageValidationContext validationContext = StageValidationContext.builder()
             .setSorted(SEQUENTIAL_FORMATTED)
             .build();
@@ -46,15 +47,12 @@ public class DefaultLoadedStage extends AbstractLoadedStage {
     @Override
     public List<ValidationError> getValidationErrors(PipelineValidationContext context) {
         List<ValidationError> errors = super.getValidationErrors(context);
-        String changeCategoryErrorMsg = String.format(
-                "Change[{}] in default stage cannot have categories %s or %s",
-                ChangeCategory.SYSTEM, ChangeCategory.IMPORT);
 
-        for(AbstractLoadedTask task : getTasks()) {
-            if(task instanceof AbstractLoadedChange) {
+        for (AbstractLoadedTask task : getTasks()) {
+            if (task instanceof AbstractLoadedChange) {
                 AbstractLoadedChange change = (AbstractLoadedChange) task;
-                if(change.hasAnyCategory(ChangeCategory.SYSTEM, ChangeCategory.IMPORT)) {
-                    errors.add(new ValidationError(changeCategoryErrorMsg, task.getId(), "change"));
+                if (!change.isStandard()) {
+                    errors.add(new ValidationError(INVALID_CHANGE_TYPE_MSG, task.getId(), "change"));
                 }
             } else {
                 errors.add(new ValidationError("Task in default stage must be a Change", task.getId(), "change"));
@@ -64,8 +62,6 @@ public class DefaultLoadedStage extends AbstractLoadedStage {
 
         return errors;
     }
-
-
 
 
 }

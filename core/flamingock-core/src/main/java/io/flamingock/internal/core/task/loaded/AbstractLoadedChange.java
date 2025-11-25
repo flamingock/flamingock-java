@@ -16,11 +16,8 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.annotations.Categories;
-import io.flamingock.api.annotations.FlamingockConstructor;
 import io.flamingock.api.task.ChangeCategory;
-import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
-import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
@@ -51,7 +48,6 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
     private final static String ORDER_REG_EXP = "^(?=(?:[^a-zA-Z0-9]*[a-zA-Z0-9]){3}).+$";
     private final static Pattern ORDER_PATTERN = Pattern.compile(ORDER_REG_EXP);
     private final Constructor<?> constructor;
-    private final Set<ChangeCategory> categories;
 
 
     protected AbstractLoadedChange(String fileName,
@@ -69,22 +65,11 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
         super(fileName, id, order, author, implementationClass, runAlways, transactional, system, targetSystem, recovery, legacy);
 
         this.constructor = constructor;
-
-        this.categories = ReflectionUtil.findAllAnnotations(implementationClass, Categories.class).stream()
-                .map(Categories::value)
-                .map(Arrays::asList)
-                .flatMap(List::stream)
-                .collect(Collectors.toSet());
     }
 
     @Override
     public Constructor<?> getConstructor() {
         return constructor;
-    }
-
-    @Override
-    public boolean hasCategory(ChangeCategory property) {
-        return categories.contains(property);
     }
 
     @Override
