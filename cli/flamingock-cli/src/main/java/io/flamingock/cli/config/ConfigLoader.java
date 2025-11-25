@@ -104,6 +104,20 @@ public class ConfigLoader {
                 databaseConfig.setCouchbase(couchbaseConfig);
             }
 
+            Map<String, Object> sqlData = (Map<String, Object>) auditData.get("sql");
+            if (sqlData != null) {
+                DatabaseConfig.SqlConfig sqlConfig = new DatabaseConfig.SqlConfig();
+                sqlConfig.setEndpoint((String) sqlData.get("endpoint"));
+                sqlConfig.setUsername((String) sqlData.get("username"));
+                sqlConfig.setPassword((String) sqlData.get("password"));
+                sqlConfig.setSqlDialect((String) sqlData.get("sql-dialect"));
+                sqlConfig.setTable((String) sqlData.get("table"));
+                if (sqlData.get("properties") != null) {
+                    sqlConfig.setProperties((Map<String, String>) sqlData.get("properties"));
+                }
+                databaseConfig.setSql(sqlConfig);
+            }
+
             config.setAudit(databaseConfig);
         }
 
@@ -118,8 +132,9 @@ public class ConfigLoader {
         boolean hasMongoDB = config.getAudit().getMongodb() != null;
         boolean hasDynamoDB = config.getAudit().getDynamodb() != null;
         boolean hasCouchbase = config.getAudit().getCouchbase() != null;
+        boolean hasSql = config.getAudit().getSql() != null;
 
-        if (Stream.of(hasMongoDB, hasDynamoDB, hasCouchbase)
+        if (Stream.of(hasMongoDB, hasDynamoDB, hasCouchbase, hasSql)
             .filter(b -> b)
             .count()>1) {
             throw new IllegalArgumentException("Multiple database configurations found. Please configure only one database type.");
@@ -131,12 +146,14 @@ public class ConfigLoader {
             return DatabaseType.DYNAMODB;
         } else if (hasCouchbase) {
             return DatabaseType.COUCHBASE;
+        } else if (hasSql) {
+            return DatabaseType.SQL;
         } else {
-            throw new IllegalArgumentException("No supported database configuration found. Please configure MongoDB, DynamoDB or Couchbase.");
+            throw new IllegalArgumentException("No supported database configuration found. Please configure MongoDB, DynamoDB, Couchbase or SQL.");
         }
     }
 
     public enum DatabaseType {
-        MONGODB, DYNAMODB, COUCHBASE
+        MONGODB, DYNAMODB, COUCHBASE, SQL
     }
 }

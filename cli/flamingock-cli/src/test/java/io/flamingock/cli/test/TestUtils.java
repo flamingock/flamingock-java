@@ -71,6 +71,22 @@ public class TestUtils {
         return config;
     }
 
+    public static FlamingockConfig createSqlConfig() {
+        FlamingockConfig config = new FlamingockConfig();
+        config.setServiceIdentifier("test-service");
+
+        DatabaseConfig databaseConfig = new DatabaseConfig();
+        DatabaseConfig.SqlConfig sqlConfig = new DatabaseConfig.SqlConfig();
+        sqlConfig.setEndpoint("jdbc:sqlserver://localhost:1433");
+        sqlConfig.setUsername("test-user");
+        sqlConfig.setPassword("test-password");
+        sqlConfig.setSqlDialect("SqlServer");
+        databaseConfig.setSql(sqlConfig);
+
+        config.setAudit(databaseConfig);
+        return config;
+    }
+
     public static List<AuditEntry> createSampleAuditEntries() {
         AuditEntry entry1 = new AuditEntry(
             "exec-001",
@@ -148,5 +164,16 @@ public class TestUtils {
             "      username: \"test-user\"\n" +
             "      password: \"test-password\"\n" +
             "      bucket-name: \"test-bucket\"\n";
+    }
+
+    public static String getValidSqlYaml() {
+        return "flamingock:\n" +
+            "  service-identifier: \"test-cli\"\n" +
+            "  audit:\n" +
+            "    sql:\n" +
+            "      endpoint: \"jdbc:sqlserver://localhost:1433\"\n" +
+            "      username: \"test-user\"\n" +
+            "      password: \"test-password\"\n" +
+            "      sql-dialect: \"SqlServer\"\n";
     }
 }

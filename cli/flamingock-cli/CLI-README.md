@@ -121,10 +121,23 @@ flamingock:
   service-identifier: "flamingock-cli"
   audit:
     couchbase:
-      endpoint: "http://localhost:8000"
+      endpoint: "couchbase://localhost:12110"
       username: "your-username"
       password: "your-password"
       bucket-name: "test"
+      table: "flamingockAuditLog"           # Optional, defaults to "flamingockAuditLog"
+```
+
+### SQL Example
+```yaml
+flamingock:
+  service-identifier: "flamingock-cli"
+  audit:
+    sql:
+      endpoint: "jdbc:sqlserver://localhost:1433/test-db"
+      username: "your-username"
+      password: "your-password"
+      sql-dialect: "SqlServer"
       table: "flamingockAuditLog"           # Optional, defaults to "flamingockAuditLog"
 ```
 
