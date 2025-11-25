@@ -213,7 +213,7 @@ public @interface EnableFlamingock {
     /**
      * If true, the annotation processor will validate that all code-based changes
      * (classes annotated with @Change) are mapped to some stage. When unmapped changes
-     * are found and this flag is true, a RuntimeException is thrown at compilation time. Default is true.
+     * are found and this flag is true**(default)**, a RuntimeException is thrown at compilation time.
      * When false, only a warning is emitted.
      */
     boolean strictStageMapping() default true;
