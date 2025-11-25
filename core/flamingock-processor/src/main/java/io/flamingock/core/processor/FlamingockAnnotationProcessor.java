@@ -209,14 +209,15 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         List<CodePreviewChange> legacyChanges = allChanges.stream().filter(CodePreviewChange::isLegacy).collect(Collectors.toList());
         List<CodePreviewChange> standardChanges = allChanges.stream().filter(TaskDescriptor::isStandard).collect(Collectors.toList());
 
+        Map<String, List<CodePreviewChange>> standardChangesMapByPackage = getCodeChangesMapByPackage(standardChanges);
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
                 systemChanges,
                 legacyChanges,
-                getCodeChangesMapByPackage(standardChanges),
+                standardChangesMapByPackage,
                 flamingockAnnotation
         );
 
-        validateAllChangesAreMappedToStages(legacyChanges, noLegacyChangesByPackage, pipeline, flamingockAnnotation.strictStageMapping());
+        validateAllChangesAreMappedToStages(standardChangesMapByPackage, pipeline, flamingockAnnotation.strictStageMapping());
 
         Serializer serializer = new Serializer(processingEnv, logger);
         String setup = flamingockAnnotation.setup().toString();
@@ -681,16 +682,14 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
      * It checks package names from the changes map against the pipeline stages' sourcesPackage
      * (including the SYSTEM stage). If any stage does not represent any package, a RuntimeException is thrown.
      *
-     * @param legacyCodedChanges legacy code changes (kept for completeness; not used for package mapping)
-     * @param noLegacyCodedChangesByPackage non-legacy changes grouped by source package
+     * @param standardChanges non-legacy changes grouped by source package
      * @param pipeline built preview pipeline
      * @param strictStageMapping if true, unmapped changes will throw an exception; if false, will log a warning
      */
-    private void validateAllChangesAreMappedToStages(List<CodePreviewChange> legacyCodedChanges,
-                                                     Map<String, List<CodePreviewChange>> noLegacyCodedChangesByPackage,
+    private void validateAllChangesAreMappedToStages(Map<String, List<CodePreviewChange>> standardChanges,
                                                      PreviewPipeline pipeline,
                                                      Boolean strictStageMapping) {
-        if (noLegacyCodedChangesByPackage == null || noLegacyCodedChangesByPackage.isEmpty()) {
+        if (standardChanges == null || standardChanges.isEmpty()) {
             return;
         }
 
@@ -702,7 +701,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         List<String> unmapped = new ArrayList<>();
 
-        for (String pkg : noLegacyCodedChangesByPackage.keySet()) {
+        for (String pkg : standardChanges.keySet()) {
             if (pkg == null) {
                 continue;
             }
