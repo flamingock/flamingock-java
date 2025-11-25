@@ -33,6 +33,7 @@ import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -41,10 +42,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
@@ -99,24 +103,15 @@ public class CouchbaseImporterTest {
     }
 
     @Test
-    void testImporterIntegration() {
+    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecuted_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
         Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
-        JsonObject doc = JsonObject.create()
-                .put("executionId", "exec-1")
-                .put("changeId", "change-1")
-                .put("author", "author1")
-                .put("timestamp", String.valueOf(Instant.now().toEpochMilli()))
-                .put("state", "EXECUTED")
-                .put("type", "EXECUTION")
-                .put("changeLogClass", "io.flamingock.changelog.Class1")
-                .put("changeSetMethod", "method1")
-                .putNull("metadata")
-                .put("executionMillis", 123L)
-                .put("executionHostName", "host1")
-                .putNull("errorTrace")
-                .put("systemChange", true)
-                .put("_doctype", "mongockChangeEntry");
-        originCollection.upsert("change-1", doc);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("mongock-change-2", createAuditObject("mongock-change-2"));
 
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
@@ -129,34 +124,84 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        List<JsonObject> auditLog = CouchbaseCollectionHelper.selectAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME);
+        validateFlamingockAuditOutput();
 
-        assertFalse(auditLog.isEmpty(), "Audit log should not be empty");
-
-        JsonObject entry = auditLog.stream()
-                .filter(e -> "change-1".equals(e.getString("changeId")))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Entry with changeId 'change-1' not found"));
-
-        assertEquals("change-1", entry.getString("changeId"));
-        assertEquals("author1", entry.getString("author"));
-        assertEquals("exec-1", entry.getString("executionId"));
-        assertEquals("APPLIED", entry.getString("state"));
-        assertTrue(entry.getBoolean("systemChange"));
     }
 
     @Test
-    @Disabled("restore when https://trello.com/c/4gEQ8Wb4/458-mongock-legacy-targetsystem done")
-    void failIfEmptyOrigin() {
+    @DisplayName("GIVEN some Mongock changeUnits already executed " +
+            "AND some other Mongock changeUnits pending for execution" +
+            "WHEN migrating to Flamingock Community" +
+            "THEN migrates the history with the executed changeUnits " +
+            "AND executes the pending Mongock changeUnits " +
+            "AND executes the pending Flamingock changes")
+    void GIVEN_someChangeUnitsAlreadyExecuted_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
                 .setAuditStore(new CouchbaseAuditStore(cluster, FLAMINGOCK_BUCKET_NAME)
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
                 .build();
 
-        org.junit.jupiter.api.Assertions.assertThrows(
-                io.flamingock.internal.common.core.error.FlamingockException.class,
-                flamingock::run
-        );
+        flamingock.run();
+
+        validateFlamingockAuditOutput();
+
     }
+
+
+    private static void validateFlamingockAuditOutput() {
+        List<JsonObject> auditLog = CouchbaseCollectionHelper.selectAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME);
+
+
+        Map<String, JsonObject> byChangeId = auditLog.stream()
+                .collect(Collectors.toMap(
+                        e -> e.getString("changeId"),
+                        e -> e
+                ));
+
+
+        assertEquals(4, auditLog.size());
+        JsonObject importAudit = byChangeId.get("migration-mongock-to-flamingock-community");
+        JsonObject mongockAudit1 = byChangeId.get("mongock-change-1");
+        JsonObject mongockAudit2 = byChangeId.get("mongock-change-2");
+        JsonObject flamingockAudit = byChangeId.get("flamingock-change");
+        assertNotNull(importAudit);
+        assertEquals("APPLIED", importAudit.getString("state"));
+
+        assertNotNull(mongockAudit1);
+        assertEquals("APPLIED", mongockAudit1.getString("state"));
+
+        assertNotNull(mongockAudit2);
+        assertEquals("APPLIED", mongockAudit2.getString("state"));
+
+        assertNotNull(flamingockAudit);
+        assertEquals("APPLIED", flamingockAudit.getString("state"));
+    }
+
+    private static JsonObject createAuditObject(String value) {
+        JsonObject doc = JsonObject.create()
+                .put("executionId", "exec-1")
+                .put("changeId", value)
+                .put("author", "author1")
+                .put("timestamp", String.valueOf(Instant.now().toEpochMilli()))
+                .put("state", "EXECUTED")
+                .put("type", "EXECUTION")
+                .put("changeLogClass", "io.flamingock.changelog.Class1")
+                .put("changeSetMethod", "method1")
+                .putNull("metadata")
+                .put("executionMillis", 123L)
+                .put("executionHostName", "host1")
+                .putNull("errorTrace")
+                .put("systemChange", true)
+                .put("_doctype", "mongockChangeEntry");
+        return doc;
+    }
+
 }
