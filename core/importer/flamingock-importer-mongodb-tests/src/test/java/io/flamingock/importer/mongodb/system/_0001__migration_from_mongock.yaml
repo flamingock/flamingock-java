@@ -1,5 +1,0 @@
-id: migration-from-mongock
-transactional: false
-template: MongoDBImporterChangeTemplate
-configuration:
-  origin: mongockChangeLogs

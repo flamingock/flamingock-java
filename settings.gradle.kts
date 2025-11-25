@@ -53,7 +53,8 @@ project(":community:flamingock-community-bom").projectDir = file("community/flam
 
 include("community:flamingock-auditstore-mongodb-sync")
 project(":community:flamingock-auditstore-mongodb-sync").name = "flamingock-auditstore-mongodb-sync"
-project(":community:flamingock-auditstore-mongodb-sync").projectDir = file("community/flamingock-auditstore-mongodb-sync")
+project(":community:flamingock-auditstore-mongodb-sync").projectDir =
+    file("community/flamingock-auditstore-mongodb-sync")
 
 include("community:flamingock-auditstore-couchbase")
 project(":community:flamingock-auditstore-couchbase").name = "flamingock-auditstore-couchbase"
@@ -80,15 +81,18 @@ project(":platform-plugins:flamingock-springboot-integration").projectDir =
 //////////////////////////////////////
 
 include("core:target-systems:nontransactional-target-system")
-project(":core:target-systems:nontransactional-target-system").projectDir = file("core/target-systems/nontransactional-target-system")
+project(":core:target-systems:nontransactional-target-system").projectDir =
+    file("core/target-systems/nontransactional-target-system")
 project(":core:target-systems:nontransactional-target-system").name = "nontransactional-target-system"
 
 include("core:target-systems:mongodb-sync-target-system")
-project(":core:target-systems:mongodb-sync-target-system").projectDir = file("core/target-systems/mongodb-sync-target-system")
+project(":core:target-systems:mongodb-sync-target-system").projectDir =
+    file("core/target-systems/mongodb-sync-target-system")
 project(":core:target-systems:mongodb-sync-target-system").name = "mongodb-sync-target-system"
 
 include("core:target-systems:mongodb-springdata-target-system")
-project(":core:target-systems:mongodb-springdata-target-system").projectDir = file("core/target-systems/mongodb-springdata-target-system")
+project(":core:target-systems:mongodb-springdata-target-system").projectDir =
+    file("core/target-systems/mongodb-springdata-target-system")
 project(":core:target-systems:mongodb-springdata-target-system").name = "mongodb-springdata-target-system"
 
 include("core:target-systems:sql-target-system")
@@ -149,32 +153,23 @@ project(":utils:sql-util").name = "sql-util"
 project(":utils:sql-util").projectDir = file("utils/sql-util")
 
 //////////////////////////////////////
-// IMPORTER
-//////////////////////////////////////
-include("core:importer:flamingock-importer")
-project(":core:importer:flamingock-importer").name = "flamingock-importer"
-project(":core:importer:flamingock-importer").projectDir = file("core/importer/flamingock-importer")
-
-include("core:importer:flamingock-importer-mongodb-tests")
-project(":core:importer:flamingock-importer-mongodb-tests").name = "flamingock-importer-mongodb-tests"
-project(":core:importer:flamingock-importer-mongodb-tests").projectDir = file("core/importer/flamingock-importer-mongodb-tests")
-
-
-include("core:importer:flamingock-importer-dynamodb-tests")
-project(":core:importer:flamingock-importer-dynamodb-tests").name = "flamingock-importer-dynamodb-tests"
-project(":core:importer:flamingock-importer-dynamodb-tests").projectDir = file("core/importer/flamingock-importer-dynamodb-tests")
-
-
-include("core:importer:flamingock-importer-couchbase-tests")
-project(":core:importer:flamingock-importer-couchbase-tests").name = "flamingock-importer-couchbase-tests"
-project(":core:importer:flamingock-importer-couchbase-tests").projectDir = file("core/importer/flamingock-importer-couchbase-tests")
-
-//////////////////////////////////////
-// SUPPORT
+// LEGACY
 //////////////////////////////////////
 include("legacy:mongock-support")
 project(":legacy:mongock-support").name = "mongock-support"
 project(":legacy:mongock-support").projectDir = file("legacy/mongock-support")
+
+include("legacy:mongock-importer-mongodb")
+project(":legacy:mongock-importer-mongodb").name = "mongock-importer-mongodb"
+project(":legacy:mongock-importer-mongodb").projectDir = file("legacy/mongock-importer-mongodb")
+
+include("legacy:mongock-importer-dynamodb")
+project(":legacy:mongock-importer-dynamodb").name = "mongock-importer-dynamodb"
+project(":legacy:mongock-importer-dynamodb").projectDir = file("legacy/mongock-importer-dynamodb")
+
+include("legacy:mongock-importer-couchbase")
+project(":legacy:mongock-importer-couchbase").name = "mongock-importer-couchbase"
+project(":legacy:mongock-importer-couchbase").projectDir = file("legacy/mongock-importer-couchbase")
 
 //////////////////////////////////////
 // CLI
@@ -189,3 +184,5 @@ project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
 include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
+
+
