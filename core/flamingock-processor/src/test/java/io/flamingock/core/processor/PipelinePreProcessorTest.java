@@ -309,11 +309,11 @@ public class PipelinePreProcessorTest {
 
         // Invoke private validator by reflection and assert it throws (InvocationTargetException wraps the RuntimeException)
         Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-                "validateAllChangesAreMappedToStages", List.class, Map.class, PreviewPipeline.class, Boolean.class);
+                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class, Boolean.class);
         validator.setAccessible(true);
 
         InvocationTargetException ex = assertThrows(InvocationTargetException.class, () ->
-                validator.invoke(processor, Collections.emptyList(), changesByPackage, pipeline, true));
+                validator.invoke(processor, changesByPackage, pipeline, true));
 
         Throwable cause = ex.getCause();
         assertNotNull(cause, "Validator should throw a RuntimeException cause");
