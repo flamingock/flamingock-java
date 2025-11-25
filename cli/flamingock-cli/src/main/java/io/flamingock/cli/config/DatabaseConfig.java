@@ -15,12 +15,15 @@
  */
 package io.flamingock.cli.config;
 
+import io.flamingock.internal.common.sql.SqlDialect;
+
 import java.util.Map;
 
 public class DatabaseConfig {
     private MongoDBConfig mongodb;
     private DynamoDBConfig dynamodb;
     private CouchbaseConfig couchbase;
+    private SqlConfig sql;
 
     public MongoDBConfig getMongodb() {
         return mongodb;
@@ -44,6 +47,14 @@ public class DatabaseConfig {
 
     public void setCouchbase(CouchbaseConfig couchbase) {
         this.couchbase = couchbase;
+    }
+
+    public SqlConfig getSql() {
+        return sql;
+    }
+
+    public void setSql(SqlConfig sql) {
+        this.sql = sql;
     }
 
     public static class MongoDBConfig {
@@ -207,6 +218,92 @@ public class DatabaseConfig {
 
         public void setPassword(String password) {
             this.password = password;
+        }
+
+        public String getTable() {
+            return table;
+        }
+
+        public void setTable(String table) {
+            this.table = table;
+        }
+
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+
+        public void setProperties(Map<String, String> properties) {
+            this.properties = properties;
+        }
+    }
+
+    public static class SqlConfig {
+        private String endpoint;
+        private String username;
+        private String password;
+        private SqlDialect sqlDialect;
+        private String table;
+        private Map<String, String> properties;
+
+        public String getEndpoint() {
+            return endpoint;
+        }
+
+        public void setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public SqlDialect getSqlDialect() {
+            return sqlDialect;
+        }
+
+        public void setSqlDialect(String sqlDialect) {
+            this.sqlDialect = SqlDialect.valueOf(sqlDialect.toUpperCase());
+        }
+
+        public String getDriverClassName() {
+            switch (sqlDialect) {
+                case MYSQL:
+                    return "com.mysql.cj.jdbc.Driver";
+                case MARIADB:
+                    return "org.mariadb.jdbc.Driver";
+                case POSTGRESQL:
+                    return "org.postgresql.Driver";
+                case SQLITE:
+                    return "org.sqlite.JDBC";
+                case H2:
+                    return "org.h2.Driver";
+                case SQLSERVER:
+                    return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+                case SYBASE:
+                    return "com.sybase.jdbc4.jdbc.SybDriver";
+                case FIREBIRD:
+                    return "org.firebirdsql.jdbc.FBDriver";
+                case INFORMIX:
+                    return "com.informix.jdbc.IfxDriver";
+                case ORACLE:
+                    return "oracle.jdbc.OracleDriver";
+                case DB2:
+                    return "com.ibm.db2.jcc.DB2Driver";
+                default:
+                    throw new IllegalArgumentException("Unsupported SQL Dialect: " + sqlDialect);
+            }
         }
 
         public String getTable() {

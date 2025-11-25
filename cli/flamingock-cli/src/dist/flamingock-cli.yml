@@ -26,3 +26,11 @@ flamingock:
     #   password: "your-password"
     #   bucket-name: "test"
     #   table: "flamingockAuditLog"           # Optional, defaults to "flamingockAuditLog"
+
+    # SQL Configuration (uncomment and modify to use)
+    # sql:
+    #   endpoint: "jdbc:sqlserver://localhost:1433/test-db"
+    #   username: "your-username"
+    #   password: "your-password"
+    #   sql-dialect: "SqlServer"
+    #   table: "flamingockAuditLog"           # Optional, defaults to "flamingockAuditLog"
