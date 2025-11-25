@@ -17,6 +17,7 @@ package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
@@ -107,7 +108,7 @@ public class ChangeProcessStrategyFactory {
 
         changeLogger.logStartChangeProcessStrategy(change.getId());
         
-        TargetSystemOps targetSystemOps = targetSystemManager.getTargetSystem(change.getTargetSystem());
+        TargetSystemOps targetSystemOps = getTargetSystem();
         
         // Log target system resolution
         changeLogger.logTargetSystemResolved(change.getId(), change.getTargetSystem());
@@ -127,6 +128,15 @@ public class ChangeProcessStrategyFactory {
                 new TaskSummarizer(change),
                 lockGuardProxyFactory
         );
+    }
+
+    private TargetSystemOps getTargetSystem() {
+        try {
+            return targetSystemManager.getTargetSystem(change.getTargetSystem());
+        } catch (Exception e) {
+            String message = String.format("Error in change [%s] : %s", change.getId(), e.getMessage());
+            throw new FlamingockException(message);
+        }
     }
 
     /**

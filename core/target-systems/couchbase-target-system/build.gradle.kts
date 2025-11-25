@@ -4,6 +4,7 @@ dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
     implementation(project(":utils:couchbase-util"))
+    implementation(project(":legacy:mongock-importer-couchbase"))
 
     //General
     compileOnly("com.couchbase.client:java-client:3.6.0")

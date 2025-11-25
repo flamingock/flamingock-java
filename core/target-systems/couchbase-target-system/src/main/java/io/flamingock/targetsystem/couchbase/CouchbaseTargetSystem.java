@@ -19,13 +19,21 @@ import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
+import io.flamingock.importer.mongock.couchbase.MongockImporterCouchbase;
+import io.flamingock.internal.common.core.audit.AuditHistoryReader;
+import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.common.core.error.FlamingockException;
+
+import java.util.Objects;
+import java.util.Optional;
+
+import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
+import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 
 public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTargetSystem> {
 
@@ -86,5 +94,14 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
     @Override
     public TransactionWrapper getTxWrapper() {
         return txWrapper;
+    }
+
+    @Override
+    public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
+        if (Objects.requireNonNull(type) == MONGOCK) {
+            return Optional.of(new MongockImporterCouchbase(cluster, bucketName, scopeName, DEFAULT_MONGOCK_ORIGIN));
+        } else {
+            return Optional.empty();
+        }
     }
 }

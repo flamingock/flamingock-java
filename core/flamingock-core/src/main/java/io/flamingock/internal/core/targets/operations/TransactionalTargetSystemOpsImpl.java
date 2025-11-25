@@ -15,12 +15,15 @@
  */
 package io.flamingock.internal.core.targets.operations;
 
+import io.flamingock.internal.common.core.audit.AuditHistoryReader;
+import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -47,6 +50,11 @@ public class TransactionalTargetSystemOpsImpl
     public final <T> T applyChangeTransactional(Function<ExecutionRuntime, T> changeApplier, ExecutionRuntime executionRuntime) {
         executionRuntime.addContextLayer(targetSystem.getContext());
         return targetSystem.applyChangeTransactional(changeApplier, executionRuntime);
+    }
+
+    @Override
+    public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
+        return targetSystem.getAuditAuditReader(type);
     }
 
     @Override

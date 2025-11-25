@@ -16,9 +16,8 @@
 package io.flamingock.internal.core.pipeline.loaded.stage;
 
 
-import io.flamingock.api.task.ChangeCategory;
-import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.api.StageType;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
@@ -32,6 +31,9 @@ import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationC
  * It's the result of adding the loaded task to the ProcessDefinition
  */
 public class SystemLoadedStage extends AbstractLoadedStage {
+
+    private static final String INVALID_CHANGE_TYPE_MSG = "Invalid change detected: a non-system change was found while processing a system stage";
+
 
     private static final StageValidationContext validationContext = StageValidationContext.builder()
             .setSorted(UNSORTED)
@@ -48,15 +50,12 @@ public class SystemLoadedStage extends AbstractLoadedStage {
     @Override
     public List<ValidationError> getValidationErrors(PipelineValidationContext context) {
         List<ValidationError> errors = super.getValidationErrors(context);
-        String changeCategoryErrorMsg = String.format(
-                "Change in a system stage must have category %s or %s ",
-                ChangeCategory.SYSTEM, ChangeCategory.IMPORT);
 
-        for(AbstractLoadedTask task : getTasks()) {
-            if(task instanceof AbstractLoadedChange) {
+        for (AbstractLoadedTask task : getTasks()) {
+            if (task instanceof AbstractLoadedChange) {
                 AbstractLoadedChange change = (AbstractLoadedChange) task;
-                if(!change.hasCategory(ChangeCategory.IMPORT)) {
-                    errors.add(new ValidationError(changeCategoryErrorMsg, task.getId(), "change"));
+                if (!change.isSystem()) {
+                    errors.add(new ValidationError(INVALID_CHANGE_TYPE_MSG, task.getId(), "change"));
                 }
             } else {
                 errors.add(new ValidationError("Task in a system stage must of type Change", task.getId(), "change"));

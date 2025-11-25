@@ -96,10 +96,9 @@ public class TargetSystemManager implements ContextInitializable {
         if (id == null || !targetSystemMap.containsKey(id)) {
             String availableTargetSystems = String.join(", ", targetSystemMap.keySet());
             String message = String.format(
-                    "Change requires a valid targetSystem. Found: [%s]. Available target systems: [%s]",
+                    "Not found targetSystem [%s] among available target systems: [ %s ]",
                     id, availableTargetSystems
             );
-            logger.debug(message);
             throw new FlamingockException(message);
         } else {
             AbstractTargetSystem<?> targetSystem = targetSystemMap.get(id);

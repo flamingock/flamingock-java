@@ -10,6 +10,7 @@ dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
     implementation(project(":utils:mongodb-util"))
+    implementation(project(":legacy:mongock-importer-mongodb"))
 
     //General
     compileOnly("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")
