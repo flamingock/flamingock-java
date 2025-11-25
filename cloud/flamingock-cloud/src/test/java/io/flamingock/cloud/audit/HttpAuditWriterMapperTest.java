@@ -15,10 +15,7 @@
  */
 package io.flamingock.cloud.audit;
 
-import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.api.annotations.Change;
-import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Recovery;
+import io.flamingock.api.annotations.*;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -30,16 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class HttpAuditWriterMapperTest {
 
     // Test classes for different recovery strategies
-    @Change(id = "test-manual", author = "aperezdieppa")
-    @Recovery(strategy = RecoveryStrategy.MANUAL_INTERVENTION)
     static class _001__TestManualInterventionChange {
-        @Apply
         public void apply() {}
     }
 
-    @Change(id = "test-default", author = "aperezdieppa")
     static class _001__TestDefaultRecoveryChange {
-        @Apply
         public void apply() {}
     }
 
