@@ -124,10 +124,10 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      *         or {@link Optional#empty()} if this target system does not support audit reading for the specified type
      * @see AuditHistoryReader
      * @see AuditReaderType
-     * @see io.flamingock.importer.ImporterAdapter
      */
     public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
         return Optional.empty();
     }
+
 
 }

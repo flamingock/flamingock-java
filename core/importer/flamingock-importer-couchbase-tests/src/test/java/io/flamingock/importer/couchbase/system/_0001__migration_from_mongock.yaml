@@ -1,8 +1,0 @@
-id: migration-from-mongock
-transactional: false
-template: CouchbaseImporterChangeTemplate
-configuration:
-  origin:
-    scopeName: _default
-    collectionName: _default
-  failOnEmptyOrigin: true
