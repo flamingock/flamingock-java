@@ -49,7 +49,7 @@ public class MongockImportChange {
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
-        validate(legacyHistory);
+        validate(legacyHistory, targetSystemId);
         legacyHistory.forEach(auditEntryFromOrigin -> {
             //This is the changeId present in the pipeline. If it's a system change or '..._before' won't appear
             AuditEntry auditEntryWithStageId = auditEntryFromOrigin.copyWithNewIdAndStageId(
@@ -77,9 +77,10 @@ public class MongockImportChange {
 
 
 
-    private void validate(List<AuditEntry> legacyHistory) {
+    private void validate(List<AuditEntry> legacyHistory, String targetSystemId) {
         if (legacyHistory.isEmpty()) {
-            throw new FlamingockException("No audit entries found when importing from '%s'.");
+            String message = String.format("No audit entries found when importing from '%s'.", targetSystemId);
+            throw new FlamingockException(message);
         }
     }
 }

@@ -24,6 +24,7 @@ import com.couchbase.client.java.manager.bucket.BucketSettings;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.community.couchbase.driver.CouchbaseAuditStore;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.runner.Runner;
@@ -49,6 +50,7 @@ import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONG
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
@@ -152,6 +154,26 @@ public class CouchbaseImporterTest {
         flamingock.run();
 
         validateFlamingockAuditOutput();
+    }
+
+    @Test
+    @DisplayName("GIVEN mongock audit history empty " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should throw exception")
+    void GIVEN_mongockAuditHistoryEmpty_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        // Setup Mongock entries
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(new CouchbaseAuditStore(cluster, FLAMINGOCK_BUCKET_NAME)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .build();
+
+        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
+        assertEquals("No audit entries found when importing from 'couchbase-target-system'.", ex.getMessage());
 
     }
 
