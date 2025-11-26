@@ -22,6 +22,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import static io.flamingock.internal.common.sql.SqlDialect.SQLSERVER;
 import static org.assertj.core.api.Assertions.*;
@@ -100,7 +101,7 @@ class SimpleConfigLoaderTest {
         assertThat(config.getAudit().getSql().getEndpoint()).isEqualTo("jdbc:sqlserver://localhost:1433");
         assertThat(config.getAudit().getSql().getUsername()).isEqualTo("test-user");
         assertThat(config.getAudit().getSql().getPassword()).isEqualTo("test-password");
-        assertThat(config.getAudit().getSql().getSqlDialect()).isEqualTo(SQLSERVER);
+        assertThat(config.getAudit().getSql().getSqlDialect()).isEqualTo(Optional.of(SQLSERVER));
     }
 
     @Test

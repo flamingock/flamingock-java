@@ -38,11 +38,7 @@ public class SqlDataSourceFactory {
             throw new IllegalArgumentException("Database endpoint is required");
         }
 
-        if (config.getSqlDialect() == null) {
-            throw new IllegalArgumentException("Sql dialect is required");
-        }
-
-        if (!SqlDialect.SQLITE.equals(config.getSqlDialect())) {
+        if (config.getEffectiveSqlDialect() != SqlDialect.SQLITE) {
             if (config.getUsername() == null) {
                 throw new IllegalArgumentException("Database username is required");
             }
@@ -54,15 +50,9 @@ public class SqlDataSourceFactory {
         try {
             DataSource sqlDatasource;
 
-            if (config.getSqlDialect().equals(SqlDialect.SQLITE)) {
+            if (config.getEffectiveSqlDialect() == (SqlDialect.SQLITE)) {
                 SQLiteDataSource sqliteDatasource = new SQLiteDataSource();
                 sqliteDatasource.setUrl(config.getEndpoint());
-
-                try (Connection conn = sqliteDatasource.getConnection();
-                     Statement stmt = conn.createStatement()) {
-                    stmt.execute("PRAGMA journal_mode=WAL;");
-                    stmt.execute("PRAGMA busy_timeout=5000;");
-                }
 
                 sqlDatasource = sqliteDatasource;
             } else {
