@@ -35,16 +35,25 @@ public class DynamoDBMongockTestHelper implements MongockTestHelper {
         this.table = enhancedClient.table(tableName, TableSchema.fromBean(MongockDynamoDBAuditEntry.class));
     }
 
+    @Override
     public void write(MongockChangeEntry entry) {
         table.putItem(convertToMongockDynamoDBAuditEntry(entry));
     }
 
+    @Override
     public int writeAll(List<MongockChangeEntry> entries) {
         for (MongockChangeEntry entry : entries) {
             table.putItem(convertToMongockDynamoDBAuditEntry(entry));
         }
         return entries.size();
     }
+
+    @Override
+    public void reset() {
+        table.deleteTable();
+    }
+
+
 
     private MongockDynamoDBAuditEntry convertToMongockDynamoDBAuditEntry(MongockChangeEntry entry) {
         return new MongockDynamoDBAuditEntry(

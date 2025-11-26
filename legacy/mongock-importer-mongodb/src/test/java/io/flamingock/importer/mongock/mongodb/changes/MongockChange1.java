@@ -18,7 +18,7 @@ package io.flamingock.importer.mongock.mongodb.changes;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 
-@ChangeUnit(id = "client-initializer", order = "1", author = "flamingock-team")
+@ChangeUnit(id = "mongock-change-1", order = "1", author = "flamingock-team")
 public class MongockChange1 {
 
     @Execution
