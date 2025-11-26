@@ -106,6 +106,7 @@ public class RegistrationFeature implements Feature {
     private static void registerClassForReflection(String className) {
         try {
             registerClassForReflection(Class.forName(className));
+            initializeClassAtBuildTime(Class.forName(className));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
