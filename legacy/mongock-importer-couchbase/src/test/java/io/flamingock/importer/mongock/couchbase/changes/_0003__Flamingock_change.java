@@ -25,8 +25,8 @@ import io.flamingock.api.annotations.TargetSystem;
 import java.util.Collections;
 
 @TargetSystem(id = "couchbase-target-system")
-@Change(id = "create-users-collection", author = "importer", transactional = false)
-public class _0001__CreateUsersCollectionChange {
+@Change(id = "flamingock-change", author = "importer", transactional = false)
+public class _0003__Flamingock_change {
 
     @Apply
     public void apply(Bucket bucket) {

@@ -26,6 +26,13 @@ import java.util.List;
  * Helper class for writing MongockChangeEntry objects to MongoDB for testing purposes.
  */
 public interface MongockTestHelper {
+
+    String DEFAULT_EXECUTION_ID = "2025-06-19T06:43:56.656364-778";
+    String DEFAULT_HOSTNAME = "Antonios-MacBook-Pro.local";
+    SimpleDateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+    void reset();
+
     /**
      * Writes a MongockChangeEntry to the MongoDB collection.
      *
@@ -43,10 +50,6 @@ public interface MongockTestHelper {
 
     default int setupBasicScenario() {
         List<MongockChangeEntry> entries = new ArrayList<>();
-
-        String DEFAULT_EXECUTION_ID = "2025-06-19T06:43:56.656364-778";
-        String DEFAULT_HOSTNAME = "Antonios-MacBook-Pro.local";
-        SimpleDateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
         try {
             // System change 00001 before execution
@@ -88,7 +91,7 @@ public interface MongockTestHelper {
             // Client initializer before execution
             entries.add(new MongockChangeEntry(
                     DEFAULT_EXECUTION_ID,
-                    "client-initializer_before",
+                    "mongock-change-1_before",
                     "mongock",
                     DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.094Z"),
                     MongockChangeState.EXECUTED,
@@ -106,7 +109,7 @@ public interface MongockTestHelper {
             // Client initializer execution
             entries.add(new MongockChangeEntry(
                     DEFAULT_EXECUTION_ID,
-                    "client-initializer",
+                    "mongock-change-1",
                     "mongock",
                     DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.132Z"),
                     MongockChangeState.EXECUTED,
@@ -124,7 +127,7 @@ public interface MongockTestHelper {
             // Client updater
             entries.add(new MongockChangeEntry(
                     DEFAULT_EXECUTION_ID,
-                    "client-updater",
+                    "mongock-change-2",
                     "mongock",
                     DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.169Z"),
                     MongockChangeState.EXECUTED,
@@ -133,6 +136,90 @@ public interface MongockTestHelper {
                     "apply",
                     null,
                     20L,
+                    DEFAULT_HOSTNAME,
+                    null,
+                    false,
+                    null
+            ));
+
+
+
+            // Write all entries to MongoDB
+            return writeAll(entries);
+
+        } catch (ParseException e) {
+            throw new RuntimeException("Failed to parse date", e);
+        }
+    }
+
+    default int setupWithOnlyOneChange() {
+        List<MongockChangeEntry> entries = new ArrayList<>();
+
+        try {
+            // System change 00001 before execution
+            entries.add(new MongockChangeEntry(
+                    DEFAULT_EXECUTION_ID,
+                    "system-change-00001_before",
+                    "mongock",
+                    DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.014Z"),
+                    MongockChangeState.EXECUTED,
+                    MongockChangeType.BEFORE_EXECUTION,
+                    "io.mongock.runner.core.executor.system.changes.SystemChangeUnit00001",
+                    "beforeExecution",
+                    null,
+                    2L,
+                    DEFAULT_HOSTNAME,
+                    null,
+                    true,
+                    null
+            ));
+
+            // System change 00001 execution
+            entries.add(new MongockChangeEntry(
+                    DEFAULT_EXECUTION_ID,
+                    "system-change-00001",
+                    "mongock",
+                    DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.034Z"),
+                    MongockChangeState.EXECUTED,
+                    MongockChangeType.EXECUTION,
+                    "io.mongock.runner.core.executor.system.changes.SystemChangeUnit00001",
+                    "apply",
+                    null,
+                    4L,
+                    DEFAULT_HOSTNAME,
+                    null,
+                    true,
+                    null
+            ));
+
+            entries.add(new MongockChangeEntry(
+                    DEFAULT_EXECUTION_ID,
+                    "mongock-change-1_before",
+                    "mongock",
+                    DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.094Z"),
+                    MongockChangeState.EXECUTED,
+                    MongockChangeType.BEFORE_EXECUTION,
+                    "io.mongock.examples.mongodb.standalone.mondogb.sync.migration.initializer.ClientInitializerChangeUnit",
+                    "beforeExecution",
+                    null,
+                    25L,
+                    DEFAULT_HOSTNAME,
+                    null,
+                    false,
+                    null
+            ));
+
+            entries.add(new MongockChangeEntry(
+                    DEFAULT_EXECUTION_ID,
+                    "mongock-change-1",
+                    "mongock",
+                    DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.132Z"),
+                    MongockChangeState.EXECUTED,
+                    MongockChangeType.EXECUTION,
+                    "io.mongock.examples.mongodb.standalone.mondogb.sync.migration.initializer.ClientInitializerChangeUnit",
+                    "apply",
+                    null,
+                    23L,
                     DEFAULT_HOSTNAME,
                     null,
                     false,

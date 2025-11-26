@@ -31,6 +31,11 @@ public class MongoDBMongockTestHelper implements MongockTestHelper {
         this.changeLogCollection = changeLogCollection;
     }
 
+    @Override
+    public void reset() {
+        changeLogCollection.drop();
+    }
+
     public void write(MongockChangeEntry entry) {
         changeLogCollection.insertOne(convertToDocument(entry));
     }

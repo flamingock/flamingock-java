@@ -15,25 +15,19 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Categories;
-import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
-import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
-import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
-import org.jetbrains.annotations.NotNull;
+import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask {
 
@@ -97,19 +91,19 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
     @NotNull
     private Optional<ValidationError> getOrderError(StageValidationContext context) {
         String order = getOrder().orElse(null);
-        if(context.getSortType().isSorted()) {
+        if (context.getSortType().isSorted()) {
             if (order == null || order.isEmpty()) {
                 return Optional.of(new ValidationError("Change in a sorted stage but no order value was provided", id, "change"));
             }
 
-            if(context.getSortType() == StageValidationContext.SortType.SEQUENTIAL_FORMATTED) {
+            if (context.getSortType() == StageValidationContext.SortType.SEQUENTIAL_FORMATTED) {
                 if (!ORDER_PATTERN.matcher(order).matches()) {
                     String message = String.format("Invalid order field format in change[%s]. Order must match pattern: %s", id, ORDER_REG_EXP);
                     return Optional.of(new ValidationError(message, id, "task"));
                 }
             }
 
-        } else if(order != null) {
+        } else if (order != null) {
             logger.warn("Change[{}] is in an auto-sorted stage but order value was provided - order will be ignored and managed automatically by Flamingock", id);
 
         }
