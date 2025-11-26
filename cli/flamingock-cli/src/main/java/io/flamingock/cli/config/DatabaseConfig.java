@@ -271,7 +271,7 @@ public class DatabaseConfig {
         }
 
         public Optional<SqlDialect> getSqlDialect() {
-            return sqlDialect == null ? Optional.empty() :  Optional.of(sqlDialect);
+            return Optional.ofNullable(sqlDialect);
         }
 
         public void setSqlDialect(String sqlDialect) {
@@ -286,14 +286,7 @@ public class DatabaseConfig {
             if (parts.length < 2 || parts[1].isEmpty()) {
                 throw new IllegalStateException("Cannot determine SQL dialect from endpoint: " + this.endpoint);
             }
-            String dialect = parts[1].toLowerCase();
-            if ("firebirdsql".equals(dialect)) dialect = "firebird";
-            if ("informix-sqli".equals(dialect)) dialect = "informix";
-            try {
-                return SqlDialect.valueOf(dialect.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Unsupported SQL Dialect: " + dialect, e);
-            }
+            return SqlDialect.fromString(parts[1].toLowerCase());
         }
 
         public String getDriverClassName() {

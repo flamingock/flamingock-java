@@ -38,7 +38,7 @@ public class SqlDataSourceFactory {
             throw new IllegalArgumentException("Database endpoint is required");
         }
 
-        if (!SqlDialect.SQLITE.equals(config.getEffectiveSqlDialect())) {
+        if (config.getEffectiveSqlDialect() != SqlDialect.SQLITE) {
             if (config.getUsername() == null) {
                 throw new IllegalArgumentException("Database username is required");
             }
@@ -50,7 +50,7 @@ public class SqlDataSourceFactory {
         try {
             DataSource sqlDatasource;
 
-            if (config.getEffectiveSqlDialect().equals(SqlDialect.SQLITE)) {
+            if (config.getEffectiveSqlDialect() == (SqlDialect.SQLITE)) {
                 SQLiteDataSource sqliteDatasource = new SQLiteDataSource();
                 sqliteDatasource.setUrl(config.getEndpoint());
 
