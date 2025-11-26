@@ -100,8 +100,7 @@ class CLISqlIntegrationTest {
                 "    sql:\n" +
                 "      endpoint: \"" + sqlContainer.getJdbcUrl() + "\"\n" +
                 "      username: \"" + sqlContainer.getUsername() + "\"\n" +
-                "      password: \"" + sqlContainer.getPassword() + "\"\n" +
-                "      sql-dialect: \"" + dialectName + "\"\n";
+                "      password: \"" + sqlContainer.getPassword() + "\"\n";
 
         Files.write(configFile, sqlConfig.getBytes());
 
@@ -182,8 +181,7 @@ class CLISqlIntegrationTest {
                 "    sql:\n" +
                 "      endpoint: \"jdbc:sqlserver://invalid-host:1433\"\n" +
                 "      username: \"" + sqlContainer.getUsername() + "\"\n" +
-                "      password: \"" + sqlContainer.getPassword() + "\"\n" +
-                "      sql-dialect: \"" + dialectName + "\"\n";
+                "      password: \"" + sqlContainer.getPassword() + "\"\n";
 
         Files.write(configFile, invalidConfig.getBytes());
 

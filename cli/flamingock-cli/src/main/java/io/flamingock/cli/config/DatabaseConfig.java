@@ -18,6 +18,7 @@ package io.flamingock.cli.config;
 import io.flamingock.internal.common.sql.SqlDialect;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class DatabaseConfig {
     private MongoDBConfig mongodb;
@@ -269,16 +270,27 @@ public class DatabaseConfig {
             this.password = password;
         }
 
-        public SqlDialect getSqlDialect() {
-            return sqlDialect;
+        public Optional<SqlDialect> getSqlDialect() {
+            return Optional.ofNullable(sqlDialect);
         }
 
         public void setSqlDialect(String sqlDialect) {
             this.sqlDialect = SqlDialect.valueOf(sqlDialect.toUpperCase());
         }
 
+        public SqlDialect getEffectiveSqlDialect() {
+            if (this.sqlDialect != null) {
+                return this.sqlDialect;
+            }
+            String[] parts = this.endpoint.split(":", 3);
+            if (parts.length < 2 || parts[1].isEmpty()) {
+                throw new IllegalStateException("Cannot determine SQL dialect from endpoint: " + this.endpoint);
+            }
+            return SqlDialect.fromString(parts[1].toLowerCase());
+        }
+
         public String getDriverClassName() {
-            switch (sqlDialect) {
+            switch (this.getEffectiveSqlDialect()) {
                 case MYSQL:
                     return "com.mysql.cj.jdbc.Driver";
                 case MARIADB:
@@ -302,7 +314,7 @@ public class DatabaseConfig {
                 case DB2:
                     return "com.ibm.db2.jcc.DB2Driver";
                 default:
-                    throw new IllegalArgumentException("Unsupported SQL Dialect: " + sqlDialect);
+                    throw new IllegalArgumentException("Unsupported SQL Dialect: " + this.getEffectiveSqlDialect());
             }
         }
 
