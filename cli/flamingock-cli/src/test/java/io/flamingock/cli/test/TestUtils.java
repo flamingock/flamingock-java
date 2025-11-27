@@ -80,7 +80,6 @@ public class TestUtils {
         sqlConfig.setEndpoint("jdbc:sqlserver://localhost:1433");
         sqlConfig.setUsername("test-user");
         sqlConfig.setPassword("test-password");
-        sqlConfig.setSqlDialect("SqlServer");
         databaseConfig.setSql(sqlConfig);
 
         config.setAudit(databaseConfig);

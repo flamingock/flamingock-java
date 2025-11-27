@@ -18,7 +18,7 @@ package io.flamingock.importer.mongock.dynamodb.changes;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 
-@ChangeUnit(id = "client-updater", order = "2", author = "flamingock-team")
+@ChangeUnit(id = "mongock-change-2", order = "2", author = "flamingock-team")
 public class MongockChange2 {
 
     @Execution
