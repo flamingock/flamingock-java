@@ -93,6 +93,6 @@ class SimpleCLITest {
 
         assertThat(sqlConfig).isNotNull();
         assertThat(sqlConfig.getAudit().getSql()).isNotNull();
-        assertThat(sqlConfig.getAudit().getSql().getSqlDialect()).isEqualTo(SQLSERVER);
+        assertThat(sqlConfig.getAudit().getSql().getEffectiveSqlDialect()).isEqualTo(SQLSERVER);
     }
 }

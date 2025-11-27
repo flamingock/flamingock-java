@@ -15,6 +15,9 @@
  */
 package io.flamingock.internal.common.sql;
 
+import java.util.Locale;
+import java.util.Optional;
+
 public enum SqlDialect {
     MYSQL,
     MARIADB,
@@ -28,5 +31,15 @@ public enum SqlDialect {
     FIREBIRD,
     INFORMIX,
     ORACLE,
-    DB2,
+    DB2;
+
+    public static SqlDialect fromString(String dialect) {
+        if ("firebirdsql".equals(dialect.toLowerCase())) return FIREBIRD;
+        if ("informix-sqli".equals(dialect.toLowerCase())) return INFORMIX;
+        try {
+            return SqlDialect.valueOf(dialect.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unsupported SQL Dialect: " + dialect, e);
+        }
+    }
 }
