@@ -18,12 +18,7 @@ package io.flamingock.graalvm;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.preview.CodePreviewChange;
-import io.flamingock.internal.common.core.preview.PreviewMethod;
-import io.flamingock.internal.common.core.preview.PreviewPipeline;
-import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.common.core.preview.SystemPreviewStage;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
+import io.flamingock.internal.common.core.preview.*;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -59,6 +54,7 @@ public class RegistrationFeature implements Feature {
         //preview
         registerClassForReflection(PreviewPipeline.class.getName());
         registerClassForReflection(PreviewStage.class.getName());
+        registerClassForReflection(PreviewConstructor.class.getName());
         registerClassForReflection(SystemPreviewStage.class.getName());
         registerClassForReflection(CodePreviewChange.class.getName());
         registerClassForReflection(PreviewMethod.class);
@@ -110,6 +106,7 @@ public class RegistrationFeature implements Feature {
     private static void registerClassForReflection(String className) {
         try {
             registerClassForReflection(Class.forName(className));
+            initializeClassAtBuildTime(Class.forName(className));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
