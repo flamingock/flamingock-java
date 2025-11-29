@@ -71,7 +71,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
         separateMongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
 
         // Initialize test kit with MongoDB persistence
-        testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(sharedMongoClient, "test"), sharedMongoClient, database);
+        testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test")), sharedMongoClient, database);
         auditHelper = testKit.getAuditHelper();
     }
 
@@ -87,6 +87,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
         String changeId = "non-tx-transactional-false";
         LocalDateTime testStart = LocalDateTime.now();
         LocalDateTime testEnd = testStart.plusMinutes(5); // Allow enough time for test execution
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test");
 
         // Given-When-Then - Test MongoDB audit persistence with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
@@ -96,8 +97,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
-                                .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
+                                .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                                .addTargetSystem(mongoDBSyncTargetSystem)
                                 .build()
                                 .run();
                     });
@@ -124,6 +125,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     @Test
     @DisplayName("Should persist NON_TX txStrategy for transactional=false scenarios")
     void testNonTxScenarios() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test");
         // Given-When-Then - Test NON_TX scenarios with AuditTestSupport
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
@@ -133,8 +135,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
-                                .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
+                                .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                                .addTargetSystem(mongoDBSyncTargetSystem)
                                 .addTargetSystem(new NonTransactionalTargetSystem("non-tx-system")) // Non-transactional target system
                                 .build()
                                 .run();
@@ -171,6 +173,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     @Test
     @DisplayName("Should persist TX_SHARED txStrategy when targetSystem not defined in change")
     void testTxSharedScenarios() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test");
         MongoDBSyncTargetSystem sharedTargetSystem = new MongoDBSyncTargetSystem("tx-shared-system", sharedMongoClient, "test"); // Same MongoClient as audit storage
 
 
@@ -182,8 +185,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
-                                .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
+                                .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                                .addTargetSystem(mongoDBSyncTargetSystem)
                                 .addTargetSystem(sharedTargetSystem)
                                 .build()
                                 .run();
@@ -207,6 +210,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     @Test
     @DisplayName("Should persist TX_SEPARATE_NO_MARKER when targetSystem defined and different from auditStore")
     void testTxNoMarkerWhenSameMongoClientButDifferentTargetSystem() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test");
         MongoDBSyncTargetSystem sharedTargetSystem = new MongoDBSyncTargetSystem("mongo-system", sharedMongoClient, "test"); // Same MongoClient as audit storage
 
         // Given-When-Then - Test TX_SEPARATE_NO_MARKER scenarios with AuditTestSupport
@@ -217,8 +221,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
-                                .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
+                                .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                                .addTargetSystem(mongoDBSyncTargetSystem)
                                 .addTargetSystem(sharedTargetSystem)
                                 .build()
                                 .run();
@@ -242,6 +246,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     @Test
     @DisplayName("Should persist TX_SEPARATE_NO_MARKER txStrategy for different MongoClient scenario")
     void testTxSeparateNoMarkerScenario() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test");
         MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
         MongoDBSyncTargetSystem separateTargetSystem = new MongoDBSyncTargetSystem("tx-separate-system", separateMongoClient, "test"); // Different MongoClient from audit storage
 
@@ -253,8 +258,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
-                                .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
+                                .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                                .addTargetSystem(mongoDBSyncTargetSystem)
                                 .addTargetSystem(separateTargetSystem)
                                 .build()
                                 .run();
@@ -278,6 +283,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     @Test
     @DisplayName("Should persist correct targetSystemId for different target system configurations")
     void testTargetSystemIdVariations() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test");
         MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
 
         // Given-When-Then - Test multiple target system configurations with AuditTestSupport
@@ -290,8 +296,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 .WHEN(() -> {
                     assertDoesNotThrow(() -> {
                         testKit.createBuilder()
-                                .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
-                                .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
+                                .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                                .addTargetSystem(mongoDBSyncTargetSystem)
                                 .addTargetSystem(new NonTransactionalTargetSystem("non-tx-system"))
                                 .addTargetSystem(new MongoDBSyncTargetSystem("tx-separate-system", separateMongoClient, "test"))
                                 .build()
@@ -317,6 +323,7 @@ class MongoDBSyncAuditPersistenceE2ETest {
     @Test
     @DisplayName("Should persist multiple changes with different txStrategy configurations correctly")
     void testMultipleChangesWithDifferentConfigurations() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test");
 
 
         AuditTestSupport.withTestKit(testKit)
@@ -327,8 +334,8 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 ).WHEN(() -> assertDoesNotThrow(() -> {
                     MongoDatabase separateDatabase = separateMongoClient.getDatabase("test");
                     testKit.createBuilder()
-                            .setAuditStore(new MongoDBSyncAuditStore(sharedMongoClient, "test"))
-                            .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", sharedMongoClient, "test"))
+                            .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                            .addTargetSystem(mongoDBSyncTargetSystem)
                             .addTargetSystem(new MongoDBSyncTargetSystem("tx-separate-system", separateMongoClient, "test"))
                             .build()
                             .run();

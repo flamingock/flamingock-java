@@ -30,6 +30,7 @@ import io.flamingock.internal.core.store.audit.community.CommunityAuditPersisten
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
@@ -52,9 +53,20 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     private boolean autoCreate = true;
 
 
-    public MongoDBSyncAuditStore(MongoClient client, String databaseName) {
+    private MongoDBSyncAuditStore(MongoClient client, String databaseName) {
         this.client = client;
         this.databaseName = databaseName;
+    }
+
+    /**
+     * Generate a new MongoDBSyncAuditStore instance from the specified MongoDBSyncTargetSystem.
+     * This method uses the MongoClient and database name from the target system to create the audit store.
+     *
+     * @param mongoDBSyncTargetSystem the MongoDBSyncTargetSystem instance to extract the client and database name from
+     * @return a new MongoDBSyncAuditStore instance
+     */
+    public static MongoDBSyncAuditStore from(MongoDBSyncTargetSystem mongoDBSyncTargetSystem) {
+        return new MongoDBSyncAuditStore(mongoDBSyncTargetSystem.getClient(), mongoDBSyncTargetSystem.getDatabaseName());
     }
 
     public MongoDBSyncAuditStore withAuditRepositoryName(String auditRepositoryName) {
