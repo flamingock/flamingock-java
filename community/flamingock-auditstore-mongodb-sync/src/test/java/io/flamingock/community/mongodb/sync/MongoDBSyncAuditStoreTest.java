@@ -86,7 +86,7 @@ class MongoDBSyncAuditStoreTest {
     void setupEach() {
         mongoClient = MongoClients.create(mongoDBContainer.getConnectionString());
         database = mongoClient.getDatabase("test");
-        testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test")), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
         mongoDBTestHelper = new MongoDBTestHelper(database);
@@ -102,6 +102,7 @@ class MongoDBSyncAuditStoreTest {
     @Test
     @DisplayName("When standalone runs the driver with DEFAULT repository names related collections should exists")
     void happyPathWithDefaultRepositoryNames() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
@@ -110,8 +111,8 @@ class MongoDBSyncAuditStoreTest {
                         new CodeChangeTestDefinition(_003__insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                        .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -133,6 +134,7 @@ class MongoDBSyncAuditStoreTest {
     @Test
     @DisplayName("When standalone runs the driver with transactions enabled should persist the audit logs and the user's collection updated")
     void happyPathWithTransaction() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
@@ -141,8 +143,8 @@ class MongoDBSyncAuditStoreTest {
                         new CodeChangeTestDefinition(_003__insert_jorge_happy_transactional.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                        .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -168,6 +170,7 @@ class MongoDBSyncAuditStoreTest {
     @Test
     @DisplayName("When standalone runs the driver with transactions enabled and execution fails should persist only the applied audit logs")
     void failedWithTransaction() {
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
@@ -177,8 +180,8 @@ class MongoDBSyncAuditStoreTest {
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                            .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                            .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                            .addTargetSystem(mongoDBSyncTargetSystem)
                             .build()
                             .run();
                 }))

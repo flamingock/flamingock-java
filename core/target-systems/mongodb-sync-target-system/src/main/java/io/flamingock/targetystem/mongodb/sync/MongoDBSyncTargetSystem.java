@@ -77,6 +77,10 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
         return database;
     }
 
+    public String getDatabaseName() {
+        return databaseName;
+    }
+
     public WriteConcern getWriteConcern() {
         return writeConcern;
     }

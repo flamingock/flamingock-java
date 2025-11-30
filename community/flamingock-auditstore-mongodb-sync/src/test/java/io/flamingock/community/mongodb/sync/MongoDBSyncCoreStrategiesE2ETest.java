@@ -88,7 +88,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
     @DisplayName("Should execute non-transactional change using NonTx strategy with complete audit flow in MongoDB")
     void testNonTransactionalChangeExecution() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
+        TestKit testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem), mongoClient, database);
 
         // Given-When-Then
         AuditTestSupport.withTestKit(testKit)
@@ -97,8 +98,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
                         new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                        .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -114,7 +115,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
     @DisplayName("Should execute transactional change using SimpleTx/SharedTx strategy with complete audit flow in MongoDB")
     void testTransactionalChangeExecution() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
+        TestKit testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then
@@ -124,8 +126,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
                         new CodeChangeTestDefinition(_002__insert_federico_happy_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                        .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -141,7 +143,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
     @DisplayName("Should execute multiple changes with correct audit sequence in MongoDB")
     void testMultipleChangesExecution() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
+        TestKit testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then
@@ -151,8 +154,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
                         new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                        .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -168,7 +171,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
     @DisplayName("Should handle failing transactional change with proper audit and rollback in MongoDB")
     void testFailingTransactionalChangeWithRollback() {
         // Given - Create MongoDB test kit with real database storage
-        TestKit testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
+        TestKit testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then
@@ -179,8 +183,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
                 )
                 .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
                     testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                            .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                            .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                            .addTargetSystem(mongoDBSyncTargetSystem)
                             .build()
                             .run();
                 }))
@@ -198,7 +202,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
     @DisplayName("Should handle already-applied changes correctly on second run with MongoDB persistence")
     void testAlreadyAppliedChangesSkipping() {
         // Given - Create MongoDB test kit with persistent storage
-        TestKit testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, "test");
+        TestKit testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem), mongoClient, database);
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         // Given-When-Then - First execution
@@ -207,8 +212,8 @@ class MongoDBSyncCoreStrategiesE2ETest {
                         new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList())
                 )
                 .WHEN(() -> testKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                        .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(
@@ -221,15 +226,15 @@ class MongoDBSyncCoreStrategiesE2ETest {
         assertEquals(2, auditHelper.getAuditEntriesSorted().size());
 
         // Second execution - create new kit using SAME MongoDB database to simulate persistence
-        TestKit secondRunKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, "test"), mongoClient, database);
+        TestKit secondRunKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem), mongoClient, database);
 
         AuditTestSupport.withTestKit(secondRunKit)
                 .GIVEN_Changes(
                         new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList())
                 )
                 .WHEN(() -> secondRunKit.createBuilder()
-                        .setAuditStore(new MongoDBSyncAuditStore(mongoClient, "test"))
-                        .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, "test"))
+                        .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                        .addTargetSystem(mongoDBSyncTargetSystem)
                         .build()
                         .run())
                 .THEN_VerifyAuditSequenceStrict(

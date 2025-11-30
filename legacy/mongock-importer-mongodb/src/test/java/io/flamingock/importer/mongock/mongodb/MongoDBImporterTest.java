@@ -78,7 +78,7 @@ public class MongoDBImporterTest {
         mongockTestHelper = new MongoDBMongockTestHelper(database.getCollection(DEFAULT_MONGOCK_ORIGIN));
 
         // Initialize TestKit for unified testing
-        testKit = MongoDBSyncTestKit.create(new MongoDBSyncAuditStore(mongoClient, DATABASE_NAME), mongoClient, database);
+        testKit = MongoDBSyncTestKit.create(MongoDBSyncAuditStore.from(new MongoDBSyncTargetSystem("mongodb", mongoClient, DATABASE_NAME)), mongoClient, database);
         auditHelper = testKit.getAuditHelper();
 
     }

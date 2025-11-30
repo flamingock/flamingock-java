@@ -76,9 +76,10 @@ class MongoChangeTemplateTest {
     @DisplayName("WHEN mongodb template THEN runs fine IF Flamingock mongodb sync ce")
     void happyPath() {
 
+        MongoDBSyncTargetSystem mongoDBSyncTargetSystem = new MongoDBSyncTargetSystem("mongodb", mongoClient, DB_NAME);
         FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(new MongoDBSyncAuditStore(mongoClient, DB_NAME))
-                .addTargetSystem(new MongoDBSyncTargetSystem("mongodb", mongoClient, DB_NAME))
+                .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
+                .addTargetSystem(mongoDBSyncTargetSystem)
                 .build()
                 .run();
 
