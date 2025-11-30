@@ -59,14 +59,17 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     }
 
     /**
-     * Generate a new MongoDBSyncAuditStore instance from the specified MongoDBSyncTargetSystem.
-     * This method uses the MongoClient and database name from the target system to create the audit store.
+     * Creates a {@link MongoDBSyncAuditStore} using the same MongoDB client and
+     * database configured in the given {@link MongoDBSyncTargetSystem}.
+     * <p>
+     * Only the underlying MongoDB instance (client + database name) is reused.
+     * No additional target-system configuration is carried over.
      *
-     * @param mongoDBSyncTargetSystem the MongoDBSyncTargetSystem instance to extract the client and database name from
-     * @return a new MongoDBSyncAuditStore instance
+     * @param targetSystem the target system from which to derive the client and database
+     * @return a new audit store bound to the same MongoDB instance as the target system
      */
-    public static MongoDBSyncAuditStore from(MongoDBSyncTargetSystem mongoDBSyncTargetSystem) {
-        return new MongoDBSyncAuditStore(mongoDBSyncTargetSystem.getClient(), mongoDBSyncTargetSystem.getDatabaseName());
+    public static MongoDBSyncAuditStore from(MongoDBSyncTargetSystem targetSystem) {
+        return new MongoDBSyncAuditStore(targetSystem.getClient(), targetSystem.getDatabaseName());
     }
 
     public MongoDBSyncAuditStore withAuditRepositoryName(String auditRepositoryName) {
