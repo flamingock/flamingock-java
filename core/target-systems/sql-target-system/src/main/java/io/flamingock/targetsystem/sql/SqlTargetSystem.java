@@ -37,6 +37,10 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         this.dataSource = dataSource;
     }
 
+    public DataSource getDataSource() {
+        return dataSource;
+    }
+
     @Override
     public void initialize(ContextResolver baseContext) {
         this.validate();

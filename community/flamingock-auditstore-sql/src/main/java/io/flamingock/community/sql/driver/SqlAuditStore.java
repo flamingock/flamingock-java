@@ -24,6 +24,7 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.community.sql.internal.SqlAuditPersistence;
 import io.flamingock.community.sql.internal.SqlLockService;
+import io.flamingock.targetsystem.sql.SqlTargetSystem;
 
 import javax.sql.DataSource;
 
@@ -38,8 +39,22 @@ public class SqlAuditStore implements CommunityAuditStore {
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
     private boolean autoCreate = true;
 
-    public SqlAuditStore(DataSource dataSource) {
+    private SqlAuditStore(DataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    /**
+     * Creates a {@link SqlAuditStore} using the same SQL datasource
+     * configured in the given {@link SqlTargetSystem}.
+     * <p>
+     * Only the underlying SQL instance (datasource) is reused.
+     * No additional target-system configuration is carried over.
+     *
+     * @param targetSystem the target system from which to derive the datasource
+     * @return a new audit store bound to the same SQL instance as the target system
+     */
+    public static SqlAuditStore from(SqlTargetSystem targetSystem) {
+        return new SqlAuditStore(targetSystem.getDataSource());
     }
 
     public SqlAuditStore withAuditRepositoryName(String auditRepositoryName) {

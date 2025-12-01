@@ -289,8 +289,8 @@ class SqlAuditStoreTest {
                     new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
             ));
 
-            SqlAuditStore auditStore = new SqlAuditStore(context.dataSource);
             SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+            SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
 
             FlamingockFactory.getCommunityBuilder()
                     .setAuditStore(auditStore)
@@ -363,8 +363,8 @@ class SqlAuditStoreTest {
                     new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
             ));
 
-            SqlAuditStore auditStore = new SqlAuditStore(context.dataSource);
             SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+            SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
@@ -450,8 +450,8 @@ class SqlAuditStoreTest {
                     new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
             ));
 
-            SqlAuditStore auditStore = new SqlAuditStore(context.dataSource);
             SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
+            SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
