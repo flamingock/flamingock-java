@@ -29,6 +29,7 @@ import io.flamingock.internal.core.store.audit.community.CommunityAuditPersisten
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.couchbase.internal.CouchbaseAuditPersistence;
+import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
 public class CouchbaseAuditStore implements CommunityAuditStore {
 
@@ -45,9 +46,23 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     private boolean autoCreate = true;
 
 
-    public CouchbaseAuditStore(Cluster cluster, String bucketName) {
+    private CouchbaseAuditStore(Cluster cluster, String bucketName) {
         this.cluster = cluster;
         this.bucketName = bucketName;
+    }
+
+    /**
+     * Creates a {@link CouchbaseAuditStore} using the same Couchbase cluster and
+     * bucket configured in the given {@link CouchbaseTargetSystem}.
+     * <p>
+     * Only the underlying Couchbase instance (cluster + bucket name) is reused.
+     * No additional target-system configuration is carried over.
+     *
+     * @param targetSystem the target system from which to derive the cluster and bucket
+     * @return a new audit store bound to the same Couchbase instance as the target system
+     */
+    public static CouchbaseAuditStore from(CouchbaseTargetSystem targetSystem) {
+        return new CouchbaseAuditStore(targetSystem.getCluster(), targetSystem.getBucketName());
     }
 
     public CouchbaseAuditStore withScopeName(String scopeName) {
