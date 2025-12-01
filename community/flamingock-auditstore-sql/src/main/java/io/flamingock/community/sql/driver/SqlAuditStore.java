@@ -47,11 +47,11 @@ public class SqlAuditStore implements CommunityAuditStore {
      * Creates a {@link SqlAuditStore} using the same SQL datasource
      * configured in the given {@link SqlTargetSystem}.
      * <p>
-     * Only the underlying SQL instance (datasource) is reused.
+     * Only the underlying SQL datasource is reused.
      * No additional target-system configuration is carried over.
      *
      * @param targetSystem the target system from which to derive the datasource
-     * @return a new audit store bound to the same SQL instance as the target system
+     * @return a new audit store bound to the same SQL datasource as the target system
      */
     public static SqlAuditStore from(SqlTargetSystem targetSystem) {
         return new SqlAuditStore(targetSystem.getDataSource());
