@@ -87,7 +87,7 @@ public class DynamoDBImporterTest {
         mongockTestHelper = new DynamoDBMongockTestHelper(client, DEFAULT_MONGOCK_ORIGIN);
 
         // Initialize TestKit for unified testing
-        testKit = DynamoDBTestKit.create(client, new DynamoDBAuditStore(client));
+        testKit = DynamoDBTestKit.create(client, DynamoDBAuditStore.from(new DynamoDBTargetSystem("dynamodb", client)));
         auditHelper = testKit.getAuditHelper();
 
     }
