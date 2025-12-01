@@ -118,7 +118,7 @@ public class CouchbaseImporterTest {
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(new CouchbaseAuditStore(cluster, FLAMINGOCK_BUCKET_NAME)
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)
@@ -145,7 +145,7 @@ public class CouchbaseImporterTest {
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(new CouchbaseAuditStore(cluster, FLAMINGOCK_BUCKET_NAME)
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)
@@ -166,7 +166,7 @@ public class CouchbaseImporterTest {
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
         Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(new CouchbaseAuditStore(cluster, FLAMINGOCK_BUCKET_NAME)
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)

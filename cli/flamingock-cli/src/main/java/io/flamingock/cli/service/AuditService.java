@@ -41,6 +41,7 @@ import io.flamingock.internal.core.configuration.community.CommunityConfiguratio
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
+import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -180,7 +181,7 @@ public class AuditService {
         // Create Couchbase cluster
         Cluster couchbaseCluster = CouchbaseClusterFactory.createCouchbaseCluster(couchbaseConfig);
 
-        return new CouchbaseAuditStore(couchbaseCluster, couchbaseConfig.getBucketName())
+        return CouchbaseAuditStore.from(new CouchbaseTargetSystem("couchbase", couchbaseCluster, couchbaseConfig.getBucketName()))
             .withAuditRepositoryName(couchbaseConfig.getTable());
     }
 

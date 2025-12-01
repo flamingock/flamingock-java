@@ -58,6 +58,10 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
         return this.bucket;
     }
 
+    public String getBucketName() {
+        return this.bucketName;
+    }
+
     public TransactionManager<TransactionAttemptContext> getTxManager() {
         return txWrapper.getTxManager();
     }

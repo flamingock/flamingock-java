@@ -88,6 +88,7 @@ class CouchbaseAuditStoreTest {
         //Given-When
         Bucket bucket = cluster.bucket(BUCKET_NAME);
         Collection testCollection = bucket.defaultCollection();
+        CouchbaseTargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -97,8 +98,8 @@ class CouchbaseAuditStoreTest {
             );
 
             FlamingockFactory.getCommunityBuilder()
-                    .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
-                    .addTargetSystem(new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME))
+                    .setAuditStore(CouchbaseAuditStore.from(couchbaseTargetSystem))
+                    .addTargetSystem(couchbaseTargetSystem)
                     .addDependency(testCollection) // for test purpose only
                     .build()
                     .run();
@@ -134,6 +135,7 @@ class CouchbaseAuditStoreTest {
         //Given-When
         Bucket bucket = cluster.bucket(BUCKET_NAME);
         Collection testCollection = bucket.defaultCollection();
+        CouchbaseTargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -144,8 +146,8 @@ class CouchbaseAuditStoreTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
-                        .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
-                        .addTargetSystem(new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME))
+                        .setAuditStore(CouchbaseAuditStore.from(couchbaseTargetSystem))
+                        .addTargetSystem(couchbaseTargetSystem)
                         .addDependency(testCollection) // for test purpose only
                         .build()
                         .run();
@@ -179,6 +181,7 @@ class CouchbaseAuditStoreTest {
         //Given-When
         Bucket bucket = cluster.bucket(BUCKET_NAME);
         Collection testCollection = bucket.defaultCollection();
+        CouchbaseTargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
@@ -189,8 +192,8 @@ class CouchbaseAuditStoreTest {
 
             assertThrows(PipelineExecutionException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
-                    .setAuditStore(new CouchbaseAuditStore(cluster, BUCKET_NAME))
-                        .addTargetSystem(new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME))
+                    .setAuditStore(CouchbaseAuditStore.from(couchbaseTargetSystem))
+                        .addTargetSystem(couchbaseTargetSystem)
                         .addDependency(testCollection) // for test purpose only
                         .build()
                         .run();
