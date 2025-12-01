@@ -40,6 +40,7 @@ import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -169,7 +170,7 @@ public class AuditService {
         // Create DynamoDB client
         DynamoDbClient dynamoClient = DynamoDBClientFactory.createDynamoDBClient(dynamoConfig);
 
-        return new DynamoDBAuditStore(dynamoClient)
+        return DynamoDBAuditStore.from(new DynamoDBTargetSystem("dynamo", dynamoClient))
             .withAuditRepositoryName(dynamoConfig.getTable());
     }
 

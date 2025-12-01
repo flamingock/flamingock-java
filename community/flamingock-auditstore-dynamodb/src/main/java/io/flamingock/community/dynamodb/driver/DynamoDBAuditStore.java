@@ -26,6 +26,7 @@ import io.flamingock.internal.core.store.audit.community.CommunityAuditPersisten
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.community.dynamodb.internal.DynamoDBAuditPersistence;
+import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBAuditStore implements CommunityAuditStore {
@@ -41,8 +42,22 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
     private long writeCapacityUnits = 5L;
     private boolean autoCreate = true;
 
-    public DynamoDBAuditStore(DynamoDbClient client) {
+    private DynamoDBAuditStore(DynamoDbClient client) {
         this.client = client;
+    }
+
+    /**
+     * Creates a {@link DynamoDBAuditStore} using the same DynamoDB client
+     * configured in the given {@link DynamoDBTargetSystem}.
+     * <p>
+     * Only the underlying DynamoDB instance (client) is reused.
+     * No additional target-system configuration is carried over.
+     *
+     * @param targetSystem the target system from which to derive the client
+     * @return a new audit store bound to the same DynamoDB instance as the target system
+     */
+    public static DynamoDBAuditStore from(DynamoDBTargetSystem targetSystem) {
+        return new DynamoDBAuditStore(targetSystem.getClient());
     }
 
     public DynamoDBAuditStore withAuditRepositoryName(String auditRepositoryName) {

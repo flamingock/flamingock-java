@@ -82,7 +82,7 @@ class DynamoDBAuditStoreTest {
         client = DynamoDBTestContainer.createClient(dynamoDBContainer);
 
         // Initialize test kit with DynamoDB persistence using the same client as the driver
-        testKit = DynamoDBTestKit.create(client, new DynamoDBAuditStore(client));
+        testKit = DynamoDBTestKit.create(client, DynamoDBAuditStore.from(new DynamoDBTargetSystem("dynamodb", client)));
         auditHelper = testKit.getAuditHelper();
     }
 
@@ -96,6 +96,7 @@ class DynamoDBAuditStoreTest {
     @DisplayName("When standalone runs the driver with DEFAULT repository names related tables should exists")
     void happyPathWithDefaultRepositoryNames() {
         // Given-When
+        DynamoDBTargetSystem dynamoDBTargetSystem = new DynamoDBTargetSystem("dynamodb", client);
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
                         new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
@@ -103,8 +104,8 @@ class DynamoDBAuditStoreTest {
                         new CodeChangeTestDefinition(_004__insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore(client))
-                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
+                            .setAuditStore(DynamoDBAuditStore.from(dynamoDBTargetSystem))
+                            .addTargetSystem(dynamoDBTargetSystem)
                             .build()
                             .run();
                 })
@@ -122,6 +123,7 @@ class DynamoDBAuditStoreTest {
     @DisplayName("When standalone runs the driver with transactions enabled should persist the audit logs and the user's table updated")
     void happyPathWithTransaction() {
         // Given-When-Then
+        DynamoDBTargetSystem dynamoDBTargetSystem = new DynamoDBTargetSystem("dynamodb", client);
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
                         new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
@@ -130,14 +132,14 @@ class DynamoDBAuditStoreTest {
                 .WHEN(() -> {
                     // Run pipeline twice to verify repeated execution
                     FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore(client))
-                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
+                            .setAuditStore(DynamoDBAuditStore.from(dynamoDBTargetSystem))
+                            .addTargetSystem(dynamoDBTargetSystem)
                             .build()
                             .run();
 
                     FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore(client))
-                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
+                            .setAuditStore(DynamoDBAuditStore.from(dynamoDBTargetSystem))
+                            .addTargetSystem(dynamoDBTargetSystem)
                             .build()
                             .run();
                 })
@@ -168,6 +170,7 @@ class DynamoDBAuditStoreTest {
     @DisplayName("When standalone runs the driver and execution fails should persist only the applied audit logs")
     void failedWithTransaction() {
         // Given-When-Then - Test failure scenario with audit verification
+        DynamoDBTargetSystem dynamoDBTargetSystem = new DynamoDBTargetSystem("dynamodb", client);
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
                         new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
@@ -176,8 +179,8 @@ class DynamoDBAuditStoreTest {
                 .WHEN(() -> {
                     assertThrows(PipelineExecutionException.class, () -> {
                         FlamingockFactory.getCommunityBuilder()
-                                .setAuditStore(new DynamoDBAuditStore(client))
-                                .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
+                                .setAuditStore(DynamoDBAuditStore.from(dynamoDBTargetSystem))
+                                .addTargetSystem(dynamoDBTargetSystem)
                                 .build()
                                 .run();
                     });
@@ -232,6 +235,7 @@ class DynamoDBAuditStoreTest {
                 Collections.emptyList()
         );
 
+        DynamoDBTargetSystem dynamoDBTargetSystem = new DynamoDBTargetSystem("dynamodb", client);
         AuditTestSupport.withTestKit(testKit)
                 .GIVEN_Changes(
                         new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.singletonList(DynamoDbClient.class)),
@@ -239,11 +243,11 @@ class DynamoDBAuditStoreTest {
                         new CodeChangeTestDefinition(_004__insert_jorge_happy_transactional.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
                     FlamingockFactory.getCommunityBuilder()
-                            .setAuditStore(new DynamoDBAuditStore(client)
+                            .setAuditStore(DynamoDBAuditStore.from(dynamoDBTargetSystem)
                                     .withAutoCreate(false)
                                     .withAuditRepositoryName(CUSTOM_AUDIT_REPOSITORY_NAME)
                                     .withLockRepositoryName(CUSTOM_LOCK_REPOSITORY_NAME))
-                            .addTargetSystem(new DynamoDBTargetSystem("dynamodb", client))
+                            .addTargetSystem(dynamoDBTargetSystem)
                             .build()
                             .run();
                 })
