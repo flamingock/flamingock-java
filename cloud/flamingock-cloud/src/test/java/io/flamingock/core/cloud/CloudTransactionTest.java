@@ -20,7 +20,7 @@ import io.flamingock.core.cloud.changes._002__CloudChange2;
 import io.flamingock.core.cloud.utils.TestCloudTargetSystem;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
-import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;

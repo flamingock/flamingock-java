@@ -17,7 +17,7 @@ package io.flamingock.springboot;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.builder.change.AbstractChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.runner.RunnerBuilder;
 import io.flamingock.internal.util.Constants;
