@@ -15,7 +15,7 @@
  */
 package io.flamingock.cloud;
 
-import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 
 public class Flamingock {

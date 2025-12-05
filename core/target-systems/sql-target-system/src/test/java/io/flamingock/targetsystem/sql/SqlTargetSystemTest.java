@@ -31,7 +31,7 @@ import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;

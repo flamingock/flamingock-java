@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder.ops;
+package io.flamingock.internal.core.builder;
 
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.Dependency;
-import io.flamingock.internal.core.builder.AbstractBuilder;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.store.AuditStore;
-import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.store.audit.AuditPersistence;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Property;
