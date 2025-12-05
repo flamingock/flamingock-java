@@ -27,6 +27,10 @@ include("core:flamingock-core-api")
 project(":core:flamingock-core-api").name = "flamingock-core-api"
 project(":core:flamingock-core-api").projectDir = file("core/flamingock-core-api")
 
+include("core:flamingock-test-support")
+project(":core:flamingock-test-support").name = "flamingock-test-support"
+project(":core:flamingock-test-support").projectDir = file("core/flamingock-test-support")
+
 
 //////////////////////////////////////
 // CLOUD
@@ -186,3 +190,5 @@ project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
 
 
+
+include("core:flamingock-test-support")
