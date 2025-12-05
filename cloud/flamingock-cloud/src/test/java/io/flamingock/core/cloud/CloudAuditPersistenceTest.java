@@ -24,7 +24,7 @@ import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.util.ThreadSleeper;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.core.store.lock.LockException;

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder.change;
+package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
 import io.flamingock.internal.core.configuration.cloud.CloudConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;

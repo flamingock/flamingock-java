@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.kit;
 
-import io.flamingock.internal.core.builder.change.CommunityChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.CommunityChangeRunnerBuilder;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.common.core.context.Context;

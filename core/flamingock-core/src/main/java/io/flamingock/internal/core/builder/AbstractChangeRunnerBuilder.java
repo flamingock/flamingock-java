@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder.change;
+package io.flamingock.internal.core.builder;
 
 import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
@@ -21,7 +21,6 @@ import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.internal.core.builder.AbstractBuilder;
 import io.flamingock.internal.core.configuration.EventLifecycleConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.context.PriorityContext;

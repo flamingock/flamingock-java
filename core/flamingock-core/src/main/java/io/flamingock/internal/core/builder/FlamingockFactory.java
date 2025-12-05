@@ -15,16 +15,12 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.builder.change.AbstractChangeRunnerBuilder;
-import io.flamingock.internal.core.builder.change.CloudChangeRunnerBuilder;
-import io.flamingock.internal.core.builder.change.CommunityChangeRunnerBuilder;
 import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.store.CloudAuditStore;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.plugin.DefaultPluginManager;
-import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 
 import java.util.Optional;
