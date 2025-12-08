@@ -188,7 +188,3 @@ project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
 include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
-
-
-
-include("core:flamingock-test-support")

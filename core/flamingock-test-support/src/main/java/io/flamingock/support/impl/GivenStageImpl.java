@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.support.impl;
 
-import io.flamingock.internal.core.builder.change.AbstractChangeRunnerBuilder;
+import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
+import io.flamingock.support.GivenStage;
+import io.flamingock.support.ThenStage;
+import io.flamingock.support.WhenStage;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-class GivenStageImpl implements GivenStage {
+public class GivenStageImpl implements GivenStage {
 
-    final AbstractChangeRunnerBuilder<?, ?> builder;
-    final List<Class<?>> applied = new ArrayList<>();
-    final List<Class<?>> failed = new ArrayList<>();
-    final List<Class<?>> rolledback = new ArrayList<>();
-    boolean runCalled = false;
+    private final List<Class<?>> applied = new ArrayList<>();
+    private final List<Class<?>> failed = new ArrayList<>();
+    private final List<Class<?>> rolledBack = new ArrayList<>();
 
-    GivenStageImpl(AbstractChangeRunnerBuilder<?, ?> builder) {
-        this.builder = builder;
+    public GivenStageImpl() {
     }
 
     @Override
     public GivenStage andAppliedChanges(Class<?>... changes) {
         if (changes != null) {
-            for (Class<?> c : changes) {
-                applied.add(c);
-            }
+            applied.addAll(Arrays.asList(changes));
         }
         return this;
     }
@@ -44,26 +44,21 @@ class GivenStageImpl implements GivenStage {
     @Override
     public GivenStage andFailedChanges(Class<?>... changes) {
         if (changes != null) {
-            for (Class<?> c : changes) {
-                failed.add(c);
-            }
+            failed.addAll(Arrays.asList(changes));
         }
         return this;
     }
 
     @Override
-    public GivenStage andRolledbackChanges(Class<?>... changes) {
+    public GivenStage andRolledBackChanges(Class<?>... changes) {
         if (changes != null) {
-            for (Class<?> c : changes) {
-                rolledback.add(c);
-            }
+            rolledBack.addAll(Arrays.asList(changes));
         }
         return this;
     }
 
     @Override
     public WhenStage whenRun() {
-        this.runCalled = true;
-        return new WhenStageImpl(this);
+        return new WhenStageImpl();
     }
 }

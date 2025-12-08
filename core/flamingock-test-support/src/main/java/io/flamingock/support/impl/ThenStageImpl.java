@@ -13,16 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.support.impl;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
-
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.List;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.support.ThenStage;
+import io.flamingock.support.domain.AuditEntryExpectation;
 
-public interface ThenStage {
-    ThenStage thenExpectAuditSequenceStrict(AuditEntryExpectation... expectations);
-    ThenStage thenExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> validator);
-    ThenStage thenInspectAuditEntries(Consumer<List<AuditEntry>> validator);
-    void verify();
+final class ThenStageImpl implements ThenStage {
+
+
+
+    ThenStageImpl() {
+    }
+
+    @Override
+    public ThenStage andExpectAuditSequenceStrict(AuditEntryExpectation... expectations) {
+
+        return this;
+    }
+
+    @Override
+    public ThenStage andExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> validator) {
+
+        return this;
+    }
+
+    @Override
+    public void verify() {
+    }
 }
