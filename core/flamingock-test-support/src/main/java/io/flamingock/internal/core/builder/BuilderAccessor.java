@@ -28,4 +28,11 @@ public class BuilderAccessor {
     public AuditStore<?> getAuditStore(){
         return builder.auditStore;
     }
+
+
+    public void run() {
+        builder.build().run();
+    }
+
+
 }

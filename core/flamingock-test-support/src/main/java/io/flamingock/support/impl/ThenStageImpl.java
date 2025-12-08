@@ -15,32 +15,53 @@
  */
 package io.flamingock.support.impl;
 
-import java.util.function.Consumer;
-import java.util.List;
-import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.core.builder.BuilderAccessor;
 import io.flamingock.support.ThenStage;
 import io.flamingock.support.domain.AuditEntryExpectation;
+import io.flamingock.support.validation.ValidationHandler;
+import io.flamingock.support.validation.Validator;
+import io.flamingock.support.validation.ValidatorFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 final class ThenStageImpl implements ThenStage {
 
+    private final List<Validator> validators = new ArrayList<>();
+    private final ValidatorFactory validatorFactory;
+    private final BuilderAccessor builderAccesor;
 
-
-    ThenStageImpl() {
+    ThenStageImpl(BuilderAccessor builderAccessor) {
+        this.builderAccesor = builderAccessor;
+        validatorFactory = new ValidatorFactory(builderAccessor);
     }
 
     @Override
     public ThenStage andExpectAuditSequenceStrict(AuditEntryExpectation... expectations) {
-
+        validators.add(validatorFactory.getAuditSeqStrictValidator(expectations));
         return this;
     }
 
     @Override
-    public ThenStage andExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> validator) {
-
+    public ThenStage andExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {
+        validators.add(validatorFactory.getExceptionValidator(exceptionClass, exceptionConsumer));
         return this;
     }
 
     @Override
-    public void verify() {
+    public void verify() throws AssertionError {
+
+        ValidationHandler validationHandler;
+        try {
+            builderAccesor.run();
+            validationHandler = new ValidationHandler(validators);
+
+        } catch (Throwable actualException) {
+            validationHandler = new ValidationHandler(validators, actualException);
+
+        }
+
+        validationHandler.validate();
     }
 }

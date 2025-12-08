@@ -82,6 +82,6 @@ public final class FlamingockTestSupport {
             throw new NullPointerException("builder must not be null");
         }
         BuilderAccessor builderAccessor = new BuilderAccessor(builder);
-        return new GivenStageImpl();
+        return new GivenStageImpl(new BuilderAccessor(builder));
     }
 }
