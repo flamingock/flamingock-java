@@ -26,8 +26,11 @@ import java.util.List;
 
 public class AuditSequenceStrictValidator implements SimpleValidator {
 
+    private static final String VALIDATOR_NAME = "Audit Sequence (Strict)";
+
     private final AuditStore<?> auditStore;
     private final List<AuditEntryExpectation> expectations;
+
 
     public AuditSequenceStrictValidator(AuditStore<?> auditStore, AuditEntryExpectation... expectations) {
         this.auditStore = auditStore;
@@ -36,6 +39,7 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
 
     @Override
     public ValidationResult validate() {
-        return new ValidationResult();
+        // TODO: Implement actual validation logic
+        return ValidationResult.success(VALIDATOR_NAME);
     }
 }

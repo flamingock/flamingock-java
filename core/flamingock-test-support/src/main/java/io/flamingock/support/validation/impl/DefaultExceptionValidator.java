@@ -16,16 +16,16 @@
 package io.flamingock.support.validation.impl;
 
 import io.flamingock.support.validation.ExceptionValidator;
-import io.flamingock.support.validation.Validator;
 import io.flamingock.support.validation.error.ValidationResult;
 
 import java.util.function.Consumer;
 
 public class DefaultExceptionValidator implements ExceptionValidator {
 
+    private static final String VALIDATOR_NAME = "Exception";
+
     private final Class<? extends Throwable> expectedExceptionClass;
     private final Consumer<Throwable> expectedExceptionConsumer;
-
     private Throwable actualException;
 
     public DefaultExceptionValidator(Class<? extends Throwable> expectedExceptionClass,
@@ -40,6 +40,7 @@ public class DefaultExceptionValidator implements ExceptionValidator {
 
     @Override
     public ValidationResult validate(Throwable actualException) {
-        return new ValidationResult();
+        // TODO: Implement actual validation logic
+        return ValidationResult.success(VALIDATOR_NAME);
     }
 }
