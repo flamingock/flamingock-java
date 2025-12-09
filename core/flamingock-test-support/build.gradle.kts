@@ -4,6 +4,8 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // JUnit for assertion utilities
+    api("org.junit.jupiter:junit-jupiter-api:5.9.2")
 }
 
 description = "Test support module for Flamingock framework"

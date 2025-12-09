@@ -16,14 +16,19 @@
 package io.flamingock.support.validation.impl;
 
 import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.support.domain.AuditEntryAssertions;
 import io.flamingock.support.domain.AuditEntryExpectation;
 import io.flamingock.support.validation.SimpleValidator;
-import io.flamingock.support.validation.Validator;
 import io.flamingock.support.validation.error.ValidationResult;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * Strict sequence validator: verifies actual audit entries exactly match the provided expectations.
+ */
 public class AuditSequenceStrictValidator implements SimpleValidator {
 
     private static final String VALIDATOR_NAME = "Audit Sequence (Strict)";
@@ -39,7 +44,71 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
 
     @Override
     public ValidationResult validate() {
-        // TODO: Implement actual validation logic
+
+        List<AuditEntry> actualEntries = auditStore.getPersistence().getAuditHistory();
+        List<AuditEntry> sortedActual = actualEntries.stream()
+                .sorted()
+                .collect(Collectors.toList());
+
+        if (sortedActual.size() != expectations.size()) {
+            return ValidationResult.failure(String.format(
+                    "%s: Expected %d audit entries but found %d. Expected: %s, Actual: %s",
+                    VALIDATOR_NAME,
+                    expectations.size(),
+                    sortedActual.size(),
+                    formatExpectedSequence(expectations),
+                    formatActualSequence(sortedActual)
+            ));
+        }
+
+        for (int i = 0; i < expectations.size(); i++) {
+            AuditEntry actual = sortedActual.get(i);
+            AuditEntryExpectation expected = expectations.get(i);
+
+            try {
+                AuditEntryAssertions.assertAuditEntry(actual, expected);
+            } catch (AssertionError e) {
+                return ValidationResult.failure(String.format(
+                        "%s: Audit entry mismatch at position %d: %s. Full expected sequence: %s, Full actual sequence: %s",
+                        VALIDATOR_NAME,
+                        i,
+                        e.getMessage(),
+                        formatExpectedSequence(expectations),
+                        formatActualSequence(sortedActual)
+                ));
+            }
+        }
+
         return ValidationResult.success(VALIDATOR_NAME);
+    }
+
+    private String formatExpectedSequence(List<AuditEntryExpectation> expectedAudits) {
+        if (expectedAudits.isEmpty()) {
+            return "[]";
+        }
+
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < expectedAudits.size(); i++) {
+            if (i > 0) sb.append(", ");
+            AuditEntryExpectation exp = expectedAudits.get(i);
+            sb.append(String.format("(%s, %s)", exp.getExpectedChangeId(), exp.getExpectedState()));
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String formatActualSequence(List<AuditEntry> actualEntries) {
+        if (actualEntries.isEmpty()) {
+            return "[]";
+        }
+
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < actualEntries.size(); i++) {
+            if (i > 0) sb.append(", ");
+            AuditEntry entry = actualEntries.get(i);
+            sb.append(String.format("(%s, %s)", entry.getTaskId(), entry.getState()));
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }

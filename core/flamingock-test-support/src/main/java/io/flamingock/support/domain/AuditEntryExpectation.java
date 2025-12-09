@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.support.stages.ThenStage;
 import io.flamingock.support.stages.WhenStage;
 
@@ -100,6 +101,12 @@ public class AuditEntryExpectation {
     private String expectedExecutionHostname;
     private String expectedErrorTrace;
     private String expectedTargetSystemId;
+    private Boolean expectedSystemChange;
+    private AuditTxType expectedTxType;
+    private String expectedTaskId;
+    private AuditEntry.ExecutionType expectedType;
+
+
 
     // Time range for flexible timestamp verification
     private LocalDateTime timestampAfter;
@@ -477,6 +484,9 @@ public class AuditEntryExpectation {
     /** Returns the expected change ID. */
     public String getExpectedChangeId() { return expectedChangeId; }
 
+    /** Returns the expected task ID. */
+    public String getExpectedTaskId() { return expectedTaskId; }
+
     /** Returns the expected author. */
     public String getExpectedAuthor() { return expectedAuthor; }
 
@@ -512,4 +522,26 @@ public class AuditEntryExpectation {
 
     /** Returns the upper bound for timestamp range verification. */
     public LocalDateTime getTimestampBefore() { return timestampBefore; }
+
+    public AuditEntry.ExecutionType getExpectedType() { return expectedType; }
+
+    public Boolean getExpectedSystemChange() { return expectedSystemChange; }
+
+    public AuditTxType getExpectedTxType() { return expectedTxType; }
+
+    public void setExpectedSystemChange(Boolean expectedSystemChange) {
+        this.expectedSystemChange = expectedSystemChange;
+    }
+
+    public void setExpectedTxType(AuditTxType expectedTxType) {
+        this.expectedTxType = expectedTxType;
+    }
+
+    public void setExpectedTaskId(String expectedTaskId) {
+        this.expectedTaskId = expectedTaskId;
+    }
+
+    public void setExpectedType(AuditEntry.ExecutionType expectedType) {
+        this.expectedType = expectedType;
+    }
 }
