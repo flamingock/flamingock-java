@@ -16,11 +16,15 @@
 package io.flamingock.support.domain;
 
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.support.stages.ThenStage;
 import io.flamingock.support.stages.WhenStage;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.APPLIED;
@@ -33,7 +37,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_
  *
  * <p>This class provides a fluent API for specifying the expected values of an audit entry
  * that should be created during change execution. It supports selective field verification,
- * meaning only the fields explicitly set via {@code withXxx()} methods will be validated.</p>
+ * meaning only fields with non-null expected values will be validated.</p>
  *
  * <h2>Basic Usage</h2>
  * <p>Create expectations using the static factory methods and optionally chain field specifications:</p>
@@ -41,30 +45,40 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_
  * // Simple expectation - only verifies change ID and status
  * AuditEntryExpectation.APPLIED("my-change-id")
  *
- * // Detailed expectation - verifies additional fields
- * AuditEntryExpectation.APPLIED("my-change-id")
- *     .withClass(MyChange.class)
- *     .withAuthor("dev-team")
+ * // Class-based expectation - auto-extracts metadata from annotations
+ * AuditEntryExpectation.APPLIED(MyChange.class)
+ *
+ * // Detailed expectation with overrides
+ * AuditEntryExpectation.APPLIED(MyChange.class)
+ *     .withAuthor("custom-author")
  *     .withTargetSystemId("mongodb-main")
  * }</pre>
  *
- * <h2>Selective Field Verification</h2>
- * <p>By default, only the change ID and status (specified via factory methods) are verified.
- * Additional fields are only verified when explicitly set:</p>
- * <ul>
- *   <li><b>Always verified:</b> change ID, status</li>
- *   <li><b>Verified when set:</b> author, class name, method name, metadata, error trace,
- *       system change flag, transaction type, target system ID</li>
- *   <li><b>Verified only with flag:</b> execution ID, stage ID, timestamp, execution millis,
- *       execution hostname (these set a verification flag when their {@code withXxx()} is called)</li>
- * </ul>
- *
  * <h2>Factory Methods</h2>
+ * <p>Two variants are available for each status:</p>
+ *
+ * <h3>String-based (manual configuration)</h3>
  * <ul>
  *   <li>{@link #APPLIED(String)} - Expect a successfully applied change</li>
  *   <li>{@link #FAILED(String)} - Expect a failed change</li>
  *   <li>{@link #ROLLED_BACK(String)} - Expect a rolled-back change</li>
  *   <li>{@link #ROLLBACK_FAILED(String)} - Expect a change whose rollback failed</li>
+ * </ul>
+ *
+ * <h3>Class-based (auto-extraction from annotations)</h3>
+ * <ul>
+ *   <li>{@link #APPLIED(Class)} - Extracts changeId, author, className, methodName from annotations</li>
+ *   <li>{@link #FAILED(Class)} - Same extraction for failed changes</li>
+ *   <li>{@link #ROLLED_BACK(Class)} - Extracts rollback method name from {@code @Rollback}</li>
+ *   <li>{@link #ROLLBACK_FAILED(Class)} - Same extraction for failed rollbacks</li>
+ * </ul>
+ *
+ * <h2>Selective Field Verification</h2>
+ * <p>A field is verified only if its expected value is non-null:</p>
+ * <ul>
+ *   <li><b>Always verified:</b> change ID, status (required by factory methods)</li>
+ *   <li><b>Verified when non-null:</b> author, class name, method name, metadata,
+ *       error trace, target system ID, execution ID, stage ID, timestamp, etc.</li>
  * </ul>
  *
  * @see WhenStage#thenExpectAuditSequenceStrict(AuditEntryExpectation...)
@@ -79,27 +93,17 @@ public class AuditEntryExpectation {
     private String expectedStageId;
     private String expectedAuthor;
     private LocalDateTime expectedCreatedAt;
-    private AuditEntry.ExecutionType expectedType;
     private String expectedClassName;
     private String expectedMethodName;
     private Object expectedMetadata;
     private Long expectedExecutionMillis;
     private String expectedExecutionHostname;
     private String expectedErrorTrace;
-    private Boolean expectedSystemChange;
-    private AuditTxType expectedTxType;
     private String expectedTargetSystemId;
 
     // Time range for flexible timestamp verification
     private LocalDateTime timestampAfter;
     private LocalDateTime timestampBefore;
-
-    // Flags for optional field verification
-    private boolean shouldVerifyExecutionId = false;
-    private boolean shouldVerifyStageId = false;
-    private boolean shouldVerifyTimestamp = false;
-    private boolean shouldVerifyExecutionMillis = false;
-    private boolean shouldVerifyExecutionHostname = false;
 
     private AuditEntryExpectation(String expectedChangeId, AuditEntry.Status expectedState) {
         this.expectedChangeId = expectedChangeId;
@@ -125,11 +129,11 @@ public class AuditEntryExpectation {
      * <p>Use this when the change is expected to fail during execution and be recorded
      * with {@code FAILED} status in the audit store.</p>
      *
-     * @param taskId the unique identifier of the expected change
+     * @param expectedChangeId the unique identifier of the expected change
      * @return a new expectation builder for further configuration
      */
-    public static AuditEntryExpectation FAILED(String taskId) {
-        return new AuditEntryExpectation(taskId, FAILED);
+    public static AuditEntryExpectation FAILED(String expectedChangeId) {
+        return new AuditEntryExpectation(expectedChangeId, FAILED);
     }
 
     /**
@@ -138,11 +142,11 @@ public class AuditEntryExpectation {
      * <p>Use this when the change is expected to have been rolled back successfully
      * and be recorded with {@code ROLLED_BACK} status in the audit store.</p>
      *
-     * @param taskId the unique identifier of the expected change
+     * @param expectedChangeId the unique identifier of the expected change
      * @return a new expectation builder for further configuration
      */
-    public static AuditEntryExpectation ROLLED_BACK(String taskId) {
-        return new AuditEntryExpectation(taskId, ROLLED_BACK);
+    public static AuditEntryExpectation ROLLED_BACK(String expectedChangeId) {
+        return new AuditEntryExpectation(expectedChangeId, ROLLED_BACK);
     }
 
     /**
@@ -151,11 +155,145 @@ public class AuditEntryExpectation {
      * <p>Use this when the change's rollback operation is expected to fail
      * and be recorded with {@code ROLLBACK_FAILED} status in the audit store.</p>
      *
-     * @param taskId the unique identifier of the expected change
+     * @param expectedChangeId the unique identifier of the expected change
      * @return a new expectation builder for further configuration
      */
-    public static AuditEntryExpectation ROLLBACK_FAILED(String taskId) {
-        return new AuditEntryExpectation(taskId, ROLLBACK_FAILED);
+    public static AuditEntryExpectation ROLLBACK_FAILED(String expectedChangeId) {
+        return new AuditEntryExpectation(expectedChangeId, ROLLBACK_FAILED);
+    }
+
+    // ==================== Class-Based Factory Methods ====================
+
+    /**
+     * Creates an expectation for a successfully applied change by extracting
+     * metadata from the change class annotations.
+     *
+     * <p>This factory method uses reflection to extract:</p>
+     * <ul>
+     *   <li>Change ID and author from {@code @Change} annotation</li>
+     *   <li>Class name from the class itself</li>
+     *   <li>Method name from the method annotated with {@code @Apply}</li>
+     *   <li>Target system ID from {@code @TargetSystem} annotation (if present)</li>
+     * </ul>
+     *
+     * <p>Values can be overridden after creation using {@code withXxx()} methods.</p>
+     *
+     * @param changeClass the change class annotated with {@code @Change}
+     * @return a new expectation builder pre-populated with annotation values
+     * @throws IllegalArgumentException if the class is not annotated with {@code @Change}
+     *         or does not contain a method annotated with {@code @Apply}
+     */
+    public static AuditEntryExpectation APPLIED(Class<?> changeClass) {
+        return fromChangeClass(changeClass, APPLIED);
+    }
+
+    /**
+     * Creates an expectation for a failed change by extracting
+     * metadata from the change class annotations.
+     *
+     * <p>This factory method uses reflection to extract:</p>
+     * <ul>
+     *   <li>Change ID and author from {@code @Change} annotation</li>
+     *   <li>Class name from the class itself</li>
+     *   <li>Method name from the method annotated with {@code @Apply}</li>
+     *   <li>Target system ID from {@code @TargetSystem} annotation (if present)</li>
+     * </ul>
+     *
+     * <p>Values can be overridden after creation using {@code withXxx()} methods.</p>
+     *
+     * @param changeClass the change class annotated with {@code @Change}
+     * @return a new expectation builder pre-populated with annotation values
+     * @throws IllegalArgumentException if the class is not annotated with {@code @Change}
+     *         or does not contain a method annotated with {@code @Apply}
+     */
+    public static AuditEntryExpectation FAILED(Class<?> changeClass) {
+        return fromChangeClass(changeClass, FAILED);
+    }
+
+    /**
+     * Creates an expectation for a rolled-back change by extracting
+     * metadata from the change class annotations.
+     *
+     * <p>This factory method uses reflection to extract:</p>
+     * <ul>
+     *   <li>Change ID and author from {@code @Change} annotation</li>
+     *   <li>Class name from the class itself</li>
+     *   <li>Method name from the method annotated with {@code @Rollback}</li>
+     *   <li>Target system ID from {@code @TargetSystem} annotation (if present)</li>
+     * </ul>
+     *
+     * <p>Values can be overridden after creation using {@code withXxx()} methods.</p>
+     *
+     * @param changeClass the change class annotated with {@code @Change}
+     * @return a new expectation builder pre-populated with annotation values
+     * @throws IllegalArgumentException if the class is not annotated with {@code @Change}
+     *         or does not contain a method annotated with {@code @Rollback}
+     */
+    public static AuditEntryExpectation ROLLED_BACK(Class<?> changeClass) {
+        return fromChangeClass(changeClass, ROLLED_BACK);
+    }
+
+    /**
+     * Creates an expectation for a change whose rollback failed by extracting
+     * metadata from the change class annotations.
+     *
+     * <p>This factory method uses reflection to extract:</p>
+     * <ul>
+     *   <li>Change ID and author from {@code @Change} annotation</li>
+     *   <li>Class name from the class itself</li>
+     *   <li>Method name from the method annotated with {@code @Rollback}</li>
+     *   <li>Target system ID from {@code @TargetSystem} annotation (if present)</li>
+     * </ul>
+     *
+     * <p>Values can be overridden after creation using {@code withXxx()} methods.</p>
+     *
+     * @param changeClass the change class annotated with {@code @Change}
+     * @return a new expectation builder pre-populated with annotation values
+     * @throws IllegalArgumentException if the class is not annotated with {@code @Change}
+     *         or does not contain a method annotated with {@code @Rollback}
+     */
+    public static AuditEntryExpectation ROLLBACK_FAILED(Class<?> changeClass) {
+        return fromChangeClass(changeClass, ROLLBACK_FAILED);
+    }
+
+    private static AuditEntryExpectation fromChangeClass(Class<?> changeClass, AuditEntry.Status status) {
+        Change changeAnnotation = changeClass.getAnnotation(Change.class);
+        if (changeAnnotation == null) {
+            throw new IllegalArgumentException(
+                    String.format("Class [%s] must be annotated with @Change", changeClass.getName()));
+        }
+
+        AuditEntryExpectation expectation = new AuditEntryExpectation(
+                changeAnnotation.id(),
+                status
+        );
+
+        expectation.expectedAuthor = changeAnnotation.author();
+        expectation.expectedClassName = changeClass.getName();
+        expectation.expectedMethodName = findMethodName(changeClass, status);
+
+        TargetSystem targetSystem = changeClass.getAnnotation(TargetSystem.class);
+        if (targetSystem != null) {
+            expectation.expectedTargetSystemId = targetSystem.id();
+        }
+
+        return expectation;
+    }
+
+    private static String findMethodName(Class<?> changeClass, AuditEntry.Status status) {
+        Class<? extends Annotation> annotationClass =
+                (status == APPLIED || status == FAILED) ? Apply.class : Rollback.class;
+
+        for (Method method : changeClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(annotationClass)) {
+                return method.getName();
+            }
+        }
+
+        throw new IllegalArgumentException(String.format(
+                "Class [%s] must contain a method annotated with @%s",
+                changeClass.getName(),
+                annotationClass.getSimpleName()));
     }
 
     // ==================== Identity Fields ====================
@@ -170,7 +308,6 @@ public class AuditEntryExpectation {
      */
     public AuditEntryExpectation withExecutionId(String executionId) {
         this.expectedExecutionId = executionId;
-        this.shouldVerifyExecutionId = true;
         return this;
     }
 
@@ -184,7 +321,6 @@ public class AuditEntryExpectation {
      */
     public AuditEntryExpectation withStageId(String stageId) {
         this.expectedStageId = stageId;
-        this.shouldVerifyStageId = true;
         return this;
     }
 
@@ -212,7 +348,6 @@ public class AuditEntryExpectation {
      */
     public AuditEntryExpectation withCreatedAt(LocalDateTime createdAt) {
         this.expectedCreatedAt = createdAt;
-        this.shouldVerifyTimestamp = true;
         return this;
     }
 
@@ -230,18 +365,6 @@ public class AuditEntryExpectation {
     public AuditEntryExpectation withTimestampBetween(LocalDateTime after, LocalDateTime before) {
         this.timestampAfter = after;
         this.timestampBefore = before;
-        this.shouldVerifyTimestamp = true;
-        return this;
-    }
-
-    /**
-     * Sets the expected execution type.
-     *
-     * @param type the expected execution type
-     * @return this builder for method chaining
-     */
-    public AuditEntryExpectation withType(AuditEntry.ExecutionType type) {
-        this.expectedType = type;
         return this;
     }
 
@@ -250,9 +373,11 @@ public class AuditEntryExpectation {
     /**
      * Sets the expected fully-qualified class name.
      *
+     * <p>This is useful for overriding the class name after using a class-based
+     * factory method, or when using string-based factory methods.</p>
+     *
      * @param className the expected class name
      * @return this builder for method chaining
-     * @see #withClass(Class)
      */
     public AuditEntryExpectation withClassName(String className) {
         this.expectedClassName = className;
@@ -262,40 +387,15 @@ public class AuditEntryExpectation {
     /**
      * Sets the expected method name.
      *
+     * <p>This is useful for overriding the method name after using a class-based
+     * factory method, or when using string-based factory methods.</p>
+     *
      * @param methodName the expected method name
      * @return this builder for method chaining
-     * @see #withClass(Class)
      */
     public AuditEntryExpectation withMethodName(String methodName) {
         this.expectedMethodName = methodName;
         return this;
-    }
-
-    /**
-     * Sets both class name and method name by inspecting the provided change class.
-     *
-     * <p>This method uses reflection to find the method annotated with {@code @Apply}
-     * and automatically sets both {@code className} and {@code methodName} fields.</p>
-     *
-     * <p>This is the recommended way to set execution details as it avoids
-     * hardcoding string values that may become stale.</p>
-     *
-     * @param clazz the change class to inspect
-     * @return this builder for method chaining
-     * @throws RuntimeException if no method annotated with {@code @Apply} is found
-     */
-    public AuditEntryExpectation withClass(Class<?> clazz) {
-        this.expectedClassName = clazz.getName();
-
-        java.lang.reflect.Method[] methods = clazz.getDeclaredMethods();
-        for (java.lang.reflect.Method method : methods) {
-            if (method.isAnnotationPresent(Apply.class)) {
-                this.expectedMethodName = method.getName();
-                return this;
-            }
-        }
-
-        throw new RuntimeException(String.format("Class[%s] should contain a method annotated with @Apply", expectedClassName));
     }
 
     /**
@@ -321,7 +421,6 @@ public class AuditEntryExpectation {
      */
     public AuditEntryExpectation withExecutionMillis(Long executionMillis) {
         this.expectedExecutionMillis = executionMillis;
-        this.shouldVerifyExecutionMillis = true;
         return this;
     }
 
@@ -335,7 +434,6 @@ public class AuditEntryExpectation {
      */
     public AuditEntryExpectation withExecutionHostname(String hostname) {
         this.expectedExecutionHostname = hostname;
-        this.shouldVerifyExecutionHostname = true;
         return this;
     }
 
@@ -355,31 +453,7 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== System Fields ====================
-
-    /**
-     * Sets whether this is expected to be a system change.
-     *
-     * @param systemChange {@code true} if this should be a system change
-     * @return this builder for method chaining
-     */
-    public AuditEntryExpectation withSystemChange(Boolean systemChange) {
-        this.expectedSystemChange = systemChange;
-        return this;
-    }
-
-    // ==================== Transaction Fields ====================
-
-    /**
-     * Sets the expected transaction type.
-     *
-     * @param txStrategy the expected transaction type
-     * @return this builder for method chaining
-     */
-    public AuditEntryExpectation withTxType(AuditTxType txStrategy) {
-        this.expectedTxType = txStrategy;
-        return this;
-    }
+    // ==================== Target System Fields ====================
 
     /**
      * Sets the expected target system identifier.
@@ -412,9 +486,6 @@ public class AuditEntryExpectation {
     /** Returns the expected audit entry status. */
     public AuditEntry.Status getExpectedState() { return expectedState; }
 
-    /** Returns the expected execution type. */
-    public AuditEntry.ExecutionType getExpectedType() { return expectedType; }
-
     /** Returns the expected class name. */
     public String getExpectedClassName() { return expectedClassName; }
 
@@ -433,12 +504,6 @@ public class AuditEntryExpectation {
     /** Returns the expected error trace. */
     public String getExpectedErrorTrace() { return expectedErrorTrace; }
 
-    /** Returns whether this is expected to be a system change. */
-    public Boolean getExpectedSystemChange() { return expectedSystemChange; }
-
-    /** Returns the expected transaction type. */
-    public AuditTxType getExpectedTxType() { return expectedTxType; }
-
     /** Returns the expected target system ID. */
     public String getExpectedTargetSystemId() { return expectedTargetSystemId; }
 
@@ -447,21 +512,4 @@ public class AuditEntryExpectation {
 
     /** Returns the upper bound for timestamp range verification. */
     public LocalDateTime getTimestampBefore() { return timestampBefore; }
-
-    // ==================== Verification Flags ====================
-
-    /** Returns {@code true} if execution ID should be verified. */
-    public boolean shouldVerifyExecutionId() { return shouldVerifyExecutionId; }
-
-    /** Returns {@code true} if stage ID should be verified. */
-    public boolean shouldVerifyStageId() { return shouldVerifyStageId; }
-
-    /** Returns {@code true} if timestamp should be verified. */
-    public boolean shouldVerifyTimestamp() { return shouldVerifyTimestamp; }
-
-    /** Returns {@code true} if execution millis should be verified. */
-    public boolean shouldVerifyExecutionMillis() { return shouldVerifyExecutionMillis; }
-
-    /** Returns {@code true} if execution hostname should be verified. */
-    public boolean shouldVerifyExecutionHostname() { return shouldVerifyExecutionHostname; }
 }
