@@ -61,11 +61,11 @@ public class SqlAuditMarkerDialectHelperTest {
                 return new MSSQLServerContainer<>(DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-latest"))
                     .withPassword("YourStrong!Passw0rd")
                     .acceptLicense();
-//            case ORACLE:
-//                return new OracleContainer("gvenzl/oracle-free:slim-faststart")
-//                    .withDatabaseName("testdb")
-//                    .withUsername("testuser")
-//                    .withPassword("testpass");
+            case ORACLE:
+                return new OracleContainer("gvenzl/oracle-free:slim-faststart")
+                    .withDatabaseName("testdb")
+                    .withUsername("testuser")
+                    .withPassword("testpass");
             default:
                 return null;
         }

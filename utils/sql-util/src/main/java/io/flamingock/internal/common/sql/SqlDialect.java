@@ -15,9 +15,6 @@
  */
 package io.flamingock.internal.common.sql;
 
-import java.util.Locale;
-import java.util.Optional;
-
 public enum SqlDialect {
     MYSQL,
     MARIADB,
