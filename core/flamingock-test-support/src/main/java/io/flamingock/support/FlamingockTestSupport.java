@@ -18,7 +18,10 @@ package io.flamingock.support;
 
 import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.BuilderAccessor;
-import io.flamingock.support.impl.GivenStageImpl;
+import io.flamingock.support.stages.GivenStage;
+import io.flamingock.support.stages.GivenStageImpl;
+import io.flamingock.support.stages.ThenStage;
+import io.flamingock.support.stages.WhenStage;
 
 /**
  * Entry point for the Flamingock BDD-style test support framework.

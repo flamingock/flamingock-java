@@ -24,4 +24,6 @@ public class ValidationResult {
     public List<ValidationError> getErrors() {
         return new ArrayList<>();
     }
+
+
 }

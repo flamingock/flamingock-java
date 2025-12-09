@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support.impl;
+package io.flamingock.support.stages;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.builder.BuilderAccessor;
-import io.flamingock.support.ThenStage;
-import io.flamingock.support.WhenStage;
 import io.flamingock.support.domain.AuditEntryExpectation;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 public class WhenStageImpl implements WhenStage {

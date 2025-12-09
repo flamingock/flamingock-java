@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support.impl;
+package io.flamingock.support.stages;
 
 import io.flamingock.internal.core.builder.BuilderAccessor;
-import io.flamingock.support.ThenStage;
 import io.flamingock.support.domain.AuditEntryExpectation;
 import io.flamingock.support.validation.ValidationHandler;
 import io.flamingock.support.validation.Validator;
