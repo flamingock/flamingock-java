@@ -15,5 +15,41 @@
  */
 package io.flamingock.support.validation.error;
 
-public class ValidationError {
+/**
+ * Abstract base class for all validation errors in the Flamingock test support framework.
+ *
+ * <p>Each concrete validation error extends this class and provides its specific
+ * error type via the constructor and a human-readable message via {@link #formatMessage()}.</p>
+ *
+ * @see ValidationErrorType
+ * @see ValidationResult
+ */
+public abstract class ValidationError {
+
+    private final ValidationErrorType errorType;
+
+    /**
+     * Constructs a validation error with the specified type.
+     *
+     * @param errorType the type of validation error
+     */
+    protected ValidationError(ValidationErrorType errorType) {
+        this.errorType = errorType;
+    }
+
+    /**
+     * Returns the type of this validation error.
+     *
+     * @return the error type
+     */
+    public ValidationErrorType getErrorType() {
+        return errorType;
+    }
+
+    /**
+     * Formats this error as a human-readable message for display in assertion errors.
+     *
+     * @return a formatted error message
+     */
+    public abstract String formatMessage();
 }
