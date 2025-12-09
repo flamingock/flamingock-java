@@ -13,34 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support.impl;
+package io.flamingock.support.validation;
 
-import java.util.function.Consumer;
 import java.util.List;
-import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.support.ThenStage;
-import io.flamingock.support.domain.AuditEntryExpectation;
 
-final class ThenStageImpl implements ThenStage {
+public class ValidationHandler {
 
+    private final List<Validator> validators;
+    private final Throwable executionException;
 
-
-    ThenStageImpl() {
+    public ValidationHandler(List<Validator> validators) {
+        this(validators, null);
     }
 
-    @Override
-    public ThenStage andExpectAuditSequenceStrict(AuditEntryExpectation... expectations) {
-
-        return this;
+    public ValidationHandler(List<Validator> validators, Throwable executionException) {
+        this.validators = validators;
+        this.executionException = executionException;
     }
 
-    @Override
-    public ThenStage andExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> validator) {
 
-        return this;
-    }
+    public void validate() throws AssertionError {
 
-    @Override
-    public void verify() {
+        //TODO process validator and grab the potential validation errors in a AssertionError
+        // we probably need another class for building the validation result
+
+
     }
 }

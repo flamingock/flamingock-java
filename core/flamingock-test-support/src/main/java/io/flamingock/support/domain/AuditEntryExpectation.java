@@ -18,6 +18,8 @@ package io.flamingock.support.domain;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.support.stages.ThenStage;
+import io.flamingock.support.stages.WhenStage;
 
 import java.time.LocalDateTime;
 
@@ -65,8 +67,8 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_
  *   <li>{@link #ROLLBACK_FAILED(String)} - Expect a change whose rollback failed</li>
  * </ul>
  *
- * @see io.flamingock.support.WhenStage#thenExpectAuditSequenceStrict(AuditEntryExpectation...)
- * @see io.flamingock.support.ThenStage#andExpectAuditSequenceStrict(AuditEntryExpectation...)
+ * @see WhenStage#thenExpectAuditSequenceStrict(AuditEntryExpectation...)
+ * @see ThenStage#andExpectAuditSequenceStrict(AuditEntryExpectation...)
  */
 public class AuditEntryExpectation {
 

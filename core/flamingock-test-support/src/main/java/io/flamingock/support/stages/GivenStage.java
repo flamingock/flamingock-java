@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support;
+package io.flamingock.support.stages;
+
+import io.flamingock.support.FlamingockTestSupport;
 
 /**
  * Represents the "Given" phase of the BDD test flow for setting up preconditions.

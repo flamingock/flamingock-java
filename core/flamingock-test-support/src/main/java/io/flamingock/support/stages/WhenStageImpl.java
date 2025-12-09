@@ -13,30 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support.impl;
+package io.flamingock.support.stages;
 
-import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.support.ThenStage;
-import io.flamingock.support.WhenStage;
+import io.flamingock.internal.core.builder.BuilderAccessor;
 import io.flamingock.support.domain.AuditEntryExpectation;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 public class WhenStageImpl implements WhenStage {
 
-    WhenStageImpl() {}
+    private final BuilderAccessor builderAccessor;
+
+    WhenStageImpl(BuilderAccessor builderAccessor) {
+        this.builderAccessor = builderAccessor;
+    }
 
     @Override
     public ThenStage thenExpectAuditSequenceStrict(AuditEntryExpectation... expectations) {
-        return new ThenStageImpl()
-                .andExpectAuditSequenceStrict(expectations);
+        return new ThenStageImpl(builderAccessor).andExpectAuditSequenceStrict(expectations);
     }
 
     @Override
     public ThenStage thenExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> validator) {
-        return new ThenStageImpl()
-                .andExpectException(exceptionClass, validator);
+        return new ThenStageImpl(builderAccessor).andExpectException(exceptionClass, validator);
     }
 
 }

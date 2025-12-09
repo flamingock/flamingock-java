@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support.impl;
+package io.flamingock.support.stages;
 
-import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
-import io.flamingock.support.GivenStage;
-import io.flamingock.support.ThenStage;
-import io.flamingock.support.WhenStage;
+import io.flamingock.internal.core.builder.BuilderAccessor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,11 +23,13 @@ import java.util.List;
 
 public class GivenStageImpl implements GivenStage {
 
+    private final BuilderAccessor builderAccessor;
     private final List<Class<?>> applied = new ArrayList<>();
     private final List<Class<?>> failed = new ArrayList<>();
     private final List<Class<?>> rolledBack = new ArrayList<>();
 
-    public GivenStageImpl() {
+    public GivenStageImpl(BuilderAccessor builderAccessor) {
+        this.builderAccessor = builderAccessor;
     }
 
     @Override
@@ -59,6 +58,6 @@ public class GivenStageImpl implements GivenStage {
 
     @Override
     public WhenStage whenRun() {
-        return new WhenStageImpl();
+        return new WhenStageImpl(builderAccessor);
     }
 }

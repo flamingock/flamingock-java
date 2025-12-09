@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support;
+package io.flamingock.support.stages;
 
 import io.flamingock.support.domain.AuditEntryExpectation;
 
@@ -79,11 +79,11 @@ public interface ThenStage {
      * but allows chaining after other assertions.</p>
      *
      * @param exceptionClass the expected exception type
-     * @param validator      a consumer to perform additional assertions on the thrown exception;
+     * @param exceptionConsumer      a consumer to perform additional assertions on the thrown exception;
      *                       may be {@code null} if no additional validation is needed
      * @return this stage for method chaining
      */
-    ThenStage andExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> validator);
+    ThenStage andExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer);
 
     /**
      * Terminal operation that executes the change runner and verifies all expectations.

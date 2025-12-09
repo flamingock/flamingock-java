@@ -13,26 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.support.validation;
 
-import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.support.validation.error.ValidationResult;
 
-public class BuilderAccessor {
+public interface ExceptionValidator extends Validator {
 
-    private AbstractChangeRunnerBuilder<?, ?> builder;
-
-    public BuilderAccessor(AbstractChangeRunnerBuilder<?,?> builder) {
-        this.builder = builder;
-    }
-
-    public AuditStore<?> getAuditStore(){
-        return builder.auditStore;
-    }
-
-
-    public void run() {
-        builder.build().run();
-    }
-
+    ValidationResult validate(Throwable actualException);
 
 }

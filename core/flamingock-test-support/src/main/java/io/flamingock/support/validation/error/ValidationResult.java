@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.support.validation.error;
 
-import io.flamingock.internal.core.store.AuditStore;
+import java.util.ArrayList;
+import java.util.List;
 
-public class BuilderAccessor {
-
-    private AbstractChangeRunnerBuilder<?, ?> builder;
-
-    public BuilderAccessor(AbstractChangeRunnerBuilder<?,?> builder) {
-        this.builder = builder;
-    }
-
-    public AuditStore<?> getAuditStore(){
-        return builder.auditStore;
-    }
+public class ValidationResult {
 
 
-    public void run() {
-        builder.build().run();
+    public List<ValidationError> getErrors() {
+        return new ArrayList<>();
     }
 
 
