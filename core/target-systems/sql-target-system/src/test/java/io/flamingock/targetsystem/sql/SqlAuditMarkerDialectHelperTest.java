@@ -22,7 +22,9 @@ import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -32,7 +34,10 @@ import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class SqlAuditMarkerDialectHelperTest {
@@ -132,8 +137,32 @@ public class SqlAuditMarkerDialectHelperTest {
         }
     }
 
+    static Stream<Arguments> dialectProvider() {
+        String enabledDialects = System.getProperty("sql.test.dialects", "mysql");
+        Set<String> enabled = Arrays.stream(enabledDialects.split(","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        Stream<Arguments> allDialects = Stream.of(
+                Arguments.of(SqlDialect.MYSQL, "mysql"),
+                Arguments.of(SqlDialect.SQLSERVER, "sqlserver"),
+                Arguments.of(SqlDialect.ORACLE, "oracle"),
+                Arguments.of(SqlDialect.POSTGRESQL, "postgresql"),
+                Arguments.of(SqlDialect.MARIADB, "mariadb"),
+                Arguments.of(SqlDialect.H2, "h2"),
+                Arguments.of(SqlDialect.SQLITE, "sqlite"),
+                Arguments.of(SqlDialect.INFORMIX, "informix"),
+                Arguments.of(SqlDialect.FIREBIRD, "firebird")
+        );
+
+        return allDialects.filter(args -> {
+            String dialectName = (String) args.get()[1];
+            return enabled.contains(dialectName);
+        });
+    }
+
     @ParameterizedTest(name = "[{index}] dialect={0} - Should add and list two marks successfully")
-    @EnumSource(SqlDialect.class)
+    @MethodSource("dialectProvider")
     void addOngoingTaskMark(SqlDialect dialect) {
         JdbcDatabaseContainer<?> container = createContainerForDialect(dialect);
         Assumptions.assumeTrue(container != null ||
@@ -179,7 +208,7 @@ public class SqlAuditMarkerDialectHelperTest {
     }
 
     @ParameterizedTest(name = "[{index}] dialect={0} - Should remove all marks successfully")
-    @EnumSource(SqlDialect.class)
+    @MethodSource("dialectProvider")
     void removeOngoingTaskMark(SqlDialect dialect) {
         JdbcDatabaseContainer<?> container = createContainerForDialect(dialect);
         Assumptions.assumeTrue(container != null ||

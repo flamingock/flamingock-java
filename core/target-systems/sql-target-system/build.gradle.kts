@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.utils.extendsFrom
+import java.time.Duration
 
 dependencies {
     //Flamingock
@@ -35,4 +36,26 @@ java {
 
 configurations.testImplementation {
     extendsFrom(configurations.compileOnly.get())
+}
+
+
+tasks.test {
+    // CI-specific configuration
+    val isCI = System.getenv("CI")?.toBoolean() ?: false
+    val enabledDialects = System.getProperty("sql.test.dialects") ?: if (isCI) "mysql,oracle" else "mysql,oracle,sqlserver"
+
+    systemProperty("sql.test.dialects", enabledDialects)
+
+    // Parallel execution control
+    maxParallelForks = if (isCI) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+
+    // Timeout for long-running database tests
+    if (isCI) {
+        timeout.set(Duration.ofMinutes(30))
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = false
+    }
 }
