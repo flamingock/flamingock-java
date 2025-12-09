@@ -29,10 +29,10 @@ final class ThenStageImpl implements ThenStage {
 
     private final List<Validator> validators = new ArrayList<>();
     private final ValidatorFactory validatorFactory;
-    private final BuilderAccessor builderAccesor;
+    private final BuilderAccessor builderAccessor;
 
     ThenStageImpl(BuilderAccessor builderAccessor) {
-        this.builderAccesor = builderAccessor;
+        this.builderAccessor = builderAccessor;
         validatorFactory = new ValidatorFactory(builderAccessor);
     }
 
@@ -53,7 +53,7 @@ final class ThenStageImpl implements ThenStage {
 
         ValidationHandler validationHandler;
         try {
-            builderAccesor.run();
+            builderAccessor.run();
             validationHandler = new ValidationHandler(validators);
 
         } catch (Throwable actualException) {
