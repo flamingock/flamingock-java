@@ -15,7 +15,7 @@
  */
 package io.flamingock.support.validation.impl;
 
-import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.SimpleValidator;
 import io.flamingock.support.validation.error.ValidationResult;
@@ -28,12 +28,12 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
 
     private static final String VALIDATOR_NAME = "Audit Sequence (Strict)";
 
-    private final AuditStore<?> auditStore;
+    private final AuditReader auditReader;
     private final List<AuditEntryExpectation> expectations;
 
 
-    public AuditSequenceStrictValidator(AuditStore<?> auditStore, AuditEntryDefinition... definitions) {
-        this.auditStore = auditStore;
+    public AuditSequenceStrictValidator(AuditReader auditReader, AuditEntryDefinition... definitions) {
+        this.auditReader = auditReader;
         this.expectations = Arrays.stream(definitions)
                 .map(AuditEntryExpectation::new)
                 .collect(Collectors.toList());

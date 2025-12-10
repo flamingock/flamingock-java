@@ -15,27 +15,27 @@
  */
 package io.flamingock.support.stages;
 
-import io.flamingock.internal.core.builder.BuilderAccessor;
+import io.flamingock.support.context.TestContext;
 import io.flamingock.support.domain.AuditEntryDefinition;
 
 import java.util.function.Consumer;
 
 public class WhenStageImpl implements WhenStage {
 
-    private final BuilderAccessor builderAccessor;
+    private final TestContext testContext;
 
-    WhenStageImpl(BuilderAccessor builderAccessor) {
-        this.builderAccessor = builderAccessor;
+    WhenStageImpl(TestContext testContext) {
+        this.testContext = testContext;
     }
 
     @Override
     public ThenStage thenExpectAuditSequenceStrict(AuditEntryDefinition... definitions) {
-        return new ThenStageImpl(builderAccessor).andExpectAuditSequenceStrict(definitions);
+        return new ThenStageImpl(testContext).andExpectAuditSequenceStrict(definitions);
     }
 
     @Override
     public ThenStage thenExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> validator) {
-        return new ThenStageImpl(builderAccessor).andExpectException(exceptionClass, validator);
+        return new ThenStageImpl(testContext).andExpectException(exceptionClass, validator);
     }
 
 }
