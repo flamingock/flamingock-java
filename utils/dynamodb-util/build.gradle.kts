@@ -13,8 +13,8 @@ dependencies {
     api(project(":utils:general-util"))
     
     // TestContainers for DynamoDB testing
-    api("org.testcontainers:testcontainers:1.19.3")
-    api("org.testcontainers:junit-jupiter:1.19.3")
+    api("org.testcontainers:testcontainers:2.0.2")
+    api("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
 
 }
 

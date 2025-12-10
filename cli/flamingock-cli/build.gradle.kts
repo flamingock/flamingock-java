@@ -50,16 +50,16 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.8.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
     testImplementation("org.assertj:assertj-core:3.24.2")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.3")
-    testImplementation("org.testcontainers:mongodb:1.19.3")
-    testImplementation("org.testcontainers:couchbase:1.19.3")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-couchbase:2.0.2")
     testImplementation("com.github.stefanbirkner:system-lambda:1.2.1")
     // SQL Testcontainers
-    testImplementation("org.testcontainers:mysql:1.19.3")
-    testImplementation("org.testcontainers:mssqlserver:1.19.3")
-    testImplementation("org.testcontainers:oracle-xe:1.19.3")
-    testImplementation("org.testcontainers:postgresql:1.19.3")
-    testImplementation("org.testcontainers:mariadb:1.19.3")
+    testImplementation("org.testcontainers:testcontainers-mysql:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-mssqlserver:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-oracle-xe:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-mariadb:2.0.2")
 
 }
 

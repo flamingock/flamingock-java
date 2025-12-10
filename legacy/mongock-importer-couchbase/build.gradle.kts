@@ -15,8 +15,8 @@ dependencies {
     testImplementation(project(":utils:couchbase-util"))
     testImplementation(project(":utils:test-util"))
 
-    testImplementation("org.testcontainers:couchbase:1.21.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:testcontainers-couchbase:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.mockito:mockito-inline:4.11.0")
 }
 

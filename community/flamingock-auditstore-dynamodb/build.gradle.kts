@@ -11,8 +11,8 @@ dependencies {
     testImplementation(project(":core:target-systems:nontransactional-target-system"))
 
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.0")
-    testImplementation("org.testcontainers:testcontainers:1.19.0")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
+    testImplementation("org.testcontainers:testcontainers:2.0.2")
 
 //    Mongock
     testImplementation("io.mongock:mongock-standalone:5.5.0")
