@@ -16,7 +16,7 @@
 package io.flamingock.support.stages;
 
 import io.flamingock.internal.core.builder.BuilderAccessor;
-import io.flamingock.support.domain.AuditEntryExpectation;
+import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.ValidationHandler;
 import io.flamingock.support.validation.Validator;
 import io.flamingock.support.validation.ValidatorFactory;
@@ -37,8 +37,8 @@ final class ThenStageImpl implements ThenStage {
     }
 
     @Override
-    public ThenStage andExpectAuditSequenceStrict(AuditEntryExpectation... expectations) {
-        validators.add(validatorFactory.getAuditSeqStrictValidator(expectations));
+    public ThenStage andExpectAuditSequenceStrict(AuditEntryDefinition... definitions) {
+        validators.add(validatorFactory.getAuditSeqStrictValidator(definitions));
         return this;
     }
 

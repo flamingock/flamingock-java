@@ -15,7 +15,7 @@
  */
 package io.flamingock.support.stages;
 
-import io.flamingock.support.domain.AuditEntryExpectation;
+import io.flamingock.support.domain.AuditEntryDefinition;
 
 import java.util.function.Consumer;
 
@@ -39,15 +39,15 @@ import java.util.function.Consumer;
  * <pre>{@code
  * .whenRun()
  * .thenExpectAuditSequenceStrict(
- *     AuditEntryExpectation.APPLIED("change-1"),
- *     AuditEntryExpectation.APPLIED("change-2")
+ *     AuditEntryDefinition.APPLIED("change-1"),
+ *     AuditEntryDefinition.APPLIED("change-2")
  * )
  * .verify();
  * }</pre>
  *
  * @see GivenStage#whenRun()
  * @see ThenStage
- * @see AuditEntryExpectation
+ * @see AuditEntryDefinition
  */
 public interface WhenStage {
 
@@ -56,19 +56,19 @@ public interface WhenStage {
      *
      * <p><b>Strict validation</b> means:</p>
      * <ul>
-     *   <li>The number of actual audit entries must exactly match the number of expectations</li>
-     *   <li>The order of audit entries must exactly match the order of expectations</li>
-     *   <li>Each audit entry is validated against its corresponding expectation</li>
+     *   <li>The number of actual audit entries must exactly match the number of definitions</li>
+     *   <li>The order of audit entries must exactly match the order of definitions</li>
+     *   <li>Each audit entry is validated against its corresponding definition</li>
      * </ul>
      *
-     * <p>For each {@link AuditEntryExpectation}, only the fields explicitly set via
+     * <p>For each {@link AuditEntryDefinition}, only the fields explicitly set via
      * {@code withXxx()} methods are verified. The change ID and status are always verified.</p>
      *
-     * @param expectations the expected audit entries in exact order
+     * @param definitions the expected audit entries in exact order
      * @return the {@link ThenStage} for chaining additional assertions or calling {@code verify()}
-     * @see AuditEntryExpectation
+     * @see AuditEntryDefinition
      */
-    ThenStage thenExpectAuditSequenceStrict(AuditEntryExpectation... expectations);
+    ThenStage thenExpectAuditSequenceStrict(AuditEntryDefinition... definitions);
 
     /**
      * Defines an expectation that the execution should throw a specific exception.

@@ -16,13 +16,13 @@
 package io.flamingock.support.validation.impl;
 
 import io.flamingock.internal.core.store.AuditStore;
-import io.flamingock.support.domain.AuditEntryExpectation;
+import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.SimpleValidator;
-import io.flamingock.support.validation.Validator;
 import io.flamingock.support.validation.error.ValidationResult;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AuditSequenceStrictValidator implements SimpleValidator {
 
@@ -32,9 +32,11 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
     private final List<AuditEntryExpectation> expectations;
 
 
-    public AuditSequenceStrictValidator(AuditStore<?> auditStore, AuditEntryExpectation... expectations) {
+    public AuditSequenceStrictValidator(AuditStore<?> auditStore, AuditEntryDefinition... definitions) {
         this.auditStore = auditStore;
-        this.expectations = Arrays.asList(expectations);
+        this.expectations = Arrays.stream(definitions)
+                .map(AuditEntryExpectation::new)
+                .collect(Collectors.toList());
     }
 
     @Override
