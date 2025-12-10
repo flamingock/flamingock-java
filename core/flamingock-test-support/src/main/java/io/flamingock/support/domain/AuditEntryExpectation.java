@@ -15,8 +15,10 @@
  */
 package io.flamingock.support.domain;
 
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -90,6 +92,9 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_
  */
 public class AuditEntryExpectation {
 
+    private static final String ORDER_PATTERN_PREFIX = "_";
+    private static final String ORDER_PATTERN_SEPARATOR = "__";
+
     private final String expectedChangeId;
     private final AuditEntry.Status expectedState;
 
@@ -104,6 +109,9 @@ public class AuditEntryExpectation {
     private String expectedExecutionHostname;
     private String expectedErrorTrace;
     private String expectedTargetSystemId;
+    private RecoveryStrategy expectedRecoveryStrategy;
+    private String expectedOrder;
+    private Boolean expectedTransactional;
 
     // Time range for flexible timestamp verification
     private LocalDateTime timestampAfter;
@@ -279,6 +287,15 @@ public class AuditEntryExpectation {
             expectation.expectedTargetSystemId = targetSystem.id();
         }
 
+        Recovery recovery = changeClass.getAnnotation(Recovery.class);
+        expectation.expectedRecoveryStrategy = (recovery != null)
+                ? recovery.strategy()
+                : RecoveryStrategy.MANUAL_INTERVENTION;
+
+        expectation.expectedOrder = extractOrderFromClassName(changeClass.getSimpleName());
+
+        expectation.expectedTransactional = changeAnnotation.transactional();
+
         return expectation;
     }
 
@@ -296,6 +313,17 @@ public class AuditEntryExpectation {
                 "Class [%s] must contain a method annotated with @%s",
                 changeClass.getName(),
                 annotationClass.getSimpleName()));
+    }
+
+    private static String extractOrderFromClassName(String className) {
+        if (className == null || !className.startsWith(ORDER_PATTERN_PREFIX)) {
+            return null;
+        }
+        int separatorIndex = className.indexOf(ORDER_PATTERN_SEPARATOR);
+        if (separatorIndex <= 1) {
+            return null;
+        }
+        return className.substring(1, separatorIndex);
     }
 
     /**
@@ -457,6 +485,46 @@ public class AuditEntryExpectation {
     }
 
     /**
+     * Sets the expected recovery strategy for verification.
+     *
+     * <p>Enables verification of the recovery strategy field.</p>
+     *
+     * @param recoveryStrategy the expected recovery strategy
+     * @return this builder for method chaining
+     */
+    public AuditEntryExpectation withRecoveryStrategy(RecoveryStrategy recoveryStrategy) {
+        this.expectedRecoveryStrategy = recoveryStrategy;
+        return this;
+    }
+
+    /**
+     * Sets the expected order value for verification.
+     *
+     * <p>The order is typically extracted from the class name pattern {@code _ORDER__CHANGE-NAME},
+     * but can be overridden using this method.</p>
+     *
+     * @param order the expected order value
+     * @return this builder for method chaining
+     */
+    public AuditEntryExpectation withOrder(String order) {
+        this.expectedOrder = order;
+        return this;
+    }
+
+    /**
+     * Sets the expected transactional flag for verification.
+     *
+     * <p>Indicates whether the change should run within a transaction.</p>
+     *
+     * @param transactional the expected transactional flag
+     * @return this builder for method chaining
+     */
+    public AuditEntryExpectation withTransactional(boolean transactional) {
+        this.expectedTransactional = transactional;
+        return this;
+    }
+
+    /**
      * Compares this expectation against an actual audit entry.
      *
      * <p>Returns a list of field mismatches (empty if all expected fields match).
@@ -529,6 +597,22 @@ public class AuditEntryExpectation {
 
         if (expectedTargetSystemId != null && !expectedTargetSystemId.equals(actual.getTargetSystemId())) {
             errors.add(new FieldMismatchError("targetSystemId", expectedTargetSystemId, actual.getTargetSystemId()));
+        }
+
+        if (expectedRecoveryStrategy != null && expectedRecoveryStrategy != actual.getRecoveryStrategy()) {
+            errors.add(new FieldMismatchError("recoveryStrategy",
+                    expectedRecoveryStrategy.name(),
+                    actual.getRecoveryStrategy() != null ? actual.getRecoveryStrategy().name() : null));
+        }
+
+        if (expectedOrder != null && !expectedOrder.equals(actual.getOrder())) {
+            errors.add(new FieldMismatchError("order", expectedOrder, actual.getOrder()));
+        }
+
+        if (expectedTransactional != null && !expectedTransactional.equals(actual.getTransactionFlag())) {
+            errors.add(new FieldMismatchError("transactional",
+                    String.valueOf(expectedTransactional),
+                    String.valueOf(actual.getTransactionFlag())));
         }
 
         errors.addAll(compareTimestamp(actual));
