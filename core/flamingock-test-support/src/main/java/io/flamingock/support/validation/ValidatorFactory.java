@@ -16,7 +16,7 @@
 package io.flamingock.support.validation;
 
 import io.flamingock.internal.core.builder.BuilderAccessor;
-import io.flamingock.support.domain.AuditEntryExpectation;
+import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.impl.AuditSequenceStrictValidator;
 import io.flamingock.support.validation.impl.DefaultExceptionValidator;
 
@@ -30,8 +30,8 @@ public class ValidatorFactory {
         this.builderAccessor = builderAccessor;
     }
 
-    public Validator getAuditSeqStrictValidator(AuditEntryExpectation... expectations) {
-        return new AuditSequenceStrictValidator(builderAccessor.getAuditStore(), expectations);
+    public Validator getAuditSeqStrictValidator(AuditEntryDefinition... definitions) {
+        return new AuditSequenceStrictValidator(builderAccessor.getAuditStore(), definitions);
     }
 
     public Validator getExceptionValidator(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {

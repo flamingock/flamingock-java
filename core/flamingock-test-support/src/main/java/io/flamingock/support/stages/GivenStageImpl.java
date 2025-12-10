@@ -16,6 +16,7 @@
 package io.flamingock.support.stages;
 
 import io.flamingock.internal.core.builder.BuilderAccessor;
+import io.flamingock.support.domain.AuditEntryDefinition;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,34 +25,16 @@ import java.util.List;
 public class GivenStageImpl implements GivenStage {
 
     private final BuilderAccessor builderAccessor;
-    private final List<Class<?>> applied = new ArrayList<>();
-    private final List<Class<?>> failed = new ArrayList<>();
-    private final List<Class<?>> rolledBack = new ArrayList<>();
+    private final List<AuditEntryDefinition> existingAudit = new ArrayList<>();
 
     public GivenStageImpl(BuilderAccessor builderAccessor) {
         this.builderAccessor = builderAccessor;
     }
 
     @Override
-    public GivenStage andAppliedChanges(Class<?>... changes) {
-        if (changes != null) {
-            applied.addAll(Arrays.asList(changes));
-        }
-        return this;
-    }
-
-    @Override
-    public GivenStage andFailedChanges(Class<?>... changes) {
-        if (changes != null) {
-            failed.addAll(Arrays.asList(changes));
-        }
-        return this;
-    }
-
-    @Override
-    public GivenStage andRolledBackChanges(Class<?>... changes) {
-        if (changes != null) {
-            rolledBack.addAll(Arrays.asList(changes));
+    public GivenStage andExistingAudit(AuditEntryDefinition... definitions) {
+        if (definitions != null) {
+            existingAudit.addAll(Arrays.asList(definitions));
         }
         return this;
     }
@@ -59,5 +42,14 @@ public class GivenStageImpl implements GivenStage {
     @Override
     public WhenStage whenRun() {
         return new WhenStageImpl(builderAccessor);
+    }
+
+    /**
+     * Returns the list of existing audit definitions.
+     *
+     * @return the existing audit definitions
+     */
+    public List<AuditEntryDefinition> getExistingAudit() {
+        return existingAudit;
     }
 }

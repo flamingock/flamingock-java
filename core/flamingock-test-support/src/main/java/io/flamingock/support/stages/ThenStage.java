@@ -15,7 +15,7 @@
  */
 package io.flamingock.support.stages;
 
-import io.flamingock.support.domain.AuditEntryExpectation;
+import io.flamingock.support.domain.AuditEntryDefinition;
 
 import java.util.function.Consumer;
 
@@ -38,16 +38,16 @@ import java.util.function.Consumer;
  * <pre>{@code
  * .whenRun()
  * .thenExpectAuditSequenceStrict(
- *     AuditEntryExpectation.APPLIED("change-1")
+ *     AuditEntryDefinition.APPLIED("change-1")
  * )
  * .andExpectAuditSequenceStrict(
- *     AuditEntryExpectation.APPLIED("change-2")
+ *     AuditEntryDefinition.APPLIED("change-2")
  * )
  * .verify();  // Execution and verification happen here
  * }</pre>
  *
  * @see WhenStage
- * @see AuditEntryExpectation
+ * @see AuditEntryDefinition
  */
 public interface ThenStage {
 
@@ -55,21 +55,21 @@ public interface ThenStage {
      * Adds an additional strict expectation for the audit entry sequence.
      *
      * <p>This method has the same semantics as
-     * {@link WhenStage#thenExpectAuditSequenceStrict(AuditEntryExpectation...)}
+     * {@link WhenStage#thenExpectAuditSequenceStrict(AuditEntryDefinition...)}
      * but allows chaining multiple sequence expectations.</p>
      *
      * <p><b>Strict validation</b> means:</p>
      * <ul>
-     *   <li>The number of actual audit entries must exactly match the number of expectations</li>
-     *   <li>The order of audit entries must exactly match the order of expectations</li>
-     *   <li>Each audit entry is validated against its corresponding expectation</li>
+     *   <li>The number of actual audit entries must exactly match the number of definitions</li>
+     *   <li>The order of audit entries must exactly match the order of definitions</li>
+     *   <li>Each audit entry is validated against its corresponding definition</li>
      * </ul>
      *
-     * @param expectations the expected audit entries in exact order
+     * @param definitions the expected audit entries in exact order
      * @return this stage for method chaining
-     * @see AuditEntryExpectation
+     * @see AuditEntryDefinition
      */
-    ThenStage andExpectAuditSequenceStrict(AuditEntryExpectation... expectations);
+    ThenStage andExpectAuditSequenceStrict(AuditEntryDefinition... definitions);
 
     /**
      * Adds an expectation that the execution should throw a specific exception.
@@ -96,7 +96,7 @@ public interface ThenStage {
      * </ol>
      *
      * <p>This is the only method in the fluent chain that triggers actual execution.
-     * All preceding methods ({@code given}, {@code andAppliedChanges}, {@code whenRun},
+     * All preceding methods ({@code given}, {@code andExistingAudit}, {@code whenRun},
      * {@code thenExpect...}) are intermediate operations that only configure the test.</p>
      *
      * @throws AssertionError if any expectation is not met

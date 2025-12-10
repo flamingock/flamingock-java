@@ -16,6 +16,7 @@
 package io.flamingock.support.stages;
 
 import io.flamingock.support.FlamingockTestSupport;
+import io.flamingock.support.domain.AuditEntryDefinition;
 
 /**
  * Represents the "Given" phase of the BDD test flow for setting up preconditions.
@@ -33,54 +34,43 @@ import io.flamingock.support.FlamingockTestSupport;
  *
  * <h2>Example</h2>
  * <pre>{@code
+ * import static io.flamingock.support.domain.AuditEntryDefinition.*;
+ *
  * FlamingockTestSupport
  *     .given(builder)
- *     .andAppliedChanges(SetupChange.class, MigrationV1.class)
- *     .andFailedChanges(FailedChange.class)
+ *     .andExistingAudit(
+ *         APPLIED(SetupChange.class),
+ *         APPLIED(MigrationV1.class),
+ *         FAILED(FailedChange.class)
+ *     )
  *     .whenRun()
  *     // ... assertions
  * }</pre>
  *
  * @see FlamingockTestSupport#given(io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder)
  * @see WhenStage
+ * @see AuditEntryDefinition
  */
 public interface GivenStage {
 
     /**
-     * Specifies changes that should be marked as successfully applied in the audit store
-     * before running the change runner.
+     * Specifies audit entries that should exist in the audit store before running the change runner.
      *
-     * <p>These changes will be treated as if they were already executed successfully
-     * in a previous run. The change runner will skip them during execution.</p>
+     * <p>Use the static factory methods from {@link AuditEntryDefinition} to create definitions:</p>
+     * <ul>
+     *   <li>{@link AuditEntryDefinition#APPLIED(Class)} - Mark a change as successfully applied</li>
+     *   <li>{@link AuditEntryDefinition#FAILED(Class)} - Mark a change as failed</li>
+     *   <li>{@link AuditEntryDefinition#ROLLED_BACK(Class)} - Mark a change as rolled back</li>
+     *   <li>{@link AuditEntryDefinition#ROLLBACK_FAILED(Class)} - Mark a change as rollback failed</li>
+     * </ul>
      *
-     * @param changes the change classes to mark as applied
+     * <p>String-based variants are also available for manual change ID specification.</p>
+     *
+     * @param definitions the audit entry definitions to pre-populate
      * @return this stage for method chaining
+     * @see AuditEntryDefinition
      */
-    GivenStage andAppliedChanges(Class<?>... changes);
-
-    /**
-     * Specifies changes that should be marked as failed in the audit store
-     * before running the change runner.
-     *
-     * <p>These changes will be treated as if they failed in a previous run.
-     * Depending on the runner configuration, they may be retried or skipped.</p>
-     *
-     * @param changes the change classes to mark as failed
-     * @return this stage for method chaining
-     */
-    GivenStage andFailedChanges(Class<?>... changes);
-
-    /**
-     * Specifies changes that should be marked as rolled back in the audit store
-     * before running the change runner.
-     *
-     * <p>These changes will be treated as if they were executed but subsequently
-     * rolled back in a previous run.</p>
-     *
-     * @param changes the change classes to mark as rolled back
-     * @return this stage for method chaining
-     */
-    GivenStage andRolledBackChanges(Class<?>... changes);
+    GivenStage andExistingAudit(AuditEntryDefinition... definitions);
 
     /**
      * Completes the setup phase and transitions to the assertion phase.

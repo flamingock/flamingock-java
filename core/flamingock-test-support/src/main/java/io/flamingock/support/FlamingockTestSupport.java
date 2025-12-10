@@ -32,16 +32,20 @@ import io.flamingock.support.stages.WhenStage;
  *
  * <h2>Usage Example</h2>
  * <pre>{@code
+ * import static io.flamingock.support.domain.AuditEntryDefinition.*;
+ *
  * FlamingockTestSupport
  *     .given(builder)
- *     .andAppliedChanges(InitialSetupChange.class, SchemaV1Change.class)
- *     .andFailedChanges(FailedMigrationChange.class)
+ *     .andExistingAudit(
+ *         APPLIED(InitialSetupChange.class),
+ *         APPLIED(SchemaV1Change.class),
+ *         FAILED(FailedMigrationChange.class)
+ *     )
  *     .whenRun()
  *     .thenExpectAuditSequenceStrict(
- *         APPLIED("schema-v2-change")
- *             .withClass(SchemaV2Change.class)
+ *         APPLIED(SchemaV2Change.class)
  *             .withAuthor("dev-team"),
- *         APPLIED("data-migration-change")
+ *         APPLIED(DataMigrationChange.class)
  *     )
  *     .verify();
  * }</pre>
@@ -61,7 +65,7 @@ import io.flamingock.support.stages.WhenStage;
  * @see GivenStage
  * @see WhenStage
  * @see ThenStage
- * @see io.flamingock.support.domain.AuditEntryExpectation
+ * @see io.flamingock.support.domain.AuditEntryDefinition
  */
 public final class FlamingockTestSupport {
 
