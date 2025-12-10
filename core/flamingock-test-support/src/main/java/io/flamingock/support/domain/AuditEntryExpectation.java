@@ -22,10 +22,14 @@ import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.support.stages.ThenStage;
 import io.flamingock.support.stages.WhenStage;
+import io.flamingock.support.validation.error.FieldMismatchError;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.APPLIED;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.FAILED;
@@ -162,8 +166,6 @@ public class AuditEntryExpectation {
         return new AuditEntryExpectation(expectedChangeId, ROLLBACK_FAILED);
     }
 
-    // ==================== Class-Based Factory Methods ====================
-
     /**
      * Creates an expectation for a successfully applied change by extracting
      * metadata from the change class annotations.
@@ -296,8 +298,6 @@ public class AuditEntryExpectation {
                 annotationClass.getSimpleName()));
     }
 
-    // ==================== Identity Fields ====================
-
     /**
      * Sets the expected execution ID for verification.
      *
@@ -323,8 +323,6 @@ public class AuditEntryExpectation {
         this.expectedStageId = stageId;
         return this;
     }
-
-    // ==================== Metadata Fields ====================
 
     /**
      * Sets the expected author of the change.
@@ -368,8 +366,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Execution Fields ====================
-
     /**
      * Sets the expected fully-qualified class name.
      *
@@ -409,8 +405,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Performance Fields ====================
-
     /**
      * Sets the expected execution duration in milliseconds.
      *
@@ -437,8 +431,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Error Fields ====================
-
     /**
      * Sets the expected error trace for failed changes.
      *
@@ -453,8 +445,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Target System Fields ====================
-
     /**
      * Sets the expected target system identifier.
      *
@@ -466,50 +456,128 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Getters (for verification logic) ====================
+    /**
+     * Compares this expectation against an actual audit entry.
+     *
+     * <p>Returns a list of field mismatches (empty if all expected fields match).
+     * Only fields with non-null expected values are verified, except for
+     * {@code changeId} and {@code status} which are always verified.</p>
+     *
+     * <p>Timestamp verification supports two modes:</p>
+     * <ul>
+     *   <li>Exact match: when {@code expectedCreatedAt} is set</li>
+     *   <li>Range match: when {@code timestampAfter} and/or {@code timestampBefore} are set</li>
+     * </ul>
+     *
+     * @param actual the actual audit entry to compare against
+     * @return list of field mismatch errors (empty if all match)
+     */
+    public List<FieldMismatchError> compareWith(AuditEntry actual) {
+        List<FieldMismatchError> errors = new ArrayList<>();
 
-    /** Returns the expected execution ID. */
-    public String getExpectedExecutionId() { return expectedExecutionId; }
+        // Required fields - always verified
+        if (!expectedChangeId.equals(actual.getTaskId())) {
+            errors.add(new FieldMismatchError("changeId", expectedChangeId, actual.getTaskId()));
+        }
 
-    /** Returns the expected stage ID. */
-    public String getExpectedStageId() { return expectedStageId; }
+        if (expectedState != actual.getState()) {
+            errors.add(new FieldMismatchError("status",
+                    expectedState.name(),
+                    actual.getState() != null ? actual.getState().name() : null));
+        }
 
-    /** Returns the expected change ID. */
-    public String getExpectedChangeId() { return expectedChangeId; }
+        // Optional fields - verified when non-null
+        if (expectedExecutionId != null && !expectedExecutionId.equals(actual.getExecutionId())) {
+            errors.add(new FieldMismatchError("executionId", expectedExecutionId, actual.getExecutionId()));
+        }
 
-    /** Returns the expected author. */
-    public String getExpectedAuthor() { return expectedAuthor; }
+        if (expectedStageId != null && !expectedStageId.equals(actual.getStageId())) {
+            errors.add(new FieldMismatchError("stageId", expectedStageId, actual.getStageId()));
+        }
 
-    /** Returns the expected creation timestamp. */
-    public LocalDateTime getExpectedCreatedAt() { return expectedCreatedAt; }
+        if (expectedAuthor != null && !expectedAuthor.equals(actual.getAuthor())) {
+            errors.add(new FieldMismatchError("author", expectedAuthor, actual.getAuthor()));
+        }
 
-    /** Returns the expected audit entry status. */
-    public AuditEntry.Status getExpectedState() { return expectedState; }
+        if (expectedClassName != null && !expectedClassName.equals(actual.getClassName())) {
+            errors.add(new FieldMismatchError("className", expectedClassName, actual.getClassName()));
+        }
 
-    /** Returns the expected class name. */
-    public String getExpectedClassName() { return expectedClassName; }
+        if (expectedMethodName != null && !expectedMethodName.equals(actual.getMethodName())) {
+            errors.add(new FieldMismatchError("methodName", expectedMethodName, actual.getMethodName()));
+        }
 
-    /** Returns the expected method name. */
-    public String getExpectedMethodName() { return expectedMethodName; }
+        if (expectedMetadata != null && !Objects.equals(expectedMetadata, actual.getMetadata())) {
+            errors.add(new FieldMismatchError("metadata",
+                    String.valueOf(expectedMetadata),
+                    String.valueOf(actual.getMetadata())));
+        }
 
-    /** Returns the expected metadata. */
-    public Object getExpectedMetadata() { return expectedMetadata; }
+        if (expectedExecutionMillis != null && expectedExecutionMillis != actual.getExecutionMillis()) {
+            errors.add(new FieldMismatchError("executionMillis",
+                    String.valueOf(expectedExecutionMillis),
+                    String.valueOf(actual.getExecutionMillis())));
+        }
 
-    /** Returns the expected execution duration in milliseconds. */
-    public Long getExpectedExecutionMillis() { return expectedExecutionMillis; }
+        if (expectedExecutionHostname != null && !expectedExecutionHostname.equals(actual.getExecutionHostname())) {
+            errors.add(new FieldMismatchError("executionHostname", expectedExecutionHostname, actual.getExecutionHostname()));
+        }
 
-    /** Returns the expected execution hostname. */
-    public String getExpectedExecutionHostname() { return expectedExecutionHostname; }
+        if (expectedErrorTrace != null && !expectedErrorTrace.equals(actual.getErrorTrace())) {
+            errors.add(new FieldMismatchError("errorTrace", expectedErrorTrace, actual.getErrorTrace()));
+        }
 
-    /** Returns the expected error trace. */
-    public String getExpectedErrorTrace() { return expectedErrorTrace; }
+        if (expectedTargetSystemId != null && !expectedTargetSystemId.equals(actual.getTargetSystemId())) {
+            errors.add(new FieldMismatchError("targetSystemId", expectedTargetSystemId, actual.getTargetSystemId()));
+        }
 
-    /** Returns the expected target system ID. */
-    public String getExpectedTargetSystemId() { return expectedTargetSystemId; }
+        errors.addAll(compareTimestamp(actual));
 
-    /** Returns the lower bound for timestamp range verification. */
-    public LocalDateTime getTimestampAfter() { return timestampAfter; }
+        return errors;
+    }
 
-    /** Returns the upper bound for timestamp range verification. */
-    public LocalDateTime getTimestampBefore() { return timestampBefore; }
+    private List<FieldMismatchError> compareTimestamp(AuditEntry actual) {
+        List<FieldMismatchError> errors = new ArrayList<>();
+        if (expectedCreatedAt != null) {
+            // Exact match mode
+            if (!expectedCreatedAt.equals(actual.getCreatedAt())) {
+                errors.add(new FieldMismatchError("createdAt",
+                        expectedCreatedAt.toString(),
+                        actual.getCreatedAt() != null ? actual.getCreatedAt().toString() : null));
+            }
+        } else if (timestampAfter != null || timestampBefore != null) {
+            // Range match mode
+            LocalDateTime actualTimestamp = actual.getCreatedAt();
+            if (actualTimestamp == null) {
+                errors.add(new FieldMismatchError("createdAt",
+                        formatTimestampRange(),
+                        null));
+            } else {
+                boolean afterOk = timestampAfter == null ||
+                        actualTimestamp.isAfter(timestampAfter) ||
+                        actualTimestamp.isEqual(timestampAfter);
+                boolean beforeOk = timestampBefore == null ||
+                        actualTimestamp.isBefore(timestampBefore) ||
+                        actualTimestamp.isEqual(timestampBefore);
+
+                if (!afterOk || !beforeOk) {
+                    errors.add(new FieldMismatchError("createdAt",
+                            formatTimestampRange(),
+                            actualTimestamp.toString()));
+                }
+            }
+        }
+        return errors;
+    }
+
+    private String formatTimestampRange() {
+        if (timestampAfter != null && timestampBefore != null) {
+            return String.format("between %s and %s", timestampAfter, timestampBefore);
+        } else if (timestampAfter != null) {
+            return String.format("after %s", timestampAfter);
+        } else {
+            return String.format("before %s", timestampBefore);
+        }
+    }
+
 }
