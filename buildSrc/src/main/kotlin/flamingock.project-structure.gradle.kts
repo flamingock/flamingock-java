@@ -53,7 +53,14 @@ val utilProjects = setOf(
     "sql-util"
 )
 
-val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + templateProjects + utilProjects
+val legacyProjects = setOf(
+    "mongock-support",
+    "mongock-importer-mongodb",
+    "mongock-importer-dynamodb",
+    "mongock-importer-couchbase"
+)
+
+val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + templateProjects + utilProjects + legacyProjects
 
 // Project classification utilities
 fun Project.isBomModule(): Boolean = name.endsWith("-bom")
@@ -68,6 +75,7 @@ fun Project.getProjectCategory(): String? = when (name) {
     in targetSystemProjects -> "targetSystems"
     in templateProjects -> "templates"
     in utilProjects -> "utils"
+    in legacyProjects -> "legacy"
     else -> null
 }
 
@@ -80,6 +88,7 @@ fun getProjectsForBundle(bundle: String?): Set<String> = when (bundle) {
     "targetSystems" -> targetSystemProjects
     "templates" -> templateProjects
     "utils" -> utilProjects
+    "legacy" -> legacyProjects
     "all" -> allProjects
     else -> setOf()
 }
@@ -92,6 +101,7 @@ extra["pluginProjects"] = pluginProjects
 extra["targetSystemProjects"] = targetSystemProjects
 extra["templateProjects"] = templateProjects
 extra["utilProjects"] = utilProjects
+extra["legacyProjects"] = legacyProjects
 extra["allProjects"] = allProjects
 
 // Apply appropriate plugins based on project type
