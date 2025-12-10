@@ -111,6 +111,7 @@ public class AuditEntryExpectation {
     private String expectedTargetSystemId;
     private RecoveryStrategy expectedRecoveryStrategy;
     private String expectedOrder;
+    private Boolean expectedTransactional;
 
     // Time range for flexible timestamp verification
     private LocalDateTime timestampAfter;
@@ -292,6 +293,8 @@ public class AuditEntryExpectation {
                 : RecoveryStrategy.MANUAL_INTERVENTION;
 
         expectation.expectedOrder = extractOrderFromClassName(changeClass.getSimpleName());
+
+        expectation.expectedTransactional = changeAnnotation.transactional();
 
         return expectation;
     }
@@ -509,6 +512,19 @@ public class AuditEntryExpectation {
     }
 
     /**
+     * Sets the expected transactional flag for verification.
+     *
+     * <p>Indicates whether the change should run within a transaction.</p>
+     *
+     * @param transactional the expected transactional flag
+     * @return this builder for method chaining
+     */
+    public AuditEntryExpectation withTransactional(boolean transactional) {
+        this.expectedTransactional = transactional;
+        return this;
+    }
+
+    /**
      * Compares this expectation against an actual audit entry.
      *
      * <p>Returns a list of field mismatches (empty if all expected fields match).
@@ -591,6 +607,12 @@ public class AuditEntryExpectation {
 
         if (expectedOrder != null && !expectedOrder.equals(actual.getOrder())) {
             errors.add(new FieldMismatchError("order", expectedOrder, actual.getOrder()));
+        }
+
+        if (expectedTransactional != null && !expectedTransactional.equals(actual.getTransactionFlag())) {
+            errors.add(new FieldMismatchError("transactional",
+                    String.valueOf(expectedTransactional),
+                    String.valueOf(actual.getTransactionFlag())));
         }
 
         errors.addAll(compareTimestamp(actual));
