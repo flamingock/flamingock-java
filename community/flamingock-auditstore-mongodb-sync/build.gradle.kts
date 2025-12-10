@@ -13,8 +13,8 @@ dependencies {
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":core:target-systems:nontransactional-target-system"))
     testImplementation(project(":e2e:core-e2e"))
-    testImplementation("org.testcontainers:mongodb:1.18.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+    testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.mockito:mockito-inline:4.11.0")
 
     testImplementation("io.mongock:mongock-standalone:5.5.0")

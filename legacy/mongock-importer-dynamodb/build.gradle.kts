@@ -13,9 +13,9 @@ dependencies {
 
     testImplementation(project(":utils:test-util"))
 
-    testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.mockito:mockito-inline:4.11.0")
-    testImplementation("org.testcontainers:localstack:1.19.7")
+    testImplementation("org.testcontainers:testcontainers-localstack:2.0.2")
     testImplementation("software.amazon.awssdk:dynamodb:2.25.61")
 
     testImplementation("org.mockito:mockito-inline:4.11.0")
