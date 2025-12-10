@@ -166,8 +166,6 @@ public class AuditEntryExpectation {
         return new AuditEntryExpectation(expectedChangeId, ROLLBACK_FAILED);
     }
 
-    // ==================== Class-Based Factory Methods ====================
-
     /**
      * Creates an expectation for a successfully applied change by extracting
      * metadata from the change class annotations.
@@ -300,8 +298,6 @@ public class AuditEntryExpectation {
                 annotationClass.getSimpleName()));
     }
 
-    // ==================== Identity Fields ====================
-
     /**
      * Sets the expected execution ID for verification.
      *
@@ -327,8 +323,6 @@ public class AuditEntryExpectation {
         this.expectedStageId = stageId;
         return this;
     }
-
-    // ==================== Metadata Fields ====================
 
     /**
      * Sets the expected author of the change.
@@ -372,8 +366,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Execution Fields ====================
-
     /**
      * Sets the expected fully-qualified class name.
      *
@@ -413,8 +405,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Performance Fields ====================
-
     /**
      * Sets the expected execution duration in milliseconds.
      *
@@ -441,8 +431,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Error Fields ====================
-
     /**
      * Sets the expected error trace for failed changes.
      *
@@ -457,8 +445,6 @@ public class AuditEntryExpectation {
         return this;
     }
 
-    // ==================== Target System Fields ====================
-
     /**
      * Sets the expected target system identifier.
      *
@@ -469,8 +455,6 @@ public class AuditEntryExpectation {
         this.expectedTargetSystemId = targetSystemId;
         return this;
     }
-
-    // ==================== Comparison Logic ====================
 
     /**
      * Compares this expectation against an actual audit entry.
@@ -547,13 +531,13 @@ public class AuditEntryExpectation {
             errors.add(new FieldMismatchError("targetSystemId", expectedTargetSystemId, actual.getTargetSystemId()));
         }
 
-        // Timestamp verification
-        compareTimestamp(actual, errors);
+        errors.addAll(compareTimestamp(actual));
 
         return errors;
     }
 
-    private void compareTimestamp(AuditEntry actual, List<FieldMismatchError> errors) {
+    private List<FieldMismatchError> compareTimestamp(AuditEntry actual) {
+        List<FieldMismatchError> errors = new ArrayList<>();
         if (expectedCreatedAt != null) {
             // Exact match mode
             if (!expectedCreatedAt.equals(actual.getCreatedAt())) {
@@ -583,6 +567,7 @@ public class AuditEntryExpectation {
                 }
             }
         }
+        return errors;
     }
 
     private String formatTimestampRange() {
@@ -595,50 +580,4 @@ public class AuditEntryExpectation {
         }
     }
 
-    // ==================== Getters (for verification logic) ====================
-
-    /** Returns the expected execution ID. */
-    public String getExpectedExecutionId() { return expectedExecutionId; }
-
-    /** Returns the expected stage ID. */
-    public String getExpectedStageId() { return expectedStageId; }
-
-    /** Returns the expected change ID. */
-    public String getExpectedChangeId() { return expectedChangeId; }
-
-    /** Returns the expected author. */
-    public String getExpectedAuthor() { return expectedAuthor; }
-
-    /** Returns the expected creation timestamp. */
-    public LocalDateTime getExpectedCreatedAt() { return expectedCreatedAt; }
-
-    /** Returns the expected audit entry status. */
-    public AuditEntry.Status getExpectedState() { return expectedState; }
-
-    /** Returns the expected class name. */
-    public String getExpectedClassName() { return expectedClassName; }
-
-    /** Returns the expected method name. */
-    public String getExpectedMethodName() { return expectedMethodName; }
-
-    /** Returns the expected metadata. */
-    public Object getExpectedMetadata() { return expectedMetadata; }
-
-    /** Returns the expected execution duration in milliseconds. */
-    public Long getExpectedExecutionMillis() { return expectedExecutionMillis; }
-
-    /** Returns the expected execution hostname. */
-    public String getExpectedExecutionHostname() { return expectedExecutionHostname; }
-
-    /** Returns the expected error trace. */
-    public String getExpectedErrorTrace() { return expectedErrorTrace; }
-
-    /** Returns the expected target system ID. */
-    public String getExpectedTargetSystemId() { return expectedTargetSystemId; }
-
-    /** Returns the lower bound for timestamp range verification. */
-    public LocalDateTime getTimestampAfter() { return timestampAfter; }
-
-    /** Returns the upper bound for timestamp range verification. */
-    public LocalDateTime getTimestampBefore() { return timestampBefore; }
 }
