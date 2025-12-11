@@ -11,9 +11,9 @@ dependencies {
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":utils:mongodb-util"))
 
-    testImplementation("org.testcontainers:mongodb:1.18.3")
+    testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
 
-    testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.mockito:mockito-inline:4.11.0")
 
 }
