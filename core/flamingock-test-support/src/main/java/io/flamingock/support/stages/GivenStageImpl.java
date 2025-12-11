@@ -16,6 +16,7 @@
 package io.flamingock.support.stages;
 
 import io.flamingock.internal.core.builder.BuilderAccessor;
+import io.flamingock.support.context.TestContext;
 import io.flamingock.support.domain.AuditEntryDefinition;
 
 import java.util.ArrayList;
@@ -41,7 +42,8 @@ public class GivenStageImpl implements GivenStage {
 
     @Override
     public WhenStage whenRun() {
-        return new WhenStageImpl(builderAccessor);
+        TestContext testContext = new TestContext(builderAccessor, existingAudit);
+        return new WhenStageImpl(testContext);
     }
 
     /**
