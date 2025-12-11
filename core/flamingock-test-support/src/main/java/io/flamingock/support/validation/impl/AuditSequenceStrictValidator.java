@@ -57,9 +57,11 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
      * Internal constructor for direct list initialization (used by tests).
      */
     AuditSequenceStrictValidator(List<AuditEntryDefinition> expectedDefinitions, List<AuditEntry> actualEntries, AuditReader auditReader) {
-        this.expectations = expectedDefinitions.stream()
+        this.expectations = expectedDefinitions != null
+                ? expectedDefinitions.stream()
                 .map(AuditEntryExpectation::new)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                : new ArrayList<>();
         this.auditReader = auditReader;
         this.actualEntries = actualEntries != null ? actualEntries : new ArrayList<>();
     }
@@ -77,20 +79,6 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
 
         allErrors.addAll(getValidationErrors(expectations, actualEntries));
 
-        if (expectedSize > actualSize) {
-            for (int i = actualSize; i < expectedSize; i++) {
-                AuditEntryDefinition def = expectations.get(i).getDefinition();
-                allErrors.add(new MissingEntryError(i, def.getChangeId(), def.getState()));
-            }
-        }
-
-        if (expectedSize < actualSize) {
-            for (int i = expectedSize; i < actualSize; i++) {
-                AuditEntry actual = actualEntries.get(i);
-                allErrors.add(new UnexpectedEntryError(i, actual.getTaskId(), actual.getState()));
-            }
-        }
-
         if (allErrors.isEmpty()) {
             return ValidationResult.success(VALIDATOR_NAME);
         }
@@ -100,16 +88,25 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
 
     private static List<ValidationError> getValidationErrors(List<AuditEntryExpectation> expectedEntries, List<AuditEntry> actualEntries) {
         List<ValidationError> allErrors = new ArrayList<>();
-        if (expectedEntries == null || expectedEntries.isEmpty()) {
+        if (expectedEntries.isEmpty()) {
             return allErrors;
         }
-        int actualSize = actualEntries != null ? actualEntries.size() : 0;
-        int limit = Math.min(expectedEntries.size(), actualSize);
+        int actualSize = actualEntries.size();
+        int limit = Math.max(expectedEntries.size(), actualSize);
+
         for (int i = 0; i < limit; i++) {
-            AuditEntryExpectation expected = expectedEntries.get(i);
-            AuditEntry actual = actualEntries.get(i);
-            List<FieldMismatchError> entryErrors = expected.compareWith(actual);
-            allErrors.addAll(entryErrors);
+            AuditEntryExpectation expected = i < expectedEntries.size() ? expectedEntries.get(i) : null;
+            AuditEntry actual = i < actualEntries.size() ? actualEntries.get(i) : null;
+            if( expected != null && actual != null) {
+               allErrors.addAll(expected.compareWith(actual));
+            } else if( expected != null) {
+               AuditEntryDefinition def = expected.getDefinition();
+                allErrors.add(new MissingEntryError(i, def.getChangeId(), def.getState()));
+            } else {
+                assert actual != null;
+                allErrors.add(new UnexpectedEntryError(i, actual.getTaskId(), actual.getState()));
+            }
+           
         }
         return allErrors;
     }
