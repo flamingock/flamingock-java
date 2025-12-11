@@ -17,8 +17,8 @@ dependencies {
     compileOnly("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
 
     //Test
-    testImplementation("org.testcontainers:mongodb:1.18.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+    testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
 
     testImplementation(project(":cloud:flamingock-cloud"))
     testImplementation(project(":utils:test-util"))

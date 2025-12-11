@@ -10,8 +10,8 @@ dependencies {
     compileOnly("com.couchbase.client:java-client:3.6.0")
 
     //Test
-    testImplementation("org.testcontainers:couchbase:1.21.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:testcontainers-couchbase:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
 
     testImplementation(project(":cloud:flamingock-cloud"))
     testImplementation(project(":utils:test-util"))

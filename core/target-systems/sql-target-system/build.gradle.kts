@@ -7,10 +7,10 @@ dependencies {
     implementation(project(":utils:sql-util"))
 
     //Test
-    testImplementation("org.testcontainers:testcontainers-mysql:2.0.1")
-    testImplementation("org.testcontainers:testcontainers-postgresql:2.0.1")
-    testImplementation("org.testcontainers:testcontainers-mssqlserver:2.0.1")
-    testImplementation("org.testcontainers:testcontainers-oracle-free:2.0.1")
+    testImplementation("org.testcontainers:testcontainers-mysql:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-mssqlserver:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-oracle-free:2.0.2")
     testImplementation("mysql:mysql-connector-java:8.0.33")
     testImplementation("org.postgresql:postgresql:42.7.8")
     testImplementation("com.microsoft.sqlserver:mssql-jdbc:13.2.1.jre8")
@@ -19,7 +19,7 @@ dependencies {
     testImplementation("com.h2database:h2:2.2.220")
     testImplementation("org.apache.derby:derbytools:10.15.2.0")
     testImplementation("org.firebirdsql.jdbc:jaybird:5.0.10.java8")
-    testImplementation("org.testcontainers:junit-jupiter:1.18.3")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
 
     testImplementation(project(":cloud:flamingock-cloud"))
     testImplementation(project(":utils:test-util"))
