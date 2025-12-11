@@ -60,7 +60,7 @@ class AuditSequenceStrictValidatorTest {
                 FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries);
+        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
         ValidationResult result = validator.validate();
 
         assertTrue(result.isSuccess());
@@ -74,7 +74,7 @@ class AuditSequenceStrictValidatorTest {
                 APPLIED("change-2")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries);
+        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -93,7 +93,7 @@ class AuditSequenceStrictValidatorTest {
                 APPLIED("change-3")  // Expected APPLIED but actual is FAILED
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries);
+        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -113,7 +113,7 @@ class AuditSequenceStrictValidatorTest {
                 AuditEntryDefinition.FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries);
+        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -138,7 +138,7 @@ class AuditSequenceStrictValidatorTest {
                 AuditEntryDefinition.FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntriesSubset);
+        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntriesSubset, null);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -168,7 +168,7 @@ class AuditSequenceStrictValidatorTest {
                 AuditEntryDefinition.FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntriesExtra);
+        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntriesExtra, null);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -217,7 +217,8 @@ class AuditSequenceStrictValidatorTest {
 
         AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(
                 Collections.singletonList(expectedWithOptionalFields),
-                Collections.singletonList(actualWithOptionalFields)
+                Collections.singletonList(actualWithOptionalFields),
+                null
         );
 
         ValidationResult result = validator.validate();
@@ -255,7 +256,8 @@ class AuditSequenceStrictValidatorTest {
 
         AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(
                 Collections.singletonList(expectedWithDifferentOptional),
-                Collections.singletonList(actualEntry)
+                Collections.singletonList(actualEntry),
+                null
         );
 
         ValidationResult result = validator.validate();

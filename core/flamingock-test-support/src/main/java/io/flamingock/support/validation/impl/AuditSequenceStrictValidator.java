@@ -16,15 +16,10 @@
 package io.flamingock.support.validation.impl;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.SimpleValidator;
-import io.flamingock.support.validation.error.CountMismatchError;
-import io.flamingock.support.validation.error.FieldMismatchError;
-import io.flamingock.support.validation.error.MissingEntryError;
-import io.flamingock.support.validation.error.UnexpectedEntryError;
-import io.flamingock.support.validation.error.ValidationError;
-import io.flamingock.support.validation.error.ValidationResult;
+import io.flamingock.support.validation.error.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,26 +41,26 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
 
     private static final String VALIDATOR_NAME = "Audit Sequence (Strict)";
 
-    private final List<AuditEntryExpectation> expectedExpectations;
+    private final AuditReader auditReader;
+    private final List<AuditEntryExpectation> expectations;
     private final List<AuditEntry> actualEntries;
 
-    /**
-     * Creates a strict sequence validator from an AuditStore and expected definitions.
-     *
-     * @param auditStore  the audit store to read actual entries from
-     * @param definitions the expected audit entry definitions
-     */
-    public AuditSequenceStrictValidator(AuditStore<?> auditStore, AuditEntryDefinition... definitions) {
-        this(Arrays.asList(definitions), auditStore.getPersistence().getAuditHistory());
+    public AuditSequenceStrictValidator(AuditReader auditReader, AuditEntryDefinition... definitions) {
+        this.auditReader = auditReader;
+        this.expectations = Arrays.stream(definitions)
+                .map(AuditEntryExpectation::new)
+                .collect(Collectors.toList());
+        this.actualEntries = auditReader.getAuditHistory();
     }
 
     /**
      * Internal constructor for direct list initialization (used by tests).
      */
-    AuditSequenceStrictValidator(List<AuditEntryDefinition> expectedDefinitions, List<AuditEntry> actualEntries) {
-        this.expectedExpectations = expectedDefinitions.stream()
+    AuditSequenceStrictValidator(List<AuditEntryDefinition> expectedDefinitions, List<AuditEntry> actualEntries, AuditReader auditReader) {
+        this.expectations = expectedDefinitions.stream()
                 .map(AuditEntryExpectation::new)
                 .collect(Collectors.toList());
+        this.auditReader = auditReader;
         this.actualEntries = actualEntries != null ? actualEntries : new ArrayList<>();
     }
 
@@ -73,18 +68,18 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
     public ValidationResult validate() {
         List<ValidationError> allErrors = new ArrayList<>();
 
-        int expectedSize = expectedExpectations.size();
+        int expectedSize = expectations.size();
         int actualSize = actualEntries.size();
 
         if (expectedSize != actualSize) {
             allErrors.add(new CountMismatchError(getExpectedChangeIds(), getActualChangeIds()));
         }
 
-        allErrors.addAll(getValidationErrors(expectedExpectations, actualEntries));
+        allErrors.addAll(getValidationErrors(expectations, actualEntries));
 
         if (expectedSize > actualSize) {
             for (int i = actualSize; i < expectedSize; i++) {
-                AuditEntryDefinition def = expectedExpectations.get(i).getDefinition();
+                AuditEntryDefinition def = expectations.get(i).getDefinition();
                 allErrors.add(new MissingEntryError(i, def.getChangeId(), def.getState()));
             }
         }
@@ -120,7 +115,7 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
     }
 
     private List<String> getExpectedChangeIds() {
-        return expectedExpectations.stream()
+        return expectations.stream()
                 .map(exp -> exp.getDefinition().getChangeId())
                 .collect(Collectors.toList());
     }
