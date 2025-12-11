@@ -19,8 +19,11 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.error.CountMismatchError;
 import io.flamingock.support.validation.error.FieldMismatchError;
+import io.flamingock.support.validation.error.MissingEntryError;
+import io.flamingock.support.validation.error.UnexpectedEntryError;
 import io.flamingock.support.validation.error.ValidationResult;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -32,6 +35,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.ExecutionType.
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.APPLIED;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.FAILED;
 import static io.flamingock.support.domain.AuditEntryDefinition.APPLIED;
+import static io.flamingock.support.domain.AuditEntryDefinition.FAILED;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuditSequenceStrictValidatorTest {
@@ -48,11 +52,12 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
+    @DisplayName("AuditSequenceStrictValidator passes when entries match exactly")
     void shouldPassValidation_whenEntriesMatchExactly() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
                 APPLIED("change-2"),
-                AuditEntryDefinition.FAILED("change-3")
+                FAILED("change-3")
         );
 
         AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries);
@@ -62,6 +67,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
+    @DisplayName("AuditSequenceStrictValidator fails when counts mismatch")
     void shouldFailValidation_whenCountMismatch() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
@@ -72,11 +78,14 @@ class AuditSequenceStrictValidatorTest {
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
-        assertEquals(1, result.getErrors().size());
-        assertInstanceOf(CountMismatchError.class, result.getErrors().get(0));
+        assertEquals(2, result.getErrors().size());
+        assertTrue(result.getErrors().stream().anyMatch(e -> e instanceof CountMismatchError));
+        assertTrue(result.getErrors().stream().anyMatch(e -> e instanceof UnexpectedEntryError));
     }
 
+
     @Test
+    @DisplayName("AuditSequenceStrictValidator fails when a field status mismatches")
     void shouldFailValidation_whenStatusMismatch() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
@@ -96,6 +105,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
+    @DisplayName("AuditSequenceStrictValidator fails when changeId mismatches")
     void shouldFailValidation_whenChangeIdMismatch() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
@@ -115,6 +125,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
+    @DisplayName("AuditSequenceStrictValidator fails when an expected entry is missing (count + missing entry error)")
     void shouldFailValidation_whenMissingEntry() {
         List<AuditEntry> actualEntriesSubset = Arrays.asList(
                 createAuditEntry("change-1", APPLIED),
@@ -132,9 +143,17 @@ class AuditSequenceStrictValidatorTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.getErrors().stream().anyMatch(e -> e instanceof CountMismatchError));
+        assertTrue(result.getErrors().stream().anyMatch(e -> e instanceof MissingEntryError));
+        MissingEntryError missing = (MissingEntryError) result.getErrors().stream()
+                .filter(e -> e instanceof MissingEntryError)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Expected a MissingEntryError but none was found"));
+        assertEquals(2, missing.getExpectedIndex());
+        assertEquals("change-3", missing.getExpectedChangeId());
     }
 
     @Test
+    @DisplayName("AuditSequenceStrictValidator fails when there is an unexpected actual entry (count + unexpected entry error)")
     void shouldFailValidation_whenUnexpectedEntry() {
         List<AuditEntry> actualEntriesExtra = Arrays.asList(
                 createAuditEntry("change-1", APPLIED),
@@ -154,9 +173,17 @@ class AuditSequenceStrictValidatorTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.getErrors().stream().anyMatch(e -> e instanceof CountMismatchError));
+        assertTrue(result.getErrors().stream().anyMatch(e -> e instanceof UnexpectedEntryError));
+        UnexpectedEntryError unexpected = (UnexpectedEntryError) result.getErrors().stream()
+                .filter(e -> e instanceof UnexpectedEntryError)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Expected an UnexpectedEntryError but none was found"));
+        assertEquals(3, unexpected.getIndex());
+        assertEquals("change-4", unexpected.getActualChangeId());
     }
 
     @Test
+    @DisplayName("AuditSequenceStrictValidator passes when optional fields match")
     void shouldPassValidation_whenOptionalFieldsMatch() {
         AuditEntry actualWithOptionalFields = new AuditEntry(
                 "exec-1",
@@ -199,6 +226,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
+    @DisplayName("AuditSequenceStrictValidator fails when an optional field mismatches")
     void shouldFailValidation_whenOptionalFieldMismatch() {
         AuditEntry actualEntry = new AuditEntry(
                 "exec-1",

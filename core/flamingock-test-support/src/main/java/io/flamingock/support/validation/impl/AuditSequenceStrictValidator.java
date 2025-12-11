@@ -20,6 +20,9 @@ import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.SimpleValidator;
 import io.flamingock.support.validation.error.CountMismatchError;
+import io.flamingock.support.validation.error.FieldMismatchError;
+import io.flamingock.support.validation.error.MissingEntryError;
+import io.flamingock.support.validation.error.UnexpectedEntryError;
 import io.flamingock.support.validation.error.ValidationError;
 import io.flamingock.support.validation.error.ValidationResult;
 
@@ -68,33 +71,50 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
 
     @Override
     public ValidationResult validate() {
-        // Check count
-        if (expectedExpectations.size() != actualEntries.size()) {
-            return ValidationResult.failure(VALIDATOR_NAME,
-                    new CountMismatchError(getExpectedChangeIds(), getActualChangeIds()));
+        List<ValidationError> allErrors = new ArrayList<>();
+
+        int expectedSize = expectedExpectations.size();
+        int actualSize = actualEntries.size();
+
+        if (expectedSize != actualSize) {
+            allErrors.add(new CountMismatchError(getExpectedChangeIds(), getActualChangeIds()));
         }
 
-        // Validate each entry in sequence
-        List<ValidationError> allErrors = getValidationErrors(expectedExpectations, actualEntries);
+        allErrors.addAll(getValidationErrors(expectedExpectations, actualEntries));
+
+        if (expectedSize > actualSize) {
+            for (int i = actualSize; i < expectedSize; i++) {
+                AuditEntryDefinition def = expectedExpectations.get(i).getDefinition();
+                allErrors.add(new MissingEntryError(i, def.getChangeId(), def.getState()));
+            }
+        }
+
+        if (expectedSize < actualSize) {
+            for (int i = expectedSize; i < actualSize; i++) {
+                AuditEntry actual = actualEntries.get(i);
+                allErrors.add(new UnexpectedEntryError(i, actual.getTaskId(), actual.getState()));
+            }
+        }
 
         if (allErrors.isEmpty()) {
             return ValidationResult.success(VALIDATOR_NAME);
         }
 
-        return ValidationResult.failure(VALIDATOR_NAME, allErrors.toArray(
-                new io.flamingock.support.validation.error.ValidationError[0]));
+        return ValidationResult.failure(VALIDATOR_NAME, allErrors.toArray(new ValidationError[0]));
     }
 
-    private static List<ValidationError> getValidationErrors(List<AuditEntryExpectation> expectedExpectations, List<AuditEntry> actualEntries) {
+    private static List<ValidationError> getValidationErrors(List<AuditEntryExpectation> expectedEntries, List<AuditEntry> actualEntries) {
         List<ValidationError> allErrors = new ArrayList<>();
-        for (int i = 0; i < expectedExpectations.size(); i++) {
-            AuditEntryExpectation expected = expectedExpectations.get(i);
+        if (expectedEntries == null || expectedEntries.isEmpty()) {
+            return allErrors;
+        }
+        int actualSize = actualEntries != null ? actualEntries.size() : 0;
+        int limit = Math.min(expectedEntries.size(), actualSize);
+        for (int i = 0; i < limit; i++) {
+            AuditEntryExpectation expected = expectedEntries.get(i);
             AuditEntry actual = actualEntries.get(i);
-
-            List<io.flamingock.support.validation.error.FieldMismatchError> entryErrors = expected.compareWith(actual);
-            if (!entryErrors.isEmpty()) {
-                allErrors.addAll(entryErrors);
-            }
+            List<FieldMismatchError> entryErrors = expected.compareWith(actual);
+            allErrors.addAll(entryErrors);
         }
         return allErrors;
     }
