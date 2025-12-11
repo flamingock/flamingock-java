@@ -15,7 +15,7 @@
  */
 package io.flamingock.support.validation;
 
-import io.flamingock.internal.core.builder.BuilderAccessor;
+import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.impl.AuditSequenceStrictValidator;
 import io.flamingock.support.validation.impl.DefaultExceptionValidator;
@@ -24,14 +24,14 @@ import java.util.function.Consumer;
 
 public class ValidatorFactory {
 
-    private final BuilderAccessor builderAccessor;
+    private final AuditReader auditReader;
 
-    public ValidatorFactory(BuilderAccessor builderAccessor) {
-        this.builderAccessor = builderAccessor;
+    public ValidatorFactory(AuditReader auditReader) {
+        this.auditReader = auditReader;
     }
 
     public Validator getAuditSeqStrictValidator(AuditEntryDefinition... definitions) {
-        return new AuditSequenceStrictValidator(builderAccessor.getAuditStore(), definitions);
+        return new AuditSequenceStrictValidator(auditReader, definitions);
     }
 
     public Validator getExceptionValidator(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {

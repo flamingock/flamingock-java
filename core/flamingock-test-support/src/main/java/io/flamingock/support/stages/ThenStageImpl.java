@@ -15,8 +15,9 @@
  */
 package io.flamingock.support.stages;
 
-import io.flamingock.internal.core.builder.BuilderAccessor;
+import io.flamingock.support.context.TestContext;
 import io.flamingock.support.domain.AuditEntryDefinition;
+import io.flamingock.support.precondition.PreconditionInserter;
 import io.flamingock.support.validation.ValidationHandler;
 import io.flamingock.support.validation.Validator;
 import io.flamingock.support.validation.ValidatorFactory;
@@ -29,11 +30,11 @@ final class ThenStageImpl implements ThenStage {
 
     private final List<Validator> validators = new ArrayList<>();
     private final ValidatorFactory validatorFactory;
-    private final BuilderAccessor builderAccessor;
+    private final TestContext testContext;
 
-    ThenStageImpl(BuilderAccessor builderAccessor) {
-        this.builderAccessor = builderAccessor;
-        validatorFactory = new ValidatorFactory(builderAccessor);
+    ThenStageImpl(TestContext testContext) {
+        this.testContext = testContext;
+        validatorFactory = new ValidatorFactory(testContext.getAuditReader());
     }
 
     @Override
@@ -50,10 +51,13 @@ final class ThenStageImpl implements ThenStage {
 
     @Override
     public void verify() throws AssertionError {
+        // Insert preconditions first
+        PreconditionInserter preconditionInserter = new PreconditionInserter(testContext.getAuditWriter());
+        preconditionInserter.insert(testContext.getPreconditions());
 
         ValidationHandler validationHandler;
         try {
-            builderAccessor.run();
+            testContext.run();
             validationHandler = new ValidationHandler(validators);
 
         } catch (Throwable actualException) {

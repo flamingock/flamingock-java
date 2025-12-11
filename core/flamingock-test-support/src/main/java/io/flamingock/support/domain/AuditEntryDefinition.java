@@ -22,8 +22,10 @@ import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditTxType;
 
 import java.lang.annotation.Annotation;
+import java.util.UUID;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
@@ -504,5 +506,49 @@ public class AuditEntryDefinition {
 
     public Boolean getTransactional() {
         return transactional;
+    }
+
+    // ========== Conversion Methods ==========
+
+    /**
+     * Converts this definition to an {@link AuditEntry} for insertion into the audit store.
+     *
+     * <p>Fields that are not set will use sensible defaults:</p>
+     * <ul>
+     *   <li>{@code executionId} - UUID-based if not specified</li>
+     *   <li>{@code stageId} - UUID-based if not specified</li>
+     *   <li>{@code createdAt} - current time if not specified</li>
+     *   <li>{@code executionMillis} - 0 if not specified</li>
+     *   <li>{@code executionHostname} - "test-host" if not specified</li>
+     *   <li>{@code type} - {@code ExecutionType.EXECUTION}</li>
+     *   <li>{@code txStrategy} - {@code AuditTxType.NON_TX}</li>
+     *   <li>{@code systemChange} - false</li>
+     *   <li>{@code recoveryStrategy} - {@code RecoveryStrategy.MANUAL_INTERVENTION} if not specified</li>
+     * </ul>
+     *
+     * @return an {@link AuditEntry} instance representing this definition
+     */
+    public AuditEntry toAuditEntry() {
+        return new AuditEntry(
+                executionId != null ? executionId : "precondition-" + UUID.randomUUID().toString(),
+                stageId != null ? stageId : "precondition-stage-" + UUID.randomUUID().toString(),
+                changeId,
+                author,
+                createdAt != null ? createdAt : LocalDateTime.now(),
+                state,
+                AuditEntry.ExecutionType.EXECUTION,
+                className,
+                methodName,
+                executionMillis != null ? executionMillis : 0L,
+                executionHostname != null ? executionHostname : "test-host",
+                metadata,
+                false, // systemChange
+                errorTrace,
+                AuditTxType.NON_TX,
+                targetSystemId,
+                order,
+                recoveryStrategy != null ? recoveryStrategy : RecoveryStrategy.MANUAL_INTERVENTION,
+                transactional
+        );
     }
 }
