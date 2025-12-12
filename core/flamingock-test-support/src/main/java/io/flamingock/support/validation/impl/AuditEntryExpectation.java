@@ -30,11 +30,11 @@ import java.util.Objects;
  * against expected definitions. Users should not interact with this class directly;
  * they should use {@link AuditEntryDefinition} instead.</p>
  */
-class AuditEntryExpectation {
+public class AuditEntryExpectation {
 
     private final AuditEntryDefinition definition;
 
-    AuditEntryExpectation(AuditEntryDefinition definition) {
+    public AuditEntryExpectation(AuditEntryDefinition definition) {
         this.definition = definition;
     }
 
@@ -48,7 +48,7 @@ class AuditEntryExpectation {
      * @param actual the actual audit entry to compare against
      * @return list of field mismatch errors (empty if all match)
      */
-    List<FieldMismatchError> compareWith(AuditEntry actual) {
+    public List<FieldMismatchError> compareWith(AuditEntry actual) {
         List<FieldMismatchError> errors = new ArrayList<>();
 
         // Required fields - always verified
