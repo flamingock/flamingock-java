@@ -70,20 +70,15 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
     public ValidationResult validate() {
         List<ValidationError> allErrors = new ArrayList<>();
 
-        int expectedSize = expectations.size();
-        int actualSize = actualEntries.size();
-
-        if (expectedSize != actualSize) {
+        if (expectations.size() != actualEntries.size()) {
             allErrors.add(new CountMismatchError(getExpectedChangeIds(), getActualChangeIds()));
         }
 
         allErrors.addAll(getValidationErrors(expectations, actualEntries));
 
-        if (allErrors.isEmpty()) {
-            return ValidationResult.success(VALIDATOR_NAME);
-        }
-
-        return ValidationResult.failure(VALIDATOR_NAME, allErrors.toArray(new ValidationError[0]));
+        return allErrors.isEmpty()
+          ? ValidationResult.success(VALIDATOR_NAME)
+          : ValidationResult.failure(VALIDATOR_NAME, allErrors.toArray(new ValidationError[0]));
     }
 
     private static List<ValidationError> getValidationErrors(List<AuditEntryExpectation> expectedEntries, List<AuditEntry> actualEntries) {
