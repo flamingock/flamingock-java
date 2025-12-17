@@ -16,21 +16,35 @@
 package io.flamingock.springboot;
 
 import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
 
 public final class SpringbootUtil {
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Springboot");
 
     private SpringbootUtil() {
     }
 
-    public static InitializingBean toInitializingBean(Runner runner) {
-        return runner::run;
+    public static InitializingBean toInitializingBean(Runner runner, boolean autoRun) {
+        return () -> runIfApply(runner, autoRun);
     }
 
-    public static ApplicationRunner toApplicationRunner(Runner runner) {
-        return args -> runner.run();
+    public static ApplicationRunner toApplicationRunner(Runner runner, boolean autoRun) {
+        return args -> runIfApply(runner, autoRun);
+    }
+
+    private static void runIfApply(Runner runner, boolean autoRun) {
+        if(autoRun) {
+            runner.run();
+        }  else {
+            logger.info(
+                    "Flamingock automatic execution is disabled (flamingock.autorun=false). " +
+                            "Changes will not be executed at startup."
+            );
+        }
     }
 
     public static String[] getActiveProfiles(ApplicationContext springContext) {
