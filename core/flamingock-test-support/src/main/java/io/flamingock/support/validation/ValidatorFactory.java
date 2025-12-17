@@ -37,4 +37,18 @@ public class ValidatorFactory {
     public Validator getExceptionValidator(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {
         return new DefaultExceptionValidator(exceptionClass, exceptionConsumer);
     }
+
+    public Validator getValidator(ValidatorArgs args) {
+        if (args instanceof AuditSequenceStrictValidator.Args) {
+            AuditSequenceStrictValidator.Args a = (AuditSequenceStrictValidator.Args) args;
+            return new AuditSequenceStrictValidator(auditReader, a.getExpectations().toArray(new AuditEntryDefinition[0]));
+        }
+
+        if (args instanceof DefaultExceptionValidator.Args) {
+            DefaultExceptionValidator.Args a = (DefaultExceptionValidator.Args) args;
+            return new DefaultExceptionValidator(a.getExceptionClass(), a.getExceptionConsumer());
+        }
+
+        throw new IllegalArgumentException("Unknown ValidatorArgs type: " + (args != null ? args.getClass() : "null"));
+    }
 }

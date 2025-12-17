@@ -29,10 +29,7 @@ import java.util.UUID;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.APPLIED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.FAILED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLBACK_FAILED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_BACK;
+import static io.flamingock.internal.common.core.audit.AuditEntry.Status.*;
 
 /**
  * Defines an audit entry for use in BDD-style tests.
@@ -61,6 +58,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_
  *
  * <h3>String-based (manual configuration)</h3>
  * <ul>
+ *   <li>{@link #STARTED(String)} - Define a started change</li>
  *   <li>{@link #APPLIED(String)} - Define an applied change</li>
  *   <li>{@link #FAILED(String)} - Define a failed change</li>
  *   <li>{@link #ROLLED_BACK(String)} - Define a rolled-back change</li>
@@ -69,6 +67,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_
  *
  * <h3>Class-based (auto-extraction from annotations)</h3>
  * <ul>
+ *   <li>{@link #STARTED(Class)} - Extracts changeId, author, className, methodName from annotations</li>
  *   <li>{@link #APPLIED(Class)} - Extracts changeId, author, className, methodName from annotations</li>
  *   <li>{@link #FAILED(Class)} - Same extraction for failed changes</li>
  *   <li>{@link #ROLLED_BACK(Class)} - Extracts rollback method name from {@code @Rollback}</li>
@@ -121,6 +120,16 @@ public class AuditEntryDefinition {
     // ========== Static Factory Methods (String-based) ==========
 
     /**
+     * Creates a definition for a started change.
+     *
+     * @param changeId the unique identifier of the change
+     * @return a new definition builder for further configuration
+     */
+    public static AuditEntryDefinition STARTED(String changeId) {
+        return new AuditEntryDefinition(changeId, STARTED);
+    }
+
+    /**
      * Creates a definition for an applied change.
      *
      * @param changeId the unique identifier of the change
@@ -161,6 +170,29 @@ public class AuditEntryDefinition {
     }
 
     // ========== Static Factory Methods (Class-based) ==========
+
+    /**
+     * Creates a definition for a started change by extracting metadata from annotations.
+     *
+     * <p>Extracts from the change class:</p>
+     * <ul>
+     *   <li>Change ID and author from {@code @Change} annotation</li>
+     *   <li>Class name from the class itself</li>
+     *   <li>Method name from the method annotated with {@code @Apply}</li>
+     *   <li>Target system ID from {@code @TargetSystem} annotation (if present)</li>
+     *   <li>Recovery strategy from {@code @Recovery} annotation (if present)</li>
+     *   <li>Order from class name pattern {@code _ORDER__CHANGE-NAME} (if applicable)</li>
+     *   <li>Transactional flag from {@code @Change.transactional()}</li>
+     * </ul>
+     *
+     * @param changeClass the change class annotated with {@code @Change}
+     * @return a new definition builder pre-populated with annotation values
+     * @throws IllegalArgumentException if the class is not annotated with {@code @Change}
+     *         or does not contain a method annotated with {@code @Apply}
+     */
+    public static AuditEntryDefinition STARTED(Class<?> changeClass) {
+        return fromChangeClass(changeClass, STARTED);
+    }
 
     /**
      * Creates a definition for an applied change by extracting metadata from annotations.
@@ -261,7 +293,7 @@ public class AuditEntryDefinition {
 
     private static String findMethodName(Class<?> changeClass, AuditEntry.Status status) {
         Class<? extends Annotation> annotationClass =
-                (status == APPLIED || status == FAILED) ? Apply.class : Rollback.class;
+                (status == STARTED || status == APPLIED || status == FAILED) ? Apply.class : Rollback.class;
 
         for (Method method : changeClass.getDeclaredMethods()) {
             if (method.isAnnotationPresent(annotationClass)) {

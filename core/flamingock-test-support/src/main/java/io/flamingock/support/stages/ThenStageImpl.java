@@ -19,52 +19,53 @@ import io.flamingock.support.context.TestContext;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.precondition.PreconditionInserter;
 import io.flamingock.support.validation.ValidationHandler;
-import io.flamingock.support.validation.Validator;
-import io.flamingock.support.validation.ValidatorFactory;
+import io.flamingock.support.validation.ValidatorArgs;
+import io.flamingock.support.validation.impl.AuditSequenceStrictValidator;
+import io.flamingock.support.validation.impl.DefaultExceptionValidator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.Arrays;
+import java.util.Collections;
 
 final class ThenStageImpl implements ThenStage {
 
-    private final List<Validator> validators = new ArrayList<>();
-    private final ValidatorFactory validatorFactory;
+    private final List<ValidatorArgs> validators = new ArrayList<>();
     private final TestContext testContext;
 
     ThenStageImpl(TestContext testContext) {
         this.testContext = testContext;
-        validatorFactory = new ValidatorFactory(testContext.getAuditReader());
     }
 
     @Override
     public ThenStage andExpectAuditSequenceStrict(AuditEntryDefinition... definitions) {
-        validators.add(validatorFactory.getAuditSeqStrictValidator(definitions));
+        List<AuditEntryDefinition> definitionsList = definitions != null ? Arrays.asList(definitions) : Collections.<AuditEntryDefinition>emptyList();
+        validators.add(new AuditSequenceStrictValidator.Args(definitionsList));
         return this;
     }
 
     @Override
     public ThenStage andExpectException(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {
-        validators.add(validatorFactory.getExceptionValidator(exceptionClass, exceptionConsumer));
+        validators.add(new DefaultExceptionValidator.Args(exceptionClass, exceptionConsumer));
         return this;
     }
 
     @Override
     public void verify() throws AssertionError {
-        // Insert preconditions first
-        PreconditionInserter preconditionInserter = new PreconditionInserter(testContext.getAuditWriter());
-        preconditionInserter.insert(testContext.getPreconditions());
-
         ValidationHandler validationHandler;
         try {
             testContext.run();
-            validationHandler = new ValidationHandler(validators);
+            validationHandler = new ValidationHandler(testContext, validators);
 
         } catch (Throwable actualException) {
-            validationHandler = new ValidationHandler(validators, actualException);
+            validationHandler = new ValidationHandler(testContext, validators, actualException);
 
         }
 
         validationHandler.validate();
+
+        PreconditionInserter preconditionInserter = new PreconditionInserter(testContext.getAuditWriter());
+        preconditionInserter.insert(testContext.getPreconditions());
     }
 }
