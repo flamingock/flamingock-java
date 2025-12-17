@@ -257,3 +257,156 @@ All Java and Kotlin source files must include the Flamingock license header:
 ## Execution Flow Architecture
 
 **📖 Complete Documentation**: See `docs/EXECUTION_FLOW_GUIDE.md` for comprehensive execution flow from builder through pipeline completion, including StageExecutor, ExecutionPlanner, StepNavigator, transaction handling, and rollback mechanisms.
+
+## Templates System (Deep Dive)
+
+Templates are **reusable, declarative change definitions** that enable "no-code migrations". Instead of writing Java classes with `@Change` annotations, developers define changes in YAML files.
+
+### Purpose and Motivation
+
+1. **Reduce code duplication** - Common patterns (create tables, insert data) are standardized
+2. **Enable non-developers** - Business analysts and DBAs can create migrations without Java
+3. **Declarative over imperative** - YAML is more readable for well-defined operations
+4. **GraalVM support** - Templates enable proper reflection registration at build time
+
+### Core Architecture
+
+**Interface**: `ChangeTemplate<SHARED_CONFIG, APPLY_FIELD, ROLLBACK_FIELD>`
+- `SHARED_CONFIG` - Configuration shared between apply and rollback (use `Void` if not needed)
+- `APPLY_FIELD` - Payload type for the apply operation
+- `ROLLBACK_FIELD` - Payload type for the rollback operation
+
+**Base Class**: `AbstractChangeTemplate` resolves generic types via reflection and provides:
+- Field management: `changeId`, `isTransactional`, `configuration`, `applyPayload`, `rollbackPayload`
+- Reflective class collection for GraalVM native image support
+
+**Key Files**:
+- `core/flamingock-core-api/src/main/java/io/flamingock/api/template/ChangeTemplate.java`
+- `core/flamingock-core-api/src/main/java/io/flamingock/api/template/AbstractChangeTemplate.java`
+- `core/flamingock-core-commons/src/main/java/io/flamingock/internal/common/core/template/ChangeTemplateManager.java`
+
+### Existing Implementations
+
+| Template | Location | CONFIG | APPLY | ROLLBACK |
+|----------|----------|--------|-------|----------|
+| `SqlTemplate` | `templates/flamingock-sql-template` | `Void` | `String` (raw SQL) | `String` (raw SQL) |
+| `MongoChangeTemplate` | `templates/flamingock-mongodb-sync-template` | `Void` | `MongoOperation` | `MongoOperation` |
+
+### YAML Structure
+
+```yaml
+id: create-users-table           # Unique identifier
+author: developer-name           # Optional author
+transactional: true              # Default: true
+template: SqlTemplate            # Template class name (simple name)
+targetSystem:
+  id: "postgresql"               # Must match registered target system
+apply: "CREATE TABLE users ..."  # Payload for apply (type depends on template)
+rollback: "DROP TABLE users"     # Optional: payload for rollback
+recovery:
+  strategy: MANUAL_INTERVENTION  # Or ALWAYS_RETRY
+```
+
+### Execution Flow
+
+```
+YAML File
+    ↓ (parsing)
+ChangeTemplateFileContent
+    ↓ (preview building)
+TemplatePreviewChange
+    ↓ (loaded task building - template lookup from registry)
+TemplateLoadedChange
+    ↓ (execution preparation)
+TemplateExecutableTask
+    ↓ (runtime execution)
+Template instance with injected dependencies
+```
+
+**Key Classes in Flow**:
+- `ChangeTemplateFileContent` - YAML parsed data (`core/flamingock-core-commons`)
+- `TemplatePreviewTaskBuilder` - Builds preview from file content (`core/flamingock-core-commons`)
+- `TemplateLoadedTaskBuilder` - Resolves template class, builds loaded change (`core/flamingock-core`)
+- `TemplateExecutableTask` - Executes template with dependency injection (`core/flamingock-core`)
+
+### Discovery Mechanism (SPI)
+
+Templates are discovered via Java's `ServiceLoader`:
+
+**Direct Registration**:
+```
+META-INF/services/io.flamingock.api.template.ChangeTemplate
+→ io.flamingock.template.sql.SqlTemplate
+```
+
+**Factory Registration** (for multiple templates):
+```
+META-INF/services/io.flamingock.internal.common.core.template.ChangeTemplateFactory
+→ com.example.MyTemplateFactory
+```
+
+**ChangeTemplateManager** loads all templates at startup and provides lookup by simple class name.
+
+### Ordering
+
+Change execution order is determined **solely by filename convention**:
+- `_0001__create_users.yaml` runs before `_0002__seed_data.yaml`
+- No explicit `order` field in YAML; order comes from filename prefix
+
+### Transactionality and Rollback
+
+- `transactional: true` is the **default**
+- For ACID databases, Flamingock manages rollback automatically via native DB transactions
+- Manual rollback is **optional but recommended** because:
+  - Required for non-transactional operations (e.g., MongoDB DDL)
+  - Used by CLI `UNDO` operation to revert already-committed changes
+
+### Recovery Strategy
+
+When a change fails and cannot be rolled back:
+
+| Strategy | Behavior |
+|----------|----------|
+| `MANUAL_INTERVENTION` (default) | Requires user intervention before retry |
+| `ALWAYS_RETRY` | Safe to retry automatically (for idempotent operations) |
+
+**File**: `core/flamingock-core-api/src/main/java/io/flamingock/api/RecoveryStrategy.java`
+
+### Dependency Injection in Templates
+
+Template methods (`@Apply`, `@Rollback`) receive dependencies as **method parameters**, not constructor injection:
+
+```java
+@Apply
+public void apply(Connection connection) {  // Injected from context
+    execute(connection, applyPayload);
+}
+```
+
+Dependencies are resolved from the `ContextResolver` based on type matching.
+
+### Creating Custom Templates
+
+1. Extend `AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>`
+2. Implement `@Apply` method (required)
+3. Implement `@Rollback` method (optional but recommended)
+4. Register in `META-INF/services/io.flamingock.api.template.ChangeTemplate`
+
+**Documentation**: https://docs.flamingock.io/templates/create-your-own-template
+
+### GraalVM Support
+
+Templates must declare reflective classes for native image compilation:
+- Override `getReflectiveClasses()` in template
+- Pass additional classes to `AbstractChangeTemplate` constructor
+- `RegistrationFeature` in `flamingock-graalvm` module handles registration
+
+### Evolution Proposals
+
+See `docs/TEMPLATES_EVOLUTION_PROPOSALS.md` for comprehensive proposals including:
+- Variables and interpolation
+- Dry-run/Plan mode
+- JSON Schema validation
+- Explicit dependencies (`depends_on`)
+- Policy as Code
+- And more...

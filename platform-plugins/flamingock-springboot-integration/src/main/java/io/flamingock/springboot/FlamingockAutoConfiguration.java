@@ -23,6 +23,7 @@ import io.flamingock.internal.core.runner.RunnerBuilder;
 import io.flamingock.internal.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -45,22 +46,23 @@ public class FlamingockAutoConfiguration {
     @Bean("flamingock-runner")
     @Profile(Constants.NON_CLI_PROFILE)
     @ConditionalOnExpression("'${flamingock.runner-type:ApplicationRunner}'.toLowerCase().equals('applicationrunner')")
-    public ApplicationRunner applicationRunner(RunnerBuilder runnerBuilder) {
-        return SpringbootUtil.toApplicationRunner(runnerBuilder.build());
+    public ApplicationRunner applicationRunner(RunnerBuilder runnerBuilder,
+                                               @Value("${flamingock.autorun:true}") boolean autoRun) {
+        return SpringbootUtil.toApplicationRunner(runnerBuilder.build(), autoRun);
     }
 
     @Bean("flamingock-runner")
     @Profile(Constants.NON_CLI_PROFILE)
     @ConditionalOnExpression("'${flamingock.runner-type:null}'.toLowerCase().equals('initializingbean')")
-    public InitializingBean initializingBeanRunner(RunnerBuilder runnerBuilder) {
-        return SpringbootUtil.toInitializingBean(runnerBuilder.build());
+    public InitializingBean initializingBeanRunner(RunnerBuilder runnerBuilder,
+                                                   @Value("${flamingock.autorun:true}") boolean autoRun) {
+        return SpringbootUtil.toInitializingBean(runnerBuilder.build(), autoRun);
     }
 
     @Bean("flamingock-builder")
     @Profile(Constants.NON_CLI_PROFILE)
     @ConditionalOnMissingBean(RunnerBuilder.class)
-
-    public RunnerBuilder flamingockBuilder(SpringbootProperties configurationProperties,
+    public AbstractChangeRunnerBuilder<?,?> flamingockBuilder(SpringbootProperties configurationProperties,
                                            ApplicationContext springContext,
                                            ApplicationEventPublisher applicationEventPublisher,
                                            @Autowired(required = false) CommunityAuditStore auditStore,
