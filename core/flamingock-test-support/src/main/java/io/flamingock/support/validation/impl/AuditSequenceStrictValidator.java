@@ -23,7 +23,7 @@ import io.flamingock.support.validation.ValidatorArgs;
 import io.flamingock.support.validation.error.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,13 +45,22 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
     private final AuditReader auditReader;
     private final List<AuditEntryExpectation> expectations;
     private final List<AuditEntry> actualEntries;
+    private static final List<AuditEntry.Status> EXCLUDED_STATES = Collections.singletonList(
+            AuditEntry.Status.STARTED
+    );
 
-    public AuditSequenceStrictValidator(AuditReader auditReader, AuditEntryDefinition... definitions) {
+    public AuditSequenceStrictValidator(AuditReader auditReader, List<AuditEntryDefinition> definitions) {
         this.auditReader = auditReader;
-        this.expectations = Arrays.stream(definitions)
+        this.expectations = definitions != null
+                ? definitions.stream()
                 .map(AuditEntryExpectation::new)
+                .collect(Collectors.toList())
+                : new ArrayList<>();
+
+       this.actualEntries = auditReader.getAuditHistory().stream()
+                .filter(entry -> !EXCLUDED_STATES.contains(entry.getState()))
+                .sorted()
                 .collect(Collectors.toList());
-        this.actualEntries = auditReader.getAuditHistory();
     }
 
     /**
