@@ -68,4 +68,22 @@ public class DefaultExceptionValidator implements ExceptionValidator {
         }
         return ValidationResult.success(VALIDATOR_NAME);
     }
+
+    public static class Args implements io.flamingock.support.validation.ValidatorArgs {
+        private final Class<? extends Throwable> exceptionClass;
+        private final Consumer<Throwable> exceptionConsumer;
+
+        public Args(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {
+            this.exceptionClass = exceptionClass;
+            this.exceptionConsumer = exceptionConsumer;
+        }
+
+        public Class<? extends Throwable> getExceptionClass() {
+            return exceptionClass;
+        }
+
+        public Consumer<Throwable> getExceptionConsumer() {
+            return exceptionConsumer;
+        }
+    }
 }

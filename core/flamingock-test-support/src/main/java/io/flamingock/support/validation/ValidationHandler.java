@@ -15,6 +15,7 @@
  */
 package io.flamingock.support.validation;
 
+import io.flamingock.support.context.TestContext;
 import io.flamingock.support.validation.error.ExceptionNotExpectedError;
 import io.flamingock.support.validation.error.ValidationResult;
 
@@ -45,6 +46,25 @@ public class ValidationHandler {
         this.validators = validators;
         this.executionException = executionException;
         this.formatter = new ValidationErrorFormatter();
+    }
+
+    // TestContext and deferred ValidatorArgs
+    public ValidationHandler(TestContext testContext, List<ValidatorArgs> args) {
+        this(testContext, args, null);
+    }
+
+    public ValidationHandler(TestContext testContext, List<ValidatorArgs> args, Throwable executionException) {
+        this.executionException = executionException;
+        this.formatter = new ValidationErrorFormatter();
+        // Build actual validators now that we have access to the TestContext
+        ValidatorFactory factory = new ValidatorFactory(testContext.getAuditReader());
+        List<Validator> built = new ArrayList<>();
+        if (args != null) {
+            for (ValidatorArgs a : args) {
+                built.add(factory.getValidator(a));
+            }
+        }
+        this.validators = built;
     }
 
     /**

@@ -29,10 +29,7 @@ import java.util.UUID;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.APPLIED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.FAILED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLBACK_FAILED;
-import static io.flamingock.internal.common.core.audit.AuditEntry.Status.ROLLED_BACK;
+import static io.flamingock.internal.common.core.audit.AuditEntry.Status.*;
 
 /**
  * Defines an audit entry for use in BDD-style tests.

@@ -19,10 +19,11 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.SimpleValidator;
+import io.flamingock.support.validation.ValidatorArgs;
 import io.flamingock.support.validation.error.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,13 +45,22 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
     private final AuditReader auditReader;
     private final List<AuditEntryExpectation> expectations;
     private final List<AuditEntry> actualEntries;
+    private static final List<AuditEntry.Status> EXCLUDED_STATES = Collections.singletonList(
+            AuditEntry.Status.STARTED
+    );
 
-    public AuditSequenceStrictValidator(AuditReader auditReader, AuditEntryDefinition... definitions) {
+    public AuditSequenceStrictValidator(AuditReader auditReader, List<AuditEntryDefinition> definitions) {
         this.auditReader = auditReader;
-        this.expectations = Arrays.stream(definitions)
+        this.expectations = definitions != null
+                ? definitions.stream()
                 .map(AuditEntryExpectation::new)
+                .collect(Collectors.toList())
+                : new ArrayList<>();
+
+       this.actualEntries = auditReader.getAuditHistory().stream()
+                .filter(entry -> !EXCLUDED_STATES.contains(entry.getState()))
+                .sorted()
                 .collect(Collectors.toList());
-        this.actualEntries = auditReader.getAuditHistory();
     }
 
     /**
@@ -77,8 +87,8 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
         allErrors.addAll(getValidationErrors(expectations, actualEntries));
 
         return allErrors.isEmpty()
-          ? ValidationResult.success(VALIDATOR_NAME)
-          : ValidationResult.failure(VALIDATOR_NAME, allErrors.toArray(new ValidationError[0]));
+                ? ValidationResult.success(VALIDATOR_NAME)
+                : ValidationResult.failure(VALIDATOR_NAME, allErrors.toArray(new ValidationError[0]));
     }
 
     private static List<ValidationError> getValidationErrors(List<AuditEntryExpectation> expectedEntries, List<AuditEntry> actualEntries) {
@@ -93,15 +103,15 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
             AuditEntryExpectation expected = i < expectedEntries.size() ? expectedEntries.get(i) : null;
             AuditEntry actual = i < actualEntries.size() ? actualEntries.get(i) : null;
             if( expected != null && actual != null) {
-               allErrors.addAll(expected.compareWith(actual));
+                allErrors.addAll(expected.compareWith(actual));
             } else if( expected != null) {
-               AuditEntryDefinition def = expected.getDefinition();
+                AuditEntryDefinition def = expected.getDefinition();
                 allErrors.add(new MissingEntryError(i, def.getChangeId(), def.getState()));
             } else {
                 assert actual != null;
                 allErrors.add(new UnexpectedEntryError(i, actual.getTaskId(), actual.getState()));
             }
-           
+
         }
         return allErrors;
     }
@@ -116,5 +126,17 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
         return actualEntries.stream()
                 .map(AuditEntry::getTaskId)
                 .collect(Collectors.toList());
+    }
+
+    public static class Args implements ValidatorArgs {
+        private final List<AuditEntryDefinition> expectations;
+
+        public Args(List<AuditEntryDefinition> expectations) {
+            this.expectations = expectations;
+        }
+
+        public List<AuditEntryDefinition> getExpectations() {
+            return expectations;
+        }
     }
 }

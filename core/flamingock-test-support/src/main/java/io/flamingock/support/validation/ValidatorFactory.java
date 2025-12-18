@@ -20,6 +20,7 @@ import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.validation.impl.AuditSequenceStrictValidator;
 import io.flamingock.support.validation.impl.DefaultExceptionValidator;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public class ValidatorFactory {
@@ -30,11 +31,25 @@ public class ValidatorFactory {
         this.auditReader = auditReader;
     }
 
-    public Validator getAuditSeqStrictValidator(AuditEntryDefinition... definitions) {
+    public Validator getAuditSeqStrictValidator(List<AuditEntryDefinition> definitions) {
         return new AuditSequenceStrictValidator(auditReader, definitions);
     }
 
     public Validator getExceptionValidator(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {
         return new DefaultExceptionValidator(exceptionClass, exceptionConsumer);
+    }
+
+    public Validator getValidator(ValidatorArgs args) {
+        if (args instanceof AuditSequenceStrictValidator.Args) {
+            AuditSequenceStrictValidator.Args a = (AuditSequenceStrictValidator.Args) args;
+            return new AuditSequenceStrictValidator(auditReader, a.getExpectations());
+        }
+
+        if (args instanceof DefaultExceptionValidator.Args) {
+            DefaultExceptionValidator.Args a = (DefaultExceptionValidator.Args) args;
+            return new DefaultExceptionValidator(a.getExceptionClass(), a.getExceptionConsumer());
+        }
+
+        throw new IllegalArgumentException("Unknown ValidatorArgs type: " + (args != null ? args.getClass() : "null"));
     }
 }
