@@ -31,6 +31,9 @@ include("core:flamingock-test-support")
 project(":core:flamingock-test-support").name = "flamingock-test-support"
 project(":core:flamingock-test-support").projectDir = file("core/flamingock-test-support")
 
+include("core:flamingock-springboot-test-support")
+project(":core:flamingock-springboot-test-support").name = "flamingock-springboot-test-support"
+project(":core:flamingock-springboot-test-support").projectDir = file("core/flamingock-springboot-test-support")
 
 //////////////////////////////////////
 // CLOUD
@@ -188,3 +191,5 @@ project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
 include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
+
+include("core:flamingock-springboot-test-support")
