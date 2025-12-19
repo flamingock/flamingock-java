@@ -19,62 +19,94 @@ import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
 import io.flamingock.internal.core.store.CommunityAuditStore;
-import io.flamingock.internal.core.runner.RunnerBuilder;
-import io.flamingock.internal.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
+/**
+ * Spring Boot auto-configuration for Flamingock.
+ *
+ * <p>The configuration behavior is controlled by the {@code flamingock.management-mode} property:</p>
+ * <ul>
+ *   <li>{@code APPLICATION_RUNNER} (default) - Spring creates, builds, and executes the runner as an ApplicationRunner</li>
+ *   <li>{@code INITIALIZING_BEAN} - Spring creates, builds, and executes the runner as an InitializingBean</li>
+ *   <li>{@code DEFERRED} - Spring creates the builder; the application controls execution</li>
+ *   <li>{@code UNMANAGED} - No beans are created; the application manages everything</li>
+ * </ul>
+ */
 @Configuration
 @ConditionalOnClass(name = "org.springframework.boot.SpringApplication")
-@ConditionalOnFlamingockEnabled
+@ConditionalOnExpression("!'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('UNMANAGED')")
 @EnableConfigurationProperties(SpringbootProperties.class)
 public class FlamingockAutoConfiguration {
 
+    /**
+     * Creates an ApplicationRunner that builds and executes Flamingock at application startup.
+     * Only created when management-mode is APPLICATION_RUNNER (the default).
+     */
     @Bean("flamingock-runner")
-    @Profile(Constants.NON_CLI_PROFILE)
-    @ConditionalOnExpression("'${flamingock.runner-type:ApplicationRunner}'.toLowerCase().equals('applicationrunner')")
-    public ApplicationRunner applicationRunner(RunnerBuilder runnerBuilder,
-                                               @Value("${flamingock.autorun:true}") boolean autoRun) {
-        return SpringbootUtil.toApplicationRunner(runnerBuilder, autoRun);
+    @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('APPLICATION_RUNNER')")
+    public ApplicationRunner applicationRunner(SpringbootProperties configurationProperties,
+                                               ApplicationContext springContext,
+                                               ApplicationEventPublisher applicationEventPublisher,
+                                               @Autowired(required = false) CommunityAuditStore auditStore,
+                                               List<TargetSystem> targetSystems) {
+        AbstractChangeRunnerBuilder<?, ?> builder = createBuilder(
+                configurationProperties, springContext, applicationEventPublisher, auditStore, targetSystems);
+        return SpringbootUtil.toApplicationRunner(builder);
     }
 
+    /**
+     * Creates an InitializingBean that builds and executes Flamingock during bean initialization.
+     * Only created when management-mode is INITIALIZING_BEAN.
+     */
     @Bean("flamingock-runner")
-    @Profile(Constants.NON_CLI_PROFILE)
-    @ConditionalOnExpression("'${flamingock.runner-type:null}'.toLowerCase().equals('initializingbean')")
-    public InitializingBean initializingBeanRunner(RunnerBuilder runnerBuilder,
-                                                   @Value("${flamingock.autorun:true}") boolean autoRun) {
-        return SpringbootUtil.toInitializingBean(runnerBuilder, autoRun);
+    @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('INITIALIZING_BEAN')")
+    public InitializingBean initializingBeanRunner(SpringbootProperties configurationProperties,
+                                                   ApplicationContext springContext,
+                                                   ApplicationEventPublisher applicationEventPublisher,
+                                                   @Autowired(required = false) CommunityAuditStore auditStore,
+                                                   List<TargetSystem> targetSystems) {
+        AbstractChangeRunnerBuilder<?, ?> builder = createBuilder(
+                configurationProperties, springContext, applicationEventPublisher, auditStore, targetSystems);
+        return SpringbootUtil.toInitializingBean(builder);
     }
 
+    /**
+     * Exposes the Flamingock builder for manual control over execution.
+     * Only created when management-mode is DEFERRED.
+     */
     @Bean("flamingock-builder")
-    @Profile(Constants.NON_CLI_PROFILE)
-    @ConditionalOnMissingBean(RunnerBuilder.class)
-    public AbstractChangeRunnerBuilder<?,?> flamingockBuilder(SpringbootProperties configurationProperties,
-                                           ApplicationContext springContext,
-                                           ApplicationEventPublisher applicationEventPublisher,
-                                           @Autowired(required = false) CommunityAuditStore auditStore,
-                                           List<TargetSystem> targetSystems) {
+    @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('DEFERRED')")
+    public AbstractChangeRunnerBuilder<?, ?> flamingockBuilder(SpringbootProperties configurationProperties,
+                                                               ApplicationContext springContext,
+                                                               ApplicationEventPublisher applicationEventPublisher,
+                                                               @Autowired(required = false) CommunityAuditStore auditStore,
+                                                               List<TargetSystem> targetSystems) {
+        return createBuilder(configurationProperties, springContext, applicationEventPublisher, auditStore, targetSystems);
+    }
 
-        AbstractChangeRunnerBuilder<?,?> builder = FlamingockFactory.getEditionAwareBuilder(
+    private AbstractChangeRunnerBuilder<?, ?> createBuilder(SpringbootProperties configurationProperties,
+                                                            ApplicationContext springContext,
+                                                            ApplicationEventPublisher applicationEventPublisher,
+                                                            CommunityAuditStore auditStore,
+                                                            List<TargetSystem> targetSystems) {
+        AbstractChangeRunnerBuilder<?, ?> builder = FlamingockFactory.getEditionAwareBuilder(
                         configurationProperties.getCoreConfiguration(),
                         configurationProperties.getCloudProperties(),
                         configurationProperties.getLocalConfiguration(),
                         auditStore
                 )
-                .addDependency(SpringRunnerType.class, configurationProperties.getRunnerType())
+                .addDependency(SpringbootManagementMode.class, configurationProperties.getManagementMode())
                 .addDependency(ApplicationContext.class, springContext)
                 .addDependency(ApplicationEventPublisher.class, applicationEventPublisher);
 
@@ -83,6 +115,5 @@ public class FlamingockAutoConfiguration {
         }
 
         return builder;
-
     }
 }

@@ -46,8 +46,9 @@ class SpringBootFlamingockIntegrationTest {
     }
 
     @Test
-    void flamingockRunnerBeanExists() {
-        assertThat(context.containsBean("flamingock-runner")).isTrue();
+    void flamingockRunnerBeanNotExistsInDeferredMode() {
+        // In DEFERRED mode, the runner bean is not created - user controls execution manually
+        assertThat(context.containsBean("flamingock-runner")).isFalse();
     }
 
     @Test

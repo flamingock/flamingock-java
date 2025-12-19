@@ -33,7 +33,7 @@ public class SpringbootProperties
         CoreConfigurable,
         CommunityConfigurable,
         CloudConfigurable {
-    private SpringRunnerType runnerType = SpringRunnerType.ApplicationRunner;
+    private SpringbootManagementMode managementMode = SpringbootManagementMode.APPLICATION_RUNNER;
 
     private final CoreConfiguration coreConfiguration = new CoreConfiguration();
 
@@ -141,12 +141,12 @@ public class SpringbootProperties
         return coreConfiguration.getMetadata();
     }
 
-    public SpringRunnerType getRunnerType() {
-        return runnerType;
+    public SpringbootManagementMode getManagementMode() {
+        return managementMode;
     }
 
-    public void setRunnerType(SpringRunnerType runnerType) {
-        this.runnerType = runnerType;
+    public void setManagementMode(SpringbootManagementMode managementMode) {
+        this.managementMode = managementMode;
     }
 
 

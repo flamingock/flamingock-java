@@ -20,15 +20,13 @@ import io.flamingock.internal.common.core.preview.PreviewPipeline;
 public class FlamingockMetadata {
 
     private PreviewPipeline pipeline;
-    private String setup;
     private String configFile;
 
     public FlamingockMetadata() {
     }
 
-    public FlamingockMetadata(PreviewPipeline pipeline, String setup, String configFile) {
+    public FlamingockMetadata(PreviewPipeline pipeline, String configFile) {
         this.pipeline = pipeline;
-        this.setup = setup;
         this.configFile = configFile;
     }
 
@@ -38,14 +36,6 @@ public class FlamingockMetadata {
 
     public void setPipeline(PreviewPipeline pipeline) {
         this.pipeline = pipeline;
-    }
-
-    public String getSetup() {
-        return setup;
-    }
-
-    public void setSetup(String setup) {
-        this.setup = setup;
     }
 
     public String getPipelineFile() {
@@ -59,7 +49,6 @@ public class FlamingockMetadata {
     @Override
     public String toString() {
         return "FlamingockMetadata{" + "pipeline=" + pipeline +
-                ", setup='" + setup + '\'' +
                 ", configFile='" + configFile + '\'' +
                 '}';
     }

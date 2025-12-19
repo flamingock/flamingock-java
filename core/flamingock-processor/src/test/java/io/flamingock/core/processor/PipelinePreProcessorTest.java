@@ -513,7 +513,6 @@ public class PipelinePreProcessorTest {
             return new EnableFlamingock() {
                 @Override public Stage[] stages() { return stages; }
                 @Override public String configFile() { return configFile; }
-                @Override public io.flamingock.api.SetupType setup() { return io.flamingock.api.SetupType.DEFAULT; }
 
                 @Override
                 public boolean strictStageMapping() {

@@ -220,9 +220,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         validateAllChangesAreMappedToStages(standardChangesMapByPackage, pipeline, flamingockAnnotation.strictStageMapping());
 
         Serializer serializer = new Serializer(processingEnv, logger);
-        String setup = flamingockAnnotation.setup().toString();
         String configFile = flamingockAnnotation.configFile();
-        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, setup, configFile);
+        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, configFile);
         serializer.serializeFullPipeline(flamingockMetadata);
 
         // Generate summary - count all changes from the final pipeline (code-based + template-based)
