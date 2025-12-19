@@ -50,7 +50,7 @@ class FlamingockTestSupportIntegrationTest {
             NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka");
 
             FlamingockTestSupport
-                    .given(testKit.createBuilder().addTargetSystem(targetSystem))
+                    .givenBuilder(testKit.createBuilder().addTargetSystem(targetSystem))
                     .whenRun()
                     .thenExpectAuditSequenceStrict(
                             APPLIED(_001__SimpleNonTransactionalChange.class)
@@ -75,7 +75,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .given(testKit.createBuilder()
+                    .givenBuilder(testKit.createBuilder()
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))
@@ -101,7 +101,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .given(testKit.createBuilder()
+                    .givenBuilder(testKit.createBuilder()
                             .addTargetSystem(new NonTransactionalTargetSystem("salesforce"))
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
@@ -129,7 +129,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .given(testKit.createBuilder()
+                    .givenBuilder(testKit.createBuilder()
                             .addTargetSystem(new NonTransactionalTargetSystem("stripe-api"))
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
@@ -164,7 +164,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .given(testKit.createBuilder().addTargetSystem(targetSystem))
+                    .givenBuilder(testKit.createBuilder().addTargetSystem(targetSystem))
                     .whenRun()
                     .thenExpectException(PipelineExecutionException.class, ex -> {
                         assertTrue(ex.getMessage().contains("Intentional failure"));
@@ -192,7 +192,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .given(testKit.createBuilder()
+                    .givenBuilder(testKit.createBuilder()
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))

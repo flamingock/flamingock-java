@@ -84,7 +84,7 @@ public final class FlamingockTestSupport {
      * @return the {@link GivenStage} for defining initial audit state preconditions
      * @throws NullPointerException if {@code builder} is {@code null}
      */
-    public static GivenStage given(AbstractChangeRunnerBuilder<?, ?> builder) {
+    public static GivenStage givenBuilder(AbstractChangeRunnerBuilder<?, ?> builder) {
         if (builder == null) {
             throw new NullPointerException("builder must not be null");
         }

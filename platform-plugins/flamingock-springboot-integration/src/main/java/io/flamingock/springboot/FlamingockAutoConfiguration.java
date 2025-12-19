@@ -48,7 +48,7 @@ public class FlamingockAutoConfiguration {
     @ConditionalOnExpression("'${flamingock.runner-type:ApplicationRunner}'.toLowerCase().equals('applicationrunner')")
     public ApplicationRunner applicationRunner(RunnerBuilder runnerBuilder,
                                                @Value("${flamingock.autorun:true}") boolean autoRun) {
-        return SpringbootUtil.toApplicationRunner(runnerBuilder.build(), autoRun);
+        return SpringbootUtil.toApplicationRunner(runnerBuilder, autoRun);
     }
 
     @Bean("flamingock-runner")
@@ -56,7 +56,7 @@ public class FlamingockAutoConfiguration {
     @ConditionalOnExpression("'${flamingock.runner-type:null}'.toLowerCase().equals('initializingbean')")
     public InitializingBean initializingBeanRunner(RunnerBuilder runnerBuilder,
                                                    @Value("${flamingock.autorun:true}") boolean autoRun) {
-        return SpringbootUtil.toInitializingBean(runnerBuilder.build(), autoRun);
+        return SpringbootUtil.toInitializingBean(runnerBuilder, autoRun);
     }
 
     @Bean("flamingock-builder")

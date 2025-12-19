@@ -47,7 +47,7 @@ import io.flamingock.support.domain.AuditEntryDefinition;
  *     // ... assertions
  * }</pre>
  *
- * @see FlamingockTestSupport#given(io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder)
+ * @see FlamingockTestSupport#givenBuilder(io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder)
  * @see WhenStage
  * @see AuditEntryDefinition
  */

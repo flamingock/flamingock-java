@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":core:flamingock-core"))
+    implementation(project(":core:flamingock-core"))
 
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
