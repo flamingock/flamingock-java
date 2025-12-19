@@ -21,6 +21,9 @@ import io.flamingock.internal.core.runner.RunnerBuilder;
 public class DummyRunnerBuilder implements RunnerBuilder {
     @Override
     public Runner build() {
-        return null;
+        // Return a no-op runner for testing
+        return () -> {
+            // No-op: just for testing
+        };
     }
 }

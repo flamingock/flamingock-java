@@ -15,98 +15,107 @@
  */
 package io.flamingock.springboot;
 
-import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.core.runner.RunnerBuilder;
-import org.junit.jupiter.api.BeforeEach;
+import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 
 class FlamingockAutoConfigurationTests {
 
-    private static final String PROFILE = "non-cli";   // adjust if Constants.NON_CLI_PROFILE differs
-    private static final String META_INF_PATH = "META-INF/flamingock/metadata.json";
+    private static final String PROFILE = "non-cli";
 
-    /**
-     * Helper that builds a context runner with a custom class-loader
-     * containing the supplied JSON as the metadata file.
-     */
-    private ApplicationContextRunner contextWithJson(String json, @TempDir Path dir)
-            throws IOException {
-
-        ApplicationContextRunner applicationContextRunner = new ApplicationContextRunner()
-                .withConfiguration(AutoConfigurations.of(FlamingockAutoConfiguration.class));
-
-        // Create META-INF/flamingock directory structure
-        if(json != null) {
-            Path metaInfDir = dir.resolve("META-INF/flamingock");
-            Files.createDirectories(metaInfDir);
-            Files.write(metaInfDir.resolve("metadata.json"), json.getBytes(StandardCharsets.UTF_8));            // Build a new class loader that exposes the temp directory
-            URL[] urls = { dir.toUri().toURL() };
-            ClassLoader cl = new URLClassLoader(urls, getClass().getClassLoader());
-            applicationContextRunner = applicationContextRunner.withClassLoader(cl);
-        }
-
-        return applicationContextRunner
+    private ApplicationContextRunner contextRunner() {
+        return new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(FlamingockAutoConfiguration.class))
                 .withUserConfiguration(TestConfiguration.class)
                 .withPropertyValues("spring.profiles.active=" + PROFILE);
     }
 
-    private ApplicationContextRunner contextEmpty() throws IOException {
-        return contextWithJson(null, null);
-    }
-
-    @BeforeEach
-    public void setup() {
-        // restore real supplier so other tests are unaffected
-        OnFlamingockEnabledCondition.restoreMetadataSupplier();
+    @Test
+    void whenModeIsDefault_thenRunnerBeanExistsAndBuilderBeanDoesNot() {
+        // Default is APPLICATION_RUNNER - runner bean exists, builder bean does not
+        contextRunner().run(ctx -> {
+            assertThat(ctx).hasBean("flamingock-runner");
+            assertThat(ctx).doesNotHaveBean("flamingock-builder");
+        });
     }
 
     @Test
-    void runnerBeanRegisteredWhenSetupDefault(@TempDir Path dir) throws IOException {
-        String json = "{\n  \"setup\": \"DEFAULT\"\n}";
-
-        contextWithJson(json, dir).run(ctx ->
-                assertThat(ctx).hasBean("flamingock-runner"));
+    void whenModeIsApplicationRunner_thenRunnerBeanExistsAndBuilderBeanDoesNot() {
+        contextRunner()
+                .withPropertyValues("flamingock.management-mode=APPLICATION_RUNNER")
+                .run(ctx -> {
+                    assertThat(ctx).hasBean("flamingock-runner");
+                    assertThat(ctx).doesNotHaveBean("flamingock-builder");
+                });
     }
 
     @Test
-    void runnerBeanRegisteredWhenSetupAbsent(@TempDir Path dir) throws IOException {
-        String json = "{}";   // no 'setup' key
-
-        contextWithJson(json, dir).run(ctx ->
-                assertThat(ctx).hasBean("flamingock-runner"));
+    void whenModeIsInitializingBean_thenRunnerBeanIsCreated() {
+        // InitializingBean executes immediately during bean creation.
+        // We verify the bean creation was attempted by checking the context fails
+        // with a Flamingock-related error (proving the InitializingBean bean was created and executed).
+        contextRunner()
+                .withPropertyValues("flamingock.management-mode=INITIALIZING_BEAN")
+                .run(ctx -> {
+                    // Context fails because InitializingBean tries to run Flamingock
+                    assertThat(ctx).hasFailed();
+                    // Verify the failure is related to Flamingock execution (FlamingockException)
+                    Throwable failure = ctx.getStartupFailure();
+                    Throwable rootCause = failure;
+                    while (rootCause.getCause() != null) {
+                        rootCause = rootCause.getCause();
+                    }
+                    assertThat(rootCause.getClass().getName()).contains("flamingock");
+                });
     }
 
     @Test
-    void runnerBeanNotRegisteredWhenSetupBuilder() throws IOException {
-        // replace the supplier so the Condition "sees" BUILDER
-        OnFlamingockEnabledCondition.setMetadataSupplier(
-                () -> Optional.of(new FlamingockMetadata(null, "BUILDER", null))
-        );
-
-        contextEmpty().run(ctx -> assertThat(ctx).doesNotHaveBean("flamingock-runner"));
+    void whenModeIsDeferred_thenBuilderBeanExistsAndRunnerBeanDoesNot() {
+        contextRunner()
+                .withPropertyValues("flamingock.management-mode=DEFERRED")
+                .run(ctx -> {
+                    assertThat(ctx).doesNotHaveBean("flamingock-runner");
+                    assertThat(ctx).hasBean("flamingock-builder");
+                });
     }
-    
+
+    @Test
+    void whenModeIsUnmanaged_thenNoBeansExist() {
+        // When UNMANAGED, the entire auto-configuration class should not load
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(FlamingockAutoConfiguration.class))
+                .withPropertyValues(
+                        "spring.profiles.active=" + PROFILE,
+                        "flamingock.management-mode=UNMANAGED"
+                )
+                .run(ctx -> {
+                    assertThat(ctx).doesNotHaveBean(FlamingockAutoConfiguration.class);
+                    assertThat(ctx).doesNotHaveBean("flamingock-runner");
+                    assertThat(ctx).doesNotHaveBean("flamingock-builder");
+                });
+    }
+
     @Configuration
     static class TestConfiguration {
         @Bean
-        public RunnerBuilder flamingockBuilder() {
-            return new DummyRunnerBuilder();
+        public List<TargetSystem> targetSystems() {
+            return new ArrayList<>();
+        }
+
+        @Bean
+        public CommunityAuditStore auditStore() {
+            return mock(CommunityAuditStore.class);
         }
     }
 }

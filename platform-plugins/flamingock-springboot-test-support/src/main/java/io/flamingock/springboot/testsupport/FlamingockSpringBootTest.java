@@ -29,8 +29,8 @@ import java.lang.annotation.Target;
  * Annotation for Flamingock integration tests with Spring Boot.
  *
  * <p>This annotation configures a Spring Boot test context with Flamingock's
- * auto-run disabled ({@code flamingock.autorun=false}), allowing tests to
- * manually control when Flamingock executes.</p>
+ * management mode set to DEFERRED ({@code flamingock.management-mode=DEFERRED}),
+ * allowing tests to manually control when Flamingock executes.</p>
  *
  * <p><strong>Usage:</strong></p>
  * <pre>
@@ -64,7 +64,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@SpringBootTest(properties = "flamingock.autorun=false")
+@SpringBootTest(properties = "flamingock.management-mode=DEFERRED")
 public @interface FlamingockSpringBootTest {
 
     /**
