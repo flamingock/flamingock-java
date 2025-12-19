@@ -16,6 +16,7 @@
 package io.flamingock.springboot;
 
 import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.runner.RunnerBuilder;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
@@ -28,16 +29,17 @@ public final class SpringbootUtil {
     private SpringbootUtil() {
     }
 
-    public static InitializingBean toInitializingBean(Runner runner, boolean autoRun) {
-        return () -> runIfApply(runner, autoRun);
+    public static InitializingBean toInitializingBean(RunnerBuilder runnerBuilder, boolean autoRun) {
+        return () -> runIfApply(runnerBuilder, autoRun);
     }
 
-    public static ApplicationRunner toApplicationRunner(Runner runner, boolean autoRun) {
-        return args -> runIfApply(runner, autoRun);
+    public static ApplicationRunner toApplicationRunner(RunnerBuilder runnerBuilder, boolean autoRun) {
+        return args -> runIfApply(runnerBuilder, autoRun);
     }
 
-    private static void runIfApply(Runner runner, boolean autoRun) {
+    private static void runIfApply(RunnerBuilder runnerBuilder, boolean autoRun) {
         if(autoRun) {
+            Runner runner = runnerBuilder.build();
             runner.run();
         }  else {
             logger.info(
