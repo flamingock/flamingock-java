@@ -42,29 +42,29 @@ class FlamingockAutoConfigurationTests {
     }
 
     @Test
-    void whenModeIsDefault_thenRunnerBeanExistsAndBuilderBeanDoesNot() {
-        // Default is APPLICATION_RUNNER - runner bean exists, builder bean does not
+    void whenModeIsDefault_thenBothBuilderAndRunnerBeansExist() {
+        // Default is APPLICATION_RUNNER - both builder and runner beans exist
         contextRunner().run(ctx -> {
+            assertThat(ctx).hasBean("flamingock-builder");
             assertThat(ctx).hasBean("flamingock-runner");
-            assertThat(ctx).doesNotHaveBean("flamingock-builder");
         });
     }
 
     @Test
-    void whenModeIsApplicationRunner_thenRunnerBeanExistsAndBuilderBeanDoesNot() {
+    void whenModeIsApplicationRunner_thenBothBuilderAndRunnerBeansExist() {
         contextRunner()
                 .withPropertyValues("flamingock.management-mode=APPLICATION_RUNNER")
                 .run(ctx -> {
+                    assertThat(ctx).hasBean("flamingock-builder");
                     assertThat(ctx).hasBean("flamingock-runner");
-                    assertThat(ctx).doesNotHaveBean("flamingock-builder");
                 });
     }
 
     @Test
-    void whenModeIsInitializingBean_thenRunnerBeanIsCreated() {
+    void whenModeIsInitializingBean_thenBothBeansCreatedAndExecutionAttempted() {
         // InitializingBean executes immediately during bean creation.
-        // We verify the bean creation was attempted by checking the context fails
-        // with a Flamingock-related error (proving the InitializingBean bean was created and executed).
+        // Both builder and runner beans are created, but execution fails because
+        // the test context doesn't have all required Flamingock dependencies.
         contextRunner()
                 .withPropertyValues("flamingock.management-mode=INITIALIZING_BEAN")
                 .run(ctx -> {
