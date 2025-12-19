@@ -19,7 +19,6 @@ import io.flamingock.api.targets.TargetSystem;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
 import io.flamingock.internal.core.store.CommunityAuditStore;
-import io.flamingock.internal.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -30,7 +29,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
@@ -56,7 +54,6 @@ public class FlamingockAutoConfiguration {
      * Only created when management-mode is APPLICATION_RUNNER (the default).
      */
     @Bean("flamingock-runner")
-    @Profile(Constants.NON_CLI_PROFILE)
     @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('APPLICATION_RUNNER')")
     public ApplicationRunner applicationRunner(SpringbootProperties configurationProperties,
                                                ApplicationContext springContext,
@@ -73,7 +70,6 @@ public class FlamingockAutoConfiguration {
      * Only created when management-mode is INITIALIZING_BEAN.
      */
     @Bean("flamingock-runner")
-    @Profile(Constants.NON_CLI_PROFILE)
     @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('INITIALIZING_BEAN')")
     public InitializingBean initializingBeanRunner(SpringbootProperties configurationProperties,
                                                    ApplicationContext springContext,
@@ -90,7 +86,6 @@ public class FlamingockAutoConfiguration {
      * Only created when management-mode is DEFERRED.
      */
     @Bean("flamingock-builder")
-    @Profile(Constants.NON_CLI_PROFILE)
     @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('DEFERRED')")
     public AbstractChangeRunnerBuilder<?, ?> flamingockBuilder(SpringbootProperties configurationProperties,
                                                                ApplicationContext springContext,
