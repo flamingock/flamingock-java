@@ -42,7 +42,7 @@ import io.flamingock.support.stages.WhenStage;
  *         FAILED(FailedMigrationChange.class)
  *     )
  *     .whenRun()
- *     .thenExpectAuditSequenceStrict(
+ *     .thenExpectAuditFinalStateSequence(
  *         APPLIED(SchemaV2Change.class)
  *             .withAuthor("dev-team"),
  *         APPLIED(DataMigrationChange.class)

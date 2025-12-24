@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Scope;
  *     void testMigration() {
  *         flamingockTestSupport.givenBuilderFromContext()
  *             .whenRun()
- *             .thenExpectAuditSequenceStrict(APPLIED(MyChange.class))
+ *             .thenExpectAuditFinalStateSequence(APPLIED(MyChange.class))
  *             .verify();
  *     }
  * }

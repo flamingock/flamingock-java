@@ -35,7 +35,7 @@ package io.flamingock.support.validation;
  * <h2>Implementation</h2>
  * <p>Implementations are typically static inner classes within their corresponding validators:</p>
  * <pre>{@code
- * public class AuditSequenceStrictValidator implements SimpleValidator {
+ * public class AuditFinalStateSequenceValidator implements SimpleValidator {
  *     // ... validator implementation
  *
  *     public static class Args implements ValidatorArgs {
@@ -55,7 +55,7 @@ package io.flamingock.support.validation;
  * <h2>Usage in Framework</h2>
  * <p>The framework uses these argument carriers as follows:</p>
  * <ol>
- *   <li>User calls expectation method (e.g., {@code thenExpectAuditSequenceStrict(...)})</li>
+ *   <li>User calls expectation method (e.g., {@code thenExpectAuditFinalStateSequence(...)})</li>
  *   <li>Stage creates an {@code Args} instance and stores it in the validators list</li>
  *   <li>When {@code verify()} is called, the {@link ValidationHandler} constructs actual
  *       validators using {@link ValidatorFactory#getValidator(ValidatorArgs)}</li>

@@ -18,6 +18,7 @@ package io.flamingock.support.validation.impl;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.support.domain.AuditEntryDefinition;
+import io.flamingock.support.stages.ThenStage;
 import io.flamingock.support.validation.SimpleValidator;
 import io.flamingock.support.validation.ValidatorArgs;
 import io.flamingock.support.validation.error.*;
@@ -28,36 +29,66 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Validator that performs strict sequence validation of audit entries.
+ * Validates that the final state sequence of audit entries matches the expected definitions exactly.
  *
- * <p>This validator verifies that the actual audit entries match the expected
- * sequence exactly, both in count and in field values. Checking:</p>
+ * <p>This validator focuses on the <strong>final state</strong> of each change, filtering out
+ * intermediate states like {@code STARTED}. It validates only the states that represent
+ * actual outcomes: {@code APPLIED}, {@code FAILED}, {@code ROLLED_BACK}, {@code ROLLBACK_FAILED}.</p>
+ *
+ * <p><strong>Exact sequence validation:</strong></p>
  * <ul>
- *   <li>Exact count match between expected and actual entries</li>
- *   <li>Strict field-by-field validation for each entry at each index</li>
- *   <li>Order preservation (expected[0] must match actual[0], etc.)</li>
+ *   <li>The number of actual entries must exactly match the number of expected definitions</li>
+ *   <li>Order is preserved: expected[0] must match actual[0], expected[1] must match actual[1], etc.</li>
  * </ul>
+ *
+ * <p>This is not a "contains" validator - if the audit log has 3 changes, you must
+ * provide exactly 3 expected definitions.</p>
+ *
+ * <p><strong>Field validation:</strong></p>
+ * <p>Only fields that are set in the {@link AuditEntryDefinition} are validated. The {@code changeId}
+ * and {@code state} are always compared (they are required). Additional fields depend on how the
+ * definition is constructed:</p>
+ * <ul>
+ *   <li>Class-based factory methods (e.g., {@code APPLIED(MyChange.class)}) auto-extract fields
+ *       from annotations: author, className, methodName, targetSystemId, recoveryStrategy, order, transactional</li>
+ *   <li>String-based factory methods (e.g., {@code APPLIED("change-id")}) only set changeId and state</li>
+ *   <li>Use {@code withXxx()} methods to add or override specific fields to validate</li>
+ *   <li>Fields that are null in the definition are not compared</li>
+ * </ul>
+ *
+ * <p><strong>Example:</strong></p>
+ * <pre>{@code
+ * testSupport.givenBuilderFromContext()
+ *     .whenRun()
+ *     .thenExpectAuditFinalStateSequence(
+ *         APPLIED(CreateUsersChange.class),  // validates fields from annotations
+ *         APPLIED("template-change-id"),     // validates only changeId and state
+ *         FAILED(BrokenChange.class).withErrorTrace("Expected error")  // adds error trace validation
+ *     )
+ *     .verify();
+ * }</pre>
+ *
+ * @see AuditEntryDefinition
+ * @see ThenStage#andExpectAuditFinalStateSequence(AuditEntryDefinition...)
  */
-public class AuditSequenceStrictValidator implements SimpleValidator {
+public class AuditFinalStateSequenceValidator implements SimpleValidator {
 
-    private static final String VALIDATOR_NAME = "Audit Sequence (Strict)";
+    private static final String VALIDATOR_NAME = "Audit Final State Sequence";
 
-    private final AuditReader auditReader;
     private final List<AuditEntryExpectation> expectations;
     private final List<AuditEntry> actualEntries;
     private static final List<AuditEntry.Status> EXCLUDED_STATES = Collections.singletonList(
             AuditEntry.Status.STARTED
     );
 
-    public AuditSequenceStrictValidator(AuditReader auditReader, List<AuditEntryDefinition> definitions) {
-        this.auditReader = auditReader;
+    public AuditFinalStateSequenceValidator(AuditReader auditReader, List<AuditEntryDefinition> definitions) {
         this.expectations = definitions != null
                 ? definitions.stream()
                 .map(AuditEntryExpectation::new)
                 .collect(Collectors.toList())
                 : new ArrayList<>();
 
-       this.actualEntries = auditReader.getAuditHistory().stream()
+        this.actualEntries = auditReader.getAuditHistory().stream()
                 .filter(entry -> !EXCLUDED_STATES.contains(entry.getState()))
                 .sorted()
                 .collect(Collectors.toList());
@@ -66,13 +97,12 @@ public class AuditSequenceStrictValidator implements SimpleValidator {
     /**
      * Internal constructor for direct list initialization (used by tests).
      */
-    AuditSequenceStrictValidator(List<AuditEntryDefinition> expectedDefinitions, List<AuditEntry> actualEntries, AuditReader auditReader) {
+    AuditFinalStateSequenceValidator(List<AuditEntryDefinition> expectedDefinitions, List<AuditEntry> actualEntries) {
         this.expectations = expectedDefinitions != null
                 ? expectedDefinitions.stream()
                 .map(AuditEntryExpectation::new)
                 .collect(Collectors.toList())
                 : new ArrayList<>();
-        this.auditReader = auditReader;
         this.actualEntries = actualEntries != null ? actualEntries : new ArrayList<>();
     }
 

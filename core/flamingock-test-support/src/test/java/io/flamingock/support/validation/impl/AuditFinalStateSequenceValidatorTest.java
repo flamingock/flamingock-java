@@ -38,7 +38,7 @@ import static io.flamingock.support.domain.AuditEntryDefinition.APPLIED;
 import static io.flamingock.support.domain.AuditEntryDefinition.FAILED;
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuditSequenceStrictValidatorTest {
+class AuditFinalStateSequenceValidatorTest {
 
     private List<AuditEntry> actualEntries;
 
@@ -52,7 +52,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator passes when entries match exactly")
+    @DisplayName("AuditFinalStateSequenceValidator passes when entries match exactly")
     void shouldPassValidation_whenEntriesMatchExactly() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
@@ -60,21 +60,21 @@ class AuditSequenceStrictValidatorTest {
                 FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(expectedDefinitions, actualEntries);
         ValidationResult result = validator.validate();
 
         assertTrue(result.isSuccess());
     }
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator fails when counts mismatch")
+    @DisplayName("AuditFinalStateSequenceValidator fails when counts mismatch")
     void shouldFailValidation_whenCountMismatch() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
                 APPLIED("change-2")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(expectedDefinitions, actualEntries);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -85,7 +85,7 @@ class AuditSequenceStrictValidatorTest {
 
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator fails when a field status mismatches")
+    @DisplayName("AuditFinalStateSequenceValidator fails when a field status mismatches")
     void shouldFailValidation_whenStatusMismatch() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
@@ -93,7 +93,7 @@ class AuditSequenceStrictValidatorTest {
                 APPLIED("change-3")  // Expected APPLIED but actual is FAILED
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(expectedDefinitions, actualEntries);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -105,7 +105,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator fails when changeId mismatches")
+    @DisplayName("AuditFinalStateSequenceValidator fails when changeId mismatches")
     void shouldFailValidation_whenChangeIdMismatch() {
         List<AuditEntryDefinition> expectedDefinitions = Arrays.asList(
                 APPLIED("change-1"),
@@ -113,7 +113,7 @@ class AuditSequenceStrictValidatorTest {
                 AuditEntryDefinition.FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntries, null);
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(expectedDefinitions, actualEntries);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -125,7 +125,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator fails when an expected entry is missing (count + missing entry error)")
+    @DisplayName("AuditFinalStateSequenceValidator fails when an expected entry is missing (count + missing entry error)")
     void shouldFailValidation_whenMissingEntry() {
         List<AuditEntry> actualEntriesSubset = Arrays.asList(
                 createAuditEntry("change-1", APPLIED),
@@ -138,7 +138,7 @@ class AuditSequenceStrictValidatorTest {
                 AuditEntryDefinition.FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntriesSubset, null);
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(expectedDefinitions, actualEntriesSubset);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -153,7 +153,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator fails when there is an unexpected actual entry (count + unexpected entry error)")
+    @DisplayName("AuditFinalStateSequenceValidator fails when there is an unexpected actual entry (count + unexpected entry error)")
     void shouldFailValidation_whenUnexpectedEntry() {
         List<AuditEntry> actualEntriesExtra = Arrays.asList(
                 createAuditEntry("change-1", APPLIED),
@@ -168,7 +168,7 @@ class AuditSequenceStrictValidatorTest {
                 AuditEntryDefinition.FAILED("change-3")
         );
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(expectedDefinitions, actualEntriesExtra, null);
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(expectedDefinitions, actualEntriesExtra);
         ValidationResult result = validator.validate();
 
         assertFalse(result.isSuccess());
@@ -183,7 +183,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator passes when optional fields match")
+    @DisplayName("AuditFinalStateSequenceValidator passes when optional fields match")
     void shouldPassValidation_whenOptionalFieldsMatch() {
         AuditEntry actualWithOptionalFields = new AuditEntry(
                 "exec-1",
@@ -215,10 +215,9 @@ class AuditSequenceStrictValidatorTest {
                 .withOrder("1")
                 .withTransactional(true);
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(
                 Collections.singletonList(expectedWithOptionalFields),
-                Collections.singletonList(actualWithOptionalFields),
-                null
+                Collections.singletonList(actualWithOptionalFields)
         );
 
         ValidationResult result = validator.validate();
@@ -227,7 +226,7 @@ class AuditSequenceStrictValidatorTest {
     }
 
     @Test
-    @DisplayName("AuditSequenceStrictValidator fails when an optional field mismatches")
+    @DisplayName("AuditFinalStateSequenceValidator fails when an optional field mismatches")
     void shouldFailValidation_whenOptionalFieldMismatch() {
         AuditEntry actualEntry = new AuditEntry(
                 "exec-1",
@@ -254,10 +253,9 @@ class AuditSequenceStrictValidatorTest {
         AuditEntryDefinition expectedWithDifferentOptional = APPLIED("change-1")
                 .withTargetSystemId("different-target");
 
-        AuditSequenceStrictValidator validator = new AuditSequenceStrictValidator(
+        AuditFinalStateSequenceValidator validator = new AuditFinalStateSequenceValidator(
                 Collections.singletonList(expectedWithDifferentOptional),
-                Collections.singletonList(actualEntry),
-                null
+                Collections.singletonList(actualEntry)
         );
 
         ValidationResult result = validator.validate();

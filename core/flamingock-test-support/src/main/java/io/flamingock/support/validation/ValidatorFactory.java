@@ -17,7 +17,7 @@ package io.flamingock.support.validation;
 
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.support.domain.AuditEntryDefinition;
-import io.flamingock.support.validation.impl.AuditSequenceStrictValidator;
+import io.flamingock.support.validation.impl.AuditFinalStateSequenceValidator;
 import io.flamingock.support.validation.impl.DefaultExceptionValidator;
 
 import java.util.List;
@@ -31,8 +31,8 @@ public class ValidatorFactory {
         this.auditReader = auditReader;
     }
 
-    public Validator getAuditSeqStrictValidator(List<AuditEntryDefinition> definitions) {
-        return new AuditSequenceStrictValidator(auditReader, definitions);
+    public Validator getAuditFinalStateSequenceValidator(List<AuditEntryDefinition> definitions) {
+        return new AuditFinalStateSequenceValidator(auditReader, definitions);
     }
 
     public Validator getExceptionValidator(Class<? extends Throwable> exceptionClass, Consumer<Throwable> exceptionConsumer) {
@@ -40,9 +40,9 @@ public class ValidatorFactory {
     }
 
     public Validator getValidator(ValidatorArgs args) {
-        if (args instanceof AuditSequenceStrictValidator.Args) {
-            AuditSequenceStrictValidator.Args a = (AuditSequenceStrictValidator.Args) args;
-            return new AuditSequenceStrictValidator(auditReader, a.getExpectations());
+        if (args instanceof AuditFinalStateSequenceValidator.Args) {
+            AuditFinalStateSequenceValidator.Args a = (AuditFinalStateSequenceValidator.Args) args;
+            return new AuditFinalStateSequenceValidator(auditReader, a.getExpectations());
         }
 
         if (args instanceof DefaultExceptionValidator.Args) {

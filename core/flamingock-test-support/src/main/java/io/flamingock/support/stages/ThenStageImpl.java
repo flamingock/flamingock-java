@@ -20,7 +20,7 @@ import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.precondition.PreconditionInserter;
 import io.flamingock.support.validation.ValidationHandler;
 import io.flamingock.support.validation.ValidatorArgs;
-import io.flamingock.support.validation.impl.AuditSequenceStrictValidator;
+import io.flamingock.support.validation.impl.AuditFinalStateSequenceValidator;
 import io.flamingock.support.validation.impl.DefaultExceptionValidator;
 
 import java.util.ArrayList;
@@ -39,9 +39,9 @@ final class ThenStageImpl implements ThenStage {
     }
 
     @Override
-    public ThenStage andExpectAuditSequenceStrict(AuditEntryDefinition... definitions) {
+    public ThenStage andExpectAuditFinalStateSequence(AuditEntryDefinition... definitions) {
         List<AuditEntryDefinition> definitionsList = definitions != null ? Arrays.asList(definitions) : Collections.<AuditEntryDefinition>emptyList();
-        validators.add(new AuditSequenceStrictValidator.Args(definitionsList));
+        validators.add(new AuditFinalStateSequenceValidator.Args(definitionsList));
         return this;
     }
 
