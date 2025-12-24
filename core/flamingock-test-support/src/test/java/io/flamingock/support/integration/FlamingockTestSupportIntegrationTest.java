@@ -52,7 +52,7 @@ class FlamingockTestSupportIntegrationTest {
             FlamingockTestSupport
                     .givenBuilder(testKit.createBuilder().addTargetSystem(targetSystem))
                     .whenRun()
-                    .thenExpectAuditSequenceStrict(
+                    .thenExpectAuditFinalStateSequence(
                             APPLIED(_001__SimpleNonTransactionalChange.class)
                     )
                     .verify();
@@ -80,7 +80,7 @@ class FlamingockTestSupportIntegrationTest {
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))
                     .whenRun()
-                    .thenExpectAuditSequenceStrict(
+                    .thenExpectAuditFinalStateSequence(
                             APPLIED(_003__MultiTest1NonTransactionalChange.class),
                             APPLIED(_004__MultiTest2TransactionalChange.class)
                     )
@@ -108,7 +108,7 @@ class FlamingockTestSupportIntegrationTest {
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))
                     .whenRun()
                     .thenExpectException(PipelineExecutionException.class, null)
-                    .andExpectAuditSequenceStrict(
+                    .andExpectAuditFinalStateSequence(
                             FAILED(_006__FailingTransactionalChange.class),
                             ROLLED_BACK(_006__FailingTransactionalChange.class)
                     )
@@ -138,7 +138,7 @@ class FlamingockTestSupportIntegrationTest {
                             APPLIED(_005__SecondRunNonTransactionalChange.class)
                     )
                     .whenRun()
-                    .thenExpectAuditSequenceStrict(
+                    .thenExpectAuditFinalStateSequence(
                             APPLIED(_005__SecondRunNonTransactionalChange.class)
                     )
                     .verify();
@@ -171,7 +171,7 @@ class FlamingockTestSupportIntegrationTest {
                         assertTrue(counter.isExecuted(), "Counter should be executed");
                         assertTrue(counter.isRollbacked(), "Counter should be rolled back");
                     })
-                    .andExpectAuditSequenceStrict(
+                    .andExpectAuditFinalStateSequence(
                             FAILED(_007__SimpleNonTransactionalChangeWithError.class),
                             ROLLED_BACK(_007__SimpleNonTransactionalChangeWithError.class)
                     )
@@ -197,7 +197,7 @@ class FlamingockTestSupportIntegrationTest {
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))
                     .whenRun()
-                    .thenExpectAuditSequenceStrict(
+                    .thenExpectAuditFinalStateSequence(
                             APPLIED(_002__SimpleTransactionalChange.class)
                     )
                     .verify();

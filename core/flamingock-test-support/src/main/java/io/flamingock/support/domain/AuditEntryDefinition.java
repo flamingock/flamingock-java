@@ -81,7 +81,7 @@ import static io.flamingock.internal.common.core.audit.AuditEntry.Status.*;
  *         APPLIED(MigrationV1.class)
  *     )
  *     .whenRun()
- *     .thenExpectAuditSequenceStrict(
+ *     .thenExpectAuditFinalStateSequence(
  *         APPLIED(NewChange.class)
  *     )
  *     .verify();

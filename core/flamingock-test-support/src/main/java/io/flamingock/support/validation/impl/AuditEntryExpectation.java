@@ -30,6 +30,7 @@ import java.util.Objects;
  * against expected definitions. Users should not interact with this class directly;
  * they should use {@link AuditEntryDefinition} instead.</p>
  */
+
 public class AuditEntryExpectation {
 
     private final AuditEntryDefinition definition;

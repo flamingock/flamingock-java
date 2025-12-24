@@ -29,8 +29,8 @@ public class WhenStageImpl implements WhenStage {
     }
 
     @Override
-    public ThenStage thenExpectAuditSequenceStrict(AuditEntryDefinition... definitions) {
-        return new ThenStageImpl(testContext).andExpectAuditSequenceStrict(definitions);
+    public ThenStage thenExpectAuditFinalStateSequence(AuditEntryDefinition... definitions) {
+        return new ThenStageImpl(testContext).andExpectAuditFinalStateSequence(definitions);
     }
 
     @Override

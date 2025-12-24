@@ -38,7 +38,7 @@ import java.util.function.Consumer;
  * <h2>Example</h2>
  * <pre>{@code
  * .whenRun()
- * .thenExpectAuditSequenceStrict(
+ * .thenExpectAuditFinalStateSequence(
  *     AuditEntryDefinition.APPLIED("change-1"),
  *     AuditEntryDefinition.APPLIED("change-2")
  * )
@@ -52,23 +52,24 @@ import java.util.function.Consumer;
 public interface WhenStage {
 
     /**
-     * Defines a strict expectation for the audit entry sequence.
+     * Asserts that the final state sequence of audit entries matches the given definitions exactly.
      *
-     * <p><b>Strict validation</b> means:</p>
-     * <ul>
-     *   <li>The number of actual audit entries must exactly match the number of definitions</li>
-     *   <li>The order of audit entries must exactly match the order of definitions</li>
-     *   <li>Each audit entry is validated against its corresponding definition</li>
-     * </ul>
+     * <p>This validates only <strong>final states</strong> (APPLIED, FAILED, ROLLED_BACK, ROLLBACK_FAILED),
+     * filtering out intermediate states like STARTED. The actual audit log may contain multiple entries
+     * per change (e.g., STARTED then APPLIED), but only the final outcome is validated.</p>
      *
-     * <p>For each {@link AuditEntryDefinition}, only the fields explicitly set via
-     * {@code withXxx()} methods are verified. The change ID and status are always verified.</p>
+     * <p><strong>Exact matching:</strong> The number of definitions must match the number of
+     * final-state entries in the audit log. This is not a subset check.</p>
      *
-     * @param definitions the expected audit entries in exact order
-     * @return the {@link ThenStage} for chaining additional assertions or calling {@code verify()}
+     * <p><strong>Field validation:</strong> Only fields set in each definition are validated.
+     * Use class-based factories (e.g., {@code APPLIED(MyChange.class)}) to auto-extract fields
+     * from annotations, or string-based factories with {@code withXxx()} methods for fine-grained control.</p>
+     *
+     * @param definitions the expected audit entry definitions, in exact order
+     * @return a ThenStage for adding additional expectations or calling verify()
      * @see AuditEntryDefinition
      */
-    ThenStage thenExpectAuditSequenceStrict(AuditEntryDefinition... definitions);
+    ThenStage thenExpectAuditFinalStateSequence(AuditEntryDefinition... definitions);
 
     /**
      * Defines an expectation that the execution should throw a specific exception.

@@ -37,10 +37,10 @@ import java.util.function.Consumer;
  * <h2>Example with Multiple Assertions</h2>
  * <pre>{@code
  * .whenRun()
- * .thenExpectAuditSequenceStrict(
+ * .thenExpectAuditFinalStateSequence(
  *     AuditEntryDefinition.APPLIED("change-1")
  * )
- * .andExpectAuditSequenceStrict(
+ * .andExpectAuditFinalStateSequence(
  *     AuditEntryDefinition.APPLIED("change-2")
  * )
  * .verify();  // Execution and verification happen here
@@ -52,24 +52,23 @@ import java.util.function.Consumer;
 public interface ThenStage {
 
     /**
-     * Adds an additional strict expectation for the audit entry sequence.
+     * Adds an additional expectation that the final state sequence of audit entries matches
+     * the given definitions exactly.
      *
-     * <p>This method has the same semantics as
-     * {@link WhenStage#thenExpectAuditSequenceStrict(AuditEntryDefinition...)}
-     * but allows chaining multiple sequence expectations.</p>
+     * <p>This validates only <strong>final states</strong> (APPLIED, FAILED, ROLLED_BACK, ROLLBACK_FAILED),
+     * filtering out intermediate states like STARTED.</p>
      *
-     * <p><b>Strict validation</b> means:</p>
-     * <ul>
-     *   <li>The number of actual audit entries must exactly match the number of definitions</li>
-     *   <li>The order of audit entries must exactly match the order of definitions</li>
-     *   <li>Each audit entry is validated against its corresponding definition</li>
-     * </ul>
+     * <p><strong>Exact matching:</strong> The number of definitions must match the number of
+     * final-state entries in the audit log. This is not a subset check.</p>
      *
-     * @param definitions the expected audit entries in exact order
+     * <p><strong>Field validation:</strong> Only fields set in each definition are validated.
+     * See {@link AuditEntryDefinition} for details on class-based vs string-based factories.</p>
+     *
+     * @param definitions the expected audit entry definitions, in exact order
      * @return this stage for method chaining
      * @see AuditEntryDefinition
      */
-    ThenStage andExpectAuditSequenceStrict(AuditEntryDefinition... definitions);
+    ThenStage andExpectAuditFinalStateSequence(AuditEntryDefinition... definitions);
 
     /**
      * Adds an expectation that the execution should throw a specific exception.

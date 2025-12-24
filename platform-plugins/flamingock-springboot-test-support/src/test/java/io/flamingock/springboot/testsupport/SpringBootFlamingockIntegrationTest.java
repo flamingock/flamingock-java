@@ -57,7 +57,7 @@ class SpringBootFlamingockIntegrationTest {
         testSupport
                 .givenBuilderFromContext()
                 .whenRun()
-                .thenExpectAuditSequenceStrict(
+                .thenExpectAuditFinalStateSequence(
                         APPLIED(_001__SimpleTestChange.class)
                 )
                 .verify();
