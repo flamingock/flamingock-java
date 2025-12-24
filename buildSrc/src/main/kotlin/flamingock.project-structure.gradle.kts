@@ -9,7 +9,8 @@ val coreProjects = setOf(
     "flamingock-core-commons",
     "flamingock-core-api",
     "flamingock-processor",
-    "flamingock-graalvm"
+    "flamingock-graalvm",
+    "flamingock-test-support"
 )
 
 val cloudProjects = setOf(
@@ -28,7 +29,8 @@ val communityProjects = setOf(
 )
 
 val pluginProjects = setOf(
-    "flamingock-springboot-integration"
+    "flamingock-springboot-integration",
+    "flamingock-springboot-test-support"
 )
 
 val targetSystemProjects = setOf(
