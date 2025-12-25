@@ -66,12 +66,7 @@ final class ThenStageImpl implements ThenStage {
 
         }
 
-        ValidationHandler validationHandler = exception != null
-                ? new ValidationHandler(testContext, validators)
-                : new ValidationHandler(testContext, validators, exception);
-
-        validationHandler.validate();
+        new ValidationHandler(testContext, validators, exception).validate();
         testContext.cleanUp();
-
     }
 }
