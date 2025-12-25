@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * }</pre>
  *
  */
-public class InMemoryAuditStorage {
+class InMemoryAuditStorage {
     
     private final List<AuditEntry> auditEntries = new ArrayList<>();
 

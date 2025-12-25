@@ -16,6 +16,7 @@
 package io.flamingock.springboot.testsupport;
 
 import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
+import io.flamingock.support.FlamingockTestSupport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -52,7 +53,7 @@ import org.springframework.context.annotation.Scope;
  *
  * @see FlamingockSpringBootTest
  * @see FlamingockSpringBootTestSupport
- * @see io.flamingock.support.FlamingockTestSupport
+ * @see FlamingockTestSupport
  * @since 1.0
  */
 @Configuration

@@ -22,7 +22,7 @@ import io.flamingock.internal.core.store.audit.domain.RollbackAuditContextBundle
 import io.flamingock.internal.core.store.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.util.Result;
 
-public class InMemoryAuditWriter implements LifecycleAuditWriter {
+class InMemoryAuditWriter implements LifecycleAuditWriter {
 
     private final InMemoryAuditStorage auditStorage;
 

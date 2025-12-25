@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support;
+package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.support.inmemory.InMemoryAuditPersistence;
-import io.flamingock.support.inmemory.InMemoryAuditStorage;
-import io.flamingock.support.inmemory.InMemoryLockService;
-import io.flamingock.support.inmemory.InMemoryLockStorage;
 
 public class InMemoryAuditStore implements CommunityAuditStore {
     

@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * }</pre>
  *
  */
-public class InMemoryLockStorage {
+class InMemoryLockStorage {
     
     private final Map<LockKey, LockAcquisition> locks = new ConcurrentHashMap<>();
     private final Map<String, Object> metadata = new HashMap<>();

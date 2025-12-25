@@ -20,7 +20,7 @@ import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.support.FlamingockTestSupport;
-import io.flamingock.support.InMemoryFlamingockBuilder;
+import io.flamingock.support.inmemory.InMemoryFlamingockBuilder;
 import io.flamingock.support.integration.changes.*;
 import io.flamingock.support.integration.helpers.Counter;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;

@@ -21,7 +21,7 @@ import io.flamingock.internal.core.store.lock.LockServiceException;
 import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.id.RunnerId;
 
-public class InMemoryLockService implements CommunityLockService {
+class InMemoryLockService implements CommunityLockService {
     
     private final InMemoryLockStorage lockStorage;
     private final RunnerId instanceId;

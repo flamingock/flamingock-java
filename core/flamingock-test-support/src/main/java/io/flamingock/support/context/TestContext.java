@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.builder.BuilderAccessor;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.support.domain.AuditEntryDefinition;
-import io.flamingock.support.InMemoryAuditStore;
+import io.flamingock.support.inmemory.InMemoryAuditStore;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,6 +78,8 @@ public class TestContext {
 
     /**
      * Returns the change runner by building it from the builder.
+     *
+     * @return the built runner ready for execution
      */
     public Runner build() {
         return builderAccessor.build();

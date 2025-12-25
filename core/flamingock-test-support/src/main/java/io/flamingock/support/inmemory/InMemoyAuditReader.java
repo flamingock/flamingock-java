@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.audit.AuditReader;
 
 import java.util.List;
 
-public class InMemoyAuditReader implements AuditReader {
+class InMemoyAuditReader implements AuditReader {
 
     private final InMemoryAuditStorage auditStorage;
 

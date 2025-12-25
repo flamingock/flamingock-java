@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support;
+package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.builder.CommunityChangeRunnerBuilder;

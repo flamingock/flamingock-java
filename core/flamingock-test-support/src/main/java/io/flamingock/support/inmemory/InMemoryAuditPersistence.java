@@ -21,7 +21,7 @@ import io.flamingock.internal.util.Result;
 
 import java.util.List;
 
-public class InMemoryAuditPersistence implements CommunityAuditPersistence {
+class InMemoryAuditPersistence implements CommunityAuditPersistence {
     
     private final InMemoryAuditWriter auditWriter;
     private final InMemoyAuditReader auditReader;
