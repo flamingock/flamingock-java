@@ -15,28 +15,28 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.plan.community.CommunityExecutionPlanner;
-import io.flamingock.internal.core.store.AuditStore;
-import io.flamingock.internal.core.store.CommunityAuditStore;
-import io.flamingock.internal.core.configuration.core.CoreConfiguration;
+import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurator;
-import io.flamingock.internal.common.core.context.Context;
+import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
+import io.flamingock.internal.core.plan.community.CommunityExecutionPlanner;
 import io.flamingock.internal.core.plugin.PluginManager;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class CommunityChangeRunnerBuilder
         extends AbstractChangeRunnerBuilder<CommunityAuditStore, CommunityChangeRunnerBuilder>
-        implements CommunityConfigurator<CommunityChangeRunnerBuilder> {
+        implements CommunityConfigurator<CommunityChangeRunnerBuilder>,
+        AuditStoreReceiver<CommunityChangeRunnerBuilder> {
 
     private final CommunityConfiguration communityConfiguration;
 
 
     public CommunityChangeRunnerBuilder(CoreConfiguration coreConfiguration,
-                                           CommunityConfiguration communityConfiguration,
-                                           Context dependencyInjectableContext,
-                                           PluginManager pluginManager) {
+                                        CommunityConfiguration communityConfiguration,
+                                        Context dependencyInjectableContext,
+                                        PluginManager pluginManager) {
         super(coreConfiguration, dependencyInjectableContext, pluginManager);
         this.communityConfiguration = communityConfiguration;
     }
@@ -72,6 +72,7 @@ public class CommunityChangeRunnerBuilder
                 .build();
     }
 
+    @Override
     public CommunityChangeRunnerBuilder setAuditStore(CommunityAuditStore auditStore) {
         this.auditStore = auditStore;
         return this;

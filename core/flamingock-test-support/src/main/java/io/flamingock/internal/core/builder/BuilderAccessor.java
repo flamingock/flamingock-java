@@ -17,6 +17,7 @@ package io.flamingock.internal.core.builder;
 
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 
 public class BuilderAccessor {
 
@@ -35,4 +36,12 @@ public class BuilderAccessor {
     }
 
 
+    public void overrideAuditStore(CommunityAuditStore auditStore) {
+        if(!(builder instanceof AuditStoreReceiver)) {
+            String message = String.format("Builder of type[%s] does not allow AuditStore override operation", builder.getClass().getSimpleName());
+            throw new IllegalArgumentException(message);
+        }
+
+        ((AuditStoreReceiver<?>)builder).setAuditStore(auditStore);
+    }
 }
