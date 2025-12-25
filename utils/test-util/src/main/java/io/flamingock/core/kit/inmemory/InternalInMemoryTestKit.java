@@ -43,24 +43,24 @@ import io.flamingock.core.kit.lock.LockTestHelper;
  * <p><strong>For other storage implementations:</strong> Use this as a reference
  * implementation when creating TestKits for MongoDB, DynamoDB, etc.</p>
  */
-public class InMemoryTestKit implements TestKit {
+public class InternalInMemoryTestKit implements TestKit {
     
-    private final InMemoryAuditStorage auditStorage;
-    private final InMemoryLockStorage lockStorage;
+    private final InternalInMemoryAuditStorage auditStorage;
+    private final InternalInMemoryLockStorage lockStorage;
     private final AuditTestHelper auditHelper;
     private final LockTestHelper lockHelper;
 
-    public static InMemoryTestKit create() {
-        InMemoryAuditStorage auditStorage = new InMemoryAuditStorage();
-        InMemoryLockStorage lockStorage = new InMemoryLockStorage();
-        return new InMemoryTestKit(auditStorage, lockStorage);
+    public static InternalInMemoryTestKit create() {
+        InternalInMemoryAuditStorage auditStorage = new InternalInMemoryAuditStorage();
+        InternalInMemoryLockStorage lockStorage = new InternalInMemoryLockStorage();
+        return new InternalInMemoryTestKit(auditStorage, lockStorage);
     }
 
-    public static InMemoryTestKit create(InMemoryAuditStorage auditStorage, InMemoryLockStorage lockStorage) {
-        return new InMemoryTestKit(auditStorage, lockStorage);
+    public static InternalInMemoryTestKit create(InternalInMemoryAuditStorage auditStorage, InternalInMemoryLockStorage lockStorage) {
+        return new InternalInMemoryTestKit(auditStorage, lockStorage);
     }
     
-    private InMemoryTestKit(InMemoryAuditStorage auditStorage, InMemoryLockStorage lockStorage) {
+    private InternalInMemoryTestKit(InternalInMemoryAuditStorage auditStorage, InternalInMemoryLockStorage lockStorage) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
         
@@ -71,7 +71,7 @@ public class InMemoryTestKit implements TestKit {
     
     @Override
     public TestFlamingockBuilder createBuilder() {
-        InMemoryTestAuditStore auditStore = new InMemoryTestAuditStore(auditStorage, lockStorage);
+        InternalInMemoryTestAuditStore auditStore = new InternalInMemoryTestAuditStore(auditStorage, lockStorage);
         return createBuilderWithAuditStore(auditStore);
     }
     
@@ -91,11 +91,11 @@ public class InMemoryTestKit implements TestKit {
         lockStorage.clear();
     }
 
-    public InMemoryAuditStorage getAuditStorage() {
+    public InternalInMemoryAuditStorage getAuditStorage() {
         return auditStorage;
     }
 
-    public InMemoryLockStorage getLockStorage() {
+    public InternalInMemoryLockStorage getLockStorage() {
         return lockStorage;
     }
 

@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.builder;
+package io.flamingock.support.inmemory;
 
-import io.flamingock.internal.core.runner.Runner;
-import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.audit.AuditReader;
 
-public class BuilderAccessor {
+import java.util.List;
 
-    private AbstractChangeRunnerBuilder<?, ?> builder;
+public class InMemoyAuditReader implements AuditReader {
 
-    public BuilderAccessor(AbstractChangeRunnerBuilder<?,?> builder) {
-        this.builder = builder;
+    private final InMemoryAuditStorage auditStorage;
+
+    public InMemoyAuditReader(InMemoryAuditStorage auditStorage) {
+        this.auditStorage = auditStorage;
     }
 
-    public AuditStore<?> getAuditStore(){
-        return builder.auditStore;
-    }
 
-    public Runner build() {
-        return builder.build();
+    @Override
+    public List<AuditEntry> getAuditHistory() {
+        return auditStorage.getAuditEntries();
     }
-
 
 }

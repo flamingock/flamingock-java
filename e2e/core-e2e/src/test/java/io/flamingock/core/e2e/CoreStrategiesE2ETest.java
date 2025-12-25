@@ -20,7 +20,7 @@ import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.e2e.changes.*;
 import io.flamingock.core.e2e.helpers.Counter;
 import io.flamingock.core.kit.audit.AuditTestHelper;
-import io.flamingock.core.kit.inmemory.InMemoryTestKit;
+import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -47,7 +47,7 @@ class CoreStrategiesE2ETest {
     @DisplayName("Should execute non-transactional change using NonTx strategy with complete audit flow")
     void testNonTransactionalChangeExecution() {
         // Given - Create isolated test kit with domain-separated helpers
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -81,7 +81,7 @@ class CoreStrategiesE2ETest {
     @DisplayName("Should execute transactional change using SimpleTx/SharedTx strategy with complete audit flow")
     void testTransactionalChangeExecution() {
         // Given - Create isolated test kit
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -112,7 +112,7 @@ class CoreStrategiesE2ETest {
     @DisplayName("Should execute multiple changes with correct audit sequence")
     void testMultipleChangesExecution() {
         // Given - Create isolated test kit
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -144,7 +144,7 @@ class CoreStrategiesE2ETest {
     @DisplayName("Should handle failing transactional change with proper audit and rollback")
     void testFailingTransactionalChangeWithRollback() {
         // Given - Create isolated test kit
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -178,7 +178,7 @@ class CoreStrategiesE2ETest {
     @DisplayName("Should handle already-applied changes correctly on second run")
     void testAlreadyAppliedChangesSkipping() {
         // Given - Create test kit with persistent storage
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
@@ -206,7 +206,7 @@ class CoreStrategiesE2ETest {
 
             // Second execution - create new kit using SAME storage to simulate persistence
             // but avoid potential builder state issues
-            InMemoryTestKit secondRunKit = InMemoryTestKit.create(
+            InternalInMemoryTestKit secondRunKit = InternalInMemoryTestKit.create(
                     testKit.getAuditStorage(),
                     testKit.getLockStorage()
             );
@@ -229,7 +229,7 @@ class CoreStrategiesE2ETest {
     @Test
     @DisplayName("Should inject dependencies in rollback for NON-TX change")
     void testDependencyInjectionInRollbackForNonTxChange() {
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         Counter counter = new Counter();

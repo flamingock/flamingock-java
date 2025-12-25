@@ -22,12 +22,12 @@ import io.flamingock.internal.core.store.lock.LockKey;
 import io.flamingock.internal.core.store.lock.LockServiceException;
 import io.flamingock.internal.util.id.RunnerId;
 
-public class InMemoryLockService implements CommunityLockService {
+public class InternalInMemoryLockService implements CommunityLockService {
     
     private final LockStorage lockStorage;
     private final RunnerId instanceId;
     
-    public InMemoryLockService(LockStorage lockStorage, RunnerId instanceId) {
+    public InternalInMemoryLockService(LockStorage lockStorage, RunnerId instanceId) {
         this.lockStorage = lockStorage;
         this.instanceId = instanceId;
     }

@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.builder;
 
 import io.flamingock.internal.core.plan.community.CommunityExecutionPlanner;
+import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
@@ -37,6 +38,15 @@ public class CommunityChangeRunnerBuilder
                                            Context dependencyInjectableContext,
                                            PluginManager pluginManager) {
         super(coreConfiguration, dependencyInjectableContext, pluginManager);
+        this.communityConfiguration = communityConfiguration;
+    }
+
+    public CommunityChangeRunnerBuilder(CoreConfiguration coreConfiguration,
+                                        CommunityConfiguration communityConfiguration,
+                                        Context dependencyInjectableContext,
+                                        PluginManager pluginManager,
+                                        CommunityAuditStore auditStore) {
+        super(coreConfiguration, dependencyInjectableContext, pluginManager, auditStore);
         this.communityConfiguration = communityConfiguration;
     }
 

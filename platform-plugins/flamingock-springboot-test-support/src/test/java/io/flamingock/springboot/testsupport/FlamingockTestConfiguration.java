@@ -16,9 +16,9 @@
 package io.flamingock.springboot.testsupport;
 
 import io.flamingock.api.targets.TargetSystem;
-import io.flamingock.core.kit.inmemory.InMemoryAuditStorage;
-import io.flamingock.core.kit.inmemory.InMemoryLockStorage;
-import io.flamingock.core.kit.inmemory.InMemoryTestAuditStore;
+import io.flamingock.core.kit.inmemory.InternalInMemoryAuditStorage;
+import io.flamingock.core.kit.inmemory.InternalInMemoryLockStorage;
+import io.flamingock.core.kit.inmemory.InternalInMemoryTestAuditStore;
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.springframework.context.annotation.Bean;
@@ -32,9 +32,9 @@ public class FlamingockTestConfiguration {
 
     @Bean
     public CommunityAuditStore auditStore() {
-        InMemoryAuditStorage auditStorage = new InMemoryAuditStorage();
-        InMemoryLockStorage lockStorage = new InMemoryLockStorage();
-        return new InMemoryTestAuditStore(auditStorage, lockStorage);
+        InternalInMemoryAuditStorage auditStorage = new InternalInMemoryAuditStorage();
+        InternalInMemoryLockStorage lockStorage = new InternalInMemoryLockStorage();
+        return new InternalInMemoryTestAuditStore(auditStorage, lockStorage);
     }
 
     @Bean

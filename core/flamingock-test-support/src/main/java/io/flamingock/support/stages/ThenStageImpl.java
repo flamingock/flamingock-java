@@ -15,6 +15,7 @@
  */
 package io.flamingock.support.stages;
 
+import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.support.context.TestContext;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.precondition.PreconditionInserter;
@@ -53,19 +54,24 @@ final class ThenStageImpl implements ThenStage {
 
     @Override
     public void verify() throws AssertionError {
-        ValidationHandler validationHandler;
+        Throwable exception = null;
         try {
-            testContext.run();
-            validationHandler = new ValidationHandler(testContext, validators);
+            Runner runner = testContext.build();
+            PreconditionInserter preconditionInserter = new PreconditionInserter(testContext.getAuditWriter());
+            preconditionInserter.insert(testContext.getPreconditions());
+            runner.run();
 
         } catch (Throwable actualException) {
-            validationHandler = new ValidationHandler(testContext, validators, actualException);
+            exception = actualException;
 
         }
 
-        validationHandler.validate();
+        ValidationHandler validationHandler = exception != null
+                ? new ValidationHandler(testContext, validators)
+                : new ValidationHandler(testContext, validators, exception);
 
-        PreconditionInserter preconditionInserter = new PreconditionInserter(testContext.getAuditWriter());
-        preconditionInserter.insert(testContext.getPreconditions());
+        validationHandler.validate();
+        testContext.cleanUp();
+
     }
 }
