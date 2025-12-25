@@ -17,10 +17,10 @@ package io.flamingock.support.integration;
 
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.core.kit.inmemory.InMemoryTestKit;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.support.FlamingockTestSupport;
+import io.flamingock.support.inmemory.InMemoryFlamingockBuilder;
 import io.flamingock.support.integration.changes.*;
 import io.flamingock.support.integration.helpers.Counter;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
@@ -39,7 +39,6 @@ class FlamingockTestSupportIntegrationTest {
     @Test
     @DisplayName("Should execute non-transactional change")
     void shouldExecuteNonTransactionalChange() {
-        InMemoryTestKit testKit = InMemoryTestKit.create();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
@@ -50,21 +49,18 @@ class FlamingockTestSupportIntegrationTest {
             NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka");
 
             FlamingockTestSupport
-                    .givenBuilder(testKit.createBuilder().addTargetSystem(targetSystem))
+                    .givenBuilder(InMemoryFlamingockBuilder.create().addTargetSystem(targetSystem))
                     .whenRun()
                     .thenExpectAuditFinalStateSequence(
                             APPLIED(_001__SimpleNonTransactionalChange.class)
                     )
                     .verify();
-        } finally {
-            testKit.cleanUp();
         }
     }
 
     @Test
     @DisplayName("Should verify multiple changes execute in correct sequence with complete audit flow")
     void shouldVerifyMultipleChangesInSequence() {
-        InMemoryTestKit testKit = InMemoryTestKit.create();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
@@ -75,7 +71,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .givenBuilder(testKit.createBuilder()
+                    .givenBuilder(InMemoryFlamingockBuilder.create()
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))
@@ -91,7 +87,6 @@ class FlamingockTestSupportIntegrationTest {
     @Test
     @DisplayName("Should verify failing transactional change triggers rollback with correct audit trail")
     void shouldVerifyFailingTransactionalChangeTriggersRollback() {
-        InMemoryTestKit testKit = InMemoryTestKit.create();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
@@ -101,7 +96,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .givenBuilder(testKit.createBuilder()
+                    .givenBuilder(InMemoryFlamingockBuilder.create()
                             .addTargetSystem(new NonTransactionalTargetSystem("salesforce"))
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
@@ -119,7 +114,6 @@ class FlamingockTestSupportIntegrationTest {
     @Test
     @DisplayName("Should verify already-applied changes are skipped on subsequent runs")
     void shouldVerifyAlreadyAppliedChangesAreSkipped() {
-        InMemoryTestKit testKit = InMemoryTestKit.create();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
@@ -129,7 +123,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .givenBuilder(testKit.createBuilder()
+                    .givenBuilder(InMemoryFlamingockBuilder.create()
                             .addTargetSystem(new NonTransactionalTargetSystem("stripe-api"))
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
@@ -148,7 +142,6 @@ class FlamingockTestSupportIntegrationTest {
     @Test
     @DisplayName("Should verify dependency injection works correctly in rollback for non-transactional changes")
     void shouldVerifyDependencyInjectionInRollbackForNonTransactionalChanges() {
-        InMemoryTestKit testKit = InMemoryTestKit.create();
         Counter counter = new Counter();
 
         NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka")
@@ -164,7 +157,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .givenBuilder(testKit.createBuilder().addTargetSystem(targetSystem))
+                    .givenBuilder(InMemoryFlamingockBuilder.create().addTargetSystem(targetSystem))
                     .whenRun()
                     .thenExpectException(PipelineExecutionException.class, ex -> {
                         assertTrue(ex.getMessage().contains("Intentional failure"));
@@ -182,7 +175,6 @@ class FlamingockTestSupportIntegrationTest {
     @Test
     @DisplayName("Should verify transactional change executes successfully with correct audit entries")
     void shouldVerifyTransactionalChangeExecutesSuccessfully() {
-        InMemoryTestKit testKit = InMemoryTestKit.create();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
@@ -192,7 +184,7 @@ class FlamingockTestSupportIntegrationTest {
             );
 
             FlamingockTestSupport
-                    .givenBuilder(testKit.createBuilder()
+                    .givenBuilder(InMemoryFlamingockBuilder.create()
                             .addTargetSystem(new NonTransactionalTargetSystem("okta"))
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))

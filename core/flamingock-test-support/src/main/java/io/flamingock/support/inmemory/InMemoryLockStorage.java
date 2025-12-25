@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.core.kit.inmemory;
+package io.flamingock.support.inmemory;
 
-import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.internal.core.store.lock.LockAcquisition;
 import io.flamingock.internal.core.store.lock.LockKey;
 
@@ -36,11 +35,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * InMemoryLockStorage storage = new InMemoryLockStorage();
  * LockTestHelper helper = new LockTestHelper(storage);
  * }</pre>
- * 
- * <p><strong>For other storage implementations:</strong> Use this as a reference
- * when implementing LockStorage for MongoDB, DynamoDB, etc.</p>
+ *
  */
-public class InMemoryLockStorage implements LockStorage {
+class InMemoryLockStorage {
     
     private final Map<LockKey, LockAcquisition> locks = new ConcurrentHashMap<>();
     private final Map<String, Object> metadata = new HashMap<>();

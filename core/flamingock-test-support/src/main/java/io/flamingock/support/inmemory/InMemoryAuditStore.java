@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.core.kit.inmemory;
+package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.id.RunnerId;
 
-public class InMemoryTestAuditStore implements CommunityAuditStore {
+public class InMemoryAuditStore implements CommunityAuditStore {
     
     private final InMemoryAuditStorage auditStorage;
     private final InMemoryLockStorage lockStorage;
-    private InMemoryTestAuditPersistence persistence;
+    private InMemoryAuditPersistence persistence;
     private RunnerId runnerId;
 
-    public InMemoryTestAuditStore(InMemoryAuditStorage auditStorage, InMemoryLockStorage lockStorage) {
-        this.auditStorage = auditStorage;
-        this.lockStorage = lockStorage;
+    public static InMemoryAuditStore create() {
+        return new InMemoryAuditStore();
+    }
+
+    private InMemoryAuditStore() {
+        this.auditStorage = new InMemoryAuditStorage();
+        this.lockStorage = new InMemoryLockStorage();
 
     }
     
@@ -38,12 +42,12 @@ public class InMemoryTestAuditStore implements CommunityAuditStore {
         // Extract required components from context
         runnerId = contextResolver.getRequiredDependencyValue(RunnerId.class);
         // Create the test audit persistence with domain-separated storage
-        this.persistence = new InMemoryTestAuditPersistence(auditStorage);
+        this.persistence = new InMemoryAuditPersistence(auditStorage);
     }
 
     
     @Override
-    public InMemoryTestAuditPersistence getPersistence() {
+    public InMemoryAuditPersistence getPersistence() {
         if (persistence == null) {
             throw new IllegalStateException("AuditStore not initialized - call initialize first");
         }
@@ -53,5 +57,10 @@ public class InMemoryTestAuditStore implements CommunityAuditStore {
     @Override
     public CommunityLockService getLockService() {
         return new InMemoryLockService(lockStorage, runnerId);
+    }
+
+    public void cleanUp() {
+        auditStorage.clear();
+        lockStorage.clear();
     }
 }

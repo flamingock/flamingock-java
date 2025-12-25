@@ -18,7 +18,9 @@ package io.flamingock.support.context;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.builder.BuilderAccessor;
+import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.support.domain.AuditEntryDefinition;
+import io.flamingock.support.inmemory.InMemoryAuditStore;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,10 +77,12 @@ public class TestContext {
     }
 
     /**
-     * Runs the change runner by building and executing it.
+     * Returns the change runner by building it from the builder.
+     *
+     * @return the built runner ready for execution
      */
-    public void run() {
-        builderAccessor.run();
+    public Runner build() {
+        return builderAccessor.build();
     }
 
     /**
@@ -88,5 +92,11 @@ public class TestContext {
      */
     public List<AuditEntryDefinition> getPreconditions() {
         return Collections.unmodifiableList(preconditions);
+    }
+
+    public void cleanUp() {
+        if(builderAccessor.getAuditStore() instanceof InMemoryAuditStore) {
+            ((InMemoryAuditStore)builderAccessor.getAuditStore()).cleanUp();
+        }
     }
 }

@@ -21,7 +21,7 @@ import io.flamingock.core.e2e.changes._008__TargetSystemManagerInjectionChange;
 import io.flamingock.core.e2e.changes._009__TargetSystemIdInjectionChange;
 import io.flamingock.core.e2e.helpers.Counter;
 import io.flamingock.core.kit.audit.AuditTestHelper;
-import io.flamingock.core.kit.inmemory.InMemoryTestKit;
+import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.core.targets.TargetSystemManager;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
@@ -45,7 +45,7 @@ class BuilderE2ETest {
     @DisplayName("Should inject TargetSystemManager as dependency in change")
     void shouldInjectTargetSystemManagerInChange() {
         // Given - Create isolated test kit with domain-separated helpers
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         Counter counter = new Counter();
@@ -84,7 +84,7 @@ class BuilderE2ETest {
     @DisplayName("Should inject target system ID as dependency in change via @Named annotation")
     void shouldInjectTargetSystemIdInChange() {
         // Given - Create isolated test kit with domain-separated helpers
-        InMemoryTestKit testKit = InMemoryTestKit.create();
+        InternalInMemoryTestKit testKit = InternalInMemoryTestKit.create();
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         Counter counter = new Counter();

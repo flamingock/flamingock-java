@@ -16,6 +16,7 @@
 package io.flamingock.support.stages;
 
 import io.flamingock.internal.core.builder.BuilderAccessor;
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.support.context.TestContext;
 import io.flamingock.support.domain.AuditEntryDefinition;
 
@@ -41,17 +42,15 @@ public class GivenStageImpl implements GivenStage {
     }
 
     @Override
+    public GivenStage andOverrideAuditStore(CommunityAuditStore auditStore) {
+        builderAccessor.overrideAuditStore(auditStore);
+        return this;
+    }
+
+    @Override
     public WhenStage whenRun() {
         TestContext testContext = new TestContext(builderAccessor, existingAudit);
         return new WhenStageImpl(testContext);
     }
 
-    /**
-     * Returns the list of existing audit definitions.
-     *
-     * @return the existing audit definitions
-     */
-    public List<AuditEntryDefinition> getExistingAudit() {
-        return existingAudit;
-    }
 }

@@ -23,7 +23,7 @@ import io.flamingock.core.e2e.changes._001__SimpleNonTransactionalChange;
 import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.core.kit.audit.AuditTestHelper;
-import io.flamingock.core.kit.inmemory.InMemoryTestKit;
+import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -62,12 +62,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class RecoveryE2ETest {
 
-    private InMemoryTestKit testKit;
+    private InternalInMemoryTestKit testKit;
     private AuditTestHelper auditHelper;
 
     @BeforeEach
     void setUp() {
-        testKit = InMemoryTestKit.create();
+        testKit = InternalInMemoryTestKit.create();
         auditHelper = testKit.getAuditHelper();
     }
 

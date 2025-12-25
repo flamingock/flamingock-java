@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * <p><strong>For other storage implementations:</strong> Use this as a reference
  * when implementing AuditStorage for MongoDB, DynamoDB, etc.</p>
  */
-public class InMemoryAuditStorage implements AuditStorage {
+public class InternalInMemoryAuditStorage implements AuditStorage {
     
     private final List<AuditEntry> auditEntries = new ArrayList<>();
 

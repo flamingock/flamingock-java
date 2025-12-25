@@ -15,6 +15,7 @@
  */
 package io.flamingock.support.stages;
 
+import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.support.FlamingockTestSupport;
 import io.flamingock.support.domain.AuditEntryDefinition;
 
@@ -71,6 +72,33 @@ public interface GivenStage {
      * @see AuditEntryDefinition
      */
     GivenStage andExistingAudit(AuditEntryDefinition... definitions);
+
+    /**
+     * Overrides the audit store configured in the builder with a custom one.
+     *
+     * <p>Use this method when you need to use a different audit store than the one
+     * configured in the Flamingock builder. This is particularly useful for:</p>
+     * <ul>
+     *   <li>Testing with an in-memory audit store for isolation</li>
+     *   <li>Replacing a production audit store with a test-specific implementation</li>
+     * </ul>
+     *
+     * <h3>Example</h3>
+     * <pre>
+     * CommunityAuditStore testAuditStore = InMemoryAuditStore.create();
+     *
+     * FlamingockTestSupport.givenBuilder(builder)
+     *     .andOverrideAuditStore(testAuditStore)
+     *     .whenRun()
+     *     .thenExpectAuditFinalStateSequence(APPLIED(MyChange.class))
+     *     .verify();
+     * </pre>
+     *
+     * @param auditStore the audit store to use instead of the one configured in the builder
+     * @return this stage for method chaining
+     * @see CommunityAuditStore
+     */
+    GivenStage andOverrideAuditStore(CommunityAuditStore auditStore);
 
     /**
      * Completes the setup phase and transitions to the assertion phase.

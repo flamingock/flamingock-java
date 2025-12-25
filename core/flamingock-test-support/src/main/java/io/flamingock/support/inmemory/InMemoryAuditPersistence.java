@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.core.kit.inmemory;
+package io.flamingock.support.inmemory;
 
-import io.flamingock.core.kit.audit.AuditStorage;
-import io.flamingock.core.kit.audit.TestAuditReader;
-import io.flamingock.core.kit.audit.TestAuditWriter;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 
 import java.util.List;
 
-public class InMemoryTestAuditPersistence implements CommunityAuditPersistence {
+class InMemoryAuditPersistence implements CommunityAuditPersistence {
     
-    private final TestAuditWriter auditWriter;
-    private final TestAuditReader auditReader;
+    private final InMemoryAuditWriter auditWriter;
+    private final InMemoyAuditReader auditReader;
     
-    public InMemoryTestAuditPersistence(AuditStorage auditStorage) {
-        this.auditWriter = new TestAuditWriter(auditStorage);
-        this.auditReader = new TestAuditReader(auditStorage);
+    public InMemoryAuditPersistence(InMemoryAuditStorage auditStorage) {
+        this.auditWriter = new InMemoryAuditWriter(auditStorage);
+        this.auditReader = new InMemoyAuditReader(auditStorage);
     }
 
     @Override
