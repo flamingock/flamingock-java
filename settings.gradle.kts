@@ -93,6 +93,11 @@ project(":core:target-systems:nontransactional-target-system").projectDir =
     file("core/target-systems/nontransactional-target-system")
 project(":core:target-systems:nontransactional-target-system").name = "nontransactional-target-system"
 
+include("core:target-systems:mongodb-target-system-api")
+project(":core:target-systems:mongodb-target-system-api").projectDir =
+    file("core/target-systems/mongodb-target-system-api")
+project(":core:target-systems:mongodb-target-system-api").name = "mongodb-target-system-api"
+
 include("core:target-systems:mongodb-sync-target-system")
 project(":core:target-systems:mongodb-sync-target-system").projectDir =
     file("core/target-systems/mongodb-sync-target-system")
