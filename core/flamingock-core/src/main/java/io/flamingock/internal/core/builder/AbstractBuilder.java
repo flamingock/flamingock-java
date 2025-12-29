@@ -82,9 +82,9 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
     protected abstract HOLDER getSelf();
 
     protected void configureStoreAndTargetSystem(PriorityContext dependencyContext) {
-        auditStore.initialize(dependencyContext);
         //remove this, targetSystem should be mandatory
         targetSystemManager.initialize(dependencyContext);
+        auditStore.initialize(dependencyContext);
     }
 
     protected AuditPersistence getAuditPersistence(PriorityContext hierarchicalContext) {

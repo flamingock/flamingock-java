@@ -40,7 +40,6 @@ import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONG
 
 public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> implements MongoDBTargetSystem {
 
-    private final MongoDBSyncDatabaseAccesor databaseAccesor;
     private final MongoClient mongoClient;
     private final String databaseName;
     private MongoDatabase database;
@@ -54,7 +53,6 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
         super(id);
         this.mongoClient = mongoClient;
         this.databaseName = databaseName;
-        this.databaseAccesor = new MongoDBSyncDatabaseAccesor(mongoClient, databaseName);
     }
 
     public MongoDBSyncTargetSystem withReadConcern(ReadConcern readConcern) {
@@ -78,7 +76,10 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
 
     @Override
     public MongoDatabase getMongoDatabase() {
-        return databaseAccesor.getDatabase();
+        if (mongoClient == null || databaseName == null || databaseName.isEmpty()) {
+            throw new FlamingockException("TargetSystem is not initialized. The 'mongoClient' instance and 'databaseName' property are required.");
+        }
+        return mongoClient.getDatabase(databaseName);
     }
 
     public String getDatabaseName() {

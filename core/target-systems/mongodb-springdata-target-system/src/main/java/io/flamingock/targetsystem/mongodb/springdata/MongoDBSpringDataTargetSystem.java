@@ -40,7 +40,6 @@ import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONG
 public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<MongoDBSpringDataTargetSystem>
         implements MongoDBTargetSystem {
 
-    private final MongoDBSpringDataDatabaseAccesor databaseAccesor;
     private final MongoTemplate mongoTemplate;
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
     private ReadConcern readConcern = ReadConcern.MAJORITY;
@@ -51,7 +50,6 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
     public MongoDBSpringDataTargetSystem(String id, MongoTemplate mongoTemplate) {
         super(id);
         this.mongoTemplate = mongoTemplate;
-        this.databaseAccesor = new MongoDBSpringDataDatabaseAccesor(mongoTemplate);
     }
 
     public MongoDBSpringDataTargetSystem withReadConcern(ReadConcern readConcern) {
@@ -87,7 +85,10 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
 
     @Override
     public MongoDatabase getMongoDatabase() {
-        return databaseAccesor.getDatabase();
+        if (mongoTemplate == null) {
+            throw new FlamingockException("TargetSystem is not initialized. The 'mongoTemplate' instance is required.");
+        }
+        return mongoTemplate.getDb();
     }
 
     @Override
