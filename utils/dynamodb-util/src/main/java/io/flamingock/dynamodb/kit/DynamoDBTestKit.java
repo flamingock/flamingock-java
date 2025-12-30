@@ -27,8 +27,8 @@ public class DynamoDBTestKit extends AbstractTestKit {
 
     private final DynamoDbClient client;
 
-    public DynamoDBTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver, DynamoDbClient client) {
-        super(auditStorage, lockStorage, driver);
+    public DynamoDBTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore AuditStore, DynamoDbClient client) {
+        super(auditStorage, lockStorage, AuditStore);
         this.client = client;
     }
 
@@ -72,7 +72,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
     public static class Builder {
 
         private DynamoDbClient client;
-        private CommunityAuditStore driver;
+        private CommunityAuditStore AuditStore;
         private String auditTableName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
         private String lockTableName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
         private boolean autoCleanup = true;
@@ -95,13 +95,13 @@ public class DynamoDBTestKit extends AbstractTestKit {
         }
 
         /**
-         * Configures the local driver for this TestKit.
+         * Configures the AuditStore for this TestKit.
          *
-         * @param driver the local driver to use
+         * @param AuditStore the AuditStore to use
          * @return this builder for method chaining
          */
-        public Builder withAuditStore(CommunityAuditStore driver) {
-            this.driver = driver;
+        public Builder withAuditStore(CommunityAuditStore AuditStore) {
+            this.AuditStore = AuditStore;
             return this;
         }
 
@@ -181,8 +181,8 @@ public class DynamoDBTestKit extends AbstractTestKit {
             if (client == null) {
                 throw new IllegalStateException("DynamoDB client must be configured");
             }
-            if (driver == null) {
-                throw new IllegalStateException("Local driver must be configured");
+            if (AuditStore == null) {
+                throw new IllegalStateException("AuditStore must be configured");
             }
 
             DynamoDBAuditStorage auditStorage = new DynamoDBAuditStorage(
@@ -195,7 +195,7 @@ public class DynamoDBTestKit extends AbstractTestKit {
                     readCapacityUnits, writeCapacityUnits
             );
 
-            return new DynamoDBTestKit(auditStorage, lockStorage, driver, client);
+            return new DynamoDBTestKit(auditStorage, lockStorage, AuditStore, client);
         }
     }
 }

@@ -17,7 +17,7 @@ package io.flamingock.importer.mongock.dynamodb;
 
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.community.dynamodb.driver.DynamoDBAuditStore;
+import io.flamingock.store.dynamodb.DynamoDBAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.dynamodb.kit.DynamoDBTableFactory;
@@ -27,9 +27,7 @@ import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
