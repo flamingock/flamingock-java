@@ -18,31 +18,69 @@ package io.flamingock.template.sql;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import io.flamingock.template.sql.util.SqlStatementParser;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
 
 public class SqlTemplate extends AbstractChangeTemplate<Void, String, String> {
+
+    private final Logger logger = FlamingockLoggerFactory.getLogger(SqlTemplate.class);
 
     public SqlTemplate() {
         super();
     }
 
     @Apply
-    public void apply(Connection connection) {
+    public void apply(Connection connection) throws SQLException {
         execute(connection, applyPayload);
     }
 
     @Rollback
-    public void rollback(Connection connection) {
+    public void rollback(Connection connection) throws SQLException {
         execute(connection, rollbackPayload);
     }
 
-    private static void execute(Connection connection, String sql) {
-        try {
-            connection.createStatement().executeUpdate(sql);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+    private void execute(Connection connection, String sql) throws SQLException {
+        if (connection == null) {
+            throw new IllegalArgumentException("connection is null");
+        }
+        if (connection.isClosed()) {
+            throw new IllegalArgumentException("connection is closed");
+        }
+
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new IllegalArgumentException("SQL payload is null or empty");
+        }
+
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        // Group statements by command type for intelligent batching
+        Map<String, List<String>> groupedStatements = new HashMap<>();
+        for (String stmt : statements) {
+            String trimmed = stmt.trim();
+            if (trimmed.isEmpty()) continue;
+            String command = SqlStatementParser.getCommand(trimmed);
+            groupedStatements.computeIfAbsent(command, k -> new ArrayList<>()).add(trimmed);
+        }
+
+        // Execute each group
+        for (Map.Entry<String, List<String>> entry : groupedStatements.entrySet()) {
+            List<String> group = entry.getValue();
+            if (group.size() == 1) {
+                // Single statement, execute individually
+                SqlStatementParser.executeSingle(connection, group.get(0));
+            } else {
+                // Multiple statements of same type, batch them
+                SqlStatementParser.executeMany(connection, group);
+            }
         }
     }
 }
