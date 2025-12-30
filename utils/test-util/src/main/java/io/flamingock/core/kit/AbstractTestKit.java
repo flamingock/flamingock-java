@@ -23,7 +23,7 @@ import io.flamingock.internal.core.store.CommunityAuditStore;
 
 /**
  * Generic TestKit implementation that works with any storage technology.
- * Accepts audit storage, lock storage, and driver implementations from the test user.
+ * Accepts audit storage, lock storage, and audit store implementations from the test user.
  * 
  * This is the preferred implementation for testing with real databases as it follows
  * the proper dependency separation - storage classes only depend on their respective
@@ -33,14 +33,14 @@ public abstract class AbstractTestKit implements TestKit {
     
     private final AuditStorage auditStorage;
     private final LockStorage lockStorage;
-    private final CommunityAuditStore driver;
+    private final CommunityAuditStore AuditStore;
     private final AuditTestHelper auditHelper;
     private final LockTestHelper lockHelper;
     
-    protected AbstractTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver) {
+    protected AbstractTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore AuditStore) {
         this.auditStorage = auditStorage;
         this.lockStorage = lockStorage;
-        this.driver = driver;
+        this.AuditStore = AuditStore;
         
         // Create helpers at construction time - ready to use immediately
         this.auditHelper = new AuditTestHelper(auditStorage);
@@ -49,7 +49,7 @@ public abstract class AbstractTestKit implements TestKit {
     
     @Override
     public TestFlamingockBuilder createBuilder() {
-        return createBuilderWithAuditStore(driver);
+        return createBuilderWithAuditStore(AuditStore);
     }
     
     @Override

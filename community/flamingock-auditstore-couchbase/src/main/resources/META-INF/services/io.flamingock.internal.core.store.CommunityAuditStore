@@ -1,1 +1,1 @@
-io.flamingock.community.couchbase.driver.CouchbaseAuditStore
+io.flamingock.store.couchbase.CouchbaseAuditStore

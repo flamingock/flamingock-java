@@ -109,7 +109,7 @@ This is a multi-module Gradle project using Kotlin DSL.
 - Base context contains runner ID and core configuration
 - Plugin contexts merged via `PriorityContextResolver`
 - External frameworks (Spring Boot) contribute dependency contexts
-- **Critical**: Hierarchical context MUST be built before driver initialization
+- **Critical**: Hierarchical context MUST be built before AuditStore initialization
 
 **Pipeline Architecture**: Change execution organized in stages:
 - `LoadedPipeline` - Executable pipeline with stages and changes
@@ -136,7 +136,7 @@ This is a multi-module Gradle project using Kotlin DSL.
 - `flamingock-graalvm` - GraalVM native image support
 
 **Community Modules** (`community/`):
-- Database-specific drivers (MongoDB, DynamoDB, Couchbase)
+- Database-specific AuditStores (MongoDB, DynamoDB, Couchbase)
 - `flamingock-importer` - Import from legacy systems (Mongock)
 - Version-specific implementations (e.g., Spring Data v3 legacy)
 
@@ -202,11 +202,11 @@ When modifying the builder pattern in `AbstractFlamingockBuilder.build()`:
 1. Template loading must occur first
 2. Base context preparation before plugin initialization  
 3. Plugin initialization before hierarchical context building
-4. Hierarchical context MUST be complete before driver initialization
+4. Hierarchical context MUST be complete before AuditStore initialization
 5. AuditStore initialization provides auditPersistence for audit writer registration
 6. Pipeline building contributes dependencies back to context
 
-Violating this order will cause runtime failures due to missing dependencies during driver initialization.
+Violating this order will cause runtime failures due to missing dependencies during AuditStore initialization.
 
 ## License Header Management
 

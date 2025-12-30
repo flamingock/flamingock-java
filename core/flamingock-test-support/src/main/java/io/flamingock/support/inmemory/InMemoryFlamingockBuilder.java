@@ -27,7 +27,7 @@ import io.flamingock.internal.core.plugin.PluginManager;
  * Specialized Flamingock builder for testing purposes.
  * 
  * <p>This builder extends CommunityFlamingockBuilder and is pre-configured with test-specific
- * settings and drivers. It's created by TestKit implementations and provides the same API
+ * settings and AuditStores. It's created by TestKit implementations and provides the same API
  * as production builders but optimized for testing scenarios.</p>
  * 
  * <p><strong>Usage:</strong></p>

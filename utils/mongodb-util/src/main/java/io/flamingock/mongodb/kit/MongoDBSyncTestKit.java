@@ -32,8 +32,8 @@ public class MongoDBSyncTestKit extends AbstractTestKit {
 
     private final MongoClient mongoClient;
 
-    public MongoDBSyncTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore driver, MongoClient mongoClient) {
-        super(auditStorage, lockStorage, driver);
+    public MongoDBSyncTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore AuditStore, MongoClient mongoClient) {
+        super(auditStorage, lockStorage, AuditStore);
         this.mongoClient = mongoClient;
     }
 
@@ -49,9 +49,9 @@ public class MongoDBSyncTestKit extends AbstractTestKit {
     /**
      * Create a new MongoDBSyncTestKit with MongoDB client and database
      */
-    public static MongoDBSyncTestKit create(CommunityAuditStore driver, MongoClient mongoClient, MongoDatabase database) {
+    public static MongoDBSyncTestKit create(CommunityAuditStore AuditStore, MongoClient mongoClient, MongoDatabase database) {
         MongoDBSyncAuditStorage auditStorage = new MongoDBSyncAuditStorage(database);
         MongoDBSyncLockStorage lockStorage = new MongoDBSyncLockStorage(database);
-        return new MongoDBSyncTestKit(auditStorage, lockStorage, driver, mongoClient);
+        return new MongoDBSyncTestKit(auditStorage, lockStorage, AuditStore, mongoClient);
     }
 }

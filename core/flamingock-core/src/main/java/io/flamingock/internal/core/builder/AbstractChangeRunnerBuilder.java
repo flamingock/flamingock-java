@@ -139,7 +139,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
      * <li><strong>Context Preparation</strong> - Sets up base context with runner ID and core config</li>
      * <li><strong>Plugin Initialization</strong> - Initializes plugins with access to base context</li>
      * <li><strong>Hierarchical Context Building</strong> - Merges external contexts (e.g., Spring Boot)</li>
-     * <li><strong>AuditStore Initialization</strong> - Initializes driver with full hierarchical context</li>
+     * <li><strong>AuditStore Initialization</strong> - Initializes AuditStore with full hierarchical context</li>
      * <li><strong>Persistence Setup</strong> - Retrieves AuditPersistence and registers audit writer</li>
      * <li><strong>Pipeline Building</strong> - Constructs pipeline and contributes dependencies</li>
      * <li><strong>Runner Creation</strong> - Assembles final runner with all components</li>
@@ -148,9 +148,9 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
      * <h3>Critical Order Dependencies:</h3>
      * <p><strong>Hierarchical Context MUST be built before AuditStore initialization.</strong>
      * The hierarchical context merges external dependency sources (like Spring Boot's application context)
-     * with Flamingock's internal context. When {@code driver.initialize(hierarchicalContext)} is called,
-     * the driver searches this context for required dependencies (database connections, configuration, etc.).
-     * If the hierarchical context is built after driver initialization, these external dependencies
+     * with Flamingock's internal context. When {@code AuditStore.initialize(hierarchicalContext)} is called,
+     * the AuditStore searches this context for required dependencies (database connections, configuration, etc.).
+     * If the hierarchical context is built after AuditStore initialization, these external dependencies
      * won't be available, causing the AuditPersistence to fail during execution.
      *
      * <h3>Component Relationships:</h3>
@@ -170,7 +170,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
      *
      * @return A fully configured Runner ready for execution
      * @see #buildContext() for context merging details
-     * @see AuditStore#initialize(ContextResolver) for driver initialization requirements
+     * @see AuditStore#initialize(ContextResolver) for AuditStore initialization requirements
      * @see LoadedPipeline#contributeToContext(ContextInjectable) for pipeline contributions
      */
     @Override
