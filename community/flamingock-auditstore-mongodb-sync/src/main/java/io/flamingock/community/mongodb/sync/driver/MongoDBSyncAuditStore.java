@@ -18,7 +18,6 @@ package io.flamingock.community.mongodb.sync.driver;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.community.mongodb.sync.internal.MongoDBSyncAuditPersistence;
 import io.flamingock.community.mongodb.sync.internal.MongoDBSyncLockService;
@@ -30,6 +29,7 @@ import io.flamingock.internal.core.store.audit.community.CommunityAuditPersisten
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.targetystem.mongodb.api.MongoDBTargetSystem;
 import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
@@ -37,13 +37,12 @@ import static io.flamingock.internal.util.constants.CommunityPersistenceConstant
 
 public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
+    private final MongoDBTargetSystem mongoDBTargetSystem;
 
     protected RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
     private MongoDBSyncAuditPersistence persistence;
     private MongoDBSyncLockService lockService;
-    private final MongoClient client;
-    private final String databaseName;
     private MongoDatabase database;
     private String auditRepositoryName = DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = DEFAULT_LOCK_STORE_NAME;
@@ -53,9 +52,8 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     private boolean autoCreate = true;
 
 
-    private MongoDBSyncAuditStore(MongoClient client, String databaseName) {
-        this.client = client;
-        this.databaseName = databaseName;
+    private MongoDBSyncAuditStore(MongoDBTargetSystem mongoDBTargetSystem) {
+        this.mongoDBTargetSystem = mongoDBTargetSystem;
     }
 
     /**
@@ -68,8 +66,8 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
      * @param targetSystem the target system from which to derive the client and database
      * @return a new audit store bound to the same MongoDB instance as the target system
      */
-    public static MongoDBSyncAuditStore from(MongoDBSyncTargetSystem targetSystem) {
-        return new MongoDBSyncAuditStore(targetSystem.getClient(), targetSystem.getDatabaseName());
+    public static MongoDBSyncAuditStore from(MongoDBTargetSystem targetSystem) {
+        return new MongoDBSyncAuditStore(targetSystem);
     }
 
     public MongoDBSyncAuditStore withAuditRepositoryName(String auditRepositoryName) {
@@ -106,6 +104,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     public void initialize(ContextResolver baseContext) {
         runnerId = baseContext.getRequiredDependencyValue(RunnerId.class);
         communityConfiguration = baseContext.getRequiredDependencyValue(CommunityConfigurable.class);
+        database = mongoDBTargetSystem.getMongoDatabase();
         this.validate();
     }
 
@@ -145,14 +144,9 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
     private void validate() {
 
-        if (client == null) {
-            throw new FlamingockException("The 'client' instance is required.");
+        if (database == null ) {
+            throw new FlamingockException("The 'database' instance is required.");
         }
-
-        if (databaseName == null || databaseName.trim().isEmpty()) {
-            throw new FlamingockException("The 'databaseName' property is required.");
-        }
-        database = client.getDatabase(databaseName);
 
         if (auditRepositoryName == null || auditRepositoryName.trim().isEmpty()) {
             throw new FlamingockException("The 'auditRepositoryName' property is required.");

@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":core:flamingock-core"))
     implementation(project(":community:flamingock-community"))
     implementation(project(":utils:sql-util"))
+    implementation(project(":core:target-systems:mongodb-target-system-api"))
 
     // CLI framework
     implementation("info.picocli:picocli:4.7.5")

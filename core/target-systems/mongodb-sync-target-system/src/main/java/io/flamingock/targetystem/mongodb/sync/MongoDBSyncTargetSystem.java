@@ -30,6 +30,7 @@ import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB;
+import io.flamingock.targetystem.mongodb.api.MongoDBTargetSystem;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -37,7 +38,7 @@ import java.util.Optional;
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 
-public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> {
+public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> implements MongoDBTargetSystem {
 
     private final MongoClient mongoClient;
     private final String databaseName;
@@ -73,8 +74,12 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
         return mongoClient;
     }
 
-    public MongoDatabase getDatabase() {
-        return database;
+    @Override
+    public MongoDatabase getMongoDatabase() {
+        if (mongoClient == null || databaseName == null || databaseName.isEmpty()) {
+            throw new FlamingockException("TargetSystem is not initialized. The 'mongoClient' instance and 'databaseName' property are required.");
+        }
+        return mongoClient.getDatabase(databaseName);
     }
 
     public String getDatabaseName() {

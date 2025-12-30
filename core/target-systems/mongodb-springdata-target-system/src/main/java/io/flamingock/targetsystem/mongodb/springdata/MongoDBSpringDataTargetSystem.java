@@ -18,6 +18,7 @@ package io.flamingock.targetsystem.mongodb.springdata;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoDatabase;
 import io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
@@ -26,6 +27,7 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import io.flamingock.targetystem.mongodb.api.MongoDBTargetSystem;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.Objects;
@@ -35,9 +37,10 @@ import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 
 
-public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<MongoDBSpringDataTargetSystem> {
+public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<MongoDBSpringDataTargetSystem>
+        implements MongoDBTargetSystem {
 
-    private MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
@@ -78,6 +81,14 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
 
     public ReadPreference getReadPreference() {
         return readPreference;
+    }
+
+    @Override
+    public MongoDatabase getMongoDatabase() {
+        if (mongoTemplate == null) {
+            throw new FlamingockException("TargetSystem is not initialized. The 'mongoTemplate' instance is required.");
+        }
+        return mongoTemplate.getDb();
     }
 
     @Override
