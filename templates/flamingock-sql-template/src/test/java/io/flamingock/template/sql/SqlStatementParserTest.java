@@ -165,4 +165,79 @@ class SqlStatementParserTest {
         assertEquals("UNKNOWN", SqlStatementParser.getCommand("   "));
         assertEquals("CREATE", SqlStatementParser.getCommand("  create   table   users"));
     }
+
+    //-------------------
+
+    @Test
+    void splitStatements_preservesNewlinesInsideStringLiteral() {
+        String sql = "INSERT INTO t(txt) VALUES ('a\nb'); SELECT 1;";
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        assertEquals(2, statements.size());
+        assertEquals("INSERT INTO t(txt) VALUES ('a\nb')", statements.get(0)); // should preserve newline
+        assertEquals("SELECT 1", statements.get(1));
+    }
+
+    @Test
+    void splitStatements_preservesMultipleSpacesInsideStringLiteral() {
+        String sql = "INSERT INTO t(txt) VALUES ('a  b');";
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        assertEquals(1, statements.size());
+        assertEquals("INSERT INTO t(txt) VALUES ('a  b')", statements.get(0)); // double space must remain
+    }
+
+    @Test
+    void splitStatements_stripBlockCommentDoesNotConcatenateTokens() {
+        String sql = "SELECT/*comment*/1; SELECT 2;";
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        assertEquals(2, statements.size());
+        assertEquals("SELECT 1", statements.get(0));  // should have a space
+        assertEquals("SELECT 2", statements.get(1));
+    }
+
+    @Test
+    void splitStatements_supportsHashLineCommentsIfEnabled() {
+        String sql = "SELECT 1; # comment\nSELECT 2;";
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        assertEquals(2, statements.size());
+        assertEquals("SELECT 1", statements.get(0));
+        assertEquals("SELECT 2", statements.get(1));
+    }
+
+
+    @Test
+    void splitStatements_blockCommentRemovalMustNotConcatenateTokens() {
+        String sql = "SELECT/*c*/1; SELECT 2;";
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        assertEquals(2, statements.size());
+        assertEquals("SELECT 1", statements.get(0));   // today you'll get "SELECT1"
+        assertEquals("SELECT 2", statements.get(1));
+    }
+
+    @Test
+    void splitStatements_handlesDoubledQuotesWithoutFlippingStringState() {
+        // the semicolon is inside the literal, then we close and continue
+        String sql = "INSERT INTO t(txt) VALUES ('x''y;z'); SELECT 1;";
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        assertEquals(2, statements.size());
+        assertEquals("INSERT INTO t(txt) VALUES ('x''y;z')", statements.get(0));
+        assertEquals("SELECT 1", statements.get(1));
+    }
+
+    @Test
+    void splitStatements_supportsHashLineComments_ifWeClaimMySqlFriendly() {
+        String sql = "SELECT 1; # comment\nSELECT 2;";
+        List<String> statements = SqlStatementParser.splitStatements(sql);
+
+        assertEquals(2, statements.size());
+        assertEquals("SELECT 1", statements.get(0));
+        assertEquals("SELECT 2", statements.get(1));
+    }
+
+
 }
