@@ -21,9 +21,10 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Nullable;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.template.mongodb.model.MongoApplyPayload;
 import io.flamingock.template.mongodb.model.MongoOperation;
 
-public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOperation, MongoOperation> {
+public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoApplyPayload, MongoApplyPayload> {
 
     public MongoChangeTemplate() {
         super(MongoOperation.class);
@@ -34,7 +35,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
         }
-        executeOp(db, applyPayload, clientSession);
+        executeOperations(db, applyPayload, clientSession);
     }
 
     @Rollback
@@ -42,11 +43,16 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoOpera
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
         }
-        executeOp(db, rollbackPayload, clientSession);
+        executeOperations(db, rollbackPayload, clientSession);
     }
 
-    private void executeOp(MongoDatabase db, MongoOperation op, ClientSession clientSession) {
-        op.getOperator(db).apply(clientSession);
+    private void executeOperations(MongoDatabase db, MongoApplyPayload payload, ClientSession clientSession) {
+        if (payload == null) {
+            return;
+        }
+        for (MongoOperation op : payload.getOperations()) {
+            op.getOperator(db).apply(clientSession);
+        }
     }
 
 }
