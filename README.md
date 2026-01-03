@@ -5,10 +5,12 @@
 <h3 align="center">Auditable, versioned changes across distributed systems.</h3>
 <p align="center">Evolve queues, DBs, APIs, configs, resources and more — governed, auditable, applied at startup in lockstep.</p>
 
-<p align="center"><small>
-  Coming from <a href="https://github.com/flamingock/mongock-legacy#%EF%B8%8F-mongock-is-deprecated">Mongock</a>?  
-  Learn about the transition and why Flamingock is its evolution.
-</small></p>
+<p align="center">
+  <small>
+    Coming from <a href="https://github.com/flamingock/mongock-legacy#%EF%B8%8F-mongock-is-deprecated">Mongock</a>?  
+    Learn about the transition and why Flamingock is its evolution.
+  </small>
+</p>
 
 <p align="center">
   <a href="https://central.sonatype.com/search?q=io.flamingock">
@@ -21,6 +23,16 @@
     <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License" />
   </a>
 </p>
+
+
+<p align="center">
+  <small>
+    <a href="https://docs.flamingock.io/get-started/quick-start">Quick start in minutes</a>
+  </small>
+</p>
+
+
+
 
 **Flamingock** brings *Change-as-Code (CaC)* to your entire stack.  
 
