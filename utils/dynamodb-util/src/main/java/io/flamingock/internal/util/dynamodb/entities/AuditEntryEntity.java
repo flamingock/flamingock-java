@@ -41,6 +41,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     private AuditEntry.Status state;
     private String className;
     private String methodName;
+    private String sourceFile;
     private Object metadata;
     private Long executionMillis;
     private String executionHostname;
@@ -66,6 +67,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.state = auditEntry.getState();
         this.className = auditEntry.getClassName();
         this.methodName = auditEntry.getMethodName();
+        this.sourceFile = auditEntry.getSourceFile();
         this.metadata = auditEntry.getMetadata();
         this.executionMillis = auditEntry.getExecutionMillis();
         this.executionHostname = auditEntry.getExecutionHostname();
@@ -132,7 +134,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.author = author;
     }
 
-    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TIMESTAMP)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_CREATED_AT)
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -150,7 +152,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.state = AuditEntry.Status.valueOf(state);
     }
 
-    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_CHANGE_CLASS)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_INVOKED_CLASS)
     public String getClassName() {
         return className;
     }
@@ -166,6 +168,15 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
 
     public void setMethodName(String methodName) {
         this.methodName = methodName;
+    }
+
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_SOURCE_FILE)
+    public String getSourceFile() {
+        return sourceFile;
+    }
+
+    public void setSourceFile(String sourceFile) {
+        this.sourceFile = sourceFile;
     }
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_METADATA)
@@ -240,7 +251,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.targetSystemId = targetSystemId;
     }
 
-    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_ORDER)
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_CHANGE_ORDER)
     public String getOrder() {
         return order;
     }
@@ -302,6 +313,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
                 type,
                 className,
                 methodName,
+                sourceFile,
                 executionMillis,
                 executionHostname,
                 metadata,

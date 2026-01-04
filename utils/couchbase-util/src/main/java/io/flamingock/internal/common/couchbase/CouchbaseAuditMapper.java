@@ -23,22 +23,23 @@ import io.flamingock.internal.util.TimeUtil;
 
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STAGE_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_AUTHOR;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_CLASS;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_INVOKED_CLASS;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_INVOKED_METHOD;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SOURCE_FILE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ERROR_TRACE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_HOSTNAME;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_EXECUTION_MILLIS;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_METADATA;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_ORDER;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ORDER;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_RECOVERY_STRATEGY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TRANSACTION_FLAG;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_STRATEGY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TIMESTAMP;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TYPE;
 
 public class CouchbaseAuditMapper {
@@ -49,11 +50,12 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_STAGE_ID, auditEntry.getStageId());
         CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_ID, auditEntry.getTaskId());
         CouchbaseUtils.addFieldToDocument(document, KEY_AUTHOR, auditEntry.getAuthor());
-        CouchbaseUtils.addFieldToDocument(document, KEY_TIMESTAMP, TimeUtil.toDate(auditEntry.getCreatedAt()));
+        CouchbaseUtils.addFieldToDocument(document, KEY_CREATED_AT, TimeUtil.toDate(auditEntry.getCreatedAt()));
         CouchbaseUtils.addFieldToDocument(document, KEY_STATE, auditEntry.getState().name());
         CouchbaseUtils.addFieldToDocument(document, KEY_TYPE, auditEntry.getType().name());
-        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_CLASS, auditEntry.getClassName());
+        CouchbaseUtils.addFieldToDocument(document, KEY_INVOKED_CLASS, auditEntry.getClassName());
         CouchbaseUtils.addFieldToDocument(document, KEY_INVOKED_METHOD, auditEntry.getMethodName());
+        CouchbaseUtils.addFieldToDocument(document, KEY_SOURCE_FILE, auditEntry.getSourceFile());
         CouchbaseUtils.addFieldToDocument(document, KEY_METADATA, auditEntry.getMetadata());
         CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_MILLIS, auditEntry.getExecutionMillis());
         CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
@@ -61,7 +63,7 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
         CouchbaseUtils.addFieldToDocument(document, KEY_TX_STRATEGY, AuditTxType.safeString(auditEntry.getTxType()));
         CouchbaseUtils.addFieldToDocument(document, KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
-        CouchbaseUtils.addFieldToDocument(document, KEY_ORDER, auditEntry.getOrder());
+        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_ORDER, auditEntry.getOrder());
         CouchbaseUtils.addFieldToDocument(document, KEY_RECOVERY_STRATEGY, auditEntry.getRecoveryStrategy().name());
         CouchbaseUtils.addFieldToDocument(document, KEY_TRANSACTION_FLAG, auditEntry.getTransactionFlag());
         return document;
@@ -83,11 +85,12 @@ public class CouchbaseAuditMapper {
                 jsonObject.getString(KEY_STAGE_ID),
                 jsonObject.getString(KEY_CHANGE_ID),
                 jsonObject.getString(KEY_AUTHOR),
-                jsonObject.get(KEY_TIMESTAMP) != null ? TimeUtil.toLocalDateTime(jsonObject.getLong(KEY_TIMESTAMP)) : null,
+                jsonObject.get(KEY_CREATED_AT) != null ? TimeUtil.toLocalDateTime(jsonObject.getLong(KEY_CREATED_AT)) : null,
                 jsonObject.get(KEY_STATE) != null ? AuditEntry.Status.valueOf(jsonObject.getString(KEY_STATE)) : null,
                 jsonObject.get(KEY_TYPE) != null ? AuditEntry.ExecutionType.valueOf(jsonObject.getString(KEY_TYPE)) : null,
-                jsonObject.getString(KEY_CHANGE_CLASS),
+                jsonObject.getString(KEY_INVOKED_CLASS),
                 jsonObject.getString(KEY_INVOKED_METHOD),
+                jsonObject.getString(KEY_SOURCE_FILE),
                 jsonObject.getLong(KEY_EXECUTION_MILLIS),
                 jsonObject.getString(KEY_EXECUTION_HOSTNAME),
                 jsonObject.get(KEY_METADATA) != null ? jsonObject.getObject(KEY_METADATA).toMap() : null,
@@ -95,7 +98,7 @@ public class CouchbaseAuditMapper {
                 jsonObject.getString(KEY_ERROR_TRACE),
                 txStrategy,
                 jsonObject.getString(KEY_TARGET_SYSTEM_ID),
-                jsonObject.getString(KEY_ORDER),
+                jsonObject.getString(KEY_CHANGE_ORDER),
                 jsonObject.getString(KEY_RECOVERY_STRATEGY) != null
                         ? RecoveryStrategy.valueOf(jsonObject.getString(KEY_RECOVERY_STRATEGY))
                         : RecoveryStrategy.MANUAL_INTERVENTION,
