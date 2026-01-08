@@ -65,8 +65,7 @@ It applies **versioned, auditable changes** to the external systems your applica
 such as schemas, databases, message brokers, APIs, cloud resources, and configuration —
 **as part of the application lifecycle itself**.
 
-Flamingock runs **inside your application** (or via a CLI),  
-not in CI/CD, ensuring every environment starts in a **known, consistent state**.
+Flamingock runs **inside your application** (or via a CLI), not in CI/CD, ensuring every environment starts in a **known, consistent state**.
 
 **No manual scripts.  
 No hidden steps.  
