@@ -68,9 +68,9 @@ such as schemas, databases, message brokers, APIs, cloud resources, and configur
 Flamingock runs **inside your application** (or via a CLI),  
 not in CI/CD, ensuring every environment starts in a **known, consistent state**.
 
-**No manual scripts.**
-**No hidden steps.**
-**No drift.**
+**No manual scripts.  
+No hidden steps.  
+No drift.**
 
 ---
 
