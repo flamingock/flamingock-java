@@ -102,10 +102,13 @@ No more fragile scripts or untracked console changes. With CaC:
 ## 🚀 Getting started
 
 ```kotlin
-implementation(platform("io.flamingock:flamingock-community-bom:$latestVersion"))
-implementation("io.flamingock:flamingock-community")
+plugins {
+    id("io.flamingock") version "[VERSION]"
+}
 
-annotationProcessor("io.flamingock:flamingock-processor:$latestVersion")
+flamingock {
+    community()
+}
 ```
 
 - Read the [Quick Start guide](https://docs.flamingock.io/get-started/quick-start)
