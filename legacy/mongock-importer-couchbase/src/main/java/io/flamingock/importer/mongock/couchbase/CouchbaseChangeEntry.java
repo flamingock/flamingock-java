@@ -94,6 +94,7 @@ public class CouchbaseChangeEntry {
                 AuditEntry.ExecutionType.valueOf(type),
                 changeLogClass,
                 changeSetMethod,
+                null, //TODO: set sourceFile
                 executionMillis,
                 executionHostName,
                 metadata,

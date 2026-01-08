@@ -536,6 +536,7 @@ public class AuditEntryDefinition {
                 AuditEntry.ExecutionType.EXECUTION,
                 className,
                 methodName,
+                null, //TODO: set sourceFile
                 executionMillis != null ? executionMillis : 0L,
                 executionHostname != null ? executionHostname : "test-host",
                 metadata,

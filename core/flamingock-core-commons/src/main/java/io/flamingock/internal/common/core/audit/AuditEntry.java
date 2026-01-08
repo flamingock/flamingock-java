@@ -32,6 +32,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     private final Status state;
     private final String className;
     private final String methodName;
+    private final String sourceFile;
     private final Object metadata;
     private final long executionMillis;
     private final String executionHostname;
@@ -52,6 +53,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       ExecutionType type,
                       String className,
                       String methodName,
+                      String sourceFile,
                       long executionMillis,
                       String executionHostname,
                       Object metadata,
@@ -70,6 +72,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         this.state = state;
         this.className = className;
         this.methodName = methodName;
+        this.sourceFile = sourceFile;
         this.metadata = metadata;
         this.executionMillis = executionMillis;
         this.executionHostname = executionHostname;
@@ -97,13 +100,14 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       ExecutionType type,
                       String className,
                       String methodName,
+                      String sourceFile,
                       long executionMillis,
                       String executionHostname,
                       Object metadata,
                       boolean systemChange,
                       String errorTrace,
                       AuditTxType txStrategy) {
-        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName,
+        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, sourceFile,
              executionMillis, executionHostname, metadata, systemChange, errorTrace, txStrategy, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
@@ -121,12 +125,13 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       ExecutionType type,
                       String className,
                       String methodName,
+                      String sourceFile,
                       long executionMillis,
                       String executionHostname,
                       Object metadata,
                       boolean systemChange,
                       String errorTrace) {
-        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName,
+        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, sourceFile,
              executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
@@ -172,6 +177,8 @@ public class AuditEntry implements Comparable<AuditEntry> {
     public String getMethodName() {
         return methodName;
     }
+
+    public String getSourceFile() { return sourceFile; }
 
     public Object getMetadata() {
         return metadata;
@@ -241,6 +248,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                 getType(),
                 getClassName(),
                 getMethodName(),
+                getSourceFile(),
                 getExecutionMillis(),
                 getExecutionHostname(),
                 getMetadata(),

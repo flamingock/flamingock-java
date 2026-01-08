@@ -130,6 +130,7 @@ class AuditSnapshotMapBuilderTest {
                 AuditEntry.ExecutionType.EXECUTION,
                 "TestClass",
                 "testMethod",
+                "TestSourceFile",
                 100L,
                 "localhost",
                 new HashMap<>(),

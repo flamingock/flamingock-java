@@ -65,7 +65,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
 
             Set<TargetSystemAuditMark> ongoingStatuses = new HashSet<>();
             while (resultSet.next()) {
-                String taskId = resultSet.getString("task_id");
+                String taskId = resultSet.getString("change_id");
                 AuditContextBundle.Operation operation = AuditContextBundle.Operation.valueOf(resultSet.getString("operation"));
                 ongoingStatuses.add(new TargetSystemAuditMark(taskId, operation.toOngoingStatusOperation()));
             }
