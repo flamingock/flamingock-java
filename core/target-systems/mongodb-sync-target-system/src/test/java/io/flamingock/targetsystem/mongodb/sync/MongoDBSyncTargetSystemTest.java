@@ -39,7 +39,6 @@ import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.internal.core.runner.Runner;
-import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
