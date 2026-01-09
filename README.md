@@ -24,30 +24,42 @@
   </a>
 </p>
 
+## 🚀 Getting started
 
-<p align="center">
-  <small>
-    <a href="https://docs.flamingock.io/get-started/quick-start">Quick start in minutes</a>
-  </small>
-</p>
+```kotlin
+plugins {
+    id("io.flamingock") version "[VERSION]"
+}
 
+flamingock {
+    community()
+}
+```
 
+> Replace `[VERSION]` with the latest from [Maven Central](https://central.sonatype.com/search?q=io.flamingock).
 
+- Read the [Quick Start guide](https://docs.flamingock.io/get-started/quick-start)
+- Explore [examples](https://github.com/flamingock/flamingock-java-examples)
 
-## 🧩 In plain English for developers
+---
+
+## 🧩 What is Flamingock?
 
 When you deploy an app, it usually depends on things outside your code —
-a database schema, a queue, a permission, a config value.
+a database schema, a queue, a feature flag, a config value.
 
 Keeping all of that in sync across environments often means:
 manual scripts, tribal knowledge, and hoping nothing breaks.
 
-With **Flamingock**, your application and its required changes evolve together.
+**Flamingock** brings **Change-as-Code (CaC)** to your application stack.
+
+It applies **versioned, auditable changes** to the external systems your application depends on —
+as part of the application lifecycle itself.
 
 Changes are:
-- applied in a strict, deterministic order
-- executed automatically at startup
-- recorded in an external audit log
+- **applied** in a strict, deterministic order at startup
+- **verified** before serving traffic
+- **recorded** in an external audit log
 
 If Flamingock cannot guarantee a safe outcome, it **stops** —
 preventing silent corruption or partial execution.
@@ -57,29 +69,9 @@ code and system evolution, moving forward together.
 
 ---
 
-## What is Flamingock?
-
-**Flamingock** brings **Change-as-Code (CaC)** to your application stack.
-
-It applies **versioned, auditable changes** to the external systems your application depends on —
-such as schemas, databases, message brokers, APIs, cloud resources, and configuration —
-**as part of the application lifecycle itself**.
-
-Flamingock runs **inside your application** (or via a CLI), not in CI/CD, ensuring every environment starts in a **known, consistent state**.
-
-**No manual scripts.  
-No hidden steps.  
-No drift.**
-
----
-
 ## 💡 What Flamingock manages
 
-Modern applications rarely fail because of bad code.
-They fail because **external systems evolve out of sync** —
-schemas, queues, permissions, configs, and cloud resources changed manually, inconsistently, and without auditability.
-
-Flamingock closes that gap by managing **application-level system changes**, including:
+Flamingock handles **application-level system changes**, including:
 
 - Database schemas and reference data
 - Message queues, topics, and schemas
@@ -100,41 +92,6 @@ those belong in tools like Terraform or Pulumi.
 Flamingock complements IaC by managing the evolution layer IaC does not cover.
 
 ---
-
-## 💡 Change-as-Code (CaC)
-
-**Automate changes.  
-Version changes.  
-Control evolution.**
-
-Change-as-Code means treating every system change
-that affects application behavior as executable, versioned code.
-
-With CaC:
-- changes live in your VCS
-- execution order is explicit and deterministic
-- every run is auditable
-- environments stay aligned over time
-
-Just as Infrastructure-as-Code reshaped provisioning,
-**Change-as-Code reshapes how systems evolve**.
-
-## 🚀 Getting started
-
-```kotlin
-plugins {
-    id("io.flamingock") version "[VERSION]"
-}
-
-flamingock {
-    community()
-}
-```
-
-- Read the [Quick Start guide](https://docs.flamingock.io/get-started/quick-start)
-- Explore [examples](https://github.com/flamingock/flamingock-java-examples)
-
-<br />
 
 ## 🔑 Key features
 
@@ -182,7 +139,7 @@ flamingock {
 
 Flamingock is built in the open.
 
-If you’d like to report a bug, suggest an improvement, or contribute code,
+If you'd like to report a bug, suggest an improvement, or contribute code,
 please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
