@@ -30,6 +30,7 @@ public class MongoOperation {
     private String type;
     private String collection;
     private Map<String, Object> parameters;
+    private MongoOperation rollback;
 
     public String getType() { return type; }
 
@@ -42,6 +43,10 @@ public class MongoOperation {
     public void setCollection(String collection) { this.collection = collection; }
 
     public void setParameters(Map<String, Object> parameters) { this.parameters = parameters; }
+
+    public MongoOperation getRollback() { return rollback; }
+
+    public void setRollback(MongoOperation rollback) { this.rollback = rollback; }
 
     @SuppressWarnings("unchecked")
     public List<Document> getDocuments() {
@@ -110,10 +115,13 @@ public class MongoOperation {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("MongoOperation{");
+        final StringBuilder sb = new StringBuilder("MongoOperation{");
         sb.append("type='").append(type).append('\'');
         sb.append(", collection='").append(collection).append('\'');
         sb.append(", parameters=").append(parameters);
+        if (rollback != null) {
+            sb.append(", rollback=").append(rollback);
+        }
         sb.append('}');
         return sb.toString();
     }

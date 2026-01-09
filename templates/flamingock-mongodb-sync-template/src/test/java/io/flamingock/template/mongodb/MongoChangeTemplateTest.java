@@ -71,6 +71,7 @@ class MongoChangeTemplateTest {
         mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
         mongoDatabase.getCollection("users").drop();
         mongoDatabase.getCollection("products").drop();
+        mongoDatabase.getCollection("orders").drop();
     }
 
 
@@ -90,7 +91,7 @@ class MongoChangeTemplateTest {
                 .find()
                 .into(new ArrayList<>());
 
-        assertEquals(6, auditLog.size());
+        assertEquals(8, auditLog.size());
 
         assertEquals("create-users-collection-with-index", auditLog.get(0).getString("changeId"));
         assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(0).getString("state"));
@@ -106,6 +107,11 @@ class MongoChangeTemplateTest {
         assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(4).getString("state"));
         assertEquals("multiple-operations-change", auditLog.get(5).getString("changeId"));
         assertEquals(AuditEntry.Status.APPLIED.name(), auditLog.get(5).getString("state"));
+
+        assertEquals("per-operation-rollback-change", auditLog.get(6).getString("changeId"));
+        assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(6).getString("state"));
+        assertEquals("per-operation-rollback-change", auditLog.get(7).getString("changeId"));
+        assertEquals(AuditEntry.Status.APPLIED.name(), auditLog.get(7).getString("state"));
 
         // Verify for single operation
         List<Document> users = mongoDatabase.getCollection("users")
@@ -137,7 +143,23 @@ class MongoChangeTemplateTest {
         boolean categoryIndexExists = indexes.stream()
                 .anyMatch(idx -> "category_index".equals(idx.getString("name")));
         assertTrue(categoryIndexExists, "Category index should exist on products collection");
-    }
 
+        List<Document> orders = mongoDatabase.getCollection("orders")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(2, orders.size(), "Should have 2 orders from per-operation rollback change");
+        assertEquals("ORD-001", orders.get(0).getString("orderId"));
+        assertEquals("John Doe", orders.get(0).getString("customer"));
+        assertEquals("ORD-002", orders.get(1).getString("orderId"));
+        assertEquals("Jane Smith", orders.get(1).getString("customer"));
+
+        List<Document> orderIndexes = mongoDatabase.getCollection("orders")
+                .listIndexes()
+                .into(new ArrayList<>());
+        boolean orderIdIndexExists = orderIndexes.stream()
+                .anyMatch(idx -> "orderId_index".equals(idx.getString("name")));
+        assertTrue(orderIdIndexExists, "orderId_index should exist on orders collection");
+    }
 
 }

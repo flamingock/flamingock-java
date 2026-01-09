@@ -19,6 +19,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.template.mongodb.model.operator.CreateCollectionOperator;
 import io.flamingock.template.mongodb.model.operator.CreateIndexOperator;
 import io.flamingock.template.mongodb.model.operator.CreateViewOperator;
+import io.flamingock.template.mongodb.model.operator.DeleteOperator;
 import io.flamingock.template.mongodb.model.operator.DropCollectionOperator;
 import io.flamingock.template.mongodb.model.operator.DropIndexOperator;
 import io.flamingock.template.mongodb.model.operator.DropViewOperator;
@@ -35,6 +36,7 @@ public enum MongoOperationType {
     CREATE_COLLECTION("createCollection", CreateCollectionOperator::new),
     CREATE_INDEX("createIndex", CreateIndexOperator::new),
     INSERT("insert", InsertOperator::new),
+    DELETE("delete", DeleteOperator::new),
     DROP_COLLECTION("dropCollection", DropCollectionOperator::new),
     DROP_INDEX("dropIndex", DropIndexOperator::new),
     RENAME_COLLECTION("renameCollection", RenameCollectionOperator::new),
