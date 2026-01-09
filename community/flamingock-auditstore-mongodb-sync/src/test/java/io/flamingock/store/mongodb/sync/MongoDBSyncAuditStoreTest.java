@@ -30,7 +30,7 @@ import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.core.runner.PipelineExecutionException;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
-import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
+import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
