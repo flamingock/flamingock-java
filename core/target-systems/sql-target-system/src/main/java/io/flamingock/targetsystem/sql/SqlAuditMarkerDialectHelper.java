@@ -31,11 +31,11 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
     }
 
     public String getListAllSqlString(String tableName) {
-        return String.format("SELECT task_id, operation FROM %s", tableName);
+        return String.format("SELECT change_id, operation FROM %s", tableName);
     }
 
     public String getClearMarkSqlString(String tableName) {
-        return String.format("DELETE FROM %s WHERE task_id = ?", tableName);
+        return String.format("DELETE FROM %s WHERE change_id = ?", tableName);
     }
 
     public String getMarkSqlString(String tableName) {
@@ -43,43 +43,43 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
             case MYSQL:
             case MARIADB:
                 return String.format(
-                    "INSERT INTO %s (task_id, operation) VALUES (?, ?) ON DUPLICATE KEY UPDATE operation = VALUES(operation)",
+                    "INSERT INTO %s (change_id, operation) VALUES (?, ?) ON DUPLICATE KEY UPDATE operation = VALUES(operation)",
                     tableName);
             case POSTGRESQL:
                 return String.format(
-                    "INSERT INTO %s (task_id, operation) VALUES (?, ?) ON CONFLICT (task_id) DO UPDATE SET operation = EXCLUDED.operation",
+                    "INSERT INTO %s (change_id, operation) VALUES (?, ?) ON CONFLICT (change_id) DO UPDATE SET operation = EXCLUDED.operation",
                     tableName);
             case SQLITE:
                 return String.format(
-                    "INSERT OR REPLACE INTO %s (task_id, operation) VALUES (?, ?)",
+                    "INSERT OR REPLACE INTO %s (change_id, operation) VALUES (?, ?)",
                     tableName);
             case SQLSERVER:
             case SYBASE:
                 return String.format(
-                    "MERGE INTO %s AS target USING (SELECT ? AS task_id, ? AS operation) AS source ON (target.task_id = source.task_id) " +
-                        "WHEN MATCHED THEN UPDATE SET operation = source.operation WHEN NOT MATCHED THEN INSERT (task_id, operation) VALUES (source.task_id, source.operation);",
+                    "MERGE INTO %s AS target USING (SELECT ? AS change_id, ? AS operation) AS source ON (target.change_id = source.change_id) " +
+                        "WHEN MATCHED THEN UPDATE SET operation = source.operation WHEN NOT MATCHED THEN INSERT (change_id, operation) VALUES (source.change_id, source.operation);",
                     tableName);
             case ORACLE:
                 return String.format(
-                    "MERGE INTO %s t USING (SELECT ? AS task_id, ? AS operation FROM dual) s ON (t.task_id = s.task_id) " +
-                        "WHEN MATCHED THEN UPDATE SET t.operation = s.operation WHEN NOT MATCHED THEN INSERT (task_id, operation) VALUES (s.task_id, s.operation)",
+                    "MERGE INTO %s t USING (SELECT ? AS change_id, ? AS operation FROM dual) s ON (t.change_id = s.change_id) " +
+                        "WHEN MATCHED THEN UPDATE SET t.operation = s.operation WHEN NOT MATCHED THEN INSERT (change_id, operation) VALUES (s.change_id, s.operation)",
                     tableName);
             case DB2:
                 return String.format(
-                    "MERGE INTO %s AS t USING (SELECT ? AS task_id, ? AS operation FROM SYSIBM.SYSDUMMY1) AS s ON (t.task_id = s.task_id) " +
-                        "WHEN MATCHED THEN UPDATE SET operation = s.operation WHEN NOT MATCHED THEN INSERT (task_id, operation) VALUES (s.task_id, s.operation)",
+                    "MERGE INTO %s AS t USING (SELECT ? AS change_id, ? AS operation FROM SYSIBM.SYSDUMMY1) AS s ON (t.change_id = s.change_id) " +
+                        "WHEN MATCHED THEN UPDATE SET operation = s.operation WHEN NOT MATCHED THEN INSERT (change_id, operation) VALUES (s.change_id, s.operation)",
                     tableName, tableName);
             case FIREBIRD:
                 return String.format(
-                    "UPDATE OR INSERT INTO %s (task_id, operation) VALUES (?, ?) MATCHING (task_id)",
+                    "UPDATE OR INSERT INTO %s (change_id, operation) VALUES (?, ?) MATCHING (change_id)",
                     tableName);
             case H2:
                 return String.format(
-                    "MERGE INTO %s (task_id, operation) KEY (task_id) VALUES (?, ?)",
+                    "MERGE INTO %s (change_id, operation) KEY (change_id) VALUES (?, ?)",
                     tableName);
             case INFORMIX:
                 return String.format(
-                    "INSERT INTO %s (task_id, operation) VALUES (?, ?) ON DUPLICATE KEY UPDATE operation = ?",
+                    "INSERT INTO %s (change_id, operation) VALUES (?, ?) ON DUPLICATE KEY UPDATE operation = ?",
                     tableName);
             default:
                 throw new UnsupportedOperationException("Dialect not supported for upsert: " + sqlDialect.name());
@@ -98,15 +98,15 @@ public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper 
             case FIREBIRD:
             case INFORMIX:
                 return String.format(
-                    "CREATE TABLE %s (task_id VARCHAR(255) PRIMARY KEY, operation VARCHAR(50) NOT NULL)",
+                    "CREATE TABLE %s (change_id VARCHAR(255) PRIMARY KEY, operation VARCHAR(50) NOT NULL)",
                     tableName);
             case ORACLE:
                 return String.format(
-                    "CREATE TABLE %s (task_id VARCHAR2(255) PRIMARY KEY, operation VARCHAR2(50) NOT NULL)",
+                    "CREATE TABLE %s (change_id VARCHAR2(255) PRIMARY KEY, operation VARCHAR2(50) NOT NULL)",
                     tableName);
             case DB2:
                 return String.format(
-                    "CREATE TABLE %s (task_id VARCHAR(255) NOT NULL PRIMARY KEY, operation VARCHAR(50) NOT NULL)",
+                    "CREATE TABLE %s (change_id VARCHAR(255) NOT NULL PRIMARY KEY, operation VARCHAR(50) NOT NULL)",
                     tableName);
             default:
                 throw new UnsupportedOperationException("Dialect not supported for CREATE TABLE: " + sqlDialect.name());
