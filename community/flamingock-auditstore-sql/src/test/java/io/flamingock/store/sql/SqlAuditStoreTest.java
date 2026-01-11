@@ -305,7 +305,7 @@ class SqlAuditStoreTest {
         // Verify audit logs
         try (Connection conn = context.dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
+                     "SELECT change_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
              ResultSet rs = ps.executeQuery()) {
 
             String[] expectedTaskIds = {"create-index", "insert-document", "insert-another-document"};
@@ -314,11 +314,11 @@ class SqlAuditStoreTest {
             int appliedCount = 0;
 
             while (rs.next()) {
-                String taskId = rs.getString("task_id");
+                String taskId = rs.getString("change_id");
                 String state = rs.getString("state");
                 assertTrue(
                         java.util.Arrays.asList(expectedTaskIds).contains(taskId),
-                        "Unexpected task_id: " + taskId
+                        "Unexpected change_id: " + taskId
                 );
                 assertTrue(
                         state.equals("STARTED") || state.equals("APPLIED"),
@@ -380,35 +380,35 @@ class SqlAuditStoreTest {
             // Verify audit sequence
             try (Connection conn = context.dataSource.getConnection();
                  PreparedStatement ps = conn.prepareStatement(
-                         "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
+                         "SELECT change_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
                  ResultSet rs = ps.executeQuery()) {
 
                 assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
+                assertEquals("create-index", rs.getString("change_id"));
                 assertEquals("STARTED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
+                assertEquals("create-index", rs.getString("change_id"));
                 assertEquals("APPLIED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
+                assertEquals("insert-document", rs.getString("change_id"));
                 assertEquals("STARTED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
+                assertEquals("insert-document", rs.getString("change_id"));
                 assertEquals("APPLIED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
+                assertEquals("execution-with-exception", rs.getString("change_id"));
                 assertEquals("STARTED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
+                assertEquals("execution-with-exception", rs.getString("change_id"));
                 assertEquals("FAILED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
+                assertEquals("execution-with-exception", rs.getString("change_id"));
                 assertEquals("ROLLED_BACK", rs.getString("state"));
 
                 assertFalse(rs.next());
@@ -467,35 +467,35 @@ class SqlAuditStoreTest {
             // Verify audit sequence
             try (Connection conn = context.dataSource.getConnection();
                  PreparedStatement ps = conn.prepareStatement(
-                         "SELECT task_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
+                         "SELECT change_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
                  ResultSet rs = ps.executeQuery()) {
 
                 assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
+                assertEquals("create-index", rs.getString("change_id"));
                 assertEquals("STARTED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("task_id"));
+                assertEquals("create-index", rs.getString("change_id"));
                 assertEquals("APPLIED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
+                assertEquals("insert-document", rs.getString("change_id"));
                 assertEquals("STARTED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("task_id"));
+                assertEquals("insert-document", rs.getString("change_id"));
                 assertEquals("APPLIED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
+                assertEquals("execution-with-exception", rs.getString("change_id"));
                 assertEquals("STARTED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
+                assertEquals("execution-with-exception", rs.getString("change_id"));
                 assertEquals("FAILED", rs.getString("state"));
 
                 assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("task_id"));
+                assertEquals("execution-with-exception", rs.getString("change_id"));
                 assertEquals("ROLLED_BACK", rs.getString("state"));
 
                 assertFalse(rs.next());

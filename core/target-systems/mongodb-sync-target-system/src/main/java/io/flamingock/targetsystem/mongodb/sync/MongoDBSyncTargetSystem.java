@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetystem.mongodb.sync;
+package io.flamingock.targetsystem.mongodb.sync;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -30,7 +30,7 @@ import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB;
-import io.flamingock.targetystem.mongodb.api.MongoDBTargetSystem;
+import io.flamingock.targetsystem.mongodb.api.MongoDBTargetSystem;
 
 import java.util.Objects;
 import java.util.Optional;

@@ -43,7 +43,7 @@ import io.flamingock.internal.core.store.AuditStore;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import io.flamingock.targetsystem.sql.SqlTargetSystem;
-import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
+import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import javax.sql.DataSource;

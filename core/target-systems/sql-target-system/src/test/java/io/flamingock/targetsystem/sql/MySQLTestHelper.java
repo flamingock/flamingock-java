@@ -80,7 +80,7 @@ public class MySQLTestHelper {
             // Create table if it doesn't exist
             createOngoingTasksTableIfNotExists(connection);
 
-            String sql = String.format("INSERT INTO %s (task_id, operation) VALUES (?, ?)", ONGOING_TASKS_TABLE);
+            String sql = String.format("INSERT INTO %s (change_id, operation) VALUES (?, ?)", ONGOING_TASKS_TABLE);
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
                 stmt.setString(1, taskId);
                 stmt.setString(2, "EXECUTION");
@@ -109,7 +109,7 @@ public class MySQLTestHelper {
         if (!resultSet.next()) {
             String createTableSql = String.format(
                     "CREATE TABLE %s (" +
-                            "task_id VARCHAR(255) PRIMARY KEY, " +
+                            "change_id VARCHAR(255) PRIMARY KEY, " +
                             "operation VARCHAR(50) NOT NULL" +
                             ")", ONGOING_TASKS_TABLE);
             try (Statement stmt = connection.createStatement()) {

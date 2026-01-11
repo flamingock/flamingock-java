@@ -204,6 +204,7 @@ public class MongockAuditEntry {
                 AuditEntry.ExecutionType.EXECUTION,
                 changeLogClass,
                 changeSetMethod,
+                null, //TODO: set sourceFile
                 executionMillis,
                 executionHostName,
                 metadata,
