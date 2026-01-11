@@ -30,6 +30,7 @@ public class MongoOperation {
     private String type;
     private String collection;
     private Map<String, Object> parameters;
+    private MongoOperation rollback;
 
     public String getType() { return type; }
 
@@ -42,6 +43,10 @@ public class MongoOperation {
     public void setCollection(String collection) { this.collection = collection; }
 
     public void setParameters(Map<String, Object> parameters) { this.parameters = parameters; }
+
+    public MongoOperation getRollback() { return rollback; }
+
+    public void setRollback(MongoOperation rollback) { this.rollback = rollback; }
 
     @SuppressWarnings("unchecked")
     public List<Document> getDocuments() {
@@ -69,6 +74,40 @@ public class MongoOperation {
         return new Document((Map<String, Object>) parameters.get("filter"));
     }
 
+    public String getIndexName() {
+        Object value = parameters.get("indexName");
+        return value != null ? (String) value : null;
+    }
+
+    public String getTarget() {
+        return (String) parameters.get("target");
+    }
+
+    @SuppressWarnings("unchecked")
+    public Document getValidator() {
+        Object value = parameters.get("validator");
+        return value != null ? new Document((Map<String, Object>) value) : null;
+    }
+
+    public String getValidationLevel() {
+        return (String) parameters.get("validationLevel");
+    }
+
+    public String getValidationAction() {
+        return (String) parameters.get("validationAction");
+    }
+
+    public String getViewOn() {
+        return (String) parameters.get("viewOn");
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Document> getPipeline() {
+        List<Map<String, Object>> rawPipeline = (List<Map<String, Object>>) parameters.get("pipeline");
+        return rawPipeline != null
+                ? rawPipeline.stream().map(Document::new).collect(Collectors.toList())
+                : null;
+    }
 
     public MongoOperator getOperator(MongoDatabase db) {
         return MongoOperationType.getFromValue(getType()).getOperator(db, this);
@@ -76,10 +115,13 @@ public class MongoOperation {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("MongoOperation{");
+        final StringBuilder sb = new StringBuilder("MongoOperation{");
         sb.append("type='").append(type).append('\'');
         sb.append(", collection='").append(collection).append('\'');
         sb.append(", parameters=").append(parameters);
+        if (rollback != null) {
+            sb.append(", rollback=").append(rollback);
+        }
         sb.append('}');
         return sb.toString();
     }
