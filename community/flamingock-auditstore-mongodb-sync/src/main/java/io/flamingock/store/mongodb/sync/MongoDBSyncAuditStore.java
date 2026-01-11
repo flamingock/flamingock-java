@@ -29,8 +29,8 @@ import io.flamingock.internal.core.store.audit.community.CommunityAuditPersisten
 import io.flamingock.internal.core.store.CommunityAuditStore;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.targetystem.mongodb.api.MongoDBTargetSystem;
-import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
+import io.flamingock.targetsystem.mongodb.api.MongoDBTargetSystem;
+import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;

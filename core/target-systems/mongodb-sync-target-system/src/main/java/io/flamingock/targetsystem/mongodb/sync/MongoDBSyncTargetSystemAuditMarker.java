@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetystem.mongodb.sync;
+package io.flamingock.targetsystem.mongodb.sync;
 
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
@@ -24,8 +24,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
-import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
+import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
+import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;

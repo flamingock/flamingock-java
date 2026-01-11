@@ -29,7 +29,7 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.runner.Runner;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.support.mongock.annotations.MongockSupport;
-import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
+import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;

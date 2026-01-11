@@ -85,6 +85,7 @@ public class AuditEntryTestFactory {
                 AuditEntry.ExecutionType.EXECUTION,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
+                "TestSourceFile",              // sourceFile
                 0L,                           // executionMillis
                 "localhost",                  // executionHostname
                 null,                         // metadata
@@ -114,6 +115,7 @@ public class AuditEntryTestFactory {
                 AuditEntry.ExecutionType.EXECUTION,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
+                "TestSourceFile",              // sourceFile
                 0L,                           // executionMillis
                 "localhost",                  // executionHostname
                 null,                         // metadata
@@ -222,6 +224,7 @@ public class AuditEntryTestFactory {
                 AuditEntry.ExecutionType.EXECUTION,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
+                "TestSourceFile",              // sourceFile
                 0L,                           // executionMillis
                 "localhost",                  // executionHostname
                 null,                         // metadata
@@ -250,6 +253,7 @@ public class AuditEntryTestFactory {
                 AuditEntry.ExecutionType.EXECUTION,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
+                "TestSourceFile",              // sourceFile
                 0L,                           // executionMillis
                 "localhost",                  // executionHostname
                 null,                         // metadata
@@ -283,6 +287,7 @@ public class AuditEntryTestFactory {
                 AuditEntry.ExecutionType.EXECUTION,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
+                "TestSourceFile",              // sourceFile
                 0L,                           // executionMillis
                 "localhost",                  // executionHostname
                 null,                         // metadata
