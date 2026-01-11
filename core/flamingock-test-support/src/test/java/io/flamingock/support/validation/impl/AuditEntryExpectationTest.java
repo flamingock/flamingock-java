@@ -602,6 +602,7 @@ class AuditEntryExpectationTest {
                 AuditEntry.ExecutionType.EXECUTION,
                 className,
                 methodName,
+                null, //TODO: set sourceFile
                 executionMillis,
                 hostname,
                 metadata,

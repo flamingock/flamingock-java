@@ -203,6 +203,7 @@ public class MongockDynamoDBAuditEntry {
                 AuditEntry.ExecutionType.valueOf(type),
                 changeLogClass,
                 changeSetMethod,
+                null, //TODO: set sourceFile
                 executionMillis,
                 executionHostName,
                 metadata,

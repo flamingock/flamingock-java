@@ -100,6 +100,7 @@ public abstract class AuditContextBundle {
                 getExecutionType(),
                 loadedTask.getSource(),
                 runtimeContext.getMethodExecutor(),
+                null, //TODO: set sourceFile
                 runtimeContext.getDuration(),
                 stageExecutionContext.getHostname(),
                 stageExecutionContext.getMetadata(),

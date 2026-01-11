@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetystem.mongodb.sync.util;
+package io.flamingock.targetsystem.mongodb.sync.util;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.IndexOptions;

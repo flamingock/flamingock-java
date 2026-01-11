@@ -83,17 +83,18 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
                 ps.setString(6, auditEntry.getState() != null ? auditEntry.getState().name() : null);
                 ps.setString(7, auditEntry.getClassName());
                 ps.setString(8, auditEntry.getMethodName());
-                ps.setString(9, auditEntry.getMetadata() != null ? auditEntry.getMetadata().toString() : null);
-                ps.setLong(10, auditEntry.getExecutionMillis());
-                ps.setString(11, auditEntry.getExecutionHostname());
-                ps.setString(12, auditEntry.getErrorTrace());
-                ps.setString(13, auditEntry.getType() != null ? auditEntry.getType().name() : null);
-                ps.setString(14, auditEntry.getTxType() != null ? auditEntry.getTxType().name() : null);
-                ps.setString(15, auditEntry.getTargetSystemId());
-                ps.setString(16, auditEntry.getOrder());
-                ps.setString(17, auditEntry.getRecoveryStrategy() != null ? auditEntry.getRecoveryStrategy().name() : null);
-                ps.setObject(18, auditEntry.getTransactionFlag());
-                ps.setObject(19, auditEntry.getSystemChange());
+                ps.setString(9, auditEntry.getSourceFile());
+                ps.setString(10, auditEntry.getMetadata() != null ? auditEntry.getMetadata().toString() : null);
+                ps.setLong(11, auditEntry.getExecutionMillis());
+                ps.setString(12, auditEntry.getExecutionHostname());
+                ps.setString(13, auditEntry.getErrorTrace());
+                ps.setString(14, auditEntry.getType() != null ? auditEntry.getType().name() : null);
+                ps.setString(15, auditEntry.getTxType() != null ? auditEntry.getTxType().name() : null);
+                ps.setString(16, auditEntry.getTargetSystemId());
+                ps.setString(17, auditEntry.getOrder());
+                ps.setString(18, auditEntry.getRecoveryStrategy() != null ? auditEntry.getRecoveryStrategy().name() : null);
+                ps.setObject(19, auditEntry.getTransactionFlag());
+                ps.setObject(20, auditEntry.getSystemChange());
                 ps.executeUpdate();
             }
             return Result.OK();
@@ -121,21 +122,22 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
                 AuditEntry entry = new AuditEntry(
                         rs.getString("execution_id"),
                         rs.getString("stage_id"),
-                        rs.getString("task_id"),
+                        rs.getString("change_id"),
                         rs.getString("author"),
                         rs.getTimestamp("created_at").toLocalDateTime(),
                         rs.getString("state") != null ? AuditEntry.Status.valueOf(rs.getString("state")) : null,
                         rs.getString("type") != null ? AuditEntry.ExecutionType.valueOf(rs.getString("type")) : null,
-                        rs.getString("class_name"),
-                        rs.getString("method_name"),
+                        rs.getString("invoked_class"),
+                        rs.getString("invoked_method"),
+                        rs.getString("source_file"),
                         rs.getLong("execution_millis"),
                         rs.getString("execution_hostname"),
                         rs.getString("metadata"),
                         rs.getBoolean("system_change"),
                         rs.getString("error_trace"),
-                        AuditTxType.fromString(rs.getString("tx_type")),
+                        AuditTxType.fromString(rs.getString("tx_strategy")),
                         rs.getString("target_system_id"),
-                        rs.getString("order_col"),
+                        rs.getString("change_order"),
                         rs.getString("recovery_strategy") != null ? io.flamingock.api.RecoveryStrategy.valueOf(rs.getString("recovery_strategy")) : null,
                         rs.getObject("transaction_flag") != null ? rs.getBoolean("transaction_flag") : null
                 );

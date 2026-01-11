@@ -125,21 +125,21 @@ if (project != rootProject) {
                 }
             }
 
-            files {
-                active.set(org.jreleaser.model.Active.ALWAYS)
-                artifact {
-                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.zip"))
-                    platform.set("cross-platform")
-                }
-                artifact {
-                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.tar.gz"))
-                    platform.set("unix")
-                }
-                artifact {
-                    path.set(layout.buildDirectory.file("jreleaser/distributions/checksums.txt"))
-                    platform.set("checksums")
-                }
-            }
+//            files {
+//                active.set(org.jreleaser.model.Active.ALWAYS)
+//                artifact {
+//                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.zip"))
+//                    platform.set("cross-platform")
+//                }
+//                artifact {
+//                    path.set(layout.buildDirectory.file("jreleaser/distributions/flamingock-cli.tar.gz"))
+//                    platform.set("unix")
+//                }
+//                artifact {
+//                    path.set(layout.buildDirectory.file("jreleaser/distributions/checksums.txt"))
+//                    platform.set("checksums")
+//                }
+//            }
         }
     }
 }

@@ -21,7 +21,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.api.annotations.EnableFlamingock;
-import io.flamingock.targetystem.mongodb.sync.MongoDBSyncTargetSystem;
+import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 import io.flamingock.store.mongodb.sync.MongoDBSyncAuditStore;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.builder.FlamingockFactory;
