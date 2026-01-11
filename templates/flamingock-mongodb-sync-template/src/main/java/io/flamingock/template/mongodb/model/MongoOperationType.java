@@ -18,8 +18,14 @@ package io.flamingock.template.mongodb.model;
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.template.mongodb.model.operator.CreateCollectionOperator;
 import io.flamingock.template.mongodb.model.operator.CreateIndexOperator;
+import io.flamingock.template.mongodb.model.operator.CreateViewOperator;
+import io.flamingock.template.mongodb.model.operator.DropCollectionOperator;
+import io.flamingock.template.mongodb.model.operator.DropIndexOperator;
+import io.flamingock.template.mongodb.model.operator.DropViewOperator;
 import io.flamingock.template.mongodb.model.operator.InsertOperator;
+import io.flamingock.template.mongodb.model.operator.ModifyCollectionOperator;
 import io.flamingock.template.mongodb.model.operator.MongoOperator;
+import io.flamingock.template.mongodb.model.operator.RenameCollectionOperator;
 
 import java.util.Arrays;
 import java.util.function.BiFunction;
@@ -28,7 +34,13 @@ public enum MongoOperationType {
 
     CREATE_COLLECTION("createCollection", CreateCollectionOperator::new),
     CREATE_INDEX("createIndex", CreateIndexOperator::new),
-    INSERT("insert", InsertOperator::new);
+    INSERT("insert", InsertOperator::new),
+    DROP_COLLECTION("dropCollection", DropCollectionOperator::new),
+    DROP_INDEX("dropIndex", DropIndexOperator::new),
+    RENAME_COLLECTION("renameCollection", RenameCollectionOperator::new),
+    MODIFY_COLLECTION("modifyCollection", ModifyCollectionOperator::new),
+    CREATE_VIEW("createView", CreateViewOperator::new),
+    DROP_VIEW("dropView", DropViewOperator::new);
 
     private final String value;
     private final BiFunction<MongoDatabase, MongoOperation, MongoOperator> createOperatorFunction;
