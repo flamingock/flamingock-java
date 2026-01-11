@@ -24,8 +24,6 @@ import io.flamingock.template.mongodb.mapper.InsertOptionsMapper;
 import io.flamingock.template.mongodb.model.MongoOperation;
 import org.bson.Document;
 
-import java.util.List;
-
 public class InsertOperator extends MongoOperator {
 
 
@@ -36,7 +34,7 @@ public class InsertOperator extends MongoOperator {
     @Override
     protected void applyInternal(ClientSession clientSession) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(op.getCollection());
-        if(op.getDocuments() == null || op.getDocuments().size() == 0) {
+        if(op.getDocuments() == null || op.getDocuments().isEmpty()) {
             return;
         }
 
@@ -49,16 +47,16 @@ public class InsertOperator extends MongoOperator {
 
     private void insertMany(ClientSession clientSession, MongoCollection<Document> collection) {
         if(clientSession != null) {
-            if(op.getOptions().size() != 0) {
-                InsertManyOptions insertManyOptions = InsertOptionsMapper.mapToInertManyOptions(op.getOptions());
+            if(!op.getOptions().isEmpty()) {
+                InsertManyOptions insertManyOptions = InsertOptionsMapper.mapToInsertManyOptions(op.getOptions());
                 collection.insertMany(clientSession, op.getDocuments(), insertManyOptions);
             } else {
                 collection.insertMany(clientSession, op.getDocuments());
             }
 
         } else {
-            if(op.getOptions().size() != 0) {
-                InsertManyOptions insertManyOptions = InsertOptionsMapper.mapToInertManyOptions(op.getOptions());
+            if(!op.getOptions().isEmpty()) {
+                InsertManyOptions insertManyOptions = InsertOptionsMapper.mapToInsertManyOptions(op.getOptions());
                 collection.insertMany(op.getDocuments(), insertManyOptions);
             } else {
                 collection.insertMany(op.getDocuments());
@@ -69,16 +67,16 @@ public class InsertOperator extends MongoOperator {
     private void insertOne(ClientSession clientSession, MongoCollection<Document> collection) {
 
         if(clientSession != null) {
-            if(op.getOptions().size() != 0) {
-                InsertOneOptions insertOneOptions = InsertOptionsMapper.mapToInertOneOptions(op.getOptions());
+            if(!op.getOptions().isEmpty()) {
+                InsertOneOptions insertOneOptions = InsertOptionsMapper.mapToInsertOneOptions(op.getOptions());
                 collection.insertOne(clientSession, op.getDocuments().get(0), insertOneOptions);
             } else {
                 collection.insertOne(clientSession, op.getDocuments().get(0));
             }
 
         } else {
-            if(op.getOptions().size() != 0) {
-                InsertOneOptions insertOneOptions = InsertOptionsMapper.mapToInertOneOptions(op.getOptions());
+            if(!op.getOptions().isEmpty()) {
+                InsertOneOptions insertOneOptions = InsertOptionsMapper.mapToInsertOneOptions(op.getOptions());
                 collection.insertOne(op.getDocuments().get(0), insertOneOptions);
             } else {
                 collection.insertOne(op.getDocuments().get(0));

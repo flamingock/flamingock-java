@@ -30,7 +30,9 @@ import static io.flamingock.template.mongodb.mapper.MapperUtil.getString;
 import java.util.concurrent.TimeUnit;
 
 
-public class IndexOptionsMapper {
+public final class IndexOptionsMapper {
+
+    private IndexOptionsMapper() {}
 
     public static IndexOptions mapToIndexOptions(Map<String, Object> options) {
         IndexOptions indexOptions = new IndexOptions();
@@ -98,10 +100,5 @@ public class IndexOptionsMapper {
 
         return indexOptions;
     }
-
-
-    // Utility methods for safe type checking with exception handling
-
-
 }
 

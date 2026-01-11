@@ -237,6 +237,128 @@ class MongoOperationValidatorTest {
     }
 
     @Nested
+    @DisplayName("Update Operation Tests")
+    class UpdateOperationTests {
+
+        @Test
+        @DisplayName("WHEN update missing parameters THEN validation fails")
+        void updateMissingParametersTest() {
+            MongoOperation op = new MongoOperation();
+            op.setType("update");
+            op.setCollection("test");
+            op.setParameters(null);
+
+            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
+
+            assertEquals(1, errors.size());
+            assertTrue(errors.get(0).getMessage().contains("requires 'parameters'"));
+        }
+
+        @Test
+        @DisplayName("WHEN update missing filter THEN validation fails")
+        void updateMissingFilterTest() {
+            MongoOperation op = new MongoOperation();
+            op.setType("update");
+            op.setCollection("test");
+            Map<String, Object> params = new HashMap<>();
+            Map<String, Object> update = new HashMap<>();
+            update.put("$set", new HashMap<>());
+            params.put("update", update);
+            op.setParameters(params);
+
+            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
+
+            assertEquals(1, errors.size());
+            assertTrue(errors.get(0).getMessage().contains("requires 'filter'"));
+        }
+
+        @Test
+        @DisplayName("WHEN update missing update param THEN validation fails")
+        void updateMissingUpdateParamTest() {
+            MongoOperation op = new MongoOperation();
+            op.setType("update");
+            op.setCollection("test");
+            Map<String, Object> params = new HashMap<>();
+            params.put("filter", new HashMap<>());
+            op.setParameters(params);
+
+            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
+
+            assertEquals(1, errors.size());
+            assertTrue(errors.get(0).getMessage().contains("requires 'update'"));
+        }
+
+        @Test
+        @DisplayName("WHEN update param is wrong type THEN validation fails")
+        void updateParamWrongTypeTest() {
+            MongoOperation op = new MongoOperation();
+            op.setType("update");
+            op.setCollection("test");
+            Map<String, Object> params = new HashMap<>();
+            params.put("filter", new HashMap<>());
+            params.put("update", "not a document");
+            op.setParameters(params);
+
+            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
+
+            assertEquals(1, errors.size());
+            assertTrue(errors.get(0).getMessage().contains("must be a document"));
+        }
+
+        @Test
+        @DisplayName("WHEN update missing both filter and update THEN both errors reported")
+        void updateMissingBothTest() {
+            MongoOperation op = new MongoOperation();
+            op.setType("update");
+            op.setCollection("test");
+            op.setParameters(new HashMap<>());
+
+            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
+
+            assertEquals(2, errors.size());
+        }
+
+        @Test
+        @DisplayName("WHEN update is valid THEN validation passes")
+        void updateValidTest() {
+            MongoOperation op = new MongoOperation();
+            op.setType("update");
+            op.setCollection("test");
+            Map<String, Object> params = new HashMap<>();
+            params.put("filter", new HashMap<>());
+            Map<String, Object> update = new HashMap<>();
+            Map<String, Object> setFields = new HashMap<>();
+            setFields.put("status", "active");
+            update.put("$set", setFields);
+            params.put("update", update);
+            op.setParameters(params);
+
+            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
+
+            assertTrue(errors.isEmpty());
+        }
+
+        @Test
+        @DisplayName("WHEN update with multi option is valid THEN validation passes")
+        void updateWithMultiValidTest() {
+            MongoOperation op = new MongoOperation();
+            op.setType("update");
+            op.setCollection("test");
+            Map<String, Object> params = new HashMap<>();
+            params.put("filter", new HashMap<>());
+            Map<String, Object> update = new HashMap<>();
+            update.put("$set", new HashMap<>());
+            params.put("update", update);
+            params.put("multi", true);
+            op.setParameters(params);
+
+            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
+
+            assertTrue(errors.isEmpty());
+        }
+    }
+
+    @Nested
     @DisplayName("Delete Operation Tests")
     class DeleteOperationTests {
 
@@ -495,7 +617,7 @@ class MongoOperationValidatorTest {
             op.setType("createView");
             op.setCollection("testView");
             Map<String, Object> params = new HashMap<>();
-            params.put("pipeline", Arrays.asList(new HashMap<>()));
+            params.put("pipeline", Collections.singletonList(new HashMap<>()));
             op.setParameters(params);
 
             List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);

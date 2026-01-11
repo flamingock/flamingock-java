@@ -27,6 +27,7 @@ import io.flamingock.template.mongodb.model.operator.InsertOperator;
 import io.flamingock.template.mongodb.model.operator.ModifyCollectionOperator;
 import io.flamingock.template.mongodb.model.operator.MongoOperator;
 import io.flamingock.template.mongodb.model.operator.RenameCollectionOperator;
+import io.flamingock.template.mongodb.model.operator.UpdateOperator;
 
 import java.util.Arrays;
 import java.util.function.BiFunction;
@@ -36,6 +37,7 @@ public enum MongoOperationType {
     CREATE_COLLECTION("createCollection", CreateCollectionOperator::new),
     CREATE_INDEX("createIndex", CreateIndexOperator::new),
     INSERT("insert", InsertOperator::new),
+    UPDATE("update", UpdateOperator::new),
     DELETE("delete", DeleteOperator::new),
     DROP_COLLECTION("dropCollection", DropCollectionOperator::new),
     DROP_INDEX("dropIndex", DropIndexOperator::new),

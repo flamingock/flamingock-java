@@ -44,17 +44,17 @@ public abstract class MongoOperator {
 
         if (transactional) {
             if (withClientSession) {
+                logger.debug("Applying transactional operation [{}] with transaction", simpleName);
+            } else {
                 logger.warn("{} is a transactional operation but is not being applied within a transaction. " +
                                 "Recommend marking Change as transactional.",
                         simpleName);
-            } else {
-                logger.debug("Applying operation [{}] with transaction: ", simpleName);
             }
         } else {
-            if(withClientSession) {
+            if (withClientSession) {
                 logger.info("{} is not transactional, but Change has been marked as transactional. Transaction ignored.", simpleName);
             } else {
-                logger.debug("Applying non-transactional operation [{}]: ", simpleName);
+                logger.debug("Applying non-transactional operation [{}]", simpleName);
             }
         }
     }

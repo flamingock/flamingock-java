@@ -109,6 +109,16 @@ public class MongoOperation {
                 : null;
     }
 
+    @SuppressWarnings("unchecked")
+    public Document getUpdate() {
+        return new Document((Map<String, Object>) parameters.get("update"));
+    }
+
+    public boolean isMulti() {
+        Object multi = parameters.get("multi");
+        return multi != null && (Boolean) multi;
+    }
+
     public MongoOperator getOperator(MongoDatabase db) {
         return MongoOperationType.getFromValue(getType()).getOperator(db, this);
     }

@@ -63,6 +63,21 @@ import java.util.Map;
  *         email: "john@example.com"
  * }</pre>
  *
+ * <h3>update</h3>
+ * <p>Requires {@code parameters.filter} and {@code parameters.update}. Optionally supports {@code parameters.multi}
+ * (boolean, default false) to update multiple documents.</p>
+ * <pre>{@code
+ * - type: update
+ *   collection: users
+ *   parameters:
+ *     filter:
+ *       status: "inactive"
+ *     update:
+ *       $set:
+ *         status: "archived"
+ *     multi: true
+ * }</pre>
+ *
  * <h3>delete</h3>
  * <p>Requires {@code parameters.filter}. Filter can be empty ({@code {}}) to delete all documents.</p>
  * <pre>{@code
@@ -215,6 +230,8 @@ public final class MongoOperationValidator {
         switch (type) {
             case INSERT:
                 return validateInsert(op, entityId);
+            case UPDATE:
+                return validateUpdate(op, entityId);
             case DELETE:
                 return validateDelete(op, entityId);
             case CREATE_INDEX:
@@ -264,6 +281,33 @@ public final class MongoOperationValidator {
                 errors.add(new ValidationError(entityId, "InsertOperation",
                         "Document at index " + i + " is null"));
             }
+        }
+
+        return errors;
+    }
+
+    private static List<ValidationError> validateUpdate(MongoOperation op, String entityId) {
+        List<ValidationError> errors = new ArrayList<>();
+        Map<String, Object> params = op.getParameters();
+
+        if (params == null) {
+            errors.add(new ValidationError(entityId, "UpdateOperation",
+                    "Update operation requires 'parameters' with 'filter' and 'update'"));
+            return errors;
+        }
+
+        if (!params.containsKey("filter")) {
+            errors.add(new ValidationError(entityId, "UpdateOperation",
+                    "Update operation requires 'filter' parameter"));
+        }
+
+        Object update = params.get("update");
+        if (update == null) {
+            errors.add(new ValidationError(entityId, "UpdateOperation",
+                    "Update operation requires 'update' parameter"));
+        } else if (!(update instanceof Map)) {
+            errors.add(new ValidationError(entityId, "UpdateOperation",
+                    "'update' must be a document"));
         }
 
         return errors;
