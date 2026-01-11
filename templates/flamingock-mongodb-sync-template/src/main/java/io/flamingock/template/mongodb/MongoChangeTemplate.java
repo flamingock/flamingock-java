@@ -24,6 +24,9 @@ import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.template.mongodb.model.MongoApplyPayload;
 import io.flamingock.template.mongodb.model.MongoOperation;
+import io.flamingock.template.mongodb.validation.MongoOperationValidator;
+import io.flamingock.template.mongodb.validation.MongoTemplateValidationException;
+import io.flamingock.template.mongodb.validation.ValidationError;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -97,6 +100,7 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoApply
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
         }
+        validatePayload(applyPayload, changeId);
         executeOperationsWithAutoRollback(db, applyPayload, clientSession);
     }
 
@@ -105,7 +109,25 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoApply
         if (this.isTransactional && clientSession == null) {
             throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
         }
+        validatePayload(rollbackPayload, changeId + ".rollback");
         executeRollbackOperations(db, applyPayload, clientSession);
+    }
+
+    private void validatePayload(MongoApplyPayload payload, String entityId) {
+        if (payload == null || payload.getOperations() == null) {
+            return;
+        }
+
+        List<ValidationError> errors = new ArrayList<>();
+        List<MongoOperation> operations = payload.getOperations();
+        for (int i = 0; i < operations.size(); i++) {
+            String opId = entityId + ".operations[" + i + "]";
+            errors.addAll(MongoOperationValidator.validate(operations.get(i), opId));
+        }
+
+        if (!errors.isEmpty()) {
+            throw new MongoTemplateValidationException(errors);
+        }
     }
 
     private void executeOperationsWithAutoRollback(MongoDatabase db, MongoApplyPayload payload, ClientSession clientSession) {
