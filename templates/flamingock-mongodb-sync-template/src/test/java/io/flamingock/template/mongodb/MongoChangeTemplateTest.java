@@ -40,6 +40,7 @@ import java.util.List;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EnableFlamingock(configFile = "flamingock/pipeline.yaml")
 @Testcontainers
@@ -68,7 +69,9 @@ class MongoChangeTemplateTest {
     @BeforeEach
     void setupEach() {
         mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
-        mongoDatabase.getCollection(DEFAULT_AUDIT_STORE_NAME).drop();
+        mongoDatabase.getCollection("users").drop();
+        mongoDatabase.getCollection("products").drop();
+        mongoDatabase.getCollection("orders").drop();
     }
 
 
@@ -88,7 +91,7 @@ class MongoChangeTemplateTest {
                 .find()
                 .into(new ArrayList<>());
 
-        assertEquals(4, auditLog.size());
+        assertEquals(8, auditLog.size());
 
         assertEquals("create-users-collection-with-index", auditLog.get(0).getString("changeId"));
         assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(0).getString("state"));
@@ -100,6 +103,17 @@ class MongoChangeTemplateTest {
         assertEquals("seed-users", auditLog.get(3).getString("changeId"));
         assertEquals(AuditEntry.Status.APPLIED.name(), auditLog.get(3).getString("state"));
 
+        assertEquals("multiple-operations-change", auditLog.get(4).getString("changeId"));
+        assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(4).getString("state"));
+        assertEquals("multiple-operations-change", auditLog.get(5).getString("changeId"));
+        assertEquals(AuditEntry.Status.APPLIED.name(), auditLog.get(5).getString("state"));
+
+        assertEquals("per-operation-rollback-change", auditLog.get(6).getString("changeId"));
+        assertEquals(AuditEntry.Status.STARTED.name(), auditLog.get(6).getString("state"));
+        assertEquals("per-operation-rollback-change", auditLog.get(7).getString("changeId"));
+        assertEquals(AuditEntry.Status.APPLIED.name(), auditLog.get(7).getString("state"));
+
+        // Verify for single operation
         List<Document> users = mongoDatabase.getCollection("users")
                 .find()
                 .into(new ArrayList<>());
@@ -112,7 +126,40 @@ class MongoChangeTemplateTest {
         assertEquals("Backup", users.get(1).getString("name"));
         assertEquals("backup@company.com", users.get(1).getString("email"));
         assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
-    }
 
+        // Verify for multiple operation
+        List<Document> products = mongoDatabase.getCollection("products")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(3, products.size(), "Should have 3 products from multiple operations");
+        assertEquals("Laptop", products.get(0).getString("name"));
+        assertEquals("Keyboard", products.get(1).getString("name"));
+        assertEquals("Mouse", products.get(2).getString("name"));
+
+        List<Document> indexes = mongoDatabase.getCollection("products")
+                .listIndexes()
+                .into(new ArrayList<>());
+        boolean categoryIndexExists = indexes.stream()
+                .anyMatch(idx -> "category_index".equals(idx.getString("name")));
+        assertTrue(categoryIndexExists, "Category index should exist on products collection");
+
+        List<Document> orders = mongoDatabase.getCollection("orders")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(2, orders.size(), "Should have 2 orders from per-operation rollback change");
+        assertEquals("ORD-001", orders.get(0).getString("orderId"));
+        assertEquals("John Doe", orders.get(0).getString("customer"));
+        assertEquals("ORD-002", orders.get(1).getString("orderId"));
+        assertEquals("Jane Smith", orders.get(1).getString("customer"));
+
+        List<Document> orderIndexes = mongoDatabase.getCollection("orders")
+                .listIndexes()
+                .into(new ArrayList<>());
+        boolean orderIdIndexExists = orderIndexes.stream()
+                .anyMatch(idx -> "orderId_index".equals(idx.getString("name")));
+        assertTrue(orderIdIndexExists, "orderId_index should exist on orders collection");
+    }
 
 }

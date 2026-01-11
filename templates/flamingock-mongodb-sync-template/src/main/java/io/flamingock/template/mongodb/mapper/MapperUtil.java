@@ -16,10 +16,12 @@
 package io.flamingock.template.mongodb.mapper;
 
 import com.mongodb.client.model.Collation;
+import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.conversions.Bson;
 
+import java.util.List;
 import java.util.Map;
 
 public final class MapperUtil {
@@ -101,7 +103,9 @@ public final class MapperUtil {
     // Converts Java types into BSON types
     @SuppressWarnings("unchecked")
     public static BsonValue toBsonValue(Object value) {
-        if (value instanceof String) {
+        if (value == null) {
+            return org.bson.BsonNull.VALUE;
+        } else if (value instanceof String) {
             return new org.bson.BsonString((String) value);
         } else if (value instanceof Integer) {
             return new org.bson.BsonInt32((Integer) value);
@@ -111,9 +115,20 @@ public final class MapperUtil {
             return new org.bson.BsonDouble((Double) value);
         } else if (value instanceof Boolean) {
             return new org.bson.BsonBoolean((Boolean) value);
+        } else if (value instanceof List) {
+            return toBsonArray((List<?>) value);
         } else if (value instanceof Map) {
             return toBsonDocument((Map<String, Object>) value);
         }
         throw new IllegalArgumentException("Unsupported BSON type: " + value.getClass().getSimpleName());
+    }
+
+    // Converts a List to BsonArray
+    public static BsonArray toBsonArray(List<?> list) {
+        BsonArray array = new BsonArray();
+        for (Object item : list) {
+            array.add(toBsonValue(item));
+        }
+        return array;
     }
 }
