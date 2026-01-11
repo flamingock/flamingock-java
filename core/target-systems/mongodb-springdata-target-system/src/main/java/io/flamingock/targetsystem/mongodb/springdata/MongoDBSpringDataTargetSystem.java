@@ -27,7 +27,7 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.targetystem.mongodb.api.MongoDBTargetSystem;
+import io.flamingock.targetsystem.mongodb.api.MongoDBTargetSystem;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.Objects;

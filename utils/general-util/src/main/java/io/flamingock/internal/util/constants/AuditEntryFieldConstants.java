@@ -20,11 +20,12 @@ public class AuditEntryFieldConstants {
     public static final String KEY_STAGE_ID = "stageId";
     public static final String KEY_CHANGE_ID = "changeId";
     public static final String KEY_AUTHOR = "author";
-    public static final String KEY_TIMESTAMP = "timestamp";
+    public static final String KEY_CREATED_AT = "createdAt";
     public static final String KEY_STATE = "state";
     public static final String KEY_TYPE = "type";
-    public static final String KEY_CHANGE_CLASS = "changeClass";
+    public static final String KEY_INVOKED_CLASS = "invokedClass";
     public static final String KEY_INVOKED_METHOD = "invokedMethod";
+    public static final String KEY_SOURCE_FILE = "sourceFile";
     public static final String KEY_METADATA = "metadata";
     public static final String KEY_EXECUTION_MILLIS = "executionMillis";
     public static final String KEY_EXECUTION_HOSTNAME = "executionHostname";
@@ -32,7 +33,7 @@ public class AuditEntryFieldConstants {
     public static final String KEY_SYSTEM_CHANGE = "systemChange";
     public static final String KEY_TX_STRATEGY = "txStrategy";
     public static final String KEY_TARGET_SYSTEM_ID = "targetSystemId";
-    public static final String KEY_ORDER = "order";
+    public static final String KEY_CHANGE_ORDER = "changeOrder";
     public static final String KEY_RECOVERY_STRATEGY = "recoveryStrategy";
     public static final String KEY_TRANSACTION_FLAG = "transactionFlag";
 }

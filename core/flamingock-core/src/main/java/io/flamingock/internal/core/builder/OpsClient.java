@@ -96,6 +96,7 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
                 currentEntry.getType(),
                 currentEntry.getClassName(),
                 currentEntry.getMethodName(),
+                null, //TODO: set sourceFile
                 currentEntry.getExecutionMillis(),
                 StringUtil.hostname(),
                 currentEntry.getMetadata(),//??

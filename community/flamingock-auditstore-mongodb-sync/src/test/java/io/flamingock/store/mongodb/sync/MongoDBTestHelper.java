@@ -19,7 +19,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.TimeUtil;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.targetystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
+import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CHANGE_ID;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TIMESTAMP;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 
 public class MongoDBTestHelper {
     public final MongoDatabase mongoDatabase;
@@ -48,7 +48,7 @@ public class MongoDBTestHelper {
                 .find()
                 .into(new LinkedList<>())
                 .stream()
-                .sorted(Comparator.comparing(d -> TimeUtil.toLocalDateTime(d.get(KEY_TIMESTAMP))))
+                .sorted(Comparator.comparing(d -> TimeUtil.toLocalDateTime(d.get(KEY_CREATED_AT))))
                 .map(document -> document.getString(KEY_CHANGE_ID))
                 .collect(Collectors.toList());
     }
