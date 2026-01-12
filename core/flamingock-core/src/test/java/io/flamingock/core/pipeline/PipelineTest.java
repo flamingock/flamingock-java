@@ -107,6 +107,51 @@ public class PipelineTest {
 
     }
 
+    @Test
+    @DisplayName("Should throw an exception only for the empty stage when mixed with non-empty stages")
+    void shouldThrowExceptionOnlyForEmptyStageWhenMixedWithNonEmptyStages() {
+        PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
+
+        CodePreviewChange validTask = new CodePreviewChange(
+                "valid-task",
+                "001",
+                "test-author",
+                PipelineTestChange.class.getName(),
+                PreviewConstructor.getDefault(),
+                executionMethod,
+                null,
+                false,
+                true,
+                false,
+                null,
+                RecoveryDescriptor.getDefault(),
+                false);
+
+        // Stage with a valid task
+        PreviewStage stageWithChanges = Mockito.mock(PreviewStage.class);
+        Mockito.when(stageWithChanges.getType()).thenReturn(StageType.DEFAULT);
+        Mockito.when(stageWithChanges.getName()).thenReturn("stage-with-changes");
+        Mockito.when(stageWithChanges.getTasks()).thenReturn((Collection) Collections.singletonList(validTask));
+
+        // Stage without any tasks (empty)
+        PreviewStage emptyStage = getPreviewStage("empty-stage");
+
+        PreviewPipeline previewPipeline = new PreviewPipeline();
+        previewPipeline.setStages(Arrays.asList(stageWithChanges, emptyStage));
+
+        LoadedPipeline pipeline = LoadedPipeline.builder()
+                .addPreviewPipeline(previewPipeline)
+                .build();
+
+        FlamingockException exception = Assertions.assertThrows(FlamingockException.class, pipeline::validate);
+
+        // Should only fail for the empty stage
+        Assertions.assertTrue(exception.getMessage().contains("Stage[empty-stage] must contain at least one task"),
+                "Error message should mention the empty stage");
+        Assertions.assertFalse(exception.getMessage().contains("stage-with-changes"),
+                "Error message should NOT mention the stage with changes");
+    }
+
 
     private static PreviewStage getPreviewStage(String name) {
         PreviewStage stage = Mockito.mock(PreviewStage.class);
