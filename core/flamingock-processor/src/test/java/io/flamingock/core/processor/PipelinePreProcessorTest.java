@@ -136,11 +136,11 @@ public class PipelinePreProcessorTest {
         EnableFlamingock invalidAnnotation = createMockAnnotationWithNeitherFileNorStages();
         Map<String, List<AbstractPreviewTask>> changes = new HashMap<>();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        
+
         // When & Then - should throw RuntimeException from the main validation method
-        Exception exception = assertThrows(Exception.class, () -> 
+        Exception exception = assertThrows(Exception.class, () ->
             callGetPipelineFromProcessChanges(processor, changes, invalidAnnotation));
-        
+
         // Check if it's wrapped in InvocationTargetException
         Throwable cause = exception.getCause();
         if (cause instanceof RuntimeException) {
@@ -150,6 +150,26 @@ public class PipelinePreProcessorTest {
             assertTrue(exception.getMessage().contains("must specify either configFile OR stages"),
                     "Should have error about missing configuration");
         }
+    }
+
+    /**
+     * Test that @EnableFlamingock with an explicit empty stages array should be allowed.
+     * This test is expected to FAIL initially (TDD approach) because the current implementation
+     * requires at least one stage to be defined.
+     */
+    @Test
+    @DisplayName("Should allow empty stages array in @EnableFlamingock annotation")
+    void shouldAllowEmptyStagesArrayInAnnotation() throws Exception {
+        // Given - create @EnableFlamingock annotation with explicit empty stages array
+        EnableFlamingock annotation = new MockFlamingockBuilder()
+            .withStages() // Empty stages array
+            .build();
+        Map<String, List<AbstractPreviewTask>> changes = new HashMap<>();
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+
+        // When & Then - should NOT throw exception (empty stages should be allowed)
+
+        assertDoesNotThrow(() -> callGetPipelineFromProcessChanges(processor, changes, annotation));
     }
 
     /**

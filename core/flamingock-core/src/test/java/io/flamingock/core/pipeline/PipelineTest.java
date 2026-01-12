@@ -54,20 +54,20 @@ public class PipelineTest {
         }
     }
 
+    /**
+     * Test that a pipeline with no stages should be allowed.
+     * This test is expected to FAIL initially (TDD approach) because the current implementation
+     * requires at least one stage to be defined in the pipeline.
+     */
     @Test
-    @DisplayName("Should throw an exception when Pipeline.validateAndGetLoadedStages() if no stages")
-    void shouldThrowExceptionWhenPipelineDoesNotContainStages() {
-
-
+    @DisplayName("Should allow pipeline with no stages")
+    void shouldAllowPipelineWithNoStages() {
         LoadedPipeline emptyPipeline = LoadedPipeline.builder()
                 .addPreviewPipeline(new PreviewPipeline())
                 .build();
 
-        FlamingockException exception = Assertions.assertThrows(FlamingockException.class, emptyPipeline::validate);
-
-        Assertions.assertTrue(exception.getMessage().contains("Pipeline must contain at least one stage"), 
-                "Error message should mention that pipeline must contain at least one stage");
-
+        // Expect validation to pass (no exception should be thrown)
+        Assertions.assertDoesNotThrow(emptyPipeline::validate);
     }
 
     @Test
