@@ -672,10 +672,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException("@EnableFlamingock annotation cannot have both configFile and stages configured. Choose one: either specify configFile OR stages.");
         }
 
-        if (!hasFileInAnnotation && !hasStagesInAnnotation) {
-            throw new RuntimeException("@EnableFlamingock annotation must specify either configFile OR stages configuration.");
-        }
-
     }
 
     /**
