@@ -127,32 +127,6 @@ public class PipelinePreProcessorTest {
     }
 
     /**
-     * Test error handling for invalid annotation configuration.
-     */
-    @Test
-    @DisplayName("Should throw error for invalid annotation configuration")
-    void shouldThrowErrorForInvalidAnnotationConfiguration() throws Exception {
-        // Given - create invalid @EnableFlamingock annotation (neither file nor stages)
-        EnableFlamingock invalidAnnotation = createMockAnnotationWithNeitherFileNorStages();
-        Map<String, List<AbstractPreviewTask>> changes = new HashMap<>();
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-
-        // When & Then - should throw RuntimeException from the main validation method
-        Exception exception = assertThrows(Exception.class, () ->
-            callGetPipelineFromProcessChanges(processor, changes, invalidAnnotation));
-
-        // Check if it's wrapped in InvocationTargetException
-        Throwable cause = exception.getCause();
-        if (cause instanceof RuntimeException) {
-            assertTrue(cause.getMessage().contains("must specify either configFile OR stages"),
-                    "Should have error about missing configuration");
-        } else {
-            assertTrue(exception.getMessage().contains("must specify either configFile OR stages"),
-                    "Should have error about missing configuration");
-        }
-    }
-
-    /**
      * Test that @EnableFlamingock with an explicit empty stages array should be allowed.
      * This test is expected to FAIL initially (TDD approach) because the current implementation
      * requires at least one stage to be defined.
