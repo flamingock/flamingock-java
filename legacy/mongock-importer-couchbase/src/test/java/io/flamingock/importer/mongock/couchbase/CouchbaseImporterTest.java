@@ -23,6 +23,7 @@ import com.couchbase.client.java.manager.bucket.BucketManager;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.store.couchbase.CouchbaseAuditStore;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
@@ -41,11 +42,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
+import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -63,7 +66,7 @@ public class CouchbaseImporterTest {
 
     public static final String MONGOCK_BUCKET_NAME = "test";
     public static final String MONGOCK_SCOPE_NAME = CollectionIdentifier.DEFAULT_SCOPE;
-    public static final String MONGOCK_COLLECTION_NAME = DEFAULT_MONGOCK_ORIGIN;
+    public static final String MONGOCK_COLLECTION_NAME = CollectionIdentifier.DEFAULT_COLLECTION;
 
 
     @Container
@@ -125,8 +128,27 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        validateFlamingockAuditOutput();
+        List<JsonObject> auditLog = getAuditLog();
 
+        assertEquals(6, auditLog.size());
+
+        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(1).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(1).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(2).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(3).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(3).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(4).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(4).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(5).getString("state"));
     }
 
     @Test
@@ -152,7 +174,30 @@ public class CouchbaseImporterTest {
 
         flamingock.run();
 
-        validateFlamingockAuditOutput();
+        List<JsonObject> auditLog = getAuditLog();
+
+        assertEquals(7, auditLog.size());
+
+        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(1).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(2).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(3).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(3).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(4).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(5).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(6).getString("state"));
     }
 
     @Test
@@ -176,34 +221,12 @@ public class CouchbaseImporterTest {
 
     }
 
-
-    private static void validateFlamingockAuditOutput() {
-        List<JsonObject> auditLog = CouchbaseCollectionHelper.selectAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME);
-
-
-        Map<String, JsonObject> byChangeId = auditLog.stream()
-                .collect(Collectors.toMap(
-                        e -> e.getString("changeId"),
-                        e -> e
-                ));
-
-
-        assertEquals(4, auditLog.size());
-        JsonObject importAudit = byChangeId.get("migration-mongock-to-flamingock-community");
-        JsonObject mongockAudit1 = byChangeId.get("mongock-change-1");
-        JsonObject mongockAudit2 = byChangeId.get("mongock-change-2");
-        JsonObject flamingockAudit = byChangeId.get("flamingock-change");
-        assertNotNull(importAudit);
-        assertEquals("APPLIED", importAudit.getString("state"));
-
-        assertNotNull(mongockAudit1);
-        assertEquals("APPLIED", mongockAudit1.getString("state"));
-
-        assertNotNull(mongockAudit2);
-        assertEquals("APPLIED", mongockAudit2.getString("state"));
-
-        assertNotNull(flamingockAudit);
-        assertEquals("APPLIED", flamingockAudit.getString("state"));
+    private List<JsonObject> getAuditLog() {
+        return CouchbaseCollectionHelper.selectAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME)
+                .stream()
+                .sorted(Comparator.comparingLong(o -> ((JsonObject)o).getLong(KEY_CREATED_AT))
+                        .thenComparing(o -> AuditEntry.Status.valueOf(((JsonObject)o).getString(KEY_STATE)).getPriority()))
+                .collect(Collectors.toList());
     }
 
     private static JsonObject createAuditObject(String value) {
@@ -211,7 +234,7 @@ public class CouchbaseImporterTest {
                 .put("executionId", "exec-1")
                 .put("changeId", value)
                 .put("author", "author1")
-                .put("timestamp", String.valueOf(Instant.now().toEpochMilli()))
+                .put("timestamp", Instant.now().toEpochMilli())
                 .put("state", "EXECUTED")
                 .put("type", "EXECUTION")
                 .put("changeLogClass", "io.flamingock.changelog.Class1")
