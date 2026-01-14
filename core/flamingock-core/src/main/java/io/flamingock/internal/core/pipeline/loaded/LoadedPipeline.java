@@ -88,10 +88,7 @@ public class LoadedPipeline implements PipelineDescriptor {
         }
 
         // Validate pipeline has stages
-        if (loadedStages == null || loadedStages.isEmpty()) {
-            errors.add(new ValidationError("Pipeline must contain at least one stage", "pipeline", "pipeline"));
-
-        } else {
+        if (loadedStages != null) {
             loadedStages.stream()
                     .map(stage -> stage.getValidationErrors(DEFAULT_CONTEXT))
                     .forEach(errors::addAll);

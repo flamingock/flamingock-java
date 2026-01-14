@@ -26,7 +26,7 @@ public class CouchbaseChangeEntry {
     private String executionId;
     private String changeId;
     private String author;
-    private String timestamp;
+    private Long timestamp;
     private String state;
     private String type;
     private String changeLogClass;
@@ -50,7 +50,7 @@ public class CouchbaseChangeEntry {
         entry.executionId = doc.getString("executionId");
         entry.changeId = doc.getString("changeId");
         entry.author = doc.getString("author");
-        entry.timestamp = doc.getString("timestamp");
+        entry.timestamp = doc.getLong("timestamp");
         entry.state = doc.getString("state");
         entry.type = doc.getString("type");
         entry.changeLogClass = doc.getString("changeLogClass");
@@ -71,19 +71,11 @@ public class CouchbaseChangeEntry {
     }
 
     public AuditEntry toAuditEntry() {
-        long epochMillis;
-        try {
-            epochMillis = Long.parseLong(timestamp);
-        } catch (NumberFormatException e) {
-            String ts = timestamp;
-            if (ts.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}")) {
-                ts = ts + "Z";
-            }
-            epochMillis = Instant.parse(ts).toEpochMilli();
-        }
-        LocalDateTime ts = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
+        LocalDateTime ts = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
 
         MongockChangeState stateEnum = MongockChangeState.valueOf(state);
+        MongockChangeType changeType = MongockChangeType.valueOf(type);
+
         return new AuditEntry(
                 executionId,
                 null,
@@ -91,7 +83,7 @@ public class CouchbaseChangeEntry {
                 author,
                 ts,
                 stateEnum.toAuditStatus(),
-                AuditEntry.ExecutionType.valueOf(type),
+                changeType.toAuditType(),
                 changeLogClass,
                 changeSetMethod,
                 null, //TODO: set sourceFile

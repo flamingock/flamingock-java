@@ -19,6 +19,10 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import org.jetbrains.annotations.NotNull;
 
 public class PipelineHelper {
+
+    public static final String SYSTEM_STAGE_ID = "flamingock-system-stage";
+    public static final String LEGACY_STAGE_ID = "flamingock-legacy-stage";
+
     private static final String errorTemplate = "importing change with id[%s] from database. It must be imported  to a flamingock stage";
 
     private final PipelineDescriptor pipelineDescriptor;
@@ -29,7 +33,7 @@ public class PipelineHelper {
 
     public String getStageId(AuditEntry auditEntryFromOrigin) {
         if (Boolean.TRUE.equals(auditEntryFromOrigin.getSystemChange())) {
-            return "mongock-legacy-system-changes";
+            return LEGACY_STAGE_ID;
         } else {
             String taskIdInPipeline = getBaseTaskId(auditEntryFromOrigin);
             return pipelineDescriptor.getStageByTask(taskIdInPipeline).orElseThrow(() -> generateTaskIdException(taskIdInPipeline));

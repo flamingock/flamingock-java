@@ -39,6 +39,7 @@ import io.flamingock.internal.core.task.navigation.step.complete.failed.Complete
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.util.Result;
+import io.flamingock.internal.util.TimeService;
 
 import java.time.LocalDateTime;
 
@@ -89,10 +90,10 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
     protected final AuditStoreStepOperations auditStoreOperations;
 
     private final ContextResolver baseContext;
+    
     private final LockGuardProxyFactory lockProxyFactory;
 
-    protected final LocalDateTime auditTime;
-
+    protected final TimeService timeService;
 
     protected AbstractChangeProcessStrategy(ExecutableTask change,
                                             ExecutionContext executionContext,
@@ -101,7 +102,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
                                             TaskSummarizer summarizer,
                                             LockGuardProxyFactory proxyFactory,
                                             ContextResolver baseContext,
-                                            LocalDateTime auditTime) {
+                                            TimeService timeService) {
         this.change = change;
         this.executionContext = executionContext;
         this.targetSystemOps = targetSystemOps;
@@ -109,7 +110,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         this.auditStoreOperations = auditStoreOperations;
         this.lockProxyFactory = proxyFactory;
         this.baseContext = baseContext;
-        this.auditTime = auditTime;
+        this.timeService = timeService;
     }
 
 
@@ -145,7 +146,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
      */
     protected ExecutableStep auditAndLogStartExecution(StartStep startStep,
                                                        ExecutionContext executionContext) {
-        Result auditResult = auditStoreOperations.auditStartExecution(startStep, executionContext, auditTime);
+        Result auditResult = auditStoreOperations.auditStartExecution(startStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditStartResult(auditResult, startStep.getLoadedTask().getId());
         ExecutableStep executableStep = startStep.start();
         summarizer.add(executableStep);
@@ -162,7 +163,7 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         summarizer.add(executionStep);
         stepLogger.logExecutionResult(executionStep);
 
-        Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, auditTime);
+        Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, timeService.currentDateTime());
 
         stepLogger.logAuditExecutionResult(auditResult, executionStep.getLoadedTask());
         AfterExecutionAuditStep afterExecutionAudit = executionStep.withAuditResult(auditResult);
@@ -172,14 +173,14 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
 
 
     protected void auditAndLogManualRollback(ManualRolledBackStep rolledBackStep, ExecutionContext executionContext) {
-        Result auditResult = auditStoreOperations.auditManualRollback(rolledBackStep, executionContext, auditTime);
+        Result auditResult = auditStoreOperations.auditManualRollback(rolledBackStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditManualRollbackResult(auditResult, rolledBackStep.getLoadedTask());
         CompletedFailedManualRollback failedStep = rolledBackStep.applyAuditResult(auditResult);
         summarizer.add(failedStep);
     }
 
     protected void auditAndLogAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext) {
-        Result auditResult = auditStoreOperations.auditAutoRollback(rolledBackStep, executionContext, auditTime);
+        Result auditResult = auditStoreOperations.auditAutoRollback(rolledBackStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditAutoRollbackResult(auditResult, rolledBackStep.getLoadedTask());
         summarizer.add(rolledBackStep);
     }

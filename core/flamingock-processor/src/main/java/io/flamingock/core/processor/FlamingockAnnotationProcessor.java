@@ -23,6 +23,7 @@ import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.PathResolver;
 import io.flamingock.core.processor.util.ProjectRootDetector;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
+import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -371,10 +372,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private Optional<SystemPreviewStage> buildSystemStageIfNeeded(List<CodePreviewChange> systemChanges) {
         if(!systemChanges.isEmpty()) {
-            logger.verbose("Building stage: SystemStage");
+            logger.verbose("Building stage: " + PipelineHelper.SYSTEM_STAGE_ID);
             // For system stage, use hardcoded name, description, package and resource dir to maintain consistency
             SystemPreviewStage systemStage = PreviewStage.systemBuilder()
-                    .setName("SystemStage")
+                    .setName(PipelineHelper.SYSTEM_STAGE_ID)
                     .setDescription("Dedicated stage for system-level changes")
                     .setSourcesRoots(sourceRoots)
                     .setSourcesPackage(null)
@@ -433,8 +434,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     private Optional<PreviewStage> buildLegacyStageIfNeeded(List<CodePreviewChange> legacyChanges) {
         if (legacyChanges != null && !legacyChanges.isEmpty()) {
+            logger.verbose("Building stage: " + PipelineHelper.LEGACY_STAGE_ID);
             PreviewStage flamingockLegacyStage = PreviewStage.defaultBuilder(StageType.LEGACY)
-                    .setName("legacy-stage")
+                    .setName(PipelineHelper.LEGACY_STAGE_ID)
                     .setDescription("Flamingock legacy stage")
                     .setSourcesRoots(sourceRoots)
                     .setSourcesPackage(null) //TODO:
@@ -555,7 +557,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException("System stage in YAML pipeline requires a 'location' field. Please specify the location where changes are found.");
         }
 
-        logger.verbose("Building stage: SystemStage");
+        logger.verbose("Building stage: flamingock-system-stage");
 
         String sourcesPackage = null;
         String resourcesDir = null;
@@ -575,7 +577,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         // For system stage, use hardcoded name and description to maintain consistency
         return PreviewStage.systemBuilder()
-                .setName("SystemStage")
+                .setName("flamingock-system-stage")
                 .setDescription("Dedicated stage for system-level changes")
                 .setSourcesRoots(sourceRoots)
                 .setSourcesPackage(sourcesPackage)
@@ -668,10 +670,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     private void validateConfiguration(EnableFlamingock pipelineAnnotation, boolean hasFileInAnnotation, boolean hasStagesInAnnotation) {
         if (hasFileInAnnotation && hasStagesInAnnotation) {
             throw new RuntimeException("@EnableFlamingock annotation cannot have both configFile and stages configured. Choose one: either specify configFile OR stages.");
-        }
-
-        if (!hasFileInAnnotation && !hasStagesInAnnotation) {
-            throw new RuntimeException("@EnableFlamingock annotation must specify either configFile OR stages configuration.");
         }
 
     }
