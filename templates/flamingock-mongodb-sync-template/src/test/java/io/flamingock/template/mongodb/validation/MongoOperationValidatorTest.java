@@ -718,93 +718,22 @@ class MongoOperationValidatorTest {
     }
 
     @Nested
-    @DisplayName("Rollback Validation Tests")
-    class RollbackValidationTests {
-
-        @Test
-        @DisplayName("WHEN rollback operation is invalid THEN validation fails with rollback path")
-        void invalidRollbackTest() {
-            MongoOperation rollback = new MongoOperation();
-            rollback.setType("insert");
-            rollback.setCollection("test");
-            rollback.setParameters(new HashMap<>()); // missing documents
-
-            MongoOperation op = new MongoOperation();
-            op.setType("createCollection");
-            op.setCollection("test");
-            op.setRollback(rollback);
-
-            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
-
-            assertEquals(1, errors.size());
-            assertTrue(errors.get(0).getEntityId().contains(".rollback"));
-            assertTrue(errors.get(0).getMessage().contains("documents"));
-        }
-
-        @Test
-        @DisplayName("WHEN rollback operation is valid THEN validation passes")
-        void validRollbackTest() {
-            MongoOperation rollback = new MongoOperation();
-            rollback.setType("dropCollection");
-            rollback.setCollection("test");
-
-            MongoOperation op = new MongoOperation();
-            op.setType("createCollection");
-            op.setCollection("test");
-            op.setRollback(rollback);
-
-            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
-
-            assertTrue(errors.isEmpty());
-        }
-
-        @Test
-        @DisplayName("WHEN nested rollback is invalid THEN validation fails with nested path")
-        void nestedInvalidRollbackTest() {
-            MongoOperation nestedRollback = new MongoOperation();
-            nestedRollback.setType("unknownType");
-            nestedRollback.setCollection("test");
-
-            MongoOperation rollback = new MongoOperation();
-            rollback.setType("dropCollection");
-            rollback.setCollection("test");
-            rollback.setRollback(nestedRollback);
-
-            MongoOperation op = new MongoOperation();
-            op.setType("createCollection");
-            op.setCollection("test");
-            op.setRollback(rollback);
-
-            List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
-
-            assertEquals(1, errors.size());
-            assertTrue(errors.get(0).getEntityId().contains(".rollback.rollback"));
-        }
-    }
-
-    @Nested
     @DisplayName("Multiple Errors Tests")
     class MultipleErrorsTests {
 
         @Test
         @DisplayName("WHEN multiple validation errors exist THEN all are collected")
         void multipleErrorsTest() {
-            MongoOperation rollback = new MongoOperation();
-            rollback.setType("insert");
-            rollback.setCollection("");
-            rollback.setParameters(new HashMap<>());
-
             MongoOperation op = new MongoOperation();
             op.setType("insert");
             op.setCollection("test$invalid");
             Map<String, Object> params = new HashMap<>();
             params.put("documents", new ArrayList<>());
             op.setParameters(params);
-            op.setRollback(rollback);
 
             List<ValidationError> errors = MongoOperationValidator.validate(op, ENTITY_ID);
 
-            assertEquals(4, errors.size());
+            assertEquals(2, errors.size()); // collection contains $ and documents is empty
         }
     }
 }

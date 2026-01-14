@@ -21,107 +21,175 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Nullable;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
-import io.flamingock.internal.util.log.FlamingockLoggerFactory;
-import io.flamingock.template.mongodb.model.MongoApplyPayload;
 import io.flamingock.template.mongodb.model.MongoOperation;
 import io.flamingock.template.mongodb.validation.MongoOperationValidator;
 import io.flamingock.template.mongodb.validation.MongoTemplateValidationException;
 import io.flamingock.template.mongodb.validation.ValidationError;
-import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * MongoDB Change Template for executing declarative MongoDB operations defined in YAML.
  *
- * <h2>Apply Behavior</h2>
- * <p>The {@link #apply} method executes all operations defined in the payload sequentially.
- * The behavior differs based on the transactional mode:</p>
- *
- * <h3>Transactional Mode ({@code transactional: true})</h3>
- * <ul>
- *   <li>All operations execute within a MongoDB transaction (ClientSession)</li>
- *   <li>If any operation fails, MongoDB automatically rolls back the entire transaction</li>
- *   <li>Per-operation rollback definitions are NOT executed (the transaction handles atomicity)</li>
- * </ul>
- *
- * <h3>Non-Transactional Mode ({@code transactional: false})</h3>
- * <ul>
- *   <li>Each operation executes independently without a transaction</li>
- *   <li>Successfully completed operations are tracked</li>
- *   <li>If operation N fails, auto-rollback is triggered for operations 1 to N-1</li>
- *   <li>Auto-rollback executes per-operation rollbacks in reverse order</li>
- *   <li>Operations without a rollback definition are skipped during auto-rollback</li>
- *   <li>After auto-rollback completes, the original exception is re-thrown</li>
- * </ul>
- *
- * <h2>YAML Example</h2>
+ * <h2>YAML Structure</h2>
  * <pre>{@code
  * id: create-orders-collection
- * transactional: false
+ * transactional: true
  * template: MongoChangeTemplate
  * targetSystem:
  *   id: "mongodb"
  * apply:
- *   operations:
- *     - type: createCollection
- *       collection: orders
- *       rollback:
- *         type: dropCollection
- *         collection: orders
- *
- *     - type: insert
- *       collection: orders
- *       parameters:
- *         documents:
- *           - orderId: "ORD-001"
- *             customer: "John Doe"
- *       rollback:
- *         type: delete
- *         collection: orders
- *         parameters:
- *           filter: {}
+ *   - type: createCollection
+ *     collection: orders
+ *   - type: insert
+ *     collection: orders
+ *     parameters:
+ *       documents:
+ *         - orderId: "ORD-001"
+ *           customer: "John Doe"
+ * rollback:
+ *   - type: delete
+ *     collection: orders
+ *     parameters:
+ *       filter: {}
+ *   - type: dropCollection
+ *     collection: orders
  * }</pre>
  *
+ * <h2>Execution Behavior</h2>
+ * <ul>
+ *   <li>Apply operations execute sequentially in order</li>
+ *   <li>Rollback operations execute sequentially in the order defined by the user</li>
+ *   <li>The framework handles rollback invocation on failure</li>
+ *   <li>In transactional mode, MongoDB transaction provides atomicity</li>
+ * </ul>
+ *
  * @see MongoOperation
- * @see MongoApplyPayload
  */
-public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoApplyPayload, MongoApplyPayload> {
+/*
+ * Backward Compatibility for YAML Formats
+ *
+ * This template supports two YAML structures:
+ * - New list format:   apply: [- type: createCollection, - type: insert]
+ * - Old single format: apply: {type: createCollection, collection: users}
+ *
+ * The framework uses getApplyPayloadClass() to deserialize YAML payloads.
+ * Due to Java type erasure, List<MongoOperation> becomes List.class, which
+ * cannot deserialize the old Map format correctly.
+ *
+ * Solution: Override getApplyPayloadClass() to return Object.class, allowing
+ * the framework to pass raw YAML data (Map or List). The convertRawPayload()
+ * method then handles conversion to List<MongoOperation> for both formats.
+ *
+ * The converted operations are cached to avoid repeated conversion.
+ */
+public class MongoChangeTemplate extends AbstractChangeTemplate<Void, List<MongoOperation>, List<MongoOperation>> {
 
-    private static final Logger logger = FlamingockLoggerFactory.getLogger(MongoChangeTemplate.class);
+    private List<MongoOperation> convertedApplyOps;
+    private List<MongoOperation> convertedRollbackOps;
 
     public MongoChangeTemplate() {
         super(MongoOperation.class);
     }
 
+    /**
+     * Returns Object.class to allow the framework to pass raw YAML data without
+     * attempting to deserialize it as List. This enables backward compatibility
+     * with the old single-operation YAML format.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<List<MongoOperation>> getApplyPayloadClass() {
+        return (Class<List<MongoOperation>>) (Class<?>) Object.class;
+    }
+
+    /**
+     * Returns Object.class to allow the framework to pass raw YAML data without
+     * attempting to deserialize it as List. This enables backward compatibility
+     * with the old single-operation YAML format.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<List<MongoOperation>> getRollbackPayloadClass() {
+        return (Class<List<MongoOperation>>) (Class<?>) Object.class;
+    }
+
     @Apply
     public void apply(MongoDatabase db, @Nullable ClientSession clientSession) {
-        if (this.isTransactional && clientSession == null) {
-            throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
-        }
-        validatePayload(applyPayload, changeId);
-        executeOperationsWithAutoRollback(db, applyPayload, clientSession);
+        validateSession(clientSession);
+        List<MongoOperation> operations = getConvertedApplyOperations();
+        validatePayload(operations, changeId + ".apply");
+        executeOperations(db, operations, clientSession);
     }
 
     @Rollback
     public void rollback(MongoDatabase db, @Nullable ClientSession clientSession) {
-        if (this.isTransactional && clientSession == null) {
-            throw new IllegalArgumentException(String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
-        }
-        validatePayload(rollbackPayload, changeId + ".rollback");
-        executeRollbackOperations(db, applyPayload, clientSession);
+        validateSession(clientSession);
+        List<MongoOperation> operations = getConvertedRollbackOperations();
+        validatePayload(operations, changeId + ".rollback");
+        executeOperations(db, operations, clientSession);
     }
 
-    private void validatePayload(MongoApplyPayload payload, String entityId) {
-        if (payload == null || payload.getOperations() == null) {
+    private List<MongoOperation> getConvertedApplyOperations() {
+        if (convertedApplyOps == null) {
+            convertedApplyOps = convertRawPayload(getRawPayload("applyPayload"));
+        }
+        return convertedApplyOps;
+    }
+
+    private List<MongoOperation> getConvertedRollbackOperations() {
+        if (convertedRollbackOps == null) {
+            convertedRollbackOps = convertRawPayload(getRawPayload("rollbackPayload"));
+        }
+        return convertedRollbackOps;
+    }
+
+    /**
+     * Accesses a payload field via reflection to avoid Java's checkcast instruction.
+     * Since we override getApplyPayloadClass() to return Object.class, the actual
+     * runtime value may be a Map (old format) or List (new format), not List<MongoOperation>.
+     */
+    private Object getRawPayload(String fieldName) {
+        try {
+            java.lang.reflect.Field field = findField(getClass(), fieldName);
+            if (field != null) {
+                field.setAccessible(true);
+                return field.get(this);
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private java.lang.reflect.Field findField(Class<?> clazz, String fieldName) {
+        while (clazz != null) {
+            try {
+                return clazz.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+        return null;
+    }
+
+    private void validateSession(ClientSession clientSession) {
+        if (this.isTransactional && clientSession == null) {
+            throw new IllegalArgumentException(
+                    String.format("Transactional change[%s] requires transactional ecosystem with ClientSession", changeId));
+        }
+    }
+
+    private void validatePayload(List<MongoOperation> operations, String entityId) {
+        if (operations == null || operations.isEmpty()) {
             return;
         }
 
         List<ValidationError> errors = new ArrayList<>();
-        List<MongoOperation> operations = payload.getOperations();
         for (int i = 0; i < operations.size(); i++) {
-            String opId = entityId + ".operations[" + i + "]";
+            String opId = entityId + "[" + i + "]";
             errors.addAll(MongoOperationValidator.validate(operations.get(i), opId));
         }
 
@@ -130,59 +198,82 @@ public class MongoChangeTemplate extends AbstractChangeTemplate<Void, MongoApply
         }
     }
 
-    private void executeOperationsWithAutoRollback(MongoDatabase db, MongoApplyPayload payload, ClientSession clientSession) {
-        if (payload == null) {
+    private void executeOperations(MongoDatabase db, List<MongoOperation> operations, ClientSession clientSession) {
+        if (operations == null || operations.isEmpty()) {
             return;
         }
 
-        List<MongoOperation> operations = payload.getOperations();
-
-        // Transactional, MongoDB handles rollback
-        if (this.isTransactional && clientSession != null) {
-            for (MongoOperation op : operations) {
-                op.getOperator(db).apply(clientSession);
-            }
-            return;
-        }
-
-        // Non-transactional: auto-rollback on failure
-        List<MongoOperation> successfulOps = new ArrayList<>();
         for (MongoOperation op : operations) {
-            try {
-                op.getOperator(db).apply(clientSession);
-                successfulOps.add(op);
-            } catch (Exception e) {
-                rollbackSuccessfulOperations(db, successfulOps, clientSession);
-                throw e;
-            }
+            op.getOperator(db).apply(clientSession);
         }
     }
 
-    private void rollbackSuccessfulOperations(MongoDatabase db, List<MongoOperation> successfulOps, ClientSession clientSession) {
-        for (int i = successfulOps.size() - 1; i >= 0; i--) {
-            MongoOperation op = successfulOps.get(i);
-            if (op.getRollback() != null) {
-                try {
-                    op.getRollback().getOperator(db).apply(clientSession);
-                } catch (Exception rollbackEx) {
-                    logger.warn("Rollback failed for operation: {}", op, rollbackEx);
+    @SuppressWarnings("unchecked")
+    private List<MongoOperation> convertRawPayload(Object rawPayload) {
+        if (rawPayload == null) {
+            return null;
+        }
+
+        // Handle single MongoOperation (already converted)
+        if (rawPayload instanceof MongoOperation) {
+            List<MongoOperation> operations = new ArrayList<>();
+            operations.add((MongoOperation) rawPayload);
+            return operations;
+        }
+
+        // Handle single Map (backward compatibility)
+        if (rawPayload instanceof Map && !(rawPayload instanceof Collection)) {
+            Map<String, Object> map = (Map<String, Object>) rawPayload;
+            // Check if it looks like an operation (has 'type' field)
+            if (map.containsKey("type")) {
+                List<MongoOperation> operations = new ArrayList<>();
+                operations.add(convertMapToOperation(map));
+                return operations;
+            }
+        }
+
+        // Handle Collection types
+        if (rawPayload instanceof Collection) {
+            Collection<?> rawCollection = (Collection<?>) rawPayload;
+            if (rawCollection.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            // Check if already properly deserialized
+            Object firstElement = rawCollection.iterator().next();
+            if (firstElement instanceof MongoOperation) {
+                // If it's already a List<MongoOperation>, return as-is
+                if (rawPayload instanceof List) {
+                    return (List<MongoOperation>) rawPayload;
+                }
+                // Otherwise convert to List
+                return new ArrayList<>((Collection<MongoOperation>) rawCollection);
+            }
+
+            // Convert from LinkedHashMap elements
+            List<MongoOperation> operations = new ArrayList<>();
+            for (Object item : rawCollection) {
+                if (item instanceof Map) {
+                    operations.add(convertMapToOperation((Map<String, Object>) item));
                 }
             }
+            return operations;
         }
+
+        return new ArrayList<>();
     }
 
-    private void executeRollbackOperations(MongoDatabase db, MongoApplyPayload payload, ClientSession clientSession) {
-        if (payload == null) {
-            return;
+    @SuppressWarnings("unchecked")
+    private MongoOperation convertMapToOperation(Map<String, Object> map) {
+        MongoOperation op = new MongoOperation();
+        op.setType((String) map.get("type"));
+        op.setCollection((String) map.get("collection"));
+
+        Object params = map.get("parameters");
+        if (params instanceof Map) {
+            op.setParameters((Map<String, Object>) params);
         }
 
-        List<MongoOperation> operations = payload.getOperations();
-        for (int i = operations.size() - 1; i >= 0; i--) {
-            MongoOperation op = operations.get(i);
-            if (op.getRollback() != null) {
-                op.getRollback().getOperator(db).apply(clientSession);
-            }
-        }
+        return op;
     }
-
 }

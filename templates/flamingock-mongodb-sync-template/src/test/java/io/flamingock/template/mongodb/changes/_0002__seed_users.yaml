@@ -4,13 +4,13 @@ template: MongoChangeTemplate
 targetSystem:
   id: "mongodb"
 apply:
-  type: insert
-  collection: users
-  parameters:
-    documents:
-      - name: "Admin"
-        email: "admin@company.com"
-        roles: [ "superuser" ]
-      - name: "Backup"
-        email: "backup@company.com"
-        roles: [ "readonly" ]
+  - type: insert
+    collection: users
+    parameters:
+      documents:
+        - name: "Admin"
+          email: "admin@company.com"
+          roles: [ "superuser" ]
+        - name: "Backup"
+          email: "backup@company.com"
+          roles: [ "readonly" ]

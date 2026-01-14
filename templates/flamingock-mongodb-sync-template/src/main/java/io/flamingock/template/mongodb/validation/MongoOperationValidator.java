@@ -33,7 +33,6 @@ import java.util.Map;
  * <ul>
  *   <li><b>type</b> - Required, must be a known operation type from {@link MongoOperationType}</li>
  *   <li><b>collection</b> - Required, cannot be empty, cannot contain '$' or null character</li>
- *   <li><b>rollback</b> - If present, validated recursively with the same rules</li>
  * </ul>
  *
  * <h2>Operation-Specific Validations</h2>
@@ -195,11 +194,6 @@ public final class MongoOperationValidator {
 
         // 3. Type-specific
         errors.addAll(validateByType(type, operation, entityId));
-
-        // 4. Rollback
-        if (operation.getRollback() != null) {
-            errors.addAll(validate(operation.getRollback(), entityId + ".rollback"));
-        }
 
         return errors;
     }

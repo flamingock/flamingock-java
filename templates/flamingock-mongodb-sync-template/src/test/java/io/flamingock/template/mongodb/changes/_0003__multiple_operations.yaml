@@ -4,28 +4,27 @@ template: MongoChangeTemplate
 targetSystem:
   id: "mongodb"
 apply:
-  operations:
-    - type: createCollection
-      collection: products
+  - type: createCollection
+    collection: products
 
-    - type: insert
-      collection: products
-      parameters:
-        documents:
-          - name: "Laptop"
-            price: 999.99
-            category: "Electronics"
-          - name: "Keyboard"
-            price: 79.99
-            category: "Electronics"
-          - name: "Mouse"
-            price: 29.99
-            category: "Electronics"
+  - type: insert
+    collection: products
+    parameters:
+      documents:
+        - name: "Laptop"
+          price: 999.99
+          category: "Electronics"
+        - name: "Keyboard"
+          price: 79.99
+          category: "Electronics"
+        - name: "Mouse"
+          price: 29.99
+          category: "Electronics"
 
-    - type: createIndex
-      collection: products
-      parameters:
-        keys:
-          category: 1
-        options:
-          name: "category_index"
+  - type: createIndex
+    collection: products
+    parameters:
+      keys:
+        category: 1
+      options:
+        name: "category_index"

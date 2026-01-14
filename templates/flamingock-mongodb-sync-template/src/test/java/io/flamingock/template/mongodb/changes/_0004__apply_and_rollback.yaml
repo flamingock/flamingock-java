@@ -1,0 +1,40 @@
+id: apply-and-rollback-test
+transactional: false
+template: MongoChangeTemplate
+targetSystem:
+  id: "mongodb"
+apply:
+  - type: createCollection
+    collection: rollbackTestCollection
+
+  - type: insert
+    collection: rollbackTestCollection
+    parameters:
+      documents:
+        - name: "Item1"
+          value: 100
+        - name: "Item2"
+          value: 200
+
+  - type: createIndex
+    collection: rollbackTestCollection
+    parameters:
+      keys:
+        name: 1
+      options:
+        name: "name_index"
+        unique: true
+
+rollback:
+  - type: dropIndex
+    collection: rollbackTestCollection
+    parameters:
+      indexName: "name_index"
+
+  - type: delete
+    collection: rollbackTestCollection
+    parameters:
+      filter: {}
+
+  - type: dropCollection
+    collection: rollbackTestCollection

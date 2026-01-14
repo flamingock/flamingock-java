@@ -4,6 +4,5 @@ template: MongoChangeTemplate
 targetSystem:
   id: "mongodb"
 apply:
-  type: createCollection
-  collection: users
-
+  - type: createCollection
+    collection: users

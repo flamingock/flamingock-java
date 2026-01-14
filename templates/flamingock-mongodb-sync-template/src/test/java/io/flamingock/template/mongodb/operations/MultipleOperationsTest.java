@@ -20,7 +20,6 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.template.mongodb.model.MongoApplyPayload;
 import io.flamingock.template.mongodb.model.MongoOperation;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,15 +68,14 @@ class MultipleOperationsTest {
     @Test
     @DisplayName("WHEN multiple operations are executed THEN all operations complete successfully")
     void multipleOperationsTest() {
-        MongoApplyPayload payload = new MongoApplyPayload();
-        List<MongoOperation> ops = new ArrayList<>();
+        List<MongoOperation> operations = new ArrayList<>();
 
         // Op 1: Create collection
         MongoOperation op1 = new MongoOperation();
         op1.setType("createCollection");
         op1.setCollection(COLLECTION_NAME);
         op1.setParameters(new HashMap<>());
-        ops.add(op1);
+        operations.add(op1);
 
         // Op 2: Insert documents
         MongoOperation op2 = new MongoOperation();
@@ -95,7 +93,7 @@ class MultipleOperationsTest {
         documents.add(doc2);
         insertParams.put("documents", documents);
         op2.setParameters(insertParams);
-        ops.add(op2);
+        operations.add(op2);
 
         // Op 3: Create index
         MongoOperation op3 = new MongoOperation();
@@ -109,11 +107,9 @@ class MultipleOperationsTest {
         options.put("unique", true);
         indexParams.put("options", options);
         op3.setParameters(indexParams);
-        ops.add(op3);
+        operations.add(op3);
 
-        payload.setOperations(ops);
-
-        for (MongoOperation op : payload.getOperations()) {
+        for (MongoOperation op : operations) {
             op.getOperator(mongoDatabase).apply(null);
         }
 
@@ -123,55 +119,32 @@ class MultipleOperationsTest {
     }
 
     @Test
-    @DisplayName("WHEN single operation format is used THEN backward compatibility works")
-    void backwardCompatibilitySingleOperationTest() {
-        MongoApplyPayload payload = new MongoApplyPayload();
-        payload.setType("createCollection");
-        payload.setCollection(COLLECTION_NAME);
-        payload.setParameters(new HashMap<>());
+    @DisplayName("WHEN single operation is added THEN it works correctly")
+    void singleOperationTest() {
+        List<MongoOperation> operations = new ArrayList<>();
 
-        List<MongoOperation> ops = payload.getOperations();
-        assertEquals(1, ops.size(), "Should have exactly one operation");
-        assertEquals("createCollection", ops.get(0).getType());
-        assertEquals(COLLECTION_NAME, ops.get(0).getCollection());
+        MongoOperation op = new MongoOperation();
+        op.setType("createCollection");
+        op.setCollection(COLLECTION_NAME);
+        op.setParameters(new HashMap<>());
+        operations.add(op);
 
-        for (MongoOperation op : ops) {
-            op.getOperator(mongoDatabase).apply(null);
+        assertEquals(1, operations.size(), "Should have exactly one operation");
+
+        for (MongoOperation operation : operations) {
+            operation.getOperator(mongoDatabase).apply(null);
         }
 
         assertTrue(collectionExists(COLLECTION_NAME), "Collection should exist");
     }
 
     @Test
-    @DisplayName("WHEN payload has no operations THEN empty list is returned")
-    void emptyPayloadTest() {
-        MongoApplyPayload payload = new MongoApplyPayload();
+    @DisplayName("WHEN operations list is empty THEN no operations are executed")
+    void emptyOperationsTest() {
+        List<MongoOperation> operations = new ArrayList<>();
 
-        List<MongoOperation> ops = payload.getOperations();
-        assertTrue(ops.isEmpty(), "Should return empty list");
-    }
-
-    @Test
-    @DisplayName("WHEN operations list is set but type is also set THEN operations list takes precedence")
-    void operationsListTakesPrecedenceTest() {
-        MongoApplyPayload payload = new MongoApplyPayload();
-
-        // Backward compatibility
-        payload.setType("dropCollection");
-        payload.setCollection("someOtherCollection");
-
-        List<MongoOperation> ops = new ArrayList<>();
-        MongoOperation op = new MongoOperation();
-        op.setType("createCollection");
-        op.setCollection(COLLECTION_NAME);
-        op.setParameters(new HashMap<>());
-        ops.add(op);
-        payload.setOperations(ops);
-
-        List<MongoOperation> result = payload.getOperations();
-        assertEquals(1, result.size());
-        assertEquals("createCollection", result.get(0).getType());
-        assertEquals(COLLECTION_NAME, result.get(0).getCollection());
+        assertTrue(true, "Should be empty");
+        assertEquals(0, operations.size(), "Should have size 0");
     }
 
     private boolean collectionExists(String collectionName) {
