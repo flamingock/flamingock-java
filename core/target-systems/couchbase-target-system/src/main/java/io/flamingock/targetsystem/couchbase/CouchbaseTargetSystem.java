@@ -103,7 +103,8 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
     @Override
     public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
         if (Objects.requireNonNull(type) == MONGOCK) {
-            return Optional.of(new MongockImporterCouchbase(cluster, bucketName, scopeName, DEFAULT_MONGOCK_ORIGIN));
+            //TODO: Allow scope and collection to be parameterized
+            return Optional.of(new MongockImporterCouchbase(cluster, bucketName, CollectionIdentifier.DEFAULT_SCOPE, CollectionIdentifier.DEFAULT_COLLECTION));
         } else {
             return Optional.empty();
         }

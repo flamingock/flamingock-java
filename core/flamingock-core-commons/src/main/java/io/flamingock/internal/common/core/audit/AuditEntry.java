@@ -267,23 +267,24 @@ public class AuditEntry implements Comparable<AuditEntry> {
         if (other == null) {
             return 1;
         }
-        
+
         // Level 1: Sort by createdAt timestamp
         int timeComparison = this.createdAt.compareTo(other.createdAt);
         if (timeComparison != 0) {
             return timeComparison;
         }
-        
-        // Level 2: Sort by order (if timestamps are equal)
-        if (this.order != null && other.order != null) {
-            int orderComparison = this.order.compareTo(other.order);
-            if (orderComparison != 0) {
-                return orderComparison;
-            }
+
+        if(taskId.equals(other.getTaskId())) {
+            // Level 2: Sort by state priority (if timestamps and order are equal)
+            return Integer.compare(this.state.getPriority(), other.state.getPriority());
         }
-        
-        // Level 3: Sort by state priority (if timestamps and order are equal)
-        return Integer.compare(this.state.getPriority(), other.state.getPriority());
+
+        // Level 3: Sort by order (if timestamps are equal)
+        if (this.order != null && other.order != null) {
+            return this.order.compareTo(other.order);
+        }
+
+        return 0;
     }
 
     public enum Status {
