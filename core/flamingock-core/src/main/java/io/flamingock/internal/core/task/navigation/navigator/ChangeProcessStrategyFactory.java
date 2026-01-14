@@ -30,6 +30,7 @@ import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.NonTxChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.SharedTxChangeProcessStrategy;
 import io.flamingock.internal.core.task.navigation.navigator.strategy.SimpleTxChangeProcessStrategy;
+import io.flamingock.internal.util.TimeService;
 
 import java.util.Set;
 
@@ -126,7 +127,8 @@ public class ChangeProcessStrategyFactory {
                 baseContext,
                 executionContext,
                 new TaskSummarizer(change),
-                lockGuardProxyFactory
+                lockGuardProxyFactory,
+                TimeService.getDefault()
         );
     }
 
@@ -160,30 +162,31 @@ public class ChangeProcessStrategyFactory {
                                                     ContextResolver baseContext,
                                                     ExecutionContext executionContext,
                                                     TaskSummarizer summarizer,
-                                                    LockGuardProxyFactory proxyFactory) {
+                                                    LockGuardProxyFactory proxyFactory,
+                                                    TimeService timeService) {
 
 
         if(!change.isTransactional()) {
             changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "NON_TX");
-            return new NonTxChangeProcessStrategy(change, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+            return new NonTxChangeProcessStrategy(change, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext, timeService);
         }
 
         switch (targetSystemOps.getOperationType()) {
             case NON_TX:
                 changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "NON_TX");
-                return new NonTxChangeProcessStrategy(change, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+                return new NonTxChangeProcessStrategy(change, executionContext, targetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext, timeService);
 
             case TX_NON_SYNC:
             case TX_AUDIT_STORE_SYNC:
                 changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "TX");
                 TransactionalTargetSystemOps txTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
-                return new SimpleTxChangeProcessStrategy(change, executionContext, txTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+                return new SimpleTxChangeProcessStrategy(change, executionContext, txTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext, timeService);
 
             case TX_AUDIT_STORE_SHARED:
             default:
                 changeLogger.logStrategyApplication(change.getId(), targetSystemOps.getId(), "TX");
                 TransactionalTargetSystemOps sharedTxTargetSystemOps = (TransactionalTargetSystemOps) targetSystemOps;
-                return new SharedTxChangeProcessStrategy(change, executionContext, sharedTxTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext);
+                return new SharedTxChangeProcessStrategy(change, executionContext, sharedTxTargetSystemOps, auditStoreOps, summarizer, proxyFactory, baseContext, timeService);
         }
     }
 

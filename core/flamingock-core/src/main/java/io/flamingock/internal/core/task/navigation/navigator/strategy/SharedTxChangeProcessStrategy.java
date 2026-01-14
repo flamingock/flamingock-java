@@ -34,6 +34,7 @@ import io.flamingock.internal.core.task.navigation.step.complete.CompletedSucces
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
+import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.Wrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -86,8 +87,9 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                                          AuditStoreStepOperations auditStoreOperations,
                                          TaskSummarizer summarizer,
                                          LockGuardProxyFactory proxyFactory,
-                                         ContextResolver baseContext) {
-        super(change, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, LocalDateTime.now());
+                                         ContextResolver baseContext,
+                                         TimeService timeService) {
+        super(change, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, timeService);
     }
 
     @Override
