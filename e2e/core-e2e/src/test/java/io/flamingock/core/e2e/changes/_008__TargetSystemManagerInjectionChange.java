@@ -20,7 +20,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.annotations.TargetSystem;
 import io.flamingock.core.e2e.helpers.Counter;
-import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
 
 /**
  * Change that receives TargetSystemManager as a dependency to verify

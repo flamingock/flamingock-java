@@ -30,8 +30,8 @@ import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 
 import java.util.HashSet;
 import java.util.List;

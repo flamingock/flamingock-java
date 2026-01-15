@@ -18,9 +18,9 @@ package io.flamingock.targetsystem.sql;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.store.audit.domain.AuditContextBundle;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
+import io.flamingock.internal.core.external.store.audit.domain.AuditContextBundle;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

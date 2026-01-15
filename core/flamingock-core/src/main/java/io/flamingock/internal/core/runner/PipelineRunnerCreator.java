@@ -17,13 +17,13 @@ package io.flamingock.internal.core.runner;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
-import io.flamingock.internal.core.store.audit.AuditPersistence;
+import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
-import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
 

@@ -15,10 +15,10 @@
  */
 package io.flamingock.internal.util.dynamodb.entities;
 
-import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
-import io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants;
-import io.flamingock.internal.core.store.lock.LockAcquisition;
-import io.flamingock.internal.core.store.lock.LockStatus;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants;
+import io.flamingock.internal.core.external.store.lock.LockAcquisition;
+import io.flamingock.internal.core.external.store.lock.LockStatus;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;

@@ -19,18 +19,18 @@ package io.flamingock.internal.core.plan.community;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
 import io.flamingock.internal.core.plan.ExecutionId;
-import io.flamingock.internal.core.store.lock.community.CommunityLock;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLock;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.core.store.lock.Lock;
-import io.flamingock.internal.core.store.lock.LockException;
-import io.flamingock.internal.core.store.lock.LockRefreshDaemon;
+import io.flamingock.internal.core.external.store.lock.Lock;
+import io.flamingock.internal.core.external.store.lock.LockException;
+import io.flamingock.internal.core.external.store.lock.LockRefreshDaemon;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditReader;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -40,7 +40,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class CommunityExecutionPlanner extends ExecutionPlanner {

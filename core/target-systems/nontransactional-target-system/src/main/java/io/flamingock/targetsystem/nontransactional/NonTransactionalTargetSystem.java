@@ -16,7 +16,7 @@
 package io.flamingock.targetsystem.nontransactional;
 
 
-import io.flamingock.internal.core.targets.AbstractTargetSystem;
+import io.flamingock.internal.core.external.targets.AbstractTargetSystem;
 
 public class NonTransactionalTargetSystem extends AbstractTargetSystem<NonTransactionalTargetSystem> {
 

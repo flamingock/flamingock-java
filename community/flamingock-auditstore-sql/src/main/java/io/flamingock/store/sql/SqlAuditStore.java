@@ -15,11 +15,12 @@
  */
 package io.flamingock.store.sql;
 
-import io.flamingock.internal.core.store.CommunityAuditStore;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.sql.internal.SqlAuditPersistence;
@@ -41,6 +42,11 @@ public class SqlAuditStore implements CommunityAuditStore {
 
     private SqlAuditStore(DataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_SQL_AUDIT_STORE;
     }
 
     /**

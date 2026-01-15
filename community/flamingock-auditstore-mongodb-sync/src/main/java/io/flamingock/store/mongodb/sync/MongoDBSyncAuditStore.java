@@ -19,14 +19,15 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.internal.util.Constants;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.targetsystem.mongodb.api.MongoDBTargetSystem;
@@ -54,6 +55,11 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
     private MongoDBSyncAuditStore(MongoDBTargetSystem mongoDBTargetSystem) {
         this.mongoDBTargetSystem = mongoDBTargetSystem;
+    }
+
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_MONGODB_AUDIT_STORE;
     }
 
     /**

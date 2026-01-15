@@ -28,8 +28,8 @@ import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
 import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import org.bson.Document;
 
 import java.util.HashSet;

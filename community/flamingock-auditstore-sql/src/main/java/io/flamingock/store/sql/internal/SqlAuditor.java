@@ -19,7 +19,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.sql.SqlDialect;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 
 import javax.sql.DataSource;

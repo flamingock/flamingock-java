@@ -27,7 +27,7 @@ import io.flamingock.internal.common.core.preview.builder.CodePreviewTaskBuilder
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
-import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.support.mongock.MongockImportChange;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.support.mongock.internal.preview.builder.MongockCodePreviewChangeHelper;

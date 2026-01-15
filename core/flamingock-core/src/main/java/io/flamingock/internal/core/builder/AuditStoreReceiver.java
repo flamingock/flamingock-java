@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.builder;
 
 
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 
 public interface AuditStoreReceiver<RETURN_TYPE> {
 

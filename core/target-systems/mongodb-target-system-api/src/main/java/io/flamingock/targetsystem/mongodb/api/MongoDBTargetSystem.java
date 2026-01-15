@@ -16,7 +16,7 @@
 package io.flamingock.targetsystem.mongodb.api;
 
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.api.external.targets.TargetSystem;
 
 public interface MongoDBTargetSystem extends TargetSystem {
 

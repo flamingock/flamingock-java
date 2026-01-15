@@ -30,11 +30,11 @@ import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncCollectionHelper;
 import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
-import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
-import io.flamingock.internal.core.store.lock.LockAcquisition;
-import io.flamingock.internal.core.store.lock.LockKey;
-import io.flamingock.internal.core.store.lock.LockServiceException;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.external.store.lock.LockAcquisition;
+import io.flamingock.internal.core.external.store.lock.LockKey;
+import io.flamingock.internal.core.external.store.lock.LockServiceException;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.common.mongodb.MongoDBLockMapper;
 import org.bson.Document;
@@ -42,11 +42,11 @@ import org.bson.conversions.Bson;
 
 import java.util.Date;
 
-import static io.flamingock.internal.core.store.lock.LockStatus.LOCK_HELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
+import static io.flamingock.internal.core.external.store.lock.LockStatus.LOCK_HELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
 
 public class MongoDBSyncLockService implements CommunityLockService {
 

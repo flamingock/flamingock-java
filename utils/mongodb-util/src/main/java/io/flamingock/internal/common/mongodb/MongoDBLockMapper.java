@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.common.mongodb;
 
-import io.flamingock.internal.core.store.lock.LockAcquisition;
-import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.external.store.lock.LockAcquisition;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntry;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeUtil;
 
@@ -24,10 +24,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.function.Supplier;
 
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
 
 public class MongoDBLockMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
 

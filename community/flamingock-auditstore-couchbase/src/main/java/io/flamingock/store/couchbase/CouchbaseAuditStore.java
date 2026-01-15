@@ -18,15 +18,16 @@ package io.flamingock.store.couchbase;
 import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
+import io.flamingock.internal.util.Constants;
 import io.flamingock.store.couchbase.internal.CouchbaseLockService;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.store.couchbase.internal.CouchbaseAuditPersistence;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
@@ -49,6 +50,11 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
     private CouchbaseAuditStore(Cluster cluster, String bucketName) {
         this.cluster = cluster;
         this.bucketName = bucketName;
+    }
+
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_COUCHBASE_AUDIT_STORE;
     }
 
     /**

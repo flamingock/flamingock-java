@@ -22,9 +22,9 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
-import io.flamingock.internal.core.targets.TargetSystemManager;
-import io.flamingock.internal.core.targets.operations.TargetSystemOps;
-import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOps;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
+import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
+import io.flamingock.internal.core.external.targets.operations.TransactionalTargetSystemOps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

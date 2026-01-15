@@ -16,10 +16,10 @@
 package io.flamingock.core.kit.inmemory;
 
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
-import io.flamingock.internal.core.store.lock.LockAcquisition;
-import io.flamingock.internal.core.store.lock.LockKey;
-import io.flamingock.internal.core.store.lock.LockServiceException;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.lock.LockAcquisition;
+import io.flamingock.internal.core.external.store.lock.LockKey;
+import io.flamingock.internal.core.external.store.lock.LockServiceException;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class InternalInMemoryLockService implements CommunityLockService {

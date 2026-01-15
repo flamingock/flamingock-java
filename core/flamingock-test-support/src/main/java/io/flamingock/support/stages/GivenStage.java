@@ -15,7 +15,7 @@
  */
 package io.flamingock.support.stages;
 
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.support.FlamingockTestSupport;
 import io.flamingock.support.domain.AuditEntryDefinition;
 

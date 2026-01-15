@@ -15,11 +15,11 @@
  */
 package io.flamingock.springboot.testsupport;
 
-import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.api.external.targets.TargetSystem;
 import io.flamingock.core.kit.inmemory.InternalInMemoryAuditStorage;
 import io.flamingock.core.kit.inmemory.InternalInMemoryLockStorage;
 import io.flamingock.core.kit.inmemory.InternalInMemoryTestAuditStore;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
