@@ -15,6 +15,7 @@
  */
 package io.flamingock.store.dynamodb.internal;
 
+import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import io.flamingock.internal.util.dynamodb.entities.LockEntryEntity;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntry;
@@ -26,7 +27,6 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -51,11 +51,6 @@ public class DynamoDBLockService implements CommunityLockService {
 
     private final TimeService timeService;
     protected DynamoDbTable<LockEntryEntity> table;
-
-    public DynamoDBLockService(DynamoDBTargetSystem targetSystem,
-                                  TimeService timeService) {
-        this(targetSystem.getClient(), timeService);
-    }
 
     public DynamoDBLockService(DynamoDbClient client,
                                   TimeService timeService) {

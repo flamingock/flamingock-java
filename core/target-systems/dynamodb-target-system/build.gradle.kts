@@ -1,6 +1,7 @@
 dependencies {
 
     api(project(":core:flamingock-core"))
+    api(project(":core:target-systems:dynamodb-external-system-api"))
     implementation(project(":utils:dynamodb-util"))
     implementation(project(":legacy:mongock-importer-dynamodb"))
 

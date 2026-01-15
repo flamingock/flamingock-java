@@ -27,7 +27,7 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditPersistence;
 import io.flamingock.store.dynamodb.internal.DynamoDBLockService;
-import io.flamingock.targetsystem.dynamodb.DynamoDBExternalSystem;
+import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBAuditStore implements CommunityAuditStore {
