@@ -198,3 +198,5 @@ include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
 
+
+include("core:target-systems:couchbase-external-system-api")

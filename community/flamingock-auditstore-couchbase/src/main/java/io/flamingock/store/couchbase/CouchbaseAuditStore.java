@@ -30,7 +30,7 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.couchbase.internal.CouchbaseAuditPersistence;
 import io.flamingock.store.couchbase.internal.CouchbaseLockService;
-import io.flamingock.targetsystem.couchbase.CouchbaseExternalSystem;
+import io.flamingock.externalsystem.couchbase.api.CouchbaseExternalSystem;
 
 public class CouchbaseAuditStore implements CommunityAuditStore {
 

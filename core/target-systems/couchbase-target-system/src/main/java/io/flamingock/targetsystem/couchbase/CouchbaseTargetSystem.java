@@ -19,6 +19,7 @@ import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
+import io.flamingock.externalsystem.couchbase.api.CouchbaseExternalSystem;
 import io.flamingock.importer.mongock.couchbase.MongockImporterCouchbase;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;

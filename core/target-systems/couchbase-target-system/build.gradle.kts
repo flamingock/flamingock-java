@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.utils.extendsFrom
 dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
+    api(project(":core:target-systems:couchbase-external-system-api"))
     implementation(project(":utils:couchbase-util"))
     implementation(project(":legacy:mongock-importer-couchbase"))
 
