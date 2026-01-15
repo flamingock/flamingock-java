@@ -1,4 +1,4 @@
-package io.flamingock.targetsystem.sql;
+package io.flamingock.externalsystem.sql.api;
 
 import io.flamingock.api.external.ExternalSystem;
 

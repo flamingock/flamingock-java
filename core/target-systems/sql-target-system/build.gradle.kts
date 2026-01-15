@@ -4,6 +4,7 @@ import java.time.Duration
 dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
+    implementation(project(":core:target-systems:sql-external-system-api"))
     implementation(project(":utils:sql-util"))
 
     //Test
