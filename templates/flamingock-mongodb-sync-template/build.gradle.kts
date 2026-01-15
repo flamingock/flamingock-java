@@ -5,6 +5,7 @@ dependencies {
 
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testImplementation(project(":community:flamingock-auditstore-mongodb-sync"))
+    testImplementation(project(":core:target-systems:mongodb-sync-target-system"))
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":utils:mongodb-util"))
     testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")

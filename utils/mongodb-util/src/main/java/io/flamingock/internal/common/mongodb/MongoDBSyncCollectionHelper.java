@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.mongodb.sync.util;
+package io.flamingock.internal.common.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.IndexOptions;
-import io.flamingock.internal.common.mongodb.CollectionHelper;
-import io.flamingock.internal.common.mongodb.DocumentHelper;
 import org.bson.Document;
 
 

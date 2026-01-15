@@ -17,9 +17,9 @@ package io.flamingock.store.mongodb.sync;
 
 import com.mongodb.client.MongoDatabase;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.util.TimeUtil;
 import io.flamingock.internal.common.mongodb.MongoDBAuditMapper;
-import io.flamingock.targetsystem.mongodb.sync.util.MongoDBSyncDocumentHelper;
 import org.bson.Document;
 
 import java.util.ArrayList;
