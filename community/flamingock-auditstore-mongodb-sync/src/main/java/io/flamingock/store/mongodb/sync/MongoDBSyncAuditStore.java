@@ -30,7 +30,7 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
-import io.flamingock.targetsystem.mongodb.api.MongoDBExternalSystem;
+import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
