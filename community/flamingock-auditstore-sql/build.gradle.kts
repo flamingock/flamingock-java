@@ -2,9 +2,13 @@ import java.time.Duration
 
 dependencies {
     api(project(":core:flamingock-core"))
+
+    api(project(":core:target-systems:sql-external-system-api"))
+
     api(project(":core:target-systems:sql-target-system"))
     implementation(project(":utils:sql-util"))
 
+    testImplementation(project(":core:target-systems:sql-external-system-api"))
     testImplementation("mysql:mysql-connector-java:8.0.33")
     testImplementation("com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre8")
     testImplementation("com.oracle.database.jdbc:ojdbc8:21.9.0.0")

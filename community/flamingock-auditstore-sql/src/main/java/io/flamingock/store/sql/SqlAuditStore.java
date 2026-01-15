@@ -25,7 +25,7 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.sql.internal.SqlAuditPersistence;
 import io.flamingock.store.sql.internal.SqlLockService;
-import io.flamingock.targetsystem.sql.SqlExternalSystem;
+import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 
 import javax.sql.DataSource;
 

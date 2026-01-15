@@ -15,7 +15,7 @@
  */
 package io.flamingock.targetsystem.sql;
 
-import io.flamingock.api.external.ExternalSystem;
+import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.transaction.TransactionManager;

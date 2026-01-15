@@ -201,3 +201,4 @@ project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
 
 include("core:target-systems:couchbase-external-system-api")
 include("core:target-systems:dynamodb-external-system-api")
+include("core:target-systems:sql-external-system-api")
