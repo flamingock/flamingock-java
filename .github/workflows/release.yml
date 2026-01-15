@@ -266,11 +266,11 @@ jobs:
       FLAMINGOCK_JRELEASER_GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
       FLAMINGOCK_JRELEASER_GPG_PASSPHRASE: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_PASSPHRASE }}
 
-  mongodb-target-system-api:
+  mongodb-external-system-api:
     needs: [ build ]
     uses: ./.github/workflows/module-release-graalvm.yml
     with:
-      module: mongodb-target-system-api
+      module: mongodb-external-system-api
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
       FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
@@ -504,7 +504,7 @@ jobs:
       flamingock-importer,
       flamingock-springboot-integration,
       nontransactional-target-system,
-      mongodb-target-system-api,
+      mongodb-external-system-api,
       mongodb-sync-target-system,
       mongodb-springdata-target-system,
       sql-target-system,

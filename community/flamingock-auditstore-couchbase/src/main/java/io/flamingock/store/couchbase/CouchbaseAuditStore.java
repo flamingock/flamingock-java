@@ -31,7 +31,6 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.couchbase.internal.CouchbaseAuditPersistence;
 import io.flamingock.store.couchbase.internal.CouchbaseLockService;
 import io.flamingock.targetsystem.couchbase.CouchbaseExternalSystem;
-import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
 public class CouchbaseAuditStore implements CommunityAuditStore {
 
@@ -55,7 +54,7 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
 
     /**
      * Creates a {@link CouchbaseAuditStore} using the same Couchbase cluster and
-     * bucket configured in the given {@link CouchbaseTargetSystem}.
+     * bucket configured in the given {@link CouchbaseExternalSystem}.
      * <p>
      * Only the underlying Couchbase instance (cluster + bucket name) is reused.
      * No additional target-system configuration is carried over.

@@ -31,7 +31,6 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
 import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
 import io.flamingock.targetsystem.mongodb.api.MongoDBExternalSystem;
-import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
@@ -59,7 +58,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
     /**
      * Creates a {@link MongoDBSyncAuditStore} using the same MongoDB client and
-     * database configured in the given {@link MongoDBSyncTargetSystem}.
+     * database configured in the given {@link MongoDBExternalSystem}.
      * <p>
      * Only the underlying MongoDB instance (client + database name) is reused.
      * No additional target-system configuration is carried over.

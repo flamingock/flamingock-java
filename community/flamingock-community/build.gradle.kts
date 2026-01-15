@@ -6,7 +6,7 @@ dependencies {
     api(project(":core:target-systems:nontransactional-target-system"))
     api(project(":core:target-systems:couchbase-target-system"))
     api(project(":core:target-systems:dynamodb-target-system"))
-    api(project(":core:target-systems:mongodb-target-system-api"))
+    api(project(":core:target-systems:mongodb-external-system-api"))
     api(project(":core:target-systems:mongodb-springdata-target-system"))
     api(project(":core:target-systems:mongodb-sync-target-system"))
     api(project(":core:target-systems:sql-target-system"))

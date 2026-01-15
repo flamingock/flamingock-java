@@ -26,7 +26,6 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.sql.internal.SqlAuditPersistence;
 import io.flamingock.store.sql.internal.SqlLockService;
 import io.flamingock.targetsystem.sql.SqlExternalSystem;
-import io.flamingock.targetsystem.sql.SqlTargetSystem;
 
 import javax.sql.DataSource;
 
@@ -47,7 +46,7 @@ public class SqlAuditStore implements CommunityAuditStore {
 
     /**
      * Creates a {@link SqlAuditStore} using the same SQL datasource
-     * configured in the given {@link SqlTargetSystem}.
+     * configured in the given {@link SqlExternalSystem}.
      * <p>
      * Only the underlying SQL datasource is reused.
      * No additional target-system configuration is carried over.
