@@ -18,28 +18,29 @@ package io.flamingock.store.couchbase;
 import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
-import io.flamingock.internal.util.Constants;
-import io.flamingock.store.couchbase.internal.CouchbaseLockService;
-import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
-import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
-import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
-import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.couchbase.internal.CouchbaseAuditPersistence;
+import io.flamingock.store.couchbase.internal.CouchbaseLockService;
+import io.flamingock.targetsystem.couchbase.CouchbaseExternalSystem;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 
 public class CouchbaseAuditStore implements CommunityAuditStore {
 
+    private final Cluster cluster;
+    private final String bucketName;
     private RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
     private CouchbaseAuditPersistence persistence;
     private CouchbaseLockService lockService;
-    private final Cluster cluster;
-    private final String bucketName;
     private Bucket bucket;
     private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
@@ -52,11 +53,6 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
         this.bucketName = bucketName;
     }
 
-    @Override
-    public String getId() {
-        return Constants.DEFAULT_COUCHBASE_AUDIT_STORE;
-    }
-
     /**
      * Creates a {@link CouchbaseAuditStore} using the same Couchbase cluster and
      * bucket configured in the given {@link CouchbaseTargetSystem}.
@@ -67,8 +63,13 @@ public class CouchbaseAuditStore implements CommunityAuditStore {
      * @param targetSystem the target system from which to derive the cluster and bucket
      * @return a new audit store bound to the same Couchbase instance as the target system
      */
-    public static CouchbaseAuditStore from(CouchbaseTargetSystem targetSystem) {
+    public static CouchbaseAuditStore from(CouchbaseExternalSystem targetSystem) {
         return new CouchbaseAuditStore(targetSystem.getCluster(), targetSystem.getBucketName());
+    }
+
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_COUCHBASE_AUDIT_STORE;
     }
 
     public CouchbaseAuditStore withScopeName(String scopeName) {

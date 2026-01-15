@@ -23,18 +23,18 @@ import io.flamingock.importer.mongock.couchbase.MongockImporterCouchbase;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.transaction.TransactionManager;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.internal.common.core.error.FlamingockException;
 
 import java.util.Objects;
 import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 
-public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTargetSystem> {
+public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTargetSystem> implements CouchbaseExternalSystem {
 
     private Cluster cluster;
     private Bucket bucket;
@@ -49,14 +49,17 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
         this.bucketName = bucketName;
     }
 
+    @Override
     public Cluster getCluster() {
         return this.cluster;
     }
 
+    @Override
     public Bucket getBucket() {
         return this.bucket;
     }
 
+    @Override
     public String getBucketName() {
         return this.bucketName;
     }

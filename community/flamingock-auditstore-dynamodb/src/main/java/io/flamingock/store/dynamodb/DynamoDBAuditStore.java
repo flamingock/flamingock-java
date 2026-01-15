@@ -15,28 +15,29 @@
  */
 package io.flamingock.store.dynamodb;
 
-import io.flamingock.internal.util.Constants;
-import io.flamingock.store.dynamodb.internal.DynamoDBLockService;
-import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
-import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
-import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
-import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.util.Constants;
+import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditPersistence;
+import io.flamingock.store.dynamodb.internal.DynamoDBLockService;
+import io.flamingock.targetsystem.dynamodb.DynamoDBExternalSystem;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBAuditStore implements CommunityAuditStore {
 
+    private final DynamoDbClient client;
     private RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
     private DynamoDBAuditPersistence persistence;
     private DynamoDBLockService lockService;
-    private final DynamoDbClient client;
     private String auditRepositoryName = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
     private String lockRepositoryName = CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
     private long readCapacityUnits = 5L;
@@ -45,11 +46,6 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
 
     private DynamoDBAuditStore(DynamoDbClient client) {
         this.client = client;
-    }
-
-    @Override
-    public String getId() {
-        return Constants.DEFAULT_DYNAMODB_AUDIT_STORE;
     }
 
     /**
@@ -62,8 +58,13 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
      * @param targetSystem the target system from which to derive the client
      * @return a new audit store bound to the same DynamoDB instance as the target system
      */
-    public static DynamoDBAuditStore from(DynamoDBTargetSystem targetSystem) {
+    public static DynamoDBAuditStore from(DynamoDBExternalSystem targetSystem) {
         return new DynamoDBAuditStore(targetSystem.getClient());
+    }
+
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_DYNAMODB_AUDIT_STORE;
     }
 
     public DynamoDBAuditStore withAuditRepositoryName(String auditRepositoryName) {

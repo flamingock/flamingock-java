@@ -30,7 +30,7 @@ import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMa
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB;
-import io.flamingock.targetsystem.mongodb.api.MongoDBTargetSystem;
+import io.flamingock.targetsystem.mongodb.api.MongoDBExternalSystem;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -38,7 +38,7 @@ import java.util.Optional;
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 
-public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> implements MongoDBTargetSystem {
+public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> implements MongoDBExternalSystem {
 
     private final MongoClient mongoClient;
     private final String databaseName;
