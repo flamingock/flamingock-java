@@ -1,4 +1,4 @@
-package io.flamingock.targetsystem.dynamodb;
+package io.flamingock.externalsystem.dynamodb.api;
 
 import io.flamingock.api.external.ExternalSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
