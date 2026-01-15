@@ -1,4 +1,3 @@
-<<<<<<< HEAD:core/target-systems/sql-target-system/src/main/java/io/flamingock/targetsystem/sql/SqlExternalSystem.java
 /*
  * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
@@ -14,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.sql;
-=======
 package io.flamingock.externalsystem.sql.api;
->>>>>>> 5cb03a89 (refactor: sql external system api):core/target-systems/sql-external-system-api/src/main/java/io/flamingock/externalsystem/sql/api/SqlExternalSystem.java
 
 import io.flamingock.api.external.ExternalSystem;
 
