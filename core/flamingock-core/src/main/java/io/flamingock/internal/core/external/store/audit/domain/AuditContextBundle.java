@@ -105,6 +105,7 @@ public abstract class AuditContextBundle {
                 stageExecutionContext.getHostname(),
                 stageExecutionContext.getMetadata(),
                 loadedChange.isSystem(),
+                loadedChange.isLegacy(),
                 ThrowableUtil.serialize(runtimeContext.getError().orElse(null)),
                 getAuditTxType(),
                 getTargetSystemId(),

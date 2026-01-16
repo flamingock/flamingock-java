@@ -55,6 +55,7 @@ public class AuditEntryExpectation {
     private String expectedExecutionHostname;
     private String expectedErrorTrace;
     private Boolean expectedSystemChange;
+    private Boolean expectedLegacy;
     private AuditTxType expectedTxType;
     private String expectedTargetSystemId;
     
@@ -290,7 +291,12 @@ public class AuditEntryExpectation {
         this.expectedSystemChange = systemChange;
         return this;
     }
-    
+
+    public AuditEntryExpectation withLegacy(Boolean legacy) {
+        this.expectedLegacy = legacy;
+        return this;
+    }
+
     // Transaction fields
     public AuditEntryExpectation withTxType(AuditTxType txStrategy) {
         this.expectedTxType = txStrategy;
@@ -317,6 +323,7 @@ public class AuditEntryExpectation {
     public String getExpectedExecutionHostname() { return expectedExecutionHostname; }
     public String getExpectedErrorTrace() { return expectedErrorTrace; }
     public Boolean getExpectedSystemChange() { return expectedSystemChange; }
+    public Boolean getExpectedLegacy() { return expectedLegacy; }
     public AuditTxType getExpectedTxType() { return expectedTxType; }
     public String getExpectedTargetSystemId() { return expectedTargetSystemId; }
     

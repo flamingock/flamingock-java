@@ -607,6 +607,7 @@ class AuditEntryExpectationTest {
                 hostname,
                 metadata,
                 false,
+                false,
                 errorTrace,
                 AuditTxType.NON_TX,
                 targetSystemId,

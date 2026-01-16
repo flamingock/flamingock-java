@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 
 public class AuditEntry implements Comparable<AuditEntry> {
     protected final Boolean systemChange;
+    protected final boolean legacy;
     private final String executionId;
     private final String stageId;
     //TODO move to changeId
@@ -58,6 +59,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       String executionHostname,
                       Object metadata,
                       boolean systemChange,
+                      boolean legacy,
                       String errorTrace,
                       AuditTxType txStrategy,
                       String targetSystemId,
@@ -82,6 +84,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         this.targetSystemId = targetSystemId;
         this.order = order;
         this.systemChange = systemChange;
+        this.legacy = legacy;
         this.recoveryStrategy = recoveryStrategy != null ? recoveryStrategy : RecoveryStrategy.MANUAL_INTERVENTION;
         this.transactionFlag = transactionFlag;
     }
@@ -108,7 +111,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       String errorTrace,
                       AuditTxType txStrategy) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, sourceFile,
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, txStrategy, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
+             executionMillis, executionHostname, metadata, systemChange, false, errorTrace, txStrategy, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
     /**
@@ -132,7 +135,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       boolean systemChange,
                       String errorTrace) {
         this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, sourceFile,
-             executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
+             executionMillis, executionHostname, metadata, systemChange, false, errorTrace, null, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
     public static AuditEntry getMostRelevant(AuditEntry currentEntry, AuditEntry newEntry) {
@@ -200,6 +203,10 @@ public class AuditEntry implements Comparable<AuditEntry> {
         return systemChange;
     }
 
+    public boolean isLegacy() {
+        return legacy;
+    }
+
     public ExecutionType getType() {
         return type;
     }
@@ -253,6 +260,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                 getExecutionHostname(),
                 getMetadata(),
                 getSystemChange(),
+                isLegacy(),
                 getErrorTrace(),
                 getTxType(),
                 getTargetSystemId(),
