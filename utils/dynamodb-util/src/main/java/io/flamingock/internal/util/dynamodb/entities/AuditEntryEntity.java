@@ -32,6 +32,7 @@ import java.util.Objects;
 public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
 
     protected Boolean systemChange;
+    protected boolean legacy;
     private String partitionKey;
     private String taskId;
     private String stageId;
@@ -78,6 +79,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.order = auditEntry.getOrder();
         this.recoveryStrategy = auditEntry.getRecoveryStrategy().name();
         this.systemChange = auditEntry.getSystemChange();
+        this.legacy = auditEntry.isLegacy();
         this.transactionFlag = auditEntry.getTransactionFlag();
     }
 
@@ -233,6 +235,15 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         this.systemChange = systemChange;
     }
 
+    @DynamoDbAttribute(AuditEntryFieldConstants.KEY_LEGACY)
+    public boolean isLegacy() {
+        return legacy;
+    }
+
+    public void setLegacy(boolean legacy) {
+        this.legacy = legacy;
+    }
+
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_TX_STRATEGY)
     public String getTxType() {
         return AuditTxType.safeString(txStrategy);
@@ -318,6 +329,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
                 executionHostname,
                 metadata,
                 systemChange,
+                legacy,
                 Objects.toString(errorTrace, ""),
                 txStrategy,
                 targetSystemId,

@@ -109,6 +109,7 @@ public class AuditEntryDefinition {
     private RecoveryStrategy recoveryStrategy;
     private String order;
     private Boolean transactional;
+    private boolean legacy;
 
     private AuditEntryDefinition(String changeId, AuditEntry.Status state) {
         this.changeId = changeId;
@@ -439,6 +440,17 @@ public class AuditEntryDefinition {
         return this;
     }
 
+    /**
+     * Sets the legacy flag.
+     *
+     * @param legacy the legacy flag
+     * @return this builder for method chaining
+     */
+    public AuditEntryDefinition withLegacy(boolean legacy) {
+        this.legacy = legacy;
+        return this;
+    }
+
     // ========== Getters ==========
 
     public String getChangeId() {
@@ -505,6 +517,10 @@ public class AuditEntryDefinition {
         return transactional;
     }
 
+    public boolean isLegacy() {
+        return legacy;
+    }
+
     // ========== Conversion Methods ==========
 
     /**
@@ -541,6 +557,7 @@ public class AuditEntryDefinition {
                 executionHostname != null ? executionHostname : "test-host",
                 metadata,
                 false, // systemChange
+                legacy,
                 errorTrace,
                 AuditTxType.NON_TX,
                 targetSystemId,

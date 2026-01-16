@@ -101,6 +101,7 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
                 StringUtil.hostname(),
                 currentEntry.getMetadata(),//??
                 currentEntry.getSystemChange(),
+                currentEntry.isLegacy(),
                 "",
                 currentEntry.getTxType(),
                 currentEntry.getTargetSystemId(),

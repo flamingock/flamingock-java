@@ -95,6 +95,7 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
                 ps.setString(18, auditEntry.getRecoveryStrategy() != null ? auditEntry.getRecoveryStrategy().name() : null);
                 ps.setObject(19, auditEntry.getTransactionFlag());
                 ps.setObject(20, auditEntry.getSystemChange());
+                ps.setBoolean(21, auditEntry.isLegacy());
                 ps.executeUpdate();
             }
             return Result.OK();
@@ -134,6 +135,7 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
                         rs.getString("execution_hostname"),
                         rs.getString("metadata"),
                         rs.getBoolean("system_change"),
+                        rs.getBoolean("legacy"),
                         rs.getString("error_trace"),
                         AuditTxType.fromString(rs.getString("tx_strategy")),
                         rs.getString("target_system_id"),
