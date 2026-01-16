@@ -22,6 +22,7 @@ import io.flamingock.support.stages.ThenStage;
 import io.flamingock.support.validation.SimpleValidator;
 import io.flamingock.support.validation.ValidatorArgs;
 import io.flamingock.support.validation.error.*;
+import org.jetbrains.annotations.TestOnly;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,6 +91,7 @@ public class AuditFinalStateSequenceValidator implements SimpleValidator {
 
         this.actualEntries = auditReader.getAuditHistory().stream()
                 .filter(entry -> !EXCLUDED_STATES.contains(entry.getState()))
+                .filter(auditEntry -> !Boolean.TRUE.equals(auditEntry.getSystemChange()))
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -97,6 +99,7 @@ public class AuditFinalStateSequenceValidator implements SimpleValidator {
     /**
      * Internal constructor for direct list initialization (used by tests).
      */
+    @TestOnly
     AuditFinalStateSequenceValidator(List<AuditEntryDefinition> expectedDefinitions, List<AuditEntry> actualEntries) {
         this.expectations = expectedDefinitions != null
                 ? expectedDefinitions.stream()
