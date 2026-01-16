@@ -30,7 +30,7 @@ import io.flamingock.internal.common.cloud.auth.AuthResponse;
 import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
 import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
 import io.flamingock.internal.common.cloud.planner.request.StageRequest; import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 
 import java.util.*;
 import java.util.stream.Collectors;

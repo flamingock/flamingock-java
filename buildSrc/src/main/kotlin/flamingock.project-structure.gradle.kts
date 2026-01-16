@@ -35,7 +35,7 @@ val pluginProjects = setOf(
 
 val targetSystemProjects = setOf(
     "nontransactional-target-system",
-    "mongodb-target-system-api",
+    "mongodb-external-system-api",
     "mongodb-sync-target-system",
     "mongodb-springdata-target-system",
     "sql-target-system",

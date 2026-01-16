@@ -22,6 +22,16 @@ public final class Constants {
   public static long DEFAULT_QUIT_TRYING_AFTER_MILLIS = 3 * 60 * 1000L;//3 minutes
   public static long DEFAULT_TRY_FREQUENCY_MILLIS = 1000L;//1 second
 
+
+  public static final String DEFAULT_CLOUD_AUDIT_STORE = "cloud-audit-store";
+  public static final String DEFAULT_MONGODB_AUDIT_STORE = "mongodb-audit-store";
+  public static final String DEFAULT_DYNAMODB_AUDIT_STORE = "dynamodb-audit-store";
+  public static final String DEFAULT_COUCHBASE_AUDIT_STORE = "couchbase-audit-store";
+  public static final String DEFAULT_SQL_AUDIT_STORE = "sql-audit-store";
+  public static final String DEFAULT_IN_MEMORY_AUDIT_STORE = "in_memory-audit-store";
+
+
+
   private Constants() {}
 
 

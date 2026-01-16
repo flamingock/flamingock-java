@@ -18,9 +18,8 @@ package io.flamingock.internal.core.task.navigation.navigator.strategy;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
-import io.flamingock.internal.core.targets.operations.TransactionalTargetSystemOps;
+import io.flamingock.internal.core.external.targets.operations.TransactionalTargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.AuditStoreStepOperations;
@@ -30,7 +29,6 @@ import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
-import io.flamingock.internal.core.task.navigation.step.complete.CompletedSuccessStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
@@ -38,8 +36,6 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.Wrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
-
-import java.time.LocalDateTime;
 
 /**
  * Change process strategy for transactional target systems with shared audit store.

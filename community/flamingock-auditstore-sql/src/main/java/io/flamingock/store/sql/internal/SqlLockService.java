@@ -16,12 +16,12 @@
 package io.flamingock.store.sql.internal;
 
 import io.flamingock.internal.common.sql.SqlDialect;
-import io.flamingock.internal.core.store.lock.LockAcquisition;
-import io.flamingock.internal.core.store.lock.LockKey;
-import io.flamingock.internal.core.store.lock.LockServiceException;
-import io.flamingock.internal.core.store.lock.LockStatus;
-import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.lock.LockAcquisition;
+import io.flamingock.internal.core.external.store.lock.LockKey;
+import io.flamingock.internal.core.external.store.lock.LockServiceException;
+import io.flamingock.internal.core.external.store.lock.LockStatus;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.util.id.RunnerId;
 
 import javax.sql.DataSource;

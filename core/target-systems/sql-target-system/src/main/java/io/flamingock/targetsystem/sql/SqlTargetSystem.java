@@ -15,18 +15,19 @@
  */
 package io.flamingock.targetsystem.sql;
 
+import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
-import io.flamingock.internal.core.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
-public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> {
+public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> implements SqlExternalSystem {
 
     private DataSource dataSource;
 
@@ -37,6 +38,7 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         this.dataSource = dataSource;
     }
 
+    @Override
     public DataSource getDataSource() {
         return dataSource;
     }

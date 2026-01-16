@@ -39,7 +39,7 @@ import io.flamingock.internal.core.builder.OpsClientBuilder;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.core.context.SimpleContext;
-import io.flamingock.internal.core.store.AuditStore;
+import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import io.flamingock.targetsystem.sql.SqlTargetSystem;

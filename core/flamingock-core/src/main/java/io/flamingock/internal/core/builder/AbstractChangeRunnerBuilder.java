@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.api.external.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
@@ -26,8 +26,8 @@ import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
-import io.flamingock.internal.core.store.AuditStore;
-import io.flamingock.internal.core.store.audit.AuditPersistence;
+import io.flamingock.internal.core.external.store.AuditStore;
+import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
 import io.flamingock.internal.core.event.EventPublisher;

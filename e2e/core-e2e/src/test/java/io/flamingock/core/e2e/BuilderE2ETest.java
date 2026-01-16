@@ -23,7 +23,7 @@ import io.flamingock.core.e2e.helpers.Counter;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.util.Deserializer;
-import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

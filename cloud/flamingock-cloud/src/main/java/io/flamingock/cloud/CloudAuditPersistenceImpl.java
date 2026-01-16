@@ -16,19 +16,17 @@
 package io.flamingock.cloud;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditSnapshotBuilder;
 import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.context.ContextContributor;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.JwtProperty;
 import io.flamingock.internal.util.id.ServiceId;
-import io.flamingock.internal.core.store.audit.cloud.CloudAuditPersistence;
+import io.flamingock.internal.core.external.store.audit.cloud.CloudAuditPersistence;
 import io.flamingock.internal.common.core.context.ContextInjectable;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 

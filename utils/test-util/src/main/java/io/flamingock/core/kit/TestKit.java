@@ -19,7 +19,7 @@ import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.lock.LockTestHelper;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.plugin.DefaultPluginManager;
 

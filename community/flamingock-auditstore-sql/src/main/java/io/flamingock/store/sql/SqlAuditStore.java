@@ -15,16 +15,17 @@
  */
 package io.flamingock.store.sql;
 
-import io.flamingock.internal.core.store.CommunityAuditStore;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.sql.internal.SqlAuditPersistence;
 import io.flamingock.store.sql.internal.SqlLockService;
-import io.flamingock.targetsystem.sql.SqlTargetSystem;
+import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 
 import javax.sql.DataSource;
 
@@ -45,7 +46,7 @@ public class SqlAuditStore implements CommunityAuditStore {
 
     /**
      * Creates a {@link SqlAuditStore} using the same SQL datasource
-     * configured in the given {@link SqlTargetSystem}.
+     * configured in the given {@link SqlExternalSystem}.
      * <p>
      * Only the underlying SQL datasource is reused.
      * No additional target-system configuration is carried over.
@@ -53,8 +54,13 @@ public class SqlAuditStore implements CommunityAuditStore {
      * @param targetSystem the target system from which to derive the datasource
      * @return a new audit store bound to the same SQL datasource as the target system
      */
-    public static SqlAuditStore from(SqlTargetSystem targetSystem) {
+    public static SqlAuditStore from(SqlExternalSystem targetSystem) {
         return new SqlAuditStore(targetSystem.getDataSource());
+    }
+
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_SQL_AUDIT_STORE;
     }
 
     public SqlAuditStore withAuditRepositoryName(String auditRepositoryName) {

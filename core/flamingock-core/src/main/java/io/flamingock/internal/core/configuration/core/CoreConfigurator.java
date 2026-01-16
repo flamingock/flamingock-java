@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.configuration.core;
 
 
-import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.api.external.targets.TargetSystem;
 
 import java.util.Map;
 

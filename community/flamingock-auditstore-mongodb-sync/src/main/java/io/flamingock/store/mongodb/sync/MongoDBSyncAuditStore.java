@@ -19,25 +19,25 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
-import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
-import io.flamingock.targetsystem.mongodb.api.MongoDBTargetSystem;
-import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
+import io.flamingock.store.mongodb.sync.internal.MongoDBSyncAuditPersistence;
+import io.flamingock.store.mongodb.sync.internal.MongoDBSyncLockService;
+import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
 import static io.flamingock.internal.util.constants.CommunityPersistenceConstants.DEFAULT_LOCK_STORE_NAME;
 
 public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
-    private final MongoDBTargetSystem mongoDBTargetSystem;
+    private final MongoDBExternalSystem mongoDBTargetSystem;
 
     protected RunnerId runnerId;
     private CommunityConfigurable communityConfiguration;
@@ -52,13 +52,13 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
     private boolean autoCreate = true;
 
 
-    private MongoDBSyncAuditStore(MongoDBTargetSystem mongoDBTargetSystem) {
+    private MongoDBSyncAuditStore(MongoDBExternalSystem mongoDBTargetSystem) {
         this.mongoDBTargetSystem = mongoDBTargetSystem;
     }
 
     /**
      * Creates a {@link MongoDBSyncAuditStore} using the same MongoDB client and
-     * database configured in the given {@link MongoDBSyncTargetSystem}.
+     * database configured in the given {@link MongoDBExternalSystem}.
      * <p>
      * Only the underlying MongoDB instance (client + database name) is reused.
      * No additional target-system configuration is carried over.
@@ -66,8 +66,13 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
      * @param targetSystem the target system from which to derive the client and database
      * @return a new audit store bound to the same MongoDB instance as the target system
      */
-    public static MongoDBSyncAuditStore from(MongoDBTargetSystem targetSystem) {
+    public static MongoDBSyncAuditStore from(MongoDBExternalSystem targetSystem) {
         return new MongoDBSyncAuditStore(targetSystem);
+    }
+
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_MONGODB_AUDIT_STORE;
     }
 
     public MongoDBSyncAuditStore withAuditRepositoryName(String auditRepositoryName) {
@@ -144,7 +149,7 @@ public class MongoDBSyncAuditStore implements CommunityAuditStore {
 
     private void validate() {
 
-        if (database == null ) {
+        if (database == null) {
             throw new FlamingockException("The 'database' instance is required.");
         }
 

@@ -18,7 +18,7 @@ package io.flamingock.internal.core.builder;
 import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
 import io.flamingock.internal.core.configuration.cloud.CloudConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
-import io.flamingock.internal.core.store.CloudAuditStore;
+import io.flamingock.internal.core.external.store.CloudAuditStore;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.plugin.PluginManager;

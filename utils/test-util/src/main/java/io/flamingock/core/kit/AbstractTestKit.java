@@ -19,7 +19,7 @@ import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.core.kit.lock.LockTestHelper;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 
 /**
  * Generic TestKit implementation that works with any storage technology.

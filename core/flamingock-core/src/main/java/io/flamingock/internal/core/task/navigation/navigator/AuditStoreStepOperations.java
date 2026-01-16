@@ -16,11 +16,11 @@
 package io.flamingock.internal.core.task.navigation.navigator;
 
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.store.audit.domain.ExecutionAuditContextBundle;
-import io.flamingock.internal.core.store.audit.domain.RollbackAuditContextBundle;
-import io.flamingock.internal.core.store.audit.domain.RuntimeContext;
-import io.flamingock.internal.core.store.audit.domain.StartExecutionAuditContextBundle;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.store.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.external.store.audit.domain.RollbackAuditContextBundle;
+import io.flamingock.internal.core.external.store.audit.domain.RuntimeContext;
+import io.flamingock.internal.core.external.store.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;

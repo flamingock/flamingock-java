@@ -19,7 +19,7 @@ import io.flamingock.internal.core.builder.CommunityChangeRunnerBuilder;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.community.CommunityConfiguration;
 import io.flamingock.internal.common.core.context.Context;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.core.plugin.PluginManager;
 
 /**

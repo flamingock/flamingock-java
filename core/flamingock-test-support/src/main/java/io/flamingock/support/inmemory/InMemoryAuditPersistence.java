@@ -16,7 +16,7 @@
 package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 
 import java.util.List;

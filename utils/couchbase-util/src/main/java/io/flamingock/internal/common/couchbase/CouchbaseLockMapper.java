@@ -16,20 +16,20 @@
 package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
-import io.flamingock.internal.core.store.lock.community.CommunityLockEntry;
-import io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants;
-import io.flamingock.internal.core.store.lock.LockAcquisition;
-import io.flamingock.internal.core.store.lock.LockStatus;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntry;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants;
+import io.flamingock.internal.core.external.store.lock.LockAcquisition;
+import io.flamingock.internal.core.external.store.lock.LockStatus;
 import io.flamingock.internal.util.TimeUtil;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
-import static io.flamingock.internal.core.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.KEY_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.OWNER_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.STATUS_FIELD;
+import static io.flamingock.internal.core.external.store.lock.community.CommunityLockEntryConstants.EXPIRES_AT_FIELD;
 
 public class CouchbaseLockMapper {
 

@@ -16,8 +16,8 @@
 package io.flamingock.dynamodb.kit;
 
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.store.lock.LockAcquisition;
-import io.flamingock.internal.core.store.lock.LockKey;
+import io.flamingock.internal.core.external.store.lock.LockAcquisition;
+import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;

@@ -16,8 +16,9 @@
 package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.store.CommunityAuditStore;
-import io.flamingock.internal.core.store.lock.community.CommunityLockService;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
+import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class InMemoryAuditStore implements CommunityAuditStore {
@@ -34,7 +35,11 @@ public class InMemoryAuditStore implements CommunityAuditStore {
     private InMemoryAuditStore() {
         this.auditStorage = new InMemoryAuditStorage();
         this.lockStorage = new InMemoryLockStorage();
+    }
 
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_IN_MEMORY_AUDIT_STORE;
     }
     
     @Override

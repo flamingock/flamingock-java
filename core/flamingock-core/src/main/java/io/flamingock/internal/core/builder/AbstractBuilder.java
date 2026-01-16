@@ -15,17 +15,17 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.api.external.targets.TargetSystem;
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextConfigurable;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.configuration.core.CoreConfigurator;
 import io.flamingock.internal.core.context.PriorityContext;
-import io.flamingock.internal.core.store.AuditStore;
-import io.flamingock.internal.core.store.audit.AuditPersistence;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.targets.TargetSystemManager;
+import io.flamingock.internal.core.external.store.AuditStore;
+import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;

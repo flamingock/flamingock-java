@@ -17,7 +17,7 @@ package io.flamingock.store.sql.internal;
 
 import io.flamingock.internal.common.sql.AbstractSqlDialectHelper;
 import io.flamingock.internal.common.sql.SqlDialect;
-import io.flamingock.internal.core.store.lock.LockStatus;
+import io.flamingock.internal.core.external.store.lock.LockStatus;
 
 import javax.sql.DataSource;
 import java.sql.*;

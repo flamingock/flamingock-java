@@ -15,10 +15,10 @@
  */
 package io.flamingock.springboot;
 
-import io.flamingock.api.targets.TargetSystem;
+import io.flamingock.api.external.targets.TargetSystem;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -30,7 +30,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 

@@ -15,6 +15,7 @@
  */
 package io.flamingock.cloud;
 
+import io.flamingock.internal.util.Constants;
 import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
@@ -23,7 +24,7 @@ import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.core.configuration.cloud.CloudConfigurable;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
-import io.flamingock.internal.core.store.CloudAuditStore;
+import io.flamingock.internal.core.external.store.CloudAuditStore;
 import io.flamingock.internal.common.cloud.auth.AuthResponse;
 import io.flamingock.cloud.audit.HtttpAuditWriter;
 import io.flamingock.cloud.auth.AuthManager;
@@ -34,7 +35,7 @@ import io.flamingock.cloud.lock.client.LockServiceClient;
 import io.flamingock.cloud.planner.CloudExecutionPlanner;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.cloud.planner.client.HttpExecutionPlannerClient;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import org.apache.http.impl.client.HttpClients;
@@ -48,6 +49,10 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudAuditStore");
     private CloudAuditPersistenceImpl persistence;
 
+    @Override
+    public String getId() {
+        return Constants.DEFAULT_CLOUD_AUDIT_STORE;
+    }
 
     @Override
     public void initialize(ContextResolver baseContext) {

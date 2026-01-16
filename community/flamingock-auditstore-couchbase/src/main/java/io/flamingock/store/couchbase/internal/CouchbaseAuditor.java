@@ -28,7 +28,7 @@ import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.couchbase.CouchbaseAuditMapper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionInitializator;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;

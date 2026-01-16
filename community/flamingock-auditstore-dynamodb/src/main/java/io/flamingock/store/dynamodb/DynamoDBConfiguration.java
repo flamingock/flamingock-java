@@ -17,7 +17,7 @@ package io.flamingock.store.dynamodb;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditStoreConfigurable;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditStoreConfigurable;
 
 public class DynamoDBConfiguration implements CommunityAuditStoreConfigurable {
 

@@ -15,8 +15,8 @@
  */
 package io.flamingock.store.dynamodb.internal;
 
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.store.audit.community.CommunityAuditReader;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.dynamodb.entities.AuditEntryEntity;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.util.Result;

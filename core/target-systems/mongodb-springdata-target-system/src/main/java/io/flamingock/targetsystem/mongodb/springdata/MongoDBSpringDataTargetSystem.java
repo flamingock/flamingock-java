@@ -24,10 +24,10 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
-import io.flamingock.internal.core.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.targetsystem.mongodb.api.MongoDBTargetSystem;
+import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.Objects;
@@ -38,7 +38,7 @@ import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONG
 
 
 public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<MongoDBSpringDataTargetSystem>
-        implements MongoDBTargetSystem {
+        implements MongoDBExternalSystem {
 
     private final MongoTemplate mongoTemplate;
     private WriteConcern writeConcern = WriteConcern.MAJORITY.withJournal(true);

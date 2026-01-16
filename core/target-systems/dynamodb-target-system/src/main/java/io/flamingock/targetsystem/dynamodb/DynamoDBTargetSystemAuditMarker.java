@@ -16,8 +16,8 @@
 package io.flamingock.targetsystem.dynamodb;
 
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMark;
-import io.flamingock.internal.core.targets.mark.TargetSystemAuditMarker;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;

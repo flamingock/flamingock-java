@@ -16,10 +16,10 @@
 package io.flamingock.support.inmemory;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.core.store.audit.LifecycleAuditWriter;
-import io.flamingock.internal.core.store.audit.domain.ExecutionAuditContextBundle;
-import io.flamingock.internal.core.store.audit.domain.RollbackAuditContextBundle;
-import io.flamingock.internal.core.store.audit.domain.StartExecutionAuditContextBundle;
+import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.store.audit.domain.ExecutionAuditContextBundle;
+import io.flamingock.internal.core.external.store.audit.domain.RollbackAuditContextBundle;
+import io.flamingock.internal.core.external.store.audit.domain.StartExecutionAuditContextBundle;
 import io.flamingock.internal.util.Result;
 
 class InMemoryAuditWriter implements LifecycleAuditWriter {

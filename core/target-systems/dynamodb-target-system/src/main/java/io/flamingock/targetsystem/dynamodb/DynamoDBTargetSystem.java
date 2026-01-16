@@ -15,15 +15,16 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
+import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import io.flamingock.importer.mongock.dynamodb.MongockImporterDynamoDB;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.FlamingockEdition;
+import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.targets.mark.NoOpTargetSystemAuditMarker;
-import io.flamingock.internal.core.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -34,7 +35,7 @@ import java.util.Optional;
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 
-public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> {
+public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> implements DynamoDBExternalSystem {
 
     private DynamoDbClient client;
 
@@ -45,6 +46,7 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
         this.client = dynamoDBClient;
     }
 
+    @Override
     public DynamoDbClient getClient() {
         return client;
     }

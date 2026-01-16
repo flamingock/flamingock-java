@@ -17,7 +17,7 @@ package io.flamingock.store.dynamodb.internal;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.configuration.community.CommunityConfigurable;
-import io.flamingock.internal.core.store.audit.community.AbstractCommunityAuditPersistence;
+import io.flamingock.internal.core.external.store.audit.community.AbstractCommunityAuditPersistence;
 import io.flamingock.internal.util.Result;
 import io.flamingock.internal.util.id.RunnerId;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;

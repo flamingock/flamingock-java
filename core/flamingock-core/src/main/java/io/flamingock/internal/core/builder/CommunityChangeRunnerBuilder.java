@@ -22,7 +22,7 @@ import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.plan.community.CommunityExecutionPlanner;
 import io.flamingock.internal.core.plugin.PluginManager;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 import io.flamingock.internal.util.id.RunnerId;
 
 public class CommunityChangeRunnerBuilder

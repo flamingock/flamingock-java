@@ -20,7 +20,7 @@ import com.mongodb.client.MongoDatabase;
 import io.flamingock.core.kit.AbstractTestKit;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.lock.LockStorage;
-import io.flamingock.internal.core.store.CommunityAuditStore;
+import io.flamingock.internal.core.external.store.CommunityAuditStore;
 
 import java.util.Arrays;
 import java.util.HashSet;
