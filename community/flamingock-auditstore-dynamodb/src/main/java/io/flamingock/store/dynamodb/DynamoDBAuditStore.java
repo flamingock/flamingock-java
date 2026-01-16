@@ -27,8 +27,7 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.store.dynamodb.internal.DynamoDBAuditPersistence;
 import io.flamingock.store.dynamodb.internal.DynamoDBLockService;
-import io.flamingock.targetsystem.dynamodb.DynamoDBExternalSystem;
-import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
+import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class DynamoDBAuditStore implements CommunityAuditStore {
@@ -50,7 +49,7 @@ public class DynamoDBAuditStore implements CommunityAuditStore {
 
     /**
      * Creates a {@link DynamoDBAuditStore} using the same DynamoDB client
-     * configured in the given {@link DynamoDBTargetSystem}.
+     * configured in the given {@link DynamoDBExternalSystem}.
      * <p>
      * Only the underlying DynamoDB instance (client) is reused.
      * No additional target-system configuration is carried over.

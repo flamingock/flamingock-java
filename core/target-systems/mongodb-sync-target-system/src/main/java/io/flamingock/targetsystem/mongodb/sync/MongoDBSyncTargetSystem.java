@@ -30,7 +30,7 @@ import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMa
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB;
-import io.flamingock.targetsystem.mongodb.api.MongoDBExternalSystem;
+import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 
 import java.util.Objects;
 import java.util.Optional;

@@ -93,10 +93,10 @@ project(":core:target-systems:nontransactional-target-system").projectDir =
     file("core/target-systems/nontransactional-target-system")
 project(":core:target-systems:nontransactional-target-system").name = "nontransactional-target-system"
 
-include("core:target-systems:mongodb-target-system-api")
-project(":core:target-systems:mongodb-target-system-api").projectDir =
-    file("core/target-systems/mongodb-target-system-api")
-project(":core:target-systems:mongodb-target-system-api").name = "mongodb-target-system-api"
+include("core:target-systems:mongodb-external-system-api")
+project(":core:target-systems:mongodb-external-system-api").projectDir =
+    file("core/target-systems/mongodb-external-system-api")
+project(":core:target-systems:mongodb-external-system-api").name = "mongodb-external-system-api"
 
 include("core:target-systems:mongodb-sync-target-system")
 project(":core:target-systems:mongodb-sync-target-system").projectDir =
@@ -198,3 +198,7 @@ include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
 
+
+include("core:target-systems:couchbase-external-system-api")
+include("core:target-systems:dynamodb-external-system-api")
+include("core:target-systems:sql-external-system-api")

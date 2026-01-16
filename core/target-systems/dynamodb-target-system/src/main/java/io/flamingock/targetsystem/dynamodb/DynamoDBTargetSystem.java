@@ -15,6 +15,7 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
+import io.flamingock.externalsystem.dynamodb.api.DynamoDBExternalSystem;
 import io.flamingock.importer.mongock.dynamodb.MongockImporterDynamoDB;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;

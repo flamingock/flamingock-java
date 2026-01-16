@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.targetsystem.sql;
+package io.flamingock.externalsystem.dynamodb.api;
 
 import io.flamingock.api.external.ExternalSystem;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-import javax.sql.DataSource;
-
-public interface SqlExternalSystem extends ExternalSystem {
-    DataSource getDataSource();
+public interface DynamoDBExternalSystem extends ExternalSystem {
+    DynamoDbClient getClient();
 }

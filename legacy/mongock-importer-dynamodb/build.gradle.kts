@@ -8,6 +8,7 @@ dependencies {
     testAnnotationProcessor(project(":legacy:mongock-support"))
     testImplementation(project(":legacy:mongock-support"))
 
+    testImplementation(project(":core:target-systems:dynamodb-target-system"))
     testImplementation(project(":community:flamingock-auditstore-dynamodb"))
 
 

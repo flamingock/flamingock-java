@@ -2,12 +2,14 @@ dependencies {
     implementation(project(":utils:dynamodb-util"))
     implementation(project(":core:flamingock-core"))
 
-    api(project(":core:target-systems:dynamodb-target-system"))
+
+    api(project(":core:target-systems:dynamodb-external-system-api"))
 
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 
 
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":core:target-systems:dynamodb-target-system"))
     testImplementation(project(":core:target-systems:nontransactional-target-system"))
 
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")
