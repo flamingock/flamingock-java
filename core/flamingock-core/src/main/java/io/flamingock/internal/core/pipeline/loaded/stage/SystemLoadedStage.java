@@ -25,7 +25,7 @@ import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import java.util.Collection;
 import java.util.List;
 
-import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext.SortType.UNSORTED;
+import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext.SortType.SEQUENTIAL_FORMATTED;
 
 /**
  * It's the result of adding the loaded task to the ProcessDefinition
@@ -36,7 +36,7 @@ public class SystemLoadedStage extends AbstractLoadedStage {
 
 
     private static final StageValidationContext validationContext = StageValidationContext.builder()
-            .setSorted(UNSORTED)
+            .setSorted(SEQUENTIAL_FORMATTED)
             .build();
 
     public SystemLoadedStage(String name,

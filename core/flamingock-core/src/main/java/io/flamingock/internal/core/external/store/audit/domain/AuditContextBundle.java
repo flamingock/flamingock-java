@@ -86,31 +86,31 @@ public abstract class AuditContextBundle {
 
 
     public AuditEntry toAuditEntry() {
-        TaskDescriptor loadedTask = getLoadedTask();
+        TaskDescriptor loadedChange = getLoadedTask();
         ExecutionContext stageExecutionContext = getExecutionContext();
         RuntimeContext runtimeContext = getRuntimeContext();
         
         return new AuditEntry(
                 stageExecutionContext.getExecutionId(),
                 runtimeContext.getStageName(),
-                loadedTask.getId(),
-                loadedTask.getAuthor(),
+                loadedChange.getId(),
+                loadedChange.getAuthor(),
                 runtimeContext.getAppliedAt(),
                 getAuditStatus(),
                 getExecutionType(),
-                loadedTask.getSource(),
+                loadedChange.getSource(),
                 runtimeContext.getMethodExecutor(),
                 null, //TODO: set sourceFile
                 runtimeContext.getDuration(),
                 stageExecutionContext.getHostname(),
                 stageExecutionContext.getMetadata(),
-                getSystemChange(),
+                loadedChange.isSystem(),
                 ThrowableUtil.serialize(runtimeContext.getError().orElse(null)),
                 getAuditTxType(),
                 getTargetSystemId(),
-                loadedTask.getOrder().orElseThrow(() -> new IllegalStateException("Order is required but not present")),
-                loadedTask.getRecovery().getStrategy(),
-                loadedTask.isTransactional()
+                loadedChange.getOrder().orElseThrow(() -> new IllegalStateException("Order is required but not present")),
+                loadedChange.getRecovery().getStrategy(),
+                loadedChange.isTransactional()
         );
     }
 
@@ -130,9 +130,6 @@ public abstract class AuditContextBundle {
         return AuditEntry.ExecutionType.EXECUTION;
     }
 
-    private boolean getSystemChange() {
-        return false;
-    }
 
 
 }
