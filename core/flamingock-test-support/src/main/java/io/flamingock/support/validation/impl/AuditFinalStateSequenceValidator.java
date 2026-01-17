@@ -87,13 +87,7 @@ public class AuditFinalStateSequenceValidator implements SimpleValidator {
     private final List<AuditEntry> actualEntries;
 
     public AuditFinalStateSequenceValidator(AuditReader auditReader, List<AuditEntryDefinition> definitions) {
-        this.expectations = definitions != null
-                ? definitions.stream()
-                .map(AuditEntryExpectation::new)
-                .collect(Collectors.toList())
-                : new ArrayList<>();
-
-        this.actualEntries = filterActualEntries(auditReader.getAuditHistory());
+        this(definitions, auditReader.getAuditHistory());
     }
     /**
      * Internal constructor for direct list initialization (used by tests).
