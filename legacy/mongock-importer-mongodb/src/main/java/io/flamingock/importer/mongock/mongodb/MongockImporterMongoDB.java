@@ -17,6 +17,7 @@ package io.flamingock.importer.mongock.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import org.bson.Document;
@@ -71,9 +72,16 @@ public class MongockImporterMongoDB implements AuditHistoryReader {
                 changeEntry.getExecutionHostname(),
                 changeEntry.getMetadata(),
                 changeEntry.getSystemChange(),
-                changeEntry.getErrorTrace()
+                true,
+                changeEntry.getErrorTrace(),
+                null,
+                null,
+                null,
+                RecoveryStrategy.MANUAL_INTERVENTION,
+                null
         );
     }
+
 
     private static MongockAuditEntry toChangeEntry(Document document) {
         Date timestamp = document.getDate("timestamp");

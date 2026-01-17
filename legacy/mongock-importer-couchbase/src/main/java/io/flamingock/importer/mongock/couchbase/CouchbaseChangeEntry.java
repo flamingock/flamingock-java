@@ -16,6 +16,7 @@
 package io.flamingock.importer.mongock.couchbase;
 
 import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.time.Instant;
@@ -91,7 +92,13 @@ public class CouchbaseChangeEntry {
                 executionHostName,
                 metadata,
                 systemChange != null && systemChange,
-                errorTrace
+                true,
+                errorTrace,
+                null,
+                null,
+                null,
+                RecoveryStrategy.MANUAL_INTERVENTION,
+                null
         );
     }
 }

@@ -84,6 +84,7 @@ public class MongockChangeDiscoverer implements ChangeDiscoverer {
         builder.setSystem(true);
         builder.setRecovery(RecoveryDescriptor.getDefault());
 
+
         builder.setSourceClassPath(MongockImportChange.class.getName());
         builder.setConstructor(PreviewConstructor.getDefault());
         List<String> applyParameterTypes = Arrays.asList(
