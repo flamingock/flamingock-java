@@ -15,6 +15,7 @@
  */
 package io.flamingock.importer.mongock.dynamodb;
 
+import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -209,7 +210,13 @@ public class MongockAuditEntry {
                 executionHostName,
                 metadata,
                 systemChange != null && systemChange,
-                errorTrace
+                true,
+                errorTrace,
+                null,
+                null,
+                null,
+                RecoveryStrategy.MANUAL_INTERVENTION,
+                null
         );
     }
 }
