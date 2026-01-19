@@ -57,9 +57,8 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order VARCHAR(50), " +
                                 "recovery_strategy VARCHAR(50), " +
                                 "transaction_flag %s, " +
-                                "system_change %s, " +
-                                "legacy %s" +
-                                ")", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType(), getBooleanType());
+                                "system_change %s" +
+                                ")", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
             case FIREBIRD:
                 return String.format(
                         "CREATE TABLE %s (" +
@@ -83,8 +82,7 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order VARCHAR(50), " +
                                 "recovery_strategy VARCHAR(50), " +
                                 "transaction_flag SMALLINT, " +
-                                "system_change SMALLINT, " +
-                                "legacy SMALLINT" +
+                                "system_change SMALLINT" +
                                 ")", tableName);
             case POSTGRESQL:
                 return String.format(
@@ -109,8 +107,7 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order VARCHAR(255)," +
                                 "recovery_strategy VARCHAR(32)," +
                                 "transaction_flag BOOLEAN," +
-                                "system_change BOOLEAN," +
-                                "legacy BOOLEAN" +
+                                "system_change BOOLEAN" +
                                 ")", tableName);
 
             case SQLSERVER:
@@ -137,9 +134,8 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order VARCHAR(50), " +
                                 "recovery_strategy VARCHAR(50), " +
                                 "transaction_flag %s, " +
-                                "system_change %s, " +
-                                "legacy %s" +
-                                ")", tableName, tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType(), getBooleanType());
+                                "system_change %s" +
+                                ")", tableName, tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
             case SYBASE:
                 return String.format(
                         "IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='%s' AND type='U') " +
@@ -165,8 +161,7 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "       change_order VARCHAR(255), " +
                                 "       recovery_strategy VARCHAR(64), " +
                                 "       transaction_flag BIT NOT NULL, " +
-                                "       system_change BIT NOT NULL, " +
-                                "       legacy BIT NOT NULL" +
+                                "       system_change BIT NOT NULL" +
                                 "   )') " +
                                 "END",
                         tableName, tableName
@@ -194,9 +189,8 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order VARCHAR2(50), " +
                                 "recovery_strategy VARCHAR2(50), " +
                                 "transaction_flag %s, " +
-                                "system_change %s, " +
-                                "legacy %s" +
-                                ")'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType(), getBooleanType());
+                                "system_change %s" +
+                                ")'; EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF; END;", tableName, getAutoIncrementType(), getClobType(), getBigIntType(), getClobType(), getBooleanType(), getBooleanType());
             case DB2:
                 return String.format(
                         "BEGIN\n" +
@@ -222,8 +216,7 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order VARCHAR(50)," +
                                 "recovery_strategy VARCHAR(50)," +
                                 "transaction_flag SMALLINT," +
-                                "system_change SMALLINT," +
-                                "legacy SMALLINT" +
+                                "system_change SMALLINT" +
                                 ")';\n" +
                                 "END",
                         tableName);
@@ -251,8 +244,7 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order TEXT, " +
                                 "recovery_strategy TEXT, " +
                                 "transaction_flag INTEGER, " +
-                                "system_change INTEGER, " +
-                                "legacy INTEGER" +
+                                "system_change INTEGER" +
                                 ")", tableName);
             case INFORMIX:
                 return String.format(
@@ -277,8 +269,7 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
                                 "change_order VARCHAR(50), " +
                                 "recovery_strategy VARCHAR(50), " +
                                 "transaction_flag BOOLEAN, " +
-                                "system_change BOOLEAN, " +
-                                "legacy BOOLEAN" +
+                                "system_change BOOLEAN" +
                                 ")", tableName);
 
 
@@ -291,16 +282,16 @@ public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
         return String.format(
                 "INSERT INTO %s (" +
                         "execution_id, stage_id, change_id, author, created_at, state, invoked_class, invoked_method, source_file, metadata, " +
-                        "execution_millis, execution_hostname, error_trace, type, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag, system_change, legacy" +
+                        "execution_millis, execution_hostname, error_trace, type, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag, system_change" +
                         ") VALUES (" +
-                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
+                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
                         ")", tableName);
     }
 
     public String getSelectHistorySqlString(String tableName) {
         return String.format(
                 "SELECT execution_id, stage_id, change_id, author, created_at, state, type, invoked_class, invoked_method, source_file, " +
-                        "execution_millis, execution_hostname, metadata, system_change, legacy, error_trace, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag " +
+                        "execution_millis, execution_hostname, metadata, system_change, error_trace, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag " +
                         "FROM %s ORDER BY id ASC", tableName);
     }
 
