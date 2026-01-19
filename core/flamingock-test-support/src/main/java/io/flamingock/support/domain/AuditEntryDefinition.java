@@ -109,7 +109,6 @@ public class AuditEntryDefinition {
     private RecoveryStrategy recoveryStrategy;
     private String order;
     private Boolean transactional;
-    private boolean legacy;
     private AuditEntry.ChangeType type;
 
 
@@ -443,17 +442,6 @@ public class AuditEntryDefinition {
     }
 
     /**
-     * Sets the legacy flag.
-     *
-     * @param legacy the legacy flag
-     * @return this builder for method chaining
-     */
-    public AuditEntryDefinition withLegacy(boolean legacy) {
-        this.legacy = legacy;
-        return this;
-    }
-
-    /**
      * Sets the change type.
      *
      * @param type the change type
@@ -531,7 +519,7 @@ public class AuditEntryDefinition {
     }
 
     public boolean isLegacy() {
-        return legacy;
+        return type != null && type.isLegacy();
     }
 
     public AuditEntry.ChangeType getType() {
@@ -574,7 +562,6 @@ public class AuditEntryDefinition {
                 executionHostname != null ? executionHostname : "test-host",
                 metadata,
                 false, // systemChange
-                legacy,
                 errorTrace,
                 AuditTxType.NON_TX,
                 targetSystemId,

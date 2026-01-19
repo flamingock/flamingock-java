@@ -38,7 +38,6 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TX_STRATEGY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_LEGACY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TYPE;
@@ -62,7 +61,6 @@ public class CouchbaseAuditMapper {
         CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
         CouchbaseUtils.addFieldToDocument(document, KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         CouchbaseUtils.addFieldToDocument(document, KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
-        CouchbaseUtils.addFieldToDocument(document, KEY_LEGACY, auditEntry.isLegacy());
         CouchbaseUtils.addFieldToDocument(document, KEY_TX_STRATEGY, AuditTxType.safeString(auditEntry.getTxType()));
         CouchbaseUtils.addFieldToDocument(document, KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_ORDER, auditEntry.getOrder());
@@ -97,7 +95,6 @@ public class CouchbaseAuditMapper {
                 jsonObject.getString(KEY_EXECUTION_HOSTNAME),
                 jsonObject.get(KEY_METADATA) != null ? jsonObject.getObject(KEY_METADATA).toMap() : null,
                 jsonObject.getBoolean(KEY_SYSTEM_CHANGE) != null && jsonObject.getBoolean(KEY_SYSTEM_CHANGE),
-                jsonObject.getBoolean(KEY_LEGACY) != null && jsonObject.getBoolean(KEY_LEGACY),
                 jsonObject.getString(KEY_ERROR_TRACE),
                 txStrategy,
                 jsonObject.getString(KEY_TARGET_SYSTEM_ID),

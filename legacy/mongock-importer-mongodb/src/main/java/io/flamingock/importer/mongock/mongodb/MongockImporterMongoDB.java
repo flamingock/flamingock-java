@@ -72,7 +72,6 @@ public class MongockImporterMongoDB implements AuditHistoryReader {
                 changeEntry.getExecutionHostname(),
                 changeEntry.getMetadata(),
                 changeEntry.getSystemChange(),
-                true,
                 changeEntry.getErrorTrace(),
                 null,
                 null,

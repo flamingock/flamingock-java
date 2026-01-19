@@ -211,7 +211,6 @@ public class MongockAuditEntry {
                 executionHostName,
                 metadata,
                 systemChange != null && systemChange,
-                true,
                 errorTrace,
                 null,
                 null,

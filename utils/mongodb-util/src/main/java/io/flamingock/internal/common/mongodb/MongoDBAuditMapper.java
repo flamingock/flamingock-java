@@ -39,7 +39,6 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STAGE_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_SYSTEM_CHANGE;
-import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_LEGACY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TARGET_SYSTEM_ID;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_TYPE;
@@ -69,7 +68,6 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         document.append(KEY_EXECUTION_HOSTNAME, auditEntry.getExecutionHostname());
         document.append(KEY_ERROR_TRACE, auditEntry.getErrorTrace());
         document.append(KEY_SYSTEM_CHANGE, auditEntry.getSystemChange());
-        document.append(KEY_LEGACY, auditEntry.isLegacy());
         document.append(KEY_TX_STRATEGY, AuditTxType.safeString(auditEntry.getTxType()));
         document.append(KEY_TARGET_SYSTEM_ID, auditEntry.getTargetSystemId());
         document.append(KEY_CHANGE_ORDER, auditEntry.getOrder());
@@ -106,7 +104,6 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.getString(KEY_EXECUTION_HOSTNAME),
                 entry.get(KEY_METADATA),
                 entry.getBoolean(KEY_SYSTEM_CHANGE) != null && entry.getBoolean(KEY_SYSTEM_CHANGE),
-                entry.getBoolean(KEY_LEGACY) != null && entry.getBoolean(KEY_LEGACY),
                 entry.getString(KEY_ERROR_TRACE),
                 txStrategy,
                 entry.getString(KEY_TARGET_SYSTEM_ID),

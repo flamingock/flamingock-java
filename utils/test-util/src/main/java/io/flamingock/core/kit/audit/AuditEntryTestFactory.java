@@ -90,7 +90,6 @@ public class AuditEntryTestFactory {
                 "localhost",                  // executionHostname
                 null,                         // metadata
                 false,                        // systemChange
-                false,                        // legacy
                 null,                         // errorTrace
                 txStrategy,                       // txStrategy
                 "test-target-system",         // targetSystemId
@@ -121,7 +120,6 @@ public class AuditEntryTestFactory {
                 "localhost",                  // executionHostname
                 null,                         // metadata
                 false,                        // systemChange
-                false,                        // legacy
                 null,                         // errorTrace
                 txStrategy,                       // txStrategy
                 "test-target-system",         // targetSystemId
@@ -231,7 +229,6 @@ public class AuditEntryTestFactory {
                 "localhost",                  // executionHostname
                 null,                         // metadata
                 false,                        // systemChange
-                false,                        // legacy
                 null,                         // errorTrace
                 txStrategy,                       // txStrategy
                 targetSystemId,               // targetSystemId
@@ -261,7 +258,6 @@ public class AuditEntryTestFactory {
                 "localhost",                  // executionHostname
                 null,                         // metadata
                 false,                        // systemChange
-                false,                        // legacy
                 null,                         // errorTrace
                 txStrategy,                       // txStrategy
                 targetSystemId,               // targetSystemId
@@ -296,7 +292,6 @@ public class AuditEntryTestFactory {
                 "localhost",                  // executionHostname
                 null,                         // metadata
                 false,                        // systemChange
-                false,                        // legacy
                 null,                         // errorTrace
                 txStrategy,                       // txStrategy
                 null,                         // targetSystemId

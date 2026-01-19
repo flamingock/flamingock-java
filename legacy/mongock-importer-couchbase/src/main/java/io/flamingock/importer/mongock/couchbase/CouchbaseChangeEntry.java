@@ -92,7 +92,6 @@ public class CouchbaseChangeEntry {
                 executionHostName,
                 metadata,
                 systemChange != null && systemChange,
-                true,
                 errorTrace,
                 null,
                 null,
