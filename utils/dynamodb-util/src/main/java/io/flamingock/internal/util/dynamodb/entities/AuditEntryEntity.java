@@ -47,7 +47,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     private Long executionMillis;
     private String executionHostname;
     private Object errorTrace;
-    private AuditEntry.ExecutionType type;
+    private AuditEntry.ChangeType type;
     private AuditTxType txStrategy;
     private String targetSystemId;
     private String order;
@@ -223,7 +223,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     }
 
     public void setType(String type) {
-        this.type = AuditEntry.ExecutionType.valueOf(type);
+        this.type = AuditEntry.ChangeType.valueOf(type);
     }
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_SYSTEM_CHANGE)

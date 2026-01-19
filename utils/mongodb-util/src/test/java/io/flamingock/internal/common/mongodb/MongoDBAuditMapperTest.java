@@ -90,7 +90,7 @@ class MongoDBAuditMapperTest {
         document.append("taskId", "test-task");
         document.append("author", "test-author");
         document.append("state", AuditEntry.Status.APPLIED.name());
-        document.append("type", AuditEntry.ExecutionType.EXECUTION.name());
+        document.append("type", AuditEntry.ChangeType.STANDARD_CODE.name());
         document.append("txStrategy", "INVALID_OPERATION_TYPE");
 
         // When

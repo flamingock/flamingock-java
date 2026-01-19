@@ -104,14 +104,14 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED(changeId)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_001__NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("mongodb")
                                 .withSystemChange(false)
                                 .withTimestampBetween(testStart, testEnd),
                         APPLIED(changeId)
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_001__NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("mongodb")
@@ -144,24 +144,24 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 .THEN_VerifyAuditSequenceStrict(
                         // First change (NonTxTransactionalFalseChange) - STARTED & EXECUTED
                         STARTED("non-tx-transactional-false")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_001__NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("mongodb"),
                         APPLIED("non-tx-transactional-false")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_001__NonTxTransactionalFalseChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("mongodb"),
 
                         // Second change (NonTxTargetSystemChange) - STARTED & EXECUTED
                         STARTED("non-tx-target-system")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_003__NonTxTargetSystemChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system"),
                         APPLIED("non-tx-target-system")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_003__NonTxTargetSystemChange.class)
                                 .withTxType(AuditTxType.NON_TX)
                                 .withTargetSystemId("non-tx-system")
@@ -193,12 +193,12 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-shared-default")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_002__TxSharedDefaultChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongodb"),
                         APPLIED("tx-shared-default")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_002__TxSharedDefaultChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongodb")
@@ -229,12 +229,12 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-separate-no-marker")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_004__TxSeparateAndSameMongoClientChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system"),
                         APPLIED("tx-separate-no-marker")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_004__TxSeparateAndSameMongoClientChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("mongo-system")
@@ -266,12 +266,12 @@ class MongoDBSyncAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         STARTED("tx-separate-no-marker")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_005__TxSeparateChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("tx-separate-system"),
                         APPLIED("tx-separate-no-marker")
-                                .withType(AuditEntry.ExecutionType.EXECUTION)
+                                .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClass(_005__TxSeparateChange.class)
                                 .withTxType(AuditTxType.TX_SEPARATE_NO_MARKER)
                                 .withTargetSystemId("tx-separate-system")

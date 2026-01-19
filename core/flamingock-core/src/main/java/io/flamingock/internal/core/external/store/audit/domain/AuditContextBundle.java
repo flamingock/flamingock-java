@@ -22,6 +22,10 @@ import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 
+import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_BEFORE;
+import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_EXECUTION;
+import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.STANDARD_CODE;
+
 public abstract class AuditContextBundle {
 
 
@@ -40,20 +44,20 @@ public abstract class AuditContextBundle {
     }
 
     private final Operation operation;
-    private final TaskDescriptor loadedTask;
+    private final TaskDescriptor changeDescriptor;
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
     private final AuditTxType operationType;
     private final String targetSystemId;
 
     public AuditContextBundle(Operation operation,
-                              TaskDescriptor loadedTask,
+                              TaskDescriptor changeDescriptor,
                               ExecutionContext executionContext,
                               RuntimeContext runtimeContext,
                               AuditTxType auditTxType,
                               String targetSystemId) {
         this.operation = operation;
-        this.loadedTask = loadedTask;
+        this.changeDescriptor = changeDescriptor;
         this.executionContext = executionContext;
         this.runtimeContext = runtimeContext;
         this.operationType = auditTxType;
@@ -64,8 +68,8 @@ public abstract class AuditContextBundle {
         return operation;
     }
 
-    public TaskDescriptor getLoadedTask() {
-        return loadedTask;
+    public TaskDescriptor getChangeDescriptor() {
+        return changeDescriptor;
     }
 
     public ExecutionContext getExecutionContext() {
@@ -86,7 +90,7 @@ public abstract class AuditContextBundle {
 
 
     public AuditEntry toAuditEntry() {
-        TaskDescriptor loadedChange = getLoadedTask();
+        TaskDescriptor loadedChange = getChangeDescriptor();
         ExecutionContext stageExecutionContext = getExecutionContext();
         RuntimeContext runtimeContext = getRuntimeContext();
         
@@ -97,7 +101,7 @@ public abstract class AuditContextBundle {
                 loadedChange.getAuthor(),
                 runtimeContext.getAppliedAt(),
                 getAuditStatus(),
-                getExecutionType(),
+                getChangeType(),
                 loadedChange.getSource(),
                 runtimeContext.getMethodExecutor(),
                 null, //TODO: set sourceFile
@@ -127,8 +131,16 @@ public abstract class AuditContextBundle {
         }
     }
 
-    private AuditEntry.ExecutionType getExecutionType() {
-        return AuditEntry.ExecutionType.EXECUTION;
+    private AuditEntry.ChangeType getChangeType() {
+        if(changeDescriptor.isLegacy()) {
+            //TODO improve the way we retrieve mongock before
+            return changeDescriptor.getId().endsWith("_before")
+                    ? MONGOCK_BEFORE
+                    : MONGOCK_EXECUTION;
+        } else {
+            //TODO update this when template is released
+            return STANDARD_CODE;
+        }
     }
 
 

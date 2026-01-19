@@ -20,60 +20,31 @@ import io.flamingock.internal.common.core.audit.AuditTxType;
 
 public class AuditEntryRequest {
 
-    public enum ExecutionType {EXECUTION}
-
-    public enum Status {
-        STARTED,
-        APPLIED,
-        FAILED,
-        ROLLED_BACK,
-        ROLLBACK_FAILED,
-        MANUAL_MARKED_AS_APPLIED,
-        MANUAL_MARKED_AS_ROLLED_BACK
-    }
-
     private final String stageId;
-
     private final String taskId;
-
     private final String author;
-
     private final long appliedAtEpochMillis;
-
     private final Status state;
-
     private final String className;
-
     private final String methodName;
-
     private final Object metadata;
-
     private final long executionMillis;
-
     private final String executionHostname;
-
     private final String errorTrace;
-
-    private final ExecutionType type;
-
+    private final ChangeType type;
     private final AuditTxType txStrategy;
-
     private final String targetSystemId;
-
     private final String order;
-
     private final RecoveryStrategy recoveryStrategy;
-
-    protected Boolean systemChange;//TODO not in server
-
     private final Boolean transactionFlag;
+    protected Boolean systemChange;//TODO not in server
 
     public AuditEntryRequest(String stageId,
                              String taskId,
                              String author,
                              long appliedAtEpochMillis,
                              Status state,
-                             ExecutionType type,
+                             ChangeType type,
                              String className,
                              String methodName,
                              long executionMillis,
@@ -155,7 +126,7 @@ public class AuditEntryRequest {
         return systemChange;
     }
 
-    public ExecutionType getType() {
+    public ChangeType getType() {
         return type;
     }
 
@@ -177,6 +148,18 @@ public class AuditEntryRequest {
 
     public Boolean getTransactionFlag() {
         return transactionFlag;
+    }
+
+    public enum ChangeType {STANDARD_CODE, STANDARD_TEMPLATE, MONGOCK_EXECUTION, MONGOCK_BEFORE}
+
+    public enum Status {
+        STARTED,
+        APPLIED,
+        FAILED,
+        ROLLED_BACK,
+        ROLLBACK_FAILED,
+        MANUAL_MARKED_AS_APPLIED,
+        MANUAL_MARKED_AS_ROLLED_BACK
     }
 
 

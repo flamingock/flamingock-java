@@ -31,7 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static io.flamingock.internal.common.core.audit.AuditEntry.ExecutionType.EXECUTION;
+import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.STANDARD_CODE;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.APPLIED;
 import static io.flamingock.internal.common.core.audit.AuditEntry.Status.FAILED;
 import static io.flamingock.support.domain.AuditEntryDefinition.APPLIED;
@@ -192,7 +192,7 @@ class AuditFinalStateSequenceValidatorTest {
                 "author",
                 LocalDateTime.now(),
                 APPLIED,
-                EXECUTION,
+                STANDARD_CODE,
                 "com.example.Change",
                 "apply",
                 "sourceFile",
@@ -237,7 +237,7 @@ class AuditFinalStateSequenceValidatorTest {
                 "author",
                 LocalDateTime.now(),
                 APPLIED,
-                EXECUTION,
+                STANDARD_CODE,
                 "com.example.Change",
                 "apply",
                 "sourceFile",
@@ -280,7 +280,7 @@ class AuditFinalStateSequenceValidatorTest {
                 "test-author",
                 LocalDateTime.now(),
                 status,
-                EXECUTION,
+                STANDARD_CODE,
                 "com.example.TestChange",
                 "apply",
                 "sourceFile",

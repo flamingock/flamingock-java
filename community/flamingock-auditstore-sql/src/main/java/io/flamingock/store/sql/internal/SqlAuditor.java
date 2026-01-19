@@ -127,7 +127,7 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
                         rs.getString("author"),
                         rs.getTimestamp("created_at").toLocalDateTime(),
                         rs.getString("state") != null ? AuditEntry.Status.valueOf(rs.getString("state")) : null,
-                        rs.getString("type") != null ? AuditEntry.ExecutionType.valueOf(rs.getString("type")) : null,
+                        rs.getString("type") != null ? AuditEntry.ChangeType.valueOf(rs.getString("type")) : null,
                         rs.getString("invoked_class"),
                         rs.getString("invoked_method"),
                         rs.getString("source_file"),

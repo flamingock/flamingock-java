@@ -82,7 +82,7 @@ public class AuditEntryTestFactory {
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
-                AuditEntry.ExecutionType.EXECUTION,  // type
+                AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
                 "TestSourceFile",              // sourceFile
@@ -113,7 +113,7 @@ public class AuditEntryTestFactory {
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
-                AuditEntry.ExecutionType.EXECUTION,  // type
+                AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
                 "TestSourceFile",              // sourceFile
@@ -223,7 +223,7 @@ public class AuditEntryTestFactory {
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
-                AuditEntry.ExecutionType.EXECUTION,  // type
+                AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
                 "TestSourceFile",              // sourceFile
@@ -253,7 +253,7 @@ public class AuditEntryTestFactory {
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
-                AuditEntry.ExecutionType.EXECUTION,  // type
+                AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
                 "TestSourceFile",              // sourceFile
@@ -288,7 +288,7 @@ public class AuditEntryTestFactory {
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
-                AuditEntry.ExecutionType.EXECUTION,  // type
+                AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
                 "testMethod",                  // methodName
                 "TestSourceFile",              // sourceFile

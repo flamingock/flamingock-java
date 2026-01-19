@@ -15,7 +15,6 @@
  */
 package io.flamingock.importer.mongock.dynamodb;
 
-import io.flamingock.importer.mongock.dynamodb.MongockChangeState;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -200,7 +199,7 @@ public class MongockDynamoDBAuditEntry {
                 author,
                 ts,
                 stateEnum.toAuditStatus(),
-                AuditEntry.ExecutionType.valueOf(type),
+                AuditEntry.ChangeType.valueOf(type),
                 changeLogClass,
                 changeSetMethod,
                 null, //TODO: set sourceFile

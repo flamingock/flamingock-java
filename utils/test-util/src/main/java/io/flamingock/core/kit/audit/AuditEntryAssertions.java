@@ -186,7 +186,7 @@ public class AuditEntryAssertions {
      * @param expectedType expected execution type
      */
     public static void assertExecutionFields(AuditEntry entry, String expectedClassName, 
-                                           String expectedMethodName, AuditEntry.ExecutionType expectedType) {
+                                           String expectedMethodName, AuditEntry.ChangeType expectedType) {
         assertNotNull(entry, "Audit entry should not be null");
         assertEquals(expectedClassName, entry.getClassName(), "ClassName mismatch");
         assertEquals(expectedMethodName, entry.getMethodName(), "MethodName mismatch");

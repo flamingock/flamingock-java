@@ -97,7 +97,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
                 entry.getString(KEY_AUTHOR),
                 TimeUtil.toLocalDateTime(entry.get(KEY_CREATED_AT)),
                 entry.containsKey(KEY_STATE) ? AuditEntry.Status.valueOf(entry.getString(KEY_STATE)) : null,
-                entry.containsKey(KEY_TYPE) ? AuditEntry.ExecutionType.valueOf(entry.getString(KEY_TYPE)) : null,
+                entry.containsKey(KEY_TYPE) ? AuditEntry.ChangeType.valueOf(entry.getString(KEY_TYPE)) : null,
                 entry.getString(KEY_INVOKED_CLASS),
                 entry.getString(KEY_INVOKED_METHOD),
                 entry.getString(KEY_SOURCE_FILE),

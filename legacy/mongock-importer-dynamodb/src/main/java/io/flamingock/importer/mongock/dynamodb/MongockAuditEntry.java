@@ -17,6 +17,7 @@ package io.flamingock.importer.mongock.dynamodb;
 
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import org.jetbrains.annotations.NotNull;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
@@ -202,7 +203,7 @@ public class MongockAuditEntry {
                 author,
                 ts,
                 stateEnum.toAuditStatus(),
-                AuditEntry.ExecutionType.EXECUTION,
+                getChangeType(type),
                 changeLogClass,
                 changeSetMethod,
                 null, //TODO: set sourceFile
@@ -218,5 +219,13 @@ public class MongockAuditEntry {
                 RecoveryStrategy.MANUAL_INTERVENTION,
                 null
         );
+    }
+
+    private static AuditEntry.ChangeType getChangeType(String mongockType) {
+        switch (mongockType) {
+            case "BEFORE_EXECUTION": return AuditEntry.ChangeType.MONGOCK_BEFORE;
+            case "EXECUTION":
+            default: return AuditEntry.ChangeType.MONGOCK_EXECUTION;
+        }
     }
 }
