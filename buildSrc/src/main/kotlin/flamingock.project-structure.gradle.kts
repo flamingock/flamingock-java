@@ -35,12 +35,18 @@ val pluginProjects = setOf(
 
 val targetSystemProjects = setOf(
     "nontransactional-target-system",
-    "mongodb-external-system-api",
     "mongodb-sync-target-system",
     "mongodb-springdata-target-system",
     "sql-target-system",
     "dynamodb-target-system",
     "couchbase-target-system"
+)
+
+val externalSystemProjects = setOf(
+    "mongodb-external-system-api",
+    "couchbase-external-system-api",
+    "dynamodb-external-system-api",
+    "sql-external-system-api"
 )
 
 val templateProjects = setOf(
@@ -63,7 +69,7 @@ val legacyProjects = setOf(
     "mongock-importer-couchbase"
 )
 
-val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + templateProjects + utilProjects + legacyProjects
+val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + templateProjects + utilProjects + legacyProjects
 
 // Project classification utilities
 fun Project.isBomModule(): Boolean = name.endsWith("-bom")
@@ -76,6 +82,7 @@ fun Project.getProjectCategory(): String? = when (name) {
     in communityProjects -> "community"
     in pluginProjects -> "plugins"
     in targetSystemProjects -> "targetSystems"
+    in externalSystemProjects -> "externalSystems"
     in templateProjects -> "templates"
     in utilProjects -> "utils"
     in legacyProjects -> "legacy"
@@ -89,6 +96,7 @@ fun getProjectsForBundle(bundle: String?): Set<String> = when (bundle) {
     "community" -> communityProjects
     "plugins" -> pluginProjects
     "targetSystems" -> targetSystemProjects
+    "externalSystems" -> externalSystemProjects
     "templates" -> templateProjects
     "utils" -> utilProjects
     "legacy" -> legacyProjects
@@ -102,6 +110,7 @@ extra["cloudProjects"] = cloudProjects
 extra["communityProjects"] = communityProjects
 extra["pluginProjects"] = pluginProjects
 extra["targetSystemProjects"] = targetSystemProjects
+extra["externalSystemProjects"] = externalSystemProjects
 extra["templateProjects"] = templateProjects
 extra["utilProjects"] = utilProjects
 extra["legacyProjects"] = legacyProjects
