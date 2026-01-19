@@ -127,7 +127,7 @@ class AuditSnapshotMapBuilderTest {
                 "test-author",
                 timestamp,
                 status,
-                AuditEntry.ExecutionType.EXECUTION,
+                AuditEntry.ChangeType.STANDARD_CODE,
                 "TestClass",
                 "testMethod",
                 "TestSourceFile",

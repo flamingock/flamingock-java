@@ -110,6 +110,8 @@ public class AuditEntryDefinition {
     private String order;
     private Boolean transactional;
     private boolean legacy;
+    private AuditEntry.ChangeType type;
+
 
     private AuditEntryDefinition(String changeId, AuditEntry.Status state) {
         this.changeId = changeId;
@@ -239,7 +241,7 @@ public class AuditEntryDefinition {
         definition.author = changeAnnotation.author();
         definition.className = changeClass.getName();
         definition.methodName = findMethodName(changeClass, status);
-
+        definition.type = AuditEntry.ChangeType.STANDARD_CODE; // if it's built from annotation, it's STANDARD_CODE
         TargetSystem targetSystem = changeClass.getAnnotation(TargetSystem.class);
         if (targetSystem != null) {
             definition.targetSystemId = targetSystem.id();
@@ -451,6 +453,17 @@ public class AuditEntryDefinition {
         return this;
     }
 
+    /**
+     * Sets the change type.
+     *
+     * @param type the change type
+     * @return this builder for method chaining
+     */
+    public AuditEntryDefinition withType(AuditEntry.ChangeType type) {
+        this.type = type;
+        return this;
+    }
+
     // ========== Getters ==========
 
     public String getChangeId() {
@@ -521,6 +534,10 @@ public class AuditEntryDefinition {
         return legacy;
     }
 
+    public AuditEntry.ChangeType getType() {
+        return type;
+    }
+
     // ========== Conversion Methods ==========
 
     /**
@@ -533,7 +550,7 @@ public class AuditEntryDefinition {
      *   <li>{@code createdAt} - current time if not specified</li>
      *   <li>{@code executionMillis} - 0 if not specified</li>
      *   <li>{@code executionHostname} - "test-host" if not specified</li>
-     *   <li>{@code type} - {@code ExecutionType.EXECUTION}</li>
+     *   <li>{@code type} - {@code ChangeType.STANDARD_CODE} if not specified</li>
      *   <li>{@code txStrategy} - {@code AuditTxType.NON_TX}</li>
      *   <li>{@code systemChange} - false</li>
      *   <li>{@code recoveryStrategy} - {@code RecoveryStrategy.MANUAL_INTERVENTION} if not specified</li>
@@ -543,13 +560,13 @@ public class AuditEntryDefinition {
      */
     public AuditEntry toAuditEntry() {
         return new AuditEntry(
-                executionId != null ? executionId : "precondition-" + UUID.randomUUID().toString(),
-                stageId != null ? stageId : "precondition-stage-" + UUID.randomUUID().toString(),
+                executionId != null ? executionId : "precondition-" + UUID.randomUUID(),
+                stageId != null ? stageId : "precondition-stage-" + UUID.randomUUID(),
                 changeId,
                 author,
                 createdAt != null ? createdAt : LocalDateTime.now(),
                 state,
-                AuditEntry.ExecutionType.EXECUTION,
+                type != null ? type : AuditEntry.ChangeType.STANDARD_CODE,
                 className,
                 methodName,
                 null, //TODO: set sourceFile

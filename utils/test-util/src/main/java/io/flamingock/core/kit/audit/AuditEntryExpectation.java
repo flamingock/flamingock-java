@@ -47,7 +47,7 @@ public class AuditEntryExpectation {
     private String expectedAuthor;
     private LocalDateTime expectedCreatedAt;
     private AuditEntry.Status expectedState;
-    private AuditEntry.ExecutionType expectedType;
+    private AuditEntry.ChangeType expectedType;
     private String expectedClassName;
     private String expectedMethodName;
     private Object expectedMetadata;
@@ -224,7 +224,7 @@ public class AuditEntryExpectation {
         return this;
     }
     
-    public AuditEntryExpectation withType(AuditEntry.ExecutionType type) {
+    public AuditEntryExpectation withType(AuditEntry.ChangeType type) {
         this.expectedType = type;
         return this;
     }
@@ -315,7 +315,7 @@ public class AuditEntryExpectation {
     public String getExpectedAuthor() { return expectedAuthor; }
     public LocalDateTime getExpectedCreatedAt() { return expectedCreatedAt; }
     public AuditEntry.Status getExpectedState() { return expectedState; }
-    public AuditEntry.ExecutionType getExpectedType() { return expectedType; }
+    public AuditEntry.ChangeType getExpectedType() { return expectedType; }
     public String getExpectedClassName() { return expectedClassName; }
     public String getExpectedMethodName() { return expectedMethodName; }
     public Object getExpectedMetadata() { return expectedMetadata; }

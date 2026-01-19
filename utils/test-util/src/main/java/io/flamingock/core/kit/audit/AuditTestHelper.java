@@ -15,7 +15,6 @@
  */
 package io.flamingock.core.kit.audit;
 
-import io.flamingock.api.annotations.Recovery;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
@@ -95,7 +94,7 @@ public class AuditTestHelper {
                 author,
                 LocalDateTime.now(),
                 AuditEntry.Status.STARTED,
-                AuditEntry.ExecutionType.EXECUTION,
+                AuditEntry.ChangeType.STANDARD_CODE,
                 "TestClass",
                 "testMethod",
                 "TestSourceFile",
@@ -122,7 +121,7 @@ public class AuditTestHelper {
                 author,
                 LocalDateTime.now(),
                 AuditEntry.Status.APPLIED,
-                AuditEntry.ExecutionType.EXECUTION,
+                AuditEntry.ChangeType.STANDARD_CODE,
                 "TestClass",
                 "testMethod",
                 "TestSourceFile",

@@ -89,7 +89,7 @@ public class CouchbaseAuditMapper {
                 jsonObject.getString(KEY_AUTHOR),
                 jsonObject.get(KEY_CREATED_AT) != null ? TimeUtil.toLocalDateTime(jsonObject.getLong(KEY_CREATED_AT)) : null,
                 jsonObject.get(KEY_STATE) != null ? AuditEntry.Status.valueOf(jsonObject.getString(KEY_STATE)) : null,
-                jsonObject.get(KEY_TYPE) != null ? AuditEntry.ExecutionType.valueOf(jsonObject.getString(KEY_TYPE)) : null,
+                jsonObject.get(KEY_TYPE) != null ? AuditEntry.ChangeType.valueOf(jsonObject.getString(KEY_TYPE)) : null,
                 jsonObject.getString(KEY_INVOKED_CLASS),
                 jsonObject.getString(KEY_INVOKED_METHOD),
                 jsonObject.getString(KEY_SOURCE_FILE),

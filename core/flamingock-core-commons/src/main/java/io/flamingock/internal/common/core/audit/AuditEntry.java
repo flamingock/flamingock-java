@@ -38,7 +38,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     private final long executionMillis;
     private final String executionHostname;
     private final String errorTrace;
-    private final ExecutionType type;
+    private final ChangeType type;
     private final AuditTxType txStrategy;
     private final String targetSystemId;
     private final String order;
@@ -51,7 +51,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       String author,
                       LocalDateTime timestamp,
                       Status state,
-                      ExecutionType type,
+                      ChangeType type,
                       String className,
                       String methodName,
                       String sourceFile,
@@ -100,7 +100,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       String author,
                       LocalDateTime timestamp,
                       Status state,
-                      ExecutionType type,
+                      ChangeType type,
                       String className,
                       String methodName,
                       String sourceFile,
@@ -125,7 +125,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       String author,
                       LocalDateTime timestamp,
                       Status state,
-                      ExecutionType type,
+                      ChangeType type,
                       String className,
                       String methodName,
                       String sourceFile,
@@ -207,7 +207,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
         return legacy;
     }
 
-    public ExecutionType getType() {
+    public ChangeType getType() {
         return type;
     }
 
@@ -318,12 +318,6 @@ public class AuditEntry implements Comparable<AuditEntry> {
             return this.priority > other.priority;
         }
 
-
-
-        public static boolean isRequiredExecution(Status entryStatus) {
-            return entryStatus == null || entryStatus == FAILED || entryStatus == ROLLED_BACK || entryStatus == ROLLBACK_FAILED;
-        }
-
         public AuditEntryRequest.Status toRequestStatus() {
             return AuditEntryRequest.Status.valueOf(name());
         }
@@ -331,11 +325,11 @@ public class AuditEntry implements Comparable<AuditEntry> {
     }
 
     //TODO remove this
-    public enum ExecutionType {
-        EXECUTION;
+    public enum ChangeType {
+        STANDARD_CODE, STANDARD_TEMPLATE, MONGOCK_EXECUTION, MONGOCK_BEFORE;
 
-        public AuditEntryRequest.ExecutionType toRequestExecutionType() {
-            return AuditEntryRequest.ExecutionType.valueOf(name());
+        public AuditEntryRequest.ChangeType toRequestExecutionType() {
+            return AuditEntryRequest.ChangeType.valueOf(name());
         }
     }
 

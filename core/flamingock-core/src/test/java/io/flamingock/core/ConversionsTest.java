@@ -32,11 +32,11 @@ public class ConversionsTest {
     @DisplayName("AuditEntryRequest.ExecutionType should match AuditEntry.ExecutionType")
     void auditEntryExecutionTypeShouldAuditEntryRequestExecutionType() {
         Set<String> auditEntryRequestExecutionTypeValues = Arrays
-                .stream(AuditEntryRequest.ExecutionType.values())
-                .map(AuditEntryRequest.ExecutionType::name)
+                .stream(AuditEntryRequest.ChangeType.values())
+                .map(AuditEntryRequest.ChangeType::name)
                 .collect(Collectors.toSet());
-        List<String> auditEntryExecutionTypeValues = Arrays.stream(AuditEntry.ExecutionType.values())
-                .map(AuditEntry.ExecutionType::name)
+        List<String> auditEntryExecutionTypeValues = Arrays.stream(AuditEntry.ChangeType.values())
+                .map(AuditEntry.ChangeType::name)
                 .collect(Collectors.toList());
 
         if (auditEntryExecutionTypeValues.size() != auditEntryRequestExecutionTypeValues.size()) {

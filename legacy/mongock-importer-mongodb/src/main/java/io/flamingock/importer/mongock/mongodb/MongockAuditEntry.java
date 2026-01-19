@@ -107,7 +107,7 @@ public class MongockAuditEntry {
         this.state = MongockAuditEntry.MongockChangeState.valueOf(state);
     }
 
-    public AuditEntry.ExecutionType getType() {
+    public AuditEntry.ChangeType getType() {
         return type.toAuditType();
     }
 
@@ -201,9 +201,12 @@ public class MongockAuditEntry {
     public enum MongockChangeType {
         EXECUTION, BEFORE_EXECUTION;
 
-        public AuditEntry.ExecutionType toAuditType() {
-            //TODO: remove
-            return AuditEntry.ExecutionType.EXECUTION;
+        public AuditEntry.ChangeType toAuditType() {
+            switch (this) {
+                case BEFORE_EXECUTION: return AuditEntry.ChangeType.MONGOCK_BEFORE;
+                case EXECUTION:
+                default: return AuditEntry.ChangeType.MONGOCK_EXECUTION;
+            }
         }
     }
 

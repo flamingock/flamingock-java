@@ -599,7 +599,7 @@ class AuditEntryExpectationTest {
                 author,
                 timestamp,
                 status,
-                AuditEntry.ExecutionType.EXECUTION,
+                AuditEntry.ChangeType.STANDARD_CODE,
                 className,
                 methodName,
                 null, //TODO: set sourceFile

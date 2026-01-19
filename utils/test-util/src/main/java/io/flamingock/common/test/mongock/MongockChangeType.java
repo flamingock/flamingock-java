@@ -35,8 +35,8 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 public enum MongockChangeType {
     EXECUTION, BEFORE_EXECUTION;
 
-    public AuditEntry.ExecutionType toAuditType() {
+    public AuditEntry.ChangeType toAuditType() {
         //TODO: remove
-        return AuditEntry.ExecutionType.EXECUTION;
+        return AuditEntry.ChangeType.STANDARD_CODE;
     }
 }
