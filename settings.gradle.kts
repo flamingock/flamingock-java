@@ -108,13 +108,25 @@ project(":core:target-systems:mongodb-springdata-target-system").projectDir =
     file("core/target-systems/mongodb-springdata-target-system")
 project(":core:target-systems:mongodb-springdata-target-system").name = "mongodb-springdata-target-system"
 
+include("core:target-systems:sql-external-system-api")
+project(":core:target-systems:sql-external-system-api").projectDir = file("core/target-systems/sql-external-system-api")
+project(":core:target-systems:sql-external-system-api").name = "sql-external-system-api"
+
 include("core:target-systems:sql-target-system")
 project(":core:target-systems:sql-target-system").projectDir = file("core/target-systems/sql-target-system")
 project(":core:target-systems:sql-target-system").name = "sql-target-system"
 
+include("core:target-systems:dynamodb-external-system-api")
+project(":core:target-systems:dynamodb-external-system-api").projectDir = file("core/target-systems/dynamodb-external-system-api")
+project(":core:target-systems:dynamodb-external-system-api").name = "dynamodb-external-system-api"
+
 include("core:target-systems:dynamodb-target-system")
 project(":core:target-systems:dynamodb-target-system").projectDir = file("core/target-systems/dynamodb-target-system")
 project(":core:target-systems:dynamodb-target-system").name = "dynamodb-target-system"
+
+include("core:target-systems:couchbase-external-system-api")
+project(":core:target-systems:couchbase-external-system-api").projectDir = file("core/target-systems/couchbase-external-system-api")
+project(":core:target-systems:couchbase-external-system-api").name = "couchbase-external-system-api"
 
 include("core:target-systems:couchbase-target-system")
 project(":core:target-systems:couchbase-target-system").projectDir = file("core/target-systems/couchbase-target-system")
@@ -197,8 +209,3 @@ project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
 include("e2e:core-e2e")
 project(":e2e:core-e2e").name = "core-e2e"
 project(":e2e:core-e2e").projectDir = file("e2e/core-e2e")
-
-
-include("core:target-systems:couchbase-external-system-api")
-include("core:target-systems:dynamodb-external-system-api")
-include("core:target-systems:sql-external-system-api")
