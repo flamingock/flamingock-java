@@ -91,7 +91,6 @@ if (project != rootProject) {
                     sections.set(setOf(UpdateSection.TITLE, UpdateSection.BODY, UpdateSection.ASSETS))
                 }
                 prerelease {
-                    enabled.set(true)
                     pattern.set("^(0\\..*|.*-(beta\\.?\\d*|snapshot\\.?\\d*|alpha\\.?\\d*|rc\\.?\\d*|RC\\.?\\d*)\$)")
                 }
                 changelog {
