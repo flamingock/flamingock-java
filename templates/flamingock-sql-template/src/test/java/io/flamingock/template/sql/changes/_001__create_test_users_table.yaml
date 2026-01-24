@@ -1,0 +1,9 @@
+id: create-test-users-table
+transactional: true
+template: SqlTemplate
+targetSystem:
+  id: "sql"
+apply:
+  - "CREATE TABLE test_users (id INT PRIMARY KEY, name VARCHAR(100), role VARCHAR(50));"
+rollback:
+  - "DROP TABLE test_users;"

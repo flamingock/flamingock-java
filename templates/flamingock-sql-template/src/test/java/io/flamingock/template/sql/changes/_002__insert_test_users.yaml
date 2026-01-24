@@ -1,0 +1,11 @@
+id: insert-test-users
+transactional: true
+template: SqlTemplate
+targetSystem:
+  id: "sql"
+apply: |
+    INSERT INTO test_users (id, name, role) VALUES (1, 'Admin', 'superuser'); /* comment */
+    INSERT INTO test_users (id, name, role) VALUES (2, 'backup', 'readonly');
+    INSERT INTO test_users (id, name, role) VALUES (3, 'text;with;semi', 'user');
+rollback: |
+    DELETE FROM test_users WHERE id IN (1, 2, 3);
