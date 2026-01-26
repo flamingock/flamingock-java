@@ -27,6 +27,7 @@ public class ChangeTemplateFileContent {
     private Object configuration;
     private Object apply;
     private Object rollback;
+    private Object steps;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
 
@@ -118,6 +119,14 @@ public class ChangeTemplateFileContent {
 
     public void setRollback(Object rollback) {
         this.rollback = rollback;
+    }
+
+    public Object getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Object steps) {
+        this.steps = steps;
     }
 
     public TargetSystemDescriptor getTargetSystem() {

@@ -46,9 +46,11 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
             Object instance = executionRuntime.getInstance(descriptor.getConstructor());
             ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
+            changeTemplateInstance.setChangeId(descriptor.getId());
             setExecutionData(executionRuntime, changeTemplateInstance, "Configuration");
             setExecutionData(executionRuntime, changeTemplateInstance, "ApplyPayload");
             setExecutionData(executionRuntime, changeTemplateInstance, "RollbackPayload");
+            setStepsPayloadIfPresent(executionRuntime, changeTemplateInstance);
             executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
@@ -98,6 +100,33 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
                 .findFirst()
                 .orElseThrow(()-> new RuntimeException("Not found config setter for template: " + changeTemplateClass.getSimpleName()));
 
+    }
+
+    /**
+     * Sets the steps payload on the template if the template supports it and steps data is present.
+     * This method uses reflection to call setStepsPayload if the template has such a method.
+     * Templates that don't support steps will simply not have this method called.
+     */
+    private void setStepsPayloadIfPresent(ExecutionRuntime executionRuntime,
+                                          ChangeTemplate<?, ?, ?> instance) {
+        Object stepsData = descriptor.getSteps();
+        if (stepsData == null) {
+            return;
+        }
+
+        Method setStepsMethod = Arrays.stream(instance.getClass().getMethods())
+                .filter(m -> "setStepsPayload".equals(m.getName()))
+                .filter(m -> m.getParameterCount() == 1)
+                .findFirst()
+                .orElse(null);
+
+        if (setStepsMethod != null) {
+            logger.debug("Setting steps payload for change[{}]", descriptor.getId());
+            executionRuntime.executeMethodWithParameters(instance, setStepsMethod, stepsData);
+        } else {
+            logger.warn("Template[{}] has steps defined but doesn't support setStepsPayload method",
+                    instance.getClass().getSimpleName());
+        }
     }
 
 
