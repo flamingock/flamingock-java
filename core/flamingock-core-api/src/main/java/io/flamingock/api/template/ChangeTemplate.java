@@ -15,6 +15,8 @@
  */
 package io.flamingock.api.template;
 
+import java.util.List;
+
 /**
  * Interface representing a reusable change template with configuration of type {@code CONFIG}.
  *
@@ -29,9 +31,25 @@ public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD
 
     void setConfiguration(SHARED_CONFIG_FIELD configuration);
 
+    /**
+     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
+     */
+    @Deprecated
     void setApplyPayload(APPLY_FIELD applyPayload);
 
+    /**
+     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
+     */
+    @Deprecated
     void setRollbackPayload(ROLLBACK_FIELD rollbackPayload);
+
+    void setStepsPayload(List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> stepsPayload);
+
+    List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> getStepsPayload();
+
+    default boolean hasStepsPayload() {
+        return getStepsPayload() != null && !getStepsPayload().isEmpty();
+    }
 
     Class<SHARED_CONFIG_FIELD> getConfigurationClass();
 
