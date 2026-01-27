@@ -27,6 +27,7 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
     private Object configuration;
     private Object apply;
     private Object rollback;
+    private Object steps;
 
     public TemplatePreviewChange() {}
 
@@ -44,6 +45,7 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
                                  Object configuration,
                                  Object apply,
                                  Object rollback,
+                                 Object steps,
                                  TargetSystemDescriptor targetSystem,
                                  RecoveryDescriptor recovery) {
         super(id, order, author, templateName, runAlways, transactional, system, targetSystem, recovery, false);
@@ -52,6 +54,7 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
         this.configuration = configuration;
         this.apply = apply;
         this.rollback = rollback;
+        this.steps = steps;
     }
 
     public String getFileName() {
@@ -98,12 +101,21 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
         this.rollback = rollback;
     }
 
+    public Object getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Object steps) {
+        this.steps = steps;
+    }
+
     @Override
     public String toString() {
         return "TemplatePreviewChange{" + "profiles=" + profiles +
                 ", configuration=" + configuration +
                 ", apply=" + apply +
                 ", rollback=" + rollback +
+                ", steps=" + steps +
                 ", id='" + id + '\'' +
                 ", order='" + order + '\'' +
                 ", author='" + author + '\'' +

@@ -17,6 +17,7 @@ package io.flamingock.graalvm;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.*;
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
@@ -142,6 +143,7 @@ public class RegistrationFeature implements Feature {
         registerClassForReflection(ChangeTemplateManager.class);
         registerClassForReflection(ChangeTemplate.class);
         registerClassForReflection(AbstractChangeTemplate.class);
+        registerClassForReflection(TemplateStep.class);
         ChangeTemplateManager.getTemplates().forEach(template -> {
             registerClassForReflection(template.getClass());
             template.getReflectiveClasses().forEach(RegistrationFeature::registerClassForReflection);
