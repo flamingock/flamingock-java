@@ -46,6 +46,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.net.URI;
@@ -312,6 +313,7 @@ public class DynamoDBCloudTargetSystemTest {
             return DynamoDbClient.builder()
                     .region(Region.EU_WEST_1)
                     .endpointOverride(new URI("http://localhost:8000"))
+                    .httpClient(UrlConnectionHttpClient.builder().build())
                     .credentialsProvider(
                             StaticCredentialsProvider.create(
                                     AwsBasicCredentials.create("dummye", "dummye")
