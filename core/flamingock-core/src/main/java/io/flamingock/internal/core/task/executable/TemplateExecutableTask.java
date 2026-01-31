@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
@@ -25,7 +26,10 @@ import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoadedChange> {
     private final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
@@ -46,9 +50,11 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
             Object instance = executionRuntime.getInstance(descriptor.getConstructor());
             ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
+            changeTemplateInstance.setChangeId(descriptor.getId());
             setExecutionData(executionRuntime, changeTemplateInstance, "Configuration");
             setExecutionData(executionRuntime, changeTemplateInstance, "ApplyPayload");
             setExecutionData(executionRuntime, changeTemplateInstance, "RollbackPayload");
+            setStepsIfPresent(executionRuntime, changeTemplateInstance);
             executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
@@ -98,6 +104,74 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
                 .findFirst()
                 .orElseThrow(()-> new RuntimeException("Not found config setter for template: " + changeTemplateClass.getSimpleName()));
 
+    }
+
+    /**
+     * Sets the steps on the template if steps data is present.
+     * Converts raw step data (List of Maps) to List of TemplateStep using the template's payload classes.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void setStepsIfPresent(ExecutionRuntime executionRuntime,
+                                   ChangeTemplate<?, ?, ?> instance) {
+        Object stepsData = descriptor.getSteps();
+        if (stepsData == null) {
+            return;
+        }
+
+        logger.debug("Setting steps for change[{}]", descriptor.getId());
+
+        List<TemplateStep> convertedSteps = convertToTemplateSteps(
+                stepsData,
+                instance.getApplyPayloadClass(),
+                instance.getRollbackPayloadClass()
+        );
+
+        Method setStepsMethod = getSetterMethod(instance.getClass(), "setStepsPayload");
+        executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
+    }
+
+    /**
+     * Converts raw step data (List of Maps from YAML) to a list of TemplateStep objects.
+     *
+     * @param stepsData       the raw steps data (expected to be a List of Maps)
+     * @param applyClass      the class type for apply payloads
+     * @param rollbackClass   the class type for rollback payloads
+     * @return list of converted TemplateStep objects
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private List<TemplateStep> convertToTemplateSteps(Object stepsData,
+                                                      Class<?> applyClass,
+                                                      Class<?> rollbackClass) {
+        List<TemplateStep> result = new ArrayList<>();
+
+        if (!(stepsData instanceof List)) {
+            logger.warn("Steps data is not a List, ignoring");
+            return result;
+        }
+
+        List<?> stepsList = (List<?>) stepsData;
+        for (Object stepItem : stepsList) {
+            if (stepItem instanceof Map) {
+                Map<String, Object> stepMap = (Map<String, Object>) stepItem;
+                TemplateStep step = new TemplateStep();
+
+                Object applyData = stepMap.get("apply");
+                if (applyData != null && Void.class != applyClass) {
+                    step.setApply(FileUtil.getFromMap(applyClass, applyData));
+                }
+
+                Object rollbackData = stepMap.get("rollback");
+                if (rollbackData != null && Void.class != rollbackClass) {
+                    step.setRollback(FileUtil.getFromMap(rollbackClass, rollbackData));
+                }
+
+                result.add(step);
+            } else if (stepItem instanceof TemplateStep) {
+                result.add((TemplateStep) stepItem);
+            }
+        }
+
+        return result;
     }
 
 

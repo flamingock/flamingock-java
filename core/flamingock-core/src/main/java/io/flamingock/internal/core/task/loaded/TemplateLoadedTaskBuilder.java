@@ -45,6 +45,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     private Object configuration;
     private Object apply;
     private Object rollback;
+    private Object steps;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
 
@@ -134,6 +135,11 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
         return this;
     }
 
+    public TemplateLoadedTaskBuilder setSteps(Object steps) {
+        this.steps = steps;
+        return this;
+    }
+
     @Override
     public TemplateLoadedChange build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
@@ -156,6 +162,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
                 configuration,
                 apply,
                 rollback,
+                steps,
                 targetSystem,
                 recovery);
 
@@ -175,6 +182,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
         setConfiguration(preview.getConfiguration());
         setApply(preview.getApply());
         setRollback(preview.getRollback());
+        setSteps(preview.getSteps());
         setTargetSystem(preview.getTargetSystem());
         setRecovery(preview.getRecovery());
         return this;

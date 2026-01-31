@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.TemplateStep;
 import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +28,7 @@ import org.mockito.MockedStatic;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,6 +40,8 @@ class TemplateLoadedTaskBuilderTest {
 
     // Simple test template implementation
     public static class TestChangeTemplate implements ChangeTemplate<Object, Object, Object> {
+
+        private List<TemplateStep<Object, Object>> stepsPayload;
 
         @Override
         public void setChangeId(String changeId) {}
@@ -53,6 +57,12 @@ class TemplateLoadedTaskBuilderTest {
 
         @Override
         public void setRollbackPayload(Object rollbackPayload) {}
+
+        @Override
+        public void setStepsPayload(List<TemplateStep<Object, Object>> stepsPayload) { this.stepsPayload = stepsPayload; }
+
+        @Override
+        public List<TemplateStep<Object, Object>> getStepsPayload() { return stepsPayload; }
 
         @Override
         public Class<Object> getConfigurationClass() { return Object.class; }

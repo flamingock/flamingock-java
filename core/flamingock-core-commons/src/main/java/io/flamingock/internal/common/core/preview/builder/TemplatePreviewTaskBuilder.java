@@ -40,6 +40,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private Object configuration;
     private Object apply;
     private Object rollback;
+    private Object steps;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
 
@@ -108,6 +109,10 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         this.recovery = recovery;
     }
 
+    public void setSteps(Object steps) {
+        this.steps = steps;
+    }
+
     @Override
     public TemplatePreviewChange build() {
 
@@ -127,6 +132,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
                 configuration,
                 apply,
                 rollback,
+                steps,
                 targetSystem,
                 recovery);
     }
@@ -153,6 +159,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         setConfiguration(templateTaskDescriptor.getConfiguration());
         setApply(templateTaskDescriptor.getApply());
         setRollback(templateTaskDescriptor.getRollback());
+        setSteps(templateTaskDescriptor.getSteps());
         setTransactional(templateTaskDescriptor.getTransactional() != null ? templateTaskDescriptor.getTransactional() : true);
         setRunAlways(false);
         setTargetSystem(templateTaskDescriptor.getTargetSystem());

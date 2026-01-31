@@ -78,6 +78,7 @@ public class TemplateChangeTestDefinition extends ChangeTestDefinition {
                 configuration,
                 apply,
                 rollback,
+                null, // steps - null for backward compatibility
                 TargetSystemDescriptor.fromId(targetSystem),
                 RecoveryDescriptor.getDefault()
         );
