@@ -20,6 +20,7 @@ import io.flamingock.internal.util.ReflectionUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -31,8 +32,17 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     protected String changeId;
     protected boolean isTransactional;
     protected SHARED_CONFIGURATION_FIELD configuration;
+    /**
+     * @deprecated Use {@link #stepsPayload} instead. Will be removed in a future release.
+     */
+    @Deprecated
     protected APPLY_FIELD applyPayload;
+    /**
+     * @deprecated Use {@link #stepsPayload} instead. Will be removed in a future release.
+     */
+    @Deprecated
     protected ROLLBACK_FIELD rollbackPayload;
+    protected List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> stepsPayload;
 
 
     private final Set<Class<?>> reflectiveClasses;
@@ -56,6 +66,7 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
             reflectiveClasses.add(configurationClass);
             reflectiveClasses.add(applyPayloadClass);
             reflectiveClasses.add(rollbackPayloadClass);
+            reflectiveClasses.add(TemplateStep.class);
         } catch (ClassCastException e) {
             throw new IllegalStateException("Generic type arguments for a Template must be concrete types (classes, interfaces, or primitive wrappers like String, Integer, etc.): " + e.getMessage(), e);
         } catch (Exception e) {
@@ -83,14 +94,32 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
         this.configuration = configuration;
     }
 
+    /**
+     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
+     */
+    @Deprecated
     @Override
     public void setApplyPayload(APPLY_FIELD applyPayload) {
         this.applyPayload = applyPayload;
     }
 
+    /**
+     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
+     */
+    @Deprecated
     @Override
     public void setRollbackPayload(ROLLBACK_FIELD rollbackPayload) {
         this.rollbackPayload = rollbackPayload;
+    }
+
+    @Override
+    public void setStepsPayload(List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> stepsPayload) {
+        this.stepsPayload = stepsPayload;
+    }
+
+    @Override
+    public List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> getStepsPayload() {
+        return stepsPayload;
     }
 
     @Override

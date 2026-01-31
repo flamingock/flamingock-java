@@ -35,6 +35,7 @@ public class TemplateLoadedChange extends AbstractLoadedChange {
     private final Object configuration;
     private final Object apply;
     private final Object rollback;
+    private final Object steps;
 
     TemplateLoadedChange(String changeFileName,
                          String id,
@@ -49,6 +50,7 @@ public class TemplateLoadedChange extends AbstractLoadedChange {
                          Object configuration,
                          Object apply,
                          Object rollback,
+                         Object steps,
                          TargetSystemDescriptor targetSystem,
                          RecoveryDescriptor recovery) {
         super(changeFileName, id, order, author, templateClass, constructor, runAlways, transactional, systemTask, targetSystem, recovery, false);
@@ -57,6 +59,7 @@ public class TemplateLoadedChange extends AbstractLoadedChange {
         this.configuration = configuration;
         this.apply = apply;
         this.rollback = rollback;
+        this.steps = steps;
     }
 
     public Object getConfiguration() {
@@ -69,6 +72,10 @@ public class TemplateLoadedChange extends AbstractLoadedChange {
 
     public Object getRollback() {
         return rollback;
+    }
+
+    public Object getSteps() {
+        return steps;
     }
 
     public List<String> getProfiles() {
