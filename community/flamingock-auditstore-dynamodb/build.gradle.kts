@@ -9,6 +9,7 @@ dependencies {
 
 
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":utils:dynamodb-test-kit"))
     testImplementation(project(":core:target-systems:dynamodb-target-system"))
     testImplementation(project(":core:target-systems:nontransactional-target-system"))
 

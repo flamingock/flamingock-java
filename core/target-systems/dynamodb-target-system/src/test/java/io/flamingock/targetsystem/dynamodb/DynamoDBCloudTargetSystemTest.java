@@ -15,8 +15,7 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
-import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
+import io.flamingock.dynamodb.kit.DynamoDBTestContainer;
 import io.flamingock.targetsystem.dynamodb.changes.common.UserEntity;
 import io.flamingock.targetsystem.dynamodb.changes.happypath._001__HappyCreateTableClientsChange;
 import io.flamingock.targetsystem.dynamodb.changes.happypath._002__HappyInsertClientsChange;
@@ -41,15 +40,13 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -57,11 +54,14 @@ import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.FAILED;
 import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
 
+@Testcontainers
 public class DynamoDBCloudTargetSystemTest {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamoDBCloudTargetSystemTest.class);
 
-    private static DynamoDBProxyServer dynamoDBLocal;
+    @Container
+    static GenericContainer<?> dynamoContainer = DynamoDBTestContainer.createContainer();
+
     private static DynamoDbClient client;
     private static DynamoDBTestHelper dynamoDBTestHelper;
 
@@ -83,20 +83,11 @@ public class DynamoDBCloudTargetSystemTest {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        logger.info("Starting DynamoDB Local...");
-        dynamoDBLocal = ServerRunner.createServerFromCommandLineArgs(
-                new String[]{
-                        "-inMemory",
-                        "-port",
-                        "8000"
-                }
-        );
-        dynamoDBLocal.start();
-
-        client = getDynamoDBClient();
+        logger.info("Creating DynamoDB client from TestContainer...");
+        client = DynamoDBTestContainer.createClient(dynamoContainer);
 
         //We use different client, as the transactioner will close it
-        dynamoDBTestHelper = new DynamoDBTestHelper(getDynamoDBClient());
+        dynamoDBTestHelper = new DynamoDBTestHelper(DynamoDBTestContainer.createClient(dynamoContainer));
 
         logger.info("Starting Mock Server...");
         mockRunnerServer = new MockRunnerServer()
@@ -125,11 +116,6 @@ public class DynamoDBCloudTargetSystemTest {
         //tear down
         logger.info("Stopping Mock Server...");
         mockRunnerServer.stop();
-
-        logger.info("Stopping DynamoDB Local...");
-        if(dynamoDBLocal != null) {
-            dynamoDBLocal.stop();
-        }
     }
 
     @Test
@@ -307,19 +293,4 @@ public class DynamoDBCloudTargetSystemTest {
         }
     }
 
-    private static DynamoDbClient getDynamoDBClient() {
-        try {
-            return DynamoDbClient.builder()
-                    .region(Region.EU_WEST_1)
-                    .endpointOverride(new URI("http://localhost:8000"))
-                    .credentialsProvider(
-                            StaticCredentialsProvider.create(
-                                    AwsBasicCredentials.create("dummye", "dummye")
-                            )
-                    )
-                    .build();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

@@ -19,6 +19,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -88,6 +89,7 @@ public class DynamoDBTestContainer {
         return DynamoDbClient.builder()
                 .region(Region.US_EAST_1)
                 .endpointOverride(URI.create(endpoint))
+                .httpClient(UrlConnectionHttpClient.builder().build())
                 .credentialsProvider(
                         StaticCredentialsProvider.create(
                                 AwsBasicCredentials.create(DUMMY_ACCESS_KEY, DUMMY_SECRET_KEY)
