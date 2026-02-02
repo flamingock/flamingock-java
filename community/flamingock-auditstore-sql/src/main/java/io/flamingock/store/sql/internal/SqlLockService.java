@@ -48,12 +48,12 @@ public class SqlLockService implements CommunityLockService {
             }
         } catch (SQLException e) {
             // For Informix, ignore "Table or view already exists" error (SQLCODE -310)
-            if (dialectHelper.getSqlDialect() == SqlDialect.INFORMIX &&
+            if (dialectHelper != null && dialectHelper.getSqlDialect() == SqlDialect.INFORMIX &&
                     (e.getErrorCode() == -310 || e.getSQLState() != null && e.getSQLState().startsWith("42S01"))) {
                 return;
             }
             // Firebird throws an error when table already exists; ignore that specific case
-            if (dialectHelper.getSqlDialect() == io.flamingock.internal.common.sql.SqlDialect.FIREBIRD) {
+            if (dialectHelper != null && dialectHelper.getSqlDialect() == SqlDialect.FIREBIRD) {
                 int errorCode = e.getErrorCode();
                 String sqlState = e.getSQLState();
                 String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";

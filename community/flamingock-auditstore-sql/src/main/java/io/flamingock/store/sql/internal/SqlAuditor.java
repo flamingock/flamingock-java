@@ -49,7 +49,7 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
             }
         } catch (SQLException e) {
             // Firebird throws an error when table already exists; ignore that specific case
-            if (dialectHelper.getSqlDialect() == SqlDialect.FIREBIRD) {
+            if (dialectHelper != null && dialectHelper.getSqlDialect() == SqlDialect.FIREBIRD) {
                 int errorCode = e.getErrorCode();
                 String sqlState = e.getSQLState();
                 String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
@@ -69,7 +69,7 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
             conn = dataSource.getConnection();
 
             // For Informix, ensure autoCommit is enabled for audit writes
-            if (dialectHelper.getSqlDialect() == SqlDialect.INFORMIX) {
+            if (dialectHelper != null && dialectHelper.getSqlDialect() == SqlDialect.INFORMIX) {
                 conn.setAutoCommit(true);
             }
 
