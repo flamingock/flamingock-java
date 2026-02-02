@@ -32,18 +32,18 @@ public class SqlLockService implements CommunityLockService {
 
     private final DataSource dataSource;
     private final String lockRepositoryName;
-    private final SqlLockDialectHelper dialectHelper;
+    private SqlLockDialectHelper dialectHelper = null;
 
     public SqlLockService(DataSource dataSource, String lockRepositoryName) {
         this.dataSource = dataSource;
         this.lockRepositoryName = lockRepositoryName;
-        this.dialectHelper = new SqlLockDialectHelper(dataSource);
     }
 
     public void initialize(boolean autoCreate) {
         if (autoCreate) {
             try (Connection conn = dataSource.getConnection();
                  Statement stmt = conn.createStatement()) {
+                this.dialectHelper = new SqlLockDialectHelper(conn);
                 stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
             } catch (SQLException e) {
                 // For Informix, ignore "Table or view already exists" error (SQLCODE -310)

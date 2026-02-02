@@ -32,23 +32,23 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
     private final DataSource dataSource;
     private final String auditTableName;
     private final boolean autoCreate;
-    private final SqlAuditorDialectHelper dialectHelper;
+    private SqlAuditorDialectHelper dialectHelper = null;
 
     public SqlAuditor(DataSource dataSource, String auditTableName, boolean autoCreate) {
         this.dataSource = dataSource;
         this.auditTableName = auditTableName;
         this.autoCreate = autoCreate;
-        this.dialectHelper = new SqlAuditorDialectHelper(dataSource);
     }
 
     public void initialize() {
         if (autoCreate) {
             try (Connection conn = dataSource.getConnection();
                  Statement stmt = conn.createStatement()) {
+                this.dialectHelper = new SqlAuditorDialectHelper(conn);
                 stmt.executeUpdate(dialectHelper.getCreateTableSqlString(auditTableName));
             } catch (SQLException e) {
                 // Firebird throws an error when table already exists; ignore that specific case
-                if (dialectHelper.getSqlDialect() == io.flamingock.internal.common.sql.SqlDialect.FIREBIRD) {
+                if (dialectHelper.getSqlDialect() == SqlDialect.FIREBIRD) {
                     int errorCode = e.getErrorCode();
                     String sqlState = e.getSQLState();
                     String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";

@@ -15,21 +15,12 @@
  */
 package io.flamingock.internal.common.sql;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 public class AbstractSqlDialectHelper {
 
     protected static SqlDialect sqlDialect;
-
-    public AbstractSqlDialectHelper(DataSource dataSource) {
-        try {
-            sqlDialect = fromDatabaseProductName(dataSource.getConnection().getMetaData().getDatabaseProductName());
-        } catch (SQLException e) {
-            throw new IllegalStateException("Unable to obtain database product name from DataSource", e);
-        }
-    }
 
     public AbstractSqlDialectHelper(SqlDialect sqlDialect) {
         this.sqlDialect = sqlDialect;

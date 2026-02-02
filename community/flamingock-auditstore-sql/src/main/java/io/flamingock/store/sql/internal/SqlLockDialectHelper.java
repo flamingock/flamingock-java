@@ -19,15 +19,14 @@ import io.flamingock.internal.common.sql.AbstractSqlDialectHelper;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.external.store.lock.LockStatus;
 
-import javax.sql.DataSource;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
 
-    public SqlLockDialectHelper(DataSource dataSource) {
-        super(dataSource);
+    public SqlLockDialectHelper(Connection connection) {
+        super(connection);
     }
 
     public SqlLockDialectHelper(SqlDialect dialect) {
