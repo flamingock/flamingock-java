@@ -41,24 +41,24 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
     }
 
     public void initialize() {
-        if (autoCreate) {
-            try (Connection conn = dataSource.getConnection();
-                 Statement stmt = conn.createStatement()) {
-                this.dialectHelper = new SqlAuditorDialectHelper(conn);
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+            this.dialectHelper = new SqlAuditorDialectHelper(conn);
+            if (autoCreate) {
                 stmt.executeUpdate(dialectHelper.getCreateTableSqlString(auditTableName));
-            } catch (SQLException e) {
-                // Firebird throws an error when table already exists; ignore that specific case
-                if (dialectHelper.getSqlDialect() == SqlDialect.FIREBIRD) {
-                    int errorCode = e.getErrorCode();
-                    String sqlState = e.getSQLState();
-                    String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-
-                    if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
-                        return;
-                    }
-                }
-                throw new RuntimeException("Failed to initialize audit table", e);
             }
+        } catch (SQLException e) {
+            // Firebird throws an error when table already exists; ignore that specific case
+            if (dialectHelper.getSqlDialect() == SqlDialect.FIREBIRD) {
+                int errorCode = e.getErrorCode();
+                String sqlState = e.getSQLState();
+                String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+
+                if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
+                    return;
+                }
+            }
+            throw new RuntimeException("Failed to initialize audit table", e);
         }
     }
 

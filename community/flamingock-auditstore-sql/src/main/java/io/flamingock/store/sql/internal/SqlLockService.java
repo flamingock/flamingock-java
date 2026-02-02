@@ -40,29 +40,29 @@ public class SqlLockService implements CommunityLockService {
     }
 
     public void initialize(boolean autoCreate) {
-        if (autoCreate) {
-            try (Connection conn = dataSource.getConnection();
-                 Statement stmt = conn.createStatement()) {
-                this.dialectHelper = new SqlLockDialectHelper(conn);
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+            this.dialectHelper = new SqlLockDialectHelper(conn);
+            if (autoCreate) {
                 stmt.executeUpdate(dialectHelper.getCreateTableSqlString(lockRepositoryName));
-            } catch (SQLException e) {
-                // For Informix, ignore "Table or view already exists" error (SQLCODE -310)
-                if (dialectHelper.getSqlDialect() == SqlDialect.INFORMIX &&
-                        (e.getErrorCode() == -310 || e.getSQLState() != null && e.getSQLState().startsWith("42S01"))) {
+            }
+        } catch (SQLException e) {
+            // For Informix, ignore "Table or view already exists" error (SQLCODE -310)
+            if (dialectHelper.getSqlDialect() == SqlDialect.INFORMIX &&
+                    (e.getErrorCode() == -310 || e.getSQLState() != null && e.getSQLState().startsWith("42S01"))) {
+                return;
+            }
+            // Firebird throws an error when table already exists; ignore that specific case
+            if (dialectHelper.getSqlDialect() == io.flamingock.internal.common.sql.SqlDialect.FIREBIRD) {
+                int errorCode = e.getErrorCode();
+                String sqlState = e.getSQLState();
+                String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+
+                if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
                     return;
                 }
-                // Firebird throws an error when table already exists; ignore that specific case
-                if (dialectHelper.getSqlDialect() == io.flamingock.internal.common.sql.SqlDialect.FIREBIRD) {
-                    int errorCode = e.getErrorCode();
-                    String sqlState = e.getSQLState();
-                    String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-
-                    if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
-                        return;
-                    }
-                }
-                throw new RuntimeException("Failed to initialize lock table", e);
             }
+            throw new RuntimeException("Failed to initialize lock table", e);
         }
     }
 
