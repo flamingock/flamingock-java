@@ -15,7 +15,6 @@
  */
 package io.flamingock.cloud.audit;
 
-import io.flamingock.api.annotations.*;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -63,7 +62,7 @@ class HttpAuditWriterMapperTest {
         );
 
         // Then
-        assertEquals(AuditTxType.TX_SHARED, request.getTxType());
+        assertEquals(AuditTxType.TX_SHARED, request.getTxStrategy());
     }
 
     @Test
@@ -94,6 +93,6 @@ class HttpAuditWriterMapperTest {
         );
 
         // Then
-        assertEquals(AuditTxType.NON_TX, request.getTxType());
+        assertEquals(AuditTxType.NON_TX, request.getTxStrategy());
     }
 }
