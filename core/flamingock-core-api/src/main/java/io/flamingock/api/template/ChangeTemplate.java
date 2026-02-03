@@ -47,8 +47,58 @@ public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD
 
     List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> getStepsPayload();
 
+    /**
+     * @deprecated Use {@link #hasMultiStep()} instead. Will be removed in a future release.
+     */
+    @Deprecated
     default boolean hasStepsPayload() {
         return getStepsPayload() != null && !getStepsPayload().isEmpty();
+    }
+
+    /**
+     * Sets the single step payload containing one apply/rollback pair.
+     *
+     * @param singleStep the single step payload
+     */
+    void setSingleStep(SingleStep<APPLY_FIELD, ROLLBACK_FIELD> singleStep);
+
+    /**
+     * Returns the single step payload.
+     *
+     * @return the single step payload, or null if not set
+     */
+    SingleStep<APPLY_FIELD, ROLLBACK_FIELD> getSingleStep();
+
+    /**
+     * Sets the multistep payload containing a list of steps.
+     *
+     * @param multiStep the multistep payload
+     */
+    void setMultiStep(MultiStep<APPLY_FIELD, ROLLBACK_FIELD> multiStep);
+
+    /**
+     * Returns the multistep payload.
+     *
+     * @return the multistep payload, or null if not set
+     */
+    MultiStep<APPLY_FIELD, ROLLBACK_FIELD> getMultiStep();
+
+    /**
+     * Checks if this template has a single step payload.
+     *
+     * @return true if a single step payload is set
+     */
+    default boolean hasSingleStep() {
+        return getSingleStep() != null;
+    }
+
+    /**
+     * Checks if this template has a multistep payload with at least one step.
+     *
+     * @return true if a multistep payload is set and not empty
+     */
+    default boolean hasMultiStep() {
+        return getMultiStep() != null && !getMultiStep().isEmpty();
     }
 
     Class<SHARED_CONFIG_FIELD> getConfigurationClass();

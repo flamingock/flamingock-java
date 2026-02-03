@@ -18,6 +18,8 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.MultiStep;
+import io.flamingock.api.template.SingleStep;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +44,8 @@ class TemplateLoadedTaskBuilderTest {
     public static class TestChangeTemplate implements ChangeTemplate<Object, Object, Object> {
 
         private List<TemplateStep<Object, Object>> stepsPayload;
+        private SingleStep<Object, Object> singleStep;
+        private MultiStep<Object, Object> multiStep;
 
         @Override
         public void setChangeId(String changeId) {}
@@ -63,6 +67,18 @@ class TemplateLoadedTaskBuilderTest {
 
         @Override
         public List<TemplateStep<Object, Object>> getStepsPayload() { return stepsPayload; }
+
+        @Override
+        public void setSingleStep(SingleStep<Object, Object> singleStep) { this.singleStep = singleStep; }
+
+        @Override
+        public SingleStep<Object, Object> getSingleStep() { return singleStep; }
+
+        @Override
+        public void setMultiStep(MultiStep<Object, Object> multiStep) { this.multiStep = multiStep; }
+
+        @Override
+        public MultiStep<Object, Object> getMultiStep() { return multiStep; }
 
         @Override
         public Class<Object> getConfigurationClass() { return Object.class; }

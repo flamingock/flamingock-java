@@ -16,6 +16,8 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.MultiStep;
+import io.flamingock.api.template.SingleStep;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
@@ -107,27 +109,79 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
     }
 
     /**
-     * Sets the steps on the template if steps data is present.
-     * Converts raw step data (List of Maps) to List of TemplateStep using the template's payload classes.
+     * Sets the step payloads on the template based on YAML structure.
+     * <p>
+     * Detection is based on YAML fields:
+     * <ul>
+     *   <li>YAML has 'steps' field → MultiStep (and legacy stepsPayload for backwards compatibility)</li>
+     *   <li>YAML has 'apply' field (no steps) → SingleStep</li>
+     * </ul>
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void setStepsIfPresent(ExecutionRuntime executionRuntime,
                                    ChangeTemplate<?, ?, ?> instance) {
         Object stepsData = descriptor.getSteps();
-        if (stepsData == null) {
-            return;
+        Object applyData = descriptor.getApply();
+
+        if (stepsData != null) {
+            // YAML has 'steps' field -> MultiStep
+            logger.debug("Setting MultiStep for change[{}]", descriptor.getId());
+
+            List<TemplateStep> convertedSteps = convertToTemplateSteps(
+                    stepsData,
+                    instance.getApplyPayloadClass(),
+                    instance.getRollbackPayloadClass()
+            );
+
+            // Set new MultiStep type
+            MultiStep multiStep = new MultiStep(convertedSteps);
+            Method setMultiStepMethod = getSetterMethod(instance.getClass(), "setMultiStep");
+            executionRuntime.executeMethodWithParameters(instance, setMultiStepMethod, multiStep);
+
+            // Also set legacy stepsPayload for backwards compatibility
+            Method setStepsMethod = getSetterMethod(instance.getClass(), "setStepsPayload");
+            executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
+        } else if (applyData != null) {
+            // YAML has 'apply' field -> SingleStep
+            logger.debug("Setting SingleStep for change[{}]", descriptor.getId());
+
+            SingleStep singleStep = convertToSingleStep(
+                    applyData,
+                    descriptor.getRollback(),
+                    instance.getApplyPayloadClass(),
+                    instance.getRollbackPayloadClass()
+            );
+
+            Method setSingleStepMethod = getSetterMethod(instance.getClass(), "setSingleStep");
+            executionRuntime.executeMethodWithParameters(instance, setSingleStepMethod, singleStep);
+        }
+    }
+
+    /**
+     * Converts raw apply/rollback data from YAML to a SingleStep object.
+     *
+     * @param applyData       the raw apply data
+     * @param rollbackData    the raw rollback data (maybe null)
+     * @param applyClass      the class type for apply payload
+     * @param rollbackClass   the class type for rollback payload
+     * @return the converted SingleStep object
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private SingleStep convertToSingleStep(Object applyData,
+                                           Object rollbackData,
+                                           Class<?> applyClass,
+                                           Class<?> rollbackClass) {
+        SingleStep singleStep = new SingleStep();
+
+        if (applyData != null && Void.class != applyClass) {
+            singleStep.setApply(FileUtil.getFromMap(applyClass, applyData));
         }
 
-        logger.debug("Setting steps for change[{}]", descriptor.getId());
+        if (rollbackData != null && Void.class != rollbackClass) {
+            singleStep.setRollback(FileUtil.getFromMap(rollbackClass, rollbackData));
+        }
 
-        List<TemplateStep> convertedSteps = convertToTemplateSteps(
-                stepsData,
-                instance.getApplyPayloadClass(),
-                instance.getRollbackPayloadClass()
-        );
-
-        Method setStepsMethod = getSetterMethod(instance.getClass(), "setStepsPayload");
-        executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
+        return singleStep;
     }
 
     /**
