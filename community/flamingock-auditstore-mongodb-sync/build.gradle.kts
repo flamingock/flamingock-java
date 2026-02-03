@@ -11,6 +11,7 @@ dependencies {
 
 
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":utils:mongodb-test-kit"))
     testImplementation(project(":core:target-systems:nontransactional-target-system"))
     testImplementation(project(":core:target-systems:mongodb-sync-target-system"))
 

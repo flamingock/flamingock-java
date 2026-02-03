@@ -8,7 +8,7 @@ dependencies {
     testImplementation(project(":core:target-systems:mongodb-sync-target-system"))
     testImplementation(project(":community:flamingock-auditstore-mongodb-sync"))
     testImplementation(project(":utils:test-util"))
-    testImplementation(project(":utils:mongodb-util"))
+    testImplementation(project(":utils:mongodb-test-kit"))
 
     testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
 

@@ -149,10 +149,17 @@ include("utils:mongodb-util")
 project(":utils:mongodb-util").name = "mongodb-util"
 project(":utils:mongodb-util").projectDir = file("utils/mongodb-util")
 
+include("utils:mongodb-test-kit")
+project(":utils:mongodb-test-kit").name = "mongodb-test-kit"
+project(":utils:mongodb-test-kit").projectDir = file("utils/mongodb-test-kit")
 
 include("utils:dynamodb-util")
 project(":utils:dynamodb-util").name = "dynamodb-util"
 project(":utils:dynamodb-util").projectDir = file("utils/dynamodb-util")
+
+include("utils:dynamodb-test-kit")
+project(":utils:dynamodb-test-kit").name = "dynamodb-test-kit"
+project(":utils:dynamodb-test-kit").projectDir = file("utils/dynamodb-test-kit")
 
 include("utils:couchbase-util")
 project(":utils:couchbase-util").name = "couchbase-util"
