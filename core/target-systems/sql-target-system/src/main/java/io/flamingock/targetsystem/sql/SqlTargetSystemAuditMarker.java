@@ -113,7 +113,6 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
         public Builder(DataSource dataSource, TransactionManager<Connection> txManager) {
             this.dataSource = dataSource;
             this.txManager = txManager;
-            this.dialectHelper = new SqlAuditMarkerDialectHelper(dataSource);
         }
 
         public Builder withTableName(String tableName) {
@@ -132,6 +131,11 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
         }
 
         public SqlTargetSystemAuditMarker build() {
+            try (Connection connection = dataSource.getConnection()) {
+                this.dialectHelper = new SqlAuditMarkerDialectHelper(connection);
+            } catch (SQLException ex) {
+                throw new FlamingockException(ex);
+            }
             if (autoCreate) {
                 createTableIfNotExists();
             }

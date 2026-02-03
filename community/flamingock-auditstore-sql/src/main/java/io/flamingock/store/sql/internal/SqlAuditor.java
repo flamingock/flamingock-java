@@ -32,33 +32,33 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
     private final DataSource dataSource;
     private final String auditTableName;
     private final boolean autoCreate;
-    private final SqlAuditorDialectHelper dialectHelper;
+    private SqlAuditorDialectHelper dialectHelper = null;
 
     public SqlAuditor(DataSource dataSource, String auditTableName, boolean autoCreate) {
         this.dataSource = dataSource;
         this.auditTableName = auditTableName;
         this.autoCreate = autoCreate;
-        this.dialectHelper = new SqlAuditorDialectHelper(dataSource);
     }
 
     public void initialize() {
-        if (autoCreate) {
-            try (Connection conn = dataSource.getConnection();
-                 Statement stmt = conn.createStatement()) {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+            this.dialectHelper = new SqlAuditorDialectHelper(conn);
+            if (autoCreate) {
                 stmt.executeUpdate(dialectHelper.getCreateTableSqlString(auditTableName));
-            } catch (SQLException e) {
-                // Firebird throws an error when table already exists; ignore that specific case
-                if (dialectHelper.getSqlDialect() == io.flamingock.internal.common.sql.SqlDialect.FIREBIRD) {
-                    int errorCode = e.getErrorCode();
-                    String sqlState = e.getSQLState();
-                    String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-
-                    if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
-                        return;
-                    }
-                }
-                throw new RuntimeException("Failed to initialize audit table", e);
             }
+        } catch (SQLException e) {
+            // Firebird throws an error when table already exists; ignore that specific case
+            if (dialectHelper != null && dialectHelper.getSqlDialect() == SqlDialect.FIREBIRD) {
+                int errorCode = e.getErrorCode();
+                String sqlState = e.getSQLState();
+                String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+
+                if (errorCode == 335544351 || "42000".equals(sqlState) || msg.contains("already exists")) {
+                    return;
+                }
+            }
+            throw new RuntimeException("Failed to initialize audit table", e);
         }
     }
 
@@ -69,7 +69,7 @@ public class SqlAuditor implements LifecycleAuditWriter, AuditReader {
             conn = dataSource.getConnection();
 
             // For Informix, ensure autoCommit is enabled for audit writes
-            if (dialectHelper.getSqlDialect() == SqlDialect.INFORMIX) {
+            if (dialectHelper != null && dialectHelper.getSqlDialect() == SqlDialect.INFORMIX) {
                 conn.setAutoCommit(true);
             }
 
