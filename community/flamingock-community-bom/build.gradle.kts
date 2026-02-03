@@ -12,8 +12,6 @@ dependencies {
         api("io.flamingock:flamingock-auditstore-dynamodb:$version")
         api("io.flamingock:flamingock-auditstore-sql:$version")
         api("io.flamingock:flamingock-test-support:${version}")
-        api("io.flamingock:flamingock-sql-template:$version")
-        api("io.flamingock:flamingock-mongodb-sync-template:${version}")
         api("io.flamingock:flamingock-springboot-integration:${version}")
         api("io.flamingock:flamingock-springboot-test-support:${version}")
         api("io.flamingock:flamingock-graalvm:${version}")
