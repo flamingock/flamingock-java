@@ -130,7 +130,7 @@ public class AuditEntryRequest {
         return type;
     }
 
-    public AuditTxType getTxType() {
+    public AuditTxType getTxStrategy() {
         return txStrategy;
     }
 

@@ -1,16 +1,18 @@
-
-//javaPlatform {
-//    allowDependencies() // allows referencing real dependencies in constraints
-//}
+plugins {
+    `java-platform`
+}
 
 dependencies {
     constraints {
-
-        //TODO add here all the client-facing artefacts that the ce users can use
-        // all the community editions
-        // springboot integrations
-        // templates
-        // etc.
+        // Add constraints for BOM managed modules
+        api("io.flamingock:flamingock-cloud:${version}")
+        api("io.flamingock:flamingock-test-support:${version}")
+        api("io.flamingock:flamingock-sql-template:$version")
+        api("io.flamingock:flamingock-mongodb-sync-template:${version}")
+        api("io.flamingock:flamingock-springboot-integration:${version}")
+        api("io.flamingock:flamingock-springboot-test-support:${version}")
+        api("io.flamingock:flamingock-graalvm:${version}")
+        api("io.flamingock:mongock-support:${version}")
     }
 }
 
