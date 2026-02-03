@@ -18,12 +18,12 @@ package io.flamingock.targetsystem.sql;
 import io.flamingock.internal.common.sql.AbstractSqlDialectHelper;
 import io.flamingock.internal.common.sql.SqlDialect;
 
-import javax.sql.DataSource;
+import java.sql.Connection;
 
 public final class SqlAuditMarkerDialectHelper extends AbstractSqlDialectHelper {
 
-    public SqlAuditMarkerDialectHelper(DataSource dataSource) {
-        super(dataSource);
+    public SqlAuditMarkerDialectHelper(Connection connection) {
+        super(connection);
     }
 
     public SqlAuditMarkerDialectHelper(SqlDialect dialect) {
