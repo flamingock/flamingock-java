@@ -40,6 +40,31 @@ public final class SpringbootUtil {
         };
     }
 
+    /**
+     * Creates an ApplicationRunner for CLI mode that executes Flamingock and then
+     * calls System.exit() with the appropriate exit code.
+     *
+     * @param runnerBuilder the runner builder
+     * @return an ApplicationRunner that exits after execution
+     */
+    public static ApplicationRunner toCliApplicationRunner(RunnerBuilder runnerBuilder) {
+        return args -> {
+            try {
+                Runner runner = runnerBuilder.build();
+                runner.run();
+                // Flush output before exit
+                System.out.flush();
+                System.err.flush();
+                System.exit(0);
+            } catch (Exception e) {
+                // Flush output before exit
+                System.out.flush();
+                System.err.flush();
+                System.exit(1);
+            }
+        };
+    }
+
     public static String[] getActiveProfiles(ApplicationContext springContext) {
         String[] activeProfiles = springContext.getEnvironment().getActiveProfiles();
         return activeProfiles.length > 0 ? activeProfiles : new String[]{"default"};

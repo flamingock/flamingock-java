@@ -132,21 +132,6 @@ include("core:target-systems:couchbase-target-system")
 project(":core:target-systems:couchbase-target-system").projectDir = file("core/target-systems/couchbase-target-system")
 project(":core:target-systems:couchbase-target-system").name = "couchbase-target-system"
 
-//////////////////////////////////////
-// TEMPLATES
-//////////////////////////////////////
-
-//SQL
-include("templates:flamingock-sql-template")
-project(":templates:flamingock-sql-template").name = "flamingock-sql-template"
-project(":templates:flamingock-sql-template").projectDir = file("templates/flamingock-sql-template")
-
-
-//MONGODB
-include("templates:flamingock-mongodb-sync-template")
-project(":templates:flamingock-mongodb-sync-template").name = "flamingock-mongodb-sync-template"
-project(":templates:flamingock-mongodb-sync-template").projectDir = file("templates/flamingock-mongodb-sync-template")
-
 
 //////////////////////////////////////
 // UTILS
@@ -164,10 +149,17 @@ include("utils:mongodb-util")
 project(":utils:mongodb-util").name = "mongodb-util"
 project(":utils:mongodb-util").projectDir = file("utils/mongodb-util")
 
+include("utils:mongodb-test-kit")
+project(":utils:mongodb-test-kit").name = "mongodb-test-kit"
+project(":utils:mongodb-test-kit").projectDir = file("utils/mongodb-test-kit")
 
 include("utils:dynamodb-util")
 project(":utils:dynamodb-util").name = "dynamodb-util"
 project(":utils:dynamodb-util").projectDir = file("utils/dynamodb-util")
+
+include("utils:dynamodb-test-kit")
+project(":utils:dynamodb-test-kit").name = "dynamodb-test-kit"
+project(":utils:dynamodb-test-kit").projectDir = file("utils/dynamodb-test-kit")
 
 include("utils:couchbase-util")
 project(":utils:couchbase-util").name = "couchbase-util"
@@ -202,6 +194,10 @@ project(":legacy:mongock-importer-couchbase").projectDir = file("legacy/mongock-
 include("cli:flamingock-cli")
 project(":cli:flamingock-cli").name = "flamingock-cli"
 project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
+
+include("cli:flamingock-cli-executor")
+project(":cli:flamingock-cli-executor").name = "flamingock-cli-executor"
+project(":cli:flamingock-cli-executor").projectDir = file("cli/flamingock-cli-executor")
 
 //////////////////////////////////////
 // E2E TESTS
