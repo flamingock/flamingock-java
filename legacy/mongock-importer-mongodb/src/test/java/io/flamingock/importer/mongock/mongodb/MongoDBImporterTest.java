@@ -47,6 +47,8 @@ import java.util.List;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -213,9 +215,10 @@ public class MongoDBImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
+            "AND no fail if empty origin value provided " +
             "WHEN migrating to Flamingock Community" +
             "THEN should throw exception")
-    void GIVEN_mongockAuditHistoryEmpty_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+    void GIVEN_mongockAuditHistoryEmptyAndNoFailIfEmptyOriginValueProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
         // Setup Mongock entries
 
         MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
@@ -229,4 +232,139 @@ public class MongoDBImporterTest {
 
     }
 
+    @Test
+    @DisplayName("GIVEN mongock audit history empty " +
+            "AND explicit fail if empty origin enabled " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should throw exception")
+    void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        // Setup Mongock entries
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.TRUE)
+                .build();
+
+        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
+        assertEquals("No audit entries found when importing from 'mongodb-target-system'.", ex.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("GIVEN mongock audit history empty " +
+            "AND explicit fail if empty origin disabled " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should execute the pending Mongock changeUnits " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginDisabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        // Setup Mongock entries
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.FALSE)
+                .build();
+
+        flamingock.run();
+
+        // Verify audit sequence: 10 total entries as shown in actual execution
+        auditHelper.verifyAuditSequenceStrict(
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+
+                // Legacy changes
+                STARTED("mongock-change-1"),
+                APPLIED("mongock-change-1"),
+                STARTED("mongock-change-2"),
+                APPLIED("mongock-change-2"),
+
+                // Application stage - new changes created by templates
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
+
+
+        // Validate actual change
+        List<Document> users = database.getCollection("users")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(2, users.size());
+        Assertions.assertEquals("Admin", users.get(0).getString("name"));
+        Assertions.assertEquals("admin@company.com", users.get(0).getString("email"));
+        Assertions.assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
+
+        Assertions.assertEquals("Backup", users.get(1).getString("name"));
+        Assertions.assertEquals("backup@company.com", users.get(1).getString("email"));
+        Assertions.assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+            "AND custom origin repository name provided" +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndCustomOriginProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+        // Setup Mongock entries
+
+        final String customMongockOrigin = "mongockCustomOriginCollection";
+
+        MongoDBMongockTestHelper customOriginMongockTestHelper =
+                new MongoDBMongockTestHelper(database.getCollection(customMongockOrigin));
+        customOriginMongockTestHelper.setupBasicScenario();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, customMongockOrigin)
+                .build();
+
+        flamingock.run();
+
+        // Verify audit sequence: 11 total entries as shown in actual execution
+        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
+        auditHelper.verifyAuditSequenceStrict(
+                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("mongock-change-1_before"),
+                APPLIED("mongock-change-1"),
+                APPLIED("mongock-change-2"),
+
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+
+                // Application stage - new changes created by templates
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
+
+
+
+
+        // Validate actual change
+        List<Document> users = database.getCollection("users")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(2, users.size());
+        Assertions.assertEquals("Admin", users.get(0).getString("name"));
+        Assertions.assertEquals("admin@company.com", users.get(0).getString("email"));
+        Assertions.assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
+
+        Assertions.assertEquals("Backup", users.get(1).getString("name"));
+        Assertions.assertEquals("backup@company.com", users.get(1).getString("email"));
+        Assertions.assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
+    }
 }

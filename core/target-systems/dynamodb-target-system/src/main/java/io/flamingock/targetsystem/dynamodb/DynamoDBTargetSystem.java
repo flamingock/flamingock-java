@@ -34,11 +34,13 @@ import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 
 public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> implements DynamoDBExternalSystem {
 
-    private DynamoDbClient client;
+    private final DynamoDbClient client;
 
+    private ContextResolver baseContext;
     private DynamoDBTxWrapper txWrapper;
 
     public DynamoDBTargetSystem(String id, DynamoDbClient dynamoDBClient) {
@@ -57,6 +59,7 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.baseContext = baseContext;
         this.validate();
         targetSystemContext.addDependency(client);
 
@@ -90,9 +93,15 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
     @Override
     public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
         if (Objects.requireNonNull(type) == MONGOCK) {
-            return Optional.of(new MongockImporterDynamoDB(client, DEFAULT_MONGOCK_ORIGIN));
+            return Optional.of(new MongockImporterDynamoDB(client, getMongockOrigin()));
         } else {
             return Optional.empty();
         }
+    }
+
+    private String getMongockOrigin() {
+        return targetSystemContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                .orElse(baseContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                        .orElse(DEFAULT_MONGOCK_ORIGIN));
     }
 }

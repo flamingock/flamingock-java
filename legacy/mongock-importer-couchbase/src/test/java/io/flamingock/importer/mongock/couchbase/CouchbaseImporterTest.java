@@ -33,6 +33,7 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,10 +43,17 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
+import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_SCOPE_PROPERTY_KEY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -201,10 +209,10 @@ public class CouchbaseImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
+            "AND no fail if empty origin value provided " +
             "WHEN migrating to Flamingock Community" +
             "THEN should throw exception")
-    void GIVEN_mongockAuditHistoryEmpty_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
-        // Setup Mongock entries
+    void GIVEN_mongockAuditHistoryEmptyAndNoFailIfEmptyOriginValueProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
 
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
@@ -219,6 +227,140 @@ public class CouchbaseImporterTest {
         assertEquals("No audit entries found when importing from 'couchbase-target-system'.", ex.getMessage());
 
     }
+
+    @Test
+    @DisplayName("GIVEN mongock audit history empty " +
+            "AND explicit fail if empty origin enabled " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should throw exception")
+    void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.TRUE)
+                .build();
+
+        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
+        assertEquals("No audit entries found when importing from 'couchbase-target-system'.", ex.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("GIVEN mongock audit history empty " +
+            "AND explicit fail if empty origin disabled " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should execute the pending Mongock changeUnits " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginDisabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.FALSE)
+                .build();
+
+        flamingock.run();
+
+
+        List<JsonObject> auditLog = getAuditLog();
+
+        assertEquals(8, auditLog.size());
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(0).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(0).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(1).getString("state"));
+
+        assertEquals("mongock-change-1", auditLog.get(2).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(2).getString("state"));
+
+        assertEquals("mongock-change-1", auditLog.get(3).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(3).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(4).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(5).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(5).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(6).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(7).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(7).getString("state"));
+
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+            "AND custom origin repository name provided" +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndCustomOriginProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+        // Setup Mongock entries
+        final String customMongockOriginScope = "mongockCustomScope";
+        final String customMongockOriginCollection = "mongockCustomOriginCollection";
+
+        CouchbaseCollectionHelper.createScopeIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope);
+        CouchbaseCollectionHelper.createCollectionIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope, customMongockOriginCollection);
+        CouchbaseCollectionHelper.createPrimaryIndexIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope, customMongockOriginCollection);
+
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(customMongockOriginScope).collection(customMongockOriginCollection);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_ORIGIN_SCOPE_PROPERTY_KEY, customMongockOriginScope)
+                .setProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, customMongockOriginCollection)
+                .build();
+
+        flamingock.run();
+
+
+
+        List<JsonObject> auditLog = getAuditLog();
+
+        assertEquals(7, auditLog.size());
+
+        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(1).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(2).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(3).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(3).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(4).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(5).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(6).getString("state"));
+    }
+
 
     private List<JsonObject> getAuditLog() {
         return CouchbaseCollectionHelper.selectAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME)
