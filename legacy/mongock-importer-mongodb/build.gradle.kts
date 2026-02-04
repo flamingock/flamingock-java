@@ -7,7 +7,6 @@ dependencies {
     testImplementation(project(":legacy:mongock-support"))
     testImplementation(project(":core:target-systems:mongodb-sync-target-system"))
     testImplementation(project(":community:flamingock-auditstore-mongodb-sync"))
-    testImplementation(project(":templates:flamingock-mongodb-sync-template"))
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":utils:mongodb-test-kit"))
 

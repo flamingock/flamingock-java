@@ -132,21 +132,6 @@ include("core:target-systems:couchbase-target-system")
 project(":core:target-systems:couchbase-target-system").projectDir = file("core/target-systems/couchbase-target-system")
 project(":core:target-systems:couchbase-target-system").name = "couchbase-target-system"
 
-//////////////////////////////////////
-// TEMPLATES
-//////////////////////////////////////
-
-//SQL
-include("templates:flamingock-sql-template")
-project(":templates:flamingock-sql-template").name = "flamingock-sql-template"
-project(":templates:flamingock-sql-template").projectDir = file("templates/flamingock-sql-template")
-
-
-//MONGODB
-include("templates:flamingock-mongodb-sync-template")
-project(":templates:flamingock-mongodb-sync-template").name = "flamingock-mongodb-sync-template"
-project(":templates:flamingock-mongodb-sync-template").projectDir = file("templates/flamingock-mongodb-sync-template")
-
 
 //////////////////////////////////////
 // UTILS

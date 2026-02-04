@@ -49,10 +49,6 @@ val externalSystemProjects = setOf(
     "sql-external-system-api"
 )
 
-val templateProjects = setOf(
-    "flamingock-sql-template"
-)
-
 val utilProjects = setOf(
     "general-util",
     "test-util",
@@ -69,7 +65,7 @@ val legacyProjects = setOf(
     "mongock-importer-couchbase"
 )
 
-val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + templateProjects + utilProjects + legacyProjects
+val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + utilProjects + legacyProjects
 
 // Project classification utilities
 fun Project.isBomModule(): Boolean = name.endsWith("-bom")
@@ -83,7 +79,6 @@ fun Project.getProjectCategory(): String? = when (name) {
     in pluginProjects -> "plugins"
     in targetSystemProjects -> "targetSystems"
     in externalSystemProjects -> "externalSystems"
-    in templateProjects -> "templates"
     in utilProjects -> "utils"
     in legacyProjects -> "legacy"
     else -> null
@@ -97,7 +92,6 @@ fun getProjectsForBundle(bundle: String?): Set<String> = when (bundle) {
     "plugins" -> pluginProjects
     "targetSystems" -> targetSystemProjects
     "externalSystems" -> externalSystemProjects
-    "templates" -> templateProjects
     "utils" -> utilProjects
     "legacy" -> legacyProjects
     "all" -> allProjects
@@ -111,7 +105,6 @@ extra["communityProjects"] = communityProjects
 extra["pluginProjects"] = pluginProjects
 extra["targetSystemProjects"] = targetSystemProjects
 extra["externalSystemProjects"] = externalSystemProjects
-extra["templateProjects"] = templateProjects
 extra["utilProjects"] = utilProjects
 extra["legacyProjects"] = legacyProjects
 extra["allProjects"] = allProjects
