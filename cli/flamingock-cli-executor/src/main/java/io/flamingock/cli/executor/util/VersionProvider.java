@@ -36,7 +36,7 @@ public class VersionProvider implements IVersionProvider {
         if (UNKNOWN_VERSION.equals(version)) {
             version = getVersionFromProperties();
         }
-        return new String[]{"Flamingock CLI Executor v" + version};
+        return new String[]{"Flamingock CLI v" + version};
     }
 
     /**

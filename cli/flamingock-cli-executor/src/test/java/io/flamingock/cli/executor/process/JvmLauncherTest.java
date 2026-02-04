@@ -61,12 +61,20 @@ class JvmLauncherTest {
     }
 
     @Test
+    void buildCommand_shouldDisableBanner() {
+        JvmLauncher launcher = new JvmLauncher(false);
+        List<String> command = launcher.buildCommand("/path/to/app.jar");
+
+        assertTrue(command.contains("--spring.main.banner-mode=off"));
+    }
+
+    @Test
     void buildCommand_shouldHaveCorrectFlagCount() {
         JvmLauncher launcher = new JvmLauncher(false);
         List<String> command = launcher.buildCommand("/path/to/app.jar");
 
-        // java -jar <jar> + 3 flags = 6 elements
-        assertEquals(6, command.size());
+        // java -jar <jar> + 4 flags = 7 elements
+        assertEquals(7, command.size());
     }
 
     @Test

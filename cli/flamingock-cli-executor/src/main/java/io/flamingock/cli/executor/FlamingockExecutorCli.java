@@ -23,18 +23,18 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 /**
- * Main entry point for the Flamingock CLI Executor.
+ * Main entry point for the Flamingock CLI.
  *
- * <p>This CLI tool spawns the user's Spring Boot application with Flamingock
- * and executes migrations, returning the result via exit codes.</p>
+ * <p>This CLI tool spawns the user's application with Flamingock
+ * and executes changes, returning the result via exit codes.</p>
  *
  * <p>Usage: flamingock execute apply --jar ./app.jar</p>
  */
 @Command(
         name = "flamingock",
-        description = "Flamingock CLI Executor - Execute Flamingock migrations in Spring Boot applications",
+        description = "Flamingock CLI - Execute Flamingock changes",
         header = {
-                "@|bold,cyan Flamingock CLI Executor|@ - Execute migrations in Spring Boot applications",
+                "@|bold,cyan Flamingock CLI|@ - Execute Flamingock changes",
                 ""
         },
         footer = {

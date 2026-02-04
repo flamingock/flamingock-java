@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
 }
 
-description = "Command-line executor for launching Flamingock migrations in Spring Boot applications"
+description = "Flamingock CLI for executing changes in applications"
 
 dependencies {
     // CLI Framework
@@ -71,8 +71,8 @@ afterEvaluate {
 
                 // Override description for CLI executor module
                 pom {
-                    name.set("Flamingock CLI Executor")
-                    description.set("Command-line executor for launching Flamingock migrations in Spring Boot applications")
+                    name.set("Flamingock CLI")
+                    description.set("Flamingock CLI for executing changes in applications")
                 }
             }
         }

@@ -36,7 +36,7 @@ public final class ConsoleFormatter {
         PrintStream out = System.out;
         out.println();
         out.println(SEPARATOR);
-        out.println("Flamingock CLI Executor v" + version);
+        out.println("Flamingock CLI v" + version);
         out.println(SEPARATOR);
         out.println();
     }

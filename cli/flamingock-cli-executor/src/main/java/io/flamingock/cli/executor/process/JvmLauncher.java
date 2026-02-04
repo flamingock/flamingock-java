@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Launches a JVM process to execute a Spring Boot application with Flamingock CLI mode enabled.
+ * Launches a JVM process to execute an application with Flamingock CLI mode enabled.
  *
  * <p>This class handles:</p>
  * <ul>
@@ -50,9 +50,9 @@ public class JvmLauncher {
     }
 
     /**
-     * Launches the Spring Boot application with Flamingock CLI mode enabled.
+     * Launches the application with Flamingock CLI mode enabled.
      *
-     * @param jarPath absolute path to the Spring Boot JAR
+     * @param jarPath absolute path to the application JAR
      * @return the process exit code (0 = success, non-zero = failure)
      */
     public int launch(String jarPath) {
@@ -96,7 +96,7 @@ public class JvmLauncher {
     }
 
     /**
-     * Builds the command line for launching the Spring Boot application.
+     * Builds the command line for launching the application.
      *
      * @param jarPath path to the JAR file
      * @return the command as a list of strings
@@ -113,6 +113,9 @@ public class JvmLauncher {
 
         // Spring Boot flags to disable web server
         command.add("--spring.main.web-application-type=none");
+
+        // Disable Spring Boot banner
+        command.add("--spring.main.banner-mode=off");
 
         // Add the flamingock-cli profile
         command.add("--spring.profiles.include=flamingock-cli");

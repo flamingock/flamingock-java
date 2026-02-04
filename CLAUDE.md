@@ -55,6 +55,25 @@ Build an open-core business model:
 
 **👉 North Star:** Flamingock = Change-as-Code platform for audited, synchronized evolution of distributed systems. Not just DB migrations. Not CI/CD. Not infra-as-code. Its ambition = Terraform-equivalent for system evolution.
 
+## Terminology Guidelines
+
+When writing code, documentation, or user-facing content for Flamingock:
+
+### DO NOT use "migration" or "migrations"
+- Flamingock is about **external system evolution**, not just database migrations
+- Use "**changes**" (for individual units) or "**system evolution**" (for the concept)
+- Example: "Apply pending changes" NOT "Apply pending migrations"
+
+### CLI Naming
+- The `cli/flamingock-cli-executor` module is THE Flamingock CLI (temporary internal name during transition)
+- User-facing content should say "**Flamingock CLI**", not "CLI Executor"
+- The old `cli/flamingock-cli` module is legacy and will be deprecated once feature parity is achieved
+
+### Framework-Agnostic Messaging
+- The CLI is designed to be framework-agnostic
+- Currently only Spring Boot is supported, but this will expand
+- User-facing CLI content should NOT mention "Spring Boot" - just say "applications"
+
 ## Build System
 
 This is a multi-module Gradle project using Kotlin DSL.

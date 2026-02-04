@@ -22,7 +22,7 @@ import picocli.CommandLine.ParseResult;
 import java.io.PrintWriter;
 
 /**
- * CLI exception handler for the executor that provides helpful guidance for common errors.
+ * CLI exception handler that provides helpful guidance for common errors.
  */
 public class ExecutorExceptionHandler implements IExecutionExceptionHandler {
 

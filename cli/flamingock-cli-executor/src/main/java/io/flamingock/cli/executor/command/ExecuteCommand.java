@@ -21,21 +21,21 @@ import picocli.CommandLine.Command;
 /**
  * Parent command for execution operations.
  *
- * <p>Groups subcommands related to executing Flamingock migrations:</p>
+ * <p>Groups subcommands related to executing Flamingock changes:</p>
  * <ul>
- *   <li>{@code apply} - Apply pending migrations</li>
+ *   <li>{@code apply} - Apply pending changes</li>
  * </ul>
  *
  * <p>Future milestones may add additional subcommands such as:</p>
  * <ul>
- *   <li>{@code undo} - Undo last migration (M1)</li>
- *   <li>{@code dry-run} - Preview migrations without applying (M1)</li>
- *   <li>{@code validate} - Validate migration state (M1)</li>
+ *   <li>{@code undo} - Undo last change (M1)</li>
+ *   <li>{@code dry-run} - Preview changes without applying (M1)</li>
+ *   <li>{@code validate} - Validate change state (M1)</li>
  * </ul>
  */
 @Command(
         name = "execute",
-        description = "Execute Flamingock operations on a Spring Boot application",
+        description = "Execute Flamingock operations on an application",
         subcommands = {ApplyCommand.class},
         mixinStandardHelpOptions = true
 )

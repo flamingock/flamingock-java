@@ -28,10 +28,10 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 /**
- * Command to apply pending Flamingock migrations.
+ * Command to apply pending Flamingock changes.
  *
- * <p>This command spawns the user's Spring Boot JAR with special flags
- * that enable CLI mode in Flamingock, executes all pending migrations,
+ * <p>This command spawns the user's application JAR with special flags
+ * that enable CLI mode in Flamingock, executes all pending changes,
  * and returns the result via exit code.</p>
  *
  * <p>Exit codes:</p>
@@ -44,7 +44,7 @@ import java.util.concurrent.Callable;
  */
 @Command(
         name = "apply",
-        description = "Apply pending Flamingock migrations",
+        description = "Apply pending Flamingock changes",
         mixinStandardHelpOptions = true
 )
 public class ApplyCommand implements Callable<Integer> {
@@ -58,7 +58,7 @@ public class ApplyCommand implements Callable<Integer> {
     private ExecuteCommand parent;
 
     @Option(names = {"--jar", "-j"},
-            description = "Path to the Spring Boot application JAR",
+            description = "Path to the application JAR",
             required = true)
     private File jarFile;
 
