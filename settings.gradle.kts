@@ -203,6 +203,10 @@ include("cli:flamingock-cli")
 project(":cli:flamingock-cli").name = "flamingock-cli"
 project(":cli:flamingock-cli").projectDir = file("cli/flamingock-cli")
 
+include("cli:flamingock-cli-executor")
+project(":cli:flamingock-cli-executor").name = "flamingock-cli-executor"
+project(":cli:flamingock-cli-executor").projectDir = file("cli/flamingock-cli-executor")
+
 //////////////////////////////////////
 // E2E TESTS
 //////////////////////////////////////

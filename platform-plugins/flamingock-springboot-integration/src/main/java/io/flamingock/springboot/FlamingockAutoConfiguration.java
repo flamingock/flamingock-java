@@ -25,6 +25,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,6 +44,9 @@ import java.util.List;
  *   <li>{@code DEFERRED} - Spring creates the builder; the application controls execution</li>
  *   <li>{@code UNMANAGED} - No beans are created; the application manages everything</li>
  * </ul>
+ *
+ * <p>When {@code flamingock.cli.mode=true}, the runner executes and then calls System.exit()
+ * with the appropriate exit code (0 for success, 1 for failure).</p>
  *
  * <p>The builder bean is always created (unless UNMANAGED) and can be overridden by providing
  * your own {@link AbstractChangeRunnerBuilder} bean.</p>
@@ -82,10 +86,22 @@ public class FlamingockAutoConfiguration {
     }
 
     /**
-     * Creates an ApplicationRunner that builds and executes Flamingock at application startup.
-     * Only created when management-mode is APPLICATION_RUNNER (the default).
+     * Creates an ApplicationRunner for CLI mode that builds and executes Flamingock,
+     * then calls System.exit() with the appropriate exit code.
+     * Only created when flamingock.cli.mode=true.
      */
     @Bean("flamingock-runner")
+    @ConditionalOnProperty(name = "flamingock.cli.mode", havingValue = "true")
+    public ApplicationRunner cliApplicationRunner(AbstractChangeRunnerBuilder<?, ?> builder) {
+        return SpringbootUtil.toCliApplicationRunner(builder);
+    }
+
+    /**
+     * Creates an ApplicationRunner that builds and executes Flamingock at application startup.
+     * Only created when management-mode is APPLICATION_RUNNER (the default) and CLI mode is not active.
+     */
+    @Bean("flamingock-runner")
+    @ConditionalOnProperty(name = "flamingock.cli.mode", havingValue = "false", matchIfMissing = true)
     @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('APPLICATION_RUNNER')")
     public ApplicationRunner applicationRunner(AbstractChangeRunnerBuilder<?, ?> builder) {
         return SpringbootUtil.toApplicationRunner(builder);
@@ -93,9 +109,10 @@ public class FlamingockAutoConfiguration {
 
     /**
      * Creates an InitializingBean that builds and executes Flamingock during bean initialization.
-     * Only created when management-mode is INITIALIZING_BEAN.
+     * Only created when management-mode is INITIALIZING_BEAN and CLI mode is not active.
      */
     @Bean("flamingock-runner")
+    @ConditionalOnProperty(name = "flamingock.cli.mode", havingValue = "false", matchIfMissing = true)
     @ConditionalOnExpression("'${flamingock.management-mode:APPLICATION_RUNNER}'.toUpperCase().equals('INITIALIZING_BEAN')")
     public InitializingBean initializingBeanRunner(AbstractChangeRunnerBuilder<?, ?> builder) {
         return SpringbootUtil.toInitializingBean(builder);
