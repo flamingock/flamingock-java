@@ -20,7 +20,7 @@ import java.sql.SQLException;
 
 public class AbstractSqlDialectHelper {
 
-    protected static SqlDialect sqlDialect;
+    protected final SqlDialect sqlDialect;
 
     public AbstractSqlDialectHelper(SqlDialect sqlDialect) {
         this.sqlDialect = sqlDialect;
