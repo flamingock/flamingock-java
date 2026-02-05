@@ -24,7 +24,7 @@ import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

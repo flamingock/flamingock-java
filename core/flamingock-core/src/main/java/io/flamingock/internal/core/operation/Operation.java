@@ -1,4 +1,4 @@
-package io.flamingock.internal.core.runner;
+package io.flamingock.internal.core.operation;
 
 public interface Operation<R extends AbstractOperationResult> {
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.runner.apply;
+package io.flamingock.internal.core.operation.apply;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -35,9 +35,9 @@ import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.store.lock.LockException;
-import io.flamingock.internal.core.runner.Operation;
-import io.flamingock.internal.core.runner.OperationException;
-import io.flamingock.internal.core.runner.OperationSummary;
+import io.flamingock.internal.core.operation.Operation;
+import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.core.operation.OperationSummary;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;

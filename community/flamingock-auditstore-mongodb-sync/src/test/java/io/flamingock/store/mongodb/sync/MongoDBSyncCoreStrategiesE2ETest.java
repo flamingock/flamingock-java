@@ -28,7 +28,7 @@ import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
-import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.operation.OperationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

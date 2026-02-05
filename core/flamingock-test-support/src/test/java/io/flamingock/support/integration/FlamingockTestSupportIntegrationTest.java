@@ -18,7 +18,7 @@ package io.flamingock.support.integration;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.internal.common.core.util.Deserializer;
-import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.support.FlamingockTestSupport;
 import io.flamingock.support.inmemory.InMemoryFlamingockBuilder;
 import io.flamingock.support.integration.changes.*;

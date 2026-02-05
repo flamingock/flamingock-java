@@ -20,7 +20,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._001__create_index;

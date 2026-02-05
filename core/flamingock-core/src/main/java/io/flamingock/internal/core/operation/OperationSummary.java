@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.runner;
+package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;

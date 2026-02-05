@@ -30,7 +30,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.internal.util.Trio;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;

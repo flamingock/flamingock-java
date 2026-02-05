@@ -24,7 +24,7 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
-import io.flamingock.internal.core.runner.apply.ApplyOperation;
+import io.flamingock.internal.core.operation.apply.ApplyOperation;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
 

@@ -28,7 +28,7 @@ import io.flamingock.store.mongodb.sync.changes._003__insert_jorge_happy_transac
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
-import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;

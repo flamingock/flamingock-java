@@ -1,7 +1,7 @@
 package io.flamingock.internal.core.builder.runner;
 
-import io.flamingock.internal.core.runner.AbstractOperationResult;
-import io.flamingock.internal.core.runner.Operation;
+import io.flamingock.internal.core.operation.AbstractOperationResult;
+import io.flamingock.internal.core.operation.Operation;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
