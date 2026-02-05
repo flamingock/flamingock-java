@@ -18,7 +18,7 @@ package io.flamingock.support.integration;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.internal.common.core.util.Deserializer;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.support.FlamingockTestSupport;
 import io.flamingock.support.inmemory.InMemoryFlamingockBuilder;
 import io.flamingock.support.integration.changes.*;
@@ -102,7 +102,7 @@ class FlamingockTestSupportIntegrationTest {
                             .addTargetSystem(new NonTransactionalTargetSystem("elasticsearch"))
                             .addTargetSystem(new NonTransactionalTargetSystem("s3")))
                     .whenRun()
-                    .thenExpectException(PipelineExecutionException.class, null)
+                    .thenExpectException(OperationException.class, null)
                     .andExpectAuditFinalStateSequence(
                             FAILED(_006__FailingTransactionalChange.class),
                             ROLLED_BACK(_006__FailingTransactionalChange.class)
@@ -159,7 +159,7 @@ class FlamingockTestSupportIntegrationTest {
             FlamingockTestSupport
                     .givenBuilder(InMemoryFlamingockBuilder.create().addTargetSystem(targetSystem))
                     .whenRun()
-                    .thenExpectException(PipelineExecutionException.class, ex -> {
+                    .thenExpectException(OperationException.class, ex -> {
                         assertTrue(ex.getMessage().contains("Intentional failure"));
                         assertTrue(counter.isExecuted(), "Counter should be executed");
                         assertTrue(counter.isRollbacked(), "Counter should be rolled back");

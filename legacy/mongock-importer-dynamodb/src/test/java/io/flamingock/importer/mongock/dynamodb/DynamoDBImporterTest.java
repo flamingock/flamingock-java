@@ -23,7 +23,7 @@ import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.dynamodb.kit.DynamoDBTableFactory;
 import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.junit.jupiter.api.AfterEach;

@@ -15,8 +15,8 @@
  */
 package io.flamingock.springboot;
 
-import io.flamingock.internal.core.runner.Runner;
-import io.flamingock.internal.core.runner.RunnerBuilder;
+import io.flamingock.internal.core.builder.runner.Runner;
+import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;

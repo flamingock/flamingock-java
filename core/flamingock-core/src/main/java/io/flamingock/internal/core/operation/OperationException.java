@@ -13,28 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.runner;
+package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 
-public class PipelineExecutionException extends FlamingockException {
+public class OperationException extends FlamingockException {
 
-    public static PipelineExecutionException fromExisting(Throwable exception, PipelineSummary summary) {
+    public static OperationException fromExisting(Throwable exception, OperationSummary summary) {
         Throwable cause = exception.getCause();
         return (exception instanceof FlamingockException) && cause != null
-                ? new PipelineExecutionException(cause, summary)
-                : new PipelineExecutionException(exception, summary);
+                ? new OperationException(cause, summary)
+                : new OperationException(exception, summary);
     }
 
-    private final PipelineSummary summary;
+    private final OperationSummary summary;
 
 
-    private PipelineExecutionException(Throwable throwable, PipelineSummary summary) {
+    private OperationException(Throwable throwable, OperationSummary summary) {
         super(throwable);
         this.summary = summary;
     }
 
-    public PipelineSummary getSummary() {
+    public OperationSummary getSummary() {
         return summary;
     }
 
