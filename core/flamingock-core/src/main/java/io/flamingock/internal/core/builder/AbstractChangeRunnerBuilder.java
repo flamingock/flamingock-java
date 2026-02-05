@@ -28,6 +28,7 @@ import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.OperationType;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -195,8 +196,10 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         LoadedPipeline pipeline = loadPipeline();
         pipeline.contributeToContext(hierarchicalContext);
 
-        return RunnerFactory.getApplyRunner(
+        OperationType operation = OperationType.EXECUTE;
+        return RunnerFactory.getRunner(
                 runnerId,
+                operation,
                 pipeline,
                 persistence,
                 buildExecutionPlanner(runnerId),

@@ -47,7 +47,7 @@ import java.util.List;
 
 import static io.flamingock.internal.util.ObjectUtils.requireNonNull;
 
-public class ApplyOperation implements Operation<ApplyResult> {
+public class ExecuteOperation implements Operation<ExecuteResult> {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("PipelineRunner");
 
@@ -67,14 +67,14 @@ public class ApplyOperation implements Operation<ApplyResult> {
 
     private final Runnable finalizer;
 
-    public ApplyOperation(RunnerId runnerId,
-                          LoadedPipeline pipeline,
-                          ExecutionPlanner executionPlanner,
-                          StageExecutor stageExecutor,
-                          OrphanExecutionContext orphanExecutionContext,
-                          EventPublisher eventPublisher,
-                          boolean throwExceptionIfCannotObtainLock,
-                          Runnable finalizer) {
+    public ExecuteOperation(RunnerId runnerId,
+                            LoadedPipeline pipeline,
+                            ExecutionPlanner executionPlanner,
+                            StageExecutor stageExecutor,
+                            OrphanExecutionContext orphanExecutionContext,
+                            EventPublisher eventPublisher,
+                            boolean throwExceptionIfCannotObtainLock,
+                            Runnable finalizer) {
         this.runnerId = runnerId;
         this.pipeline = pipeline;
         this.executionPlanner = executionPlanner;
@@ -187,7 +187,7 @@ public class ApplyOperation implements Operation<ApplyResult> {
 
 
     @Override
-    public ApplyResult execute() {
+    public ExecuteResult execute() {
         try {
             this.execute(pipeline);
         } catch (Throwable throwable) {

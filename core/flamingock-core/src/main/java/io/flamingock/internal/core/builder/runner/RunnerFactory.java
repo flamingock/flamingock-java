@@ -18,15 +18,17 @@ package io.flamingock.internal.core.builder.runner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.OperationType;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
-import io.flamingock.internal.core.operation.apply.ApplyOperation;
+import io.flamingock.internal.core.operation.apply.ExecuteOperation;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
@@ -35,20 +37,32 @@ public final class RunnerFactory {
     private RunnerFactory() {
     }
 
-    public static Runner getApplyRunner(RunnerId runnerId,
-                                        LoadedPipeline pipeline,
-                                        AuditPersistence persistence,
-                                        ExecutionPlanner executionPlanner,
-                                        TargetSystemManager targetSystemManager,
-                                        CoreConfigurable coreConfiguration,
-                                        EventPublisher eventPublisher,
-                                        ContextResolver dependencyContext,
-                                        Set<Class<?>> nonGuardedTypes,
-                                        boolean isThrowExceptionIfCannotObtainLock,
-                                        Runnable finalizer) {
+    public static Runner getRunner(RunnerId runnerId,
+                                   OperationType operationType,
+                                   LoadedPipeline pipeline,
+                                   AuditPersistence persistence,
+                                   ExecutionPlanner executionPlanner,
+                                   TargetSystemManager targetSystemManager,
+                                   CoreConfigurable coreConfiguration,
+                                   EventPublisher eventPublisher,
+                                   ContextResolver dependencyContext,
+                                   Set<Class<?>> nonGuardedTypes,
+                                   boolean isThrowExceptionIfCannotObtainLock,
+                                   Runnable finalizer) {
+        switch (operationType) {
+            case EXECUTE:
+                return getExecuteRunner(runnerId, pipeline, persistence, executionPlanner, targetSystemManager, coreConfiguration, eventPublisher, dependencyContext, nonGuardedTypes, isThrowExceptionIfCannotObtainLock, finalizer);
+            default:
+                throw new UnsupportedOperationException(String.format("Operation %s not supported", operationType));
+        }
 
+
+    }
+
+    @NotNull
+    private static DefaultRunner getExecuteRunner(RunnerId runnerId, LoadedPipeline pipeline, AuditPersistence persistence, ExecutionPlanner executionPlanner, TargetSystemManager targetSystemManager, CoreConfigurable coreConfiguration, EventPublisher eventPublisher, ContextResolver dependencyContext, Set<Class<?>> nonGuardedTypes, boolean isThrowExceptionIfCannotObtainLock, Runnable finalizer) {
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
-        ApplyOperation applyOperation = new ApplyOperation(
+        ExecuteOperation applyOperation = new ExecuteOperation(
                 runnerId,
                 pipeline,
                 executionPlanner,
