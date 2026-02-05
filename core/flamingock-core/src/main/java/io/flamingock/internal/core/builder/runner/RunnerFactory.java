@@ -18,6 +18,9 @@ package io.flamingock.internal.core.builder.runner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.AuditListArgs;
+import io.flamingock.internal.core.operation.AuditListOperation;
+import io.flamingock.internal.core.operation.ExecuteArgs;
 import io.flamingock.internal.core.operation.OperationType;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -25,7 +28,7 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
-import io.flamingock.internal.core.operation.apply.ExecuteOperation;
+import io.flamingock.internal.core.operation.ExecuteOperation;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +55,8 @@ public final class RunnerFactory {
         switch (operationType) {
             case EXECUTE:
                 return getExecuteRunner(runnerId, pipeline, persistence, executionPlanner, targetSystemManager, coreConfiguration, eventPublisher, dependencyContext, nonGuardedTypes, isThrowExceptionIfCannotObtainLock, finalizer);
+            case LIST:
+                return getListRunner(runnerId, persistence, finalizer);
             default:
                 throw new UnsupportedOperationException(String.format("Operation %s not supported", operationType));
         }
@@ -59,10 +64,15 @@ public final class RunnerFactory {
 
     }
 
-    @NotNull
+    private static Runner getListRunner(RunnerId runnerId, AuditPersistence persistence, Runnable finalizer) {
+        AuditListArgs args = new AuditListArgs();
+        AuditListOperation operation = new AuditListOperation(persistence);
+        return new DefaultRunner(runnerId, operation, args, finalizer);
+    }
+
     private static DefaultRunner getExecuteRunner(RunnerId runnerId, LoadedPipeline pipeline, AuditPersistence persistence, ExecutionPlanner executionPlanner, TargetSystemManager targetSystemManager, CoreConfigurable coreConfiguration, EventPublisher eventPublisher, ContextResolver dependencyContext, Set<Class<?>> nonGuardedTypes, boolean isThrowExceptionIfCannotObtainLock, Runnable finalizer) {
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
-        ExecuteOperation applyOperation = new ExecuteOperation(
+        ExecuteOperation operation = new ExecuteOperation(
                 runnerId,
                 pipeline,
                 executionPlanner,
@@ -71,7 +81,8 @@ public final class RunnerFactory {
                 eventPublisher,
                 isThrowExceptionIfCannotObtainLock,
                 finalizer);
-        return new DefaultRunner(runnerId, finalizer, applyOperation);
+        ExecuteArgs args = new ExecuteArgs(pipeline);
+        return new DefaultRunner(runnerId, operation, args, finalizer);
     }
 
 
