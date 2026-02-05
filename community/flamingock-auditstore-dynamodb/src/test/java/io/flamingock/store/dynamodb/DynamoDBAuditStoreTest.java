@@ -30,7 +30,7 @@ import io.flamingock.dynamodb.kit.DynamoDBTestKit;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.runner.OperationException;
 import io.flamingock.internal.util.dynamodb.DynamoDBConstants;
 import io.flamingock.internal.util.dynamodb.DynamoDBUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -176,7 +176,7 @@ class DynamoDBAuditStoreTest {
                         new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class, Collections.singletonList(DynamoDbClient.class)),
                         new CodeChangeTestDefinition(_003__insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(DynamoDbClient.class, TransactWriteItemsEnhancedRequest.Builder.class)))
                 .WHEN(() -> {
-                    assertThrows(PipelineExecutionException.class, () -> {
+                    assertThrows(OperationException.class, () -> {
                         FlamingockFactory.getCommunityBuilder()
                                 .setAuditStore(DynamoDBAuditStore.from(dynamoDBTargetSystem))
                                 .addTargetSystem(dynamoDBTargetSystem)

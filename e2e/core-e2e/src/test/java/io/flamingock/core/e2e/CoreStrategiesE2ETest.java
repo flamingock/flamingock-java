@@ -24,7 +24,7 @@ import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.runner.OperationException;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -155,7 +155,7 @@ class CoreStrategiesE2ETest {
             );
 
             // When & Then - Execution should fail
-            assertThrows(PipelineExecutionException.class, () -> {
+            assertThrows(OperationException.class, () -> {
                 testKit.createBuilder()
                         .addTargetSystem(new NonTransactionalTargetSystem("salesforce"))
                         .addTargetSystem(new NonTransactionalTargetSystem("okta"))
@@ -244,7 +244,7 @@ class CoreStrategiesE2ETest {
                     )
             );
 
-            PipelineExecutionException exception = assertThrows(PipelineExecutionException.class, () -> {
+            OperationException exception = assertThrows(OperationException.class, () -> {
                 testKit.createBuilder()
                         .addTargetSystem(targetSystem)
                         .build()

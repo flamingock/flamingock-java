@@ -43,9 +43,9 @@ import io.flamingock.internal.core.event.model.IStageStartedEvent;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.plugin.PluginManager;
-import io.flamingock.internal.core.runner.PipelineRunnerCreator;
-import io.flamingock.internal.core.runner.Runner;
-import io.flamingock.internal.core.runner.RunnerBuilder;
+import io.flamingock.internal.core.builder.runner.RunnerFactory;
+import io.flamingock.internal.core.builder.runner.Runner;
+import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
@@ -195,10 +195,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         LoadedPipeline pipeline = loadPipeline();
         pipeline.contributeToContext(hierarchicalContext);
 
-
-
-
-        return PipelineRunnerCreator.create(
+        return RunnerFactory.getApplyRunner(
                 runnerId,
                 pipeline,
                 persistence,

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.runner;
+package io.flamingock.internal.core.runner.apply;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -35,6 +35,9 @@ import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.store.lock.LockException;
+import io.flamingock.internal.core.runner.Operation;
+import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.runner.OperationSummary;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -44,7 +47,7 @@ import java.util.List;
 
 import static io.flamingock.internal.util.ObjectUtils.requireNonNull;
 
-public class PipelineRunner implements Runner {
+public class ApplyOperation implements Operation<ApplyResult> {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("PipelineRunner");
 
@@ -64,7 +67,7 @@ public class PipelineRunner implements Runner {
 
     private final Runnable finalizer;
 
-    public PipelineRunner(RunnerId runnerId,
+    public ApplyOperation(RunnerId runnerId,
                           LoadedPipeline pipeline,
                           ExecutionPlanner executionPlanner,
                           StageExecutor stageExecutor,
@@ -92,10 +95,10 @@ public class PipelineRunner implements Runner {
         return stages;
     }
 
-    private void run(LoadedPipeline pipeline) throws FlamingockException {
+    private void execute(LoadedPipeline pipeline) throws FlamingockException {
 
         eventPublisher.publish(new PipelineStartedEvent());
-        PipelineSummary pipelineSummary = null;
+        OperationSummary pipelineSummary = null;
         do {
             List<AbstractLoadedStage> stages = validateAndGetExecutableStages(pipeline);
             try (ExecutionPlan execution = executionPlanner.getNextExecution(stages)) {
@@ -104,9 +107,9 @@ public class PipelineRunner implements Runner {
                 execution.validate();
 
                 if (pipelineSummary == null) {
-                    pipelineSummary = new PipelineSummary(execution.getPipeline());
+                    pipelineSummary = new OperationSummary(execution.getPipeline());
                 }
-                final PipelineSummary pipelineSummaryTemp = pipelineSummary;
+                final OperationSummary pipelineSummaryTemp = pipelineSummary;
                 if (execution.isExecutionRequired()) {
                     execution.applyOnEach((executionId, lock, executableStage) -> {
                         StageSummary stageSummary = runStage(executionId, lock, executableStage);
@@ -130,7 +133,7 @@ public class PipelineRunner implements Runner {
                 //if it's a StageExecutionException, we can safely assume the stage started its
                 //execution, therefor the pipelinesSummary is initialised
                 requireNonNull(pipelineSummary).merge(e.getSummary());
-                throw PipelineExecutionException.fromExisting(e.getCause(), pipelineSummary);
+                throw OperationException.fromExisting(e.getCause(), pipelineSummary);
             }
         } while (true);
 
@@ -164,12 +167,12 @@ public class PipelineRunner implements Runner {
 
     private FlamingockException processAndGetFlamingockException(Throwable exception) throws FlamingockException {
         FlamingockException flamingockException;
-        if (exception instanceof PipelineExecutionException) {
-            PipelineExecutionException pipelineException = (PipelineExecutionException) exception;
+        if (exception instanceof OperationException) {
+            OperationException pipelineException = (OperationException) exception;
             if (pipelineException.getCause() instanceof FlamingockException) {
                 flamingockException = (FlamingockException) pipelineException.getCause();
             } else {
-                flamingockException = (PipelineExecutionException) exception;
+                flamingockException = (OperationException) exception;
             }
         } else if (exception instanceof FlamingockException) {
             flamingockException = (FlamingockException) exception;
@@ -182,14 +185,16 @@ public class PipelineRunner implements Runner {
         return flamingockException;
     }
 
+
     @Override
-    public void run() {
+    public ApplyResult execute() {
         try {
-            this.run(pipeline);
+            this.execute(pipeline);
         } catch (Throwable throwable) {
             throw processAndGetFlamingockException(throwable);
         } finally {
             finalizer.run();
         }
+        return null;
     }
 }

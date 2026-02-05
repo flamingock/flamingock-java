@@ -26,7 +26,7 @@ import io.flamingock.store.mongodb.sync.MongoDBSyncAuditStore;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;

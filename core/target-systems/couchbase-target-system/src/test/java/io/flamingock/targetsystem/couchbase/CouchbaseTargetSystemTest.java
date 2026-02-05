@@ -32,8 +32,8 @@ import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.runner.OperationException;
+import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.util.Trio;
 import io.flamingock.targetsystem.couchbase.changes.happypath._001__HappyCreateClientsCollectionChange;
 import io.flamingock.targetsystem.couchbase.changes.happypath._002__HappyInsertClientsChange;
@@ -233,7 +233,7 @@ public class CouchbaseTargetSystemTest {
             //THEN
             mockRunnerServer.verifyAllCalls();
 
-            PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
+            OperationException ex = Assertions.assertThrows(OperationException.class, runner::run);
 
             // check clients changes
             couchbaseTestHelper.checkCount(bucket.scope(SCOPE_NAME).collection(CLIENTS_COLLECTION), 0);

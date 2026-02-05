@@ -18,7 +18,7 @@ package io.flamingock.support.context;
 import io.flamingock.internal.common.core.audit.AuditReader;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.core.builder.BuilderAccessor;
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.inmemory.InMemoryAuditStore;
 

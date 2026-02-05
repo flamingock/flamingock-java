@@ -27,11 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class PipelineSummary implements StepSummary {
+public class OperationSummary implements StepSummary {
 
     private final LinkedHashMap<String, StageSummary> stageSummaries = new LinkedHashMap<>();
 
-    public PipelineSummary(ExecutablePipeline pipeline) {
+    public OperationSummary(ExecutablePipeline pipeline) {
 
         for (ExecutableStage executableStage : pipeline.getExecutableStages()) {
             StageSummary stageSummary = new StageSummary(executableStage.getName());

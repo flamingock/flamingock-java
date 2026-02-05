@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.runner;
+package io.flamingock.internal.core.builder.runner;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
@@ -24,30 +24,31 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
+import io.flamingock.internal.core.runner.apply.ApplyOperation;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.Set;
 
-public final class PipelineRunnerCreator {
+public final class RunnerFactory {
 
-    private PipelineRunnerCreator() {
+    private RunnerFactory() {
     }
 
-    public static Runner create(RunnerId runnerId,
-                                LoadedPipeline pipeline,
-                                AuditPersistence persistence,
-                                ExecutionPlanner executionPlanner,
-                                TargetSystemManager targetSystemManager,
-                                CoreConfigurable coreConfiguration,
-                                EventPublisher eventPublisher,
-                                ContextResolver dependencyContext,
-                                Set<Class<?>> nonGuardedTypes,
-                                boolean isThrowExceptionIfCannotObtainLock,
-                                Runnable finalizer) {
+    public static Runner getApplyRunner(RunnerId runnerId,
+                                        LoadedPipeline pipeline,
+                                        AuditPersistence persistence,
+                                        ExecutionPlanner executionPlanner,
+                                        TargetSystemManager targetSystemManager,
+                                        CoreConfigurable coreConfiguration,
+                                        EventPublisher eventPublisher,
+                                        ContextResolver dependencyContext,
+                                        Set<Class<?>> nonGuardedTypes,
+                                        boolean isThrowExceptionIfCannotObtainLock,
+                                        Runnable finalizer) {
 
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
-        return new PipelineRunner(
+        ApplyOperation applyOperation = new ApplyOperation(
                 runnerId,
                 pipeline,
                 executionPlanner,
@@ -56,6 +57,7 @@ public final class PipelineRunnerCreator {
                 eventPublisher,
                 isThrowExceptionIfCannotObtainLock,
                 finalizer);
+        return new DefaultRunner(runnerId, finalizer, applyOperation);
     }
 
 

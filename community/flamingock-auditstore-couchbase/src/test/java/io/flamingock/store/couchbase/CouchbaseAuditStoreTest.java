@@ -30,7 +30,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.runner.OperationException;
 import io.flamingock.internal.util.Trio;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
@@ -149,7 +149,7 @@ class CouchbaseAuditStoreTest {
                     new Trio<>(io.flamingock.store.couchbase.changes.failedWithRollback._003__execution_with_exception.class, Collections.singletonList(Collection.class), Collections.singletonList(Collection.class)))
             );
 
-            assertThrows(PipelineExecutionException.class, () -> {
+            assertThrows(OperationException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                         .setAuditStore(CouchbaseAuditStore.from(couchbaseTargetSystem))
                         .addTargetSystem(couchbaseTargetSystem)
@@ -203,7 +203,7 @@ class CouchbaseAuditStoreTest {
                     new Trio<>(_003__execution_with_exception.class, Collections.singletonList(Collection.class)))
             );
 
-            assertThrows(PipelineExecutionException.class, () -> {
+            assertThrows(OperationException.class, () -> {
                 FlamingockFactory.getCommunityBuilder()
                     .setAuditStore(CouchbaseAuditStore.from(couchbaseTargetSystem))
                         .addTargetSystem(couchbaseTargetSystem)
