@@ -18,21 +18,21 @@ package io.flamingock.internal.core.builder.runner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
+import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.AuditListArgs;
 import io.flamingock.internal.core.operation.AuditListOperation;
 import io.flamingock.internal.core.operation.ExecuteArgs;
-import io.flamingock.internal.core.operation.OperationType;
-import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.core.event.EventPublisher;
+import io.flamingock.internal.core.operation.ExecuteOperation;
+import io.flamingock.internal.core.operation.Operation;
+import io.flamingock.internal.core.operation.OperationFactory;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
-import io.flamingock.internal.core.external.targets.TargetSystemManager;
-import io.flamingock.internal.core.operation.ExecuteOperation;
+import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
@@ -42,7 +42,7 @@ public final class RunnerFactory {
     }
 
     public static Runner getRunner(RunnerId runnerId,
-                                   FlamingockArguments args,
+                                   FlamingockArguments flamingockArguments,
                                    LoadedPipeline pipeline,
                                    AuditPersistence persistence,
                                    ExecutionPlanner executionPlanner,
@@ -53,35 +53,25 @@ public final class RunnerFactory {
                                    Set<Class<?>> nonGuardedTypes,
                                    boolean isThrowExceptionIfCannotObtainLock,
                                    Runnable finalizer) {
-        switch (args.getOperation()) {
-            case EXECUTE:
-                return getExecuteRunner(runnerId, pipeline, persistence, executionPlanner, targetSystemManager, coreConfiguration, eventPublisher, dependencyContext, nonGuardedTypes, isThrowExceptionIfCannotObtainLock, finalizer);
-            case LIST:
-                return getListRunner(runnerId, persistence, finalizer);
-            default:
-                throw new UnsupportedOperationException(String.format("Operation %s not supported", args.getOperation()));
-        }
+        OperationFactory operationFactory = new OperationFactory(runnerId, flamingockArguments, pipeline, persistence, executionPlanner, targetSystemManager, coreConfiguration, eventPublisher, dependencyContext, nonGuardedTypes, isThrowExceptionIfCannotObtainLock, finalizer);
+        Operation<?, ?> operation = operationFactory.getOperation();
 
+        if(operation instanceof ExecuteOperation) {
+            return getExecuteRunner(runnerId, pipeline, (ExecuteOperation) operation, finalizer);
+        } else if (operation instanceof AuditListOperation) {
+            return getListRunner(runnerId, (AuditListOperation) operation, finalizer);
+        } else {
+            throw new UnsupportedOperationException(String.format("Operation %s not supported", flamingockArguments.getOperation()));
+        }
 
     }
 
-    private static Runner getListRunner(RunnerId runnerId, AuditPersistence persistence, Runnable finalizer) {
+    private static Runner getListRunner(RunnerId runnerId, AuditListOperation operation, Runnable finalizer) {
         AuditListArgs args = new AuditListArgs();
-        AuditListOperation operation = new AuditListOperation(persistence);
         return new DefaultRunner(runnerId, operation, args, finalizer);
     }
 
-    private static DefaultRunner getExecuteRunner(RunnerId runnerId, LoadedPipeline pipeline, AuditPersistence persistence, ExecutionPlanner executionPlanner, TargetSystemManager targetSystemManager, CoreConfigurable coreConfiguration, EventPublisher eventPublisher, ContextResolver dependencyContext, Set<Class<?>> nonGuardedTypes, boolean isThrowExceptionIfCannotObtainLock, Runnable finalizer) {
-        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
-        ExecuteOperation operation = new ExecuteOperation(
-                runnerId,
-                pipeline,
-                executionPlanner,
-                stageExecutor,
-                buildExecutionContext(coreConfiguration),
-                eventPublisher,
-                isThrowExceptionIfCannotObtainLock,
-                finalizer);
+    private static DefaultRunner getExecuteRunner(RunnerId runnerId, LoadedPipeline pipeline, ExecuteOperation operation, Runnable finalizer) {
         ExecuteArgs args = new ExecuteArgs(pipeline);
         return new DefaultRunner(runnerId, operation, args, finalizer);
     }
