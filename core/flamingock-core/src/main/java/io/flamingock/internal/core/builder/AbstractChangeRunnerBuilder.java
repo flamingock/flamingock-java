@@ -28,7 +28,6 @@ import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
-import io.flamingock.internal.core.operation.OperationType;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -41,10 +40,13 @@ import io.flamingock.internal.core.event.model.IStageCompletedEvent;
 import io.flamingock.internal.core.event.model.IStageFailedEvent;
 import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
 import io.flamingock.internal.core.event.model.IStageStartedEvent;
+import io.flamingock.internal.core.operation.OperationFactory;
+import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.plugin.PluginManager;
-import io.flamingock.internal.core.builder.runner.RunnerFactory;
+import io.flamingock.internal.core.builder.args.FlamingockArguments;
+import io.flamingock.internal.core.builder.runner.DefaultRunner;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import io.flamingock.internal.core.task.filter.TaskFilter;
@@ -90,6 +92,8 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
     protected final PluginManager pluginManager;
 
+    private String[] applicationArgs;
+
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
     private Consumer<IPipelineCompletedEvent> pipelineCompletedListener;
     private Consumer<IPipelineIgnoredEvent> pipelineIgnoredListener;
@@ -119,6 +123,11 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         super(coreConfiguration, context, auditStore);
         this.pluginManager = pluginManager;
 
+    }
+
+    public HOLDER setApplicationArguments(String[] args) {
+        this.applicationArgs = args;
+        return getSelf();
     }
 
     protected abstract void updateContextSpecific();
@@ -196,10 +205,9 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         LoadedPipeline pipeline = loadPipeline();
         pipeline.contributeToContext(hierarchicalContext);
 
-        OperationType operation = OperationType.EXECUTE;
-        return RunnerFactory.getRunner(
+        OperationFactory operationFactory = new OperationFactory(
                 runnerId,
-                operation,
+                FlamingockArguments.parse(applicationArgs),
                 pipeline,
                 persistence,
                 buildExecutionPlanner(runnerId),
@@ -211,6 +219,8 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
                 persistence.getCloser()
         );
+        RunnableOperation<?, ?> operation = operationFactory.getOperation();
+        return new DefaultRunner(runnerId, operation, persistence.getCloser());
     }
 
 

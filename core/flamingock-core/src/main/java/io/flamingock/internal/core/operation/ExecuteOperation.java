@@ -50,8 +50,6 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
 
     private final RunnerId runnerId;
 
-    private final LoadedPipeline pipeline;
-
     private final ExecutionPlanner executionPlanner;
 
     private final EventPublisher eventPublisher;
@@ -65,7 +63,6 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
     private final Runnable finalizer;
 
     public ExecuteOperation(RunnerId runnerId,
-                            LoadedPipeline pipeline,
                             ExecutionPlanner executionPlanner,
                             StageExecutor stageExecutor,
                             OrphanExecutionContext orphanExecutionContext,
@@ -73,7 +70,6 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
                             boolean throwExceptionIfCannotObtainLock,
                             Runnable finalizer) {
         this.runnerId = runnerId;
-        this.pipeline = pipeline;
         this.executionPlanner = executionPlanner;
         this.stageExecutor = stageExecutor;
         this.orphanExecutionContext = orphanExecutionContext;
