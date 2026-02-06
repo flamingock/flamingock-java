@@ -13,9 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation.apply;
+package io.flamingock.internal.core.operation;
 
-import io.flamingock.internal.core.operation.AbstractOperationResult;
+import io.flamingock.internal.common.core.audit.AuditEntry;
 
-public class ExecuteResult extends AbstractOperationResult {
+import java.util.List;
+
+public class AuditListResult extends AbstractOperationResult {
+    private final List<AuditEntry> auditEntries;
+
+    public AuditListResult(List<AuditEntry> auditEntries) {
+        this.auditEntries = auditEntries;
+    }
+
+    public List<AuditEntry> getAuditEntries() {
+        return auditEntries;
+    }
 }

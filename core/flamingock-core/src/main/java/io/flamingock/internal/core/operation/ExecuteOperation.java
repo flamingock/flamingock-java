@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation.apply;
+package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -35,9 +35,6 @@ import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.store.lock.LockException;
-import io.flamingock.internal.core.operation.Operation;
-import io.flamingock.internal.core.operation.OperationException;
-import io.flamingock.internal.core.operation.OperationSummary;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -47,7 +44,7 @@ import java.util.List;
 
 import static io.flamingock.internal.util.ObjectUtils.requireNonNull;
 
-public class ExecuteOperation implements Operation<ExecuteResult> {
+public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("PipelineRunner");
 
@@ -83,6 +80,20 @@ public class ExecuteOperation implements Operation<ExecuteResult> {
         this.eventPublisher = eventPublisher;
         this.throwExceptionIfCannotObtainLock = throwExceptionIfCannotObtainLock;
         this.finalizer = finalizer;
+    }
+
+
+
+    @Override
+    public ExecuteResult execute(ExecuteArgs args) {
+        try {
+            this.execute(args.getPipeline());
+        } catch (Throwable throwable) {
+            throw processAndGetFlamingockException(throwable);
+        } finally {
+            finalizer.run();
+        }
+        return null;
     }
 
     private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
@@ -185,16 +196,4 @@ public class ExecuteOperation implements Operation<ExecuteResult> {
         return flamingockException;
     }
 
-
-    @Override
-    public ExecuteResult execute() {
-        try {
-            this.execute(pipeline);
-        } catch (Throwable throwable) {
-            throw processAndGetFlamingockException(throwable);
-        } finally {
-            finalizer.run();
-        }
-        return null;
-    }
 }

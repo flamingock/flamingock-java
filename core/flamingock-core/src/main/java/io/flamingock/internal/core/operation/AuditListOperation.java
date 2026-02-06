@@ -15,7 +15,18 @@
  */
 package io.flamingock.internal.core.operation;
 
-public interface Operation<T extends OperationArgs, R extends AbstractOperationResult> {
+import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 
-    R execute(T args);
+public class AuditListOperation implements Operation<AuditListArgs, AuditListResult>{
+
+    private final AuditPersistence persistence;
+
+    public AuditListOperation(AuditPersistence persistence) {
+        this.persistence = persistence;
+    }
+
+    @Override
+    public AuditListResult execute(AuditListArgs args) {
+        return new AuditListResult(persistence.getAuditHistory());
+    }
 }

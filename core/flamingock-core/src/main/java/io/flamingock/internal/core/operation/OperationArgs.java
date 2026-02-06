@@ -15,7 +15,5 @@
  */
 package io.flamingock.internal.core.operation;
 
-public interface Operation<T extends OperationArgs, R extends AbstractOperationResult> {
-
-    R execute(T args);
+public interface OperationArgs {
 }
