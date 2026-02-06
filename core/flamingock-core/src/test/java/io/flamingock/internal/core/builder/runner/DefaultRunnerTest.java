@@ -15,10 +15,10 @@
  */
 package io.flamingock.internal.core.builder.runner;
 
-import io.flamingock.internal.core.operation.AbstractOperationResult;
 import io.flamingock.internal.core.operation.AuditListArgs;
 import io.flamingock.internal.core.operation.AuditListResult;
 import io.flamingock.internal.core.operation.Operation;
+import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,12 +41,14 @@ class DefaultRunnerTest {
 
     private RunnerId runnerId;
     private AuditListArgs args;
+    private RunnableOperation<AuditListArgs, AuditListResult> runnableOperation;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         runnerId = RunnerId.generate("test-service");
         args = new AuditListArgs();
+        runnableOperation = new RunnableOperation<>(operation, args);
     }
 
     @Test
@@ -54,7 +56,7 @@ class DefaultRunnerTest {
     void shouldExecuteOperationWhenRunIsCalled() {
         // Given
         when(operation.execute(args)).thenReturn(new AuditListResult(Collections.emptyList()));
-        DefaultRunner runner = new DefaultRunner(runnerId, operation, args, finalizer);
+        DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When
         runner.run();
@@ -68,7 +70,7 @@ class DefaultRunnerTest {
     void shouldCallFinalizerAfterSuccessfulExecution() {
         // Given
         when(operation.execute(args)).thenReturn(new AuditListResult(Collections.emptyList()));
-        DefaultRunner runner = new DefaultRunner(runnerId, operation, args, finalizer);
+        DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When
         runner.run();
@@ -82,7 +84,7 @@ class DefaultRunnerTest {
     void shouldCallFinalizerEvenWhenOperationThrowsException() {
         // Given
         when(operation.execute(args)).thenThrow(new RuntimeException("Test exception"));
-        DefaultRunner runner = new DefaultRunner(runnerId, operation, args, finalizer);
+        DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When & Then
         assertThrows(RuntimeException.class, runner::run);
@@ -95,7 +97,7 @@ class DefaultRunnerTest {
         // Given
         RuntimeException expectedException = new RuntimeException("Operation failed");
         when(operation.execute(args)).thenThrow(expectedException);
-        DefaultRunner runner = new DefaultRunner(runnerId, operation, args, finalizer);
+        DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When & Then
         RuntimeException actualException = assertThrows(RuntimeException.class, runner::run);
@@ -107,7 +109,7 @@ class DefaultRunnerTest {
     void shouldPassCorrectArgsToOperation() {
         // Given
         when(operation.execute(any())).thenReturn(new AuditListResult(Collections.emptyList()));
-        DefaultRunner runner = new DefaultRunner(runnerId, operation, args, finalizer);
+        DefaultRunner runner = new DefaultRunner(runnerId, runnableOperation, finalizer);
 
         // When
         runner.run();
