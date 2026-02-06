@@ -16,8 +16,11 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
+import io.flamingock.internal.common.core.response.data.AuditListResponseData;
+import io.flamingock.internal.common.core.response.data.AuditListResponseData.AuditEntryDto;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AuditListResult extends AbstractOperationResult {
     private final List<AuditEntry> auditEntries;
@@ -28,5 +31,20 @@ public class AuditListResult extends AbstractOperationResult {
 
     public List<AuditEntry> getAuditEntries() {
         return auditEntries;
+    }
+
+    @Override
+    public Object toResponseData() {
+        List<AuditEntryDto> dtos = auditEntries.stream()
+                .map(entry -> new AuditEntryDto(
+                        entry.getTaskId(),
+                        entry.getAuthor(),
+                        entry.getState() != null ? entry.getState().name() : null,
+                        entry.getStageId(),
+                        entry.getCreatedAt(),
+                        entry.getExecutionMillis()
+                ))
+                .collect(Collectors.toList());
+        return new AuditListResponseData(dtos);
     }
 }

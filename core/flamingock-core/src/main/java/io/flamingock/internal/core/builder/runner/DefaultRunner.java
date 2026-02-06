@@ -41,7 +41,7 @@ public class DefaultRunner implements Runner {
     public void run() {
         try {
             AbstractOperationResult result = operation.run();
-            //todo process result
+            //todo process result. Maybe just printing result
         } finally {
             finalizer.run();
         }

@@ -46,9 +46,13 @@ import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.plugin.PluginManager;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
+import io.flamingock.internal.core.builder.runner.CliRunner;
 import io.flamingock.internal.core.builder.runner.DefaultRunner;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
+import io.flamingock.internal.common.core.response.FileResponseChannel;
+import io.flamingock.internal.common.core.response.ResponseChannel;
+import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
@@ -205,9 +209,11 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         LoadedPipeline pipeline = loadPipeline();
         pipeline.contributeToContext(hierarchicalContext);
 
+        FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);
+
         OperationFactory operationFactory = new OperationFactory(
                 runnerId,
-                FlamingockArguments.parse(applicationArgs),
+                flamingockArgs,
                 pipeline,
                 persistence,
                 buildExecutionPlanner(runnerId),
@@ -220,7 +226,13 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 persistence.getCloser()
         );
         RunnableOperation<?, ?> operation = operationFactory.getOperation();
-        return new DefaultRunner(runnerId, operation, persistence.getCloser());
+
+        return flamingockArgs.getOutputFile()
+                .map(outputFile -> {
+                    ResponseChannel channel = new FileResponseChannel(outputFile, JsonObjectMapper.DEFAULT_INSTANCE);
+                    return (Runner) new CliRunner(operation, persistence.getCloser(), channel, flamingockArgs.getOperation());
+                })
+                .orElseGet(() -> new DefaultRunner(runnerId, operation, persistence.getCloser()));
     }
 
 

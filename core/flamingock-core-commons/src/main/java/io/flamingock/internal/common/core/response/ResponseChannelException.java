@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.common.core.response;
 
-import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+/**
+ * Exception thrown when a response channel operation fails.
+ */
+public class ResponseChannelException extends RuntimeException {
 
-public class ExecuteResult extends AbstractOperationResult {
+    public ResponseChannelException(String message) {
+        super(message);
+    }
 
-    @Override
-    public Object toResponseData() {
-        return ExecuteResponseData.placeholder();
+    public ResponseChannelException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

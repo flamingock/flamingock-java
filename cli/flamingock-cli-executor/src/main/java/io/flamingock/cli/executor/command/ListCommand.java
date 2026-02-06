@@ -18,13 +18,22 @@ package io.flamingock.cli.executor.command;
 import io.flamingock.cli.executor.FlamingockExecutorCli;
 import io.flamingock.cli.executor.output.ConsoleFormatter;
 import io.flamingock.cli.executor.process.JvmLauncher;
+import io.flamingock.cli.executor.result.ResponseResultReader;
+import io.flamingock.cli.executor.result.ResponseResultReader.ResponseResult;
 import io.flamingock.cli.executor.util.VersionProvider;
+import io.flamingock.internal.common.core.response.data.AuditListResponseData;
+import io.flamingock.internal.common.core.response.data.AuditListResponseData.AuditEntryDto;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
@@ -92,20 +101,101 @@ public class ListCommand implements Callable<Integer> {
         ConsoleFormatter.printVerbose("JAR file: " + jarFile.getAbsolutePath(), verbose);
         ConsoleFormatter.printInfo("Launching Flamingock audit list...");
 
-        // Launch the application with LIST operation
-        JvmLauncher launcher = new JvmLauncher(verbose);
-        int exitCode = launcher.launch(jarFile.getAbsolutePath(), OPERATION_LIST);
+        Path outputFile = null;
+        try {
+            outputFile = Files.createTempFile("flamingock-response-", ".json");
+            ConsoleFormatter.printVerbose("Response file: " + outputFile, verbose);
 
-        // Print result message
-        if (exitCode == 0) {
+            JvmLauncher launcher = new JvmLauncher(verbose);
+            int exitCode = launcher.launch(jarFile.getAbsolutePath(), OPERATION_LIST, outputFile.toString());
+
+            if (exitCode == 0 && Files.exists(outputFile)) {
+                ResponseResultReader reader = new ResponseResultReader();
+                ResponseResult<AuditListResponseData> result = reader.readTyped(outputFile, AuditListResponseData.class);
+
+                if (result.isSuccess() && result.getData() != null) {
+                    displayAuditEntries(result.getData().getEntries(), quiet);
+                } else if (!result.isSuccess()) {
+                    ConsoleFormatter.printError("Error: " + result.getErrorMessage());
+                    return 1;
+                }
+            } else if (exitCode != 0) {
+                if (Files.exists(outputFile)) {
+                    ResponseResultReader reader = new ResponseResultReader();
+                    ResponseResult<AuditListResponseData> result = reader.readTyped(outputFile, AuditListResponseData.class);
+                    if (!result.isSuccess()) {
+                        ConsoleFormatter.printError("Error [" + result.getErrorCode() + "]: " + result.getErrorMessage());
+                    }
+                }
+                ConsoleFormatter.printError("Audit list operation failed.");
+                return exitCode;
+            }
+
             if (!quiet) {
                 ConsoleFormatter.printInfo("Audit list completed successfully.");
             }
-        } else {
-            ConsoleFormatter.printError("Audit list operation failed.");
+            return 0;
+
+        } catch (IOException e) {
+            ConsoleFormatter.printError("Failed to create temporary file: " + e.getMessage());
+            return 1;
+        } finally {
+            if (outputFile != null) {
+                try {
+                    Files.deleteIfExists(outputFile);
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
+    private void displayAuditEntries(List<AuditEntryDto> entries, boolean quiet) {
+        if (entries == null || entries.isEmpty()) {
+            if (!quiet) {
+                ConsoleFormatter.printInfo("No audit entries found.");
+            }
+            return;
         }
 
-        return exitCode;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        System.out.println();
+        System.out.printf("%-30s %-15s %-12s %-15s %-20s %10s%n",
+                "TASK ID", "AUTHOR", "STATE", "STAGE", "CREATED AT", "DURATION");
+        System.out.println(repeatChar('-', 110));
+
+        for (AuditEntryDto entry : entries) {
+            String taskId = truncate(entry.getTaskId(), 30);
+            String author = truncate(entry.getAuthor(), 15);
+            String state = truncate(entry.getState(), 12);
+            String stageId = truncate(entry.getStageId(), 15);
+            String createdAt = entry.getCreatedAt() != null ? entry.getCreatedAt().format(formatter) : "";
+            String duration = entry.getExecutionMillis() + "ms";
+
+            System.out.printf("%-30s %-15s %-12s %-15s %-20s %10s%n",
+                    taskId, author, state, stageId, createdAt, duration);
+        }
+
+        System.out.println();
+        System.out.println("Total entries: " + entries.size());
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (value == null) {
+            return "";
+        }
+        if (value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, maxLength - 3) + "...";
+    }
+
+    private String repeatChar(char c, int count) {
+        StringBuilder sb = new StringBuilder(count);
+        for (int i = 0; i < count; i++) {
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     private FlamingockExecutorCli getRootCommand() {

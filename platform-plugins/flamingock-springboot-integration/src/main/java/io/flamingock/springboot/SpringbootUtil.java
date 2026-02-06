@@ -41,27 +41,17 @@ public final class SpringbootUtil {
     }
 
     /**
-     * Creates an ApplicationRunner for CLI mode that executes Flamingock and then
-     * calls System.exit() with the appropriate exit code.
+     * Creates an ApplicationRunner for CLI mode that executes Flamingock.
+     * If a CliRunner is built (when output file is specified), it handles
+     * flush and exit internally. Otherwise, this method handles them.
      *
      * @param runnerBuilder the runner builder
-     * @return an ApplicationRunner that exits after execution
+     * @return an ApplicationRunner for CLI execution
      */
     public static ApplicationRunner toCliApplicationRunner(RunnerBuilder runnerBuilder) {
         return args -> {
-            try {
-                Runner runner = runnerBuilder.build();
-                runner.run();
-                // Flush output before exit
-                System.out.flush();
-                System.err.flush();
-                System.exit(0);
-            } catch (Exception e) {
-                // Flush output before exit
-                System.out.flush();
-                System.err.flush();
-                System.exit(1);
-            }
+            Runner runner = runnerBuilder.build();
+            runner.run();
         };
     }
 
