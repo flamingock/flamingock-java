@@ -44,6 +44,7 @@ import io.flamingock.internal.core.event.model.IStageStartedEvent;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
 import io.flamingock.internal.core.plugin.PluginManager;
+import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.builder.runner.RunnerFactory;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
@@ -90,6 +91,8 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
     protected final PluginManager pluginManager;
 
+    private String[] applicationArgs;
+
     private Consumer<IPipelineStartedEvent> pipelineStartedListener;
     private Consumer<IPipelineCompletedEvent> pipelineCompletedListener;
     private Consumer<IPipelineIgnoredEvent> pipelineIgnoredListener;
@@ -119,6 +122,11 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         super(coreConfiguration, context, auditStore);
         this.pluginManager = pluginManager;
 
+    }
+
+    public HOLDER setApplicationArguments(String[] args) {
+        this.applicationArgs = args;
+        return getSelf();
     }
 
     protected abstract void updateContextSpecific();
@@ -177,6 +185,8 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     @Override
     public final Runner build() {
 
+        FlamingockArguments flamingockArguments = FlamingockArguments.parse(applicationArgs);
+
         ChangeTemplateManager.loadTemplates();
         pluginManager.initialize(context);
 
@@ -196,10 +206,9 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         LoadedPipeline pipeline = loadPipeline();
         pipeline.contributeToContext(hierarchicalContext);
 
-        OperationType operation = OperationType.EXECUTE;
         return RunnerFactory.getRunner(
                 runnerId,
-                operation,
+                flamingockArguments,
                 pipeline,
                 persistence,
                 buildExecutionPlanner(runnerId),

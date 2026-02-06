@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.builder.runner;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 import io.flamingock.internal.core.operation.AuditListArgs;
@@ -41,7 +42,7 @@ public final class RunnerFactory {
     }
 
     public static Runner getRunner(RunnerId runnerId,
-                                   OperationType operationType,
+                                   FlamingockArguments args,
                                    LoadedPipeline pipeline,
                                    AuditPersistence persistence,
                                    ExecutionPlanner executionPlanner,
@@ -52,13 +53,13 @@ public final class RunnerFactory {
                                    Set<Class<?>> nonGuardedTypes,
                                    boolean isThrowExceptionIfCannotObtainLock,
                                    Runnable finalizer) {
-        switch (operationType) {
+        switch (args.getOperation()) {
             case EXECUTE:
                 return getExecuteRunner(runnerId, pipeline, persistence, executionPlanner, targetSystemManager, coreConfiguration, eventPublisher, dependencyContext, nonGuardedTypes, isThrowExceptionIfCannotObtainLock, finalizer);
             case LIST:
                 return getListRunner(runnerId, persistence, finalizer);
             default:
-                throw new UnsupportedOperationException(String.format("Operation %s not supported", operationType));
+                throw new UnsupportedOperationException(String.format("Operation %s not supported", args.getOperation()));
         }
 
 

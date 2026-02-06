@@ -32,26 +32,30 @@ public class FlamingockArguments {
 
     private final boolean cliMode;
     private final OperationType operation;
+    private final boolean operationProvided;
     private final String outputFile;
     private final Map<String, String> remainingArgs;
 
     private FlamingockArguments(boolean cliMode,
                                 OperationType operation,
+                                boolean operationProvided,
                                 String outputFile,
                                 Map<String, String> remainingArgs) {
         this.cliMode = cliMode;
         this.operation = operation;
+        this.operationProvided = operationProvided;
         this.outputFile = outputFile;
         this.remainingArgs = Collections.unmodifiableMap(remainingArgs);
     }
 
     public static FlamingockArguments parse(String[] args) {
         if (args == null || args.length == 0) {
-            return new FlamingockArguments(false, null, null, Collections.emptyMap());
+            return new FlamingockArguments(false, OperationType.EXECUTE, false, null, Collections.emptyMap());
         }
 
         boolean cliMode = false;
         OperationType operation = null;
+        boolean operationProvided = false;
         String outputFile = null;
         Map<String, String> remaining = new HashMap<>();
 
@@ -86,6 +90,7 @@ public class FlamingockArguments {
                 cliMode = parseBoolean(key, value);
             } else if (KEY_OPERATION.equals(key)) {
                 operation = parseOperationType(key, value);
+                operationProvided = true;
             } else if (KEY_OUTPUT_FILE.equals(key)) {
                 outputFile = requireValue(key, value);
             } else {
@@ -97,7 +102,8 @@ public class FlamingockArguments {
             }
         }
 
-        return new FlamingockArguments(cliMode, operation, outputFile, remaining);
+        OperationType effectiveOperation = operationProvided ? operation : OperationType.EXECUTE;
+        return new FlamingockArguments(cliMode, effectiveOperation, operationProvided, outputFile, remaining);
     }
 
     private static boolean parseBoolean(String key, String value) {
@@ -141,8 +147,12 @@ public class FlamingockArguments {
         return cliMode;
     }
 
-    public Optional<OperationType> getOperation() {
-        return Optional.ofNullable(operation);
+    public OperationType getOperation() {
+        return operation;
+    }
+
+    public boolean isOperationProvided() {
+        return operationProvided;
     }
 
     public Optional<String> getOutputFile() {
@@ -151,13 +161,5 @@ public class FlamingockArguments {
 
     public Map<String, String> getRemainingArgs() {
         return remainingArgs;
-    }
-
-    public boolean hasOperation() {
-        return operation != null;
-    }
-
-    public boolean hasOutputFile() {
-        return outputFile != null;
     }
 }
