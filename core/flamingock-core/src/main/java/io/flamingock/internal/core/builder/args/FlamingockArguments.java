@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ArgumentsProcessor {
+public class FlamingockArguments {
 
     public static final String KEY_CLI_MODE = "flamingock.cli.mode";
     public static final String KEY_OPERATION = "flamingock.operation";
@@ -35,19 +35,19 @@ public class ArgumentsProcessor {
     private final String outputFile;
     private final Map<String, String> remainingArgs;
 
-    private ArgumentsProcessor(boolean cliMode,
-                               OperationType operation,
-                               String outputFile,
-                               Map<String, String> remainingArgs) {
+    private FlamingockArguments(boolean cliMode,
+                                OperationType operation,
+                                String outputFile,
+                                Map<String, String> remainingArgs) {
         this.cliMode = cliMode;
         this.operation = operation;
         this.outputFile = outputFile;
         this.remainingArgs = Collections.unmodifiableMap(remainingArgs);
     }
 
-    public static ArgumentsProcessor parse(String[] args) {
+    public static FlamingockArguments parse(String[] args) {
         if (args == null || args.length == 0) {
-            return new ArgumentsProcessor(false, null, null, Collections.emptyMap());
+            return new FlamingockArguments(false, null, null, Collections.emptyMap());
         }
 
         boolean cliMode = false;
@@ -97,7 +97,7 @@ public class ArgumentsProcessor {
             }
         }
 
-        return new ArgumentsProcessor(cliMode, operation, outputFile, remaining);
+        return new FlamingockArguments(cliMode, operation, outputFile, remaining);
     }
 
     private static boolean parseBoolean(String key, String value) {
