@@ -15,6 +15,7 @@
  */
 package io.flamingock.springboot;
 
+import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import org.springframework.beans.factory.InitializingBean;
@@ -48,9 +49,11 @@ public final class SpringbootUtil {
      * @param runnerBuilder the runner builder
      * @return an ApplicationRunner for CLI execution
      */
-    public static ApplicationRunner toCliApplicationRunner(RunnerBuilder runnerBuilder) {
+    public static ApplicationRunner toCliApplicationRunner(AbstractChangeRunnerBuilder<?, ?> runnerBuilder) {
         return args -> {
-            Runner runner = runnerBuilder.build();
+            Runner runner = runnerBuilder
+                    .setApplicationArguments(args.getSourceArgs())
+                    .build();
             runner.run();
         };
     }
