@@ -27,6 +27,7 @@ import io.flamingock.internal.core.operation.ExecuteArgs;
 import io.flamingock.internal.core.operation.ExecuteOperation;
 import io.flamingock.internal.core.operation.Operation;
 import io.flamingock.internal.core.operation.OperationFactory;
+import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
@@ -54,7 +55,7 @@ public final class RunnerFactory {
                                    boolean isThrowExceptionIfCannotObtainLock,
                                    Runnable finalizer) {
         OperationFactory operationFactory = new OperationFactory(runnerId, flamingockArguments, pipeline, persistence, executionPlanner, targetSystemManager, coreConfiguration, eventPublisher, dependencyContext, nonGuardedTypes, isThrowExceptionIfCannotObtainLock, finalizer);
-        Operation<?, ?> operation = operationFactory.getOperation();
+        RunnableOperation<?, ?> operation = operationFactory.getOperation();
 
         if(operation instanceof ExecuteOperation) {
             return getExecuteRunner(runnerId, pipeline, (ExecuteOperation) operation, finalizer);

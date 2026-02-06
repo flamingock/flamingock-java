@@ -16,35 +16,32 @@
 package io.flamingock.internal.core.builder.runner;
 
 import io.flamingock.internal.core.operation.AbstractOperationResult;
-import io.flamingock.internal.core.operation.Operation;
-import io.flamingock.internal.core.operation.OperationArgs;
+import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 public class DefaultRunner implements Runner {
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("PipelineRunner");
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("flamingock.runner");
 
     private final RunnerId runnerId;
-    private final Runnable runnerOps;
+    private final RunnableOperation<?, ?> operation;
     private final Runnable finalizer;
 
 
-    public <T extends OperationArgs> DefaultRunner(RunnerId runnerId,
-                                                   Operation<T, ?> operation,
-                                                   T args,
-                                                   Runnable finalizer) {
+    public DefaultRunner(RunnerId runnerId,
+                         RunnableOperation<?, ?> operation,
+                         Runnable finalizer) {
         this.runnerId = runnerId;
         this.finalizer = finalizer;
-        runnerOps = () -> {
-            AbstractOperationResult result = operation.execute(args);
-        };
+        this.operation = operation;
     }
 
     @Override
     public void run() {
         try {
-            runnerOps.run();
+            AbstractOperationResult result = operation.run();
+            //todo process result
         } finally {
             finalizer.run();
         }

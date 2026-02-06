@@ -27,6 +27,7 @@ import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
@@ -71,30 +72,33 @@ public class OperationFactory {
         this.finalizer = finalizer;
     }
 
-    public  Operation<?,?> getOperation() {
+    public  RunnableOperation<?, ?> getOperation() {
         switch (flamingockArgs.getOperation()) {
             case EXECUTE:
-                return getExecuteRunner();
+                return getExecuteOperation();
             case LIST:
-                return new AuditListOperation(persistence);
+                return getAuditListOperation();
             default:
                 throw new UnsupportedOperationException(String.format("Operation %s not supported", flamingockArgs.getOperation()));
         }
-
-
     }
 
-    private  ExecuteOperation getExecuteRunner() {
+    private RunnableOperation<AuditListArgs, AuditListResult> getAuditListOperation() {
+        AuditListOperation auditListOperation = new AuditListOperation(persistence);
+        return new RunnableOperation<>(auditListOperation, new AuditListArgs());
+    }
+
+    private  RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteOperation() {
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
-        return new ExecuteOperation(
+        ExecuteOperation executeOperation = new ExecuteOperation(
                 runnerId,
-                pipeline,
                 executionPlanner,
                 stageExecutor,
                 buildExecutionContext(coreConfiguration),
                 eventPublisher,
                 isThrowExceptionIfCannotObtainLock,
                 finalizer);
+        return new RunnableOperation<>(executeOperation, new ExecuteArgs(pipeline));
     }
 
 
