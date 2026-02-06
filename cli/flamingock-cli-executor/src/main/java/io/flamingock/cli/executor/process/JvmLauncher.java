@@ -51,12 +51,24 @@ public class JvmLauncher {
 
     /**
      * Launches the application with Flamingock CLI mode enabled.
+     * Uses the default EXECUTE operation.
      *
      * @param jarPath absolute path to the application JAR
      * @return the process exit code (0 = success, non-zero = failure)
      */
     public int launch(String jarPath) {
-        List<String> command = buildCommand(jarPath);
+        return launch(jarPath, null);
+    }
+
+    /**
+     * Launches the application with Flamingock CLI mode enabled and a specific operation.
+     *
+     * @param jarPath   absolute path to the application JAR
+     * @param operation the Flamingock operation to execute (e.g., "EXECUTE", "LIST"), or null for default
+     * @return the process exit code (0 = success, non-zero = failure)
+     */
+    public int launch(String jarPath, String operation) {
+        List<String> command = buildCommand(jarPath, operation);
 
         if (verbose) {
             ConsoleFormatter.printVerbose("Executing command: " + String.join(" ", command), true);
@@ -98,10 +110,11 @@ public class JvmLauncher {
     /**
      * Builds the command line for launching the application.
      *
-     * @param jarPath path to the JAR file
+     * @param jarPath   path to the JAR file
+     * @param operation the Flamingock operation to execute, or null for default
      * @return the command as a list of strings
      */
-    List<String> buildCommand(String jarPath) {
+    List<String> buildCommand(String jarPath, String operation) {
         List<String> command = new ArrayList<>();
 
         // Find the java executable
@@ -122,6 +135,11 @@ public class JvmLauncher {
 
         // Enable Flamingock CLI mode
         command.add("--flamingock.cli.mode=true");
+
+        // Add operation if specified
+        if (operation != null && !operation.isEmpty()) {
+            command.add("--flamingock.operation=" + operation);
+        }
 
         return command;
     }

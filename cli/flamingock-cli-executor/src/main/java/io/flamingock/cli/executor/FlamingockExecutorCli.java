@@ -15,6 +15,7 @@
  */
 package io.flamingock.cli.executor;
 
+import io.flamingock.cli.executor.command.AuditCommand;
 import io.flamingock.cli.executor.command.ExecuteCommand;
 import io.flamingock.cli.executor.handler.ExecutorExceptionHandler;
 import io.flamingock.cli.executor.util.VersionProvider;
@@ -41,11 +42,12 @@ import picocli.CommandLine.Option;
                 "",
                 "@|bold Examples:|@",
                 "  flamingock execute apply --jar ./app.jar",
+                "  flamingock audit list --jar ./app.jar",
                 "  flamingock --verbose execute apply --jar ./my-app.jar",
                 "",
                 "For detailed help on any command, use: flamingock <command> --help"
         },
-        subcommands = {ExecuteCommand.class},
+        subcommands = {ExecuteCommand.class, AuditCommand.class},
         mixinStandardHelpOptions = true,
         versionProvider = VersionProvider.class
 )

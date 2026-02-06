@@ -28,26 +28,26 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 /**
- * Command to apply pending Flamingock changes.
+ * Command to list audit entries from the Flamingock audit store.
  *
  * <p>This command spawns the user's application JAR with special flags
- * that enable CLI mode in Flamingock, executes all pending changes,
- * and returns the result via exit code.</p>
+ * that enable CLI mode in Flamingock and executes the LIST operation,
+ * which retrieves the audit history.</p>
  *
  * <p>Exit codes:</p>
  * <ul>
- *   <li>0 - Success (all changes applied)</li>
- *   <li>1 - Failure (execution error or change failed)</li>
+ *   <li>0 - Success</li>
+ *   <li>1 - Failure (execution error)</li>
  *   <li>2 - Usage error (invalid CLI arguments)</li>
  *   <li>126 - JAR not found</li>
  * </ul>
  */
 @Command(
-        name = "apply",
-        description = "Apply pending Flamingock changes",
+        name = "list",
+        description = "List audit entries from the change history",
         mixinStandardHelpOptions = true
 )
-public class ApplyCommand implements Callable<Integer> {
+public class ListCommand implements Callable<Integer> {
 
     /**
      * Exit code when JAR file is not found.
@@ -55,12 +55,12 @@ public class ApplyCommand implements Callable<Integer> {
     public static final int EXIT_JAR_NOT_FOUND = 126;
 
     /**
-     * Operation string for EXECUTE operation (matches FlamingockArguments parsing).
+     * Operation string for LIST operation (matches FlamingockArguments parsing).
      */
-    private static final String OPERATION_EXECUTE = "EXECUTE";
+    private static final String OPERATION_LIST = "LIST";
 
     @ParentCommand
-    private ExecuteCommand parent;
+    private AuditCommand parent;
 
     @Option(names = {"--jar", "-j"},
             description = "Path to the application JAR",
@@ -90,19 +90,19 @@ public class ApplyCommand implements Callable<Integer> {
         }
 
         ConsoleFormatter.printVerbose("JAR file: " + jarFile.getAbsolutePath(), verbose);
-        ConsoleFormatter.printInfo("Launching Flamingock execution...");
+        ConsoleFormatter.printInfo("Launching Flamingock audit list...");
 
-        // Launch the application with EXECUTE operation
+        // Launch the application with LIST operation
         JvmLauncher launcher = new JvmLauncher(verbose);
-        int exitCode = launcher.launch(jarFile.getAbsolutePath(), OPERATION_EXECUTE);
+        int exitCode = launcher.launch(jarFile.getAbsolutePath(), OPERATION_LIST);
 
         // Print result message
         if (exitCode == 0) {
             if (!quiet) {
-                ConsoleFormatter.printSuccess();
+                ConsoleFormatter.printInfo("Audit list completed successfully.");
             }
         } else {
-            ConsoleFormatter.printFailure();
+            ConsoleFormatter.printError("Audit list operation failed.");
         }
 
         return exitCode;
@@ -113,13 +113,8 @@ public class ApplyCommand implements Callable<Integer> {
             return null;
         }
         // Navigate up the command hierarchy to find the root
-        CommandLine.Model.CommandSpec spec = parent.getClass().getAnnotation(Command.class) != null
-                ? CommandLine.Model.CommandSpec.forAnnotatedObject(parent)
-                : null;
-
-        // Try to get the parent directly through field access
         try {
-            java.lang.reflect.Field parentField = ExecuteCommand.class.getDeclaredField("parent");
+            java.lang.reflect.Field parentField = AuditCommand.class.getDeclaredField("parent");
             parentField.setAccessible(true);
             Object grandParent = parentField.get(parent);
             if (grandParent instanceof FlamingockExecutorCli) {
