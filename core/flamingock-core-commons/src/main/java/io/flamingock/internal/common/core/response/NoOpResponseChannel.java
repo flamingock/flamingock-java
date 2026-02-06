@@ -13,14 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.common.core.response;
 
-import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
-
-public class ExecuteResult extends AbstractOperationResult {
+/**
+ * A response channel that does nothing.
+ * Used in CLI mode when no output file is specified.
+ */
+public class NoOpResponseChannel implements ResponseChannel {
 
     @Override
-    public Object toResponseData() {
-        return ExecuteResponseData.placeholder();
+    public void write(ResponseEnvelope envelope) throws ResponseChannelException {
+        // No-op: discard the response
+    }
+
+    @Override
+    public void close() {
+        // No-op: nothing to close
     }
 }

@@ -5,10 +5,17 @@ plugins {
 
 description = "Flamingock CLI for executing changes in applications"
 
+val jacksonVersion = "2.16.0"
+
 dependencies {
     // CLI Framework
     implementation("info.picocli:picocli:4.7.5")
     annotationProcessor("info.picocli:picocli-codegen:4.7.5")
+
+    // Core dependencies for response handling
+    implementation(project(":core:flamingock-core-commons"))
+    implementation(project(":utils:general-util"))
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")

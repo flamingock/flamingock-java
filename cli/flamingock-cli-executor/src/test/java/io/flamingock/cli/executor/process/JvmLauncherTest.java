@@ -30,7 +30,7 @@ class JvmLauncherTest {
     @Test
     void buildCommand_shouldContainJarFlag() {
         JvmLauncher launcher = new JvmLauncher(false);
-        List<String> command = launcher.buildCommand("/path/to/app.jar");
+        List<String> command = launcher.buildCommand("/path/to/app.jar", null);
 
         assertTrue(command.contains("-jar"));
         assertTrue(command.contains("/path/to/app.jar"));
@@ -39,7 +39,7 @@ class JvmLauncherTest {
     @Test
     void buildCommand_shouldContainSpringWebDisabled() {
         JvmLauncher launcher = new JvmLauncher(false);
-        List<String> command = launcher.buildCommand("/path/to/app.jar");
+        List<String> command = launcher.buildCommand("/path/to/app.jar", null);
 
         assertTrue(command.contains("--spring.main.web-application-type=none"));
     }
@@ -47,7 +47,7 @@ class JvmLauncherTest {
     @Test
     void buildCommand_shouldContainCliProfile() {
         JvmLauncher launcher = new JvmLauncher(false);
-        List<String> command = launcher.buildCommand("/path/to/app.jar");
+        List<String> command = launcher.buildCommand("/path/to/app.jar", null);
 
         assertTrue(command.contains("--spring.profiles.include=flamingock-cli"));
     }
@@ -55,7 +55,7 @@ class JvmLauncherTest {
     @Test
     void buildCommand_shouldContainCliModeFlag() {
         JvmLauncher launcher = new JvmLauncher(false);
-        List<String> command = launcher.buildCommand("/path/to/app.jar");
+        List<String> command = launcher.buildCommand("/path/to/app.jar", null);
 
         assertTrue(command.contains("--flamingock.cli.mode=true"));
     }
@@ -63,17 +63,47 @@ class JvmLauncherTest {
     @Test
     void buildCommand_shouldDisableBanner() {
         JvmLauncher launcher = new JvmLauncher(false);
-        List<String> command = launcher.buildCommand("/path/to/app.jar");
+        List<String> command = launcher.buildCommand("/path/to/app.jar", null);
 
         assertTrue(command.contains("--spring.main.banner-mode=off"));
     }
 
     @Test
-    void buildCommand_shouldHaveCorrectFlagCount() {
+    void buildCommand_shouldHaveCorrectFlagCountWithoutOperation() {
         JvmLauncher launcher = new JvmLauncher(false);
-        List<String> command = launcher.buildCommand("/path/to/app.jar");
+        List<String> command = launcher.buildCommand("/path/to/app.jar", null);
 
         // java -jar <jar> + 4 flags = 7 elements
+        assertEquals(7, command.size());
+    }
+
+    @Test
+    void buildCommand_shouldIncludeOperationWhenProvided() {
+        JvmLauncher launcher = new JvmLauncher(false);
+        List<String> command = launcher.buildCommand("/path/to/app.jar", "EXECUTE");
+
+        assertTrue(command.contains("--flamingock.operation=EXECUTE"));
+        // java -jar <jar> + 4 flags + operation = 8 elements
+        assertEquals(8, command.size());
+    }
+
+    @Test
+    void buildCommand_shouldIncludeListOperation() {
+        JvmLauncher launcher = new JvmLauncher(false);
+        List<String> command = launcher.buildCommand("/path/to/app.jar", "LIST");
+
+        assertTrue(command.contains("--flamingock.operation=LIST"));
+    }
+
+    @Test
+    void buildCommand_shouldNotIncludeOperationWhenEmpty() {
+        JvmLauncher launcher = new JvmLauncher(false);
+        List<String> command = launcher.buildCommand("/path/to/app.jar", "");
+
+        // Should not contain any operation flag
+        for (String arg : command) {
+            assertTrue(!arg.startsWith("--flamingock.operation="));
+        }
         assertEquals(7, command.size());
     }
 

@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.common.core.response;
 
 /**
- * Base class for all operation results.
+ * Interface for writing operation results to a communication channel.
+ * This abstraction allows different implementations for file-based,
+ * stdout-based, or network-based result communication.
  */
-public abstract class AbstractOperationResult {
+public interface ResponseChannel {
 
     /**
-     * Transforms this result into a response data object suitable for CLI communication.
+     * Writes the response envelope to the channel.
      *
-     * @return the response data object for this result
+     * @param envelope the response envelope to write
+     * @throws ResponseChannelException if writing fails
      */
-    public abstract Object toResponseData();
+    void write(ResponseEnvelope envelope) throws ResponseChannelException;
+
+    /**
+     * Closes the channel and releases any resources.
+     */
+    void close();
 }
