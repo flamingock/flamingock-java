@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 /**
@@ -76,8 +77,11 @@ public class ApplyCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         FlamingockExecutorCli root = getRootCommand();
-        boolean verbose = root != null && root.isVerbose();
         boolean quiet = root != null && root.isQuiet();
+        Optional<String> logLevel = root != null ? root.getLogLevel() : Optional.empty();
+
+        // Execution ops: always stream output by default
+        boolean streamOutput = true;
 
         // Print header unless quiet mode
         if (!quiet) {
@@ -95,46 +99,31 @@ public class ApplyCommand implements Callable<Integer> {
             return EXIT_JAR_NOT_FOUND;
         }
 
-        ConsoleFormatter.printVerbose("JAR file: " + jarFile.getAbsolutePath(), verbose);
-        ConsoleFormatter.printInfo("Launching Flamingock execution...");
-
         Path outputFile = null;
         try {
             outputFile = Files.createTempFile("flamingock-response-", ".json");
-            ConsoleFormatter.printVerbose("Response file: " + outputFile, verbose);
 
-            JvmLauncher launcher = new JvmLauncher(verbose);
-            int exitCode = launcher.launch(jarFile.getAbsolutePath(), OPERATION_EXECUTE, outputFile.toString());
+            JvmLauncher launcher = new JvmLauncher();
+            int exitCode = launcher.launch(
+                    jarFile.getAbsolutePath(),
+                    OPERATION_EXECUTE,
+                    outputFile.toString(),
+                    logLevel.orElse(null),
+                    streamOutput
+            );
 
-            if (exitCode == 0 && Files.exists(outputFile)) {
-                ResponseResultReader reader = new ResponseResultReader();
-                ResponseResult<ExecuteResponseData> result = reader.readTyped(outputFile, ExecuteResponseData.class);
+            ResponseResultReader reader = new ResponseResultReader();
+            ResponseResult<ExecuteResponseData> result = reader.readTyped(outputFile, ExecuteResponseData.class);
 
-                if (result.isSuccess()) {
-                    if (!quiet) {
-                        ConsoleFormatter.printSuccess();
-                        if (result.getData() != null && result.getData().getMessage() != null) {
-                            ConsoleFormatter.printInfo(result.getData().getMessage());
-                        }
-                        ConsoleFormatter.printInfo("Duration: " + result.getDurationMs() + "ms");
-                    }
-                } else {
-                    ConsoleFormatter.printError("Error: " + result.getErrorMessage());
-                    return 1;
+            if (exitCode == 0 && result.isSuccess()) {
+                if (!quiet) {
+                    ConsoleFormatter.printSuccess(result.getDurationMs());
                 }
-            } else if (exitCode != 0) {
-                if (Files.exists(outputFile)) {
-                    ResponseResultReader reader = new ResponseResultReader();
-                    ResponseResult<ExecuteResponseData> result = reader.readTyped(outputFile, ExecuteResponseData.class);
-                    if (!result.isSuccess()) {
-                        ConsoleFormatter.printError("Error [" + result.getErrorCode() + "]: " + result.getErrorMessage());
-                    }
-                }
-                ConsoleFormatter.printFailure();
-                return exitCode;
+                return 0;
+            } else {
+                ConsoleFormatter.printFailure(result.getErrorCode(), result.getErrorMessage());
+                return exitCode != 0 ? exitCode : 1;
             }
-
-            return 0;
 
         } catch (IOException e) {
             ConsoleFormatter.printError("Failed to create temporary file: " + e.getMessage());

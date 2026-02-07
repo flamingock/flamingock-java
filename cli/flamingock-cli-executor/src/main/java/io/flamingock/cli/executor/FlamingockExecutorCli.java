@@ -23,6 +23,8 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.util.Optional;
+
 /**
  * Main entry point for the Flamingock CLI.
  *
@@ -43,7 +45,7 @@ import picocli.CommandLine.Option;
                 "@|bold Examples:|@",
                 "  flamingock execute apply --jar ./app.jar",
                 "  flamingock audit list --jar ./app.jar",
-                "  flamingock --verbose execute apply --jar ./my-app.jar",
+                "  flamingock --log-level=debug execute apply --jar ./my-app.jar",
                 "",
                 "For detailed help on any command, use: flamingock <command> --help"
         },
@@ -53,10 +55,10 @@ import picocli.CommandLine.Option;
 )
 public class FlamingockExecutorCli implements Runnable {
 
-    @Option(names = {"--verbose", "-v"},
-            description = "Enable verbose output",
+    @Option(names = {"--log-level", "-l"},
+            description = "Application log level: debug, info, warn, error",
             scope = CommandLine.ScopeType.INHERIT)
-    private boolean verbose;
+    private String logLevel;
 
     @Option(names = {"--quiet", "-q"},
             description = "Suppress non-essential output",
@@ -85,8 +87,8 @@ public class FlamingockExecutorCli implements Runnable {
         new CommandLine(this).usage(System.out);
     }
 
-    public boolean isVerbose() {
-        return verbose;
+    public Optional<String> getLogLevel() {
+        return Optional.ofNullable(logLevel);
     }
 
     public boolean isQuiet() {

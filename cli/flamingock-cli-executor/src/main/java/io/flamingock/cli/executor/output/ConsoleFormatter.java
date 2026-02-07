@@ -15,14 +15,11 @@
  */
 package io.flamingock.cli.executor.output;
 
-import java.io.PrintStream;
-
 /**
  * Provides formatted console output for the CLI executor.
+ * Follows professional CLI conventions (docker, kubectl, terraform style).
  */
 public final class ConsoleFormatter {
-
-    private static final String SEPARATOR = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 
     private ConsoleFormatter() {
     }
@@ -33,34 +30,48 @@ public final class ConsoleFormatter {
      * @param version the CLI version
      */
     public static void printHeader(String version) {
-        PrintStream out = System.out;
-        out.println();
-        out.println(SEPARATOR);
-        out.println("Flamingock CLI v" + version);
-        out.println(SEPARATOR);
-        out.println();
+        System.out.println("flamingock v" + version);
+    }
+
+    /**
+     * Prints a success message after successful execution.
+     *
+     * @param durationMs the execution duration in milliseconds
+     */
+    public static void printSuccess(long durationMs) {
+        System.out.println("Completed successfully (" + durationMs + "ms)");
     }
 
     /**
      * Prints a success message after successful execution.
      */
     public static void printSuccess() {
-        PrintStream out = System.out;
-        out.println();
-        out.println(SEPARATOR);
-        out.println("SUCCESS: Flamingock execution completed successfully");
-        out.println(SEPARATOR);
+        System.out.println("Completed successfully");
     }
 
     /**
      * Prints a failure message after failed execution.
      */
     public static void printFailure() {
-        PrintStream err = System.err;
-        err.println();
-        err.println(SEPARATOR);
-        err.println("FAILED: Flamingock execution failed");
-        err.println(SEPARATOR);
+        printFailure(null, null);
+    }
+
+    /**
+     * Prints a failure message with error details.
+     *
+     * @param errorCode    the error code (optional)
+     * @param errorMessage the error message (optional)
+     */
+    public static void printFailure(String errorCode, String errorMessage) {
+        if (errorMessage != null) {
+            if (errorCode != null) {
+                System.err.println("Error (" + errorCode + "): " + errorMessage);
+            } else {
+                System.err.println("Error: " + errorMessage);
+            }
+        } else {
+            System.err.println("Error: operation failed");
+        }
     }
 
     /**
@@ -69,11 +80,7 @@ public final class ConsoleFormatter {
      * @param message the error message
      */
     public static void printError(String message) {
-        PrintStream err = System.err;
-        err.println();
-        err.println(SEPARATOR);
-        err.println("Error: " + message);
-        err.println(SEPARATOR);
+        System.err.println("Error: " + message);
     }
 
     /**
@@ -83,17 +90,5 @@ public final class ConsoleFormatter {
      */
     public static void printInfo(String message) {
         System.out.println(message);
-    }
-
-    /**
-     * Prints a verbose message (only shown in verbose mode).
-     *
-     * @param message the message
-     * @param verbose whether verbose mode is enabled
-     */
-    public static void printVerbose(String message, boolean verbose) {
-        if (verbose) {
-            System.out.println("[VERBOSE] " + message);
-        }
     }
 }

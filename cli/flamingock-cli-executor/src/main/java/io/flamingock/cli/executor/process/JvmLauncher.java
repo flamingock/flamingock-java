@@ -32,21 +32,16 @@ import java.util.List;
  * <ul>
  *   <li>Building the java command with appropriate flags</li>
  *   <li>Starting the process via ProcessBuilder</li>
- *   <li>Streaming stdout/stderr in real-time</li>
+ *   <li>Streaming stdout/stderr in real-time (when enabled)</li>
  *   <li>Returning the process exit code</li>
  * </ul>
  */
 public class JvmLauncher {
 
-    private final boolean verbose;
-
     /**
      * Creates a new JvmLauncher.
-     *
-     * @param verbose whether to enable verbose output
      */
-    public JvmLauncher(boolean verbose) {
-        this.verbose = verbose;
+    public JvmLauncher() {
     }
 
     /**
@@ -57,35 +52,22 @@ public class JvmLauncher {
      * @return the process exit code (0 = success, non-zero = failure)
      */
     public int launch(String jarPath) {
-        return launch(jarPath, null);
-    }
-
-    /**
-     * Launches the application with Flamingock CLI mode enabled and a specific operation.
-     *
-     * @param jarPath   absolute path to the application JAR
-     * @param operation the Flamingock operation to execute (e.g., "EXECUTE", "LIST"), or null for default
-     * @return the process exit code (0 = success, non-zero = failure)
-     */
-    public int launch(String jarPath, String operation) {
-        return launch(jarPath, operation, null);
+        return launch(jarPath, null, null, null, true);
     }
 
     /**
      * Launches the application with Flamingock CLI mode enabled, a specific operation,
-     * and an optional output file for result communication.
+     * an optional output file for result communication, optional log level, and output streaming control.
      *
-     * @param jarPath    absolute path to the application JAR
-     * @param operation  the Flamingock operation to execute (e.g., "EXECUTE", "LIST"), or null for default
-     * @param outputFile path to the output file for result communication, or null if not needed
+     * @param jarPath      absolute path to the application JAR
+     * @param operation    the Flamingock operation to execute (e.g., "EXECUTE", "LIST"), or null for default
+     * @param outputFile   path to the output file for result communication, or null if not needed
+     * @param logLevel     the application log level (debug, info, warn, error), or null for app default
+     * @param streamOutput whether to stream stdout/stderr to console (false = consume silently)
      * @return the process exit code (0 = success, non-zero = failure)
      */
-    public int launch(String jarPath, String operation, String outputFile) {
-        List<String> command = buildCommand(jarPath, operation, outputFile);
-
-        if (verbose) {
-            ConsoleFormatter.printVerbose("Executing command: " + String.join(" ", command), true);
-        }
+    public int launch(String jarPath, String operation, String outputFile, String logLevel, boolean streamOutput) {
+        List<String> command = buildCommand(jarPath, operation, outputFile, logLevel);
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.directory(new File(jarPath).getParentFile());
@@ -94,9 +76,18 @@ public class JvmLauncher {
         try {
             Process process = processBuilder.start();
 
-            // Stream stdout and stderr in parallel
-            Thread stdoutThread = streamOutput(process.getInputStream(), System.out);
-            Thread stderrThread = streamOutput(process.getErrorStream(), System.err);
+            Thread stdoutThread;
+            Thread stderrThread;
+
+            if (streamOutput) {
+                // Stream stdout and stderr in parallel
+                stdoutThread = streamOutput(process.getInputStream(), System.out);
+                stderrThread = streamOutput(process.getErrorStream(), System.err);
+            } else {
+                // Consume streams silently to prevent blocking
+                stdoutThread = consumeSilently(process.getInputStream());
+                stderrThread = consumeSilently(process.getErrorStream());
+            }
 
             // Wait for the process to complete
             int exitCode = process.waitFor();
@@ -109,9 +100,6 @@ public class JvmLauncher {
 
         } catch (IOException e) {
             ConsoleFormatter.printError("Failed to start process: " + e.getMessage());
-            if (verbose) {
-                e.printStackTrace(System.err);
-            }
             return 1;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -123,23 +111,13 @@ public class JvmLauncher {
     /**
      * Builds the command line for launching the application.
      *
-     * @param jarPath   path to the JAR file
-     * @param operation the Flamingock operation to execute, or null for default
-     * @return the command as a list of strings
-     */
-    List<String> buildCommand(String jarPath, String operation) {
-        return buildCommand(jarPath, operation, null);
-    }
-
-    /**
-     * Builds the command line for launching the application.
-     *
      * @param jarPath    path to the JAR file
      * @param operation  the Flamingock operation to execute, or null for default
      * @param outputFile path to the output file for result communication, or null if not needed
+     * @param logLevel   the application log level (debug, info, warn, error), or null for app default
      * @return the command as a list of strings
      */
-    List<String> buildCommand(String jarPath, String operation, String outputFile) {
+    List<String> buildCommand(String jarPath, String operation, String outputFile, String logLevel) {
         List<String> command = new ArrayList<>();
 
         // Find the java executable
@@ -169,6 +147,11 @@ public class JvmLauncher {
         // Add output file if specified
         if (outputFile != null && !outputFile.isEmpty()) {
             command.add("--flamingock.output-file=" + outputFile);
+        }
+
+        // Add log level if specified
+        if (logLevel != null && !logLevel.isEmpty()) {
+            command.add("--logging.level.root=" + logLevel.toUpperCase());
         }
 
         return command;
@@ -213,6 +196,27 @@ public class JvmLauncher {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     outputStream.println(line);
+                }
+            } catch (IOException e) {
+                // Stream closed, ignore
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+        return thread;
+    }
+
+    /**
+     * Creates a thread that consumes the input stream silently to prevent blocking.
+     *
+     * @param inputStream the stream to consume
+     * @return the thread (already started)
+     */
+    private Thread consumeSilently(InputStream inputStream) {
+        Thread thread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                while (reader.readLine() != null) {
+                    // Discard output
                 }
             } catch (IOException e) {
                 // Stream closed, ignore
