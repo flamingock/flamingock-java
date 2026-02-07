@@ -44,7 +44,7 @@ public class Serializer {
 
     public void serializeFullPipeline(FlamingockMetadata metadata) {
         serializePipelineTo(metadata);
-        serializeClassesList(metadata.getPipeline());
+        serializeClassesList(metadata);
     }
 
     private void serializePipelineTo(FlamingockMetadata metadata) {
@@ -57,8 +57,19 @@ public class Serializer {
         });
     }
 
-    private void serializeClassesList(PreviewPipeline pipeline) {
+    private void serializeClassesList(FlamingockMetadata metadata) {
         writeToFile(Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH, writer -> {
+            // Add builder provider class for GraalVM reflection
+            if (metadata.hasValidBuilderProvider()) {
+                try {
+                    writer.write(metadata.getBuilderProvider().getClassName());
+                    writer.write(System.lineSeparator());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            PreviewPipeline pipeline = metadata.getPipeline();
             if(pipeline.getSystemStage() != null) {
                 serializeClassesFromStage(writer, pipeline.getSystemStage());;
             }

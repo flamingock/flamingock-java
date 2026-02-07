@@ -18,10 +18,12 @@ package io.flamingock.core.processor;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
+import io.flamingock.api.annotations.FlamingockCliBuilder;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.PathResolver;
 import io.flamingock.core.processor.util.ProjectRootDetector;
+import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
@@ -186,7 +188,8 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<>(Arrays.asList(
                 EnableFlamingock.class.getName(),
-                Change.class.getName()
+                Change.class.getName(),
+                FlamingockCliBuilder.class.getName()
         ));
     }
 
@@ -201,10 +204,13 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         logger.info("Processing pipeline configuration");
-        AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger);
+        AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger, processingEnv);
         EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation()
                 .orElseThrow(() -> new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline."));
         Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges();
+
+        // Find @FlamingockCliBuilder annotated method
+        Optional<BuilderProviderInfo> builderProvider = annotationFinder.findBuilderProvider();
 
         List<CodePreviewChange> systemChanges = allChanges.stream().filter(TaskDescriptor::isSystem).collect(Collectors.toList());
         List<CodePreviewChange> legacyChanges = allChanges.stream().filter(CodePreviewChange::isLegacy).collect(Collectors.toList());
@@ -223,6 +229,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         Serializer serializer = new Serializer(processingEnv, logger);
         String configFile = flamingockAnnotation.configFile();
         FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, configFile);
+        builderProvider.ifPresent(flamingockMetadata::setBuilderProvider);
         serializer.serializeFullPipeline(flamingockMetadata);
 
         // Generate summary - count all changes from the final pipeline (code-based + template-based)
