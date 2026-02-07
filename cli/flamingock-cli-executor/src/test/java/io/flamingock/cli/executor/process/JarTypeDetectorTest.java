@@ -96,36 +96,80 @@ class JarTypeDetectorTest {
     }
 
     @Test
-    void detect_plainUberJar_returnsPlainUber() throws Exception {
+    void detect_plainUberJar_withFlamingockEntryPoint_returnsPlainUber() throws Exception {
         Manifest manifest = createManifest("com.example.Application");
         File jar = createJarWithEntries("plain-uber.jar",
+                manifest,
+                "com/example/Application.class",
+                "com/example/Service.class",
+                "io/flamingock/core/cli/FlamingockCliMainEntryPoint.class");
+
+        JarType result = detector.detect(jar);
+
+        assertEquals(JarType.PLAIN_UBER, result);
+    }
+
+    @Test
+    void detect_jarWithoutFlamingockEntryPoint_returnsMissingRuntime() throws Exception {
+        Manifest manifest = createManifest("com.example.Application");
+        File jar = createJarWithEntries("missing-runtime.jar",
                 manifest,
                 "com/example/Application.class",
                 "com/example/Service.class");
 
         JarType result = detector.detect(jar);
 
-        assertEquals(JarType.PLAIN_UBER, result);
+        assertEquals(JarType.MISSING_FLAMINGOCK_RUNTIME, result);
     }
 
     @Test
-    void detect_emptyJar_returnsPlainUber() throws Exception {
+    void detect_emptyJar_returnsMissingRuntime() throws Exception {
         File jar = createJarWithEntries("empty.jar", null);
 
         JarType result = detector.detect(jar);
 
-        assertEquals(JarType.PLAIN_UBER, result);
+        assertEquals(JarType.MISSING_FLAMINGOCK_RUNTIME, result);
     }
 
     @Test
-    void detect_jarWithNoManifest_andNoSpringEntries_returnsPlainUber() throws Exception {
+    void detect_jarWithNoManifest_andNoFlamingockEntryPoint_returnsMissingRuntime() throws Exception {
         File jar = createJarWithEntries("no-manifest.jar",
                 null,
                 "com/example/Application.class");
 
         JarType result = detector.detect(jar);
 
-        assertEquals(JarType.PLAIN_UBER, result);
+        assertEquals(JarType.MISSING_FLAMINGOCK_RUNTIME, result);
+    }
+
+    @Test
+    void detect_thinJar_withOnlyAppClasses_returnsMissingRuntime() throws Exception {
+        // Simulates a thin JAR - only app classes, no dependencies bundled
+        Manifest manifest = createManifest("com.example.Application");
+        File jar = createJarWithEntries("thin-jar.jar",
+                manifest,
+                "com/example/Application.class",
+                "com/example/Service.class",
+                "com/example/Repository.class");
+
+        JarType result = detector.detect(jar);
+
+        assertEquals(JarType.MISSING_FLAMINGOCK_RUNTIME, result);
+    }
+
+    @Test
+    void detect_uberJar_withFlamingockCore_butMissingEntryPoint_returnsMissingRuntime() throws Exception {
+        // Simulates uber JAR where flamingock-core was relocated or entry point excluded
+        Manifest manifest = createManifest("com.example.Application");
+        File jar = createJarWithEntries("relocated-flamingock.jar",
+                manifest,
+                "com/example/Application.class",
+                "io/flamingock/core/SomeOtherClass.class",  // Has flamingock-core but not entry point
+                "io/flamingock/api/SomeApiClass.class");
+
+        JarType result = detector.detect(jar);
+
+        assertEquals(JarType.MISSING_FLAMINGOCK_RUNTIME, result);
     }
 
     @Test
@@ -166,7 +210,8 @@ class JarTypeDetectorTest {
         Manifest manifest = createManifest("com.example.Application");
         File jar = createJarWithEntries("string-path.jar",
                 manifest,
-                "com/example/Application.class");
+                "com/example/Application.class",
+                "io/flamingock/core/cli/FlamingockCliMainEntryPoint.class");
 
         JarType result = detector.detect(jar.getAbsolutePath());
 

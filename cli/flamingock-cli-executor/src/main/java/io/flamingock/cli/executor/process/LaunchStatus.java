@@ -16,25 +16,43 @@
 package io.flamingock.cli.executor.process;
 
 /**
- * Represents the type of JAR file for determining the appropriate execution strategy.
+ * Represents the status of a JVM launch operation.
  */
-public enum JarType {
+public enum LaunchStatus {
 
     /**
-     * A Spring Boot executable JAR.
-     * Detected by presence of BOOT-INF/, Spring Boot loader entries,
-     * or Spring Boot Main-Class in manifest.
+     * The process launched and completed successfully (exit code 0).
      */
-    SPRING_BOOT,
+    SUCCESS,
 
     /**
-     * A standard (non-Spring Boot) uber/shaded JAR with Flamingock runtime.
-     * Executed using classpath with explicit main class.
+     * The Flamingock CLI entry point class was not found in the JAR.
+     * This typically means flamingock-core is not included in the uber JAR.
      */
-    PLAIN_UBER,
+    ENTRY_POINT_NOT_FOUND,
 
     /**
-     * A JAR that does not contain the Flamingock CLI entry point.
+     * The process failed to start (e.g., java executable not found, IO error).
+     */
+    PROCESS_START_FAILED,
+
+    /**
+     * The process was interrupted while running.
+     */
+    PROCESS_INTERRUPTED,
+
+    /**
+     * The process completed but with a non-zero exit code.
+     */
+    PROCESS_FAILED,
+
+    /**
+     * Failed to analyze the JAR file.
+     */
+    JAR_ANALYSIS_FAILED,
+
+    /**
+     * The JAR does not contain the Flamingock CLI entry point.
      * This can occur when:
      * - User provided a thin JAR (dependencies not bundled)
      * - User built an uber JAR but flamingock-core was excluded/relocated

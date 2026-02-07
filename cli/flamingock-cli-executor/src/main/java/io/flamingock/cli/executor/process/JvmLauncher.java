@@ -15,8 +15,6 @@
  */
 package io.flamingock.cli.executor.process;
 
-import io.flamingock.cli.executor.output.ConsoleFormatter;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +32,7 @@ import java.util.List;
  *   <li>Building the java command with appropriate flags</li>
  *   <li>Starting the process via ProcessBuilder</li>
  *   <li>Streaming stdout/stderr in real-time (when enabled)</li>
- *   <li>Returning the process exit code</li>
+ *   <li>Returning structured launch results</li>
  * </ul>
  */
 public class JvmLauncher {
@@ -67,9 +65,9 @@ public class JvmLauncher {
      * Uses the default EXECUTE operation.
      *
      * @param jarPath absolute path to the application JAR
-     * @return the process exit code (0 = success, non-zero = failure)
+     * @return the launch result
      */
-    public int launch(String jarPath) {
+    public LaunchResult launch(String jarPath) {
         return launch(jarPath, null, null, null, true);
     }
 
@@ -82,19 +80,24 @@ public class JvmLauncher {
      * @param outputFile   path to the output file for result communication, or null if not needed
      * @param logLevel     the application log level (debug, info, warn, error), or null for app default
      * @param streamOutput whether to stream stdout/stderr to console (false = consume silently)
-     * @return the process exit code (0 = success, non-zero = failure)
+     * @return the launch result
      */
-    public int launch(String jarPath, String operation, String outputFile, String logLevel, boolean streamOutput) {
+    public LaunchResult launch(String jarPath, String operation, String outputFile, String logLevel, boolean streamOutput) {
         List<String> command;
         JarType jarType;
 
         try {
             jarType = jarTypeDetector.detect(jarPath);
-            command = buildCommand(jarPath, operation, outputFile, logLevel, jarType);
         } catch (JarDetectionException e) {
-            ConsoleFormatter.printError("Failed to analyze JAR: " + e.getMessage());
-            return 1;
+            return LaunchResult.jarAnalysisFailed(e.getMessage());
         }
+
+        // Early detection: JAR is missing Flamingock runtime
+        if (jarType == JarType.MISSING_FLAMINGOCK_RUNTIME) {
+            return LaunchResult.missingFlamingockRuntime();
+        }
+
+        command = buildCommand(jarPath, operation, outputFile, logLevel, jarType);
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.directory(new File(jarPath).getParentFile());
@@ -127,22 +130,34 @@ public class JvmLauncher {
             // Check for entry point not found error in non-Spring Boot path
             if (exitCode != 0 && jarType == JarType.PLAIN_UBER) {
                 String stderr = stderrCapture.toString();
-                if (stderr.contains("Could not find or load main class") &&
-                        stderr.contains(FLAMINGOCK_CLI_ENTRY_POINT)) {
-                    printEntryPointNotFoundError();
+                if (isEntryPointNotFoundError(stderr)) {
+                    return LaunchResult.entryPointNotFound(exitCode);
                 }
             }
 
-            return exitCode;
+            if (exitCode == 0) {
+                return LaunchResult.success();
+            } else {
+                return LaunchResult.processFailed(exitCode);
+            }
 
         } catch (IOException e) {
-            ConsoleFormatter.printError("Failed to start process: " + e.getMessage());
-            return 1;
+            return LaunchResult.processStartFailed(e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            ConsoleFormatter.printError("Process was interrupted");
-            return 1;
+            return LaunchResult.processInterrupted();
         }
+    }
+
+    /**
+     * Checks if the stderr output indicates the entry point class was not found.
+     *
+     * @param stderr the captured stderr output
+     * @return true if entry point was not found
+     */
+    private boolean isEntryPointNotFoundError(String stderr) {
+        return stderr.contains("Could not find or load main class") &&
+                stderr.contains(FLAMINGOCK_CLI_ENTRY_POINT);
     }
 
     /**
@@ -270,22 +285,6 @@ public class JvmLauncher {
         }
 
         return command;
-    }
-
-    /**
-     * Prints an actionable error message when the Flamingock CLI entry point is not found.
-     */
-    private void printEntryPointNotFoundError() {
-        System.err.println();
-        System.err.println("Error: Flamingock CLI entry point not found in your JAR.");
-        System.err.println();
-        System.err.println("Your uber/shaded JAR must include 'flamingock-core' classes.");
-        System.err.println("If you're using Maven Shade or Gradle Shadow plugin, ensure flamingock-core");
-        System.err.println("is not excluded from the shading process.");
-        System.err.println();
-        System.err.println("Hint: Check that '" + FLAMINGOCK_CLI_ENTRY_POINT + "' is present:");
-        System.err.println("  jar tf your-app.jar | grep FlamingockCliMainEntryPoint");
-        System.err.println();
     }
 
     /**

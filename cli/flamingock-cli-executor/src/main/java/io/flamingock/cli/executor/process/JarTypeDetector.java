@@ -33,13 +33,15 @@ import java.util.jar.Manifest;
  *   <li>Main-Class manifest attribute pointing to Spring Boot loader</li>
  * </ul>
  *
- * <p>If none of the above are detected, the JAR is classified as a plain uber JAR.
+ * <p>For non-Spring Boot JARs, checks for the Flamingock CLI entry point class.
+ * If the entry point is missing, returns {@link JarType#MISSING_FLAMINGOCK_RUNTIME}.
  */
 public class JarTypeDetector {
 
     private static final String BOOT_INF_PREFIX = "BOOT-INF/";
     private static final String SPRING_BOOT_LOADER_PREFIX = "org/springframework/boot/loader/";
     private static final String SPRING_BOOT_LOADER_MAIN_CLASS_PREFIX = "org.springframework.boot.loader.";
+    private static final String FLAMINGOCK_ENTRY_POINT = "io/flamingock/core/cli/FlamingockCliMainEntryPoint.class";
 
     /**
      * Detects the type of the specified JAR file.
@@ -55,6 +57,9 @@ public class JarTypeDetector {
     /**
      * Detects the type of the specified JAR file.
      *
+     * <p>For non-Spring Boot JARs, also verifies the Flamingock CLI entry point is present.
+     * If missing, returns {@link JarType#MISSING_FLAMINGOCK_RUNTIME}.
+     *
      * @param jarFile the JAR file
      * @return the detected JAR type
      * @throws JarDetectionException if the JAR cannot be analyzed
@@ -68,12 +73,34 @@ public class JarTypeDetector {
                 return JarType.SPRING_BOOT;
             }
 
-            // Check for Spring Boot structure in entries
-            if (hasSpringBootEntries(jar)) {
-                return JarType.SPRING_BOOT;
+            // Check for Spring Boot structure and Flamingock entry point in single scan
+            boolean isSpringBoot = false;
+            boolean hasFlamingockEntryPoint = false;
+
+            Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String name = entry.getName();
+
+                if (name.startsWith(BOOT_INF_PREFIX) || name.startsWith(SPRING_BOOT_LOADER_PREFIX)) {
+                    isSpringBoot = true;
+                }
+
+                if (name.equals(FLAMINGOCK_ENTRY_POINT)) {
+                    hasFlamingockEntryPoint = true;
+                }
+
+                // Early exit if we found Spring Boot (no need to check entry point)
+                if (isSpringBoot) {
+                    return JarType.SPRING_BOOT;
+                }
             }
 
-            // Default to plain uber jar
+            // For non-Spring Boot JARs, verify Flamingock entry point is present
+            if (!hasFlamingockEntryPoint) {
+                return JarType.MISSING_FLAMINGOCK_RUNTIME;
+            }
+
             return JarType.PLAIN_UBER;
 
         } catch (IOException e) {
@@ -103,16 +130,4 @@ public class JarTypeDetector {
         return mainClass != null && mainClass.startsWith(SPRING_BOOT_LOADER_MAIN_CLASS_PREFIX);
     }
 
-    private boolean hasSpringBootEntries(JarFile jar) {
-        Enumeration<JarEntry> entries = jar.entries();
-        while (entries.hasMoreElements()) {
-            JarEntry entry = entries.nextElement();
-            String name = entry.getName();
-
-            if (name.startsWith(BOOT_INF_PREFIX) || name.startsWith(SPRING_BOOT_LOADER_PREFIX)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
