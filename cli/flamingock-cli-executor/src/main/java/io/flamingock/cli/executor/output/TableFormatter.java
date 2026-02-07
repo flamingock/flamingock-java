@@ -49,7 +49,7 @@ public class TableFormatter {
 
     // Column widths
     private static final int CHANGE_ID_WIDTH = 30;
-    private static final int STATE_WIDTH = 12;
+    private static final int STATE_WIDTH = 13;
     private static final int AUTHOR_WIDTH = 18;
     private static final int TIME_WIDTH = 21;
 
@@ -125,7 +125,12 @@ public class TableFormatter {
     private void printHeaderRow(List<TableColumn> columns) {
         System.out.print(VERTICAL);
         for (TableColumn column : columns) {
-            System.out.print(column.format(column.getTitle()));
+            // Always center headers
+            String title = column.getTitle();
+            int padding = column.getWidth() - title.length();
+            int leftPad = padding / 2;
+            int rightPad = padding - leftPad;
+            System.out.print(spaces(leftPad) + title + spaces(rightPad));
             System.out.print(VERTICAL);
         }
         System.out.println();
