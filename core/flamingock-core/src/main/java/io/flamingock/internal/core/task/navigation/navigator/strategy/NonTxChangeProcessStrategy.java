@@ -16,9 +16,9 @@
 package io.flamingock.internal.core.task.navigation.navigator.strategy;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.core.operation.result.ChangeResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
@@ -37,11 +37,11 @@ import org.slf4j.Logger;
 
 /**
  * Change process strategy for non-transactional target systems.
- * 
+ *
  * <p>This strategy is used for target systems that do not support transactions,
  * such as message queues, REST services, S3 buckets, or other external systems
  * where changes cannot be atomically rolled back.
- * 
+ *
  * <h3>Execution Flow</h3>
  * <ol>
  * <li>Audit change start in audit store</li>
@@ -49,13 +49,13 @@ import org.slf4j.Logger;
  * <li>Audit execution result in audit store</li>
  * <li>If execution failed, attempt manual rollback of change chain</li>
  * </ol>
- * 
+ *
  * <h3>Target System State Outcomes</h3>
  * <ul>
  * <li><strong>Success:</strong> Change applied to target system</li>
  * <li><strong>Failure:</strong> Change not applied, rollback chain applied with best effort</li>
  * </ul>
- * 
+ *
  * <h3>Audit Store State Outcomes</h3>
  * <ul>
  * <li><strong>STARTED:</strong> Change execution began but process interrupted</li>
@@ -63,10 +63,10 @@ import org.slf4j.Logger;
  * <li><strong>STARTED → FAILED:</strong> Change execution failed</li>
  * <li><strong>STARTED → FAILED → ROLLED_BACK:</strong> Change failed and rollback chain completed</li>
  * </ul>
- * 
+ *
  * <h3>Recovery Considerations</h3>
- * <p>Non-transactional target systems require careful recovery handling since changes 
- * cannot be automatically rolled back. The rollback chain mechanism provides best-effort 
+ * <p>Non-transactional target systems require careful recovery handling since changes
+ * cannot be automatically rolled back. The rollback chain mechanism provides best-effort
  * cleanup, but manual intervention may be required for complete system consistency.</p>
  */
 public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<TargetSystemOps> {
@@ -77,33 +77,42 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
                                       ExecutionContext executionContext,
                                       TargetSystemOps targetSystem,
                                       AuditStoreStepOperations auditStoreOperations,
-                                      TaskSummarizer summarizer,
+                                      ChangeResultBuilder resultBuilder,
                                       LockGuardProxyFactory proxyFactory,
                                       ContextResolver baseContext,
                                       TimeService timeService) {
-        super(change, executionContext, targetSystem, auditStoreOperations, summarizer, proxyFactory, baseContext, timeService);
+        super(change, executionContext, targetSystem, auditStoreOperations, resultBuilder, proxyFactory, baseContext, timeService);
     }
 
     @Override
     protected ChangeProcessResult doApplyChange() {
+        resultBuilder.startTimer();
+
         StartStep startStep = new StartStep(change);
 
         ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext);
 
         logger.debug("Executing non-transactional task [change={}]", change.getId());
-        
+
         ExecutionStep changeAppliedStep = targetSystemOps.applyChange(executableStep::execute, buildExecutionRuntime());
 
         AfterExecutionAuditStep afterAudit = auditAndLogExecution(changeAppliedStep);
 
+        resultBuilder.stopTimer();
 
         if(afterAudit instanceof FailedAfterExecutionAuditStep) {
             FailedAfterExecutionAuditStep failedAfterExecutionAudit = (FailedAfterExecutionAuditStep)afterAudit;
             rollbackActualChangeAndChain(failedAfterExecutionAudit, executionContext);
-            TaskSummary summary = summarizer.setFailed().getSummary();
-            return new FailedChangeProcessResult(change.getId(), summary, failedAfterExecutionAudit.getMainError());
+            Throwable mainError = failedAfterExecutionAudit.getMainError();
+            ChangeResult result = resultBuilder
+                    .failed(mainError)
+                    .build();
+            return new FailedChangeProcessResult(change.getId(), result, mainError);
         } else {
-            return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
+            ChangeResult result = resultBuilder
+                    .applied()
+                    .build();
+            return new ChangeProcessResult(change.getId(), result);
         }
 
     }
@@ -112,7 +121,6 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
         rollableFailedStep.getRollbackSteps().forEach(rollableStep -> {
             ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
             stepLogger.logManualRollbackResult(rolledBack);
-            summarizer.add(rolledBack);
             auditAndLogManualRollback(rolledBack, executionContext);
         });
     }

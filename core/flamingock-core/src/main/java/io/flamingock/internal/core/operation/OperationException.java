@@ -16,27 +16,29 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 
+/**
+ * Exception thrown when a pipeline operation fails.
+ * Contains the execution result data with information about what was executed.
+ */
 public class OperationException extends FlamingockException {
 
-    public static OperationException fromExisting(Throwable exception, OperationSummary summary) {
+    public static OperationException fromExisting(Throwable exception, ExecuteResponseData result) {
         Throwable cause = exception.getCause();
         return (exception instanceof FlamingockException) && cause != null
-                ? new OperationException(cause, summary)
-                : new OperationException(exception, summary);
+                ? new OperationException(cause, result)
+                : new OperationException(exception, result);
     }
 
-    private final OperationSummary summary;
+    private final ExecuteResponseData result;
 
-
-    private OperationException(Throwable throwable, OperationSummary summary) {
+    private OperationException(Throwable throwable, ExecuteResponseData result) {
         super(throwable);
-        this.summary = summary;
+        this.result = result;
     }
 
-    public OperationSummary getSummary() {
-        return summary;
+    public ExecuteResponseData getResult() {
+        return result;
     }
-
-
 }

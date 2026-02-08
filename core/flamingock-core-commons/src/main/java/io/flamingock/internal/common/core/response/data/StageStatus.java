@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.task.navigation.summary;
+package io.flamingock.internal.common.core.response.data;
 
-import io.flamingock.internal.core.summary.SummaryLine;
+/**
+ * Status of a stage execution.
+ */
+public enum StageStatus {
+    /**
+     * Stage completed successfully with all changes applied.
+     */
+    COMPLETED,
 
-public interface StepSummaryLine extends SummaryLine {
+    /**
+     * Stage failed during execution.
+     */
+    FAILED,
 
-    String getId();
+    /**
+     * Stage was skipped (all changes already applied).
+     */
+    SKIPPED,
 
+    /**
+     * Stage was not started (due to prior failure).
+     */
+    NOT_STARTED
 }

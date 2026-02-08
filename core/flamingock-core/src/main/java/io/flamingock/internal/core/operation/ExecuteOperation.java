@@ -16,6 +16,9 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.response.data.ErrorInfo;
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.PipelineFailedEvent;
@@ -23,12 +26,12 @@ import io.flamingock.internal.core.event.model.impl.PipelineStartedEvent;
 import io.flamingock.internal.core.event.model.impl.StageCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.StageFailedEvent;
 import io.flamingock.internal.core.event.model.impl.StageStartedEvent;
+import io.flamingock.internal.core.operation.result.ExecutionResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
-import io.flamingock.internal.core.pipeline.execution.StageSummary;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlan;
@@ -42,8 +45,9 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.flamingock.internal.util.ObjectUtils.requireNonNull;
-
+/**
+ * Executes the pipeline and returns structured result data.
+ */
 public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("PipelineRunner");
@@ -79,17 +83,20 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
     }
 
 
-
     @Override
     public ExecuteResult execute(ExecuteArgs args) {
+        ExecuteResponseData result;
         try {
-            this.execute(args.getPipeline());
+            result = this.execute(args.getPipeline());
+        } catch (OperationException operationException) {
+            result = operationException.getResult();
+            throw operationException;
         } catch (Throwable throwable) {
-            throw processAndGetFlamingockException(throwable);
+            throw processAndGetFlamingockException(throwable, null);
         } finally {
             finalizer.run();
         }
-        return null;
+        return new ExecuteResult(result);
     }
 
     private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
@@ -102,10 +109,11 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
         return stages;
     }
 
-    private void execute(LoadedPipeline pipeline) throws FlamingockException {
+    private ExecuteResponseData execute(LoadedPipeline pipeline) throws FlamingockException {
 
         eventPublisher.publish(new PipelineStartedEvent());
-        OperationSummary pipelineSummary = null;
+        ExecutionResultBuilder resultBuilder = new ExecutionResultBuilder().startTimer();
+
         do {
             List<AbstractLoadedStage> stages = validateAndGetExecutableStages(pipeline);
             try (ExecutionPlan execution = executionPlanner.getNextExecution(stages)) {
@@ -113,14 +121,10 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
                 // This centralized validation ensures both community and cloud paths are validated
                 execution.validate();
 
-                if (pipelineSummary == null) {
-                    pipelineSummary = new OperationSummary(execution.getPipeline());
-                }
-                final OperationSummary pipelineSummaryTemp = pipelineSummary;
                 if (execution.isExecutionRequired()) {
                     execution.applyOnEach((executionId, lock, executableStage) -> {
-                        StageSummary stageSummary = runStage(executionId, lock, executableStage);
-                        pipelineSummaryTemp.merge(stageSummary);
+                        StageResult stageResult = runStage(executionId, lock, executableStage);
+                        resultBuilder.addStage(stageResult);
                     });
                 } else {
                     break;
@@ -137,20 +141,25 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
                 }
                 break;
             } catch (StageExecutionException e) {
-                //if it's a StageExecutionException, we can safely assume the stage started its
-                //execution, therefor the pipelinesSummary is initialised
-                requireNonNull(pipelineSummary).merge(e.getSummary());
-                throw OperationException.fromExisting(e.getCause(), pipelineSummary);
+                resultBuilder.addStage(e.getResult());
+                resultBuilder.stopTimer().failed();
+                resultBuilder.error(ErrorInfo.fromThrowable(e.getCause(), e.getFailedChangeId(), e.getResult().getStageId()));
+                throw OperationException.fromExisting(e.getCause(), resultBuilder.build());
             }
         } while (true);
 
-        String summary = pipelineSummary != null ? pipelineSummary.getPretty() : "";
-        logger.info("Finished Flamingock process successfully\n{}", summary);
+        resultBuilder.stopTimer().success();
+        ExecuteResponseData result = resultBuilder.build();
+
+        logger.info("Finished Flamingock process successfully [applied={} skipped={} duration={}ms]",
+                result.getAppliedChanges(), result.getSkippedChanges(), result.getTotalDurationMs());
 
         eventPublisher.publish(new PipelineCompletedEvent());
+
+        return result;
     }
 
-    private StageSummary runStage(String executionId, Lock lock, ExecutableStage executableStage) {
+    private StageResult runStage(String executionId, Lock lock, ExecutableStage executableStage) {
         try {
             return startStage(executionId, lock, executableStage);
         } catch (StageExecutionException exception) {
@@ -158,21 +167,21 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
             eventPublisher.publish(new PipelineFailedEvent(exception));
             throw exception;
         } catch (Throwable generalException) {
-            throw processAndGetFlamingockException(generalException);
+            throw processAndGetFlamingockException(generalException, null);
         }
     }
 
-    private StageSummary startStage(String executionId, Lock lock, ExecutableStage executableStage) throws StageExecutionException {
+    private StageResult startStage(String executionId, Lock lock, ExecutableStage executableStage) throws StageExecutionException {
         eventPublisher.publish(new StageStartedEvent());
         logger.debug("Applied state to process:\n{}", executableStage);
 
         ExecutionContext executionContext = new ExecutionContext(executionId, orphanExecutionContext.getHostname(), orphanExecutionContext.getMetadata());
         StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock);
         eventPublisher.publish(new StageCompletedEvent(executionOutput));
-        return executionOutput.getSummary();
+        return executionOutput.getResult();
     }
 
-    private FlamingockException processAndGetFlamingockException(Throwable exception) throws FlamingockException {
+    private FlamingockException processAndGetFlamingockException(Throwable exception, ExecutionResultBuilder resultBuilder) throws FlamingockException {
         FlamingockException flamingockException;
         if (exception instanceof OperationException) {
             OperationException pipelineException = (OperationException) exception;
