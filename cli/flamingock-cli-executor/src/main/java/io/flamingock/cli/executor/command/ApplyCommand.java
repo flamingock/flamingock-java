@@ -21,6 +21,7 @@ import io.flamingock.cli.executor.orchestration.CommandResult;
 import io.flamingock.cli.executor.orchestration.ExecutionOptions;
 import io.flamingock.cli.executor.output.ConsoleFormatter;
 import io.flamingock.cli.executor.util.VersionProvider;
+import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -57,11 +58,6 @@ public class ApplyCommand implements Callable<Integer> {
      * Exit code when JAR file is not found.
      */
     public static final int EXIT_JAR_NOT_FOUND = 126;
-
-    /**
-     * Operation string for EXECUTE operation (matches FlamingockArguments parsing).
-     */
-    private static final String OPERATION_EXECUTE = "EXECUTE";
 
     @ParentCommand
     private ExecuteCommand parent;
@@ -119,7 +115,7 @@ public class ApplyCommand implements Callable<Integer> {
 
         CommandResult<ExecuteResponseData> result = commandExecutor.execute(
                 jarFile.getAbsolutePath(),
-                OPERATION_EXECUTE,
+                OperationType.EXECUTE,
                 ExecuteResponseData.class,
                 options
         );

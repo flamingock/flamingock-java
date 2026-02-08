@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;

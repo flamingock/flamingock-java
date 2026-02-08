@@ -19,6 +19,7 @@ import io.flamingock.cli.executor.process.JvmLauncher;
 import io.flamingock.cli.executor.process.LaunchResult;
 import io.flamingock.cli.executor.result.ResponseResultReader;
 import io.flamingock.cli.executor.result.ResponseResultReader.ResponseResult;
+import io.flamingock.internal.common.core.operation.OperationType;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -74,7 +75,7 @@ public class CommandExecutor {
      * </ul>
      *
      * @param jarPath      the path to the user's JAR file
-     * @param operation    the Flamingock operation to execute (e.g., "EXECUTE", "LIST")
+     * @param operation    the Flamingock operation to execute
      * @param responseType the expected type of the response data
      * @param options      execution options (log level, stream output, etc.)
      * @param <T>          the response data type
@@ -82,7 +83,7 @@ public class CommandExecutor {
      */
     public <T> CommandResult<T> execute(
             String jarPath,
-            String operation,
+            OperationType operation,
             Class<T> responseType,
             ExecutionOptions options
     ) {

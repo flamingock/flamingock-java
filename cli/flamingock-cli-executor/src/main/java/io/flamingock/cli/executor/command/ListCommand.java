@@ -22,6 +22,7 @@ import io.flamingock.cli.executor.orchestration.ExecutionOptions;
 import io.flamingock.cli.executor.output.ConsoleFormatter;
 import io.flamingock.cli.executor.output.TableFormatter;
 import io.flamingock.cli.executor.util.VersionProvider;
+import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.common.core.response.data.AuditListResponseData;
 import io.flamingock.internal.common.core.response.data.AuditListResponseData.AuditEntryDto;
 import picocli.CommandLine.Command;
@@ -59,11 +60,6 @@ public class ListCommand implements Callable<Integer> {
      * Exit code when JAR file is not found.
      */
     public static final int EXIT_JAR_NOT_FOUND = 126;
-
-    /**
-     * Operation string for LIST operation (matches FlamingockArguments parsing).
-     */
-    private static final String OPERATION_LIST = "LIST";
 
     @ParentCommand
     private AuditCommand parent;
@@ -121,7 +117,7 @@ public class ListCommand implements Callable<Integer> {
 
         CommandResult<AuditListResponseData> result = commandExecutor.execute(
                 jarFile.getAbsolutePath(),
-                OPERATION_LIST,
+                OperationType.LIST,
                 AuditListResponseData.class,
                 options
         );

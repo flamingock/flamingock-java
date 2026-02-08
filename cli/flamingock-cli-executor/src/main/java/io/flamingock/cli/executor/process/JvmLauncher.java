@@ -15,6 +15,8 @@
  */
 package io.flamingock.cli.executor.process;
 
+import io.flamingock.internal.common.core.operation.OperationType;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -76,13 +78,14 @@ public class JvmLauncher {
      * an optional output file for result communication, optional log level, and output streaming control.
      *
      * @param jarPath      absolute path to the application JAR
-     * @param operation    the Flamingock operation to execute (e.g., "EXECUTE", "LIST"), or null for default
+     * @param operation    the Flamingock operation to execute, or null for default
      * @param outputFile   path to the output file for result communication, or null if not needed
      * @param logLevel     the application log level (debug, info, warn, error), or null for app default
      * @param streamOutput whether to stream stdout/stderr to console (false = consume silently)
      * @return the launch result
      */
-    public LaunchResult launch(String jarPath, String operation, String outputFile, String logLevel, boolean streamOutput) {
+    public LaunchResult launch(String jarPath, OperationType operation, String outputFile, String logLevel, boolean streamOutput) {
+        String operationName = operation != null ? operation.name() : null;
         List<String> command;
         JarType jarType;
 
@@ -97,7 +100,7 @@ public class JvmLauncher {
             return LaunchResult.missingFlamingockRuntime();
         }
 
-        command = buildCommand(jarPath, operation, outputFile, logLevel, jarType);
+        command = buildCommand(jarPath, operationName, outputFile, logLevel, jarType);
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.directory(new File(jarPath).getParentFile());
