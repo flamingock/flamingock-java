@@ -33,8 +33,8 @@ import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.common.core.util.Deserializer;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -211,7 +211,7 @@ public class SqlTargetSystemTest {
                     .build();
 
             //THEN
-            PipelineExecutionException ex = Assertions.assertThrows(PipelineExecutionException.class, runner::run);
+            OperationException ex = Assertions.assertThrows(OperationException.class, runner::run);
 
             mockRunnerServer.verifyAllCalls();
 

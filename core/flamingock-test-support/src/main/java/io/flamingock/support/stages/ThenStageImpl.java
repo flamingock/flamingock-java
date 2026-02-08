@@ -15,7 +15,7 @@
  */
 package io.flamingock.support.stages;
 
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.support.context.TestContext;
 import io.flamingock.support.domain.AuditEntryDefinition;
 import io.flamingock.support.precondition.PreconditionInserter;

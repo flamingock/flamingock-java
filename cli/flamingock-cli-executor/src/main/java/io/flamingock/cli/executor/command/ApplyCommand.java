@@ -16,15 +16,20 @@
 package io.flamingock.cli.executor.command;
 
 import io.flamingock.cli.executor.FlamingockExecutorCli;
+import io.flamingock.cli.executor.orchestration.CommandExecutor;
+import io.flamingock.cli.executor.orchestration.CommandResult;
+import io.flamingock.cli.executor.orchestration.ExecutionOptions;
 import io.flamingock.cli.executor.output.ConsoleFormatter;
-import io.flamingock.cli.executor.process.JvmLauncher;
 import io.flamingock.cli.executor.util.VersionProvider;
+import io.flamingock.internal.common.core.operation.OperationType;
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 /**
@@ -62,11 +67,29 @@ public class ApplyCommand implements Callable<Integer> {
             required = true)
     private File jarFile;
 
+    private final CommandExecutor commandExecutor;
+
+    /**
+     * Creates a new ApplyCommand with default dependencies.
+     */
+    public ApplyCommand() {
+        this(new CommandExecutor());
+    }
+
+    /**
+     * Creates a new ApplyCommand with the specified CommandExecutor.
+     *
+     * @param commandExecutor the command executor to use
+     */
+    public ApplyCommand(CommandExecutor commandExecutor) {
+        this.commandExecutor = commandExecutor;
+    }
+
     @Override
     public Integer call() {
         FlamingockExecutorCli root = getRootCommand();
-        boolean verbose = root != null && root.isVerbose();
         boolean quiet = root != null && root.isQuiet();
+        Optional<String> logLevel = root != null ? root.getLogLevel() : Optional.empty();
 
         // Print header unless quiet mode
         if (!quiet) {
@@ -84,23 +107,28 @@ public class ApplyCommand implements Callable<Integer> {
             return EXIT_JAR_NOT_FOUND;
         }
 
-        ConsoleFormatter.printVerbose("JAR file: " + jarFile.getAbsolutePath(), verbose);
-        ConsoleFormatter.printInfo("Launching Flamingock execution...");
+        // Execution ops: always stream output by default
+        ExecutionOptions options = ExecutionOptions.builder()
+                .logLevel(logLevel.orElse(null))
+                .streamOutput(true)
+                .build();
 
-        // Launch the Spring Boot application with CLI mode enabled
-        JvmLauncher launcher = new JvmLauncher(verbose);
-        int exitCode = launcher.launch(jarFile.getAbsolutePath());
+        CommandResult<ExecuteResponseData> result = commandExecutor.execute(
+                jarFile.getAbsolutePath(),
+                OperationType.EXECUTE,
+                ExecuteResponseData.class,
+                options
+        );
 
-        // Print result message
-        if (exitCode == 0) {
+        if (result.isSuccess()) {
             if (!quiet) {
-                ConsoleFormatter.printSuccess();
+                ConsoleFormatter.printSuccess(result.getDurationMs());
             }
+            return 0;
         } else {
-            ConsoleFormatter.printFailure();
+            ConsoleFormatter.printFailure(result.getErrorCode(), result.getErrorMessage());
+            return result.getExitCode();
         }
-
-        return exitCode;
     }
 
     private FlamingockExecutorCli getRootCommand() {

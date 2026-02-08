@@ -28,7 +28,7 @@ import io.flamingock.store.couchbase.CouchbaseAuditStore;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
@@ -46,7 +46,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;

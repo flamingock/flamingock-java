@@ -28,7 +28,7 @@ import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.operation.OperationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -180,7 +180,7 @@ class MongoDBSyncCoreStrategiesE2ETest {
                         new CodeChangeTestDefinition(_001__create_client_collection_happy.class, Collections.emptyList()),
                         new CodeChangeTestDefinition(_003__insert_jorge_failed_non_transactional_rollback.class, Collections.emptyList())
                 )
-                .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
+                .WHEN(() -> assertThrows(OperationException.class, () -> {
                     testKit.createBuilder()
                             .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
                             .addTargetSystem(mongoDBSyncTargetSystem)

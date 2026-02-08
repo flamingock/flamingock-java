@@ -51,8 +51,8 @@ Create a professional CLI that enables executing Flamingock (apply, undo, dry-ru
 │  │   - Build command  │         │   --spring.profiles.include=         │ │
 │  │   - Launch JVM     │         │     flamingock-cli                   │ │
 │  │   - Capture result │◄────────│   --flamingock.cli.mode=true         │ │
-│  │                    │  file   │   --flamingock.cli.operation=apply   │ │
-│  └────────────────────┘         │   --flamingock.cli.output-file=...   │ │
+│  │                    │  file   │   --flamingock.operation=apply   │ │
+│  └────────────────────┘         │   --flamingock.output-file=...   │ │
 │                                 └──────────────────────────────────────┘ │
 │                                                                          │
 │  Communication:                                                          │
@@ -487,8 +487,8 @@ public class JvmLauncher {
         command.add("--spring.main.web-application-type=none");
         command.add("--spring.profiles.include=flamingock-cli");
         command.add("--flamingock.cli.mode=true");
-        command.add("--flamingock.cli.operation=" + operation.name().toLowerCase());
-        command.add("--flamingock.cli.output-file=" + outputFile.toAbsolutePath());
+        command.add("--flamingock.operation=" + operation.name().toLowerCase());
+        command.add("--flamingock.output-file=" + outputFile.toAbsolutePath());
 
         // App args (user-provided, after --)
         if (options.getAppArgs() != null) {
@@ -885,8 +885,8 @@ public class FlamingockCliModeAutoConfiguration {
     public CommandLineRunner flamingockCliExecutor(
             ConfigurableApplicationContext context,
             AbstractChangeRunnerBuilder<?, ?> builder,
-            @Value("${flamingock.cli.operation}") String operation,
-            @Value("${flamingock.cli.output-file}") String outputFile,
+            @Value("${flamingock.operation}") String operation,
+            @Value("${flamingock.output-file}") String outputFile,
             @Value("${flamingock.cli.count:1}") int undoCount) {
 
         return args -> {

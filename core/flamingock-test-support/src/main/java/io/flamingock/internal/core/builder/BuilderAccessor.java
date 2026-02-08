@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.builder;
 
-import io.flamingock.internal.core.runner.Runner;
+import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 

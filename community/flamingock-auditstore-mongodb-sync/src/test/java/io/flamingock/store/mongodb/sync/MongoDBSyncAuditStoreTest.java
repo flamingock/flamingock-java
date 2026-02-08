@@ -28,7 +28,7 @@ import io.flamingock.store.mongodb.sync.changes._003__insert_jorge_happy_transac
 import io.flamingock.core.kit.TestKit;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.audit.AuditTestSupport;
-import io.flamingock.internal.core.runner.PipelineExecutionException;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.mongodb.kit.MongoDBSyncTestKit;
 import io.flamingock.targetsystem.mongodb.sync.MongoDBSyncTargetSystem;
 import org.junit.jupiter.api.AfterEach;
@@ -177,7 +177,7 @@ class MongoDBSyncAuditStoreTest {
                         new CodeChangeTestDefinition(_002__insert_federico_happy_non_transactional.class, Collections.singletonList(MongoDatabase.class)),
                         new CodeChangeTestDefinition(_003__insert_jorge_failed_transactional_non_rollback.class, Arrays.asList(MongoDatabase.class, ClientSession.class))
                 )
-                .WHEN(() -> assertThrows(PipelineExecutionException.class, () -> {
+                .WHEN(() -> assertThrows(OperationException.class, () -> {
                     testKit.createBuilder()
                             .setAuditStore(MongoDBSyncAuditStore.from(mongoDBSyncTargetSystem))
                             .addTargetSystem(mongoDBSyncTargetSystem)

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.runner;
+package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
@@ -27,11 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class PipelineSummary implements StepSummary {
+public class OperationSummary implements StepSummary {
 
     private final LinkedHashMap<String, StageSummary> stageSummaries = new LinkedHashMap<>();
 
-    public PipelineSummary(ExecutablePipeline pipeline) {
+    public OperationSummary(ExecutablePipeline pipeline) {
 
         for (ExecutableStage executableStage : pipeline.getExecutableStages()) {
             StageSummary stageSummary = new StageSummary(executableStage.getName());
