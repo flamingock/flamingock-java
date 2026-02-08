@@ -296,8 +296,13 @@ Templates are **reusable, declarative change definitions** that enable "no-code 
 - `ROLLBACK_FIELD` - Payload type for the rollback operation
 
 **Base Class**: `AbstractChangeTemplate` resolves generic types via reflection and provides:
-- Field management: `changeId`, `isTransactional`, `configuration`, `applyPayload`, `rollbackPayload`
+- Field management: `changeId`, `isTransactional`, `configuration`
+- Generic type resolution for APPLY and ROLLBACK payload classes
 - Reflective class collection for GraalVM native image support
+
+**Specialized Classes**:
+- `AbstractSimpleTemplate`: For single-step changes with `setStep()`/`getStep()`
+- `AbstractSteppableTemplate`: For multi-step changes with `setSteps()`/`getSteps()`
 
 **Key Files**:
 - `core/flamingock-core-api/src/main/java/io/flamingock/api/template/ChangeTemplate.java`

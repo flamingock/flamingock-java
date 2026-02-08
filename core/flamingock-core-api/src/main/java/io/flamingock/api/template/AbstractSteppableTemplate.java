@@ -18,12 +18,11 @@ package io.flamingock.api.template;
 import java.util.List;
 
 /**
- * Represents a multistep payload that holds a list of {@link TemplateStep} objects.
+ * Abstract base class for templates with multiple steps.
  *
- * <p>This class is used when a template-based change defines multiple steps,
- * each with its own apply and optional rollback operation.</p>
+ * <p>Use this class when your template processes multiple operations, each with
+ * its own apply and optional rollback. The YAML structure for this template type is:
  *
- * <h2>YAML Structure (MultiStep format)</h2>
  * <pre>{@code
  * id: create-orders-collection
  * template: MongoChangeTemplate
@@ -47,59 +46,53 @@ import java.util.List;
  *         filter: {}
  * }</pre>
  *
- * <h2>Rollback Behavior</h2>
+ * <p>The framework will automatically parse the steps from the YAML and inject
+ * them via {@link #setSteps}.
+ *
+ * <p><b>Rollback Behavior:</b>
  * <ul>
  *   <li>When a step fails, all previously successful steps are rolled back in reverse order</li>
  *   <li>Steps without rollback operations are skipped during rollback</li>
  *   <li>Rollback errors are logged but don't stop the rollback process</li>
  * </ul>
  *
- * @param <APPLY> the type of the apply payload
- * @param <ROLLBACK> the type of the rollback payload
+ * @param <SHARED_CONFIG> the type of shared configuration
+ * @param <APPLY> the type of the apply payload for each step
+ * @param <ROLLBACK> the type of the rollback payload for each step
  */
-public class MultiStep<APPLY, ROLLBACK> {
+public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
+        extends AbstractChangeTemplate<SHARED_CONFIG, APPLY, ROLLBACK> {
 
-    private List<TemplateStep<APPLY, ROLLBACK>> steps;
+    protected List<TemplateStep<APPLY, ROLLBACK>> steps;
 
-    public MultiStep() {
-    }
-
-    public MultiStep(List<TemplateStep<APPLY, ROLLBACK>> steps) {
-        this.steps = steps;
-    }
-
-    /**
-     * Returns the list of steps in this multi-step payload.
-     *
-     * @return the list of steps
-     */
-    public List<TemplateStep<APPLY, ROLLBACK>> getSteps() {
-        return steps;
+    public AbstractSteppableTemplate(Class<?>... additionalReflectiveClass) {
+        super(additionalReflectiveClass);
     }
 
     /**
-     * Sets the list of steps for this multi-step payload.
+     * Sets the list of steps to execute.
      *
-     * @param steps the list of steps
+     * @param steps the list of template steps
      */
     public void setSteps(List<TemplateStep<APPLY, ROLLBACK>> steps) {
         this.steps = steps;
     }
 
     /**
-     * Checks if this multi-step payload is empty.
+     * Returns the list of steps.
      *
-     * @return true if steps is null or empty
+     * @return the list of template steps, or null if not set
      */
-    public boolean isEmpty() {
-        return steps == null || steps.isEmpty();
+    public List<TemplateStep<APPLY, ROLLBACK>> getSteps() {
+        return steps;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder("MultiStep{");
-        sb.append("steps=").append(steps);
-        sb.append('}');
-        return sb.toString();
+    /**
+     * Checks if this template has steps set.
+     *
+     * @return true if steps are set and not empty
+     */
+    public boolean hasSteps() {
+        return steps != null && !steps.isEmpty();
     }
 }

@@ -15,9 +15,9 @@
  */
 package io.flamingock.internal.core.task.executable;
 
+import io.flamingock.api.template.AbstractSimpleTemplate;
+import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.api.template.MultiStep;
-import io.flamingock.api.template.SingleStep;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
@@ -53,49 +53,84 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
             ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
             changeTemplateInstance.setChangeId(descriptor.getId());
-            setExecutionData(executionRuntime, changeTemplateInstance, "Configuration");
-            setExecutionData(executionRuntime, changeTemplateInstance, "ApplyPayload");
-            setExecutionData(executionRuntime, changeTemplateInstance, "RollbackPayload");
-            setStepsIfPresent(executionRuntime, changeTemplateInstance);
+            setConfigurationData(executionRuntime, changeTemplateInstance);
+
+            if (instance instanceof AbstractSteppableTemplate) {
+                setStepsForSteppableTemplate(executionRuntime, (AbstractSteppableTemplate<?, ?, ?>) instance);
+            } else if (instance instanceof AbstractSimpleTemplate) {
+                setStepForSimpleTemplate(executionRuntime, (AbstractSimpleTemplate<?, ?, ?>) instance);
+            }
+
             executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
         }
     }
 
+    /**
+     * Sets the steps for an AbstractSteppableTemplate.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void setStepsForSteppableTemplate(ExecutionRuntime executionRuntime,
+                                               AbstractSteppableTemplate<?, ?, ?> instance) {
+        Object stepsData = descriptor.getSteps();
 
-    private void setExecutionData(ExecutionRuntime executionRuntime,
-                                  ChangeTemplate<?, ?, ?> instance,
-                                  String setterName) {
-        Class<?> parameterClass;
-        Object data;
-        switch (setterName) {
-            case "Configuration":
-                parameterClass = instance.getConfigurationClass();
-                data = descriptor.getConfiguration();
-                break;
-            case "ApplyPayload":
-                parameterClass = instance.getApplyPayloadClass();
-                data = descriptor.getApply();
-                break;
-            case "RollbackPayload":
-                parameterClass = instance.getRollbackPayloadClass();
-                data = descriptor.getRollback();
-                break;
-            default:
-                throw new RuntimeException("Not found config setter for template: " + instance.getClass().getSimpleName());
+        if (stepsData != null) {
+            logger.debug("Setting steps for steppable template change[{}]", descriptor.getId());
+
+            List<TemplateStep> convertedSteps = convertToTemplateSteps(
+                    stepsData,
+                    instance.getApplyPayloadClass(),
+                    instance.getRollbackPayloadClass()
+            );
+
+            Method setStepsMethod = getSetterMethod(instance.getClass(), "setSteps");
+            executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
+        } else {
+            logger.warn("No 'steps' section provided for steppable template-based change[{}]", descriptor.getId());
         }
-        Method setConfigurationMethod = getSetterMethod(instance.getClass(), "set" + setterName);
+    }
 
-        if(data != null && Void.class != parameterClass) {
+    /**
+     * Sets the step for an AbstractSimpleTemplate.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void setStepForSimpleTemplate(ExecutionRuntime executionRuntime,
+                                          AbstractSimpleTemplate<?, ?, ?> instance) {
+        Object applyData = descriptor.getApply();
+
+        if (applyData != null) {
+            logger.debug("Setting step for simple template change[{}]", descriptor.getId());
+
+            TemplateStep step = convertToTemplateStep(
+                    applyData,
+                    descriptor.getRollback(),
+                    instance.getApplyPayloadClass(),
+                    instance.getRollbackPayloadClass()
+            );
+
+            Method setStepMethod = getSetterMethod(instance.getClass(), "setStep");
+            executionRuntime.executeMethodWithParameters(instance, setStepMethod, step);
+        } else {
+            logger.warn("No 'apply' section provided for simple template-based change[{}]", descriptor.getId());
+        }
+    }
+
+    private void setConfigurationData(ExecutionRuntime executionRuntime,
+                                       ChangeTemplate<?, ?, ?> instance) {
+        Class<?> parameterClass = instance.getConfigurationClass();
+        Object data = descriptor.getConfiguration();
+
+        if (data != null && Void.class != parameterClass) {
+            Method setConfigurationMethod = getSetterMethod(instance.getClass(), "setConfiguration");
             executionRuntime.executeMethodWithParameters(
                     instance,
                     setConfigurationMethod,
                     FileUtil.getFromMap(parameterClass, data));
-        } else if(Void.class != parameterClass ) {
-            logger.warn("No '{}' section provided for template-based change[{}] of type[{}]", setterName, descriptor.getId(), descriptor.getTemplateClass().getName());
+        } else if (Void.class != parameterClass) {
+            logger.warn("No 'Configuration' section provided for template-based change[{}] of type[{}]",
+                    descriptor.getId(), descriptor.getTemplateClass().getName());
         }
-
     }
 
 
@@ -109,79 +144,30 @@ public class TemplateExecutableTask extends ReflectionExecutableTask<TemplateLoa
     }
 
     /**
-     * Sets the step payloads on the template based on YAML structure.
-     * <p>
-     * Detection is based on YAML fields:
-     * <ul>
-     *   <li>YAML has 'steps' field → MultiStep (and legacy stepsPayload for backwards compatibility)</li>
-     *   <li>YAML has 'apply' field (no steps) → SingleStep</li>
-     * </ul>
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private void setStepsIfPresent(ExecutionRuntime executionRuntime,
-                                   ChangeTemplate<?, ?, ?> instance) {
-        Object stepsData = descriptor.getSteps();
-        Object applyData = descriptor.getApply();
-
-        if (stepsData != null) {
-            // YAML has 'steps' field -> MultiStep
-            logger.debug("Setting MultiStep for change[{}]", descriptor.getId());
-
-            List<TemplateStep> convertedSteps = convertToTemplateSteps(
-                    stepsData,
-                    instance.getApplyPayloadClass(),
-                    instance.getRollbackPayloadClass()
-            );
-
-            // Set new MultiStep type
-            MultiStep multiStep = new MultiStep(convertedSteps);
-            Method setMultiStepMethod = getSetterMethod(instance.getClass(), "setMultiStep");
-            executionRuntime.executeMethodWithParameters(instance, setMultiStepMethod, multiStep);
-
-            // Also set legacy stepsPayload for backwards compatibility
-            Method setStepsMethod = getSetterMethod(instance.getClass(), "setStepsPayload");
-            executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
-        } else if (applyData != null) {
-            // YAML has 'apply' field -> SingleStep
-            logger.debug("Setting SingleStep for change[{}]", descriptor.getId());
-
-            SingleStep singleStep = convertToSingleStep(
-                    applyData,
-                    descriptor.getRollback(),
-                    instance.getApplyPayloadClass(),
-                    instance.getRollbackPayloadClass()
-            );
-
-            Method setSingleStepMethod = getSetterMethod(instance.getClass(), "setSingleStep");
-            executionRuntime.executeMethodWithParameters(instance, setSingleStepMethod, singleStep);
-        }
-    }
-
-    /**
-     * Converts raw apply/rollback data from YAML to a SingleStep object.
+     * Converts raw apply/rollback data from YAML to a TemplateStep object.
      *
      * @param applyData       the raw apply data
      * @param rollbackData    the raw rollback data (maybe null)
      * @param applyClass      the class type for apply payload
      * @param rollbackClass   the class type for rollback payload
-     * @return the converted SingleStep object
+     * @return the converted TemplateStep object
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private SingleStep convertToSingleStep(Object applyData,
-                                           Object rollbackData,
-                                           Class<?> applyClass,
-                                           Class<?> rollbackClass) {
-        SingleStep singleStep = new SingleStep();
+    private TemplateStep convertToTemplateStep(Object applyData,
+                                               Object rollbackData,
+                                               Class<?> applyClass,
+                                               Class<?> rollbackClass) {
+        TemplateStep step = new TemplateStep();
 
         if (applyData != null && Void.class != applyClass) {
-            singleStep.setApply(FileUtil.getFromMap(applyClass, applyData));
+            step.setApply(FileUtil.getFromMap(applyClass, applyData));
         }
 
         if (rollbackData != null && Void.class != rollbackClass) {
-            singleStep.setRollback(FileUtil.getFromMap(rollbackClass, rollbackData));
+            step.setRollback(FileUtil.getFromMap(rollbackClass, rollbackData));
         }
 
-        return singleStep;
+        return step;
     }
 
     /**
