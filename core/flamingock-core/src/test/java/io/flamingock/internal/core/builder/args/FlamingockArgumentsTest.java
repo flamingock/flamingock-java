@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.builder.args;
 
-import io.flamingock.internal.core.operation.OperationType;
+import io.flamingock.internal.common.core.operation.OperationType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

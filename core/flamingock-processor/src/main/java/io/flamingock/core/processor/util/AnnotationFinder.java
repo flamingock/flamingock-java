@@ -16,13 +16,21 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.annotations.EnableFlamingock;
+import io.flamingock.api.annotations.FlamingockCliBuilder;
 import io.flamingock.internal.common.core.discover.ChangeDiscoverer;
+import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,10 +38,16 @@ public final class AnnotationFinder {
 
     private final LoggerPreProcessor logger;
     private final RoundEnvironment roundEnv;
+    private final ProcessingEnvironment processingEnv;
 
     public AnnotationFinder(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+        this(roundEnv, logger, null);
+    }
+
+    public AnnotationFinder(RoundEnvironment roundEnv, LoggerPreProcessor logger, ProcessingEnvironment processingEnv) {
         this.roundEnv = roundEnv;
         this.logger = logger;
+        this.processingEnv = processingEnv;
     }
 
     public Optional<EnableFlamingock> getPipelineAnnotation() {
@@ -76,6 +90,80 @@ public final class AnnotationFinder {
             }
         }
         return result;
+    }
+
+    /**
+     * Finds the @FlamingockCliBuilder annotated method and validates it.
+     *
+     * @return Optional containing BuilderProviderInfo if found, empty otherwise
+     * @throws RuntimeException if validation fails (multiple annotations, non-static, wrong return type, etc.)
+     */
+    public Optional<BuilderProviderInfo> findBuilderProvider() {
+        logger.info("Searching for @FlamingockCliBuilder annotation");
+        Set<? extends Element> annotatedMethods = roundEnv.getElementsAnnotatedWith(FlamingockCliBuilder.class);
+
+        if (annotatedMethods.isEmpty()) {
+            logger.verbose("No @FlamingockCliBuilder annotation found");
+            return Optional.empty();
+        }
+
+        if (annotatedMethods.size() > 1) {
+            throw new RuntimeException("Multiple @FlamingockCliBuilder annotations found. Only one is allowed.");
+        }
+
+        Element element = annotatedMethods.iterator().next();
+        if (element.getKind() != ElementKind.METHOD) {
+            throw new RuntimeException("@FlamingockCliBuilder must be placed on a method.");
+        }
+
+        ExecutableElement method = (ExecutableElement) element;
+
+        // Validate: must be static
+        if (!method.getModifiers().contains(Modifier.STATIC)) {
+            throw new RuntimeException("@FlamingockCliBuilder method must be static.");
+        }
+
+        // Validate: must have no parameters
+        if (!method.getParameters().isEmpty()) {
+            throw new RuntimeException("@FlamingockCliBuilder method must have no parameters.");
+        }
+
+        // Validate: return type must be compatible with AbstractChangeRunnerBuilder
+        validateReturnType(method);
+
+        TypeElement enclosingClass = (TypeElement) method.getEnclosingElement();
+        String className = enclosingClass.getQualifiedName().toString();
+        String methodName = method.getSimpleName().toString();
+
+        logger.info("Found @FlamingockCliBuilder method: " + className + "." + methodName + "()");
+        return Optional.of(new BuilderProviderInfo(className, methodName));
+    }
+
+    private void validateReturnType(ExecutableElement method) {
+        if (processingEnv == null) {
+            // Skip validation if processingEnv is not available
+            return;
+        }
+
+        TypeMirror returnType = method.getReturnType();
+
+        // Check if return type is assignable to AbstractChangeRunnerBuilder
+        TypeElement builderType = processingEnv.getElementUtils()
+            .getTypeElement("io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder");
+
+        if (builderType != null) {
+            Types types = processingEnv.getTypeUtils();
+            TypeMirror builderTypeMirror = types.erasure(builderType.asType());
+            TypeMirror erasedReturnType = types.erasure(returnType);
+
+            if (!types.isAssignable(erasedReturnType, builderTypeMirror)) {
+                throw new RuntimeException(
+                    "@FlamingockCliBuilder method must return AbstractChangeRunnerBuilder or a subtype. " +
+                    "Found: " + returnType.toString()
+                );
+            }
+        }
+        // If we can't find the builder type (shouldn't happen), we skip validation
     }
 
 }

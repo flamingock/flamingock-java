@@ -16,11 +16,12 @@
 package io.flamingock.cli.executor.command;
 
 import io.flamingock.cli.executor.FlamingockExecutorCli;
+import io.flamingock.cli.executor.orchestration.CommandExecutor;
+import io.flamingock.cli.executor.orchestration.CommandResult;
+import io.flamingock.cli.executor.orchestration.ExecutionOptions;
 import io.flamingock.cli.executor.output.ConsoleFormatter;
-import io.flamingock.cli.executor.process.JvmLauncher;
-import io.flamingock.cli.executor.result.ResponseResultReader;
-import io.flamingock.cli.executor.result.ResponseResultReader.ResponseResult;
 import io.flamingock.cli.executor.util.VersionProvider;
+import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -28,9 +29,6 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -61,11 +59,6 @@ public class ApplyCommand implements Callable<Integer> {
      */
     public static final int EXIT_JAR_NOT_FOUND = 126;
 
-    /**
-     * Operation string for EXECUTE operation (matches FlamingockArguments parsing).
-     */
-    private static final String OPERATION_EXECUTE = "EXECUTE";
-
     @ParentCommand
     private ExecuteCommand parent;
 
@@ -74,14 +67,29 @@ public class ApplyCommand implements Callable<Integer> {
             required = true)
     private File jarFile;
 
+    private final CommandExecutor commandExecutor;
+
+    /**
+     * Creates a new ApplyCommand with default dependencies.
+     */
+    public ApplyCommand() {
+        this(new CommandExecutor());
+    }
+
+    /**
+     * Creates a new ApplyCommand with the specified CommandExecutor.
+     *
+     * @param commandExecutor the command executor to use
+     */
+    public ApplyCommand(CommandExecutor commandExecutor) {
+        this.commandExecutor = commandExecutor;
+    }
+
     @Override
     public Integer call() {
         FlamingockExecutorCli root = getRootCommand();
         boolean quiet = root != null && root.isQuiet();
         Optional<String> logLevel = root != null ? root.getLogLevel() : Optional.empty();
-
-        // Execution ops: always stream output by default
-        boolean streamOutput = true;
 
         // Print header unless quiet mode
         if (!quiet) {
@@ -99,42 +107,27 @@ public class ApplyCommand implements Callable<Integer> {
             return EXIT_JAR_NOT_FOUND;
         }
 
-        Path outputFile = null;
-        try {
-            outputFile = Files.createTempFile("flamingock-response-", ".json");
+        // Execution ops: always stream output by default
+        ExecutionOptions options = ExecutionOptions.builder()
+                .logLevel(logLevel.orElse(null))
+                .streamOutput(true)
+                .build();
 
-            JvmLauncher launcher = new JvmLauncher();
-            int exitCode = launcher.launch(
-                    jarFile.getAbsolutePath(),
-                    OPERATION_EXECUTE,
-                    outputFile.toString(),
-                    logLevel.orElse(null),
-                    streamOutput
-            );
+        CommandResult<ExecuteResponseData> result = commandExecutor.execute(
+                jarFile.getAbsolutePath(),
+                OperationType.EXECUTE,
+                ExecuteResponseData.class,
+                options
+        );
 
-            ResponseResultReader reader = new ResponseResultReader();
-            ResponseResult<ExecuteResponseData> result = reader.readTyped(outputFile, ExecuteResponseData.class);
-
-            if (exitCode == 0 && result.isSuccess()) {
-                if (!quiet) {
-                    ConsoleFormatter.printSuccess(result.getDurationMs());
-                }
-                return 0;
-            } else {
-                ConsoleFormatter.printFailure(result.getErrorCode(), result.getErrorMessage());
-                return exitCode != 0 ? exitCode : 1;
+        if (result.isSuccess()) {
+            if (!quiet) {
+                ConsoleFormatter.printSuccess(result.getDurationMs());
             }
-
-        } catch (IOException e) {
-            ConsoleFormatter.printError("Failed to create temporary file: " + e.getMessage());
-            return 1;
-        } finally {
-            if (outputFile != null) {
-                try {
-                    Files.deleteIfExists(outputFile);
-                } catch (IOException ignored) {
-                }
-            }
+            return 0;
+        } else {
+            ConsoleFormatter.printFailure(result.getErrorCode(), result.getErrorMessage());
+            return result.getExitCode();
         }
     }
 

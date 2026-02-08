@@ -21,6 +21,7 @@ public class FlamingockMetadata {
 
     private PreviewPipeline pipeline;
     private String configFile;
+    private BuilderProviderInfo builderProvider;
 
     public FlamingockMetadata() {
     }
@@ -46,10 +47,27 @@ public class FlamingockMetadata {
         this.configFile = configFile;
     }
 
+    public BuilderProviderInfo getBuilderProvider() {
+        return builderProvider;
+    }
+
+    public void setBuilderProvider(BuilderProviderInfo builderProvider) {
+        this.builderProvider = builderProvider;
+    }
+
+    /**
+     * Checks if a valid builder provider is configured.
+     * @return true if builder provider exists and has both class and method names
+     */
+    public boolean hasValidBuilderProvider() {
+        return builderProvider != null && builderProvider.isValid();
+    }
+
     @Override
     public String toString() {
         return "FlamingockMetadata{" + "pipeline=" + pipeline +
                 ", configFile='" + configFile + '\'' +
+                ", builderProvider=" + builderProvider +
                 '}';
     }
 }

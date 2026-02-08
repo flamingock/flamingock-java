@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.common.core.operation;
 
 public enum OperationType {
     EXECUTE,
