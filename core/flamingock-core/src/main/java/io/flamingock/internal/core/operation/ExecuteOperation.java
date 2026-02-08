@@ -110,6 +110,12 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
     }
 
     private ExecuteResponseData execute(LoadedPipeline pipeline) throws FlamingockException {
+        List<AbstractLoadedStage> allStages = validateAndGetExecutableStages(pipeline);
+        int stageCount = allStages.size();
+        long changeCount = allStages.stream()
+                .mapToLong(stage -> stage.getTasks().size())
+                .sum();
+        logger.info("Flamingock execution started [stages={} changes={}]", stageCount, changeCount);
 
         eventPublisher.publish(new PipelineStartedEvent());
         ExecutionResultBuilder resultBuilder = new ExecutionResultBuilder().startTimer();
@@ -151,8 +157,8 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
         resultBuilder.stopTimer().success();
         ExecuteResponseData result = resultBuilder.build();
 
-        logger.info("Finished Flamingock process successfully [applied={} skipped={} duration={}ms]",
-                result.getAppliedChanges(), result.getSkippedChanges(), result.getTotalDurationMs());
+        logger.info("Flamingock execution completed [duration={}ms applied={} skipped={}]",
+                result.getTotalDurationMs(), result.getAppliedChanges(), result.getSkippedChanges());
 
         eventPublisher.publish(new PipelineCompletedEvent());
 

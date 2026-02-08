@@ -42,10 +42,7 @@ public final class ExecutionResultFormatter {
      * @return formatted string for display
      */
     public static String format(ExecuteResponseData result) {
-        StringBuilder sb = new StringBuilder();
-
-        // Print stages and changes
-        sb.append("\nApplying changes...\n");
+        StringBuilder sb = new StringBuilder("\n");
 
         for (StageResult stage : result.getStages()) {
             sb.append(formatStage(stage));

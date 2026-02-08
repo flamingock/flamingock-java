@@ -70,7 +70,8 @@ public class StageExecutor {
         String stageName = executableStage.getName();
         long taskCount = getTasksStream(executableStage).count();
 
-        logger.info("Starting stage execution [stage={} tasks={} execution_id={}]",
+        logger.info("Stage started [stage={}]", stageName);
+        logger.debug("Stage execution context [stage={} tasks={} execution_id={}]",
                 stageName, taskCount, executionContext.getExecutionId());
 
         StageResultBuilder resultBuilder = new StageResultBuilder()
@@ -116,8 +117,10 @@ public class StageExecutor {
 
             resultBuilder.stopTimer().completed();
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-            logger.info("Stage execution completed successfully [stage={} duration={} tasks={}]",
-                    stageName, formatDuration(stageDuration), taskCount);
+            StageResult stageResult = resultBuilder.build();
+            logger.info("Stage completed [stage={} duration={} applied={} skipped={}]",
+                    stageName, formatDuration(stageDuration), stageResult.getAppliedCount(), stageResult.getSkippedCount());
+            return new Output(stageResult);
 
         } catch (StageExecutionException stageExecutionException) {
             throw stageExecutionException;
@@ -128,8 +131,6 @@ public class StageExecutor {
                     stageName, formatDuration(stageDuration), throwable.getMessage(), throwable);
             throw StageExecutionException.fromResult(throwable, resultBuilder.build(), null);
         }
-
-        return new Output(resultBuilder.build());
     }
 
     private ChangeProcessStrategyFactory getStepNavigatorBuilder(ExecutionContext executionContext, Lock lock, ContextResolver contextResolver) {
