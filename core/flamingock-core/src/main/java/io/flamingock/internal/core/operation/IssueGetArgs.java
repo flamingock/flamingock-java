@@ -15,33 +15,28 @@
  */
 package io.flamingock.internal.core.operation;
 
-import java.time.LocalDateTime;
+public class IssueGetArgs implements OperationArgs {
 
-public class AuditListArgs implements OperationArgs {
+    private final String changeId;
+    private final boolean withGuidance;
 
-    private final boolean history;
-    private final LocalDateTime since;
-    private final boolean extended;
-
-    public AuditListArgs() {
-        this(false, null, false);
+    public IssueGetArgs() {
+        this(null, false);
     }
 
-    public AuditListArgs(boolean history, LocalDateTime since, boolean extended) {
-        this.history = history;
-        this.since = since;
-        this.extended = extended;
+    public IssueGetArgs(String changeId, boolean withGuidance) {
+        this.changeId = changeId;
+        this.withGuidance = withGuidance;
     }
 
-    public boolean isHistory() {
-        return history;
+    /**
+     * Returns the change ID to look up, or null to return the first issue.
+     */
+    public String getChangeId() {
+        return changeId;
     }
 
-    public LocalDateTime getSince() {
-        return since;
-    }
-
-    public boolean isExtended() {
-        return extended;
+    public boolean isWithGuidance() {
+        return withGuidance;
     }
 }

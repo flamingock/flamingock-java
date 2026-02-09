@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,84 +20,51 @@ import io.flamingock.cli.executor.orchestration.CommandExecutor;
 import io.flamingock.cli.executor.orchestration.CommandResult;
 import io.flamingock.cli.executor.orchestration.ExecutionOptions;
 import io.flamingock.cli.executor.output.ConsoleFormatter;
-import io.flamingock.cli.executor.output.TableFormatter;
+import io.flamingock.cli.executor.output.IssueFormatter;
+import io.flamingock.cli.executor.output.JsonFormatter;
 import io.flamingock.cli.executor.util.VersionProvider;
 import io.flamingock.internal.common.core.operation.OperationType;
-import io.flamingock.internal.common.core.response.data.AuditListResponseData;
-import io.flamingock.internal.common.core.response.data.AuditListResponseData.AuditEntryDto;
+import io.flamingock.internal.common.core.response.data.IssueListResponseData;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
 /**
- * Command to list audit entries from the Flamingock audit store.
- *
- * <p>This command spawns the user's application JAR with special flags
- * that enable CLI mode in Flamingock and executes the LIST operation,
- * which retrieves the audit history.</p>
- *
- * <p>Exit codes:</p>
- * <ul>
- *   <li>0 - Success</li>
- *   <li>1 - Failure (execution error)</li>
- *   <li>2 - Usage error (invalid CLI arguments)</li>
- *   <li>126 - JAR not found</li>
- * </ul>
+ * Command to list audit issues from the Flamingock audit store.
  */
 @Command(
         name = "list",
-        description = "List audit entries from the change history",
+        aliases = "ls",
+        description = "List changes with audit issues",
         mixinStandardHelpOptions = true
 )
-public class ListCommand implements Callable<Integer> {
+public class ListIssueCommand implements Callable<Integer> {
 
-    /**
-     * Exit code when JAR file is not found.
-     */
     public static final int EXIT_JAR_NOT_FOUND = 126;
 
     @ParentCommand
-    private AuditCommand parent;
+    private IssueCommand parent;
 
     @Option(names = {"--jar", "-j"},
             description = "Path to the application JAR",
             required = true)
     private File jarFile;
 
-    @Option(names = {"--history"},
-            description = "Show full chronological history instead of snapshot")
-    private boolean history;
-
-    @Option(names = {"--since"},
-            description = "Filter entries since date (ISO-8601: yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss)")
-    private String since;
-
-    @Option(names = {"-e", "--extended"},
-            description = "Show extended information (execution ID, class, method, hostname)")
-    private boolean extended;
+    @Option(names = {"--json"},
+            description = "Output in JSON format")
+    private boolean json;
 
     private final CommandExecutor commandExecutor;
 
-    /**
-     * Creates a new ListCommand with default dependencies.
-     */
-    public ListCommand() {
+    public ListIssueCommand() {
         this(new CommandExecutor());
     }
 
-    /**
-     * Creates a new ListCommand with the specified CommandExecutor.
-     *
-     * @param commandExecutor the command executor to use
-     */
-    public ListCommand(CommandExecutor commandExecutor) {
+    public ListIssueCommand(CommandExecutor commandExecutor) {
         this.commandExecutor = commandExecutor;
     }
 
@@ -107,12 +74,10 @@ public class ListCommand implements Callable<Integer> {
         boolean quiet = root != null && root.isQuiet();
         Optional<String> logLevel = root != null ? root.getLogLevel() : Optional.empty();
 
-        // Print header unless quiet mode
-        if (!quiet) {
+        if (!quiet && !json) {
             ConsoleFormatter.printHeader(VersionProvider.getVersionString());
         }
 
-        // Validate JAR exists
         if (!jarFile.exists()) {
             ConsoleFormatter.printError("JAR file not found: " + jarFile.getAbsolutePath());
             return EXIT_JAR_NOT_FOUND;
@@ -123,35 +88,24 @@ public class ListCommand implements Callable<Integer> {
             return EXIT_JAR_NOT_FOUND;
         }
 
-        // Build operation-specific arguments
-        Map<String, String> operationArgs = new HashMap<>();
-        if (history) {
-            operationArgs.put("flamingock.audit.history", "true");
-        }
-        if (since != null && !since.isEmpty()) {
-            operationArgs.put("flamingock.audit.since", since);
-        }
-        if (extended) {
-            operationArgs.put("flamingock.audit.extended", "true");
-        }
-
-        // Non-execution ops: only stream output if log level is explicitly set
         ExecutionOptions options = ExecutionOptions.builder()
                 .logLevel(logLevel.orElse(null))
                 .streamOutput(logLevel.isPresent())
-                .operationArgs(operationArgs)
                 .build();
 
-        CommandResult<AuditListResponseData> result = commandExecutor.execute(
+        CommandResult<IssueListResponseData> result = commandExecutor.execute(
                 jarFile.getAbsolutePath(),
-                OperationType.AUDIT_LIST,
-                AuditListResponseData.class,
+                OperationType.ISSUE_LIST,
+                IssueListResponseData.class,
                 options
         );
 
         if (result.isSuccess()) {
-            if (result.getData() != null) {
-                displayAuditEntries(result.getData().getEntries(), quiet);
+            IssueListResponseData data = result.getData();
+            if (json) {
+                JsonFormatter.print(data);
+            } else {
+                displayIssues(data, quiet);
             }
             return 0;
         } else {
@@ -160,35 +114,26 @@ public class ListCommand implements Callable<Integer> {
         }
     }
 
-    private void displayAuditEntries(List<AuditEntryDto> entries, boolean quiet) {
-        if (entries == null || entries.isEmpty()) {
+    private void displayIssues(IssueListResponseData data, boolean quiet) {
+        if (data == null || data.getIssues() == null || data.getIssues().isEmpty()) {
             if (!quiet) {
-                ConsoleFormatter.printInfo("No audit entries found.");
+                ConsoleFormatter.printInfo("No issues found. All changes are healthy.");
             }
             return;
         }
 
         System.out.println();
-        TableFormatter tableFormatter = new TableFormatter();
-        if (extended) {
-            tableFormatter.printExtendedTable(entries);
-        } else {
-            tableFormatter.printBasicTable(entries);
-        }
-
-        TableFormatter.printStateLegend();
-
+        IssueFormatter.printList(data);
         System.out.println();
-        System.out.println("Total: " + entries.size() + " entries");
+        System.out.println("Total: " + data.getIssues().size() + " issues");
     }
 
     private FlamingockExecutorCli getRootCommand() {
         if (parent == null) {
             return null;
         }
-        // Navigate up the command hierarchy to find the root
         try {
-            java.lang.reflect.Field parentField = AuditCommand.class.getDeclaredField("parent");
+            java.lang.reflect.Field parentField = IssueCommand.class.getDeclaredField("parent");
             parentField.setAccessible(true);
             Object grandParent = parentField.get(parent);
             if (grandParent instanceof FlamingockExecutorCli) {

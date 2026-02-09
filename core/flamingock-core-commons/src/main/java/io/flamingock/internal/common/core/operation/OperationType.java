@@ -22,5 +22,6 @@ public enum OperationType {
     EXECUTE_DRYRUN,
     AUDIT_LIST,
     AUDIT_FIX,
+    ISSUE_LIST,
     ISSUE_GET
 }

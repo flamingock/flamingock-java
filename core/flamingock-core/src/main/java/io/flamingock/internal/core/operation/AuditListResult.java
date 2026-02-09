@@ -24,27 +24,57 @@ import java.util.stream.Collectors;
 
 public class AuditListResult extends AbstractOperationResult {
     private final List<AuditEntry> auditEntries;
+    private final boolean extended;
 
     public AuditListResult(List<AuditEntry> auditEntries) {
+        this(auditEntries, false);
+    }
+
+    public AuditListResult(List<AuditEntry> auditEntries, boolean extended) {
         this.auditEntries = auditEntries;
+        this.extended = extended;
     }
 
     public List<AuditEntry> getAuditEntries() {
         return auditEntries;
     }
 
+    public boolean isExtended() {
+        return extended;
+    }
+
     @Override
     public Object toResponseData() {
         List<AuditEntryDto> dtos = auditEntries.stream()
-                .map(entry -> new AuditEntryDto(
-                        entry.getTaskId(),
-                        entry.getAuthor(),
-                        entry.getState() != null ? entry.getState().name() : null,
-                        entry.getStageId(),
-                        entry.getCreatedAt(),
-                        entry.getExecutionMillis()
-                ))
+                .map(this::toDto)
                 .collect(Collectors.toList());
         return new AuditListResponseData(dtos);
+    }
+
+    private AuditEntryDto toDto(AuditEntry entry) {
+        if (extended) {
+            return new AuditEntryDto(
+                    entry.getTaskId(),
+                    entry.getAuthor(),
+                    entry.getState() != null ? entry.getState().name() : null,
+                    entry.getStageId(),
+                    entry.getCreatedAt(),
+                    entry.getExecutionMillis(),
+                    entry.getExecutionId(),
+                    entry.getClassName(),
+                    entry.getMethodName(),
+                    entry.getExecutionHostname(),
+                    entry.getTargetSystemId()
+            );
+        } else {
+            return new AuditEntryDto(
+                    entry.getTaskId(),
+                    entry.getAuthor(),
+                    entry.getState() != null ? entry.getState().name() : null,
+                    entry.getStageId(),
+                    entry.getCreatedAt(),
+                    entry.getExecutionMillis()
+            );
+        }
     }
 }

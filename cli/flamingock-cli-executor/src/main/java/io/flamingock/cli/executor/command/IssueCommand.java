@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,28 +19,27 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 /**
- * Parent command for audit operations.
+ * Parent command for issue operations.
  *
- * <p>Groups subcommands related to audit inspection:</p>
+ * <p>Groups subcommands related to audit issues:</p>
  * <ul>
- *   <li>{@code list} - List audit entries</li>
- *   <li>{@code fix} - Fix audit state for a change with issues</li>
+ *   <li>{@code list} - List audit issues</li>
+ *   <li>{@code get} - Get details for a specific issue</li>
  * </ul>
  */
 @Command(
-        name = "audit",
-        description = "Audit operations for inspecting change history",
-        subcommands = {ListCommand.class, FixCommand.class},
+        name = "issue",
+        description = "Issue operations for inspecting audit problems",
+        subcommands = {ListIssueCommand.class, GetIssueCommand.class},
         mixinStandardHelpOptions = true
 )
-public class AuditCommand implements Runnable {
+public class IssueCommand implements Runnable {
 
     @CommandLine.ParentCommand
     private Object parent;
 
     @Override
     public void run() {
-        // Show help when no subcommand is specified
         new CommandLine(this).usage(System.out);
     }
 }

@@ -17,6 +17,7 @@ package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.operation.OperationType;
+import io.flamingock.internal.common.core.recovery.Resolution;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -30,9 +31,21 @@ import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Map;
 import java.util.Set;
 
 public class OperationFactory {
+
+    private static final String ARG_HISTORY = "flamingock.audit.history";
+    private static final String ARG_SINCE = "flamingock.audit.since";
+    private static final String ARG_EXTENDED = "flamingock.audit.extended";
+    private static final String ARG_CHANGE_ID = "flamingock.change-id";
+    private static final String ARG_RESOLUTION = "flamingock.resolution";
+    private static final String ARG_GUIDANCE = "flamingock.guidance";
 
     private final RunnerId runnerId;
     private final FlamingockArguments flamingockArgs;
@@ -73,23 +86,61 @@ public class OperationFactory {
         this.finalizer = finalizer;
     }
 
-    public  RunnableOperation<?, ?> getOperation() {
+    public RunnableOperation<?, ?> getOperation() {
         switch (flamingockArgs.getOperation()) {
             case EXECUTE_APPLY:
                 return getExecuteOperation();
             case AUDIT_LIST:
                 return getAuditListOperation();
+            case AUDIT_FIX:
+                return getAuditFixOperation();
+            case ISSUE_LIST:
+                return getIssueListOperation();
+            case ISSUE_GET:
+                return getIssueGetOperation();
             default:
                 throw new UnsupportedOperationException(String.format("Operation %s not supported", flamingockArgs.getOperation()));
         }
     }
 
     private RunnableOperation<AuditListArgs, AuditListResult> getAuditListOperation() {
+        Map<String, String> args = flamingockArgs.getRemainingArgs();
+        boolean history = parseBoolean(args.get(ARG_HISTORY));
+        LocalDateTime since = parseDateTime(args.get(ARG_SINCE));
+        boolean extended = parseBoolean(args.get(ARG_EXTENDED));
         AuditListOperation auditListOperation = new AuditListOperation(persistence);
-        return new RunnableOperation<>(auditListOperation, new AuditListArgs());
+        return new RunnableOperation<>(auditListOperation, new AuditListArgs(history, since, extended));
     }
 
-    private  RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteOperation() {
+    private RunnableOperation<AuditFixArgs, AuditFixResult> getAuditFixOperation() {
+        Map<String, String> args = flamingockArgs.getRemainingArgs();
+        String changeId = args.get(ARG_CHANGE_ID);
+        if (changeId == null || changeId.isEmpty()) {
+            throw new IllegalArgumentException("Change ID is required for AUDIT_FIX operation");
+        }
+        String resolutionStr = args.get(ARG_RESOLUTION);
+        if (resolutionStr == null || resolutionStr.isEmpty()) {
+            throw new IllegalArgumentException("Resolution is required for AUDIT_FIX operation");
+        }
+        Resolution resolution = Resolution.valueOf(resolutionStr.toUpperCase());
+        AuditFixOperation auditFixOperation = new AuditFixOperation(persistence);
+        return new RunnableOperation<>(auditFixOperation, new AuditFixArgs(changeId, resolution));
+    }
+
+    private RunnableOperation<IssueListArgs, IssueListResult> getIssueListOperation() {
+        IssueListOperation issueListOperation = new IssueListOperation(persistence);
+        return new RunnableOperation<>(issueListOperation, new IssueListArgs());
+    }
+
+    private RunnableOperation<IssueGetArgs, IssueGetResult> getIssueGetOperation() {
+        Map<String, String> args = flamingockArgs.getRemainingArgs();
+        String changeId = args.get(ARG_CHANGE_ID);
+        boolean guidance = parseBoolean(args.get(ARG_GUIDANCE));
+        IssueGetOperation issueGetOperation = new IssueGetOperation(persistence);
+        return new RunnableOperation<>(issueGetOperation, new IssueGetArgs(changeId, guidance));
+    }
+
+    private RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteOperation() {
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
         ExecuteOperation executeOperation = new ExecuteOperation(
                 runnerId,
@@ -102,9 +153,28 @@ public class OperationFactory {
         return new RunnableOperation<>(executeOperation, new ExecuteArgs(pipeline));
     }
 
-
     private static OrphanExecutionContext buildExecutionContext(CoreConfigurable configuration) {
         return new OrphanExecutionContext(StringUtil.hostname(), configuration.getMetadata());
     }
 
+    private static boolean parseBoolean(String value) {
+        return "true".equalsIgnoreCase(value);
+    }
+
+    private static LocalDateTime parseDateTime(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        // Try parsing as LocalDateTime first (ISO-8601 with time)
+        try {
+            return LocalDateTime.parse(value);
+        } catch (DateTimeParseException e) {
+            // Try parsing as date only
+            try {
+                return LocalDate.parse(value).atStartOfDay();
+            } catch (DateTimeParseException e2) {
+                throw new IllegalArgumentException("Invalid date format: " + value + ". Expected ISO-8601 format (e.g., 2025-01-01 or 2025-01-01T10:30:00)");
+            }
+        }
+    }
 }

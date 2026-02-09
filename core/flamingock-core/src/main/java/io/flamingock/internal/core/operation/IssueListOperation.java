@@ -15,33 +15,18 @@
  */
 package io.flamingock.internal.core.operation;
 
-import java.time.LocalDateTime;
+import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 
-public class AuditListArgs implements OperationArgs {
+public class IssueListOperation implements Operation<IssueListArgs, IssueListResult> {
 
-    private final boolean history;
-    private final LocalDateTime since;
-    private final boolean extended;
+    private final AuditPersistence persistence;
 
-    public AuditListArgs() {
-        this(false, null, false);
+    public IssueListOperation(AuditPersistence persistence) {
+        this.persistence = persistence;
     }
 
-    public AuditListArgs(boolean history, LocalDateTime since, boolean extended) {
-        this.history = history;
-        this.since = since;
-        this.extended = extended;
-    }
-
-    public boolean isHistory() {
-        return history;
-    }
-
-    public LocalDateTime getSince() {
-        return since;
-    }
-
-    public boolean isExtended() {
-        return extended;
+    @Override
+    public IssueListResult execute(IssueListArgs args) {
+        return new IssueListResult(persistence.getAuditIssues());
     }
 }

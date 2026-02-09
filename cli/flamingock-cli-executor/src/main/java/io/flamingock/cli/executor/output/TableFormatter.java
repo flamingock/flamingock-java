@@ -52,6 +52,11 @@ public class TableFormatter {
     private static final int STATE_WIDTH = 13;
     private static final int AUTHOR_WIDTH = 18;
     private static final int TIME_WIDTH = 21;
+    // Extended column widths
+    private static final int EXECUTION_ID_WIDTH = 15;
+    private static final int CLASS_WIDTH = 25;
+    private static final int METHOD_WIDTH = 15;
+    private static final int HOSTNAME_WIDTH = 15;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -67,10 +72,29 @@ public class TableFormatter {
         columns.add(new TableColumn("Author", AUTHOR_WIDTH));
         columns.add(new TableColumn("Time", TIME_WIDTH));
 
-        printTable(entries, columns);
+        printTable(entries, columns, false);
     }
 
-    private void printTable(List<AuditEntryDto> entries, List<TableColumn> columns) {
+    /**
+     * Print extended audit table with additional columns for debugging.
+     *
+     * @param entries the audit entries to display
+     */
+    public void printExtendedTable(List<AuditEntryDto> entries) {
+        List<TableColumn> columns = new ArrayList<>();
+        columns.add(new TableColumn("Change ID", CHANGE_ID_WIDTH));
+        columns.add(new TableColumn("State", STATE_WIDTH, TableColumn.Alignment.CENTER));
+        columns.add(new TableColumn("Exec ID", EXECUTION_ID_WIDTH));
+        columns.add(new TableColumn("Author", AUTHOR_WIDTH));
+        columns.add(new TableColumn("Time", TIME_WIDTH));
+        columns.add(new TableColumn("Class", CLASS_WIDTH));
+        columns.add(new TableColumn("Method", METHOD_WIDTH));
+        columns.add(new TableColumn("Hostname", HOSTNAME_WIDTH));
+
+        printTable(entries, columns, true);
+    }
+
+    private void printTable(List<AuditEntryDto> entries, List<TableColumn> columns, boolean extended) {
         // Print top border
         printTopBorder(columns);
 
@@ -82,7 +106,7 @@ public class TableFormatter {
 
         // Print data rows
         for (AuditEntryDto entry : entries) {
-            printDataRow(entry, columns);
+            printDataRow(entry, columns, extended);
         }
 
         // Print bottom border
@@ -136,7 +160,7 @@ public class TableFormatter {
         System.out.println();
     }
 
-    private void printDataRow(AuditEntryDto entry, List<TableColumn> columns) {
+    private void printDataRow(AuditEntryDto entry, List<TableColumn> columns, boolean extended) {
         System.out.print(VERTICAL);
         for (int i = 0; i < columns.size(); i++) {
             if (i == 1) {
@@ -148,7 +172,7 @@ public class TableFormatter {
                 int rightPad = padding - leftPad;
                 System.out.print(spaces(leftPad) + stateText + spaces(rightPad));
             } else {
-                String value = getColumnValue(entry, i);
+                String value = extended ? getExtendedColumnValue(entry, i) : getColumnValue(entry, i);
                 System.out.print(columns.get(i).format(value));
             }
             System.out.print(VERTICAL);
@@ -167,6 +191,47 @@ public class TableFormatter {
             default:
                 return "";
         }
+    }
+
+    private String getExtendedColumnValue(AuditEntryDto entry, int columnIndex) {
+        switch (columnIndex) {
+            case 0: // Change ID
+                return entry.getTaskId();
+            case 2: // Exec ID
+                return truncate(entry.getExecutionId(), EXECUTION_ID_WIDTH);
+            case 3: // Author
+                return entry.getAuthor();
+            case 4: // Time
+                return formatTime(entry.getCreatedAt());
+            case 5: // Class
+                return truncateClassName(entry.getClassName(), CLASS_WIDTH);
+            case 6: // Method
+                return truncate(entry.getMethodName(), METHOD_WIDTH);
+            case 7: // Hostname
+                return truncate(entry.getExecutionHostname(), HOSTNAME_WIDTH);
+            default:
+                return "";
+        }
+    }
+
+    private String truncate(String value, int maxLen) {
+        if (value == null) {
+            return "-";
+        }
+        if (value.length() <= maxLen) {
+            return value;
+        }
+        return value.substring(0, maxLen - 3) + "...";
+    }
+
+    private String truncateClassName(String className, int maxLen) {
+        if (className == null) {
+            return "-";
+        }
+        // Get simple class name
+        int lastDot = className.lastIndexOf('.');
+        String simpleName = lastDot >= 0 ? className.substring(lastDot + 1) : className;
+        return truncate(simpleName, maxLen);
     }
 
     private String spaces(int count) {

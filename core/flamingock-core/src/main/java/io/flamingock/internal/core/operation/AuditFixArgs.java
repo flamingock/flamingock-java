@@ -15,33 +15,23 @@
  */
 package io.flamingock.internal.core.operation;
 
-import java.time.LocalDateTime;
+import io.flamingock.internal.common.core.recovery.Resolution;
 
-public class AuditListArgs implements OperationArgs {
+public class AuditFixArgs implements OperationArgs {
 
-    private final boolean history;
-    private final LocalDateTime since;
-    private final boolean extended;
+    private final String changeId;
+    private final Resolution resolution;
 
-    public AuditListArgs() {
-        this(false, null, false);
+    public AuditFixArgs(String changeId, Resolution resolution) {
+        this.changeId = changeId;
+        this.resolution = resolution;
     }
 
-    public AuditListArgs(boolean history, LocalDateTime since, boolean extended) {
-        this.history = history;
-        this.since = since;
-        this.extended = extended;
+    public String getChangeId() {
+        return changeId;
     }
 
-    public boolean isHistory() {
-        return history;
-    }
-
-    public LocalDateTime getSince() {
-        return since;
-    }
-
-    public boolean isExtended() {
-        return extended;
+    public Resolution getResolution() {
+        return resolution;
     }
 }

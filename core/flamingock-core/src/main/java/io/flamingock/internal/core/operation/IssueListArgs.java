@@ -15,33 +15,8 @@
  */
 package io.flamingock.internal.core.operation;
 
-import java.time.LocalDateTime;
+public class IssueListArgs implements OperationArgs {
 
-public class AuditListArgs implements OperationArgs {
-
-    private final boolean history;
-    private final LocalDateTime since;
-    private final boolean extended;
-
-    public AuditListArgs() {
-        this(false, null, false);
-    }
-
-    public AuditListArgs(boolean history, LocalDateTime since, boolean extended) {
-        this.history = history;
-        this.since = since;
-        this.extended = extended;
-    }
-
-    public boolean isHistory() {
-        return history;
-    }
-
-    public LocalDateTime getSince() {
-        return since;
-    }
-
-    public boolean isExtended() {
-        return extended;
+    public IssueListArgs() {
     }
 }

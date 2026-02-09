@@ -19,8 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.flamingock.internal.common.core.response.ResponseEnvelope;
+import io.flamingock.internal.common.core.response.data.AuditFixResponseData;
 import io.flamingock.internal.common.core.response.data.AuditListResponseData;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+import io.flamingock.internal.common.core.response.data.IssueGetResponseData;
+import io.flamingock.internal.common.core.response.data.IssueListResponseData;
 import io.flamingock.internal.util.JsonObjectMapper;
 
 import java.io.File;
@@ -45,7 +48,10 @@ public class ResponseResultReader {
     private void registerSubtypes() {
         objectMapper.registerSubtypes(
                 new NamedType(AuditListResponseData.class, "audit_list"),
-                new NamedType(ExecuteResponseData.class, "execute")
+                new NamedType(AuditFixResponseData.class, "audit_fix"),
+                new NamedType(ExecuteResponseData.class, "execute"),
+                new NamedType(IssueListResponseData.class, "issue_list"),
+                new NamedType(IssueGetResponseData.class, "issue_get")
         );
     }
 
