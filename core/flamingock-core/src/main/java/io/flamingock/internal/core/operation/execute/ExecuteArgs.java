@@ -13,28 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.execute;
 
-import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+import io.flamingock.internal.core.operation.OperationArgs;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 
-/**
- * Result of executing the pipeline.
- * Contains structured result data for reporting and CLI output.
- */
-public class ExecuteResult extends AbstractOperationResult {
+public class ExecuteArgs implements OperationArgs {
 
-    private final ExecuteResponseData data;
+    private final LoadedPipeline pipeline;
 
-    public ExecuteResult(ExecuteResponseData data) {
-        this.data = data;
+    public ExecuteArgs(LoadedPipeline pipeline) {
+        this.pipeline = pipeline;
     }
 
-    public ExecuteResponseData getData() {
-        return data;
-    }
-
-    @Override
-    public Object toResponseData() {
-        return data;
+    public LoadedPipeline getPipeline() {
+        return pipeline;
     }
 }

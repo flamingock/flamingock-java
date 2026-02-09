@@ -21,7 +21,9 @@ import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageStatus;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
+import io.flamingock.internal.core.operation.execute.ExecuteArgs;
+import io.flamingock.internal.core.operation.execute.ExecuteOperation;
+import io.flamingock.internal.core.operation.execute.ExecuteResult;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
@@ -40,7 +42,6 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;

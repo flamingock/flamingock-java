@@ -13,20 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.issue;
 
+import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.Operation;
 
-public class IssueListOperation implements Operation<IssueListArgs, IssueListResult> {
+import java.util.Optional;
+
+public class IssueGetOperation implements Operation<IssueGetArgs, IssueGetResult> {
 
     private final AuditPersistence persistence;
 
-    public IssueListOperation(AuditPersistence persistence) {
+    public IssueGetOperation(AuditPersistence persistence) {
         this.persistence = persistence;
     }
 
     @Override
-    public IssueListResult execute(IssueListArgs args) {
-        return new IssueListResult(persistence.getAuditIssues());
+    public IssueGetResult execute(IssueGetArgs args) {
+        Optional<AuditEntryIssue> issue;
+        if (args.getChangeId() != null) {
+            issue = persistence.getAuditIssueByChangeId(args.getChangeId());
+        } else {
+            issue = persistence.getAuditIssues().stream().findFirst();
+        }
+        return new IssueGetResult(issue.orElse(null), args.isWithGuidance());
     }
 }

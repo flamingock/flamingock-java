@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.issue;
+
+import io.flamingock.internal.core.operation.OperationArgs;
 
 public class IssueGetArgs implements OperationArgs {
 

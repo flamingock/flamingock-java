@@ -13,25 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.execute;
 
-import io.flamingock.internal.common.core.recovery.Resolution;
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+import io.flamingock.internal.core.operation.AbstractOperationResult;
 
-public class AuditFixArgs implements OperationArgs {
+/**
+ * Result of executing the pipeline.
+ * Contains structured result data for reporting and CLI output.
+ */
+public class ExecuteResult extends AbstractOperationResult {
 
-    private final String changeId;
-    private final Resolution resolution;
+    private final ExecuteResponseData data;
 
-    public AuditFixArgs(String changeId, Resolution resolution) {
-        this.changeId = changeId;
-        this.resolution = resolution;
+    public ExecuteResult(ExecuteResponseData data) {
+        this.data = data;
     }
 
-    public String getChangeId() {
-        return changeId;
+    public ExecuteResponseData getData() {
+        return data;
     }
 
-    public Resolution getResolution() {
-        return resolution;
+    @Override
+    public Object toResponseData() {
+        return data;
     }
 }

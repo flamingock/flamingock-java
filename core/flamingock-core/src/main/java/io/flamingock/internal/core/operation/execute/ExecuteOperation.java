@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.execute;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
@@ -26,6 +26,8 @@ import io.flamingock.internal.core.event.model.impl.PipelineStartedEvent;
 import io.flamingock.internal.core.event.model.impl.StageCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.StageFailedEvent;
 import io.flamingock.internal.core.event.model.impl.StageStartedEvent;
+import io.flamingock.internal.core.operation.Operation;
+import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.internal.core.operation.result.ExecutionResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;

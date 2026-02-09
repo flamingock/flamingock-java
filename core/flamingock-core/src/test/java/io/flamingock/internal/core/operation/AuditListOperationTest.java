@@ -17,6 +17,9 @@ package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.audit.AuditListArgs;
+import io.flamingock.internal.core.operation.audit.AuditListOperation;
+import io.flamingock.internal.core.operation.audit.AuditListResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

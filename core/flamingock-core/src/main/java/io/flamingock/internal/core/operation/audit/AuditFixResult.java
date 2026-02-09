@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.audit;
 
 import io.flamingock.internal.common.core.recovery.FixResult;
 import io.flamingock.internal.common.core.recovery.Resolution;
 import io.flamingock.internal.common.core.response.data.AuditFixResponseData;
+import io.flamingock.internal.core.operation.AbstractOperationResult;
 
 public class AuditFixResult extends AbstractOperationResult {
 

@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.issue;
 
 import io.flamingock.internal.common.core.audit.issue.AuditEntryIssue;
 import io.flamingock.internal.common.core.response.data.IssueListResponseData;
 import io.flamingock.internal.common.core.response.data.IssueListResponseData.IssueSummaryDto;
+import io.flamingock.internal.core.operation.AbstractOperationResult;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -13,10 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.issue;
 
-public class IssueListArgs implements OperationArgs {
+import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.Operation;
 
-    public IssueListArgs() {
+public class IssueListOperation implements Operation<IssueListArgs, IssueListResult> {
+
+    private final AuditPersistence persistence;
+
+    public IssueListOperation(AuditPersistence persistence) {
+        this.persistence = persistence;
+    }
+
+    @Override
+    public IssueListResult execute(IssueListArgs args) {
+        return new IssueListResult(persistence.getAuditIssues());
     }
 }

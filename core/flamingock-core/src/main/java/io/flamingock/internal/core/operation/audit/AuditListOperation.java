@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.audit;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.Operation;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AuditListOperation implements Operation<AuditListArgs, AuditListResult>{
+public class AuditListOperation implements Operation<AuditListArgs, AuditListResult> {
 
     private final AuditPersistence persistence;
 
