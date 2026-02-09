@@ -33,7 +33,6 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,24 +42,16 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
-import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
-import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_SCOPE_PROPERTY_KEY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
 @MongockSupport(targetSystem = "couchbase-target-system")
@@ -209,7 +200,7 @@ public class CouchbaseImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
-            "AND no fail if empty origin value provided " +
+            "AND no empty origen allowed value provided " +
             "WHEN migrating to Flamingock Community" +
             "THEN should throw exception")
     void GIVEN_mongockAuditHistoryEmptyAndNoFailIfEmptyOriginValueProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
@@ -230,7 +221,7 @@ public class CouchbaseImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
-            "AND explicit fail if empty origin enabled " +
+            "AND explicit empty origin allowed disabled " +
             "WHEN migrating to Flamingock Community" +
             "THEN should throw exception")
     void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
@@ -242,7 +233,7 @@ public class CouchbaseImporterTest {
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.TRUE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE)
                 .build();
 
         FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
@@ -252,7 +243,7 @@ public class CouchbaseImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
-            "AND explicit fail if empty origin disabled " +
+            "AND explicit empty origin allowed enabled " +
             "WHEN migrating to Flamingock Community " +
             "THEN should execute the pending Mongock changeUnits " +
             "AND execute the pending flamingock changes")
@@ -265,7 +256,7 @@ public class CouchbaseImporterTest {
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.FALSE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE)
                 .build();
 
         flamingock.run();
@@ -311,6 +302,7 @@ public class CouchbaseImporterTest {
         // Setup Mongock entries
         final String customMongockOriginScope = "mongockCustomScope";
         final String customMongockOriginCollection = "mongockCustomOriginCollection";
+        final String customMongockOrigin = String.format("%s.%s", customMongockOriginScope, customMongockOriginCollection);
 
         CouchbaseCollectionHelper.createScopeIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope);
         CouchbaseCollectionHelper.createCollectionIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope, customMongockOriginCollection);
@@ -327,8 +319,7 @@ public class CouchbaseImporterTest {
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_IMPORT_ORIGIN_SCOPE_PROPERTY_KEY, customMongockOriginScope)
-                .setProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, customMongockOriginCollection)
+                .setProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, customMongockOrigin)
                 .build();
 
         flamingock.run();

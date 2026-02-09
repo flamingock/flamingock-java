@@ -50,7 +50,7 @@ import java.util.List;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -225,7 +225,7 @@ public class DynamoDBImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
-            "AND explicit fail if empty origin enabled " +
+            "AND explicit empty origin allowed disabled " +
             "WHEN migrating to Flamingock Community" +
             "THEN should throw exception")
     void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
@@ -235,7 +235,7 @@ public class DynamoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(dynamodbTargetSystem)
-                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.TRUE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE)
                 .build();
 
         FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
@@ -244,7 +244,7 @@ public class DynamoDBImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
-            "AND explicit fail if empty origin disabled " +
+            "AND explicit empty origin allowed enabled " +
             "WHEN migrating to Flamingock Community" +
             "THEN should execute the pending Mongock changeUnits " +
             "AND execute the pending flamingock changes")
@@ -255,7 +255,7 @@ public class DynamoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(dynamodbTargetSystem)
-                .setProperty(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY, Boolean.FALSE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE)
                 .build();
 
         flamingock.run();

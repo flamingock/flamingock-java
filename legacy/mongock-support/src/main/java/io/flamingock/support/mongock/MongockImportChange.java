@@ -33,7 +33,7 @@ import javax.inject.Named;
 import java.util.List;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 
 /**
  * This ChangeUnit is intentionally not annotated with @Change, @Apply, or similar,
@@ -47,12 +47,12 @@ public class MongockImportChange {
                               @NonLockGuarded TargetSystemManager targetSystemManager,
                               @NonLockGuarded AuditWriter auditWriter,
                               @NonLockGuarded PipelineDescriptor pipelineDescriptor,
-                              @Nullable @Named(MONGOCK_IMPORT_FAIL_IF_EMPTY_ORIGIN_PROPERTY_KEY) Boolean failIfEmptyOrigin) {
+                              @Nullable @Named(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) Boolean emptyOriginAllowed) {
         logger.info("Starting audit log migration from Mongock to Flamingock community audit store");
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
-        validate(legacyHistory, targetSystemId, failIfEmptyOrigin);
+        validate(legacyHistory, targetSystemId, emptyOriginAllowed);
         legacyHistory.forEach(auditEntryFromOrigin -> {
             //This is the changeId present in the pipeline. If it's a system change or '..._before' won't appear
             AuditEntry auditEntryWithStageId = auditEntryFromOrigin.copyWithNewIdAndStageId(
@@ -80,8 +80,8 @@ public class MongockImportChange {
 
 
 
-    private void validate(List<AuditEntry> legacyHistory, String targetSystemId, Boolean failIfEmptyOrigin) {
-        if (legacyHistory.isEmpty() && (failIfEmptyOrigin == null || failIfEmptyOrigin)) {
+    private void validate(List<AuditEntry> legacyHistory, String targetSystemId, Boolean emptyOriginAllowed) {
+        if (legacyHistory.isEmpty() && (emptyOriginAllowed == null || !emptyOriginAllowed)) {
             // Note that by default if the flag is null is considered as true
             String message = String.format("No audit entries found when importing from '%s'.", targetSystemId);
             throw new FlamingockException(message);
