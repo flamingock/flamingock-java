@@ -116,7 +116,7 @@ public class ApplyCommand implements Callable<Integer> {
 
         CommandResult<ExecuteResponseData> result = commandExecutor.execute(
                 jarFile.getAbsolutePath(),
-                OperationType.EXECUTE,
+                OperationType.EXECUTE_APPLY,
                 ExecuteResponseData.class,
                 options
         );

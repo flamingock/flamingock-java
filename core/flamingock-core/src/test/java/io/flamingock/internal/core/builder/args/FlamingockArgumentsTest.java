@@ -26,7 +26,7 @@ class FlamingockArgumentsTest {
     void shouldParseAllDefinedParametersWithEqualsFormat() {
         String[] args = {
                 "--flamingock.cli.mode=true",
-                "--flamingock.operation=EXECUTE",
+                "--flamingock.operation=EXECUTE_APPLY",
                 "--flamingock.output-file=/tmp/output.json"
         };
 
@@ -34,7 +34,7 @@ class FlamingockArgumentsTest {
 
         assertTrue(arguments.isCliMode());
         assertTrue(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
         assertTrue(arguments.getOutputFile().isPresent());
         assertEquals("/tmp/output.json", arguments.getOutputFile().orElse(null));
         assertTrue(arguments.getRemainingArgs().isEmpty());
@@ -44,14 +44,14 @@ class FlamingockArgumentsTest {
     void shouldParseAllDefinedParametersWithSpaceFormat() {
         String[] args = {
                 "--flamingock.cli.mode", "true",
-                "--flamingock.operation", "UNDO",
+                "--flamingock.operation", "EXECUTE_ROLLBACK",
                 "--flamingock.output-file", "/var/log/flamingock.log"
         };
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isCliMode());
-        assertEquals(OperationType.UNDO, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_ROLLBACK, arguments.getOperation());
         assertEquals("/var/log/flamingock.log", arguments.getOutputFile().orElse(null));
     }
 
@@ -76,7 +76,7 @@ class FlamingockArgumentsTest {
 
         assertFalse(arguments.isCliMode());
         assertFalse(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
         assertFalse(arguments.getOutputFile().isPresent());
         assertTrue(arguments.getRemainingArgs().isEmpty());
     }
@@ -87,14 +87,14 @@ class FlamingockArgumentsTest {
 
         assertFalse(arguments.isCliMode());
         assertFalse(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
         assertFalse(arguments.getOutputFile().isPresent());
         assertTrue(arguments.getRemainingArgs().isEmpty());
     }
 
     @Test
     void shouldDefaultCliModeToFalse() {
-        String[] args = {"--flamingock.operation=EXECUTE"};
+        String[] args = {"--flamingock.operation=EXECUTE_APPLY"};
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
@@ -114,13 +114,13 @@ class FlamingockArgumentsTest {
     void shouldTreatBooleanFlagFollowedByAnotherFlagAsTrue() {
         String[] args = {
                 "--flamingock.cli.mode",
-                "--flamingock.operation=EXECUTE"
+                "--flamingock.operation=EXECUTE_APPLY"
         };
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isCliMode());
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
     }
 
     @Test
@@ -130,7 +130,7 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertFalse(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
     }
 
     @Test
@@ -148,11 +148,11 @@ class FlamingockArgumentsTest {
 
     @Test
     void shouldParseOperationTypeCaseInsensitively() {
-        String[] args = {"--flamingock.operation=execute"};
+        String[] args = {"--flamingock.operation=execute_apply"};
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
     }
 
     @Test
@@ -165,8 +165,8 @@ class FlamingockArgumentsTest {
         );
 
         assertTrue(exception.getMessage().contains("INVALID_OP"));
-        assertTrue(exception.getMessage().contains("EXECUTE"));
-        assertTrue(exception.getMessage().contains("UNDO"));
+        assertTrue(exception.getMessage().contains("EXECUTE_APPLY"));
+        assertTrue(exception.getMessage().contains("EXECUTE_ROLLBACK"));
     }
 
     @Test
@@ -259,7 +259,7 @@ class FlamingockArgumentsTest {
     void shouldHandleMixedFormats() {
         String[] args = {
                 "--flamingock.cli.mode=true",
-                "--flamingock.operation", "DRY_RUN",
+                "--flamingock.operation", "EXECUTE_DRYRUN",
                 "--flamingock.output-file=/output.json",
                 "--custom.prop", "customValue"
         };
@@ -267,7 +267,7 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isCliMode());
-        assertEquals(OperationType.DRY_RUN, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_DRYRUN, arguments.getOperation());
         assertEquals("/output.json", arguments.getOutputFile().orElse(null));
         assertEquals("customValue", arguments.getRemainingArgs().get("custom.prop"));
     }
@@ -287,12 +287,12 @@ class FlamingockArgumentsTest {
 
     @Test
     void shouldReturnIsOperationProvidedTrueWhenOperationExplicitlyPassed() {
-        String[] args = {"--flamingock.operation=EXECUTE"};
+        String[] args = {"--flamingock.operation=EXECUTE_APPLY"};
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
     }
 
     @Test
@@ -302,6 +302,6 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertFalse(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE, arguments.getOperation());
+        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation());
     }
 }
