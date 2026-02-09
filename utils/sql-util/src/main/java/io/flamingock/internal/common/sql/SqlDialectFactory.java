@@ -20,7 +20,7 @@ import java.sql.SQLException;
 
 public final class SqlDialectFactory {
 
-    public static SqlDialect getSqlDialect(Connection connection) throws SQLException {
+    public static SqlDialect getSqlDialect(Connection connection) {
         try {
             return fromDatabaseProductName(connection.getMetaData().getDatabaseProductName());
         } catch (SQLException e) {
