@@ -15,7 +15,7 @@
  */
 package io.flamingock.store.sql.internal;
 
-import io.flamingock.internal.common.sql.AbstractSqlDialectHelper;
+import io.flamingock.internal.common.sql.SqlDialectFactory;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.external.store.lock.LockStatus;
 
@@ -23,14 +23,12 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public final class SqlLockDialectHelper extends AbstractSqlDialectHelper {
+public final class SqlLockDialectHelper {
 
-    public SqlLockDialectHelper(Connection connection) {
-        super(connection);
-    }
+    final private SqlDialect sqlDialect;
 
-    public SqlLockDialectHelper(SqlDialect dialect) {
-        super(dialect);
+    public SqlLockDialectHelper(Connection connection) throws SQLException {
+        this.sqlDialect = SqlDialectFactory.getSqlDialect(connection);
     }
 
     public String getCreateTableSqlString(String tableName) {
