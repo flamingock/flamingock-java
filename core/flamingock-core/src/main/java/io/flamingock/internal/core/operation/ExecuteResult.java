@@ -17,10 +17,24 @@ package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 
+/**
+ * Result of executing the pipeline.
+ * Contains structured result data for reporting and CLI output.
+ */
 public class ExecuteResult extends AbstractOperationResult {
+
+    private final ExecuteResponseData data;
+
+    public ExecuteResult(ExecuteResponseData data) {
+        this.data = data;
+    }
+
+    public ExecuteResponseData getData() {
+        return data;
+    }
 
     @Override
     public Object toResponseData() {
-        return ExecuteResponseData.placeholder();
+        return data;
     }
 }

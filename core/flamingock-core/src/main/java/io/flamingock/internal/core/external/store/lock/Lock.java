@@ -18,7 +18,6 @@ package io.flamingock.internal.core.external.store.lock;
 
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
-import io.flamingock.internal.util.TimeUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -144,16 +143,14 @@ public class Lock {
      * the lock is released(closed) and another instances acquire the lock, before process A has finished.
      */
     public final void release() {
-        logger.debug("Flamingock waiting to release the lock");
+        logger.debug("Releasing the lock");
         synchronized (this) {
             try {
-                logger.debug("Flamingock releasing the lock");
                 updateLease(timeService.daysToMills(-1));//forces expiring
-                logger.debug("Flamingock removing the lock from database");
                 lockService.releaseLock(lockKey, owner);
-                logger.info("Flamingock released the lock");
+                logger.debug("Lock released successfully");
             } catch (Exception ex) {
-                logger.warn("Error removing the lock. Doesn't need manually intervention.", ex);
+                logger.warn("Error removing the lock. Doesn't need manual intervention.", ex);
             }
         }
     }
@@ -218,18 +215,14 @@ public class Lock {
         long currentLockWillExpireInMillis = expiresAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() - currentMillis;
         long sleepingMillis = retryFrequencyMillis;
         if (retryFrequencyMillis > currentLockWillExpireInMillis) {
-            logger.info("The configured time frequency[{} millis] is higher than the current lock's expiration", retryFrequencyMillis);
+            logger.debug("Configured retry frequency[{}ms] exceeds lock expiration time", retryFrequencyMillis);
             sleepingMillis = Math.max(currentLockWillExpireInMillis, 500L);//0.5secs the minimum waiting before retrying
         }
-        logger.info("Flamingock will try to acquire the lock in {} mills", sleepingMillis);
         try {
-            logger.info(
-                    "Flamingock is going to sleep. Will retry in {}ms ({} minutes)",
-                    sleepingMillis,
-                    TimeUtil.millisToMinutes(sleepingMillis));
+            logger.debug("Waiting {}ms before retrying lock acquisition", sleepingMillis);
             Thread.sleep(sleepingMillis);
         } catch (InterruptedException ex) {
-            logger.warn("ERROR acquiring the lock", ex);
+            logger.warn("Lock acquisition interrupted", ex);
             Thread.currentThread().interrupt();
         }
     }

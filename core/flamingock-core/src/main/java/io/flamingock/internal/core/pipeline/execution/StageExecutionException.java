@@ -16,26 +16,35 @@
 package io.flamingock.internal.core.pipeline.execution;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.response.data.StageResult;
 
+/**
+ * Exception thrown when a stage execution fails.
+ * Contains the stage result data with information about what was executed.
+ */
 public class StageExecutionException extends FlamingockException {
 
-    public static StageExecutionException fromExisting(Throwable exception, StageSummary summary) {
+    public static StageExecutionException fromResult(Throwable exception, StageResult result, String failedChangeId) {
         Throwable cause = exception.getCause();
         return (exception instanceof FlamingockException) && cause != null
-                ? new StageExecutionException(cause, summary)
-                : new StageExecutionException(exception, summary);
+                ? new StageExecutionException(cause, result, failedChangeId)
+                : new StageExecutionException(exception, result, failedChangeId);
     }
 
-    private final StageSummary summary;
+    private final StageResult result;
+    private final String failedChangeId;
 
-    private StageExecutionException(Throwable cause, StageSummary summary) {
+    private StageExecutionException(Throwable cause, StageResult result, String failedChangeId) {
         super(cause);
-        this.summary = summary;
+        this.result = result;
+        this.failedChangeId = failedChangeId;
     }
 
-    public StageSummary getSummary() {
-        return summary;
+    public StageResult getResult() {
+        return result;
     }
 
-
+    public String getFailedChangeId() {
+        return failedChangeId;
+    }
 }

@@ -20,6 +20,7 @@ import io.flamingock.cli.executor.orchestration.CommandExecutor;
 import io.flamingock.cli.executor.orchestration.CommandResult;
 import io.flamingock.cli.executor.orchestration.ExecutionOptions;
 import io.flamingock.cli.executor.output.ConsoleFormatter;
+import io.flamingock.cli.executor.output.ExecutionResultFormatter;
 import io.flamingock.cli.executor.util.VersionProvider;
 import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
@@ -122,10 +123,20 @@ public class ApplyCommand implements Callable<Integer> {
 
         if (result.isSuccess()) {
             if (!quiet) {
-                ConsoleFormatter.printSuccess(result.getDurationMs());
+                // Print detailed execution summary
+                ExecuteResponseData data = result.getData();
+                if (data != null) {
+                    ExecutionResultFormatter.print(data);
+                } else {
+                    ConsoleFormatter.printSuccess(result.getDurationMs());
+                }
             }
             return 0;
         } else {
+            // Print execution summary if available (even on failure, shows what was applied)
+            if (!quiet && result.getData() != null) {
+                ExecutionResultFormatter.print(result.getData());
+            }
             ConsoleFormatter.printFailure(result.getErrorCode(), result.getErrorMessage());
             return result.getExitCode();
         }

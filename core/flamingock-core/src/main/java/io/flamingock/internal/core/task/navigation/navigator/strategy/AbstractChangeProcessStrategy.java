@@ -17,11 +17,11 @@ package io.flamingock.internal.core.task.navigation.navigator.strategy;
 
 import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.context.SimpleContext;
+import io.flamingock.internal.core.operation.result.ChangeResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
-import io.flamingock.internal.core.pipeline.execution.TaskSummary;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
@@ -43,12 +43,12 @@ import io.flamingock.internal.util.TimeService;
 
 /**
  * Abstract base class for change process strategies implementing common audit and execution patterns.
- * 
+ *
  * <p>This class provides the foundational infrastructure for executing changes across different
- * target system types while maintaining consistent audit trails and execution summaries.
+ * target system types while maintaining consistent audit trails and execution results.
  * Concrete implementations define the specific transaction handling and execution flow patterns
  * appropriate for their target system characteristics.
- * 
+ *
  * <h3>Common Execution Pattern</h3>
  * <ol>
  * <li>Check if change is already applied (skip if so)</li>
@@ -56,9 +56,9 @@ import io.flamingock.internal.util.TimeService;
  * <li>Execute change using strategy-specific approach</li>
  * <li>Audit execution result</li>
  * <li>Handle rollbacks and cleanup as needed</li>
- * <li>Return execution summary</li>
+ * <li>Return execution result</li>
  * </ol>
- * 
+ *
  * <h3>Audit Operations</h3>
  * <p>All strategies use consistent audit operations provided by this base class:
  * <ul>
@@ -67,11 +67,11 @@ import io.flamingock.internal.util.TimeService;
  * <li>{@code auditAndLogManualRollback} - Records manual rollback operations</li>
  * <li>{@code auditAndLogAutoRollback} - Records automatic transaction rollbacks</li>
  * </ul>
- * 
+ *
  * <h3>Execution Runtime</h3>
  * <p>The execution runtime provides dependency injection and security context for change execution,
  * ensuring changes have access to required dependencies while maintaining proper lock management.</p>
- * 
+ *
  * @param <TS_OPS> The type of target system operations supported by this strategy
  */
 public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemOps> implements ChangeProcessStrategy {
@@ -83,12 +83,12 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
 
     protected final ExecutionContext executionContext;
 
-    protected final TaskSummarizer summarizer;
+    protected final ChangeResultBuilder resultBuilder;
 
     protected final AuditStoreStepOperations auditStoreOperations;
 
     private final ContextResolver baseContext;
-    
+
     private final LockGuardProxyFactory lockProxyFactory;
 
     protected final TimeService timeService;
@@ -97,14 +97,14 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
                                             ExecutionContext executionContext,
                                             TS_OPS targetSystemOps,
                                             AuditStoreStepOperations auditStoreOperations,
-                                            TaskSummarizer summarizer,
+                                            ChangeResultBuilder resultBuilder,
                                             LockGuardProxyFactory proxyFactory,
                                             ContextResolver baseContext,
                                             TimeService timeService) {
         this.change = change;
         this.executionContext = executionContext;
         this.targetSystemOps = targetSystemOps;
-        this.summarizer = summarizer;
+        this.resultBuilder = resultBuilder;
         this.auditStoreOperations = auditStoreOperations;
         this.lockProxyFactory = proxyFactory;
         this.baseContext = baseContext;
@@ -117,27 +117,27 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
             return doApplyChange();
         } else {
             stepLogger.logSkippedExecution(change.getId());
-            TaskSummary summary = summarizer
-                    .add(new CompletedAlreadyAppliedStep(change))
-                    .setSuccessful()
-                    .getSummary();
-            return new ChangeProcessResult(change.getId(), summary);
+            ChangeResult result = resultBuilder
+                    .alreadyApplied()
+                    .durationMs(0)
+                    .build();
+            return new ChangeProcessResult(change.getId(), result);
         }
     }
 
     /**
      * Strategy-specific implementation of change application.
-     * 
+     *
      * <p>Concrete strategies must implement this method to define their specific
      * transaction handling, execution flow, and error recovery patterns.
-     * 
-     * @return Task execution summary with success/failure status and step details
+     *
+     * @return Task execution result with success/failure status and details
      */
     abstract protected ChangeProcessResult doApplyChange();
 
     /**
      * Audits and logs the start of change execution.
-     * 
+     *
      * @param startStep The initial step for the change
      * @param executionContext The execution context
      * @return The executable step ready for execution
@@ -147,25 +147,22 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         Result auditResult = auditStoreOperations.auditStartExecution(startStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditStartResult(auditResult, startStep.getLoadedTask().getId());
         ExecutableStep executableStep = startStep.start();
-        summarizer.add(executableStep);
         return executableStep;
     }
 
     /**
      * Audits and logs the execution result of a change.
-     * 
+     *
      * @param executionStep The execution step with results
      * @return The after-execution audit step
      */
     protected AfterExecutionAuditStep auditAndLogExecution(ExecutionStep executionStep) {
-        summarizer.add(executionStep);
         stepLogger.logExecutionResult(executionStep);
 
         Result auditResult = auditStoreOperations.auditExecution(executionStep, executionContext, timeService.currentDateTime());
 
         stepLogger.logAuditExecutionResult(auditResult, executionStep.getLoadedTask());
         AfterExecutionAuditStep afterExecutionAudit = executionStep.withAuditResult(auditResult);
-        summarizer.add(afterExecutionAudit);
         return afterExecutionAudit;
     }
 
@@ -174,22 +171,20 @@ public abstract class AbstractChangeProcessStrategy<TS_OPS extends TargetSystemO
         Result auditResult = auditStoreOperations.auditManualRollback(rolledBackStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditManualRollbackResult(auditResult, rolledBackStep.getLoadedTask());
         CompletedFailedManualRollback failedStep = rolledBackStep.applyAuditResult(auditResult);
-        summarizer.add(failedStep);
     }
 
     protected void auditAndLogAutoRollback(CompleteAutoRolledBackStep rolledBackStep, ExecutionContext executionContext) {
         Result auditResult = auditStoreOperations.auditAutoRollback(rolledBackStep, executionContext, timeService.currentDateTime());
         stepLogger.logAuditAutoRollbackResult(auditResult, rolledBackStep.getLoadedTask());
-        summarizer.add(rolledBackStep);
     }
 
 
     /**
      * Builds the execution runtime for change execution.
-     * 
+     *
      * <p>The runtime provides dependency injection context and security proxies
      * needed for safe change execution with proper lock management.
-     * 
+     *
      * @return Configured execution runtime
      */
     protected ExecutionRuntime buildExecutionRuntime() {

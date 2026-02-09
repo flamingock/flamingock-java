@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.task.navigation.navigator;
+package io.flamingock.internal.common.core.response.data;
 
 /**
- * Strategy interface for processing changes.
+ * Status of an individual change execution.
  */
-public interface ChangeProcessStrategy {
+public enum ChangeStatus {
+    /**
+     * Change was successfully applied.
+     */
+    APPLIED,
 
     /**
-     * Applies the change and returns the result.
-     * @return the result of applying the change
+     * Change was already applied in a previous execution.
      */
-    ChangeProcessResult applyChange();
+    ALREADY_APPLIED,
+
+    /**
+     * Change failed during execution.
+     */
+    FAILED,
+
+    /**
+     * Change failed but was successfully rolled back.
+     */
+    ROLLED_BACK,
+
+    /**
+     * Change was not reached due to a prior failure.
+     */
+    NOT_REACHED
 }
