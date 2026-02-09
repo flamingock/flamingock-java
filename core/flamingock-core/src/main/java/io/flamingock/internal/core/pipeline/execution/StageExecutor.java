@@ -18,10 +18,12 @@ package io.flamingock.internal.core.pipeline.execution;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.context.PriorityContext;
 import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
+import io.flamingock.internal.core.operation.result.StageResultBuilder;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
@@ -36,9 +38,12 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Stream;
 
+/**
+ * Executes stages and returns structured result data.
+ */
 public class StageExecutor {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("StageExecutor");
-    
+
     protected final LifecycleAuditWriter auditWriter;
 
     private final ContextResolver baseDependencyContext;
@@ -64,56 +69,68 @@ public class StageExecutor {
         LocalDateTime stageStart = LocalDateTime.now();
         String stageName = executableStage.getName();
         long taskCount = getTasksStream(executableStage).count();
-        
-        logger.info("Starting stage execution [stage={} tasks={} execution_id={}]", 
-                   stageName, taskCount, executionContext.getExecutionId());
 
-        StageSummary summary = new StageSummary(stageName);
+        logger.info("Stage started [stage={}]", stageName);
+        logger.debug("Stage execution context [stage={} tasks={} execution_id={}]",
+                stageName, taskCount, executionContext.getExecutionId());
+
+        StageResultBuilder resultBuilder = new StageResultBuilder()
+                .stageId(stageName)
+                .stageName(stageName)
+                .startTimer();
+
         PriorityContext dependencyContext = new PriorityContext(baseDependencyContext);
         dependencyContext.addDependency(new Dependency(StageDescriptor.class, executableStage));
         ChangeProcessStrategyFactory changeProcessFactory = getStepNavigatorBuilder(executionContext, lock, dependencyContext);
 
         try {
             logger.debug("Processing changes [stage={} context={}]", stageName, executionContext.getExecutionId());
-            
+
             getTasksStream(executableStage)
                     .map(changeProcessFactory::setChange)
                     .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
                     .peek(result -> {
-                        summary.addSummary(result.getSummary());
+                        resultBuilder.addChange(result.getResult());
                         if (result.isFailed()) {
-                            logger.error("Change failed [change={} stage={}]", 
-                                       result.getChangeId(), stageName);
+                            logger.error("Change failed [change={} stage={}]",
+                                    result.getChangeId(), stageName);
                         } else {
-                            logger.debug("Change completed successfully [change={} stage={}]", 
-                                       result.getChangeId(), stageName);
+                            logger.debug("Change completed successfully [change={} stage={}]",
+                                    result.getChangeId(), stageName);
                         }
                     })
                     .filter(ChangeProcessResult::isFailed)
                     .findFirst()
-                    .map(processResult -> (FailedChangeProcessResult)processResult)
+                    .map(processResult -> (FailedChangeProcessResult) processResult)
                     .ifPresent(failedResult -> {
+                        resultBuilder.stopTimer().failed();
                         Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
                         logger.debug("Stage execution failed [stage={} duration={} failed_change={}]",
-                                   stageName, formatDuration(stageDuration), failedResult.getChangeId());
-                        throw StageExecutionException.fromExisting(failedResult.getException(), summary);
+                                stageName, formatDuration(stageDuration), failedResult.getChangeId());
+                        throw StageExecutionException.fromResult(
+                                failedResult.getException(),
+                                resultBuilder.build(),
+                                failedResult.getChangeId()
+                        );
                     });
 
+            resultBuilder.stopTimer().completed();
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
-            logger.info("Stage execution completed successfully [stage={} duration={} tasks={}]", 
-                       stageName, formatDuration(stageDuration), taskCount);
+            StageResult stageResult = resultBuilder.build();
+            logger.info("Stage completed [stage={} duration={} applied={} skipped={}]",
+                    stageName, formatDuration(stageDuration), stageResult.getAppliedCount(), stageResult.getSkippedCount());
+            return new Output(stageResult);
 
         } catch (StageExecutionException stageExecutionException) {
             throw stageExecutionException;
         } catch (Throwable throwable) {
+            resultBuilder.stopTimer().failed();
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
             logger.debug("Stage execution failed with unexpected error [stage={} duration={} error={}]",
-                       stageName, formatDuration(stageDuration), throwable.getMessage(), throwable);
-            throw StageExecutionException.fromExisting(throwable, summary);
+                    stageName, formatDuration(stageDuration), throwable.getMessage(), throwable);
+            throw StageExecutionException.fromResult(throwable, resultBuilder.build(), null);
         }
-
-        return new Output(summary);
     }
 
     private ChangeProcessStrategyFactory getStepNavigatorBuilder(ExecutionContext executionContext, Lock lock, ContextResolver contextResolver) {
@@ -131,17 +148,17 @@ public class StageExecutor {
 
     public static class Output {
 
-        private final StageSummary summary;
+        private final StageResult result;
 
-        public Output(StageSummary summary) {
-            this.summary = summary;
+        public Output(StageResult result) {
+            this.result = result;
         }
 
-        public StageSummary getSummary() {
-            return summary;
+        public StageResult getResult() {
+            return result;
         }
     }
-    
+
     private String formatDuration(Duration duration) {
         long millis = duration.toMillis();
         if (millis < 1000) {

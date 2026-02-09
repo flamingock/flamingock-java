@@ -24,12 +24,13 @@ import picocli.CommandLine.Command;
  * <p>Groups subcommands related to audit inspection:</p>
  * <ul>
  *   <li>{@code list} - List audit entries</li>
+ *   <li>{@code fix} - Fix audit state for a change with issues</li>
  * </ul>
  */
 @Command(
         name = "audit",
         description = "Audit operations for inspecting change history",
-        subcommands = {ListCommand.class},
+        subcommands = {ListCommand.class, FixCommand.class},
         mixinStandardHelpOptions = true
 )
 public class AuditCommand implements Runnable {

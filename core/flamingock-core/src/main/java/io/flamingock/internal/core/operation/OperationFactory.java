@@ -16,22 +16,44 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.recovery.Resolution;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
+import io.flamingock.internal.core.operation.audit.AuditFixArgs;
+import io.flamingock.internal.core.operation.audit.AuditFixOperation;
+import io.flamingock.internal.core.operation.audit.AuditFixResult;
+import io.flamingock.internal.core.operation.audit.AuditListArgs;
+import io.flamingock.internal.core.operation.audit.AuditListOperation;
+import io.flamingock.internal.core.operation.audit.AuditListResult;
+import io.flamingock.internal.core.operation.execute.ExecuteArgs;
+import io.flamingock.internal.core.operation.execute.ExecuteOperation;
+import io.flamingock.internal.core.operation.execute.ExecuteResult;
+import io.flamingock.internal.core.operation.issue.IssueGetArgs;
+import io.flamingock.internal.core.operation.issue.IssueGetOperation;
+import io.flamingock.internal.core.operation.issue.IssueGetResult;
+import io.flamingock.internal.core.operation.issue.IssueListArgs;
+import io.flamingock.internal.core.operation.issue.IssueListOperation;
+import io.flamingock.internal.core.operation.issue.IssueListResult;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.util.StringUtil;
 import io.flamingock.internal.util.id.RunnerId;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
 public class OperationFactory {
+
+    private static final String ARG_HISTORY = "flamingock.audit.history";
+    private static final String ARG_SINCE = "flamingock.audit.since";
+    private static final String ARG_EXTENDED = "flamingock.audit.extended";
+    private static final String ARG_CHANGE_ID = "flamingock.change-id";
+    private static final String ARG_RESOLUTION = "flamingock.resolution";
+    private static final String ARG_GUIDANCE = "flamingock.guidance";
 
     private final RunnerId runnerId;
     private final FlamingockArguments flamingockArgs;
@@ -72,23 +94,53 @@ public class OperationFactory {
         this.finalizer = finalizer;
     }
 
-    public  RunnableOperation<?, ?> getOperation() {
+    public RunnableOperation<?, ?> getOperation() {
         switch (flamingockArgs.getOperation()) {
-            case EXECUTE:
+            case EXECUTE_APPLY:
                 return getExecuteOperation();
-            case LIST:
+            case AUDIT_LIST:
                 return getAuditListOperation();
+            case AUDIT_FIX:
+                return getAuditFixOperation();
+            case ISSUE_LIST:
+                return getIssueListOperation();
+            case ISSUE_GET:
+                return getIssueGetOperation();
             default:
                 throw new UnsupportedOperationException(String.format("Operation %s not supported", flamingockArgs.getOperation()));
         }
     }
 
     private RunnableOperation<AuditListArgs, AuditListResult> getAuditListOperation() {
+        boolean history = flamingockArgs.getBooleanOr(ARG_HISTORY, false);
+        java.time.LocalDateTime since = flamingockArgs.getDateTimeOr(ARG_SINCE, null);
+        boolean extended = flamingockArgs.getBooleanOr(ARG_EXTENDED, false);
         AuditListOperation auditListOperation = new AuditListOperation(persistence);
-        return new RunnableOperation<>(auditListOperation, new AuditListArgs());
+        return new RunnableOperation<>(auditListOperation, new AuditListArgs(history, since, extended));
     }
 
-    private  RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteOperation() {
+    private RunnableOperation<AuditFixArgs, AuditFixResult> getAuditFixOperation() {
+        String changeId = flamingockArgs.getStringOrThrow(ARG_CHANGE_ID,
+                "Change ID is required for AUDIT_FIX operation");
+        Resolution resolution = flamingockArgs.getEnumOrThrow(ARG_RESOLUTION, Resolution.class,
+                "Resolution is required for AUDIT_FIX operation.");
+        AuditFixOperation auditFixOperation = new AuditFixOperation(persistence);
+        return new RunnableOperation<>(auditFixOperation, new AuditFixArgs(changeId, resolution));
+    }
+
+    private RunnableOperation<IssueListArgs, IssueListResult> getIssueListOperation() {
+        IssueListOperation issueListOperation = new IssueListOperation(persistence);
+        return new RunnableOperation<>(issueListOperation, new IssueListArgs());
+    }
+
+    private RunnableOperation<IssueGetArgs, IssueGetResult> getIssueGetOperation() {
+        String changeId = flamingockArgs.getStringOr(ARG_CHANGE_ID, null);
+        boolean guidance = flamingockArgs.getBooleanOr(ARG_GUIDANCE, false);
+        IssueGetOperation issueGetOperation = new IssueGetOperation(persistence);
+        return new RunnableOperation<>(issueGetOperation, new IssueGetArgs(changeId, guidance));
+    }
+
+    private RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteOperation() {
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
         ExecuteOperation executeOperation = new ExecuteOperation(
                 runnerId,
@@ -101,9 +153,7 @@ public class OperationFactory {
         return new RunnableOperation<>(executeOperation, new ExecuteArgs(pipeline));
     }
 
-
     private static OrphanExecutionContext buildExecutionContext(CoreConfigurable configuration) {
         return new OrphanExecutionContext(StringUtil.hostname(), configuration.getMetadata());
     }
-
 }

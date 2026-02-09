@@ -16,8 +16,9 @@
 package io.flamingock.internal.core.task.navigation.navigator.strategy;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.core.operation.result.ChangeResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.external.targets.operations.TransactionalTargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
@@ -38,12 +39,12 @@ import org.slf4j.Logger;
 
 /**
  * Change process strategy for transactional target systems with separate audit store.
- * 
+ *
  * <p>This strategy is used when the target system supports transactions but uses a separate
- * audit store (either a different database in community edition or cloud-based audit in 
+ * audit store (either a different database in community edition or cloud-based audit in
  * cloud edition). Changes are applied within a transaction, but audit operations occur
  * in a separate transaction context.
- * 
+ *
  * <h3>Execution Flow</h3>
  * <ol>
  * <li>Audit change start in separate audit store</li>
@@ -55,14 +56,14 @@ import org.slf4j.Logger;
  * <li>Clear target system marker on success</li>
  * <li>On failure: audit rollback and execute rollback chain with best effort</li>
  * </ol>
- * 
+ *
  * <h3>Target System State Outcomes</h3>
  * <ul>
  * <li><strong>Success:</strong> Change committed, marker cleared</li>
  * <li><strong>Failure:</strong> Transaction rolled back automatically</li>
  * <li><strong>Partial Success:</strong> Change applied but audit failed (marker remains)</li>
  * </ul>
- * 
+ *
  * <h3>Audit Store State Outcomes</h3>
  * <ul>
  * <li><strong>STARTED:</strong> Change execution began but process interrupted</li>
@@ -70,7 +71,7 @@ import org.slf4j.Logger;
  * <li><strong>STARTED → FAILED:</strong> Change execution failed</li>
  * <li><strong>STARTED → FAILED → ROLLED_BACK:</strong> Change failed and automatic rollback audited</li>
  * </ul>
- * 
+ *
  * <h3>Marker Behavior</h3>
  * <p>When the target system supports markers (not NoOpTargetSystemAuditMarker), this strategy
  * creates a marker indicating change application status. This marker aids in recovery scenarios
@@ -84,21 +85,23 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                                          ExecutionContext executionContext,
                                          TransactionalTargetSystemOps targetSystemOps,
                                          AuditStoreStepOperations auditStoreOperations,
-                                         TaskSummarizer summarizer,
+                                         ChangeResultBuilder resultBuilder,
                                          LockGuardProxyFactory proxyFactory,
                                          ContextResolver baseContext,
                                          TimeService timeService) {
-        super(change, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, timeService);
+        super(change, executionContext, targetSystemOps, auditStoreOperations, resultBuilder, proxyFactory, baseContext, timeService);
     }
 
     @Override
     protected ChangeProcessResult doApplyChange() {
+        resultBuilder.startTimer();
+
         logger.debug("Executing transactional task [change={}]", change.getId());
 
         StartStep startStep = new StartStep(change);
 
         ExecutableStep executableStep = auditAndLogStartExecution(startStep, executionContext);
-        
+
         // Apply change within target system transaction, create marker if supported
         ExecutionStep changeResult = targetSystemOps.applyChangeTransactional(executionRuntime -> {
             ExecutionStep changeAppliedResult = executableStep.execute(executionRuntime);
@@ -109,16 +112,25 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         }, buildExecutionRuntime());
 
         AfterExecutionAuditStep afterAudit = auditAndLogExecution(changeResult);
+
+        resultBuilder.stopTimer();
+
         if(changeResult.isSuccessStep()) {
             if(afterAudit instanceof FailedAfterExecutionAuditStep) {
                 // Change applied but audit failed - leave marker for recovery
                 Throwable mainError = ((FailedAfterExecutionAuditStep)afterAudit)
                         .getMainError();
-                return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
+                ChangeResult result = resultBuilder
+                        .failed(mainError)
+                        .build();
+                return new FailedChangeProcessResult(change.getId(), result, mainError);
             } else {
                 // Success: change applied and audited, clear marker
                 targetSystemOps.clearMark(change.getId());
-                return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
+                ChangeResult result = resultBuilder
+                        .applied()
+                        .build();
+                return new ChangeProcessResult(change.getId(), result);
             }
 
         } else {
@@ -127,7 +139,11 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                     .getMainError();
             auditAndLogAutoRollback();
             rollbackChain((RollableFailedStep) afterAudit, executionContext);
-            return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
+            ChangeResult result = resultBuilder
+                    .rolledBack()
+                    .error(mainError)
+                    .build();
+            return new FailedChangeProcessResult(change.getId(), result, mainError);
         }
     }
 
@@ -138,7 +154,6 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                 .forEach(rollableStep -> {
                     ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
                     stepLogger.logManualRollbackResult(rolledBack);
-                    summarizer.add(rolledBack);
                     auditAndLogManualRollback(rolledBack, executionContext);
                 });
     }

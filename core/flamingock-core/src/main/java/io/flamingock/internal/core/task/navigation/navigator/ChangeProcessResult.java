@@ -15,24 +15,28 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
-import io.flamingock.internal.core.pipeline.execution.TaskSummary;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
 
+/**
+ * Result of processing a single change.
+ * Contains the change result data and failure information if applicable.
+ */
 public class ChangeProcessResult {
 
     private final String changeId;
-    private final TaskSummary summary;
+    private final ChangeResult result;
 
-    public ChangeProcessResult(String changeId, TaskSummary summary) {
+    public ChangeProcessResult(String changeId, ChangeResult result) {
         this.changeId = changeId;
-        this.summary = summary;
+        this.result = result;
     }
 
     public String getChangeId() {
         return changeId;
     }
 
-    public TaskSummary getSummary() {
-        return summary;
+    public ChangeResult getResult() {
+        return result;
     }
 
     public boolean isFailed() {

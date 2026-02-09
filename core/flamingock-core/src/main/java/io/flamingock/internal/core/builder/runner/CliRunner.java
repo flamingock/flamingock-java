@@ -19,7 +19,7 @@ import io.flamingock.internal.common.core.response.ResponseChannel;
 import io.flamingock.internal.common.core.response.ResponseEnvelope;
 import io.flamingock.internal.common.core.response.ResponseError;
 import io.flamingock.internal.core.operation.AbstractOperationResult;
-import io.flamingock.internal.core.operation.OperationType;
+import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;

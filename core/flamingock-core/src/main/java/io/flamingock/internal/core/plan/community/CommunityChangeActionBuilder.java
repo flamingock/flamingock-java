@@ -57,12 +57,8 @@ public class CommunityChangeActionBuilder {
             AuditEntry auditEntry = auditSnapshot.get(change.getId());
             if (auditEntry == null || auditEntry.getState() == null) {
                 // No audit entry found - first execution
-                AuditTxType txStrategy = auditEntry != null ? auditEntry.getTxType() : null;
-                log.info("Change[{}] in state='unknown' (TxType={}) -> Action={} | Reason: {}",
-                        change.getId(),
-                        txStrategy != null ? txStrategy : "unknown",
-                        ChangeAction.APPLY,
-                        "No previous audit entry found (first execution)");
+                log.debug("Change[{}] action={} | Reason: No previous audit entry (first execution)",
+                        change.getId(), ChangeAction.APPLY);
                 actionMap.put(change.getId(), ChangeAction.APPLY);
             } else {
                 ChangeAction action = ChangeActionResolver.resolve(auditEntry);

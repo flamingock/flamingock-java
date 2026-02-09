@@ -15,8 +15,11 @@
  */
 package io.flamingock.internal.core.builder.args;
 
-import io.flamingock.internal.core.operation.OperationType;
+import io.flamingock.internal.common.core.operation.OperationType;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,7 +53,7 @@ public class FlamingockArguments {
 
     public static FlamingockArguments parse(String[] args) {
         if (args == null || args.length == 0) {
-            return new FlamingockArguments(false, OperationType.EXECUTE, false, null, Collections.emptyMap());
+            return new FlamingockArguments(false, OperationType.EXECUTE_APPLY, false, null, Collections.emptyMap());
         }
 
         boolean cliMode = false;
@@ -102,7 +105,7 @@ public class FlamingockArguments {
             }
         }
 
-        OperationType effectiveOperation = operationProvided ? operation : OperationType.EXECUTE;
+        OperationType effectiveOperation = operationProvided ? operation : OperationType.EXECUTE_APPLY;
         return new FlamingockArguments(cliMode, effectiveOperation, operationProvided, outputFile, remaining);
     }
 
@@ -159,7 +162,90 @@ public class FlamingockArguments {
         return Optional.ofNullable(outputFile);
     }
 
-    public Map<String, String> getRemainingArgs() {
+    /**
+     * Returns the remaining arguments map. Package-private for testing purposes.
+     * Prefer using typed accessor methods (getStringOrThrow, getBooleanOr, etc.) instead.
+     */
+    Map<String, String> getRemainingArgs() {
         return remainingArgs;
+    }
+
+    // ========== Typed Accessor Methods ==========
+
+    /**
+     * Returns the value for the given key, or throws if null or empty.
+     */
+    public String getStringOrThrow(String key, String errorMessage) {
+        String value = remainingArgs.get(key);
+        if (isNullOrEmpty(value)) {
+            throw new ArgumentException(errorMessage);
+        }
+        return value;
+    }
+
+    /**
+     * Returns the value for the given key, or the default if null or empty.
+     */
+    public String getStringOr(String key, String defaultValue) {
+        String value = remainingArgs.get(key);
+        return isNullOrEmpty(value) ? defaultValue : value;
+    }
+
+    /**
+     * Returns the boolean value for the given key, or the default if null or empty.
+     */
+    public boolean getBooleanOr(String key, boolean defaultValue) {
+        String value = remainingArgs.get(key);
+        if (isNullOrEmpty(value)) {
+            return defaultValue;
+        }
+        return "true".equalsIgnoreCase(value);
+    }
+
+    /**
+     * Returns the LocalDateTime value for the given key, or the default if null or empty.
+     */
+    public LocalDateTime getDateTimeOr(String key, LocalDateTime defaultValue) {
+        String value = remainingArgs.get(key);
+        if (isNullOrEmpty(value)) {
+            return defaultValue;
+        }
+        return parseDateTime(key, value);
+    }
+
+    /**
+     * Returns the enum value for the given key, or throws if null or empty.
+     */
+    public <T extends Enum<T>> T getEnumOrThrow(String key, Class<T> enumClass, String errorMessage) {
+        String value = remainingArgs.get(key);
+        if (isNullOrEmpty(value)) {
+            throw new ArgumentException(errorMessage);
+        }
+        try {
+            return Enum.valueOf(enumClass, value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            String validValues = Arrays.stream(enumClass.getEnumConstants())
+                    .map(Enum::name)
+                    .collect(Collectors.joining(", "));
+            throw new ArgumentException(errorMessage + " Valid values: " + validValues);
+        }
+    }
+
+    private boolean isNullOrEmpty(String value) {
+        return value == null || value.isEmpty();
+    }
+
+    private LocalDateTime parseDateTime(String key, String value) {
+        try {
+            return LocalDateTime.parse(value);
+        } catch (DateTimeParseException e) {
+            try {
+                return LocalDate.parse(value).atStartOfDay();
+            } catch (DateTimeParseException e2) {
+                throw new ArgumentException(
+                        "Invalid date format for '%s': %s. Expected ISO-8601 (e.g., 2025-01-01 or 2025-01-01T10:30:00)",
+                        key, value);
+            }
+        }
     }
 }

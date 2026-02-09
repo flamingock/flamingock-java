@@ -1,6 +1,6 @@
 dependencies {
 // Core
-    implementation(project(":core:flamingock-core"))
+    api(project(":core:flamingock-core"))
     api(project(":core:flamingock-core-api"))
 // target systems
     api(project(":core:target-systems:nontransactional-target-system"))
