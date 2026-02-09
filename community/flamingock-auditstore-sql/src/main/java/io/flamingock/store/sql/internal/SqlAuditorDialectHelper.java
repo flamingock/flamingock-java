@@ -15,19 +15,18 @@
  */
 package io.flamingock.store.sql.internal;
 
-import io.flamingock.internal.common.sql.AbstractSqlDialectHelper;
+import io.flamingock.internal.common.sql.SqlDialectFactory;
 import io.flamingock.internal.common.sql.SqlDialect;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
-public final class SqlAuditorDialectHelper extends AbstractSqlDialectHelper {
+public final class SqlAuditorDialectHelper {
 
-    public SqlAuditorDialectHelper(Connection connection) {
-        super(connection);
-    }
+    final private SqlDialect sqlDialect;
 
-    public SqlAuditorDialectHelper(SqlDialect dialect) {
-        super(dialect);
+    public SqlAuditorDialectHelper(Connection connection) throws SQLException {
+        this.sqlDialect = SqlDialectFactory.getSqlDialect(connection);
     }
 
     public String getCreateTableSqlString(String tableName) {

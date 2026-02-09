@@ -18,27 +18,11 @@ package io.flamingock.internal.common.sql;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class AbstractSqlDialectHelper {
+public final class SqlDialectFactory {
 
-    protected final SqlDialect sqlDialect;
+    public static SqlDialect getSqlDialect(Connection connection) throws SQLException {
+        String productName = connection.getMetaData().getDatabaseProductName();
 
-    public AbstractSqlDialectHelper(SqlDialect sqlDialect) {
-        this.sqlDialect = sqlDialect;
-    }
-
-    public AbstractSqlDialectHelper(Connection connection) {
-        try {
-            sqlDialect = fromDatabaseProductName(connection.getMetaData().getDatabaseProductName());
-        } catch (SQLException e) {
-            throw new IllegalStateException("Unable to obtain database product name from DataSource", e);
-        }
-    }
-
-    public SqlDialect getSqlDialect() {
-        return sqlDialect;
-    }
-
-    private SqlDialect fromDatabaseProductName(String productName) {
         if (productName == null) {
             throw new IllegalArgumentException("Database product name is null; cannot determine SQL dialect.");
         }
