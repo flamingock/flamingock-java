@@ -34,11 +34,11 @@ public class OperationException extends FlamingockException {
         if (root instanceof FlamingockException) {
             Throwable cause = root.getCause();
             if (cause != null) {
-                // Keep the real cause, avoid FlamingockException(...) chain
                 return new OperationException(cause, result);
             }
-            // No cause available: avoid OperationException(FlamingockException)
-            return new OperationException(ThrowableUtil.messageOf(root), result);
+            OperationException oe = new OperationException(ThrowableUtil.messageOf(root), result);
+            oe.setStackTrace(root.getStackTrace());
+            return oe;
         }
 
         return new OperationException(root, result);
@@ -52,18 +52,18 @@ public class OperationException extends FlamingockException {
         int guard = 0;
 
         while (guard++ < MAX_UNWRAP_DEPTH) {
-            if (cur instanceof java.lang.reflect.InvocationTargetException) {
-                Throwable next = ((java.lang.reflect.InvocationTargetException) cur).getTargetException();
+            if (cur instanceof InvocationTargetException) {
+                Throwable next = ((InvocationTargetException) cur).getTargetException();
                 if (next != null && next != cur) { cur = next; continue; }
                 break;
             }
-            if (cur instanceof java.lang.reflect.UndeclaredThrowableException) {
-                Throwable next = ((java.lang.reflect.UndeclaredThrowableException) cur).getUndeclaredThrowable();
+            if (cur instanceof UndeclaredThrowableException) {
+                Throwable next = ((UndeclaredThrowableException) cur).getUndeclaredThrowable();
                 if (next != null && next != cur) { cur = next; continue; }
                 break;
             }
-            if (cur instanceof java.util.concurrent.ExecutionException
-                    || cur instanceof java.util.concurrent.CompletionException) {
+            if (cur instanceof ExecutionException
+                    || cur instanceof CompletionException) {
                 Throwable next = cur.getCause();
                 if (next != null && next != cur) { cur = next; continue; }
                 break;
