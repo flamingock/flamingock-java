@@ -21,8 +21,14 @@ import java.sql.SQLException;
 public final class SqlDialectFactory {
 
     public static SqlDialect getSqlDialect(Connection connection) throws SQLException {
-        String productName = connection.getMetaData().getDatabaseProductName();
+        try {
+            return fromDatabaseProductName(connection.getMetaData().getDatabaseProductName());
+        } catch (SQLException e) {
+            throw new SQLException("Failed to determine SQL dialect from database metadata", e);
+        }
+    }
 
+    private static SqlDialect fromDatabaseProductName(String productName) {
         if (productName == null) {
             throw new IllegalArgumentException("Database product name is null; cannot determine SQL dialect.");
         }
