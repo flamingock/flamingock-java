@@ -24,7 +24,7 @@ public final class SqlDialectFactory {
         try {
             return fromDatabaseProductName(connection.getMetaData().getDatabaseProductName());
         } catch (SQLException e) {
-            throw new SQLException("Failed to determine SQL dialect from database metadata", e);
+            throw new IllegalStateException("Failed to determine SQL dialect from database metadata", e);
         }
     }
 
