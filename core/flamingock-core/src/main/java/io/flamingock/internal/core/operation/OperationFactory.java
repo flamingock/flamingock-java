@@ -75,9 +75,9 @@ public class OperationFactory {
 
     public  RunnableOperation<?, ?> getOperation() {
         switch (flamingockArgs.getOperation()) {
-            case EXECUTE:
+            case EXECUTE_APPLY:
                 return getExecuteOperation();
-            case LIST:
+            case AUDIT_LIST:
                 return getAuditListOperation();
             default:
                 throw new UnsupportedOperationException(String.format("Operation %s not supported", flamingockArgs.getOperation()));

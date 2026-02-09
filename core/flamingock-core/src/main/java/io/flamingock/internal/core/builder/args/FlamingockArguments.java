@@ -50,7 +50,7 @@ public class FlamingockArguments {
 
     public static FlamingockArguments parse(String[] args) {
         if (args == null || args.length == 0) {
-            return new FlamingockArguments(false, OperationType.EXECUTE, false, null, Collections.emptyMap());
+            return new FlamingockArguments(false, OperationType.EXECUTE_APPLY, false, null, Collections.emptyMap());
         }
 
         boolean cliMode = false;
@@ -102,7 +102,7 @@ public class FlamingockArguments {
             }
         }
 
-        OperationType effectiveOperation = operationProvided ? operation : OperationType.EXECUTE;
+        OperationType effectiveOperation = operationProvided ? operation : OperationType.EXECUTE_APPLY;
         return new FlamingockArguments(cliMode, effectiveOperation, operationProvided, outputFile, remaining);
     }
 

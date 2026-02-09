@@ -117,7 +117,7 @@ public class ListCommand implements Callable<Integer> {
 
         CommandResult<AuditListResponseData> result = commandExecutor.execute(
                 jarFile.getAbsolutePath(),
-                OperationType.LIST,
+                OperationType.AUDIT_LIST,
                 AuditListResponseData.class,
                 options
         );
