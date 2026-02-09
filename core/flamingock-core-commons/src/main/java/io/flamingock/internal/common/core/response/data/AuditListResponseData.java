@@ -56,6 +56,13 @@ public class AuditListResponseData {
         private LocalDateTime createdAt;
         private long executionMillis;
 
+        // Extended fields (nullable for non-extended mode)
+        private String executionId;
+        private String className;
+        private String methodName;
+        private String executionHostname;
+        private String targetSystemId;
+
         public AuditEntryDto() {
         }
 
@@ -66,6 +73,21 @@ public class AuditListResponseData {
             this.stageId = stageId;
             this.createdAt = createdAt;
             this.executionMillis = executionMillis;
+        }
+
+        public AuditEntryDto(String taskId, String author, String state, String stageId, LocalDateTime createdAt, long executionMillis,
+                             String executionId, String className, String methodName, String executionHostname, String targetSystemId) {
+            this.taskId = taskId;
+            this.author = author;
+            this.state = state;
+            this.stageId = stageId;
+            this.createdAt = createdAt;
+            this.executionMillis = executionMillis;
+            this.executionId = executionId;
+            this.className = className;
+            this.methodName = methodName;
+            this.executionHostname = executionHostname;
+            this.targetSystemId = targetSystemId;
         }
 
         public String getTaskId() {
@@ -114,6 +136,46 @@ public class AuditListResponseData {
 
         public void setExecutionMillis(long executionMillis) {
             this.executionMillis = executionMillis;
+        }
+
+        public String getExecutionId() {
+            return executionId;
+        }
+
+        public void setExecutionId(String executionId) {
+            this.executionId = executionId;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public void setClassName(String className) {
+            this.className = className;
+        }
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public void setMethodName(String methodName) {
+            this.methodName = methodName;
+        }
+
+        public String getExecutionHostname() {
+            return executionHostname;
+        }
+
+        public void setExecutionHostname(String executionHostname) {
+            this.executionHostname = executionHostname;
+        }
+
+        public String getTargetSystemId() {
+            return targetSystemId;
+        }
+
+        public void setTargetSystemId(String targetSystemId) {
+            this.targetSystemId = targetSystemId;
         }
     }
 }

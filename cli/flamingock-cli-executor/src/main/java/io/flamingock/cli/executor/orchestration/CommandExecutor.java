@@ -96,7 +96,8 @@ public class CommandExecutor {
                     operation,
                     outputFile.toString(),
                     options.getLogLevel(),
-                    options.isStreamOutput()
+                    options.isStreamOutput(),
+                    options.getOperationArgs()
             );
 
             // Handle launch-level failures - don't try to read response file

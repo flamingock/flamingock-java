@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.operation;
+package io.flamingock.internal.core.operation.execute;
 
-public enum OperationType {
-    EXECUTE_APPLY,
-    EXECUTE_ROLLBACK,
-    EXECUTE_VALIDATE,
-    EXECUTE_DRYRUN,
-    AUDIT_LIST,
-    AUDIT_FIX,
-    ISSUE_LIST,
-    ISSUE_GET
+import io.flamingock.internal.core.operation.OperationArgs;
+import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
+
+public class ExecuteArgs implements OperationArgs {
+
+    private final LoadedPipeline pipeline;
+
+    public ExecuteArgs(LoadedPipeline pipeline) {
+        this.pipeline = pipeline;
+    }
+
+    public LoadedPipeline getPipeline() {
+        return pipeline;
+    }
 }

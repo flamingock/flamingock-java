@@ -13,19 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation;
+package io.flamingock.internal.core.operation.audit;
 
-import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
+import io.flamingock.internal.common.core.recovery.Resolution;
+import io.flamingock.internal.core.operation.OperationArgs;
 
-public class ExecuteArgs implements OperationArgs {
+public class AuditFixArgs implements OperationArgs {
 
-    private final LoadedPipeline pipeline;
+    private final String changeId;
+    private final Resolution resolution;
 
-    public ExecuteArgs(LoadedPipeline pipeline) {
-        this.pipeline = pipeline;
+    public AuditFixArgs(String changeId, Resolution resolution) {
+        this.changeId = changeId;
+        this.resolution = resolution;
     }
 
-    public LoadedPipeline getPipeline() {
-        return pipeline;
+    public String getChangeId() {
+        return changeId;
+    }
+
+    public Resolution getResolution() {
+        return resolution;
     }
 }

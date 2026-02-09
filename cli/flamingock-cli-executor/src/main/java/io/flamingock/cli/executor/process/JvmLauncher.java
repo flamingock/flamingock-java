@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Launches a JVM process to execute an application with Flamingock CLI mode enabled.
@@ -70,21 +72,22 @@ public class JvmLauncher {
      * @return the launch result
      */
     public LaunchResult launch(String jarPath) {
-        return launch(jarPath, null, null, null, true);
+        return launch(jarPath, null, null, null, true, Collections.emptyMap());
     }
 
     /**
      * Launches the application with Flamingock CLI mode enabled, a specific operation,
      * an optional output file for result communication, optional log level, and output streaming control.
      *
-     * @param jarPath      absolute path to the application JAR
-     * @param operation    the Flamingock operation to execute, or null for default
-     * @param outputFile   path to the output file for result communication, or null if not needed
-     * @param logLevel     the application log level (debug, info, warn, error), or null for app default
-     * @param streamOutput whether to stream stdout/stderr to console (false = consume silently)
+     * @param jarPath       absolute path to the application JAR
+     * @param operation     the Flamingock operation to execute, or null for default
+     * @param outputFile    path to the output file for result communication, or null if not needed
+     * @param logLevel      the application log level (debug, info, warn, error), or null for app default
+     * @param streamOutput  whether to stream stdout/stderr to console (false = consume silently)
+     * @param operationArgs additional operation-specific arguments to pass
      * @return the launch result
      */
-    public LaunchResult launch(String jarPath, OperationType operation, String outputFile, String logLevel, boolean streamOutput) {
+    public LaunchResult launch(String jarPath, OperationType operation, String outputFile, String logLevel, boolean streamOutput, Map<String, String> operationArgs) {
         String operationName = operation != null ? operation.name() : null;
         List<String> command;
         JarType jarType;
@@ -100,7 +103,7 @@ public class JvmLauncher {
             return LaunchResult.missingFlamingockRuntime();
         }
 
-        command = buildCommand(jarPath, operationName, outputFile, logLevel, jarType);
+        command = buildCommand(jarPath, operationName, outputFile, logLevel, jarType, operationArgs);
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.directory(new File(jarPath).getParentFile());
@@ -177,7 +180,7 @@ public class JvmLauncher {
     List<String> buildCommand(String jarPath, String operation, String outputFile, String logLevel)
             throws JarDetectionException {
         JarType jarType = jarTypeDetector.detect(jarPath);
-        return buildCommand(jarPath, operation, outputFile, logLevel, jarType);
+        return buildCommand(jarPath, operation, outputFile, logLevel, jarType, Collections.emptyMap());
     }
 
     /**
@@ -191,10 +194,25 @@ public class JvmLauncher {
      * @return the command as a list of strings
      */
     List<String> buildCommand(String jarPath, String operation, String outputFile, String logLevel, JarType jarType) {
+        return buildCommand(jarPath, operation, outputFile, logLevel, jarType, Collections.emptyMap());
+    }
+
+    /**
+     * Builds the command line for launching the application with the specified JAR type.
+     *
+     * @param jarPath       path to the JAR file
+     * @param operation     the Flamingock operation to execute, or null for default
+     * @param outputFile    path to the output file for result communication, or null if not needed
+     * @param logLevel      the application log level (debug, info, warn, error), or null for app default
+     * @param jarType       the type of JAR
+     * @param operationArgs additional operation-specific arguments
+     * @return the command as a list of strings
+     */
+    List<String> buildCommand(String jarPath, String operation, String outputFile, String logLevel, JarType jarType, Map<String, String> operationArgs) {
         if (jarType == JarType.SPRING_BOOT) {
-            return buildSpringBootCommand(jarPath, operation, outputFile, logLevel);
+            return buildSpringBootCommand(jarPath, operation, outputFile, logLevel, operationArgs);
         } else {
-            return buildPlainUberCommand(jarPath, operation, outputFile, logLevel);
+            return buildPlainUberCommand(jarPath, operation, outputFile, logLevel, operationArgs);
         }
     }
 
@@ -208,6 +226,20 @@ public class JvmLauncher {
      * @return the command as a list of strings
      */
     List<String> buildSpringBootCommand(String jarPath, String operation, String outputFile, String logLevel) {
+        return buildSpringBootCommand(jarPath, operation, outputFile, logLevel, Collections.emptyMap());
+    }
+
+    /**
+     * Builds the command line for launching a Spring Boot application.
+     *
+     * @param jarPath       path to the JAR file
+     * @param operation     the Flamingock operation to execute, or null for default
+     * @param outputFile    path to the output file for result communication, or null if not needed
+     * @param logLevel      the application log level (debug, info, warn, error), or null for app default
+     * @param operationArgs additional operation-specific arguments
+     * @return the command as a list of strings
+     */
+    List<String> buildSpringBootCommand(String jarPath, String operation, String outputFile, String logLevel, Map<String, String> operationArgs) {
         List<String> command = new ArrayList<>();
 
         // Find the java executable
@@ -244,6 +276,13 @@ public class JvmLauncher {
             command.add("--logging.level.root=" + logLevel.toUpperCase());
         }
 
+        // Add operation-specific arguments
+        if (operationArgs != null) {
+            for (Map.Entry<String, String> entry : operationArgs.entrySet()) {
+                command.add("--" + entry.getKey() + "=" + entry.getValue());
+            }
+        }
+
         return command;
     }
 
@@ -257,6 +296,20 @@ public class JvmLauncher {
      * @return the command as a list of strings
      */
     List<String> buildPlainUberCommand(String jarPath, String operation, String outputFile, String logLevel) {
+        return buildPlainUberCommand(jarPath, operation, outputFile, logLevel, Collections.emptyMap());
+    }
+
+    /**
+     * Builds the command line for launching a plain uber JAR application.
+     *
+     * @param jarPath       path to the JAR file
+     * @param operation     the Flamingock operation to execute, or null for default
+     * @param outputFile    path to the output file for result communication, or null if not needed
+     * @param logLevel      the application log level (debug, info, warn, error), or null for app default
+     * @param operationArgs additional operation-specific arguments
+     * @return the command as a list of strings
+     */
+    List<String> buildPlainUberCommand(String jarPath, String operation, String outputFile, String logLevel, Map<String, String> operationArgs) {
         List<String> command = new ArrayList<>();
 
         // Find the java executable
@@ -285,6 +338,13 @@ public class JvmLauncher {
         // Add log level if specified (Flamingock-specific style)
         if (logLevel != null && !logLevel.isEmpty()) {
             command.add("--flamingock.log.level=" + logLevel.toUpperCase());
+        }
+
+        // Add operation-specific arguments
+        if (operationArgs != null) {
+            for (Map.Entry<String, String> entry : operationArgs.entrySet()) {
+                command.add("--" + entry.getKey() + "=" + entry.getValue());
+            }
         }
 
         return command;

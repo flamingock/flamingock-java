@@ -17,6 +17,9 @@ package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.audit.AuditListArgs;
+import io.flamingock.internal.core.operation.audit.AuditListOperation;
+import io.flamingock.internal.core.operation.audit.AuditListResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,8 +50,8 @@ class AuditListOperationTest {
     @Test
     @DisplayName("Should return empty list when no audit entries exist")
     void shouldReturnEmptyListWhenNoAuditEntriesExist() {
-        // Given
-        when(persistence.getAuditHistory()).thenReturn(Collections.emptyList());
+        // Given - default args (no history flag) uses snapshot
+        when(persistence.getAuditSnapshot()).thenReturn(Collections.emptyList());
         AuditListArgs args = new AuditListArgs();
 
         // When
@@ -60,13 +63,13 @@ class AuditListOperationTest {
     }
 
     @Test
-    @DisplayName("Should return audit entries when they exist")
-    void shouldReturnAuditEntriesWhenTheyExist() {
+    @DisplayName("Should return audit entries from snapshot when no history flag")
+    void shouldReturnAuditEntriesFromSnapshotWhenNoHistoryFlag() {
         // Given
         AuditEntry entry1 = createAuditEntry("exec-1", "task-1");
         AuditEntry entry2 = createAuditEntry("exec-2", "task-2");
         List<AuditEntry> entries = Arrays.asList(entry1, entry2);
-        when(persistence.getAuditHistory()).thenReturn(entries);
+        when(persistence.getAuditSnapshot()).thenReturn(entries);
         AuditListArgs args = new AuditListArgs();
 
         // When
@@ -79,27 +82,84 @@ class AuditListOperationTest {
     }
 
     @Test
-    @DisplayName("Should delegate to AuditPersistence getAuditHistory")
-    void shouldDelegateToAuditPersistenceGetAuditHistory() {
+    @DisplayName("Should delegate to AuditPersistence getAuditSnapshot by default")
+    void shouldDelegateToAuditPersistenceGetAuditSnapshotByDefault() {
         // Given
-        when(persistence.getAuditHistory()).thenReturn(Collections.emptyList());
+        when(persistence.getAuditSnapshot()).thenReturn(Collections.emptyList());
         AuditListArgs args = new AuditListArgs();
 
         // When
         operation.execute(args);
 
         // Then
+        verify(persistence, times(1)).getAuditSnapshot();
+        verify(persistence, never()).getAuditHistory();
+    }
+
+    @Test
+    @DisplayName("Should delegate to AuditPersistence getAuditHistory when history flag is set")
+    void shouldDelegateToAuditPersistenceGetAuditHistoryWhenHistoryFlagIsSet() {
+        // Given
+        when(persistence.getAuditHistory()).thenReturn(Collections.emptyList());
+        AuditListArgs args = new AuditListArgs(true, null, false);
+
+        // When
+        operation.execute(args);
+
+        // Then
         verify(persistence, times(1)).getAuditHistory();
-        verifyNoMoreInteractions(persistence);
+        verify(persistence, never()).getAuditSnapshot();
+    }
+
+    @Test
+    @DisplayName("Should filter entries by since date")
+    void shouldFilterEntriesBySinceDate() {
+        // Given
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime yesterday = now.minusDays(1);
+        LocalDateTime twoDaysAgo = now.minusDays(2);
+
+        AuditEntry oldEntry = createAuditEntryWithTime("exec-1", "task-1", twoDaysAgo);
+        AuditEntry newEntry = createAuditEntryWithTime("exec-2", "task-2", now);
+        List<AuditEntry> entries = Arrays.asList(oldEntry, newEntry);
+        when(persistence.getAuditSnapshot()).thenReturn(entries);
+
+        AuditListArgs args = new AuditListArgs(false, yesterday, false);
+
+        // When
+        AuditListResult result = operation.execute(args);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.getAuditEntries().size());
+        assertEquals("task-2", result.getAuditEntries().get(0).getTaskId());
+    }
+
+    @Test
+    @DisplayName("Should set extended flag in result")
+    void shouldSetExtendedFlagInResult() {
+        // Given
+        when(persistence.getAuditSnapshot()).thenReturn(Collections.emptyList());
+        AuditListArgs args = new AuditListArgs(false, null, true);
+
+        // When
+        AuditListResult result = operation.execute(args);
+
+        // Then
+        assertTrue(result.isExtended());
     }
 
     private AuditEntry createAuditEntry(String executionId, String taskId) {
+        return createAuditEntryWithTime(executionId, taskId, LocalDateTime.now());
+    }
+
+    private AuditEntry createAuditEntryWithTime(String executionId, String taskId, LocalDateTime time) {
         return new AuditEntry(
                 executionId,
                 "stage-1",
                 taskId,
                 "test-author",
-                LocalDateTime.now(),
+                time,
                 AuditEntry.Status.APPLIED,
                 AuditEntry.ChangeType.STANDARD_CODE,
                 "TestClass",

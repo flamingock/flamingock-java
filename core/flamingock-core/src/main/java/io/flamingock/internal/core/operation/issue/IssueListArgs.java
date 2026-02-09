@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.operation;
+package io.flamingock.internal.core.operation.issue;
 
-public enum OperationType {
-    EXECUTE_APPLY,
-    EXECUTE_ROLLBACK,
-    EXECUTE_VALIDATE,
-    EXECUTE_DRYRUN,
-    AUDIT_LIST,
-    AUDIT_FIX,
-    ISSUE_LIST,
-    ISSUE_GET
+import io.flamingock.internal.core.operation.OperationArgs;
+
+public class IssueListArgs implements OperationArgs {
+
+    public IssueListArgs() {
+    }
 }

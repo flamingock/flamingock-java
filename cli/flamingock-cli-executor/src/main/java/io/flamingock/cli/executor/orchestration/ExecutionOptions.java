@@ -15,6 +15,10 @@
  */
 package io.flamingock.cli.executor.orchestration;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Encapsulates options for command execution.
  */
@@ -22,10 +26,12 @@ public class ExecutionOptions {
 
     private final String logLevel;
     private final boolean streamOutput;
+    private final Map<String, String> operationArgs;
 
     private ExecutionOptions(Builder builder) {
         this.logLevel = builder.logLevel;
         this.streamOutput = builder.streamOutput;
+        this.operationArgs = Collections.unmodifiableMap(new HashMap<>(builder.operationArgs));
     }
 
     /**
@@ -47,6 +53,15 @@ public class ExecutionOptions {
     }
 
     /**
+     * Returns additional operation-specific arguments to pass to the JAR.
+     *
+     * @return the operation arguments map (unmodifiable)
+     */
+    public Map<String, String> getOperationArgs() {
+        return operationArgs;
+    }
+
+    /**
      * Creates a new builder.
      *
      * @return a new builder instance
@@ -61,6 +76,7 @@ public class ExecutionOptions {
     public static class Builder {
         private String logLevel;
         private boolean streamOutput = true;
+        private Map<String, String> operationArgs = new HashMap<>();
 
         private Builder() {
         }
@@ -84,6 +100,29 @@ public class ExecutionOptions {
          */
         public Builder streamOutput(boolean streamOutput) {
             this.streamOutput = streamOutput;
+            return this;
+        }
+
+        /**
+         * Sets additional operation-specific arguments.
+         *
+         * @param operationArgs the operation arguments
+         * @return this builder
+         */
+        public Builder operationArgs(Map<String, String> operationArgs) {
+            this.operationArgs = operationArgs != null ? operationArgs : new HashMap<>();
+            return this;
+        }
+
+        /**
+         * Adds a single operation argument.
+         *
+         * @param key   the argument key
+         * @param value the argument value
+         * @return this builder
+         */
+        public Builder operationArg(String key, String value) {
+            this.operationArgs.put(key, value);
             return this;
         }
 
