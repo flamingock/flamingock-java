@@ -65,7 +65,12 @@ val legacyProjects = setOf(
     "mongock-importer-couchbase"
 )
 
-val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + utilProjects + legacyProjects
+val testKitsProjects = setOf(
+    "mongodb-test-kit",
+    "dynamodb-test-kit"
+)
+
+val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + utilProjects + legacyProjects + testKitsProjects
 
 // Project classification utilities
 fun Project.isBomModule(): Boolean = name.endsWith("-bom")
@@ -81,6 +86,7 @@ fun Project.getProjectCategory(): String? = when (name) {
     in externalSystemProjects -> "externalSystems"
     in utilProjects -> "utils"
     in legacyProjects -> "legacy"
+    in testKitsProjects -> "testKits"
     else -> null
 }
 
@@ -94,6 +100,7 @@ fun getProjectsForBundle(bundle: String?): Set<String> = when (bundle) {
     "externalSystems" -> externalSystemProjects
     "utils" -> utilProjects
     "legacy" -> legacyProjects
+    "testKits" -> testKitsProjects
     "all" -> allProjects
     else -> setOf()
 }
@@ -107,6 +114,7 @@ extra["targetSystemProjects"] = targetSystemProjects
 extra["externalSystemProjects"] = externalSystemProjects
 extra["utilProjects"] = utilProjects
 extra["legacyProjects"] = legacyProjects
+extra["testKitsProjects"] = testKitsProjects
 extra["allProjects"] = allProjects
 
 // Apply appropriate plugins based on project type

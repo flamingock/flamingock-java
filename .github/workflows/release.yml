@@ -576,7 +576,10 @@ jobs:
       mongock-support,
       mongock-importer-mongodb,
       mongock-importer-dynamodb,
-      mongock-importer-couchbase
+      mongock-importer-couchbase,
+      flamingock-test-support,
+      flamingock-springboot-test-support,
+      flamingock-auditstore-sql
     ]
     uses: ./.github/workflows/github-release.yml
     secrets:
