@@ -207,6 +207,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger, processingEnv);
         EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation()
                 .orElseThrow(() -> new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline."));
+        //TODO: get configuration properties from another interface
         Map<String, String> properties = new HashMap<>();
         Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges(properties);
 
