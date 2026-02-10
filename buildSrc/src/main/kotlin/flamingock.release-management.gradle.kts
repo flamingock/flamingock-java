@@ -34,6 +34,7 @@ val projectsToRelease = if (module != null) {
     val externalSystemProjects = project.extra["externalSystemProjects"] as Set<String>
     val utilProjects = project.extra["utilProjects"] as Set<String>
     val legacyProjects = project.extra["legacyProjects"] as Set<String>
+    val testKitsProjects = project.extra["testKitsProjects"] as Set<String>
 
     when (releaseBundle) {
         "core" -> coreProjects
@@ -44,6 +45,7 @@ val projectsToRelease = if (module != null) {
         "externalSystems" -> externalSystemProjects
         "utils" -> utilProjects
         "legacy" -> legacyProjects
+        "testKits" -> testKitsProjects
         "all" -> allProjects
         else -> setOf()
     }
