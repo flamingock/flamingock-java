@@ -15,8 +15,8 @@
  */
 package io.flamingock.springboot;
 
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.util.Deserializer;
-import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.core.configuration.cloud.CloudConfigurable;
 import io.flamingock.internal.core.configuration.cloud.CloudConfiguration;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
@@ -55,8 +55,8 @@ public class SpringbootProperties
     }
 
     @Override
-    public PreviewPipeline getPreviewPipeline() {
-        return Deserializer.readPreviewPipelineFromFile();
+    public FlamingockMetadata getFlamingockMetadata() {
+        return Deserializer.readMetadataFromFile();
     }
 
     @Override

@@ -18,6 +18,7 @@ package io.flamingock.targetsystem.couchbase;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.TargetSystem;
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
@@ -71,7 +72,7 @@ public class PipelineTestHelper {
      * @return a {@link PreviewPipeline} ready for preview or testing
      */
     @SafeVarargs
-    public static PreviewPipeline getPreviewPipeline(String stageName, Trio<Class<?>, List<Class<?>>, List<Class<?>>>... changeDefinitions) {
+    public static FlamingockMetadata getPreviewPipeline(String stageName, Trio<Class<?>, List<Class<?>>, List<Class<?>>>... changeDefinitions) {
 
         List<CodePreviewChange> tasks = Arrays.stream(changeDefinitions)
                 .map(trio -> {
@@ -112,11 +113,12 @@ public class PipelineTestHelper {
                 tasks
         );
 
-        return new PreviewPipeline(Collections.singletonList(stage));
+        PreviewPipeline previewPipeline = new PreviewPipeline(Collections.singletonList(stage));
+        return new FlamingockMetadata(previewPipeline, null, null);
     }
 
     @SafeVarargs
-    public static PreviewPipeline getPreviewPipeline(Trio<Class<?>, List<Class<?>>, List<Class<?>>>... changeDefinitions) {
+    public static FlamingockMetadata getPreviewPipeline(Trio<Class<?>, List<Class<?>>, List<Class<?>>>... changeDefinitions) {
         return getPreviewPipeline("default-stage-name", changeDefinitions);
     }
 

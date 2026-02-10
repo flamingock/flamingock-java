@@ -233,7 +233,7 @@ public class CouchbaseImporterTest {
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
                 .build();
 
         FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
@@ -256,7 +256,7 @@ public class CouchbaseImporterTest {
                         .withScopeName(FLAMINGOCK_SCOPE_NAME)
                         .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
                 .build();
 
         flamingock.run();

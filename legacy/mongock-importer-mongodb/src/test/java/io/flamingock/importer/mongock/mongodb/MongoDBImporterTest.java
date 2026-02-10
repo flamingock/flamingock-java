@@ -244,7 +244,7 @@ public class MongoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(mongodbTargetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
                 .build();
 
         FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
@@ -265,7 +265,7 @@ public class MongoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(mongodbTargetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
                 .build();
 
         flamingock.run();

@@ -165,7 +165,7 @@ public class CouchbaseTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
@@ -218,7 +218,7 @@ public class CouchbaseTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
                     new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
@@ -275,7 +275,7 @@ public class CouchbaseTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))

@@ -90,7 +90,7 @@ class CouchbaseAuditStoreTest {
         CouchbaseTargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(io.flamingock.store.couchbase.changes.happyPath._001__create_index.class, Collections.singletonList(Collection.class)),
                     new Trio<>(io.flamingock.store.couchbase.changes.happyPath._002__insert_document.class, Collections.singletonList(Collection.class)),
                     new Trio<>(_003__insert_another_document.class, Collections.singletonList(Collection.class)))
@@ -143,7 +143,7 @@ class CouchbaseAuditStoreTest {
         CouchbaseTargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(io.flamingock.store.couchbase.changes.failedWithRollback._001__create_index.class, Collections.singletonList(Collection.class)),
                     new Trio<>(io.flamingock.store.couchbase.changes.failedWithRollback._002__insert_document.class, Collections.singletonList(Collection.class)),
                     new Trio<>(io.flamingock.store.couchbase.changes.failedWithRollback._003__execution_with_exception.class, Collections.singletonList(Collection.class), Collections.singletonList(Collection.class)))
@@ -197,7 +197,7 @@ class CouchbaseAuditStoreTest {
         CouchbaseTargetSystem couchbaseTargetSystem = new CouchbaseTargetSystem("couchbase", cluster, BUCKET_NAME);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(_001__create_index.class, Collections.singletonList(Collection.class)),
                     new Trio<>(_002__insert_document.class, Collections.singletonList(Collection.class)),
                     new Trio<>(_003__execution_with_exception.class, Collections.singletonList(Collection.class)))
