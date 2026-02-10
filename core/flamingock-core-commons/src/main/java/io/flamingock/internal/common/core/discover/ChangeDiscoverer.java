@@ -20,8 +20,10 @@ import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
 import javax.annotation.processing.RoundEnvironment;
 import java.util.Collection;
+import java.util.Map;
 
 public interface ChangeDiscoverer {
 
-    Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger);
+    //TODO: move configuration properties to another interface
+    Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger, Map<String, String> properties);
 }

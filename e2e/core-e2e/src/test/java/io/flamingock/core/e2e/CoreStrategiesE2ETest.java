@@ -51,7 +51,7 @@ class CoreStrategiesE2ETest {
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -85,7 +85,7 @@ class CoreStrategiesE2ETest {
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_002__SimpleTransactionalChange.class, Collections.emptyList())
                     )
@@ -116,7 +116,7 @@ class CoreStrategiesE2ETest {
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_003__MultiTest1NonTransactionalChange.class, Collections.emptyList()),
                             new CodeChangeTestDefinition(_004__MultiTest2TransactionalChange.class, Collections.emptyList())
@@ -148,7 +148,7 @@ class CoreStrategiesE2ETest {
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_006__FailingTransactionalChange.class, Collections.emptyList(), Collections.emptyList())
                     )
@@ -182,7 +182,7 @@ class CoreStrategiesE2ETest {
         AuditTestHelper auditHelper = testKit.getAuditHelper();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_005__SecondRunNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -238,7 +238,7 @@ class CoreStrategiesE2ETest {
                 .addDependency(counter);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_007__SimpleNonTransactionalChangeWithError.class, Collections.singletonList(Counter.class), Collections.singletonList(Counter.class))
                     )

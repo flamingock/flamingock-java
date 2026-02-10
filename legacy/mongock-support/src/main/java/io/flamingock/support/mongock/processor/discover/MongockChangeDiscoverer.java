@@ -39,16 +39,20 @@ import javax.lang.model.element.TypeElement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+
 @SuppressWarnings("deprecation")
 public class MongockChangeDiscoverer implements ChangeDiscoverer {
 
     @Override
-    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger, Map<String, String> properties) {
 
         Optional<MongockSupport> mongockSupportOpt = this.getMongockSupportAnnotation(roundEnv, logger);
         final String mongockTargetSystemId = mongockSupportOpt.map(MongockSupport::targetSystem).orElse(null);
@@ -68,6 +72,10 @@ public class MongockChangeDiscoverer implements ChangeDiscoverer {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
             changes.add(getImporterChange(mongockTargetSystemId));
+
+            // Adding Mongock specific configuration properties
+            processConfigurationProperties(mongockSupportOpt.get(), properties);
+
             return changes;
         } else {
             throw new FlamingockException("@MongockSupport annotation must be provided when mongock-support module is present.");
@@ -108,5 +116,30 @@ public class MongockChangeDiscoverer implements ChangeDiscoverer {
 
     private List<CodePreviewChange> buildCodePreviewChange(TypeElement typeElement, String mongockTargetSystemId) {
         return new MongockCodePreviewChangeHelper().getCodePreviewChanges(typeElement, mongockTargetSystemId);
+    }
+
+    private void processConfigurationProperties(MongockSupport mongockSupport, Map<String, String> properties) {
+        if (properties == null) {
+            throw new IllegalArgumentException("properties");
+        }
+
+        if (resolveEmptyOriginAllowed(mongockSupport.emptyOriginAllowed())) {
+            properties.put(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, "true");
+        }
+
+        if (mongockSupport.origin() != null && !mongockSupport.origin().trim().isEmpty()) {
+            properties.put(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, mongockSupport.origin().trim());
+        }
+    }
+
+    private boolean resolveEmptyOriginAllowed(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return false; // default behaviour
+        }
+        String v = raw.trim();
+        if ("true".equalsIgnoreCase(v)) return true;
+        if ("false".equalsIgnoreCase(v)) return false;
+        throw new FlamingockException("Invalid value for emptyOriginAllowed: " + raw
+                + " (expected \"true\" or \"false\" or empty)");
     }
 }

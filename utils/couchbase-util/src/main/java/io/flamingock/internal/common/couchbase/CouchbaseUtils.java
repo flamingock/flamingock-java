@@ -17,6 +17,7 @@ package io.flamingock.internal.common.couchbase;
 
 import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.json.JsonObject;
+import io.flamingock.internal.common.core.error.FlamingockException;
 
 import java.util.Date;
 import java.util.Optional;
@@ -60,6 +61,74 @@ public final class CouchbaseUtils {
             } catch (IllegalArgumentException e) {
                 throw new RuntimeException("Unsupported Couchbase type " + value.getClass().getName());
             }
+        }
+    }
+
+    public static ScopeCollection getOriginScopeAndCollection(String origin) {
+
+        // Default value
+        if (origin == null || origin.trim().isEmpty()) {
+            return new ScopeCollection(CollectionIdentifier.DEFAULT_SCOPE, CollectionIdentifier.DEFAULT_COLLECTION);
+        }
+
+        String value = origin.trim();
+
+        // Separator validation (only one '.')
+        if (hasMoreThanOneDot(value)) {
+            throw new FlamingockException(
+                    "Invalid origin '" + origin + "'. Only one '.' separator is allowed."
+            );
+        }
+
+        String[] parts = value.split("\\.", 2);
+
+        // Only collection
+        if (parts.length == 1) {
+            String collection = parts[0].trim();
+
+            if (collection.isEmpty()) {
+                throw new FlamingockException(
+                        "Invalid origin '" + origin + "'. Collection name cannot be empty."
+                );
+            }
+
+            return new ScopeCollection(CollectionIdentifier.DEFAULT_SCOPE, collection);
+        }
+
+        // Scope + collection
+        String scope = parts[0].trim();
+        String collection = parts[1].trim();
+
+        if (scope.isEmpty() || collection.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Invalid origin '" + origin + "'. Scope and collection must be non-empty."
+            );
+        }
+
+        return new ScopeCollection(scope, collection);
+    }
+
+    private static boolean hasMoreThanOneDot(String value) {
+        int first = value.indexOf('.');
+        return first != -1 && value.indexOf('.', first + 1) != -1;
+    }
+
+    public static final class ScopeCollection {
+
+        private final String scope;
+        private final String collection;
+
+        private ScopeCollection(String scope, String collection) {
+            this.scope = scope;
+            this.collection = collection;
+        }
+
+        public String getScope() {
+            return scope;
+        }
+
+        public String getCollection() {
+            return collection;
         }
     }
 }

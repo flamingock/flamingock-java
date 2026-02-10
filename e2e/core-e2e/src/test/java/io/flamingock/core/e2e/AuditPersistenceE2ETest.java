@@ -75,7 +75,7 @@ class AuditPersistenceE2ETest {
         LocalDateTime testStart = LocalDateTime.now();
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -121,7 +121,7 @@ class AuditPersistenceE2ETest {
         String changeId = "test1-non-tx-change";
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -151,7 +151,7 @@ class AuditPersistenceE2ETest {
         String changeId = "test-custom-target-change";
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_002__CustomTargetSystemChange.class, Collections.emptyList())
                     )
@@ -182,7 +182,7 @@ class AuditPersistenceE2ETest {
         String changeId2 = "test-custom-target-change";
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList()),
                             new CodeChangeTestDefinition(_002__CustomTargetSystemChange.class, Collections.emptyList())

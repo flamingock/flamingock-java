@@ -17,7 +17,6 @@ package io.flamingock.internal.common.core.util;
 
 import io.flamingock.internal.util.JsonObjectMapper;
 import io.flamingock.internal.common.core.metadata.Constants;
-import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -30,7 +29,7 @@ public final class Deserializer {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Deserializer");
 
-    private static final ClassLoader CLASS_LOADER = PreviewPipeline.class.getClassLoader();
+    private static final ClassLoader CLASS_LOADER = FlamingockMetadata.class.getClassLoader();
 
 
     private Deserializer() {
@@ -42,22 +41,9 @@ public final class Deserializer {
     }
 
     /**
-     * Reads the preview pipeline from file. It first tries to load the full pipeline,
-     * and if not found, falls back to the templated pipeline.
+     * Attempts to read a file and deserialize it into a FlamingockMetadata.
      *
-     * @return PreviewPipeline object if found
-     * @throws RuntimeException if neither file is found
-     */
-    public static PreviewPipeline readPreviewPipelineFromFile() {
-        return readMetadataOptional()
-                .map(FlamingockMetadata::getPipeline)
-                .orElseThrow(() -> new RuntimeException("Flamingock metadata file not found"));
-    }
-
-    /**
-     * Attempts to read a file and deserialize it into a PreviewPipeline.
-     *
-     * @return An Optional containing the deserialized PreviewPipeline if successful, otherwise empty
+     * @return An Optional containing the deserialized FlamingockMetadata if successful, otherwise empty
      */
     private static Optional<FlamingockMetadata> readMetadataOptional() {
         try (InputStream inputStream = CLASS_LOADER.getResourceAsStream(Constants.FULL_PIPELINE_FILE_PATH)) {

@@ -15,13 +15,14 @@
  */
 package io.flamingock.internal.core.configuration.core;
 
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
 import java.util.Map;
 
 public interface CoreConfigurable {
 
-    PreviewPipeline getPreviewPipeline();
+    FlamingockMetadata getFlamingockMetadata();
 
     void setLockAcquiredForMillis(long lockAcquiredForMillis);
 

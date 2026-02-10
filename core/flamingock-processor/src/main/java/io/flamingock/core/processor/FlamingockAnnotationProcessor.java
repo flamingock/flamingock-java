@@ -207,7 +207,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger, processingEnv);
         EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation()
                 .orElseThrow(() -> new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline."));
-        Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges();
+        //TODO: get configuration properties from another interface
+        Map<String, String> properties = new HashMap<>();
+        Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges(properties);
 
         // Find @FlamingockCliBuilder annotated method
         Optional<BuilderProviderInfo> builderProvider = annotationFinder.findBuilderProvider();
@@ -228,7 +230,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         Serializer serializer = new Serializer(processingEnv, logger);
         String configFile = flamingockAnnotation.configFile();
-        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, configFile);
+        FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, configFile, properties);
         builderProvider.ifPresent(flamingockMetadata::setBuilderProvider);
         serializer.serializeFullPipeline(flamingockMetadata);
 

@@ -60,12 +60,12 @@ public final class AnnotationFinder {
                 .findFirst();
     }
 
-    public Collection<CodePreviewChange> findAnnotatedChanges() {
+    public Collection<CodePreviewChange> findAnnotatedChanges(Map<String, String> properties) {
         logger.info("Searching for code-based changes");
         return getAllChangeDiscoverers()
                 .stream()
                 .peek(cd -> logger.info(String.format("Using %s for discover changes", cd.getClass().getName())))
-                .map(cd -> cd.findAnnotatedChanges(roundEnv, logger))
+                .map(cd -> cd.findAnnotatedChanges(roundEnv, logger, properties))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }

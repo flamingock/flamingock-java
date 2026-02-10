@@ -35,6 +35,7 @@ import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 
 
 public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<MongoDBSpringDataTargetSystem>
@@ -45,6 +46,7 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
 
+    private ContextResolver baseContext;
     private MongoDBSpringDataTxWrapper txWrapper;
 
     public MongoDBSpringDataTargetSystem(String id, MongoTemplate mongoTemplate) {
@@ -93,6 +95,7 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.baseContext = baseContext;
         this.validate();
         targetSystemContext.addDependency(mongoTemplate);
 
@@ -136,9 +139,15 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
     @Override
     public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
         if (Objects.requireNonNull(type) == MONGOCK) {
-            return Optional.of(new MongockImporterMongoDB(mongoTemplate.getDb(), DEFAULT_MONGOCK_ORIGIN));
+            return Optional.of(new MongockImporterMongoDB(mongoTemplate.getDb(), getMongockOrigin()));
         } else {
             return Optional.empty();
         }
+    }
+
+    private String getMongockOrigin() {
+        return targetSystemContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                .orElse(baseContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                        .orElse(DEFAULT_MONGOCK_ORIGIN));
     }
 }
