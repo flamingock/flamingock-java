@@ -119,14 +119,7 @@ public final class ExecutionRuntime implements ContextProvider, DependencyInject
         try {
             return method.invoke(instance, parameters);
         } catch (Exception e) {
-            if(e instanceof FlamingockException) {
-                throw (FlamingockException)e;
-            } else {
-                throw  e instanceof InvocationTargetException
-                ? new FlamingockException(((InvocationTargetException)e).getTargetException())
-                : new FlamingockException(e);
-
-            }
+            throw  FlamingockException.toFlamingockException(e);
         }
     }
 

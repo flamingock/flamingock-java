@@ -29,6 +29,11 @@ public final class ThrowableUtil {
     private ThrowableUtil() {
     }
 
+    public static String messageOf(Throwable t) {
+        String msg = t.getMessage();
+        return (msg != null && !msg.isEmpty()) ? msg : t.getClass().getName();
+    }
+
     public static String serialize(Throwable e) {
         return serialize(e, 100);
     }

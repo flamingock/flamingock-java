@@ -16,11 +16,12 @@
 package io.flamingock.internal.common.core.operation;
 
 public enum OperationType {
-    EXECUTE,
-    UNDO,
-    VALIDATE,
-    DRY_RUN,
-    LIST,
-    FIX,
-    ISSUE
+    EXECUTE_APPLY,
+    EXECUTE_ROLLBACK,
+    EXECUTE_VALIDATE,
+    EXECUTE_DRYRUN,
+    AUDIT_LIST,
+    AUDIT_FIX,
+    ISSUE_LIST,
+    ISSUE_GET
 }

@@ -15,14 +15,19 @@
  */
 package io.flamingock.internal.core.task.navigation;
 
-import io.flamingock.internal.core.pipeline.execution.TaskSummary;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
 
+/**
+ * Result of a failed change process.
+ * Contains the change result data and the exception that caused the failure.
+ */
 public class FailedChangeProcessResult extends ChangeProcessResult {
+
     private final Throwable exception;
 
-    public FailedChangeProcessResult(String changeId, TaskSummary summary, Throwable exception) {
-        super(changeId, summary);
+    public FailedChangeProcessResult(String changeId, ChangeResult result, Throwable exception) {
+        super(changeId, result);
         this.exception = exception;
     }
 

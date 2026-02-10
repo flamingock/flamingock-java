@@ -15,9 +15,14 @@
  */
 package io.flamingock.internal.core.task.navigation.navigator;
 
-import io.flamingock.internal.core.pipeline.execution.TaskSummary;
-
+/**
+ * Strategy interface for processing changes.
+ */
 public interface ChangeProcessStrategy {
 
+    /**
+     * Applies the change and returns the result.
+     * @return the result of applying the change
+     */
     ChangeProcessResult applyChange();
 }

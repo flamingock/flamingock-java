@@ -67,9 +67,13 @@ public class CommunityLock extends Lock {
     private void acquire() throws LockException {
         Instant shouldStopTryingAt = timeService.nowPlusMillis(stopTryingAfterMillis);
         boolean keepLooping = true;
+        boolean firstAttempt = true;
         do {
             try {
-                logger.info("Attempting to acquire process lock [timeout={}s]", stopTryingAfterMillis / 1000);
+                if (firstAttempt) {
+                    logger.debug("Attempting to acquire process lock [timeout={}s]", stopTryingAfterMillis / 1000);
+                    firstAttempt = false;
+                }
                 LockAcquisition lockAcquisition = getLockService().upsert(lockKey, owner, leaseMillis);
                 updateLease(lockAcquisition.getAcquiredForMillis());
                 keepLooping = false;
@@ -78,7 +82,7 @@ public class CommunityLock extends Lock {
             }
 
         } while (keepLooping);
-        logger.info("Process lock acquired successfully [expires_at={}]", expiresAt());
+        logger.debug("Process lock acquired [expires_at={}]", expiresAt());
     }
 
 }

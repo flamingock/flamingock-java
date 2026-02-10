@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.builder.runner;
 
-import io.flamingock.internal.core.operation.AuditListArgs;
-import io.flamingock.internal.core.operation.AuditListResult;
+import io.flamingock.internal.core.operation.audit.AuditListArgs;
+import io.flamingock.internal.core.operation.audit.AuditListResult;
 import io.flamingock.internal.core.operation.Operation;
 import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.util.id.RunnerId;

@@ -16,8 +16,9 @@
 package io.flamingock.internal.core.task.navigation.navigator.strategy;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.core.operation.result.ChangeResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.pipeline.execution.TaskSummarizer;
 import io.flamingock.internal.core.runtime.proxy.LockGuardProxyFactory;
 import io.flamingock.internal.core.external.targets.operations.TransactionalTargetSystemOps;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
@@ -39,10 +40,10 @@ import org.slf4j.Logger;
 
 /**
  * Change process strategy for transactional target systems with shared audit store.
- * 
+ *
  * <p>This strategy is used when the target system and audit store share the same database
  * and can participate in the same transaction.
- * 
+ *
  * <h3>Execution Flow</h3>
  * <ol>
  * <li>Begin shared transaction</li>
@@ -52,20 +53,20 @@ import org.slf4j.Logger;
  * <li>Commit transaction (both change and audit atomically)</li>
  * <li>On failure: attempt separate transaction to audit failure details</li>
  * </ol>
- * 
+ *
  * <h3>Target System State Outcomes</h3>
  * <ul>
  * <li><strong>Success:</strong> Change applied atomically with audit</li>
  * <li><strong>Failure:</strong> No changes persisted (transaction rolled back)</li>
  * </ul>
- * 
+ *
  * <h3>Audit Store State Outcomes</h3>
  * <ul>
  * <li><strong>STARTED → APPLIED:</strong> Successful atomic execution and audit</li>
  * <li><strong>STARTED → EXECUTION_FAILED → ROLLED_BACK:</strong> Failed execution with detailed failure audit</li>
  * <li><strong>No audit trail:</strong> Complete transaction failure (safe to retry)</li>
  * </ul>
- * 
+ *
  * <h3>Failure Handling</h3>
  * <p>When execution fails, this strategy attempts to create a detailed failure audit trail
  * in a separate transaction: STARTED → EXECUTION_FAILED → ROLLED_BACK. This provides
@@ -81,15 +82,17 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                                          ExecutionContext executionContext,
                                          TransactionalTargetSystemOps targetSystemOps,
                                          AuditStoreStepOperations auditStoreOperations,
-                                         TaskSummarizer summarizer,
+                                         ChangeResultBuilder resultBuilder,
                                          LockGuardProxyFactory proxyFactory,
                                          ContextResolver baseContext,
                                          TimeService timeService) {
-        super(change, executionContext, targetSystemOps, auditStoreOperations, summarizer, proxyFactory, baseContext, timeService);
+        super(change, executionContext, targetSystemOps, auditStoreOperations, resultBuilder, proxyFactory, baseContext, timeService);
     }
 
     @Override
     protected ChangeProcessResult doApplyChange() {
+        resultBuilder.startTimer();
+
         logger.debug("Executing shared-transactional task [change={}]", change.getId());
 
         Wrapper<ExecutionStep> executionStep = new Wrapper<>(null);
@@ -100,16 +103,25 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
             return auditAndLogExecution(executionStep.getValue());
         }, buildExecutionRuntime());
 
+        resultBuilder.stopTimer();
+
         if(changeExecutionAndAudit instanceof FailedAfterExecutionAuditStep) {
             // Failure:this means nothing was persisted(all or nothing)
             auditIfExecutionFailure(executionStep);
             Throwable mainError = ((FailedAfterExecutionAuditStep)changeExecutionAndAudit)
                     .getMainError();
             rollbackChain((RollableFailedStep) changeExecutionAndAudit, executionContext);
-            return new FailedChangeProcessResult(change.getId(), summarizer.setFailed().getSummary(), mainError);
+            ChangeResult result = resultBuilder
+                    .rolledBack()
+                    .error(mainError)
+                    .build();
+            return new FailedChangeProcessResult(change.getId(), result, mainError);
         } else {
             // Success: both change and audit committed atomically
-            return new ChangeProcessResult(change.getId(), summarizer.setSuccessful().getSummary());
+            ChangeResult result = resultBuilder
+                    .applied()
+                    .build();
+            return new ChangeProcessResult(change.getId(), result);
         }
 
     }
@@ -117,7 +129,7 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
     /**
      * Creates detailed failure audit when execution fails.
-     * 
+     *
      * <p>Since the main transaction was rolled back, this method attempts to create
      * a comprehensive failure audit trail in a separate transaction. This provides
      * valuable diagnostic information while maintaining system safety.
@@ -125,7 +137,6 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
     private void auditIfExecutionFailure(Wrapper<ExecutionStep> executionStep) {
         ExecutionStep changeExecution = executionStep.getValue();
         if(!changeExecution.isSuccessStep()) {
-            summarizer.clear();
             targetSystemOps.<Void>applyChangeTransactional(executionRuntime -> {
                 auditAndLogStartExecution(new StartStep(change), executionContext);
                 auditAndLogExecution(changeExecution);
@@ -142,7 +153,6 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
                 .forEach(rollableStep -> {
                     ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
                     stepLogger.logManualRollbackResult(rolledBack);
-                    summarizer.add(rolledBack);
                     auditAndLogManualRollback(rolledBack, executionContext);
                 });
     }

@@ -45,50 +45,50 @@ public class ChangeProcessLogger {
     }
     
     public void logStrategyApplication(String changeId, String targetSystemId, String strategyType) {
-        logger.info("Starting change [change= {}, target= {}, strategy= {}]", changeId, targetSystemId, strategyType);
+        logger.debug("Executing change [change={} target={} strategy={}]", changeId, targetSystemId, strategyType);
     }
 
     public void logSkippedExecution(String changeId) {
-        logger.info("SKIPPED [change= {}, reason=already applied]", changeId);
+        logger.info("Change skipped [change={} reason=already_applied]", changeId);
     }
 
     public void logExecutionResult(ExecutionStep executionStep) {
         String taskId = executionStep.getTask().getId();
         String duration = formatDuration(executionStep.getDuration());
-        
+
         if (executionStep instanceof SuccessApplyStep) {
-            logger.info("APPLIED [change= {}, duration= {}]", taskId, duration);
+            logger.info("Change applied [change={} duration={}]", taskId, duration);
         } else if (executionStep instanceof FailedExecutionStep) {
             FailedExecutionStep failed = (FailedExecutionStep) executionStep;
-            logger.error("FAILED [change= {}, duration= {}] : {}",
+            logger.error("Change failed [change={} duration={}]: {}",
                         taskId, duration, failed.getMainError().getMessage());
         }
     }
 
     public void logAutoRollback(ExecutableTask executableChange, long duration) {
         String formattedDuration = formatDuration(duration);
-        logger.info("ROLLED_BACK [change= {}, duration= {}]", executableChange.getId(), formattedDuration);
+        logger.info("Change rolled back [change={} duration={}]", executableChange.getId(), formattedDuration);
     }
 
     public void logManualRollbackResult(ManualRolledBackStep rolledBack) {
         String taskId = rolledBack.getTask().getId();
         String duration = formatDuration(rolledBack.getDuration());
-        
+
         if (rolledBack instanceof FailedManualRolledBackStep) {
             FailedManualRolledBackStep failed = (FailedManualRolledBackStep) rolledBack;
-            logger.error("ROLLBACK_FAILED [change= {}, duration= {}] : {}",
+            logger.error("Rollback failed [change={} duration={}]: {}",
                         taskId, duration, failed.getMainError().getMessage());
         } else {
-            logger.info("ROLLED_BACK [change= {}, duration= {}]", taskId, duration);
+            logger.info("Change rolled back [change={} duration={}]", taskId, duration);
         }
     }
 
     public void logAuditResult(Result auditResult, String id, String description) {
         if (auditResult instanceof Result.Error) {
-            logger.error("Audit operation failed [change= {}, operation= {}] : {}",
+            logger.error("Audit operation failed [change={} operation={}]: {}",
                         id, description, ((Result.Error) auditResult).getError().getMessage());
         } else {
-            logger.debug("Audit operation completed successfully [change= {}, operation= {}]", id, description);
+            logger.debug("Audit operation completed [change={} operation={}]", id, description);
         }
     }
 

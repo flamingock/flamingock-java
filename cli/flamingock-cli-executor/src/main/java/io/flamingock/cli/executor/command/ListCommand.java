@@ -30,7 +30,9 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -68,6 +70,18 @@ public class ListCommand implements Callable<Integer> {
             description = "Path to the application JAR",
             required = true)
     private File jarFile;
+
+    @Option(names = {"--history"},
+            description = "Show full chronological history instead of snapshot")
+    private boolean history;
+
+    @Option(names = {"--since"},
+            description = "Filter entries since date (ISO-8601: yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss)")
+    private String since;
+
+    @Option(names = {"-e", "--extended"},
+            description = "Show extended information (execution ID, class, method, hostname)")
+    private boolean extended;
 
     private final CommandExecutor commandExecutor;
 
@@ -109,15 +123,28 @@ public class ListCommand implements Callable<Integer> {
             return EXIT_JAR_NOT_FOUND;
         }
 
+        // Build operation-specific arguments
+        Map<String, String> operationArgs = new HashMap<>();
+        if (history) {
+            operationArgs.put("flamingock.audit.history", "true");
+        }
+        if (since != null && !since.isEmpty()) {
+            operationArgs.put("flamingock.audit.since", since);
+        }
+        if (extended) {
+            operationArgs.put("flamingock.audit.extended", "true");
+        }
+
         // Non-execution ops: only stream output if log level is explicitly set
         ExecutionOptions options = ExecutionOptions.builder()
                 .logLevel(logLevel.orElse(null))
                 .streamOutput(logLevel.isPresent())
+                .operationArgs(operationArgs)
                 .build();
 
         CommandResult<AuditListResponseData> result = commandExecutor.execute(
                 jarFile.getAbsolutePath(),
-                OperationType.LIST,
+                OperationType.AUDIT_LIST,
                 AuditListResponseData.class,
                 options
         );
@@ -143,7 +170,11 @@ public class ListCommand implements Callable<Integer> {
 
         System.out.println();
         TableFormatter tableFormatter = new TableFormatter();
-        tableFormatter.printBasicTable(entries);
+        if (extended) {
+            tableFormatter.printExtendedTable(entries);
+        } else {
+            tableFormatter.printBasicTable(entries);
+        }
 
         TableFormatter.printStateLegend();
 
