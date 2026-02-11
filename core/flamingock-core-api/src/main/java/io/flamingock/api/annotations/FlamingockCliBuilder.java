@@ -26,11 +26,11 @@ import java.lang.annotation.Target;
  * <p>The annotated method must:
  * <ul>
  *   <li>Be static</li>
- *   <li>Take no parameters</li>
+ *   <li>Take no parameters, OR take a single {@code String[] args} parameter</li>
  *   <li>Return AbstractChangeRunnerBuilder (or a subtype)</li>
  * </ul>
  *
- * <p>Example:
+ * <p>Example without arguments:
  * <pre>
  * &#64;FlamingockCliBuilder
  * public static AbstractChangeRunnerBuilder flamingockBuilder() {
@@ -40,10 +40,26 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
- * <p>The CLI will invoke this method to get the builder, add CLI arguments,
- * build, and run the Flamingock pipeline.
+ * <p>Example with arguments (for configuration based on CLI args):
+ * <pre>
+ * &#64;FlamingockCliBuilder
+ * public static AbstractChangeRunnerBuilder flamingockBuilder(String[] args) {
+ *     // args can be used during builder configuration
+ *     return Flamingock.builder()
+ *         .setAuditStore(auditStore)
+ *         .addTargetSystem(targetSystem);
+ * }
+ * </pre>
  *
- * @since 1.0
+ * <p>The CLI will invoke this method to get the builder, add CLI arguments
+ * via {@code setApplicationArguments(args)}, build, and run the Flamingock pipeline.
+ *
+ * <p><b>Note:</b> When using the {@code String[] args} parameter, you can access
+ * the arguments during builder creation. The CLI will still call
+ * {@code setApplicationArguments(args)} after your method returns, ensuring
+ * Flamingock's internal argument parsing always occurs.
+ *
+ * @since 1.1.0
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

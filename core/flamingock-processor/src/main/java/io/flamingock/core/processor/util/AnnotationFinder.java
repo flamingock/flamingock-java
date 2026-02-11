@@ -29,6 +29,9 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.*;
@@ -123,10 +126,8 @@ public final class AnnotationFinder {
             throw new RuntimeException("@FlamingockCliBuilder method must be static.");
         }
 
-        // Validate: must have no parameters
-        if (!method.getParameters().isEmpty()) {
-            throw new RuntimeException("@FlamingockCliBuilder method must have no parameters.");
-        }
+        // Validate: must have 0 or 1 parameter (String[] args)
+        boolean acceptsArgs = validateParameters(method);
 
         // Validate: return type must be compatible with AbstractChangeRunnerBuilder
         validateReturnType(method);
@@ -135,8 +136,57 @@ public final class AnnotationFinder {
         String className = enclosingClass.getQualifiedName().toString();
         String methodName = method.getSimpleName().toString();
 
-        logger.info("Found @FlamingockCliBuilder method: " + className + "." + methodName + "()");
-        return Optional.of(new BuilderProviderInfo(className, methodName));
+        String signature = acceptsArgs ? "(String[] args)" : "()";
+        logger.info("Found @FlamingockCliBuilder method: " + className + "." + methodName + signature);
+        return Optional.of(new BuilderProviderInfo(className, methodName, acceptsArgs));
+    }
+
+    /**
+     * Validates the method parameters.
+     * Allowed signatures:
+     * - No parameters: methodName()
+     * - One String[] parameter: methodName(String[] args)
+     *
+     * @param method the method to validate
+     * @return true if the method accepts String[] args, false if no parameters
+     * @throws RuntimeException if parameters are invalid
+     */
+    private boolean validateParameters(ExecutableElement method) {
+        List<? extends VariableElement> params = method.getParameters();
+
+        if (params.isEmpty()) {
+            return false;
+        }
+
+        if (params.size() > 1) {
+            throw new RuntimeException(
+                "@FlamingockCliBuilder method must have 0 or 1 parameter (String[] args). " +
+                "Found " + params.size() + " parameters."
+            );
+        }
+
+        // Exactly one parameter - must be String[]
+        VariableElement param = params.get(0);
+        TypeMirror paramType = param.asType();
+
+        if (paramType.getKind() != TypeKind.ARRAY) {
+            throw new RuntimeException(
+                "@FlamingockCliBuilder method parameter must be String[]. " +
+                "Found: " + paramType.toString()
+            );
+        }
+
+        ArrayType arrayType = (ArrayType) paramType;
+        TypeMirror componentType = arrayType.getComponentType();
+
+        if (!componentType.toString().equals("java.lang.String")) {
+            throw new RuntimeException(
+                "@FlamingockCliBuilder method parameter must be String[]. " +
+                "Found: " + paramType.toString()
+            );
+        }
+
+        return true;
     }
 
     private void validateReturnType(ExecutableElement method) {

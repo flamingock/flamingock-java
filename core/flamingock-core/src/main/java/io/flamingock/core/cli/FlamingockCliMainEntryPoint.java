@@ -56,10 +56,24 @@ public class FlamingockCliMainEntryPoint {
 
             // 3. Load class and invoke method via reflection
             Class<?> providerClass = Class.forName(builderProvider.getClassName());
-            Method providerMethod = providerClass.getDeclaredMethod(builderProvider.getMethodName());
-            providerMethod.setAccessible(true);
 
-            Object builderObj = providerMethod.invoke(null);
+            Method providerMethod;
+            Object builderObj;
+
+            if (builderProvider.isAcceptsArgs()) {
+                // Method signature: methodName(String[] args)
+                providerMethod = providerClass.getDeclaredMethod(
+                    builderProvider.getMethodName(),
+                    String[].class
+                );
+                providerMethod.setAccessible(true);
+                builderObj = providerMethod.invoke(null, (Object) args);
+            } else {
+                // Method signature: methodName()
+                providerMethod = providerClass.getDeclaredMethod(builderProvider.getMethodName());
+                providerMethod.setAccessible(true);
+                builderObj = providerMethod.invoke(null);
+            }
 
             if (!(builderObj instanceof AbstractChangeRunnerBuilder)) {
                 System.err.println("[Flamingock] @FlamingockCliBuilder method must return AbstractChangeRunnerBuilder or a subtype.");
@@ -98,6 +112,16 @@ public class FlamingockCliMainEntryPoint {
         System.err.println();
         System.err.println("  @FlamingockCliBuilder");
         System.err.println("  public static AbstractChangeRunnerBuilder flamingockBuilder() {");
+        System.err.println("      return Flamingock.builder()");
+        System.err.println("          .setAuditStore(auditStore)");
+        System.err.println("          .addTargetSystem(targetSystem);");
+        System.err.println("  }");
+        System.err.println();
+        System.err.println("Or, to receive CLI arguments during builder configuration:");
+        System.err.println();
+        System.err.println("  @FlamingockCliBuilder");
+        System.err.println("  public static AbstractChangeRunnerBuilder flamingockBuilder(String[] args) {");
+        System.err.println("      // args available for configuration");
         System.err.println("      return Flamingock.builder()");
         System.err.println("          .setAuditStore(auditStore)");
         System.err.println("          .addTargetSystem(targetSystem);");
