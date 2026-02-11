@@ -41,7 +41,7 @@ class FlamingockTestSupportIntegrationTest {
     void shouldExecuteNonTransactionalChange() {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -63,7 +63,7 @@ class FlamingockTestSupportIntegrationTest {
     void shouldVerifyMultipleChangesInSequence() {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_003__MultiTest1NonTransactionalChange.class, Collections.emptyList()),
                             new CodeChangeTestDefinition(_004__MultiTest2TransactionalChange.class, Collections.emptyList())
@@ -89,7 +89,7 @@ class FlamingockTestSupportIntegrationTest {
     void shouldVerifyFailingTransactionalChangeTriggersRollback() {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_006__FailingTransactionalChange.class, Collections.emptyList(), Collections.emptyList())
                     )
@@ -116,7 +116,7 @@ class FlamingockTestSupportIntegrationTest {
     void shouldVerifyAlreadyAppliedChangesAreSkipped() {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_005__SecondRunNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -148,7 +148,7 @@ class FlamingockTestSupportIntegrationTest {
                 .addDependency(counter);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_007__SimpleNonTransactionalChangeWithError.class,
                                     Collections.singletonList(Counter.class),
@@ -177,7 +177,7 @@ class FlamingockTestSupportIntegrationTest {
     void shouldVerifyTransactionalChangeExecutesSuccessfully() {
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_002__SimpleTransactionalChange.class, Collections.emptyList())
                     )

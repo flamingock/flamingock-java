@@ -16,6 +16,7 @@
 package io.flamingock.support.mongock;
 
 import io.flamingock.api.annotations.NonLockGuarded;
+import io.flamingock.api.annotations.Nullable;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
@@ -32,6 +33,7 @@ import javax.inject.Named;
 import java.util.List;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 
 /**
  * This ChangeUnit is intentionally not annotated with @Change, @Apply, or similar,
@@ -44,12 +46,13 @@ public class MongockImportChange {
     public void importHistory(@Named("change.targetSystem.id") String targetSystemId,
                               @NonLockGuarded TargetSystemManager targetSystemManager,
                               @NonLockGuarded AuditWriter auditWriter,
-                              @NonLockGuarded PipelineDescriptor pipelineDescriptor) {
+                              @NonLockGuarded PipelineDescriptor pipelineDescriptor,
+                              @Nullable @Named(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowed) {
         logger.info("Starting audit log migration from Mongock to Flamingock community audit store");
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
-        validate(legacyHistory, targetSystemId);
+        validate(legacyHistory, targetSystemId, emptyOriginAllowed);
         legacyHistory.forEach(auditEntryFromOrigin -> {
             //This is the changeId present in the pipeline. If it's a system change or '..._before' won't appear
             AuditEntry auditEntryWithStageId = auditEntryFromOrigin.copyWithNewIdAndStageId(
@@ -77,10 +80,25 @@ public class MongockImportChange {
 
 
 
-    private void validate(List<AuditEntry> legacyHistory, String targetSystemId) {
+    private void validate(List<AuditEntry> legacyHistory, String targetSystemId, String emptyOriginAllowedPropertyValue) {
         if (legacyHistory.isEmpty()) {
-            String message = String.format("No audit entries found when importing from '%s'.", targetSystemId);
-            throw new FlamingockException(message);
+            boolean emptyOriginAllowed = resolveEmptyOriginAllowed(emptyOriginAllowedPropertyValue);
+            if (!emptyOriginAllowed) {
+                // Note that by default if the flag is null is considered as true
+                String message = String.format("No audit entries found when importing from '%s'.", targetSystemId);
+                throw new FlamingockException(message);
+            }
         }
+    }
+
+    private boolean resolveEmptyOriginAllowed(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return false; // default behaviour
+        }
+        String v = raw.trim();
+        if ("true".equalsIgnoreCase(v)) return true;
+        if ("false".equalsIgnoreCase(v)) return false;
+        throw new FlamingockException("Invalid value for emptyOriginAllowed: " + raw
+                + " (expected \"true\" or \"false\" or empty)");
     }
 }

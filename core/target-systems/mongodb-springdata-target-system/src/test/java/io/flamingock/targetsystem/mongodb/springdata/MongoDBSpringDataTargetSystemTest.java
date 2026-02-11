@@ -156,7 +156,7 @@ public class MongoDBSpringDataTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
@@ -209,7 +209,7 @@ public class MongoDBSpringDataTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
@@ -270,7 +270,7 @@ public class MongoDBSpringDataTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))

@@ -27,6 +27,7 @@ import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,10 +44,14 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -201,9 +206,10 @@ public class DynamoDBImporterTest {
 
     @Test
     @DisplayName("GIVEN mongock audit history empty " +
+            "AND no fail if empty origin value provided " +
             "WHEN migrating to Flamingock Community" +
             "THEN should throw exception")
-    void GIVEN_mongockAuditHistoryEmpty_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+    void GIVEN_mongockAuditHistoryEmptyAndNoFailIfEmptyOriginValueProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
         // Setup Mongock entries
 
         DynamoDBTargetSystem dynamodbTargetSystem = new DynamoDBTargetSystem("dynamodb-target-system", client);
@@ -217,4 +223,129 @@ public class DynamoDBImporterTest {
 
     }
 
+    @Test
+    @DisplayName("GIVEN mongock audit history empty " +
+            "AND explicit empty origin allowed disabled " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should throw exception")
+    void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        // Setup Mongock entries
+
+        DynamoDBTargetSystem dynamodbTargetSystem = new DynamoDBTargetSystem("dynamodb-target-system", client);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(dynamodbTargetSystem)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
+                .build();
+
+        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
+        assertEquals("No audit entries found when importing from 'dynamodb-target-system'.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("GIVEN mongock audit history empty " +
+            "AND explicit empty origin allowed enabled " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should execute the pending Mongock changeUnits " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginDisabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        // Setup Mongock entries
+
+        DynamoDBTargetSystem dynamodbTargetSystem = new DynamoDBTargetSystem("dynamodb-target-system", client);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(dynamodbTargetSystem)
+                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
+                .build();
+
+        flamingock.run();
+
+        // Verify audit sequence: 8 total entries as shown in actual execution
+        auditHelper.verifyAuditSequenceStrict(
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+
+                // Legacy changes
+                STARTED("mongock-change-1"),
+                APPLIED("mongock-change-1"),
+                STARTED("mongock-change-2"),
+                APPLIED("mongock-change-2"),
+
+                // Application stage - new changes created by templates
+                STARTED("create-users-table"),
+                APPLIED("create-users-table")
+        );
+
+
+
+        // Validate actual table creation
+        assertTrue(client.listTables().tableNames().contains("users"), "Users table should exist");
+
+        // Verify table structure
+        DescribeTableResponse tableDescription = client.describeTable(
+                DescribeTableRequest.builder().tableName("users").build()
+        );
+        assertEquals("email", tableDescription.table().keySchema().get(0).attributeName());
+        assertEquals(KeyType.HASH, tableDescription.table().keySchema().get(0).keyType());
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+            "AND custom origin repository name provided" +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndCustomOriginProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+        // Setup Mongock entries
+
+        final String customMongockOrigin = "mongockCustomOriginCollection";
+
+        // Create custom table
+        DynamoDBTableFactory.createMongockTable(client, customMongockOrigin);
+
+        DynamoDBMongockTestHelper customOriginMongockTestHelper =
+                new DynamoDBMongockTestHelper(client, customMongockOrigin);
+        customOriginMongockTestHelper.setupBasicScenario();
+
+        DynamoDBTargetSystem dynamodbTargetSystem = new DynamoDBTargetSystem("dynamodb-target-system", client);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(dynamodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, customMongockOrigin)
+                .build();
+
+        flamingock.run();
+
+        // Verify audit sequence: 9 total entries as shown in actual execution
+        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
+        auditHelper.verifyAuditSequenceStrict(
+                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("mongock-change-1_before"),
+                APPLIED("mongock-change-1"),
+                APPLIED("mongock-change-2"),
+
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+
+                // Application stage - new changes created by templates
+                STARTED("create-users-table"),
+                APPLIED("create-users-table")
+        );
+
+
+
+        // Validate actual table creation
+        assertTrue(client.listTables().tableNames().contains("users"), "Users table should exist");
+
+        // Verify table structure
+        DescribeTableResponse tableDescription = client.describeTable(
+                DescribeTableRequest.builder().tableName("users").build()
+        );
+        assertEquals("email", tableDescription.table().keySchema().get(0).attributeName());
+        assertEquals(KeyType.HASH, tableDescription.table().keySchema().get(0).keyType());
+    }
 }

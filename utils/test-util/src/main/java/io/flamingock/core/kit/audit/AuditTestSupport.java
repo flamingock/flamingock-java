@@ -116,7 +116,7 @@ public class AuditTestSupport {
         
         try (MockedStatic<Deserializer> mockedDeserializer = Mockito.mockStatic(Deserializer.class)) {
             // Set up the Deserializer mock with the configured changes
-            mockedDeserializer.when(Deserializer::readPreviewPipelineFromFile)
+            mockedDeserializer.when(Deserializer::readMetadataFromFile)
                 .thenReturn(PipelineTestHelper.getPreviewPipeline(changes));
             
             // Execute the test code

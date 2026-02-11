@@ -17,18 +17,22 @@ package io.flamingock.internal.common.core.metadata;
 
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
+import java.util.Map;
+
 public class FlamingockMetadata {
 
     private PreviewPipeline pipeline;
     private String configFile;
+    private Map<String, String> properties;
     private BuilderProviderInfo builderProvider;
 
     public FlamingockMetadata() {
     }
 
-    public FlamingockMetadata(PreviewPipeline pipeline, String configFile) {
+    public FlamingockMetadata(PreviewPipeline pipeline, String configFile, Map<String, String> properties) {
         this.pipeline = pipeline;
         this.configFile = configFile;
+        this.properties = properties;
     }
 
     public PreviewPipeline getPipeline() {
@@ -45,6 +49,14 @@ public class FlamingockMetadata {
 
     public void setPipelineFile(String configFile) {
         this.configFile = configFile;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
     }
 
     public BuilderProviderInfo getBuilderProvider() {

@@ -286,7 +286,7 @@ class SqlAuditStoreTest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             Class<?>[] changeClasses = getChangeClasses(dialectName, "happyPath");
 
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
                     new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
                     new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
@@ -360,7 +360,7 @@ class SqlAuditStoreTest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithRollback");
 
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
                     new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class)),
                     new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
@@ -447,7 +447,7 @@ class SqlAuditStoreTest {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
             Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithoutRollback");
 
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
                     new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
                     new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)

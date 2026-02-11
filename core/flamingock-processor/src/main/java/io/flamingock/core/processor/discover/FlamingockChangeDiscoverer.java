@@ -25,6 +25,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 public class FlamingockChangeDiscoverer implements ChangeDiscoverer {
 
     @Override
-    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger, Map<String, String> properties) {
         logger.info("Searching for code-based changes (Java classes annotated with @Change annotation)");
         return roundEnv.getElementsAnnotatedWith(Change.class)
                 .stream()

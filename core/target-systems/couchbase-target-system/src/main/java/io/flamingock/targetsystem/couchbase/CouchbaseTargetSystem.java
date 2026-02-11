@@ -15,7 +15,6 @@
  */
 package io.flamingock.targetsystem.couchbase;
 
-import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.transactions.TransactionAttemptContext;
@@ -25,6 +24,7 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.couchbase.CouchbaseUtils;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -34,14 +34,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 
 public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTargetSystem> implements CouchbaseExternalSystem {
 
-    private Cluster cluster;
+    private final Cluster cluster;
+    private final String bucketName;
     private Bucket bucket;
-    private String bucketName;
-    private String scopeName = CollectionIdentifier.DEFAULT_SCOPE;
 
+    private ContextResolver baseContext;
     private CouchbaseTxWrapper txWrapper;
 
     public CouchbaseTargetSystem(String id, Cluster cluster, String bucketName) {
@@ -71,6 +72,7 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.baseContext = baseContext;
         this.validate();
         targetSystemContext.addDependency(cluster);
         bucket = cluster.bucket(bucketName);
@@ -106,10 +108,16 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
     @Override
     public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
         if (Objects.requireNonNull(type) == MONGOCK) {
-            //TODO: Allow scope and collection to be parameterized
-            return Optional.of(new MongockImporterCouchbase(cluster, bucketName, CollectionIdentifier.DEFAULT_SCOPE, CollectionIdentifier.DEFAULT_COLLECTION));
+            CouchbaseUtils.ScopeCollection scopeCollection = CouchbaseUtils.getOriginScopeAndCollection(getOriginPropertyValue());
+            return Optional.of(new MongockImporterCouchbase(cluster, bucketName, scopeCollection.getScope(), scopeCollection.getCollection()));
         } else {
             return Optional.empty();
         }
+    }
+
+    private String getOriginPropertyValue() {
+        return targetSystemContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                .orElse(baseContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                        .orElse(null));
     }
 }

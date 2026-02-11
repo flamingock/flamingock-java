@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.configuration.core;
 
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.util.Deserializer;
-import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,8 +50,8 @@ public class CoreConfiguration implements CoreConfigurable {
     }
 
     @Override
-    public PreviewPipeline getPreviewPipeline() {
-        return Deserializer.readPreviewPipelineFromFile();
+    public FlamingockMetadata getFlamingockMetadata() {
+        return Deserializer.readMetadataFromFile();
     }
 
 

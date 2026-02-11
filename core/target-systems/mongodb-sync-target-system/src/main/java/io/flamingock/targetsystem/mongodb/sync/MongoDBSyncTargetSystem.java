@@ -37,6 +37,7 @@ import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 
 public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> implements MongoDBExternalSystem {
 
@@ -47,6 +48,7 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
     private ReadConcern readConcern = ReadConcern.MAJORITY;
     private ReadPreference readPreference = ReadPreference.primary();
 
+    private ContextResolver baseContext;
     private MongoDBSyncTxWrapper txWrapper;
 
     public MongoDBSyncTargetSystem(String id, MongoClient mongoClient, String databaseName) {
@@ -104,6 +106,7 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
 
     @Override
     public void initialize(ContextResolver baseContext) {
+        this.baseContext = baseContext;
         this.validate();
         targetSystemContext.addDependency(mongoClient);
         database = mongoClient.getDatabase(databaseName)
@@ -154,9 +157,15 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
     @Override
     public Optional<AuditHistoryReader> getAuditAuditReader(AuditReaderType type) {
         if (Objects.requireNonNull(type) == MONGOCK) {
-            return Optional.of(new MongockImporterMongoDB(database, DEFAULT_MONGOCK_ORIGIN));
+            return Optional.of(new MongockImporterMongoDB(database, getMongockOrigin()));
         } else {
             return Optional.empty();
         }
+    }
+
+    private String getMongockOrigin() {
+        return targetSystemContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                .orElse(baseContext.getProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY)
+                        .orElse(DEFAULT_MONGOCK_ORIGIN));
     }
 }

@@ -151,7 +151,7 @@ public class SqlTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
@@ -199,7 +199,7 @@ public class SqlTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
@@ -248,7 +248,7 @@ public class SqlTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)

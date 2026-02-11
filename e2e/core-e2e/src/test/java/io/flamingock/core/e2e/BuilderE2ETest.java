@@ -54,7 +54,7 @@ class BuilderE2ETest {
                 .addDependency(counter);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(
                                     _008__TargetSystemManagerInjectionChange.class,
@@ -93,7 +93,7 @@ class BuilderE2ETest {
                 .addDependency(counter);
 
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(
                                     _009__TargetSystemIdInjectionChange.class,

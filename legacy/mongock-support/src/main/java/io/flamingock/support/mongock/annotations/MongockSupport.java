@@ -80,4 +80,37 @@ public @interface MongockSupport {
      * @return the target system identifier
      */
     String targetSystem();
+
+    /**
+     * Defines the origin collection/table name where Mongock audit entries are stored.
+     * <p>
+     * This value is optional. When empty (default), Flamingock will use Mongock's
+     * default origin (i.e., the default audit collection/table name used by Mongock
+     * in the corresponding driver).
+     * </p>
+     *
+     * <p><b>Examples:</b></p>
+     * <pre>
+     * &#64;MongockSupport(targetSystem = "mongock-target-system", origin = "mongockChangeLog")
+     * public class LegacyMongockSupport { }
+     * </pre>
+     *
+     * @return the origin collection/table name, or empty to use Mongock defaults
+     */
+    String origin() default "";
+
+    /**
+     * Determines whether Flamingock should fail when importing from Mongock and the origin
+     * collection/table is empty.
+     * <p>
+     * Expected literal values are {@code "true"} or {@code "false"}.
+     * </p>
+     *
+     * <p>
+     * If empty (default), it will be treated as {@code "false"}.
+     * </p>
+     *
+     * @return {@code "true"} to allow empty origin, {@code "false"} to fail; empty treated as {@code "false"}
+     */
+    String emptyOriginAllowed() default "";
 }

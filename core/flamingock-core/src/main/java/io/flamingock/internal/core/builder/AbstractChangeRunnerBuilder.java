@@ -20,6 +20,7 @@ import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.configuration.EventLifecycleConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
@@ -179,7 +180,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
      * </ul>
      *
      * @return A fully configured Runner ready for execution
-     * @see #buildContext() for context merging details
+     * @see #buildContext(FlamingockMetadata) for context merging details
      * @see AuditStore#initialize(ContextResolver) for AuditStore initialization requirements
      * @see LoadedPipeline#contributeToContext(ContextInjectable) for pipeline contributions
      */
@@ -193,7 +194,9 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         RunnerId runnerId = generateRunnerId();
 
-        PriorityContext hierarchicalContext = buildContext();
+        FlamingockMetadata flamingockMetadata = coreConfiguration.getFlamingockMetadata();
+
+        PriorityContext hierarchicalContext = buildContext(flamingockMetadata);
 
         configureStoreAndTargetSystem(hierarchicalContext);
 
@@ -202,7 +205,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         //Loads the pipeline
         //This contribution to the context is fine after components initialization as it's only used
-        LoadedPipeline pipeline = loadPipeline();
+        LoadedPipeline pipeline = loadPipeline(flamingockMetadata);
         pipeline.contributeToContext(hierarchicalContext);
 
         FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);
@@ -227,7 +230,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     }
 
 
-    private LoadedPipeline loadPipeline() {
+    private LoadedPipeline loadPipeline(FlamingockMetadata flamingockMetadata) {
         List<TaskFilter> taskFiltersFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getTaskFilters)
@@ -236,14 +239,17 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         return LoadedPipeline.builder()
                 .addFilters(taskFiltersFromPlugins)
-                .addPreviewPipeline(coreConfiguration.getPreviewPipeline())
+                .addPreviewPipeline(flamingockMetadata.getPipeline())
                 .build();
     }
 
-    private PriorityContext buildContext() {
+    private PriorityContext buildContext(FlamingockMetadata flamingockMetadata) {
         logger.trace("injecting internal configuration");
         addDependency(coreConfiguration);
         addDependency(targetSystemManager);
+        if (flamingockMetadata != null && flamingockMetadata.getProperties() != null) {
+            flamingockMetadata.getProperties().forEach(this::setProperty);
+        }
         updateContextSpecific();
         List<ContextResolver> dependencyContextsFromPlugins = pluginManager.getPlugins()
                 .stream()

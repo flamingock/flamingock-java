@@ -16,6 +16,7 @@
 package io.flamingock.common.test.pipeline;
 
 import io.flamingock.api.StageType;
+import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
@@ -43,7 +44,7 @@ public class PipelineTestHelper {
     public static void testWithMockedPipeline(List<ChangeTestDefinition> changeTestDefinitions,
                       Runnable testOperation) {
         try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(changeTestDefinitions)
             );
             testOperation.run();
@@ -51,7 +52,7 @@ public class PipelineTestHelper {
     }
 
 
-    public static PreviewPipeline getPreviewPipeline(String stageName, List<ChangeTestDefinition> changeDefinitions) {
+    public static FlamingockMetadata getPreviewPipeline(String stageName, List<ChangeTestDefinition> changeDefinitions) {
 
         List<AbstractPreviewTask> tasks = changeDefinitions.stream()
                 .map(ChangeTestDefinition::toPreview)
@@ -66,18 +67,20 @@ public class PipelineTestHelper {
                 tasks
         );
 
-        return new PreviewPipeline(Collections.singletonList(stage));
+        PreviewPipeline previewPipeline = new PreviewPipeline(Collections.singletonList(stage));
+
+        return new FlamingockMetadata(previewPipeline, null, null);
     }
 
-    public static PreviewPipeline getPreviewPipeline(String stageName, ChangeTestDefinition... changeDefinitions) {
+    public static FlamingockMetadata getPreviewPipeline(String stageName, ChangeTestDefinition... changeDefinitions) {
         return getPreviewPipeline(stageName, Arrays.asList(changeDefinitions));
     }
 
-    public static PreviewPipeline getPreviewPipeline(ChangeTestDefinition... changeDefinitions) {
+    public static FlamingockMetadata getPreviewPipeline(ChangeTestDefinition... changeDefinitions) {
         return getPreviewPipeline(Arrays.asList(changeDefinitions));
     }
 
-    public static PreviewPipeline getPreviewPipeline(List<ChangeTestDefinition> changeDefinitions) {
+    public static FlamingockMetadata getPreviewPipeline(List<ChangeTestDefinition> changeDefinitions) {
         return getPreviewPipeline("default-stage-name", changeDefinitions);
     }
 }

@@ -147,7 +147,7 @@ public class DynamoDBCloudTargetSystemTest {
 
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
@@ -207,7 +207,7 @@ public class DynamoDBCloudTargetSystemTest {
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
                     new Trio<>(_002__UnhappyInsertionClientsChange.class, Collections.singletonList(DynamoDbClient.class))
@@ -267,7 +267,7 @@ public class DynamoDBCloudTargetSystemTest {
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
 
             //WHEN
-            mocked.when(Deserializer::readPreviewPipelineFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
