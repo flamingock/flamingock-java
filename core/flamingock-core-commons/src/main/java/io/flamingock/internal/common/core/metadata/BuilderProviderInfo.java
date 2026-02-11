@@ -23,6 +23,7 @@ public class BuilderProviderInfo {
 
     private String className;
     private String methodName;
+    private boolean acceptsArgs;
 
     /**
      * Empty constructor for Jackson deserialization.
@@ -30,9 +31,24 @@ public class BuilderProviderInfo {
     public BuilderProviderInfo() {
     }
 
+    /**
+     * Constructor for backward compatibility (no args).
+     */
     public BuilderProviderInfo(String className, String methodName) {
+        this(className, methodName, false);
+    }
+
+    /**
+     * Full constructor with acceptsArgs flag.
+     *
+     * @param className   the fully qualified class name containing the builder method
+     * @param methodName  the method name
+     * @param acceptsArgs true if the method accepts String[] args parameter
+     */
+    public BuilderProviderInfo(String className, String methodName, boolean acceptsArgs) {
         this.className = className;
         this.methodName = methodName;
+        this.acceptsArgs = acceptsArgs;
     }
 
     public String getClassName() {
@@ -52,6 +68,19 @@ public class BuilderProviderInfo {
     }
 
     /**
+     * Returns true if the builder method accepts String[] args parameter.
+     *
+     * @return true if method signature is: methodName(String[] args)
+     */
+    public boolean isAcceptsArgs() {
+        return acceptsArgs;
+    }
+
+    public void setAcceptsArgs(boolean acceptsArgs) {
+        this.acceptsArgs = acceptsArgs;
+    }
+
+    /**
      * Validates that both class and method names are present.
      * @return true if both fields are non-null and non-empty
      */
@@ -65,6 +94,7 @@ public class BuilderProviderInfo {
         return "BuilderProviderInfo{" +
                 "className='" + className + '\'' +
                 ", methodName='" + methodName + '\'' +
+                ", acceptsArgs=" + acceptsArgs +
                 '}';
     }
 }
