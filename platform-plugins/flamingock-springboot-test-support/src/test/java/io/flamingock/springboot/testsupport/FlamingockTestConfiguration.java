@@ -15,7 +15,7 @@
  */
 package io.flamingock.springboot.testsupport;
 
-import io.flamingock.api.external.targets.TargetSystem;
+import io.flamingock.api.external.TargetSystem;
 import io.flamingock.core.kit.inmemory.InternalInMemoryAuditStorage;
 import io.flamingock.core.kit.inmemory.InternalInMemoryLockStorage;
 import io.flamingock.core.kit.inmemory.InternalInMemoryTestAuditStore;

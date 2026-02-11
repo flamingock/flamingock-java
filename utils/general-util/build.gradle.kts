@@ -6,7 +6,7 @@ plugins {
 val jacksonVersion = "2.16.0"
 dependencies {
 
-    implementation("org.reflections:reflections:0.10.1")
+    implementation("org.reflections:reflections:0.10.1")//todo remove
 //    api("org.objenesis:objenesis:3.2")
     api("org.yaml:snakeyaml:2.2")
 //

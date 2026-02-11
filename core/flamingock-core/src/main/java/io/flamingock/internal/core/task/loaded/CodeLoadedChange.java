@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.task.ChangeCategory;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 

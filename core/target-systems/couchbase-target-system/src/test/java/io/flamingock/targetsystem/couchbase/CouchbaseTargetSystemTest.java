@@ -18,7 +18,7 @@ package io.flamingock.targetsystem.couchbase;
 import com.couchbase.client.core.io.CollectionIdentifier;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
-import io.flamingock.api.external.targets.TargetSystem;
+import io.flamingock.api.external.TargetSystem;
 import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;

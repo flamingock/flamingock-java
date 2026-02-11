@@ -15,8 +15,6 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.task.ChangeCategory;
-import io.flamingock.api.task.ChangeCategoryAware;
 import io.flamingock.internal.common.core.error.validation.Validatable;
 
 import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;

@@ -15,8 +15,6 @@
  */
 package io.flamingock.api.annotations;
 
-import io.flamingock.api.StageType;
-
 public @interface Stage {
     /**
      * Specifies the location where changes are found. This field is mandatory.

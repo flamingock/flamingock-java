@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.external.targets;
 
-import io.flamingock.api.external.targets.TargetSystem;
+import io.flamingock.api.external.TargetSystem;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
