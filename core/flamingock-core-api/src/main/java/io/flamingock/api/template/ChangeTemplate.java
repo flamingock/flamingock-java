@@ -15,13 +15,17 @@
  */
 package io.flamingock.api.template;
 
-import java.util.List;
-
 /**
  * Interface representing a reusable change template with configuration of type {@code CONFIG}.
  *
  * <p>This interface is commonly implemented by classes that act as templates for Changes
  * where a specific configuration needs to be injected and managed independently.
+ *
+ * <p>Templates should extend one of the abstract base classes:
+ * <ul>
+ *   <li>{@link AbstractSimpleTemplate} - for templates with a single apply/rollback step</li>
+ *   <li>{@link AbstractSteppableTemplate} - for templates with multiple steps</li>
+ * </ul>
  */
 public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD> extends ReflectionMetadataProvider {
 
@@ -30,26 +34,6 @@ public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD
     void setTransactional(boolean isTransactional);
 
     void setConfiguration(SHARED_CONFIG_FIELD configuration);
-
-    /**
-     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
-     */
-    @Deprecated
-    void setApplyPayload(APPLY_FIELD applyPayload);
-
-    /**
-     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
-     */
-    @Deprecated
-    void setRollbackPayload(ROLLBACK_FIELD rollbackPayload);
-
-    void setStepsPayload(List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> stepsPayload);
-
-    List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> getStepsPayload();
-
-    default boolean hasStepsPayload() {
-        return getStepsPayload() != null && !getStepsPayload().isEmpty();
-    }
 
     Class<SHARED_CONFIG_FIELD> getConfigurationClass();
 

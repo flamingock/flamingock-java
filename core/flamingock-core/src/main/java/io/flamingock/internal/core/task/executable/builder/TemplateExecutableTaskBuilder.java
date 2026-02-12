@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable.builder;
 
+import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
@@ -88,7 +89,15 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
                                            TemplateLoadedChange loadedTask,
                                            ChangeAction action) {
         Method rollbackMethod = null;
-        if (loadedTask.getRollback() != null) {
+
+        boolean isSteppableTemplate = AbstractSteppableTemplate.class.isAssignableFrom(loadedTask.getTemplateClass());
+
+        if (isSteppableTemplate) {
+            rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
+            if (rollbackMethod != null) {
+                logger.trace("Change[{}] is a steppable template with rollback method", loadedTask.getId());
+            }
+        } else if (loadedTask.getRollback() != null) {
             rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
             if (rollbackMethod != null) {
                 logger.trace("Change[{}] provides rollback in configuration", loadedTask.getId());
@@ -106,6 +115,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
                 );
             }
         }
+
         return new TemplateExecutableTask(
                 stageName,
                 loadedTask,
