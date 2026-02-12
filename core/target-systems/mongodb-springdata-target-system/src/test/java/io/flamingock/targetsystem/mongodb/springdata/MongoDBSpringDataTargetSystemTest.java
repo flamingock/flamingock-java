@@ -20,7 +20,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.api.external.targets.TargetSystem;
+import io.flamingock.api.external.TargetSystem;
 import io.flamingock.targetsystem.mongodb.springdata.changes.happypath._001__HappyCreateClientsCollectionChange;
 import io.flamingock.targetsystem.mongodb.springdata.changes.happypath._002__HappyInsertClientsChange;
 import io.flamingock.targetsystem.mongodb.springdata.changes.unhappypath._001__UnhappyCreateClientsCollectionChange;

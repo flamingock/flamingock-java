@@ -4,7 +4,6 @@ dependencies {
     api(project(":core:flamingock-test-support"))
 
     implementation(project(":core:flamingock-core"))
-    implementation(project(":core:flamingock-core-commons"))
     compileOnly("org.springframework:spring-context:${springFrameworkVersion}")
     compileOnly("org.springframework.boot:spring-boot:${springBootVersion}")
     compileOnly("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")

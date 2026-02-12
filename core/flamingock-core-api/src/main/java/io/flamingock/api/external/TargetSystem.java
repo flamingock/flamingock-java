@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cli.util;
+package io.flamingock.api.external;
 
-public final class ASCIIColors {
-    private ASCIIColors(){}
 
-    public static final String VIOLET = "\u001B[35m";
-    public static final String RESET = "\u001B[0m";
-
-    public static String inViolet(String msg) {
-        return VIOLET + msg + RESET;
-    }
+public interface TargetSystem extends ExternalSystem {
 }

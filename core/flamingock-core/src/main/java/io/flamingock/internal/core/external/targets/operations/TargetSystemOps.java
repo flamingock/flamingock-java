@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.external.targets.operations;
 
-import io.flamingock.api.external.targets.TargetSystem;
+import io.flamingock.api.external.TargetSystem;
 import io.flamingock.internal.common.core.targets.OperationType;
 import io.flamingock.internal.core.external.targets.AbstractTargetSystem;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;

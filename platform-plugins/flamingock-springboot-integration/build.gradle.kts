@@ -3,7 +3,6 @@ val springBootVersion = "2.0.0.RELEASE"
 val springFrameworkVersion = "5.0.4.RELEASE"
 dependencies {
     api(project(":core:flamingock-core"))
-    implementation(project(":core:flamingock-core-commons"))
     compileOnly("org.springframework:spring-context:${springFrameworkVersion}")
     compileOnly("org.springframework.boot:spring-boot:${springBootVersion}")
     compileOnly("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")
