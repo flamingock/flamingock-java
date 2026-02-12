@@ -20,10 +20,21 @@ import io.flamingock.internal.util.ReflectionUtil;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
+/**
+ * Abstract base class for change templates providing common functionality.
+ *
+ * <p>This class handles generic type resolution and provides the common fields
+ * needed by all templates: changeId, isTransactional, and configuration.
+ *
+ * <p>For new templates, extend one of the specialized abstract classes:
+ * <ul>
+ *   <li>{@link AbstractSimpleTemplate} - for templates with a single apply/rollback step</li>
+ *   <li>{@link AbstractSteppableTemplate} - for templates with multiple steps</li>
+ * </ul>
+ */
 public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
 
     private final Class<SHARED_CONFIGURATION_FIELD> configurationClass;
@@ -32,18 +43,6 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     protected String changeId;
     protected boolean isTransactional;
     protected SHARED_CONFIGURATION_FIELD configuration;
-    /**
-     * @deprecated Use {@link #stepsPayload} instead. Will be removed in a future release.
-     */
-    @Deprecated
-    protected APPLY_FIELD applyPayload;
-    /**
-     * @deprecated Use {@link #stepsPayload} instead. Will be removed in a future release.
-     */
-    @Deprecated
-    protected ROLLBACK_FIELD rollbackPayload;
-    protected List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> stepsPayload;
-
 
     private final Set<Class<?>> reflectiveClasses;
 
@@ -92,34 +91,6 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     @Override
     public void setConfiguration(SHARED_CONFIGURATION_FIELD configuration) {
         this.configuration = configuration;
-    }
-
-    /**
-     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
-     */
-    @Deprecated
-    @Override
-    public void setApplyPayload(APPLY_FIELD applyPayload) {
-        this.applyPayload = applyPayload;
-    }
-
-    /**
-     * @deprecated Use {@link #setStepsPayload(List)} instead. Will be removed in a future release.
-     */
-    @Deprecated
-    @Override
-    public void setRollbackPayload(ROLLBACK_FIELD rollbackPayload) {
-        this.rollbackPayload = rollbackPayload;
-    }
-
-    @Override
-    public void setStepsPayload(List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> stepsPayload) {
-        this.stepsPayload = stepsPayload;
-    }
-
-    @Override
-    public List<TemplateStep<APPLY_FIELD, ROLLBACK_FIELD>> getStepsPayload() {
-        return stepsPayload;
     }
 
     @Override

@@ -17,8 +17,7 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.api.template.TemplateStep;
+import io.flamingock.api.template.AbstractSimpleTemplate;
 import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,55 +25,21 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class TemplateLoadedTaskBuilderTest {
+class SimpleTemplateLoadedTaskBuilderTest {
 
     private TemplateLoadedTaskBuilder builder;
 
-    // Simple test template implementation
-    public static class TestChangeTemplate implements ChangeTemplate<Object, Object, Object> {
+    // Simple test template implementation using the abstract class
+    public static class TestChangeTemplate extends AbstractSimpleTemplate<Object, Object, Object> {
 
-        private List<TemplateStep<Object, Object>> stepsPayload;
-
-        @Override
-        public void setChangeId(String changeId) {}
-
-        @Override
-        public void setTransactional(boolean isTransactional) {}
-
-        @Override
-        public void setConfiguration(Object configuration) {}
-
-        @Override
-        public void setApplyPayload(Object applyPayload) {}
-
-        @Override
-        public void setRollbackPayload(Object rollbackPayload) {}
-
-        @Override
-        public void setStepsPayload(List<TemplateStep<Object, Object>> stepsPayload) { this.stepsPayload = stepsPayload; }
-
-        @Override
-        public List<TemplateStep<Object, Object>> getStepsPayload() { return stepsPayload; }
-
-        @Override
-        public Class<Object> getConfigurationClass() { return Object.class; }
-
-        @Override
-        public Class<Object> getApplyPayloadClass() { return Object.class; }
-
-        @Override
-        public Class<Object> getRollbackPayloadClass() { return Object.class; }
-
-        @Override
-        public Collection<Class<?>> getReflectiveClasses() { return Collections.emptyList(); }
+        public TestChangeTemplate() {
+            super();
+        }
 
         @Apply
         public void apply(Object config, Object execution, Object context) {
