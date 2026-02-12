@@ -87,12 +87,4 @@ public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
         return steps;
     }
 
-    /**
-     * Checks if this template has steps set.
-     *
-     * @return true if steps are set and not empty
-     */
-    public boolean hasSteps() {
-        return steps != null && !steps.isEmpty();
-    }
 }
