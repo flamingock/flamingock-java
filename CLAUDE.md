@@ -396,6 +396,40 @@ When a change fails and cannot be rolled back:
 
 **File**: `core/flamingock-core-api/src/main/java/io/flamingock/api/RecoveryStrategy.java`
 
+### Compile-Time Template Validation
+
+Templates are validated at compile-time to ensure YAML structure matches the template type:
+
+**SimpleTemplate** (`AbstractSimpleTemplate`):
+- MUST have `apply` field
+- MAY have `rollback` field
+- MUST NOT have `steps` field
+
+**SteppableTemplate** (`AbstractSteppableTemplate`):
+- MUST have `steps` field
+- MUST NOT have `apply` or `rollback` fields at root level
+- Each step MUST have `apply` field
+
+**Configuration:**
+```java
+@EnableFlamingock(
+    configFile = "pipeline.yaml",
+    strictTemplateValidation = true  // default
+)
+```
+
+| Flag Value | Behavior |
+|------------|----------|
+| `true` (default) | Compilation fails with detailed error |
+| `false` | Warning logged, compilation continues |
+
+**Validation Location:** `TemplateValidator` in `core/flamingock-core-commons/.../template/`
+
+**Key Files:**
+- `io.flamingock.internal.common.core.template.TemplateValidator` - validation logic
+- `io.flamingock.api.annotations.EnableFlamingock` - strictTemplateValidation flag
+- `io.flamingock.api.template.AbstractChangeTemplate` - template base classes
+
 ### Dependency Injection in Templates
 
 Template methods (`@Apply`, `@Rollback`) receive dependencies as **method parameters**, not constructor injection:
