@@ -28,11 +28,17 @@ import java.util.List;
 /**
  * Executable task for steppable templates (multiple steps).
  * Handles templates extending {@link AbstractSteppableTemplate}.
+ *
+ * @param <CONFIG>   the configuration type for the template
+ * @param <APPLY>    the apply payload type
+ * @param <ROLLBACK> the rollback payload type
  */
-public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableTask<SteppableTemplateLoadedChange<?, ?, ?>> {
+public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
+        extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
+                SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 
     public SteppableTemplateExecutableTask(String stageName,
-                                           SteppableTemplateLoadedChange<?, ?, ?> descriptor,
+                                           SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> descriptor,
                                            ChangeAction action,
                                            Method executionMethod,
                                            Method rollbackMethod) {
@@ -40,19 +46,21 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
 
-            AbstractSteppableTemplate<?, ?, ?> instance = (AbstractSteppableTemplate<?, ?, ?>)
-                    executionRuntime.getInstance(descriptor.getConstructor());
+            AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK> instance =
+                    (AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK>)
+                            executionRuntime.getInstance(descriptor.getConstructor());
 
             instance.setTransactional(descriptor.isTransactional());
             instance.setChangeId(descriptor.getId());
             setConfigurationData(instance);
 
-            setStepsData(instance, descriptor.getSteps());
+            setStepsData(instance);
             while (instance.advance()) {
                 executionRuntime.executeMethodWithInjectedDependencies(instance, method);
             }
@@ -64,13 +72,11 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
 
     /**
      * Sets the steps data on the template instance.
-     * Uses a helper method to handle the generic type capture properly.
+     * Now with full type alignment through generic parameters.
      */
-    @SuppressWarnings("unchecked")
-    private <A, R> void setStepsData(AbstractSteppableTemplate<?, A, R> instance,
-                                     List<? extends TemplateStep<?, ?>> steps) {
-        // Safe cast: the steps were created using the template's type information
-        instance.setSteps((List<TemplateStep<A, R>>) steps);
+    private void setStepsData(AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK> instance) {
+        List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
+        instance.setSteps(steps);
     }
 
 }

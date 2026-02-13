@@ -31,9 +31,13 @@ import java.util.Arrays;
  * Contains common logic for executing templates, with type-specific data setting
  * delegated to subclasses.
  *
- * @param <T> the type of template loaded change
+ * @param <CONFIG>   the configuration type for the template
+ * @param <APPLY>    the apply payload type
+ * @param <ROLLBACK> the rollback payload type
+ * @param <T>        the type of template loaded change
  */
-public abstract class AbstractTemplateExecutableTask<T extends AbstractTemplateLoadedChange<?, ?, ?>> extends ReflectionExecutableTask<T> {
+public abstract class AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
+        T extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> extends ReflectionExecutableTask<T> {
     protected final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
 
     public AbstractTemplateExecutableTask(String stageName,
@@ -44,9 +48,9 @@ public abstract class AbstractTemplateExecutableTask<T extends AbstractTemplateL
         super(stageName, descriptor, action, executionMethod, rollbackMethod);
     }
 
-    protected <C> void setConfigurationData(ChangeTemplate<C, ?, ?> instance) {
-        Class<C> parameterClass = instance.getConfigurationClass();
-        Object data = descriptor.getConfiguration();
+    protected void setConfigurationData(ChangeTemplate<CONFIG, ?, ?> instance) {
+        Class<CONFIG> parameterClass = instance.getConfigurationClass();
+        CONFIG data = descriptor.getConfiguration();
 
         if (data != null && Void.class != parameterClass) {
             instance.setConfiguration(FileUtil.getFromMap(parameterClass, data));

@@ -26,11 +26,17 @@ import java.lang.reflect.Method;
 /**
  * Executable task for simple templates (single apply/rollback step).
  * Handles templates extending {@link AbstractSimpleTemplate}.
+ *
+ * @param <CONFIG>   the configuration type for the template
+ * @param <APPLY>    the apply payload type
+ * @param <ROLLBACK> the rollback payload type
  */
-public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask<SimpleTemplateLoadedChange<?, ?, ?>> {
+public class SimpleTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
+        extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
+                SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 
     public SimpleTemplateExecutableTask(String stageName,
-                                        SimpleTemplateLoadedChange<?, ?, ?> descriptor,
+                                        SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> descriptor,
                                         ChangeAction action,
                                         Method executionMethod,
                                         Method rollbackMethod) {
@@ -38,12 +44,14 @@ public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
-            AbstractSimpleTemplate<?, ?, ?> changeTemplateInstance = (AbstractSimpleTemplate<?, ?, ?>)
-                    executionRuntime.getInstance(descriptor.getConstructor());
+            AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK> changeTemplateInstance =
+                    (AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK>)
+                            executionRuntime.getInstance(descriptor.getConstructor());
 
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
             changeTemplateInstance.setChangeId(descriptor.getId());
@@ -56,10 +64,9 @@ public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask
         }
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void setTemplateData(AbstractSimpleTemplate instance) {
-        Object applyPayload = descriptor.getApplyPayload();
-        Object rollbackPayload = descriptor.getRollbackPayload();
+    protected void setTemplateData(AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK> instance) {
+        APPLY applyPayload = descriptor.getApplyPayload();
+        ROLLBACK rollbackPayload = descriptor.getRollbackPayload();
 
         if (applyPayload != null) {
             logger.debug("Setting payloads for simple template change[{}]", descriptor.getId());

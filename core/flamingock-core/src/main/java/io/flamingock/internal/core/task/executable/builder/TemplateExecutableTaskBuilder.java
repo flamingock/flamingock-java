@@ -97,7 +97,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
                 }
                 rollbackMethod = null;
             }
-            return new SimpleTemplateExecutableTask(
+            return new SimpleTemplateExecutableTask<>(
                     stageName,
                     simple,
                     changeAction,
@@ -109,7 +109,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
             if (rollbackMethod != null) {
                 logger.trace("Change[{}] is a steppable template with rollback method", loadedTask.getId());
             }
-            return new SteppableTemplateExecutableTask(
+            return new SteppableTemplateExecutableTask<>(
                     stageName,
                     steppable,
                     changeAction,
