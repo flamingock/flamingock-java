@@ -461,7 +461,24 @@ TemplateExecutableTask<T> (abstract base)
 
 **Note:** Preview phase (`TemplatePreviewChange`) remains unified since YAML is parsed before template type is known.
 
->>>>>>> Stashed changes
+### SteppableTemplateExecutableTask Apply/Rollback Lifecycle
+
+The `SteppableTemplateExecutableTask` manages multi-step execution with per-step rollback:
+
+**Apply Phase:**
+- Iterates through steps in order (0 → N-1)
+- Sets `applyPayload` on template instance before executing `@Apply` method
+- `stepIndex` tracks current progress (-1 before start, N-1 after all steps complete)
+- On failure at step N, `stepIndex = N` (points to failed step)
+
+**Rollback Phase (on apply failure):**
+- Rolls back from current `stepIndex` down to 0 (reverse order)
+- Sets `rollbackPayload` on template instance before executing `@Rollback` method
+- **Skips steps without rollback payload** (`hasRollback()` returns false)
+- **Skips if template has no `@Rollback` method** (logs warning)
+
+**Key Design Decision:** Same `SteppableTemplateExecutableTask` instance is used for both apply and rollback (no retry). The `stepIndex` state persists to enable rollback from the exact failure point.
+
 ### Dependency Injection in Templates
 
 Template methods (`@Apply`, `@Rollback`) receive dependencies as **method parameters**, not constructor injection:

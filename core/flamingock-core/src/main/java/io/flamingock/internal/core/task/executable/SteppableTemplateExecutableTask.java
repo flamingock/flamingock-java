@@ -74,8 +74,13 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
             List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
             while (stepIndex >= 0 && stepIndex < steps.size()) {
                 TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex);
-                instance.setApplyPayload(currentSep.getApplyPayload());
-                executionRuntime.executeMethodWithInjectedDependencies(instance, rollbackMethod);
+                if(currentSep.hasRollback() && rollbackMethod != null) {
+                    instance.setRollbackPayload(currentSep.getRollbackPayload());
+                    executionRuntime.executeMethodWithInjectedDependencies(instance, rollbackMethod);
+                } else {
+                    logger.warn("Skipping rollback for change[{}], step[{}] -> payload provided[{}], rollback support in template[{}]",
+                            getId(), stepIndex, currentSep.hasRollback(), rollbackMethod != null);
+                }
                 stepIndex--;
             }
         } catch (Throwable ex) {
