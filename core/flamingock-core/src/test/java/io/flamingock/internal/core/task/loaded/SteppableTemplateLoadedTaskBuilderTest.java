@@ -41,7 +41,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
     private TemplateLoadedTaskBuilder builder;
 
     // Steppable test template implementation using the annotation
-    @ChangeTemplate(steppable = true)
+    @ChangeTemplate(multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestSteppableTemplate() {

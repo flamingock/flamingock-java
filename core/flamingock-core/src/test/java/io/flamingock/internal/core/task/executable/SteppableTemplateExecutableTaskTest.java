@@ -58,7 +58,7 @@ class SteppableTemplateExecutableTaskTest {
     /**
      * Test template that tracks apply and rollback invocations.
      */
-    @ChangeTemplate(steppable = true)
+    @ChangeTemplate(multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
 
         public TestSteppableTemplate() {
@@ -85,7 +85,7 @@ class SteppableTemplateExecutableTaskTest {
     /**
      * Test template without rollback method.
      */
-    @ChangeTemplate(steppable = true)
+    @ChangeTemplate(multiStep = true)
     public static class TestTemplateWithoutRollback extends AbstractChangeTemplate<Void, String, String> {
 
         public TestTemplateWithoutRollback() {

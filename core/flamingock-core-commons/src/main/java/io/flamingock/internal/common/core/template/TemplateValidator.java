@@ -125,7 +125,7 @@ public class TemplateValidator {
      */
     public TemplateType getTemplateType(Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass) {
         ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
-        if (annotation != null && annotation.steppable()) {
+        if (annotation != null && annotation.multiStep()) {
             return TemplateType.STEPPABLE;
         }
         // Default to SIMPLE (including when annotation is missing or steppable=false)

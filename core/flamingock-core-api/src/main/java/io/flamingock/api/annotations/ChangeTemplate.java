@@ -65,5 +65,5 @@ public @interface ChangeTemplate {
      *
      * @return {@code true} for steppable templates, {@code false} for simple templates
      */
-    boolean steppable() default false;
+    boolean multiStep() default false;
 }

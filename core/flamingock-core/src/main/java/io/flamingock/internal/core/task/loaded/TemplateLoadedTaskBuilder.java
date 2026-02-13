@@ -159,7 +159,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         // The actual type safety comes from the conversion methods that use reflection
         // to determine the real types at runtime.
         ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
-        boolean isSteppable = annotation != null && annotation.steppable();
+        boolean isSteppable = annotation != null && annotation.multiStep();
 
         if (isSteppable) {
             Class<? extends AbstractChangeTemplate<Object, Object, Object>> steppableTemplateClass =

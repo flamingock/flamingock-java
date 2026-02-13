@@ -50,7 +50,7 @@ class TemplateValidatorTest {
     }
 
     // Test template with @ChangeTemplate(steppable = true)
-    @ChangeTemplate(steppable = true)
+    @ChangeTemplate(multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSteppableTemplate() {
             super();
