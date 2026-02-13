@@ -32,8 +32,10 @@ import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
+import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
@@ -73,7 +75,9 @@ public class RegistrationFeature implements Feature {
         registerClassForReflection(AbstractReflectionLoadedTask.class.getName());
         registerClassForReflection(AbstractLoadedChange.class.getName());
         registerClassForReflection(CodeLoadedChange.class.getName());
-        registerClassForReflection(TemplateLoadedChange.class.getName());
+        registerClassForReflection(AbstractTemplateLoadedChange.class);
+        registerClassForReflection(SimpleTemplateLoadedChange.class);
+        registerClassForReflection(SteppableTemplateLoadedChange.class);
 
         //others
         registerClassForReflection(CoderResult.class.getName());
@@ -86,7 +90,9 @@ public class RegistrationFeature implements Feature {
         logger.startInitializationProcess("internal classes");
         initializeClassAtBuildTime(CodeLoadedChange.class);
         initializeClassAtBuildTime(AbstractLoadedChange.class);
-        initializeClassAtBuildTime(TemplateLoadedChange.class);
+        initializeClassAtBuildTime(AbstractTemplateLoadedChange.class);
+        initializeClassAtBuildTime(SimpleTemplateLoadedChange.class);
+        initializeClassAtBuildTime(SteppableTemplateLoadedChange.class);
         initializeClassAtBuildTime(ChangeTemplateManager.class);
         initializeClassAtBuildTime(RecoveryDescriptor.class);
         initializeClassAtBuildTime(FlamingockLoggerFactory.class);

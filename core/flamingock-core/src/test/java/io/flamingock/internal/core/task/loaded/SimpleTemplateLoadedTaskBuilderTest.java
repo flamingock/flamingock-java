@@ -73,9 +73,10 @@ class SimpleTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange result = builder.build();
 
             // Then
+            assertInstanceOf(SimpleTemplateLoadedChange.class, result);
             assertEquals("001", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
@@ -103,9 +104,10 @@ class SimpleTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange result = builder.build();
 
             // Then
+            assertInstanceOf(SimpleTemplateLoadedChange.class, result);
             assertEquals("0002", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_0002__test-file.yml", result.getFileName());
@@ -133,9 +135,10 @@ class SimpleTemplateLoadedTaskBuilderTest {
                     .setRollback(new Object());
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange result = builder.build();
 
             // Then
+            assertInstanceOf(SimpleTemplateLoadedChange.class, result);
             assertEquals("003", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_003__test-file.yml", result.getFileName());

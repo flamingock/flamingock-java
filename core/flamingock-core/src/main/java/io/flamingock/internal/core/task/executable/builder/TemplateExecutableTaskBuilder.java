@@ -15,12 +15,14 @@
  */
 package io.flamingock.internal.core.task.executable.builder;
 
-import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.executable.TemplateExecutableTask;
+import io.flamingock.internal.core.task.executable.SimpleTemplateExecutableTask;
+import io.flamingock.internal.core.task.executable.SteppableTemplateExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -30,29 +32,29 @@ import java.lang.reflect.Method;
 /**
  * Factory for Change classes
  */
-public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<TemplateLoadedChange> {
+public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<AbstractTemplateLoadedChange> {
     private final static Logger logger = FlamingockLoggerFactory.getLogger("TemplateBuilder");
 
     private static final TemplateExecutableTaskBuilder instance = new TemplateExecutableTaskBuilder();
     private String stageName;
     private ChangeAction changeAction;
-    private TemplateLoadedChange loadedTask;
+    private AbstractTemplateLoadedChange loadedTask;
 
     static TemplateExecutableTaskBuilder getInstance() {
         return instance;
     }
 
     public static boolean supports(AbstractLoadedTask loadedTask) {
-        return TemplateLoadedChange.class.isAssignableFrom(loadedTask.getClass());
+        return AbstractTemplateLoadedChange.class.isAssignableFrom(loadedTask.getClass());
     }
 
     @Override
-    public TemplateLoadedChange cast(AbstractLoadedTask loadedTask) {
-        return (TemplateLoadedChange) loadedTask;
+    public AbstractTemplateLoadedChange cast(AbstractLoadedTask loadedTask) {
+        return (AbstractTemplateLoadedChange) loadedTask;
     }
 
     @Override
-    public TemplateExecutableTaskBuilder setLoadedTask(TemplateLoadedChange loadedTask) {
+    public TemplateExecutableTaskBuilder setLoadedTask(AbstractTemplateLoadedChange loadedTask) {
         this.loadedTask = loadedTask;
         return this;
     }
@@ -72,57 +74,50 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Temp
 
     @Override
     public ExecutableTask build() {
-        return getTasksFromReflection(stageName, loadedTask, changeAction);
-    }
+        Method rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
 
-
-    /**
-     * New ChangeAction-based method for building tasks.
-     */
-    private TemplateExecutableTask getTasksFromReflection(String stageName,
-                                                          TemplateLoadedChange loadedTask,
-                                                          ChangeAction action) {
-        return buildTask(stageName, loadedTask, action);
-    }
-
-    private TemplateExecutableTask buildTask(String stageName,
-                                           TemplateLoadedChange loadedTask,
-                                           ChangeAction action) {
-        Method rollbackMethod = null;
-
-        boolean isSteppableTemplate = AbstractSteppableTemplate.class.isAssignableFrom(loadedTask.getTemplateClass());
-
-        if (isSteppableTemplate) {
-            rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
+        if (loadedTask instanceof SimpleTemplateLoadedChange) {
+            SimpleTemplateLoadedChange simple = (SimpleTemplateLoadedChange) loadedTask;
+            // Only include rollback method if rollback data is present
+            if (simple.getRollback() != null) {
+                if (rollbackMethod != null) {
+                    logger.trace("Change[{}] provides rollback in configuration", loadedTask.getId());
+                } else {
+                    logger.warn("Change[{}] provides rollback in configuration, but based on a template[{}] not supporting manual rollback",
+                            loadedTask.getId(),
+                            loadedTask.getSource()
+                    );
+                }
+            } else {
+                if (rollbackMethod != null) {
+                    logger.warn("Change[{}] does not provide rollback, but based on a template[{}] support manual rollback",
+                            loadedTask.getId(),
+                            loadedTask.getSource()
+                    );
+                }
+                rollbackMethod = null;
+            }
+            return new SimpleTemplateExecutableTask(
+                    stageName,
+                    simple,
+                    changeAction,
+                    loadedTask.getApplyMethod(),
+                    rollbackMethod
+            );
+        } else if (loadedTask instanceof SteppableTemplateLoadedChange) {
+            SteppableTemplateLoadedChange steppable = (SteppableTemplateLoadedChange) loadedTask;
             if (rollbackMethod != null) {
                 logger.trace("Change[{}] is a steppable template with rollback method", loadedTask.getId());
             }
-        } else if (loadedTask.getRollback() != null) {
-            rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
-            if (rollbackMethod != null) {
-                logger.trace("Change[{}] provides rollback in configuration", loadedTask.getId());
-            } else {
-                logger.warn("Change[{}] provides rollback in configuration, but based on a template[{}] not supporting manual rollback",
-                        loadedTask.getId(),
-                        loadedTask.getSource()
-                );
-            }
-        } else {
-            if (loadedTask.getRollbackMethod().isPresent()) {
-                logger.warn("Change[{}] does not provide rollback, but based on a template[{}] support manual rollback",
-                        loadedTask.getId(),
-                        loadedTask.getSource()
-                );
-            }
+            return new SteppableTemplateExecutableTask(
+                    stageName,
+                    steppable,
+                    changeAction,
+                    loadedTask.getApplyMethod(),
+                    rollbackMethod
+            );
         }
 
-        return new TemplateExecutableTask(
-                stageName,
-                loadedTask,
-                action,
-                loadedTask.getApplyMethod(),
-                rollbackMethod
-        );
-
+        throw new IllegalArgumentException("Unknown template type: " + loadedTask.getClass().getName());
     }
 }

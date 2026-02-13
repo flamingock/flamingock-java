@@ -15,6 +15,8 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.template.AbstractSimpleTemplate;
+import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.preview.PreviewConstructor;
@@ -31,7 +33,7 @@ import java.util.List;
 
 
 //TODO how to set transactional and runAlways
-public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoadedChange> {
+public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemplateLoadedChange> {
 
     private String fileName;
     private String id;
@@ -141,30 +143,49 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     }
 
     @Override
-    public TemplateLoadedChange build() {
+    public AbstractTemplateLoadedChange build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
         Class<? extends ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
 
         Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
 
-        return new TemplateLoadedChange(
-                fileName,
-                id,
-                order,
-                author,
-                templateClass,
-                constructor,
-                profiles,
-                transactional,
-                runAlways,
-                system,
-                configuration,
-                apply,
-                rollback,
-                steps,
-                targetSystem,
-                recovery);
+        // Determine template type and build appropriate loaded change
+        if (AbstractSteppableTemplate.class.isAssignableFrom(templateClass)) {
+            return new SteppableTemplateLoadedChange(
+                    fileName,
+                    id,
+                    order,
+                    author,
+                    templateClass,
+                    constructor,
+                    profiles,
+                    transactional,
+                    runAlways,
+                    system,
+                    configuration,
+                    steps,
+                    targetSystem,
+                    recovery);
+        } else {
+            // Default to SimpleTemplateLoadedChange for AbstractSimpleTemplate and unknown types
+            return new SimpleTemplateLoadedChange(
+                    fileName,
+                    id,
+                    order,
+                    author,
+                    templateClass,
+                    constructor,
+                    profiles,
+                    transactional,
+                    runAlways,
+                    system,
+                    configuration,
+                    apply,
+                    rollback,
+                    targetSystem,
+                    recovery);
+        }
 
     }
 

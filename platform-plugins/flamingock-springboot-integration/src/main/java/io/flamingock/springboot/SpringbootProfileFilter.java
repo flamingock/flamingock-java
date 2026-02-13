@@ -18,8 +18,8 @@ package io.flamingock.springboot;
 import io.flamingock.internal.core.task.filter.TaskFilter;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
+import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 import org.springframework.context.annotation.Profile;
 
 import java.util.Arrays;
@@ -49,8 +49,8 @@ public class SpringbootProfileFilter implements TaskFilter {
     }
 
     private boolean filter(AbstractReflectionLoadedTask reflectionDescriptor) {
-        if (TemplateLoadedChange.class.isAssignableFrom(reflectionDescriptor.getClass())) {
-            return filterTemplateChange((TemplateLoadedChange) reflectionDescriptor);
+        if (AbstractTemplateLoadedChange.class.isAssignableFrom(reflectionDescriptor.getClass())) {
+            return filterTemplateChange((AbstractTemplateLoadedChange) reflectionDescriptor);
 
         } else if (CodeLoadedChange.class.isAssignableFrom(reflectionDescriptor.getClass())) {
             return filterCodeChange((CodeLoadedChange) reflectionDescriptor);
@@ -65,7 +65,7 @@ public class SpringbootProfileFilter implements TaskFilter {
 
     }
 
-    private boolean filterTemplateChange(TemplateLoadedChange reflectionDescriptor) {
+    private boolean filterTemplateChange(AbstractTemplateLoadedChange reflectionDescriptor) {
         return filterProfiles(reflectionDescriptor.getProfiles());
     }
 
