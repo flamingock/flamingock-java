@@ -138,7 +138,6 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
             Throwable mainError = ((FailedAfterExecutionAuditStep)afterAudit)
                     .getMainError();
             auditAndLogAutoRollback();
-            rollbackChain((RollableFailedStep) afterAudit, executionContext);
             ChangeResult result = resultBuilder
                     .rolledBack()
                     .error(mainError)
@@ -147,16 +146,6 @@ public class SimpleTxChangeProcessStrategy extends AbstractChangeProcessStrategy
         }
     }
 
-    private void rollbackChain(RollableFailedStep rollableFailedStep, ExecutionContext executionContext) {
-        // Skip first rollback (main change) as transaction already rolled it back
-        rollableFailedStep.getRollbackSteps()
-                .stream().skip(1)
-                .forEach(rollableStep -> {
-                    ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
-                    stepLogger.logManualRollbackResult(rolledBack);
-                    auditAndLogManualRollback(rolledBack, executionContext);
-                });
-    }
 
 
     protected void auditAndLogAutoRollback() {

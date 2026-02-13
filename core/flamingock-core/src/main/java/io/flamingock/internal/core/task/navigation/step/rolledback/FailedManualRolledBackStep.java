@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.step.rolledback;
 
+import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
 import io.flamingock.internal.core.task.executable.Rollback;
 
@@ -23,8 +24,8 @@ public final class FailedManualRolledBackStep extends ManualRolledBackStep imple
     private final Throwable error;
 
 
-    FailedManualRolledBackStep(Rollback rollback, long duration, Throwable error) {
-        super(rollback, false, duration);
+    FailedManualRolledBackStep(ExecutableTask executableChange, long duration, Throwable error) {
+        super(executableChange, false, duration);
         this.error = error;
     }
 

@@ -42,9 +42,6 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
     protected final Method executionMethod;
     protected final Method rollbackMethod;
 
-    @Deprecated
-    protected final List<Rollback> rollbackChain;
-
 
     public ReflectionExecutableTask(String stageName,
                                     REFLECTION_TASK_DESCRIPTOR descriptor,
@@ -54,16 +51,12 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
         super(stageName, descriptor, action);
         this.executionMethod = executionMethod;
         this.rollbackMethod = rollbackMethod;
-        rollbackChain = new LinkedList<>();
-        if(rollbackMethod != null) {
-            rollbackChain.add(buildRollBack(rollbackMethod));
-        }
     }
 
 
     @Override
     public List<? extends Rollback> getRollbackChain() {
-        return rollbackChain;
+        return null;
     }
 
     @Override
@@ -86,8 +79,13 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
     }
 
     @Override
-    public String getExecutionMethodName() {
+    public String getApplyMethodName() {
         return executionMethod.getName();
+    }
+
+    @Override
+    public String getRollbackMethodName() {
+        return rollbackMethod.getName();
     }
 
     private Rollback buildRollBack(Method rollbackMethod) {

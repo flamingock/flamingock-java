@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.step.afteraudit;
 
+import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.AbstractTaskStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
@@ -22,21 +23,20 @@ import io.flamingock.internal.core.task.executable.Rollback;
 import io.flamingock.internal.util.StopWatch;
 
 public final class RollableStep extends AbstractTaskStep {
-    private final Rollback rollback;
 
 
-    public RollableStep(Rollback rollback) {
-        super(rollback.getTask());
-        this.rollback = rollback;
+    public RollableStep(ExecutableTask executableChange) {
+        super(executableChange);
     }
 
-    public ManualRolledBackStep rollback(ExecutionRuntime runtimeHelper) {
+    public ManualRolledBackStep rollback(ExecutionRuntime executionRuntime) {
         StopWatch stopWatch = StopWatch.startAndGet();
+        ExecutableTask change = this.getTask();
         try {
-            rollback.rollback(runtimeHelper);
-            return ManualRolledBackStep.successfulRollback(rollback, stopWatch.getElapsed());
+            change.rollback(executionRuntime);
+            return ManualRolledBackStep.successfulRollback(change, stopWatch.getElapsed());
         } catch (Throwable throwable) {
-            return  ManualRolledBackStep.failedRollback(rollback, stopWatch.getElapsed(), throwable);
+            return  ManualRolledBackStep.failedRollback(change, stopWatch.getElapsed(), throwable);
         }
     }
 

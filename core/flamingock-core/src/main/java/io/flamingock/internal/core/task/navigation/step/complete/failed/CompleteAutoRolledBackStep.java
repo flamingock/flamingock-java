@@ -31,11 +31,7 @@ public class CompleteAutoRolledBackStep extends RolledBackStep implements Succes
 
 
     @Override
-    public List<RollableStep> getRollbackSteps() {
-        return task.getRollbackChain()
-                .stream()
-                .skip(1)//Skips the first one(its own rollback), because it's AutoRollback
-                .map(RollableStep::new)
-                .collect(Collectors.toList());
+    public final RollableStep getRollbackStep() {
+        return new RollableStep(getTask());
     }
 }

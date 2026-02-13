@@ -30,6 +30,7 @@ import io.flamingock.internal.core.task.navigation.step.RollableFailedStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.RollableStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
@@ -148,13 +149,10 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
     private void rollbackChain(RollableFailedStep rollableFailedStep, ExecutionContext executionContext) {
         // Skip first rollback (main change) as transaction already rolled it back
-        rollableFailedStep.getRollbackSteps()
-                .stream().skip(1)
-                .forEach(rollableStep -> {
-                    ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
-                    stepLogger.logManualRollbackResult(rolledBack);
-                    auditAndLogManualRollback(rolledBack, executionContext);
-                });
+        RollableStep rollableStep = rollableFailedStep.getRollbackStep();
+        ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
+        stepLogger.logManualRollbackResult(rolledBack);
+        auditAndLogManualRollback(rolledBack, executionContext);
     }
 
 

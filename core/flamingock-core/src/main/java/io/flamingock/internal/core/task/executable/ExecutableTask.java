@@ -29,10 +29,11 @@ public interface ExecutableTask extends TaskDescriptor {
 
     void apply(ExecutionRuntime executionRuntime);
 
+    String getApplyMethodName();
 
     void rollback(ExecutionRuntime executionRuntime);
 
-    String getExecutionMethodName();
+    String getRollbackMethodName();
 
     boolean isAlreadyApplied();
 
