@@ -29,30 +29,35 @@ import java.util.List;
  * <p>
  * The steps are converted from raw YAML data (List of Maps) to typed TemplateStep objects
  * at load time, enabling early validation and cleaner executable tasks.
+ *
+ * @param <CONFIG>   the configuration type for the template
+ * @param <APPLY>    the apply payload type
+ * @param <ROLLBACK> the rollback payload type
  */
-public class SteppableTemplateLoadedChange extends AbstractTemplateLoadedChange {
+public class SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
+        extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> {
 
-    private final List<TemplateStep<?, ?>> steps;
+    private final List<TemplateStep<APPLY, ROLLBACK>> steps;
 
     SteppableTemplateLoadedChange(String changeFileName,
                                   String id,
                                   String order,
                                   String author,
-                                  Class<? extends AbstractSteppableTemplate<?, ?, ?>> templateClass,
+                                  Class<? extends AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                   Constructor<?> constructor,
                                   List<String> profiles,
                                   boolean transactional,
                                   boolean runAlways,
                                   boolean systemTask,
-                                  Object configuration,
-                                  List<TemplateStep<?, ?>> steps,
+                                  CONFIG configuration,
+                                  List<TemplateStep<APPLY, ROLLBACK>> steps,
                                   TargetSystemDescriptor targetSystem,
                                   RecoveryDescriptor recovery) {
         super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery);
         this.steps = steps;
     }
 
-    public List<TemplateStep<?, ?>> getSteps() {
+    public List<TemplateStep<APPLY, ROLLBACK>> getSteps() {
         return steps;
     }
 }

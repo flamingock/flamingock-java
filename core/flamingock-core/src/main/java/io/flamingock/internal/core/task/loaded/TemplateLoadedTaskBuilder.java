@@ -37,7 +37,7 @@ import java.util.Map;
 
 
 //TODO how to set transactional and runAlways
-public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemplateLoadedChange> {
+public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemplateLoadedChange<?, ?, ?>> {
 
     private String fileName;
     private String id;
@@ -147,7 +147,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     }
 
     @Override
-    public AbstractTemplateLoadedChange build() {
+    @SuppressWarnings("unchecked")
+    public AbstractTemplateLoadedChange<?, ?, ?> build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
         Class<? extends ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
@@ -155,16 +156,19 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
 
         // Determine template type and build appropriate loaded change
+        // Note: Due to type erasure, we use Object bounds at construction time.
+        // The actual type safety comes from the conversion methods that use reflection
+        // to determine the real types at runtime.
         if (AbstractSteppableTemplate.class.isAssignableFrom(templateClass)) {
 
-            @SuppressWarnings("unchecked")
-            Class<? extends AbstractSteppableTemplate<?, ?, ?>> steppableTemplateClass = (Class<? extends AbstractSteppableTemplate<?, ?, ?>>)
+            Class<? extends AbstractSteppableTemplate<Object, Object, Object>> steppableTemplateClass =
+                    (Class<? extends AbstractSteppableTemplate<Object, Object, Object>>)
                     templateClass.asSubclass(AbstractSteppableTemplate.class);
 
             // Convert steps at load time
-            List<TemplateStep<?, ?>> convertedSteps = convertSteps(constructor, steps);
+            List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);
 
-            return new SteppableTemplateLoadedChange(
+            return new SteppableTemplateLoadedChange<>(
                     fileName,
                     id,
                     order,
@@ -181,14 +185,14 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
                     recovery);
         } else {
             // Default to SimpleTemplateLoadedChange for AbstractSimpleTemplate and unknown types
-            @SuppressWarnings("unchecked")
-            Class<? extends AbstractSimpleTemplate<?, ?, ?>> simpleTemplateClass = (Class<? extends AbstractSimpleTemplate<?, ?, ?>>)
+            Class<? extends AbstractSimpleTemplate<Object, Object, Object>> simpleTemplateClass =
+                    (Class<? extends AbstractSimpleTemplate<Object, Object, Object>>)
                             templateClass.asSubclass(AbstractSimpleTemplate.class);
 
             // Convert apply/rollback to typed payloads at load time
             Pair<Object, Object> convertedPayloads = convertPayloads(constructor, apply, rollback);
 
-            return new SimpleTemplateLoadedChange(
+            return new SimpleTemplateLoadedChange<>(
                     fileName,
                     id,
                     order,
@@ -242,7 +246,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
      * Converts raw steps data from YAML to typed TemplateStep objects.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private List<TemplateStep<?, ?>> convertSteps(Constructor<?> constructor, Object stepsData) {
+    private List<TemplateStep<Object, Object>> convertSteps(Constructor<?> constructor, Object stepsData) {
         if (stepsData == null) {
             return null;
         }
@@ -269,12 +273,12 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         Class<?> applyClass = templateInstance.getApplyPayloadClass();
         Class<?> rollbackClass = templateInstance.getRollbackPayloadClass();
 
-        List<TemplateStep<?, ?>> result = new ArrayList<>();
+        List<TemplateStep<Object, Object>> result = new ArrayList<>();
 
         for (Object stepItem : stepsList) {
             if (stepItem instanceof Map) {
                 Map<String, Object> stepMap = (Map<String, Object>) stepItem;
-                TemplateStep step = new TemplateStep();
+                TemplateStep<Object, Object> step = new TemplateStep<>();
 
                 Object applyItemData = stepMap.get("apply");
                 if (applyItemData != null && Void.class != applyClass) {
@@ -288,7 +292,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
 
                 result.add(step);
             } else if (stepItem instanceof TemplateStep) {
-                result.add((TemplateStep) stepItem);
+                result.add((TemplateStep<Object, Object>) stepItem);
             }
         }
 

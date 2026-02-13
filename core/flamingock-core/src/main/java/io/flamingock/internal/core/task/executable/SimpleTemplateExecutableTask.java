@@ -27,10 +27,10 @@ import java.lang.reflect.Method;
  * Executable task for simple templates (single apply/rollback step).
  * Handles templates extending {@link AbstractSimpleTemplate}.
  */
-public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask<SimpleTemplateLoadedChange> {
+public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask<SimpleTemplateLoadedChange<?, ?, ?>> {
 
     public SimpleTemplateExecutableTask(String stageName,
-                                        SimpleTemplateLoadedChange descriptor,
+                                        SimpleTemplateLoadedChange<?, ?, ?> descriptor,
                                         ChangeAction action,
                                         Method executionMethod,
                                         Method rollbackMethod) {

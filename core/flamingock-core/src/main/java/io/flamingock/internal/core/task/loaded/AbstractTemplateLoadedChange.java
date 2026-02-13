@@ -31,23 +31,27 @@ import java.util.Optional;
  * Abstract base class for template-based loaded changes.
  * Contains common fields and methods shared by both SimpleTemplateLoadedChange
  * and SteppableTemplateLoadedChange.
+ *
+ * @param <CONFIG>   the configuration type for the template
+ * @param <APPLY>    the apply payload type
+ * @param <ROLLBACK> the rollback payload type
  */
-public abstract class AbstractTemplateLoadedChange extends AbstractLoadedChange {
+public abstract class AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> extends AbstractLoadedChange {
 
     private final List<String> profiles;
-    private final Object configuration;
+    private final CONFIG configuration;
 
     protected AbstractTemplateLoadedChange(String changeFileName,
                                            String id,
                                            String order,
                                            String author,
-                                           Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
+                                           Class<? extends ChangeTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                            Constructor<?> constructor,
                                            List<String> profiles,
                                            boolean transactional,
                                            boolean runAlways,
                                            boolean systemTask,
-                                           Object configuration,
+                                           CONFIG configuration,
                                            TargetSystemDescriptor targetSystem,
                                            RecoveryDescriptor recovery) {
         super(changeFileName, id, order, author, templateClass, constructor, runAlways, transactional, systemTask, targetSystem, recovery, false);
@@ -56,7 +60,7 @@ public abstract class AbstractTemplateLoadedChange extends AbstractLoadedChange 
         this.configuration = configuration;
     }
 
-    public Object getConfiguration() {
+    public CONFIG getConfiguration() {
         return configuration;
     }
 
@@ -65,8 +69,8 @@ public abstract class AbstractTemplateLoadedChange extends AbstractLoadedChange 
     }
 
     @SuppressWarnings("unchecked")
-    public Class<? extends ChangeTemplate<?, ?, ?>> getTemplateClass() {
-        return (Class<? extends ChangeTemplate<?, ?, ?>>) this.getImplementationClass();
+    public Class<? extends ChangeTemplate<CONFIG, APPLY, ROLLBACK>> getTemplateClass() {
+        return (Class<? extends ChangeTemplate<CONFIG, APPLY, ROLLBACK>>) this.getImplementationClass();
     }
 
     @Override

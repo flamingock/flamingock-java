@@ -16,7 +16,6 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.template.AbstractSimpleTemplate;
-import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
@@ -29,26 +28,31 @@ import java.util.List;
  * <p>
  * The payloads are converted from raw YAML data (Object/Map) to typed values
  * at load time, enabling early validation and cleaner executable tasks.
+ *
+ * @param <CONFIG>   the configuration type for the template
+ * @param <APPLY>    the apply payload type
+ * @param <ROLLBACK> the rollback payload type
  */
-public class SimpleTemplateLoadedChange extends AbstractTemplateLoadedChange {
+public class SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
+        extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> {
 
     // Already converted to typed payload (no longer raw Object from YAML)
-    private final Object applyPayload;
-    private final Object rollbackPayload;
+    private final APPLY applyPayload;
+    private final ROLLBACK rollbackPayload;
 
     SimpleTemplateLoadedChange(String changeFileName,
                                String id,
                                String order,
                                String author,
-                               Class<? extends AbstractSimpleTemplate<?, ?, ?>> templateClass,
+                               Class<? extends AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                Constructor<?> constructor,
                                List<String> profiles,
                                boolean transactional,
                                boolean runAlways,
                                boolean systemTask,
-                               Object configuration,
-                               Object applyPayload,
-                               Object rollbackPayload,
+                               CONFIG configuration,
+                               APPLY applyPayload,
+                               ROLLBACK rollbackPayload,
                                TargetSystemDescriptor targetSystem,
                                RecoveryDescriptor recovery) {
         super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery);
@@ -56,11 +60,11 @@ public class SimpleTemplateLoadedChange extends AbstractTemplateLoadedChange {
         this.rollbackPayload = rollbackPayload;
     }
 
-    public Object getApplyPayload() {
+    public APPLY getApplyPayload() {
         return applyPayload;
     }
 
-    public Object getRollbackPayload() {
+    public ROLLBACK getRollbackPayload() {
         return rollbackPayload;
     }
 

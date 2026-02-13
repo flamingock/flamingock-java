@@ -73,7 +73,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            AbstractTemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
             assertInstanceOf(SimpleTemplateLoadedChange.class, result);
@@ -81,7 +81,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
             // Verify typed payloads are stored
-            SimpleTemplateLoadedChange simpleResult = (SimpleTemplateLoadedChange) result;
+            SimpleTemplateLoadedChange<?, ?, ?> simpleResult = (SimpleTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(simpleResult.getApplyPayload());
             assertNotNull(simpleResult.getRollbackPayload());
             assertTrue(simpleResult.hasRollback());
@@ -109,7 +109,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            AbstractTemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
             assertInstanceOf(SimpleTemplateLoadedChange.class, result);
@@ -140,7 +140,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
                     .setRollback("rollbackPayload");
 
             // When
-            AbstractTemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
             assertInstanceOf(SimpleTemplateLoadedChange.class, result);

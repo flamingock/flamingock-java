@@ -33,7 +33,7 @@ import java.util.Arrays;
  *
  * @param <T> the type of template loaded change
  */
-public abstract class AbstractTemplateExecutableTask<T extends AbstractTemplateLoadedChange> extends ReflectionExecutableTask<T> {
+public abstract class AbstractTemplateExecutableTask<T extends AbstractTemplateLoadedChange<?, ?, ?>> extends ReflectionExecutableTask<T> {
     protected final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
 
     public AbstractTemplateExecutableTask(String stageName,

@@ -32,13 +32,13 @@ import java.lang.reflect.Method;
 /**
  * Factory for Change classes
  */
-public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<AbstractTemplateLoadedChange> {
+public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<AbstractTemplateLoadedChange<?, ?, ?>> {
     private final static Logger logger = FlamingockLoggerFactory.getLogger("TemplateBuilder");
 
     private static final TemplateExecutableTaskBuilder instance = new TemplateExecutableTaskBuilder();
     private String stageName;
     private ChangeAction changeAction;
-    private AbstractTemplateLoadedChange loadedTask;
+    private AbstractTemplateLoadedChange<?, ?, ?> loadedTask;
 
     static TemplateExecutableTaskBuilder getInstance() {
         return instance;
@@ -49,12 +49,12 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
     }
 
     @Override
-    public AbstractTemplateLoadedChange cast(AbstractLoadedTask loadedTask) {
-        return (AbstractTemplateLoadedChange) loadedTask;
+    public AbstractTemplateLoadedChange<?, ?, ?> cast(AbstractLoadedTask loadedTask) {
+        return (AbstractTemplateLoadedChange<?, ?, ?>) loadedTask;
     }
 
     @Override
-    public TemplateExecutableTaskBuilder setLoadedTask(AbstractTemplateLoadedChange loadedTask) {
+    public TemplateExecutableTaskBuilder setLoadedTask(AbstractTemplateLoadedChange<?, ?, ?> loadedTask) {
         this.loadedTask = loadedTask;
         return this;
     }
@@ -77,7 +77,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
         Method rollbackMethod = loadedTask.getRollbackMethod().orElse(null);
 
         if (loadedTask instanceof SimpleTemplateLoadedChange) {
-            SimpleTemplateLoadedChange simple = (SimpleTemplateLoadedChange) loadedTask;
+            SimpleTemplateLoadedChange<?, ?, ?> simple = (SimpleTemplateLoadedChange<?, ?, ?>) loadedTask;
             // Only include rollback method if rollback data is present
             if (simple.hasRollback()) {
                 if (rollbackMethod != null) {
@@ -105,7 +105,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
                     rollbackMethod
             );
         } else if (loadedTask instanceof SteppableTemplateLoadedChange) {
-            SteppableTemplateLoadedChange steppable = (SteppableTemplateLoadedChange) loadedTask;
+            SteppableTemplateLoadedChange<?, ?, ?> steppable = (SteppableTemplateLoadedChange<?, ?, ?>) loadedTask;
             if (rollbackMethod != null) {
                 logger.trace("Change[{}] is a steppable template with rollback method", loadedTask.getId());
             }

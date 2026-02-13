@@ -29,10 +29,10 @@ import java.util.List;
  * Executable task for steppable templates (multiple steps).
  * Handles templates extending {@link AbstractSteppableTemplate}.
  */
-public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableTask<SteppableTemplateLoadedChange> {
+public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableTask<SteppableTemplateLoadedChange<?, ?, ?>> {
 
     public SteppableTemplateExecutableTask(String stageName,
-                                           SteppableTemplateLoadedChange descriptor,
+                                           SteppableTemplateLoadedChange<?, ?, ?> descriptor,
                                            ChangeAction action,
                                            Method executionMethod,
                                            Method rollbackMethod) {
@@ -52,8 +52,7 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
             instance.setChangeId(descriptor.getId());
             setConfigurationData(instance);
 
-
-            List<TemplateStep<?, ?>> steps = descriptor.getSteps();
+            setStepsData(instance, descriptor.getSteps());
             while (instance.advance()) {
                 executionRuntime.executeMethodWithInjectedDependencies(instance, method);
             }
@@ -61,6 +60,17 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
         }
+    }
+
+    /**
+     * Sets the steps data on the template instance.
+     * Uses a helper method to handle the generic type capture properly.
+     */
+    @SuppressWarnings("unchecked")
+    private <A, R> void setStepsData(AbstractSteppableTemplate<?, A, R> instance,
+                                     List<? extends TemplateStep<?, ?>> steps) {
+        // Safe cast: the steps were created using the template's type information
+        instance.setSteps((List<TemplateStep<A, R>>) steps);
     }
 
 }

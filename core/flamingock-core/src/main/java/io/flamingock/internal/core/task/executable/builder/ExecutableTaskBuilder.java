@@ -43,7 +43,7 @@ public interface ExecutableTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
         if(TemplateExecutableTaskBuilder.supports(loadedTask)) {
             TemplateExecutableTaskBuilder templateBuilder = TemplateExecutableTaskBuilder.getInstance();
-            AbstractTemplateLoadedChange castedTask = templateBuilder.cast(loadedTask);
+            AbstractTemplateLoadedChange<?, ?, ?> castedTask = templateBuilder.cast(loadedTask);
             return templateBuilder.setLoadedTask(castedTask);
 
         } else if(CodeExecutableTaskBuilder.supports(loadedTask)) {
