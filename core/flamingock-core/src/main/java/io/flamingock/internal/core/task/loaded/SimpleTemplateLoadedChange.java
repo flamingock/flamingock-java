@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.template.AbstractSimpleTemplate;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -35,7 +36,7 @@ public class SimpleTemplateLoadedChange extends AbstractTemplateLoadedChange {
                                String id,
                                String order,
                                String author,
-                               Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
+                               Class<? extends AbstractSimpleTemplate<?, ?, ?>> templateClass,
                                Constructor<?> constructor,
                                List<String> profiles,
                                boolean transactional,

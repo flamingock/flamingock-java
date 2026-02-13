@@ -152,12 +152,16 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
 
         // Determine template type and build appropriate loaded change
         if (AbstractSteppableTemplate.class.isAssignableFrom(templateClass)) {
+
+            @SuppressWarnings("unchecked")
+            Class<? extends AbstractSteppableTemplate<?, ?, ?>> steppableTemplateClass = (Class<? extends AbstractSteppableTemplate<?, ?, ?>>)
+                    templateClass.asSubclass(AbstractSteppableTemplate.class);
             return new SteppableTemplateLoadedChange(
                     fileName,
                     id,
                     order,
                     author,
-                    templateClass,
+                    steppableTemplateClass,
                     constructor,
                     profiles,
                     transactional,
@@ -169,14 +173,16 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
                     recovery);
         } else {
             // Default to SimpleTemplateLoadedChange for AbstractSimpleTemplate and unknown types
-            Class<? extends AbstractSimpleTemplate> steppableTemplateClass =
-                    templateClass.asSubclass(AbstractSimpleTemplate.class);
+            @SuppressWarnings("unchecked")
+            Class<? extends AbstractSimpleTemplate<?, ?, ?>> simpleTemplateClass = (Class<? extends AbstractSimpleTemplate<?, ?, ?>>)
+                            templateClass.asSubclass(AbstractSimpleTemplate.class);
+
             return new SimpleTemplateLoadedChange(
                     fileName,
                     id,
                     order,
                     author,
-                    templateClass,
+                    simpleTemplateClass,
                     constructor,
                     profiles,
                     transactional,
