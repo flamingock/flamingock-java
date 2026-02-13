@@ -40,7 +40,9 @@ import java.util.List;
 public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends AbstractReflectionLoadedTask> extends AbstractExecutableTask<REFLECTION_TASK_DESCRIPTOR> implements ExecutableTask {
 
     protected final Method executionMethod;
+    protected final Method rollbackMethod;
 
+    @Deprecated
     protected final List<Rollback> rollbackChain;
 
 
@@ -51,6 +53,7 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
                                     Method rollbackMethod) {
         super(stageName, descriptor, action);
         this.executionMethod = executionMethod;
+        this.rollbackMethod = rollbackMethod;
         rollbackChain = new LinkedList<>();
         if(rollbackMethod != null) {
             rollbackChain.add(buildRollBack(rollbackMethod));
@@ -64,9 +67,13 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
     }
 
     @Override
-    public void execute(ExecutionRuntime executionRuntime) {
+    public void apply(ExecutionRuntime executionRuntime) {
         executeInternal(executionRuntime, executionMethod);
+    }
 
+    @Override
+    public void rollback(ExecutionRuntime executionRuntime) {
+        executeInternal(executionRuntime, rollbackMethod);
     }
 
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
