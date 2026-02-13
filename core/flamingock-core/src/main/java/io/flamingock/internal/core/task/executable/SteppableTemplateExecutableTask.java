@@ -56,6 +56,9 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
             setConfigurationData(instance);
 
             setTemplateData(executionRuntime, instance);
+            while (instance.advance()) {
+                executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+            }
 
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
@@ -78,8 +81,10 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
 
             Method setStepsMethod = getSetterMethod(instance.getClass(), "setSteps");
             executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
+
         } else {
             logger.warn("No 'steps' section provided for steppable template-based change[{}]", descriptor.getId());
+            //TODO this should throw an exception
         }
     }
 

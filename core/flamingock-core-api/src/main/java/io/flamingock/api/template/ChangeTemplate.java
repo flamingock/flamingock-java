@@ -35,6 +35,10 @@ public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD
 
     void setConfiguration(SHARED_CONFIG_FIELD configuration);
 
+    void setApplyPayload(APPLY_FIELD applyPayload);
+
+    void setRollbackPayload(ROLLBACK_FIELD rollbackPayload);
+
     Class<SHARED_CONFIG_FIELD> getConfigurationClass();
 
     Class<APPLY_FIELD> getApplyPayloadClass();

@@ -72,7 +72,8 @@ public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask
                     instance.getApplyPayloadClass(),
                     instance.getRollbackPayloadClass()
             );
-            instance.setStep(step);
+            instance.setApplyPayload(step.getApply());
+            instance.setRollbackPayload(step.getRollback());
 
         } else {
             logger.warn("No 'apply' section provided for simple template-based change[{}]", descriptor.getId());

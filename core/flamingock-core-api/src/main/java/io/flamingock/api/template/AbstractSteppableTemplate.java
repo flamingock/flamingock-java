@@ -17,6 +17,7 @@ package io.flamingock.api.template;
 
 import io.flamingock.internal.util.NotThreadSafe;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -59,15 +60,15 @@ import java.util.List;
  * </ul>
  *
  * @param <SHARED_CONFIG> the type of shared configuration
- * @param <APPLY> the type of the apply payload for each step
- * @param <ROLLBACK> the type of the rollback payload for each step
+ * @param <APPLY>         the type of the apply payload for each step
+ * @param <ROLLBACK>      the type of the rollback payload for each step
  */
 @NotThreadSafe
 public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
         extends AbstractChangeTemplate<SHARED_CONFIG, APPLY, ROLLBACK> {
 
-    protected List<TemplateStep<APPLY, ROLLBACK>> steps;
-    protected int atStep = -1;
+    private List<TemplateStep<APPLY, ROLLBACK>> steps = new ArrayList<>();
+    private int atStep = -1;
 
     public AbstractSteppableTemplate(Class<?>... additionalReflectiveClass) {
         super(additionalReflectiveClass);
@@ -78,8 +79,21 @@ public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
      *
      * @param steps the list of template steps
      */
-    public void setSteps(List<TemplateStep<APPLY, ROLLBACK>> steps) {
+    public final void setSteps(List<TemplateStep<APPLY, ROLLBACK>> steps) {
         this.steps = steps;
     }
+
+    public final boolean advance() {
+        if (atStep + 1 >= steps.size()) {
+            return false;
+        }
+        atStep++;
+        TemplateStep<APPLY, ROLLBACK> currentStep = steps.get(atStep);
+        this.setApplyPayload(currentStep.getApply());
+        return true;
+    }
+
+
+
 
 }

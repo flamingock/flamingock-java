@@ -42,7 +42,10 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     private final Class<ROLLBACK_FIELD> rollbackPayloadClass;
     protected String changeId;
     protected boolean isTransactional;
+
     protected SHARED_CONFIGURATION_FIELD configuration;
+    protected APPLY_FIELD applyPayload;
+    protected ROLLBACK_FIELD rollbackPayload;
 
     private final Set<Class<?>> additionalReflectiveClasses;
 
@@ -109,6 +112,16 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     @Override
     public void setConfiguration(SHARED_CONFIGURATION_FIELD configuration) {
         this.configuration = configuration;
+    }
+
+    @Override
+    public void setApplyPayload(APPLY_FIELD applyPayload) {
+        this.applyPayload = applyPayload;
+    }
+
+    @Override
+    public void setRollbackPayload(ROLLBACK_FIELD rollbackPayload) {
+        this.rollbackPayload = rollbackPayload;
     }
 
     @Override
