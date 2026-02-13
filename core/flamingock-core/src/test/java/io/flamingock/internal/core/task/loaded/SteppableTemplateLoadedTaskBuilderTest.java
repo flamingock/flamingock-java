@@ -16,7 +16,8 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.template.AbstractSteppableTemplate;
+import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
@@ -39,8 +40,9 @@ class SteppableTemplateLoadedTaskBuilderTest {
 
     private TemplateLoadedTaskBuilder builder;
 
-    // Steppable test template implementation using the abstract class
-    public static class TestSteppableTemplate extends AbstractSteppableTemplate<Object, Object, Object> {
+    // Steppable test template implementation using the annotation
+    @ChangeTemplate(steppable = true)
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestSteppableTemplate() {
             super();

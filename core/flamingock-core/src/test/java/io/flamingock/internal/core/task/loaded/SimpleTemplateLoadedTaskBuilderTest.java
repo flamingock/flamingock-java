@@ -17,7 +17,8 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.api.template.AbstractSimpleTemplate;
+import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,8 +35,9 @@ class SimpleTemplateLoadedTaskBuilderTest {
 
     private TemplateLoadedTaskBuilder builder;
 
-    // Simple test template implementation using the abstract class
-    public static class TestChangeTemplate extends AbstractSimpleTemplate<Object, Object, Object> {
+    // Simple test template implementation using the annotation
+    @ChangeTemplate
+    public static class TestChangeTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestChangeTemplate() {
             super();

@@ -16,7 +16,6 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
-import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -29,7 +28,7 @@ import java.util.List;
 
 /**
  * Executable task for steppable templates (multiple steps).
- * Handles templates extending {@link AbstractSteppableTemplate}.
+ * Handles templates annotated with {@code @ChangeTemplate(steppable = true)}.
  *
  * @param <CONFIG>   the configuration type for the template
  * @param <APPLY>    the apply payload type

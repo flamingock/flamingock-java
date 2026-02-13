@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.template.AbstractSteppableTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * Loaded change for steppable templates (multiple steps).
- * Used for templates extending {@link io.flamingock.api.template.AbstractSteppableTemplate}.
+ * Used for templates annotated with {@code @ChangeTemplate(steppable = true)}.
  * <p>
  * The steps are converted from raw YAML data (List of Maps) to typed TemplateStep objects
  * at load time, enabling early validation and cleaner executable tasks.
@@ -43,7 +43,7 @@ public class SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
                                   String id,
                                   String order,
                                   String author,
-                                  Class<? extends AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
+                                  Class<? extends AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                   Constructor<?> constructor,
                                   List<String> profiles,
                                   boolean transactional,

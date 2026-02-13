@@ -16,16 +16,17 @@
 package io.flamingock.api.template;
 
 /**
- * Interface representing a reusable change template with configuration of type {@code CONFIG}.
+ * Core interface for Flamingock change templates.
  *
- * <p>This interface is commonly implemented by classes that act as templates for Changes
- * where a specific configuration needs to be injected and managed independently.
+ * <p>Templates enable declarative, YAML-based changes. Implement this interface
+ * by extending {@link AbstractChangeTemplate} and annotating with
+ * {@link io.flamingock.api.annotations.ChangeTemplate}.
  *
- * <p>Templates should extend one of the abstract base classes:
- * <ul>
- *   <li>{@link AbstractSimpleTemplate} - for templates with a single apply/rollback step</li>
- *   <li>{@link AbstractSteppableTemplate} - for templates with multiple steps</li>
- * </ul>
+ * @param <SHARED_CONFIG_FIELD> shared configuration type (use {@code Void} if none)
+ * @param <APPLY_FIELD> apply payload type parsed from YAML
+ * @param <ROLLBACK_FIELD> rollback payload type parsed from YAML
+ * @see AbstractChangeTemplate
+ * @see io.flamingock.api.annotations.ChangeTemplate
  */
 public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD, ROLLBACK_FIELD> extends ReflectionMetadataProvider {
 

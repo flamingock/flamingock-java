@@ -16,8 +16,9 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
-import io.flamingock.api.template.AbstractSteppableTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.error.FlamingockException;
@@ -57,7 +58,8 @@ class SteppableTemplateExecutableTaskTest {
     /**
      * Test template that tracks apply and rollback invocations.
      */
-    public static class TestSteppableTemplate extends AbstractSteppableTemplate<Void, String, String> {
+    @ChangeTemplate(steppable = true)
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
 
         public TestSteppableTemplate() {
             super();
@@ -83,7 +85,8 @@ class SteppableTemplateExecutableTaskTest {
     /**
      * Test template without rollback method.
      */
-    public static class TestTemplateWithoutRollback extends AbstractSteppableTemplate<Void, String, String> {
+    @ChangeTemplate(steppable = true)
+    public static class TestTemplateWithoutRollback extends AbstractChangeTemplate<Void, String, String> {
 
         public TestTemplateWithoutRollback() {
             super();

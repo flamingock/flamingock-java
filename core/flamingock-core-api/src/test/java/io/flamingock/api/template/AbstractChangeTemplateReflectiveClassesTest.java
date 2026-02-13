@@ -16,6 +16,7 @@
 package io.flamingock.api.template;
 
 import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ChangeTemplate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,8 +52,9 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     // Test template with custom generic types
+    @ChangeTemplate
     public static class TestTemplateWithCustomTypes
-            extends AbstractSimpleTemplate<TestConfig, TestApplyPayload, TestRollbackPayload> {
+            extends AbstractChangeTemplate<TestConfig, TestApplyPayload, TestRollbackPayload> {
 
         public TestTemplateWithCustomTypes() {
             super();
@@ -65,8 +67,9 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     // Test template with additional reflective classes
+    @ChangeTemplate
     public static class TestTemplateWithAdditionalClasses
-            extends AbstractSimpleTemplate<TestConfig, TestApplyPayload, TestRollbackPayload> {
+            extends AbstractChangeTemplate<TestConfig, TestApplyPayload, TestRollbackPayload> {
 
         public TestTemplateWithAdditionalClasses() {
             super(AdditionalClass.class, AnotherAdditionalClass.class);
@@ -79,8 +82,9 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     // Test template with Void configuration
+    @ChangeTemplate
     public static class TestTemplateWithVoidConfig
-            extends AbstractSimpleTemplate<Void, String, String> {
+            extends AbstractChangeTemplate<Void, String, String> {
 
         public TestTemplateWithVoidConfig() {
             super();

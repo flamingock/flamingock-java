@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.api.template.AbstractSimpleTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 
 /**
  * Executable task for simple templates (single apply/rollback step).
- * Handles templates extending {@link AbstractSimpleTemplate}.
+ * Handles templates annotated with {@code @ChangeTemplate(steppable = false)} or without annotation.
  *
  * @param <CONFIG>   the configuration type for the template
  * @param <APPLY>    the apply payload type
@@ -59,7 +59,7 @@ public class SimpleTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
     @SuppressWarnings("unchecked")
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
         try {
-            AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK> instance = (AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK>)
+            AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance = (AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>)
                             executionRuntime.getInstance(descriptor.getConstructor());
 
             instance.setTransactional(descriptor.isTransactional());

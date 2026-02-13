@@ -15,9 +15,8 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.template.AbstractSimpleTemplate;
-import io.flamingock.api.template.AbstractSteppableTemplate;
-import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
@@ -150,20 +149,22 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     @SuppressWarnings("unchecked")
     public AbstractTemplateLoadedChange<?, ?, ?> build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
-        Class<? extends ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
+        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
 
         Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
 
-        // Determine template type and build appropriate loaded change
+        // Determine template type based on @ChangeTemplate annotation
         // Note: Due to type erasure, we use Object bounds at construction time.
         // The actual type safety comes from the conversion methods that use reflection
         // to determine the real types at runtime.
-        if (AbstractSteppableTemplate.class.isAssignableFrom(templateClass)) {
+        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
+        boolean isSteppable = annotation != null && annotation.steppable();
 
-            Class<? extends AbstractSteppableTemplate<Object, Object, Object>> steppableTemplateClass =
-                    (Class<? extends AbstractSteppableTemplate<Object, Object, Object>>)
-                    templateClass.asSubclass(AbstractSteppableTemplate.class);
+        if (isSteppable) {
+            Class<? extends AbstractChangeTemplate<Object, Object, Object>> steppableTemplateClass =
+                    (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
+                    templateClass.asSubclass(AbstractChangeTemplate.class);
 
             // Convert steps at load time
             List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);
@@ -184,10 +185,10 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
                     targetSystem,
                     recovery);
         } else {
-            // Default to SimpleTemplateLoadedChange for AbstractSimpleTemplate and unknown types
-            Class<? extends AbstractSimpleTemplate<Object, Object, Object>> simpleTemplateClass =
-                    (Class<? extends AbstractSimpleTemplate<Object, Object, Object>>)
-                            templateClass.asSubclass(AbstractSimpleTemplate.class);
+            // Default to SimpleTemplateLoadedChange for simple templates (steppable=false or missing annotation)
+            Class<? extends AbstractChangeTemplate<Object, Object, Object>> simpleTemplateClass =
+                    (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
+                            templateClass.asSubclass(AbstractChangeTemplate.class);
 
             // Convert apply/rollback to typed payloads at load time
             Pair<Object, Object> convertedPayloads = convertPayloads(constructor, apply, rollback);
@@ -222,9 +223,9 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         }
 
         // Instantiate template temporarily to get payload types
-        AbstractSimpleTemplate<?, ?, ?> templateInstance;
+        AbstractChangeTemplate<?, ?, ?> templateInstance;
         try {
-            templateInstance = (AbstractSimpleTemplate<?, ?, ?>) constructor.newInstance();
+            templateInstance = (AbstractChangeTemplate<?, ?, ?>) constructor.newInstance();
         } catch (Exception e) {
             throw new FlamingockException("Failed to instantiate template for type resolution: " + e.getMessage(), e);
         }
@@ -263,9 +264,9 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         }
 
         // Instantiate template temporarily to get payload types
-        AbstractSteppableTemplate<?, ?, ?> templateInstance;
+        AbstractChangeTemplate<?, ?, ?> templateInstance;
         try {
-            templateInstance = (AbstractSteppableTemplate<?, ?, ?>) constructor.newInstance();
+            templateInstance = (AbstractChangeTemplate<?, ?, ?>) constructor.newInstance();
         } catch (Exception e) {
             throw new FlamingockException("Failed to instantiate template for type resolution: " + e.getMessage(), e);
         }

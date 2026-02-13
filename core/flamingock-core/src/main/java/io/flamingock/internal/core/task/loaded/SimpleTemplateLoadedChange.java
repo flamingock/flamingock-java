@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.template.AbstractSimpleTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * Loaded change for simple templates (single apply/rollback step).
- * Used for templates extending {@link io.flamingock.api.template.AbstractSimpleTemplate}.
+ * Used for templates annotated with {@code @ChangeTemplate(steppable = false)} or without annotation.
  * <p>
  * The payloads are converted from raw YAML data (Object/Map) to typed values
  * at load time, enabling early validation and cleaner executable tasks.
@@ -44,7 +44,7 @@ public class SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
                                String id,
                                String order,
                                String author,
-                               Class<? extends AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
+                               Class<? extends AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                Constructor<?> constructor,
                                List<String> profiles,
                                boolean transactional,

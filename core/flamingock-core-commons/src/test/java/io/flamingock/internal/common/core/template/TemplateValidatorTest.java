@@ -16,8 +16,8 @@
 package io.flamingock.internal.common.core.template;
 
 import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.template.AbstractSimpleTemplate;
-import io.flamingock.api.template.AbstractSteppableTemplate;
+import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,8 +36,9 @@ class TemplateValidatorTest {
 
     private TemplateValidator validator;
 
-    // Test template extending AbstractSimpleTemplate
-    public static class TestSimpleTemplate extends AbstractSimpleTemplate<Void, String, String> {
+    // Test template with @ChangeTemplate (simple template)
+    @ChangeTemplate
+    public static class TestSimpleTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSimpleTemplate() {
             super();
         }
@@ -48,8 +49,9 @@ class TemplateValidatorTest {
         }
     }
 
-    // Test template extending AbstractSteppableTemplate
-    public static class TestSteppableTemplate extends AbstractSteppableTemplate<Void, String, String> {
+    // Test template with @ChangeTemplate(steppable = true)
+    @ChangeTemplate(steppable = true)
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSteppableTemplate() {
             super();
         }
