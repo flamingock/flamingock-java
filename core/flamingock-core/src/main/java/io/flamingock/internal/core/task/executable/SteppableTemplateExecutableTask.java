@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
+import io.flamingock.api.template.AbstractSimpleTemplate;
 import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
@@ -48,7 +49,10 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
-            ChangeTemplate<?, ?, ?> changeTemplateInstance = getInstance(executionRuntime);
+
+            AbstractSteppableTemplate<?, ?, ?> changeTemplateInstance = (AbstractSteppableTemplate<?, ?, ?>)
+                    executionRuntime.getInstance(descriptor.getConstructor());
+
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
             changeTemplateInstance.setChangeId(descriptor.getId());
             setConfigurationData(changeTemplateInstance);
@@ -62,8 +66,8 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void setTemplateData(ExecutionRuntime executionRuntime, Object instance) {
-        AbstractSteppableTemplate<?, ?, ?> steppableTemplate = (AbstractSteppableTemplate<?, ?, ?>) instance;
+    protected void setTemplateData(ExecutionRuntime executionRuntime, AbstractSteppableTemplate<?, ?, ?> instance) {
+
         Object stepsData = descriptor.getSteps();
 
         if (stepsData != null) {
@@ -71,12 +75,12 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
 
             List<TemplateStep> convertedSteps = convertToTemplateSteps(
                     stepsData,
-                    steppableTemplate.getApplyPayloadClass(),
-                    steppableTemplate.getRollbackPayloadClass()
+                    instance.getApplyPayloadClass(),
+                    instance.getRollbackPayloadClass()
             );
 
-            Method setStepsMethod = getSetterMethod(steppableTemplate.getClass(), "setSteps");
-            executionRuntime.executeMethodWithParameters(steppableTemplate, setStepsMethod, convertedSteps);
+            Method setStepsMethod = getSetterMethod(instance.getClass(), "setSteps");
+            executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
         } else {
             logger.warn("No 'steps' section provided for steppable template-based change[{}]", descriptor.getId());
         }

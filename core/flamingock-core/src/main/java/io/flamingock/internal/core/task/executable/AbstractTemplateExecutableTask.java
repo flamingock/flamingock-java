@@ -44,11 +44,6 @@ public abstract class AbstractTemplateExecutableTask<T extends AbstractTemplateL
         super(stageName, descriptor, action, executionMethod, rollbackMethod);
     }
 
-    protected ChangeTemplate<?, ?, ?> getInstance(ExecutionRuntime executionRuntime) {
-        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
-        return (ChangeTemplate<?,?,?>) instance;
-    }
-
     protected <C> void setConfigurationData(ChangeTemplate<C, ?, ?> instance) {
         Class<C> parameterClass = instance.getConfigurationClass();
         Object data = descriptor.getConfiguration();
