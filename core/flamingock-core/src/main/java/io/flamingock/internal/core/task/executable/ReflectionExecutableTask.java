@@ -57,11 +57,6 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
         }
     }
 
-    @Override
-    public void addRollback(Rollback rollback) {
-        rollbackChain.add(rollback);
-
-    }
 
     @Override
     public List<? extends Rollback> getRollbackChain() {
