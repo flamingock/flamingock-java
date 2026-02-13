@@ -53,23 +53,6 @@ public abstract class AbstractSimpleTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
         this.step = step;
     }
 
-    /**
-     * Returns the step containing the apply and optional rollback payloads.
-     *
-     * @return the template step, or null if not set
-     */
-    public TemplateStep<APPLY, ROLLBACK> getStep() {
-        return step;
-    }
-
-    /**
-     * Checks if this template has a step set.
-     *
-     * @return true if a step is set
-     */
-    public boolean hasStep() {
-        return step != null;
-    }
 
     /**
      * Convenience method to get the apply payload from the step.

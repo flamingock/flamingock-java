@@ -15,9 +15,7 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.api.template.AbstractSimpleTemplate;
 import io.flamingock.api.template.AbstractSteppableTemplate;
-import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -50,22 +48,21 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
 
-            AbstractSteppableTemplate<?, ?, ?> changeTemplateInstance = (AbstractSteppableTemplate<?, ?, ?>)
+            AbstractSteppableTemplate<?, ?, ?> instance = (AbstractSteppableTemplate<?, ?, ?>)
                     executionRuntime.getInstance(descriptor.getConstructor());
 
-            changeTemplateInstance.setTransactional(descriptor.isTransactional());
-            changeTemplateInstance.setChangeId(descriptor.getId());
-            setConfigurationData(changeTemplateInstance);
+            instance.setTransactional(descriptor.isTransactional());
+            instance.setChangeId(descriptor.getId());
+            setConfigurationData(instance);
 
-            setTemplateData(executionRuntime, changeTemplateInstance);
+            setTemplateData(executionRuntime, instance);
 
-            executionRuntime.executeMethodWithInjectedDependencies(changeTemplateInstance, method);
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
         }
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"rawtypes"})
     protected void setTemplateData(ExecutionRuntime executionRuntime, AbstractSteppableTemplate<?, ?, ?> instance) {
 
         Object stepsData = descriptor.getSteps();

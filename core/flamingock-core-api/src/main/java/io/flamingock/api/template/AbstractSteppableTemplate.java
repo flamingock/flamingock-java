@@ -15,6 +15,8 @@
  */
 package io.flamingock.api.template;
 
+import io.flamingock.internal.util.NotThreadSafe;
+
 import java.util.List;
 
 /**
@@ -60,10 +62,12 @@ import java.util.List;
  * @param <APPLY> the type of the apply payload for each step
  * @param <ROLLBACK> the type of the rollback payload for each step
  */
+@NotThreadSafe
 public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
         extends AbstractChangeTemplate<SHARED_CONFIG, APPLY, ROLLBACK> {
 
     protected List<TemplateStep<APPLY, ROLLBACK>> steps;
+    protected int atStep = -1;
 
     public AbstractSteppableTemplate(Class<?>... additionalReflectiveClass) {
         super(additionalReflectiveClass);
@@ -76,15 +80,6 @@ public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
      */
     public void setSteps(List<TemplateStep<APPLY, ROLLBACK>> steps) {
         this.steps = steps;
-    }
-
-    /**
-     * Returns the list of steps.
-     *
-     * @return the list of template steps, or null if not set
-     */
-    public List<TemplateStep<APPLY, ROLLBACK>> getSteps() {
-        return steps;
     }
 
 }
