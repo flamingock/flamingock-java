@@ -79,7 +79,7 @@ public class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends Abstrac
         try {
             executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {
-            throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
+            throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
         }
     }
 

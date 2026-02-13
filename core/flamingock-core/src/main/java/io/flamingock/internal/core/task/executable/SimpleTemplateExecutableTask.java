@@ -60,7 +60,7 @@ public class SimpleTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
 
             executionRuntime.executeMethodWithInjectedDependencies(changeTemplateInstance, method);
         } catch (Throwable ex) {
-            throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
+            throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
         }
     }
 

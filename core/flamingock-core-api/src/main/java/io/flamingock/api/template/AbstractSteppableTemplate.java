@@ -65,8 +65,6 @@ import java.util.List;
 public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
         extends AbstractChangeTemplate<SHARED_CONFIG, APPLY, ROLLBACK> {
 
-    private List<TemplateStep<APPLY, ROLLBACK>> steps = new ArrayList<>();
-    private int atStep = -1;
 
     public AbstractSteppableTemplate(Class<?>... additionalReflectiveClass) {
         super(additionalReflectiveClass);

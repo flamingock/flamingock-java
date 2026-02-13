@@ -19,7 +19,7 @@ import java.time.Duration;
 
 /**
  * Exception thrown when a Change execution fails.
- * 
+ *
  * <p>This exception provides rich context about the failed change execution including:
  * <ul>
  *   <li>Change ID and stage information</li>
@@ -28,14 +28,14 @@ import java.time.Duration;
  *   <li>Target system information</li>
  *   <li>Original cause with preserved stack trace</li>
  * </ul>
- * 
- * <p>This exception should be used instead of generic {@link FlamingockException} 
+ *
+ * <p>This exception should be used instead of generic {@link FlamingockException}
  * when change execution fails, as it provides much better debugging context.
- * 
+ *
  * @since 6.0.0
  */
 public class ChangeExecutionException extends FlamingockException {
-    
+
     private final String changeId;
     private final String stageName;
     private final String executionMode;
@@ -45,22 +45,22 @@ public class ChangeExecutionException extends FlamingockException {
     /**
      * Creates a new ChangeExecutionException with full execution context.
      *
-     * @param message descriptive error message
-     * @param changeId the ID of the failed change
-     * @param stageName the name of the stage containing the change
-     * @param executionMode the execution mode (e.g., "transactional", "non-transactional")
+     * @param message           descriptive error message
+     * @param changeId          the ID of the failed change
+     * @param stageName         the name of the stage containing the change
+     * @param executionMode     the execution mode (e.g., "transactional", "non-transactional")
      * @param executionDuration how long the change took before failing
-     * @param targetSystemId the target system where the change was being applied
-     * @param cause the underlying exception that caused the failure
+     * @param targetSystemId    the target system where the change was being applied
+     * @param cause             the underlying exception that caused the failure
      */
-    public ChangeExecutionException(String message, 
-                                   String changeId, 
-                                   String stageName, 
-                                   String executionMode, 
-                                   Duration executionDuration,
-                                   String targetSystemId,
-                                   Throwable cause) {
-        super(buildContextualMessage(message, changeId, stageName, executionMode, executionDuration, targetSystemId), cause);
+    public ChangeExecutionException(String stageName,
+                                    String changeId,
+                                    String message,
+                                    String executionMode,
+                                    Duration executionDuration,
+                                    String targetSystemId,
+                                    Throwable cause) {
+        super(buildContextualMessage(stageName, changeId, message, executionMode, executionDuration, targetSystemId), cause);
         this.changeId = changeId;
         this.stageName = stageName;
         this.executionMode = executionMode;
@@ -71,22 +71,22 @@ public class ChangeExecutionException extends FlamingockException {
     /**
      * Creates a new ChangeExecutionException with minimal context (for backward compatibility).
      *
-     * @param message descriptive error message
      * @param changeId the ID of the failed change
-     * @param cause the underlying exception that caused the failure
+     * @param message  descriptive error message
+     * @param cause    the underlying exception that caused the failure
      */
-    public ChangeExecutionException(String message, String changeId, Throwable cause) {
-        this(message, changeId, null, null, null, null, cause);
+    public ChangeExecutionException(String changeId, String message, Throwable cause) {
+        this(null, changeId, message, null, null, null, cause);
     }
 
-    private static String buildContextualMessage(String message, 
-                                                String changeId, 
-                                                String stageName, 
-                                                String executionMode, 
-                                                Duration executionDuration,
-                                                String targetSystemId) {
+    private static String buildContextualMessage(String stageName,
+                                                 String changeId,
+                                                 String message,
+                                                 String executionMode,
+                                                 Duration executionDuration,
+                                                 String targetSystemId) {
         StringBuilder contextMessage = new StringBuilder(message);
-        
+
         if (changeId != null) {
             contextMessage.append("\n  Change ID: ").append(changeId);
         }
@@ -102,7 +102,7 @@ public class ChangeExecutionException extends FlamingockException {
         if (targetSystemId != null) {
             contextMessage.append("\n  Target System: ").append(targetSystemId);
         }
-        
+
         return contextMessage.toString();
     }
 

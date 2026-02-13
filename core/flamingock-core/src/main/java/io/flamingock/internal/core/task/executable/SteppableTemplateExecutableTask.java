@@ -15,9 +15,11 @@
  */
 package io.flamingock.internal.core.task.executable;
 
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
+import io.flamingock.internal.common.core.error.SteppableChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
@@ -49,13 +51,12 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
     @SuppressWarnings("unchecked")
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
 
-        AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK> instance;
+        AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance;
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
 
-            instance =
-                    (AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK>)
+            instance = (AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>)
                             executionRuntime.getInstance(descriptor.getConstructor());
 
             instance.setTransactional(descriptor.isTransactional());
@@ -63,9 +64,8 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
             setConfigurationData(instance);
 
         } catch (Throwable ex) {
-            throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
+            throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
         }
-
 
         int stepIndex = 0;
         try {
@@ -76,8 +76,7 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
                 executionRuntime.executeMethodWithInjectedDependencies(instance, method);
             }
         } catch (Throwable ex) {
-            //TODO throw exception that holds the stepIndex;
-            throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
+            throw new SteppableChangeExecutionException(this.getId(), stepIndex, ex.getMessage(), ex);
         }
 
 
