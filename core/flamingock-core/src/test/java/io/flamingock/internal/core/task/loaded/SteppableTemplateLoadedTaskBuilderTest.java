@@ -228,9 +228,9 @@ class SteppableTemplateLoadedTaskBuilderTest {
             assertNotNull(steps);
             assertEquals(3, steps.size());
             // Verify steps are preserved in order - payloads are now typed objects
-            assertEquals("createCollection", steps.get(0).getApply());
-            assertEquals("insertDocument", steps.get(1).getApply());
-            assertEquals("createIndex", steps.get(2).getApply());
+            assertEquals("createCollection", steps.get(0).getApplyPayload());
+            assertEquals("insertDocument", steps.get(1).getApplyPayload());
+            assertEquals("createIndex", steps.get(2).getApplyPayload());
         }
     }
 
@@ -289,8 +289,8 @@ class SteppableTemplateLoadedTaskBuilderTest {
             // Steps are now converted to List<TemplateStep> at load time
             List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
             assertEquals(2, steps.size());
-            assertNull(steps.get(0).getRollback());
-            assertNull(steps.get(1).getRollback());
+            assertNull(steps.get(0).getRollbackPayload());
+            assertNull(steps.get(1).getRollbackPayload());
         }
     }
 

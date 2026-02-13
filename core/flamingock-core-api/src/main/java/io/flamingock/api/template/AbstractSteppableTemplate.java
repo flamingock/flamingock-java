@@ -49,8 +49,6 @@ import java.util.List;
  *         filter: {}
  * }</pre>
  *
- * <p>The framework will automatically parse the steps from the YAML and inject
- * them via {@link #setSteps}.
  *
  * <p><b>Rollback Behavior:</b>
  * <ul>
@@ -72,25 +70,6 @@ public abstract class AbstractSteppableTemplate<SHARED_CONFIG, APPLY, ROLLBACK>
 
     public AbstractSteppableTemplate(Class<?>... additionalReflectiveClass) {
         super(additionalReflectiveClass);
-    }
-
-    /**
-     * Sets the list of steps to execute.
-     *
-     * @param steps the list of template steps
-     */
-    public final void setSteps(List<TemplateStep<APPLY, ROLLBACK>> steps) {
-        this.steps = steps;
-    }
-
-    public final boolean advance() {
-        if (atStep + 1 >= steps.size()) {
-            return false;
-        }
-        atStep++;
-        TemplateStep<APPLY, ROLLBACK> currentStep = steps.get(atStep);
-        this.setApplyPayload(currentStep.getApply());
-        return true;
     }
 
 

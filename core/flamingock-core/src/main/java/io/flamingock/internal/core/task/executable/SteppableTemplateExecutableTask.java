@@ -48,11 +48,13 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
     @Override
     @SuppressWarnings("unchecked")
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
+
+        AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK> instance;
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
 
-            AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK> instance =
+            instance =
                     (AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK>)
                             executionRuntime.getInstance(descriptor.getConstructor());
 
@@ -60,23 +62,25 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
             instance.setChangeId(descriptor.getId());
             setConfigurationData(instance);
 
-            setStepsData(instance);
-            while (instance.advance()) {
-                executionRuntime.executeMethodWithInjectedDependencies(instance, method);
-            }
-
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
         }
-    }
 
-    /**
-     * Sets the steps data on the template instance.
-     * Now with full type alignment through generic parameters.
-     */
-    private void setStepsData(AbstractSteppableTemplate<CONFIG, APPLY, ROLLBACK> instance) {
-        List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
-        instance.setSteps(steps);
+
+        int stepIndex = 0;
+        try {
+            List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
+            for(; stepIndex < steps.size() ; stepIndex++) {
+                TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex);
+                instance.setApplyPayload(currentSep.getApplyPayload());
+                executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+            }
+        } catch (Throwable ex) {
+            //TODO throw exception that holds the stepIndex;
+            throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
+        }
+
+
     }
 
 }

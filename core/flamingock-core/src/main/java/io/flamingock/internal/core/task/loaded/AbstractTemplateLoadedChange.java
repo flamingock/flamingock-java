@@ -60,6 +60,7 @@ public abstract class AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> exte
         this.configuration = configuration;
     }
 
+
     public CONFIG getConfiguration() {
         return configuration;
     }
