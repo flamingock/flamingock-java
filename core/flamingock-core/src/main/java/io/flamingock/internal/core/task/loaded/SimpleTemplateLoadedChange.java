@@ -26,11 +26,15 @@ import java.util.List;
 /**
  * Loaded change for simple templates (single apply/rollback step).
  * Used for templates extending {@link io.flamingock.api.template.AbstractSimpleTemplate}.
+ * <p>
+ * The payloads are converted from raw YAML data (Object/Map) to typed values
+ * at load time, enabling early validation and cleaner executable tasks.
  */
 public class SimpleTemplateLoadedChange extends AbstractTemplateLoadedChange {
 
-    private final Object apply;
-    private final Object rollback;
+    // Already converted to typed payload (no longer raw Object from YAML)
+    private final Object applyPayload;
+    private final Object rollbackPayload;
 
     SimpleTemplateLoadedChange(String changeFileName,
                                String id,
@@ -43,20 +47,24 @@ public class SimpleTemplateLoadedChange extends AbstractTemplateLoadedChange {
                                boolean runAlways,
                                boolean systemTask,
                                Object configuration,
-                               Object apply,
-                               Object rollback,
+                               Object applyPayload,
+                               Object rollbackPayload,
                                TargetSystemDescriptor targetSystem,
                                RecoveryDescriptor recovery) {
         super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery);
-        this.apply = apply;
-        this.rollback = rollback;
+        this.applyPayload = applyPayload;
+        this.rollbackPayload = rollbackPayload;
     }
 
-    public Object getApply() {
-        return apply;
+    public Object getApplyPayload() {
+        return applyPayload;
     }
 
-    public Object getRollback() {
-        return rollback;
+    public Object getRollbackPayload() {
+        return rollbackPayload;
+    }
+
+    public boolean hasRollback() {
+        return rollbackPayload != null;
     }
 }

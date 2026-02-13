@@ -67,9 +67,9 @@ class SimpleTemplateLoadedTaskBuilderTest {
                     .setRunAlways(false)
                     .setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
+                    .setConfiguration("testConfig")
+                    .setApply("applyPayload")
+                    .setRollback("rollbackPayload");
             builder.setProfiles(Arrays.asList("test"));
 
             // When
@@ -80,6 +80,11 @@ class SimpleTemplateLoadedTaskBuilderTest {
             assertEquals("001", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
+            // Verify typed payloads are stored
+            SimpleTemplateLoadedChange simpleResult = (SimpleTemplateLoadedChange) result;
+            assertNotNull(simpleResult.getApplyPayload());
+            assertNotNull(simpleResult.getRollbackPayload());
+            assertTrue(simpleResult.hasRollback());
         }
     }
 
@@ -98,9 +103,9 @@ class SimpleTemplateLoadedTaskBuilderTest {
                     .setRunAlways(false)
                     .setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
+                    .setConfiguration("testConfig")
+                    .setApply("applyPayload")
+                    .setRollback("rollbackPayload");
             builder.setProfiles(Arrays.asList("test"));
 
             // When
@@ -130,9 +135,9 @@ class SimpleTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
             builder.setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
+                    .setConfiguration("testConfig")
+                    .setApply("applyPayload")
+                    .setRollback("rollbackPayload");
 
             // When
             AbstractTemplateLoadedChange result = builder.build();

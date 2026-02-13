@@ -16,12 +16,10 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.AbstractSimpleTemplate;
-import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
-import io.flamingock.internal.util.FileUtil;
 
 import java.lang.reflect.Method;
 
@@ -50,7 +48,6 @@ public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
             changeTemplateInstance.setChangeId(descriptor.getId());
             setConfigurationData(changeTemplateInstance);
-
             setTemplateData(changeTemplateInstance);
 
             executionRuntime.executeMethodWithInjectedDependencies(changeTemplateInstance, method);
@@ -61,38 +58,16 @@ public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void setTemplateData(AbstractSimpleTemplate instance) {
-        Object applyData = descriptor.getApply();
+        Object applyPayload = descriptor.getApplyPayload();
+        Object rollbackPayload = descriptor.getRollbackPayload();
 
-        if (applyData != null) {
-            logger.debug("Setting step for simple template change[{}]", descriptor.getId());
-
-            TemplateStep step = convertToTemplateStep(
-                    applyData,
-                    descriptor.getRollback(),
-                    instance.getApplyPayloadClass(),
-                    instance.getRollbackPayloadClass()
-            );
-            instance.setApplyPayload(step.getApply());
-            instance.setRollbackPayload(step.getRollback());
-
+        if (applyPayload != null) {
+            logger.debug("Setting payloads for simple template change[{}]", descriptor.getId());
+            instance.setApplyPayload(applyPayload);
+            instance.setRollbackPayload(rollbackPayload);
         } else {
-            logger.warn("No 'apply' section provided for simple template-based change[{}]", descriptor.getId());
+            logger.warn("No apply payload provided for simple template-based change[{}]", descriptor.getId());
         }
-    }
-
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected TemplateStep convertToTemplateStep(Object applyData,
-                                                 Object rollbackData,
-                                                 Class<?> applyClass,
-                                                 Class<?> rollbackClass) {
-        TemplateStep step = new TemplateStep();
-        step.setApply(FileUtil.getFromMap(applyClass, applyData));
-        if (rollbackData != null && Void.class != rollbackClass) {
-            step.setRollback(FileUtil.getFromMap(rollbackClass, rollbackData));
-        }
-
-        return step;
     }
 
 }

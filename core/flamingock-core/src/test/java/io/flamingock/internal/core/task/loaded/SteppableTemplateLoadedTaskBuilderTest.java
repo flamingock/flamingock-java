@@ -15,10 +15,11 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.template.AbstractSteppableTemplate;
+import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.api.template.AbstractSteppableTemplate;
-import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -85,9 +86,11 @@ class SteppableTemplateLoadedTaskBuilderTest {
             assertNotNull(result);
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
-            assertNotNull(steppableResult.getSteps());
-            // Steps are stored as raw Object - conversion happens at execution time
-            assertEquals(rawSteps, steppableResult.getSteps());
+            // Steps are now converted to List<TemplateStep> at load time
+            List<TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertNotNull(steps);
+            assertEquals(2, steps.size());
+            assertInstanceOf(TemplateStep.class, steps.get(0));
         }
     }
 
@@ -184,8 +187,9 @@ class SteppableTemplateLoadedTaskBuilderTest {
             SteppableTemplateLoadedChange steppableResult = (SteppableTemplateLoadedChange) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
-            assertNotNull(steppableResult.getSteps());
-            assertTrue(((List<?>) steppableResult.getSteps()).isEmpty());
+            List<TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertNotNull(steps);
+            assertTrue(steps.isEmpty());
         }
     }
 
@@ -219,14 +223,14 @@ class SteppableTemplateLoadedTaskBuilderTest {
             SteppableTemplateLoadedChange steppableResult = (SteppableTemplateLoadedChange) result;
             assertNotNull(result);
             assertEquals("multi-step-change", result.getId());
-            assertNotNull(steppableResult.getSteps());
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> resultSteps = (List<Map<String, Object>>) steppableResult.getSteps();
-            assertEquals(3, resultSteps.size());
-            // Verify steps are preserved in order
-            assertEquals("createCollection", resultSteps.get(0).get("apply"));
-            assertEquals("insertDocument", resultSteps.get(1).get("apply"));
-            assertEquals("createIndex", resultSteps.get(2).get("apply"));
+            // Steps are now converted to List<TemplateStep> at load time
+            List<TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertNotNull(steps);
+            assertEquals(3, steps.size());
+            // Verify steps are preserved in order - payloads are now typed objects
+            assertEquals("createCollection", steps.get(0).getApply());
+            assertEquals("insertDocument", steps.get(1).getApply());
+            assertEquals("createIndex", steps.get(2).getApply());
         }
     }
 
@@ -282,11 +286,11 @@ class SteppableTemplateLoadedTaskBuilderTest {
             assertInstanceOf(SteppableTemplateLoadedChange.class, result);
             SteppableTemplateLoadedChange steppableResult = (SteppableTemplateLoadedChange) result;
             assertNotNull(result);
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> resultSteps = (List<Map<String, Object>>) steppableResult.getSteps();
-            assertEquals(2, resultSteps.size());
-            assertNull(resultSteps.get(0).get("rollback"));
-            assertNull(resultSteps.get(1).get("rollback"));
+            // Steps are now converted to List<TemplateStep> at load time
+            List<TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertEquals(2, steps.size());
+            assertNull(steps.get(0).getRollback());
+            assertNull(steps.get(1).getRollback());
         }
     }
 
@@ -313,6 +317,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
             SteppableTemplateLoadedChange steppableResult = (SteppableTemplateLoadedChange) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
+            // Null steps remain null after conversion
             assertNull(steppableResult.getSteps());
         }
     }

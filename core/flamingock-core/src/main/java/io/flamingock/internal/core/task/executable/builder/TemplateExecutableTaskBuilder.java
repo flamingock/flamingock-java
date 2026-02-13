@@ -79,18 +79,18 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
         if (loadedTask instanceof SimpleTemplateLoadedChange) {
             SimpleTemplateLoadedChange simple = (SimpleTemplateLoadedChange) loadedTask;
             // Only include rollback method if rollback data is present
-            if (simple.getRollback() != null) {
+            if (simple.hasRollback()) {
                 if (rollbackMethod != null) {
                     logger.trace("Change[{}] provides rollback in configuration", loadedTask.getId());
                 } else {
-                    logger.warn("Change[{}] provides rollback in configuration, but based on a template[{}] not supporting manual rollback",
+                    logger.warn("Change[{}] provides rollback in configuration, but template[{}] doesn't support manual rollback",
                             loadedTask.getId(),
                             loadedTask.getSource()
                     );
                 }
             } else {
                 if (rollbackMethod != null) {
-                    logger.warn("Change[{}] does not provide rollback, but based on a template[{}] support manual rollback",
+                    logger.warn("Change[{}] does not provide rollback, but template[{}] supports manual rollback",
                             loadedTask.getId(),
                             loadedTask.getSource()
                     );

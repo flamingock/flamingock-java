@@ -21,12 +21,9 @@ import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
-import io.flamingock.internal.util.FileUtil;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Executable task for steppable templates (multiple steps).
@@ -55,7 +52,8 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
             instance.setChangeId(descriptor.getId());
             setConfigurationData(instance);
 
-            setTemplateData(executionRuntime, instance);
+
+            List<TemplateStep<?, ?>> steps = descriptor.getSteps();
             while (instance.advance()) {
                 executionRuntime.executeMethodWithInjectedDependencies(instance, method);
             }
@@ -65,71 +63,4 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
         }
     }
 
-    @SuppressWarnings({"rawtypes"})
-    protected void setTemplateData(ExecutionRuntime executionRuntime, AbstractSteppableTemplate<?, ?, ?> instance) {
-
-        Object stepsData = descriptor.getSteps();
-
-        if (stepsData != null) {
-            logger.debug("Setting steps for steppable template change[{}]", descriptor.getId());
-
-            List<TemplateStep> convertedSteps = convertToTemplateSteps(
-                    stepsData,
-                    instance.getApplyPayloadClass(),
-                    instance.getRollbackPayloadClass()
-            );
-
-            Method setStepsMethod = getSetterMethod(instance.getClass(), "setSteps");
-            executionRuntime.executeMethodWithParameters(instance, setStepsMethod, convertedSteps);
-
-        } else {
-            logger.warn("No 'steps' section provided for steppable template-based change[{}]", descriptor.getId());
-            //TODO this should throw an exception
-        }
-    }
-
-
-    /**
-     * Converts raw step data (List of Maps from YAML) to a list of TemplateStep objects.
-     *
-     * @param stepsData       the raw steps data (expected to be a List of Maps)
-     * @param applyClass      the class type for apply payloads
-     * @param rollbackClass   the class type for rollback payloads
-     * @return list of converted TemplateStep objects
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected List<TemplateStep> convertToTemplateSteps(Object stepsData,
-                                                        Class<?> applyClass,
-                                                        Class<?> rollbackClass) {
-        List<TemplateStep> result = new ArrayList<>();
-
-        if (!(stepsData instanceof List)) {
-            logger.warn("Steps data is not a List, ignoring");
-            return result;
-        }
-
-        List<?> stepsList = (List<?>) stepsData;
-        for (Object stepItem : stepsList) {
-            if (stepItem instanceof Map) {
-                Map<String, Object> stepMap = (Map<String, Object>) stepItem;
-                TemplateStep step = new TemplateStep();
-
-                Object applyData = stepMap.get("apply");
-                if (applyData != null && Void.class != applyClass) {
-                    step.setApply(FileUtil.getFromMap(applyClass, applyData));
-                }
-
-                Object rollbackData = stepMap.get("rollback");
-                if (rollbackData != null && Void.class != rollbackClass) {
-                    step.setRollback(FileUtil.getFromMap(rollbackClass, rollbackData));
-                }
-
-                result.add(step);
-            } else if (stepItem instanceof TemplateStep) {
-                result.add((TemplateStep) stepItem);
-            }
-        }
-
-        return result;
-    }
 }
