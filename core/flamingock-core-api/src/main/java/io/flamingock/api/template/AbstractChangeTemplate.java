@@ -44,12 +44,13 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     protected boolean isTransactional;
     protected SHARED_CONFIGURATION_FIELD configuration;
 
-    private final Set<Class<?>> reflectiveClasses;
+    private final Set<Class<?>> additionalReflectiveClasses;
 
 
     @SuppressWarnings("unchecked")
     public AbstractChangeTemplate(Class<?>... additionalReflectiveClass) {
-        reflectiveClasses = new HashSet<>(Arrays.asList(additionalReflectiveClass));
+        // Store additional classes - reflective classes set is built on-demand in getReflectiveClasses()
+        this.additionalReflectiveClasses = new HashSet<>(Arrays.asList(additionalReflectiveClass));
 
         try {
             Class<?>[] typeArgs = ReflectionUtil.resolveTypeArgumentsAsClasses(this.getClass(), AbstractChangeTemplate.class);
@@ -61,11 +62,6 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
             this.configurationClass = (Class<SHARED_CONFIGURATION_FIELD>) typeArgs[0];
             this.applyPayloadClass = (Class<APPLY_FIELD>) typeArgs[1];
             this.rollbackPayloadClass = (Class<ROLLBACK_FIELD>) typeArgs[2];
-
-            reflectiveClasses.add(configurationClass);
-            reflectiveClasses.add(applyPayloadClass);
-            reflectiveClasses.add(rollbackPayloadClass);
-            reflectiveClasses.add(TemplateStep.class);
         } catch (ClassCastException e) {
             throw new IllegalStateException("Generic type arguments for a Template must be concrete types (classes, interfaces, or primitive wrappers like String, Integer, etc.): " + e.getMessage(), e);
         } catch (Exception e) {
@@ -73,8 +69,30 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
         }
     }
 
+    /**
+     * Returns the collection of classes that need reflection registration for GraalVM native images.
+     * <p>
+     * This method builds the reflective classes set on-demand, including:
+     * <ul>
+     *   <li>The configuration class (generic type argument 0)</li>
+     *   <li>The apply payload class (generic type argument 1)</li>
+     *   <li>The rollback payload class (generic type argument 2)</li>
+     *   <li>{@link TemplateStep} class</li>
+     *   <li>Any additional classes passed to the constructor</li>
+     * </ul>
+     * <p>
+     * This method is only called by GraalVM's {@code RegistrationFeature} at build-time,
+     * so there is no performance concern from building the set on each call.
+     *
+     * @return collection of classes requiring reflection registration
+     */
     @Override
     public final Collection<Class<?>> getReflectiveClasses() {
+        Set<Class<?>> reflectiveClasses = new HashSet<>(additionalReflectiveClasses);
+        reflectiveClasses.add(configurationClass);
+        reflectiveClasses.add(applyPayloadClass);
+        reflectiveClasses.add(rollbackPayloadClass);
+        reflectiveClasses.add(TemplateStep.class);
         return reflectiveClasses;
     }
 

@@ -127,4 +127,27 @@ public @interface EnableFlamingock {
      * When false, only a warning is emitted.
      */
     boolean strictStageMapping() default true;
+
+    /**
+     * If true, the annotation processor validates that all template-based changes
+     * have YAML structure matching their template type (Simple vs Steppable).
+     * <p>
+     * <strong>SimpleTemplate</strong> validation:
+     * <ul>
+     *   <li>MUST have {@code apply} field</li>
+     *   <li>MAY have {@code rollback} field</li>
+     *   <li>MUST NOT have {@code steps} field</li>
+     * </ul>
+     * <p>
+     * <strong>SteppableTemplate</strong> validation:
+     * <ul>
+     *   <li>MUST have {@code steps} field</li>
+     *   <li>MUST NOT have {@code apply} or {@code rollback} fields at root level</li>
+     *   <li>Each step MUST have {@code apply} field</li>
+     * </ul>
+     * <p>
+     * When validation fails and this flag is {@code true} (default), a RuntimeException
+     * is thrown at compilation time. When {@code false}, only a warning is emitted.
+     */
+    boolean strictTemplateValidation() default true;
 }
