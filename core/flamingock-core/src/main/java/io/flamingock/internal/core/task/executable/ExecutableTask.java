@@ -35,8 +35,6 @@ public interface ExecutableTask extends TaskDescriptor {
 
     ChangeAction getAction();
 
-    void addRollback(Rollback rollback);
-
     List<? extends Rollback> getRollbackChain();
 
 }
