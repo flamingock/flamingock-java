@@ -39,7 +39,4 @@ public interface ExecutableTask extends TaskDescriptor {
 
     ChangeAction getAction();
 
-    @Deprecated
-    List<? extends Rollback> getRollbackChain();
-
 }

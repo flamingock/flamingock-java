@@ -44,37 +44,36 @@ public class SimpleTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
     }
 
     @Override
+    public void apply(ExecutionRuntime executionRuntime) {
+        logger.debug("Applying change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
+        logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
+        executeInternal(executionRuntime, executionMethod);
+    }
+
+    @Override
+    public void rollback(ExecutionRuntime executionRuntime) {
+        logger.debug("Rolling back change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
+        executeInternal(executionRuntime, rollbackMethod);
+    }
+
     @SuppressWarnings("unchecked")
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
         try {
-            logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
-            logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
-            AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK> changeTemplateInstance =
-                    (AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK>)
+            AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK> instance = (AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK>)
                             executionRuntime.getInstance(descriptor.getConstructor());
 
-            changeTemplateInstance.setTransactional(descriptor.isTransactional());
-            changeTemplateInstance.setChangeId(descriptor.getId());
-            setConfigurationData(changeTemplateInstance);
-            setTemplateData(changeTemplateInstance);
+            instance.setTransactional(descriptor.isTransactional());
+            instance.setChangeId(descriptor.getId());
+            logger.trace("Setting payloads for simple template change[{}]", descriptor.getId());
+            setConfigurationData(instance);
+            instance.setApplyPayload(descriptor.getApplyPayload());
+            instance.setRollbackPayload(descriptor.getRollbackPayload());
 
-            executionRuntime.executeMethodWithInjectedDependencies(changeTemplateInstance, method);
+            executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {
             throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
         }
     }
 
-    protected void setTemplateData(AbstractSimpleTemplate<CONFIG, APPLY, ROLLBACK> instance) {
-        APPLY applyPayload = descriptor.getApplyPayload();
-        ROLLBACK rollbackPayload = descriptor.getRollbackPayload();
-
-        if (applyPayload != null) {
-            logger.debug("Setting payloads for simple template change[{}]", descriptor.getId());
-            instance.setApplyPayload(applyPayload);
-            instance.setRollbackPayload(rollbackPayload);
-        } else {
-            logger.warn("No apply payload provided for simple template-based change[{}]", descriptor.getId());
-        }
-    }
 
 }

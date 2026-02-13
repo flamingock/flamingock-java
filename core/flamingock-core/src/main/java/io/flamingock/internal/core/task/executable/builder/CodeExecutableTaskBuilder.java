@@ -16,11 +16,12 @@
 package io.flamingock.internal.core.task.executable.builder;
 
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
+import io.flamingock.internal.core.task.executable.CodeExecutableTask;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.executable.ReflectionExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
+import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
@@ -47,7 +48,7 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
 
     @Override
     public CodeLoadedChange cast(AbstractLoadedTask loadedTask) {
-        return (CodeLoadedChange)loadedTask;
+        return (CodeLoadedChange) loadedTask;
     }
 
     @Override
@@ -77,18 +78,18 @@ public class CodeExecutableTaskBuilder implements ExecutableTaskBuilder<CodeLoad
      * New ChangeAction-based method for building tasks.
      */
     private ReflectionExecutableTask<AbstractReflectionLoadedTask> getTasksFromReflection(String stageName,
-                                                                                                CodeLoadedChange loadedTask,
-                                                                                                ChangeAction action) {
+                                                                                          CodeLoadedChange loadedTask,
+                                                                                          ChangeAction action) {
         return buildTasksInternal(stageName, loadedTask, action);
     }
 
     private ReflectionExecutableTask<AbstractReflectionLoadedTask> buildTasksInternal(String stageName,
-                                                                                            CodeLoadedChange loadedTask,
-                                                                                            ChangeAction action) {
+                                                                                      CodeLoadedChange loadedTask,
+                                                                                      ChangeAction action) {
         Method executionMethod = loadedTask.getApplyMethod();
         Optional<Method> rollbackMethodOpt = loadedTask.getRollbackMethod();
 
-        return new ReflectionExecutableTask<>(
+        return new CodeExecutableTask<>(
                 stageName,
                 loadedTask,
                 action,

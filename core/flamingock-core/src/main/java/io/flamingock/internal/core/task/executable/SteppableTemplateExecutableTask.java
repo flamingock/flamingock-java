@@ -19,10 +19,10 @@ import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.AbstractSteppableTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
-import io.flamingock.internal.common.core.error.SteppableChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -37,7 +37,9 @@ import java.util.List;
  */
 public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
         extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
-                SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
+        SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
+
+    private int stepIndex = -1;
 
     public SteppableTemplateExecutableTask(String stageName,
                                            SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> descriptor,
@@ -48,16 +50,49 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
+    public void apply(ExecutionRuntime executionRuntime) {
+        AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance = buildInstance(executionRuntime);
 
+        try {
+            List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
+            while (stepIndex >= -1 && stepIndex + 1 < steps.size()) {
+                TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex + 1);
+                instance.setApplyPayload(currentSep.getApplyPayload());
+                stepIndex++;
+                executionRuntime.executeMethodWithInjectedDependencies(instance, executionMethod);
+            }
+        } catch (Throwable ex) {
+            throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public void rollback(ExecutionRuntime executionRuntime) {
+        AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance = buildInstance(executionRuntime);
+
+        try {
+            List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
+            while (stepIndex >= 0 && stepIndex < steps.size()) {
+                TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex);
+                instance.setApplyPayload(currentSep.getApplyPayload());
+                executionRuntime.executeMethodWithInjectedDependencies(instance, rollbackMethod);
+                stepIndex--;
+            }
+        } catch (Throwable ex) {
+            throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
+        }
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    private AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> buildInstance(ExecutionRuntime executionRuntime) {
         AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance;
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
 
             instance = (AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>)
-                            executionRuntime.getInstance(descriptor.getConstructor());
+                    executionRuntime.getInstance(descriptor.getConstructor());
 
             instance.setTransactional(descriptor.isTransactional());
             instance.setChangeId(descriptor.getId());
@@ -66,20 +101,8 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
         } catch (Throwable ex) {
             throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
         }
-
-        int stepIndex = 0;
-        try {
-            List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
-            for(; stepIndex < steps.size() ; stepIndex++) {
-                TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex);
-                instance.setApplyPayload(currentSep.getApplyPayload());
-                executionRuntime.executeMethodWithInjectedDependencies(instance, method);
-            }
-        } catch (Throwable ex) {
-            throw new SteppableChangeExecutionException(this.getId(), stepIndex, ex.getMessage(), ex);
-        }
-
-
+        return instance;
     }
+
 
 }

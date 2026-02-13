@@ -16,12 +16,11 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
-import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 
 import java.lang.reflect.Method;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -37,31 +36,37 @@ import java.util.List;
  * However, the methods are extracted in advance, so we can spot wrong configuration before starting the process and
  * fail fast.
  */
-public abstract class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends AbstractReflectionLoadedTask>
-        extends AbstractExecutableTask<REFLECTION_TASK_DESCRIPTOR> implements ExecutableTask {
-
-    protected final Method executionMethod;
-    protected final Method rollbackMethod;
+public class CodeExecutableTask<REFLECTION_TASK_DESCRIPTOR extends AbstractReflectionLoadedTask>
+        extends ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR> {
 
 
-    public ReflectionExecutableTask(String stageName,
-                                    REFLECTION_TASK_DESCRIPTOR descriptor,
-                                    ChangeAction action,
-                                    Method executionMethod,
-                                    Method rollbackMethod) {
-        super(stageName, descriptor, action);
-        this.executionMethod = executionMethod;
-        this.rollbackMethod = rollbackMethod;
+    public CodeExecutableTask(String stageName,
+                              REFLECTION_TASK_DESCRIPTOR descriptor,
+                              ChangeAction action,
+                              Method executionMethod,
+                              Method rollbackMethod) {
+        super(stageName, descriptor, action, executionMethod, rollbackMethod);
+    }
+
+
+
+    @Override
+    public void apply(ExecutionRuntime executionRuntime) {
+        executeInternal(executionRuntime, executionMethod);
     }
 
     @Override
-    public String getApplyMethodName() {
-        return executionMethod.getName();
+    public void rollback(ExecutionRuntime executionRuntime) {
+        executeInternal(executionRuntime, rollbackMethod);
     }
 
-    @Override
-    public String getRollbackMethodName() {
-        return rollbackMethod.getName();
+    protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
+        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
+        try {
+            executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+        } catch (Throwable ex) {
+            throw new ChangeExecutionException(this.getId(), ex.getMessage(), ex);
+        }
     }
 
 
