@@ -48,15 +48,14 @@ public class SteppableTemplateExecutableTask extends AbstractTemplateExecutableT
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
-            Object instance = executionRuntime.getInstance(descriptor.getConstructor());
-            ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
+            ChangeTemplate<?, ?, ?> changeTemplateInstance = getInstance(executionRuntime);
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
             changeTemplateInstance.setChangeId(descriptor.getId());
-            setConfigurationData(executionRuntime, changeTemplateInstance);
+            setConfigurationData(changeTemplateInstance);
 
-            setTemplateData(executionRuntime, instance);
+            setTemplateData(executionRuntime, changeTemplateInstance);
 
-            executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+            executionRuntime.executeMethodWithInjectedDependencies(changeTemplateInstance, method);
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
         }

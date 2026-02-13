@@ -41,7 +41,7 @@ public abstract class AbstractTemplateLoadedChange extends AbstractLoadedChange 
                                            String id,
                                            String order,
                                            String author,
-                                           Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
+                                           Class<? extends ChangeTemplate> templateClass,
                                            Constructor<?> constructor,
                                            List<String> profiles,
                                            boolean transactional,

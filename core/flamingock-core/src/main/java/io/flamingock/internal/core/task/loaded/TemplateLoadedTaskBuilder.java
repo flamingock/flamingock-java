@@ -169,6 +169,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
                     recovery);
         } else {
             // Default to SimpleTemplateLoadedChange for AbstractSimpleTemplate and unknown types
+            Class<? extends AbstractSimpleTemplate> steppableTemplateClass =
+                    templateClass.asSubclass(AbstractSimpleTemplate.class);
             return new SimpleTemplateLoadedChange(
                     fileName,
                     id,

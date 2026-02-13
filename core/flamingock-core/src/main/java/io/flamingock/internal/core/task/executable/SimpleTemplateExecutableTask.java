@@ -23,6 +23,7 @@ import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
 import io.flamingock.internal.util.FileUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 
@@ -45,18 +46,22 @@ public class SimpleTemplateExecutableTask extends AbstractTemplateExecutableTask
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
-            Object instance = executionRuntime.getInstance(descriptor.getConstructor());
-            ChangeTemplate<?,?,?> changeTemplateInstance = (ChangeTemplate<?,?,?>) instance;
+            ChangeTemplate<?, ?, ?> changeTemplateInstance = getInstance(executionRuntime);
             changeTemplateInstance.setTransactional(descriptor.isTransactional());
             changeTemplateInstance.setChangeId(descriptor.getId());
-            setConfigurationData(executionRuntime, changeTemplateInstance);
+            setConfigurationData(changeTemplateInstance);
 
-            setTemplateData(executionRuntime, instance);
+            setTemplateData(executionRuntime, changeTemplateInstance);
 
-            executionRuntime.executeMethodWithInjectedDependencies(instance, method);
+            executionRuntime.executeMethodWithInjectedDependencies(changeTemplateInstance, method);
         } catch (Throwable ex) {
             throw new ChangeExecutionException(ex.getMessage(), this.getId(), ex);
         }
+    }
+
+    protected AbstractSimpleTemplate<?, ?, ?> getInstance(ExecutionRuntime executionRuntime) {
+        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
+        return (AbstractSimpleTemplate<?,?,?>) instance;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

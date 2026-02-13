@@ -44,17 +44,17 @@ public abstract class AbstractTemplateExecutableTask<T extends AbstractTemplateL
         super(stageName, descriptor, action, executionMethod, rollbackMethod);
     }
 
-    protected void setConfigurationData(ExecutionRuntime executionRuntime,
-                                        ChangeTemplate<?, ?, ?> instance) {
-        Class<?> parameterClass = instance.getConfigurationClass();
+    protected ChangeTemplate<?, ?, ?> getInstance(ExecutionRuntime executionRuntime) {
+        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
+        return (ChangeTemplate<?,?,?>) instance;
+    }
+
+    protected <C> void setConfigurationData(ChangeTemplate<C, ?, ?> instance) {
+        Class<C> parameterClass = instance.getConfigurationClass();
         Object data = descriptor.getConfiguration();
 
         if (data != null && Void.class != parameterClass) {
-            Method setConfigurationMethod = getSetterMethod(instance.getClass(), "setConfiguration");
-            executionRuntime.executeMethodWithParameters(
-                    instance,
-                    setConfigurationMethod,
-                    FileUtil.getFromMap(parameterClass, data));
+            instance.setConfiguration(FileUtil.getFromMap(parameterClass, data));
         } else if (Void.class != parameterClass) {
             logger.warn("No 'Configuration' section provided for template-based change[{}] of type[{}]",
                     descriptor.getId(), descriptor.getTemplateClass().getName());
