@@ -15,23 +15,28 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.internal.common.core.preview.PreviewConstructor;
-import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.template.ChangeTemplateManager;
+import io.flamingock.internal.util.FileUtil;
+import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 
 //TODO how to set transactional and runAlways
-public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoadedChange> {
+public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemplateLoadedChange<?, ?, ?>> {
 
     private String fileName;
     private String id;
@@ -141,31 +146,158 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<TemplateLoad
     }
 
     @Override
-    public TemplateLoadedChange build() {
+    @SuppressWarnings("unchecked")
+    public AbstractTemplateLoadedChange<?, ?, ?> build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
-        Class<? extends ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
+        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
 
         Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
 
-        return new TemplateLoadedChange(
-                fileName,
-                id,
-                order,
-                author,
-                templateClass,
-                constructor,
-                profiles,
-                transactional,
-                runAlways,
-                system,
-                configuration,
-                apply,
-                rollback,
-                steps,
-                targetSystem,
-                recovery);
+        // Determine template type based on @ChangeTemplate annotation
+        // Note: Due to type erasure, we use Object bounds at construction time.
+        // The actual type safety comes from the conversion methods that use reflection
+        // to determine the real types at runtime.
+        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
+        boolean isSteppable = annotation != null && annotation.multiStep();
 
+        if (isSteppable) {
+            Class<? extends AbstractChangeTemplate<Object, Object, Object>> steppableTemplateClass =
+                    (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
+                    templateClass.asSubclass(AbstractChangeTemplate.class);
+
+            // Convert steps at load time
+            List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);
+
+            return new SteppableTemplateLoadedChange<>(
+                    fileName,
+                    id,
+                    order,
+                    author,
+                    steppableTemplateClass,
+                    constructor,
+                    profiles,
+                    transactional,
+                    runAlways,
+                    system,
+                    configuration,
+                    convertedSteps,
+                    targetSystem,
+                    recovery);
+        } else {
+            // Default to SimpleTemplateLoadedChange for simple templates (steppable=false or missing annotation)
+            Class<? extends AbstractChangeTemplate<Object, Object, Object>> simpleTemplateClass =
+                    (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
+                            templateClass.asSubclass(AbstractChangeTemplate.class);
+
+            // Convert apply/rollback to typed payloads at load time
+            Pair<Object, Object> convertedPayloads = convertPayloads(constructor, apply, rollback);
+
+            return new SimpleTemplateLoadedChange<>(
+                    fileName,
+                    id,
+                    order,
+                    author,
+                    simpleTemplateClass,
+                    constructor,
+                    profiles,
+                    transactional,
+                    runAlways,
+                    system,
+                    configuration,
+                    convertedPayloads.getFirst(),
+                    convertedPayloads.getSecond(),
+                    targetSystem,
+                    recovery);
+        }
+
+    }
+
+    /**
+     * Converts raw apply/rollback data to typed payloads for simple templates.
+     * Returns Pair<applyPayload, rollbackPayload>.
+     */
+    private Pair<Object, Object> convertPayloads(Constructor<?> constructor, Object applyData, Object rollbackData) {
+        if (applyData == null) {
+            return new Pair<>(null, null);
+        }
+
+        // Instantiate template temporarily to get payload types
+        AbstractChangeTemplate<?, ?, ?> templateInstance;
+        try {
+            templateInstance = (AbstractChangeTemplate<?, ?, ?>) constructor.newInstance();
+        } catch (Exception e) {
+            throw new FlamingockException("Failed to instantiate template for type resolution: " + e.getMessage(), e);
+        }
+
+        Class<?> applyClass = templateInstance.getApplyPayloadClass();
+        Class<?> rollbackClass = templateInstance.getRollbackPayloadClass();
+
+        Object applyPayload = FileUtil.getFromMap(applyClass, applyData);
+        Object rollbackPayload = null;
+
+        if (rollbackData != null && Void.class != rollbackClass) {
+            rollbackPayload = FileUtil.getFromMap(rollbackClass, rollbackData);
+        }
+
+        return new Pair<>(applyPayload, rollbackPayload);
+    }
+
+    /**
+     * Converts raw steps data from YAML to typed TemplateStep objects.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private List<TemplateStep<Object, Object>> convertSteps(Constructor<?> constructor, Object stepsData) {
+        if (stepsData == null) {
+            return null;
+        }
+
+        if (!(stepsData instanceof List)) {
+            throw new FlamingockException(String.format(
+                "Steps must be a List for steppable template change[%s], but got: %s",
+                id, stepsData.getClass().getSimpleName()));
+        }
+
+        List<?> stepsList = (List<?>) stepsData;
+        if (stepsList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Instantiate template temporarily to get payload types
+        AbstractChangeTemplate<?, ?, ?> templateInstance;
+        try {
+            templateInstance = (AbstractChangeTemplate<?, ?, ?>) constructor.newInstance();
+        } catch (Exception e) {
+            throw new FlamingockException("Failed to instantiate template for type resolution: " + e.getMessage(), e);
+        }
+
+        Class<?> applyClass = templateInstance.getApplyPayloadClass();
+        Class<?> rollbackClass = templateInstance.getRollbackPayloadClass();
+
+        List<TemplateStep<Object, Object>> result = new ArrayList<>();
+
+        for (Object stepItem : stepsList) {
+            if (stepItem instanceof Map) {
+                Map<String, Object> stepMap = (Map<String, Object>) stepItem;
+                TemplateStep<Object, Object> step = new TemplateStep<>();
+
+                Object applyItemData = stepMap.get("apply");
+                if (applyItemData != null && Void.class != applyClass) {
+                    step.setApplyPayload(FileUtil.getFromMap(applyClass, applyItemData));
+                }
+
+                Object rollbackItemData = stepMap.get("rollback");
+                if (rollbackItemData != null && Void.class != rollbackClass) {
+                    step.setRollbackPayload(FileUtil.getFromMap(rollbackClass, rollbackItemData));
+                }
+
+                result.add(step);
+            } else if (stepItem instanceof TemplateStep) {
+                result.add((TemplateStep<Object, Object>) stepItem);
+            }
+        }
+
+        return result;
     }
 
     private TemplateLoadedTaskBuilder setPreview(TemplatePreviewChange preview) {

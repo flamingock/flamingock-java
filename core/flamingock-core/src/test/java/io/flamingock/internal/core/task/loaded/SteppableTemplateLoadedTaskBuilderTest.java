@@ -15,10 +15,12 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
+import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.api.template.AbstractSteppableTemplate;
-import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,8 +40,9 @@ class SteppableTemplateLoadedTaskBuilderTest {
 
     private TemplateLoadedTaskBuilder builder;
 
-    // Steppable test template implementation using the abstract class
-    public static class TestSteppableTemplate extends AbstractSteppableTemplate<Object, Object, Object> {
+    // Steppable test template implementation using the annotation
+    @ChangeTemplate(multiStep = true)
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestSteppableTemplate() {
             super();
@@ -77,15 +80,19 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
-            assertNotNull(result.getSteps());
-            // Steps are stored as raw Object - conversion happens at execution time
-            assertEquals(rawSteps, result.getSteps());
+            // Steps are now converted to List<TemplateStep> at load time
+            List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertNotNull(steps);
+            assertEquals(2, steps.size());
+            assertInstanceOf(TemplateStep.class, steps.get(0));
         }
     }
 
@@ -113,9 +120,10 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
             assertEquals("001", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
@@ -146,9 +154,10 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
             assertEquals("0002", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_0002__test-file.yml", result.getFileName());
@@ -173,13 +182,16 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
-            assertNotNull(result.getSteps());
-            assertTrue(((List<?>) result.getSteps()).isEmpty());
+            List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertNotNull(steps);
+            assertTrue(steps.isEmpty());
         }
     }
 
@@ -206,19 +218,21 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("multi-step-change", result.getId());
-            assertNotNull(result.getSteps());
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> resultSteps = (List<Map<String, Object>>) result.getSteps();
-            assertEquals(3, resultSteps.size());
-            // Verify steps are preserved in order
-            assertEquals("createCollection", resultSteps.get(0).get("apply"));
-            assertEquals("insertDocument", resultSteps.get(1).get("apply"));
-            assertEquals("createIndex", resultSteps.get(2).get("apply"));
+            // Steps are now converted to List<TemplateStep> at load time
+            List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertNotNull(steps);
+            assertEquals(3, steps.size());
+            // Verify steps are preserved in order - payloads are now typed objects
+            assertEquals("createCollection", steps.get(0).getApplyPayload());
+            assertEquals("insertDocument", steps.get(1).getApplyPayload());
+            assertEquals("createIndex", steps.get(2).getApplyPayload());
         }
     }
 
@@ -268,15 +282,17 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> resultSteps = (List<Map<String, Object>>) result.getSteps();
-            assertEquals(2, resultSteps.size());
-            assertNull(resultSteps.get(0).get("rollback"));
-            assertNull(resultSteps.get(1).get("rollback"));
+            // Steps are now converted to List<TemplateStep> at load time
+            List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
+            assertEquals(2, steps.size());
+            assertNull(steps.get(0).getRollbackPayload());
+            assertNull(steps.get(1).getRollbackPayload());
         }
     }
 
@@ -296,12 +312,15 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
-            assertNull(result.getSteps());
+            // Null steps remain null after conversion
+            assertNull(steppableResult.getSteps());
         }
     }
 

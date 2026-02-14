@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.task.navigation.step;
+package io.flamingock.internal.util;
 
-import io.flamingock.internal.core.task.navigation.step.afteraudit.RollableStep;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public interface RollableFailedStep extends FailedStep {
-
-    RollableStep getRollbackStep();
-
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface NotThreadSafe {
 
 }

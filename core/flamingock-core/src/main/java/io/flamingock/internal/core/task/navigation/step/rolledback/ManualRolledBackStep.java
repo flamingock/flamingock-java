@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.task.navigation.step.rolledback;
 
+import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.navigation.step.FailedStep;
 import io.flamingock.internal.core.task.navigation.step.SuccessableStep;
 import io.flamingock.internal.core.task.navigation.step.complete.failed.CompletedFailedManualRollback;
@@ -24,20 +25,18 @@ import io.flamingock.internal.util.Result;
 public class ManualRolledBackStep extends RolledBackStep implements SuccessableStep, FailedStep {
 
     private final long duration;
-    private final Rollback rollback;
 
-    protected ManualRolledBackStep(Rollback rollback, boolean rollbackSuccess, long duration) {
-        super(rollback.getTask(), rollbackSuccess);
-        this.rollback = rollback;
+    protected ManualRolledBackStep(ExecutableTask executableChange, boolean rollbackSuccess, long duration) {
+        super(executableChange, rollbackSuccess);
         this.duration = duration;
     }
 
-    public static ManualRolledBackStep successfulRollback(Rollback rollback, long duration) {
-        return new ManualRolledBackStep(rollback, true, duration);
+    public static ManualRolledBackStep successfulRollback(ExecutableTask executableChange, long duration) {
+        return new ManualRolledBackStep(executableChange, true, duration);
     }
 
-    public static ManualRolledBackStep failedRollback(Rollback rollback, long duration, Throwable error) {
-        return new FailedManualRolledBackStep(rollback, duration, error);
+    public static ManualRolledBackStep failedRollback(ExecutableTask executableChange, long duration, Throwable error) {
+        return new FailedManualRolledBackStep(executableChange, duration, error);
     }
 
     public CompletedFailedManualRollback applyAuditResult(Result auditResult) {
@@ -48,7 +47,4 @@ public class ManualRolledBackStep extends RolledBackStep implements SuccessableS
         return duration;
     }
 
-    public Rollback getRollback() {
-        return rollback;
-    }
 }

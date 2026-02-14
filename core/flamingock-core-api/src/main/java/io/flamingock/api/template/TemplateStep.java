@@ -56,15 +56,15 @@ package io.flamingock.api.template;
  */
 public class TemplateStep<APPLY, ROLLBACK> {
 
-    private APPLY apply;
-    private ROLLBACK rollback;
+    private APPLY applyPayload;
+    private ROLLBACK rollbackPayload;
 
     public TemplateStep() {
     }
 
-    public TemplateStep(APPLY apply, ROLLBACK rollback) {
-        this.apply = apply;
-        this.rollback = rollback;
+    public TemplateStep(APPLY applyPayload, ROLLBACK rollbackPayload) {
+        this.applyPayload = applyPayload;
+        this.rollbackPayload = rollbackPayload;
     }
 
     /**
@@ -72,17 +72,17 @@ public class TemplateStep<APPLY, ROLLBACK> {
      *
      * @return the apply payload (required)
      */
-    public APPLY getApply() {
-        return apply;
+    public APPLY getApplyPayload() {
+        return applyPayload;
     }
 
     /**
      * Sets the apply payload for this step.
      *
-     * @param apply the apply payload
+     * @param applyPayload the apply payload
      */
-    public void setApply(APPLY apply) {
-        this.apply = apply;
+    public void setApplyPayload(APPLY applyPayload) {
+        this.applyPayload = applyPayload;
     }
 
     /**
@@ -90,17 +90,17 @@ public class TemplateStep<APPLY, ROLLBACK> {
      *
      * @return the rollback payload, or null if no rollback is defined
      */
-    public ROLLBACK getRollback() {
-        return rollback;
+    public ROLLBACK getRollbackPayload() {
+        return rollbackPayload;
     }
 
     /**
      * Sets the rollback payload for this step.
      *
-     * @param rollback the rollback payload (optional)
+     * @param rollbackPayload the rollback payload (optional)
      */
-    public void setRollback(ROLLBACK rollback) {
-        this.rollback = rollback;
+    public void setRollbackPayload(ROLLBACK rollbackPayload) {
+        this.rollbackPayload = rollbackPayload;
     }
 
     /**
@@ -109,15 +109,15 @@ public class TemplateStep<APPLY, ROLLBACK> {
      * @return true if a rollback payload is defined
      */
     public boolean hasRollback() {
-        return rollback != null;
+        return rollbackPayload != null;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("TemplateStep{");
-        sb.append("apply=").append(apply);
-        if (rollback != null) {
-            sb.append(", rollback=").append(rollback);
+        sb.append("apply=").append(applyPayload);
+        if (rollbackPayload != null) {
+            sb.append(", rollback=").append(rollbackPayload);
         }
         sb.append('}');
         return sb.toString();

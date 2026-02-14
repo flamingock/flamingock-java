@@ -24,16 +24,20 @@ import java.util.Set;
 
 
 /**
- * Abstract base class for change templates providing common functionality.
+ * Base class for creating Flamingock change templates.
  *
- * <p>This class handles generic type resolution and provides the common fields
- * needed by all templates: changeId, isTransactional, and configuration.
+ * <p>Extend this class and annotate with {@link io.flamingock.api.annotations.ChangeTemplate}
+ * to create custom templates. The annotation's {@code steppable} attribute determines the YAML structure.
  *
- * <p>For new templates, extend one of the specialized abstract classes:
- * <ul>
- *   <li>{@link AbstractSimpleTemplate} - for templates with a single apply/rollback step</li>
- *   <li>{@link AbstractSteppableTemplate} - for templates with multiple steps</li>
- * </ul>
+ * <p>Use {@code @ChangeTemplate} (default {@code steppable = false}) for simple templates with
+ * single apply/rollback fields.
+ *
+ * <p>Use {@code @ChangeTemplate(steppable = true)} for steppable templates with multiple steps.
+ *
+ * @param <SHARED_CONFIGURATION_FIELD> shared configuration type (use {@code Void} if none)
+ * @param <APPLY_FIELD> apply payload type
+ * @param <ROLLBACK_FIELD> rollback payload type
+ * @see io.flamingock.api.annotations.ChangeTemplate
  */
 public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
 
@@ -42,7 +46,10 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     private final Class<ROLLBACK_FIELD> rollbackPayloadClass;
     protected String changeId;
     protected boolean isTransactional;
+
     protected SHARED_CONFIGURATION_FIELD configuration;
+    protected APPLY_FIELD applyPayload;
+    protected ROLLBACK_FIELD rollbackPayload;
 
     private final Set<Class<?>> additionalReflectiveClasses;
 
@@ -109,6 +116,16 @@ public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_F
     @Override
     public void setConfiguration(SHARED_CONFIGURATION_FIELD configuration) {
         this.configuration = configuration;
+    }
+
+    @Override
+    public void setApplyPayload(APPLY_FIELD applyPayload) {
+        this.applyPayload = applyPayload;
+    }
+
+    @Override
+    public void setRollbackPayload(ROLLBACK_FIELD rollbackPayload) {
+        this.rollbackPayload = rollbackPayload;
     }
 
     @Override

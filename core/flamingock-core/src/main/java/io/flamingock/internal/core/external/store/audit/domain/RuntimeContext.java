@@ -106,7 +106,7 @@ public final class RuntimeContext {
 
         public Builder setStartStep(StartStep taskStep) {
             duration = 0L;
-            methodExecutor = taskStep.getTask().getExecutionMethodName();
+            methodExecutor = taskStep.getTask().getApplyMethodName();
             stageName = taskStep.getTask().getStageName();
             setResult(taskStep);
             return this;
@@ -114,7 +114,7 @@ public final class RuntimeContext {
 
         public Builder setExecutionStep(ExecutionStep taskStep) {
             duration = taskStep.getDuration();
-            methodExecutor = taskStep.getTask().getExecutionMethodName();
+            methodExecutor = taskStep.getTask().getApplyMethodName();
             stageName = taskStep.getTask().getStageName();
             setResult(taskStep);
             return this;
@@ -122,7 +122,7 @@ public final class RuntimeContext {
 
         public Builder setManualRollbackStep(ManualRolledBackStep rolledBackStep) {
             duration = rolledBackStep.getDuration();
-            methodExecutor = rolledBackStep.getRollback().getRollbackMethodName();
+            methodExecutor = rolledBackStep.getTask().getRollbackMethodName();
             stageName = rolledBackStep.getTask().getStageName();
             setResult(rolledBackStep);
             return this;

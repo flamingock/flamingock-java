@@ -46,11 +46,8 @@ public abstract class FailedAfterExecutionAuditStep extends AfterExecutionAuditS
     }
 
     @Override
-    public final List<RollableStep> getRollbackSteps() {
-        return task.getRollbackChain()
-                .stream()
-                .map(RollableStep::new)
-                .collect(Collectors.toList());
+    public final RollableStep getRollbackStep() {
+        return new RollableStep(getTask());
     }
 
 }

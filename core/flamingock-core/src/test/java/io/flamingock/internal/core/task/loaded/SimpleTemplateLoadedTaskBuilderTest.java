@@ -17,7 +17,8 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.api.template.AbstractSimpleTemplate;
+import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.annotations.Apply;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,8 +35,9 @@ class SimpleTemplateLoadedTaskBuilderTest {
 
     private TemplateLoadedTaskBuilder builder;
 
-    // Simple test template implementation using the abstract class
-    public static class TestChangeTemplate extends AbstractSimpleTemplate<Object, Object, Object> {
+    // Simple test template implementation using the annotation
+    @ChangeTemplate
+    public static class TestChangeTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestChangeTemplate() {
             super();
@@ -67,18 +69,24 @@ class SimpleTemplateLoadedTaskBuilderTest {
                     .setRunAlways(false)
                     .setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
+                    .setConfiguration("testConfig")
+                    .setApply("applyPayload")
+                    .setRollback("rollbackPayload");
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SimpleTemplateLoadedChange.class, result);
             assertEquals("001", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
+            // Verify typed payloads are stored
+            SimpleTemplateLoadedChange<?, ?, ?> simpleResult = (SimpleTemplateLoadedChange<?, ?, ?>) result;
+            assertNotNull(simpleResult.getApplyPayload());
+            assertNotNull(simpleResult.getRollbackPayload());
+            assertTrue(simpleResult.hasRollback());
         }
     }
 
@@ -97,15 +105,16 @@ class SimpleTemplateLoadedTaskBuilderTest {
                     .setRunAlways(false)
                     .setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
+                    .setConfiguration("testConfig")
+                    .setApply("applyPayload")
+                    .setRollback("rollbackPayload");
             builder.setProfiles(Arrays.asList("test"));
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SimpleTemplateLoadedChange.class, result);
             assertEquals("0002", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_0002__test-file.yml", result.getFileName());
@@ -128,14 +137,15 @@ class SimpleTemplateLoadedTaskBuilderTest {
             builder.setProfiles(Arrays.asList("test"));
             builder.setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
-                    .setApply(new Object())
-                    .setRollback(new Object());
+                    .setConfiguration("testConfig")
+                    .setApply("applyPayload")
+                    .setRollback("rollbackPayload");
 
             // When
-            TemplateLoadedChange result = builder.build();
+            AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
+            assertInstanceOf(SimpleTemplateLoadedChange.class, result);
             assertEquals("003", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_003__test-file.yml", result.getFileName());

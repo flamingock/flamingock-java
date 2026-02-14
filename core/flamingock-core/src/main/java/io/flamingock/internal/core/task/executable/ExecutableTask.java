@@ -27,16 +27,16 @@ public interface ExecutableTask extends TaskDescriptor {
 
     String getStageName();
 
-    void execute(ExecutionRuntime runtimeHelper);
+    void apply(ExecutionRuntime executionRuntime);
 
-    String getExecutionMethodName();
+    String getApplyMethodName();
+
+    void rollback(ExecutionRuntime executionRuntime);
+
+    String getRollbackMethodName();
 
     boolean isAlreadyApplied();
 
     ChangeAction getAction();
-
-    void addRollback(Rollback rollback);
-
-    List<? extends Rollback> getRollbackChain();
 
 }

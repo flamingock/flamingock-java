@@ -15,9 +15,7 @@
  */
 package io.flamingock.internal.common.core.template;
 
-import io.flamingock.api.template.AbstractSimpleTemplate;
-import io.flamingock.api.template.AbstractSteppableTemplate;
-import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
 
@@ -49,15 +47,17 @@ public class TemplateValidator {
      */
     public enum TemplateType {
         /**
-         * Template extends AbstractSimpleTemplate - uses apply/rollback fields.
+         * Template annotated with {@code @ChangeTemplate(steppable = false)} or without annotation.
+         * Uses apply/rollback fields.
          */
         SIMPLE,
         /**
-         * Template extends AbstractSteppableTemplate - uses steps field.
+         * Template annotated with {@code @ChangeTemplate(steppable = true)}.
+         * Uses steps field.
          */
         STEPPABLE,
         /**
-         * Template type could not be determined.
+         * Template type could not be determined (kept for backward compatibility).
          */
         UNKNOWN
     }
@@ -88,7 +88,7 @@ public class TemplateValidator {
             return result;
         }
 
-        Optional<Class<? extends ChangeTemplate<?, ?, ?>>> templateClassOpt = ChangeTemplateManager.getTemplate(templateName);
+        Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> templateClassOpt = ChangeTemplateManager.getTemplate(templateName);
 
         if (!templateClassOpt.isPresent()) {
             result.add(new ValidationError(
@@ -99,7 +99,7 @@ public class TemplateValidator {
             return result;
         }
 
-        Class<? extends ChangeTemplate<?, ?, ?>> templateClass = templateClassOpt.get();
+        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = templateClassOpt.get();
         TemplateType type = getTemplateType(templateClass);
 
         switch (type) {
@@ -118,18 +118,18 @@ public class TemplateValidator {
     }
 
     /**
-     * Determines the template type based on the class hierarchy.
+     * Determines the template type based on the {@link ChangeTemplate} annotation.
      *
      * @param templateClass the template class to check
-     * @return the TemplateType (SIMPLE, STEPPABLE, or UNKNOWN)
+     * @return the TemplateType (SIMPLE or STEPPABLE). Returns SIMPLE by default if annotation is missing.
      */
-    public TemplateType getTemplateType(Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
-        if (AbstractSimpleTemplate.class.isAssignableFrom(templateClass)) {
-            return TemplateType.SIMPLE;
-        } else if (AbstractSteppableTemplate.class.isAssignableFrom(templateClass)) {
+    public TemplateType getTemplateType(Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass) {
+        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
+        if (annotation != null && annotation.multiStep()) {
             return TemplateType.STEPPABLE;
         }
-        return TemplateType.UNKNOWN;
+        // Default to SIMPLE (including when annotation is missing or steppable=false)
+        return TemplateType.SIMPLE;
     }
 
     /**

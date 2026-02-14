@@ -29,6 +29,7 @@ import io.flamingock.internal.core.task.navigation.step.ExecutableStep;
 import io.flamingock.internal.core.task.navigation.step.StartStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.AfterExecutionAuditStep;
 import io.flamingock.internal.core.task.navigation.step.afteraudit.FailedAfterExecutionAuditStep;
+import io.flamingock.internal.core.task.navigation.step.afteraudit.RollableStep;
 import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
 import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
 import io.flamingock.internal.util.TimeService;
@@ -118,10 +119,9 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
     }
 
     private void rollbackActualChangeAndChain(FailedAfterExecutionAuditStep rollableFailedStep, ExecutionContext executionContext) {
-        rollableFailedStep.getRollbackSteps().forEach(rollableStep -> {
-            ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
-            stepLogger.logManualRollbackResult(rolledBack);
-            auditAndLogManualRollback(rolledBack, executionContext);
-        });
+        RollableStep rollableStep = rollableFailedStep.getRollbackStep();
+        ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
+        stepLogger.logManualRollbackResult(rolledBack);
+        auditAndLogManualRollback(rolledBack, executionContext);
     }
 }

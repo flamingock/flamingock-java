@@ -338,11 +338,15 @@ YAML File
     ↓ (parsing)
 ChangeTemplateFileContent
     ↓ (preview building)
-TemplatePreviewChange
+TemplatePreviewChange (unified)
     ↓ (loaded task building - template lookup from registry)
-TemplateLoadedChange
+AbstractTemplateLoadedChange
+    ├── SimpleTemplateLoadedChange (for AbstractSimpleTemplate)
+    └── SteppableTemplateLoadedChange (for AbstractSteppableTemplate)
     ↓ (execution preparation)
-TemplateExecutableTask
+TemplateExecutableTask<T>
+    ├── SimpleTemplateExecutableTask (calls setStep())
+    └── SteppableTemplateExecutableTask (calls setSteps())
     ↓ (runtime execution)
 Template instance with injected dependencies
 ```
@@ -350,8 +354,9 @@ Template instance with injected dependencies
 **Key Classes in Flow**:
 - `ChangeTemplateFileContent` - YAML parsed data (`core/flamingock-core-commons`)
 - `TemplatePreviewTaskBuilder` - Builds preview from file content (`core/flamingock-core-commons`)
-- `TemplateLoadedTaskBuilder` - Resolves template class, builds loaded change (`core/flamingock-core`)
-- `TemplateExecutableTask` - Executes template with dependency injection (`core/flamingock-core`)
+- `TemplateLoadedTaskBuilder` - Resolves template class, builds type-specific loaded change (`core/flamingock-core`)
+- `TemplateExecutableTaskBuilder` - Builds type-specific executable task (`core/flamingock-core`)
+- `TemplateExecutableTask<T>` - Abstract base for template execution (`core/flamingock-core`)
 
 ### Discovery Mechanism (SPI)
 
@@ -429,6 +434,50 @@ Templates are validated at compile-time to ensure YAML structure matches the tem
 - `io.flamingock.internal.common.core.template.TemplateValidator` - validation logic
 - `io.flamingock.api.annotations.EnableFlamingock` - strictTemplateValidation flag
 - `io.flamingock.api.template.AbstractChangeTemplate` - template base classes
+
+<<<<<<< Updated upstream
+=======
+### Template Class Hierarchy (Loaded & Executable)
+
+At the **Loaded** and **Executable** phases, templates are split into type-specific classes:
+
+**Loaded Phase:**
+```
+AbstractTemplateLoadedChange (abstract base)
+├── SimpleTemplateLoadedChange (apply, rollback)
+└── SteppableTemplateLoadedChange (steps)
+```
+
+**Executable Phase:**
+```
+TemplateExecutableTask<T> (abstract base)
+├── SimpleTemplateExecutableTask (calls setStep())
+└── SteppableTemplateExecutableTask (calls setSteps())
+```
+
+**Type Detection:** Happens in `TemplateLoadedTaskBuilder.build()` using:
+- `AbstractSteppableTemplate.class.isAssignableFrom(templateClass)` → SteppableTemplateLoadedChange
+- Otherwise → SimpleTemplateLoadedChange (default for AbstractSimpleTemplate and unknown types)
+
+**Note:** Preview phase (`TemplatePreviewChange`) remains unified since YAML is parsed before template type is known.
+
+### SteppableTemplateExecutableTask Apply/Rollback Lifecycle
+
+The `SteppableTemplateExecutableTask` manages multi-step execution with per-step rollback:
+
+**Apply Phase:**
+- Iterates through steps in order (0 → N-1)
+- Sets `applyPayload` on template instance before executing `@Apply` method
+- `stepIndex` tracks current progress (-1 before start, N-1 after all steps complete)
+- On failure at step N, `stepIndex = N` (points to failed step)
+
+**Rollback Phase (on apply failure):**
+- Rolls back from current `stepIndex` down to 0 (reverse order)
+- Sets `rollbackPayload` on template instance before executing `@Rollback` method
+- **Skips steps without rollback payload** (`hasRollback()` returns false)
+- **Skips if template has no `@Rollback` method** (logs warning)
+
+**Key Design Decision:** Same `SteppableTemplateExecutableTask` instance is used for both apply and rollback (no retry). The `stepIndex` state persists to enable rollback from the exact failure point.
 
 ### Dependency Injection in Templates
 

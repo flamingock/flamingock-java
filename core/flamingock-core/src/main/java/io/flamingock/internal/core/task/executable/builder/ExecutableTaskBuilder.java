@@ -18,8 +18,8 @@ package io.flamingock.internal.core.task.executable.builder;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
-import io.flamingock.internal.core.task.loaded.TemplateLoadedChange;
 
 public interface ExecutableTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
@@ -43,7 +43,7 @@ public interface ExecutableTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
         if(TemplateExecutableTaskBuilder.supports(loadedTask)) {
             TemplateExecutableTaskBuilder templateBuilder = TemplateExecutableTaskBuilder.getInstance();
-            TemplateLoadedChange castedTask = templateBuilder.cast(loadedTask);
+            AbstractTemplateLoadedChange<?, ?, ?> castedTask = templateBuilder.cast(loadedTask);
             return templateBuilder.setLoadedTask(castedTask);
 
         } else if(CodeExecutableTaskBuilder.supports(loadedTask)) {

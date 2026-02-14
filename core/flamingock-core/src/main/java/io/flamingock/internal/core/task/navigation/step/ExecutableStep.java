@@ -30,7 +30,7 @@ public class ExecutableStep extends AbstractTaskStep {
     public ExecutionStep execute(ExecutionRuntime executionRuntime) {
         StopWatch stopWatch = StopWatch.startAndGet();
         try {
-            task.execute(executionRuntime);
+            task.apply(executionRuntime);
             return SuccessApplyStep.instance(this, stopWatch.getElapsed());
         } catch (Throwable throwable) {
             return FailedExecutionStep.instance(this, stopWatch.getElapsed(), throwable);
