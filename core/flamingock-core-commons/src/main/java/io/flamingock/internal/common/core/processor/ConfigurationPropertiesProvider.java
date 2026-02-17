@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.metadata;
+package io.flamingock.internal.common.core.processor;
 
-public final class Constants {
+import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
-    public static final String FULL_PIPELINE_FILE_PATH = "META-INF/flamingock/metadata.json";
+import javax.annotation.processing.RoundEnvironment;
+import java.util.Map;
 
-    public static final String FULL_GRAALVM_REFLECT_CLASSES_PATH = "META-INF/flamingock/reflection-classes.txt";
+public interface ConfigurationPropertiesProvider {
 
-    public static final String DEFAULT_MONGOCK_ORIGIN = "mongockChangeLog";
-
-    public static final String MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY = "internal.mongock.import.origin";
-    public static final String MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY = "internal.mongock.import.emptyOriginAllowed";
-
-    private Constants() {}
-
+    Map<String, String> getConfigurationProperties(RoundEnvironment roundEnv, LoggerPreProcessor logger);
 }

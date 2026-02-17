@@ -17,7 +17,8 @@ package io.flamingock.core.processor.util;
 
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.FlamingockCliBuilder;
-import io.flamingock.internal.common.core.discover.ChangeDiscoverer;
+import io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin;
+import io.flamingock.internal.common.core.processor.ChangeDiscoverer;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
@@ -63,36 +64,16 @@ public final class AnnotationFinder {
                 .findFirst();
     }
 
-    public Collection<CodePreviewChange> findAnnotatedChanges(Map<String, String> properties) {
+    public Collection<CodePreviewChange> findAnnotatedChanges(List<AnnotationProcessorPlugin> plugins) {
         logger.info("Searching for code-based changes");
-        return getAllChangeDiscoverers()
+        return plugins
                 .stream()
+                .filter(p -> p instanceof ChangeDiscoverer)
+                .map(p -> (ChangeDiscoverer)p)
                 .peek(cd -> logger.info(String.format("Using %s for discover changes", cd.getClass().getName())))
-                .map(cd -> cd.findAnnotatedChanges(roundEnv, logger, properties))
+                .map(cd -> cd.findAnnotatedChanges(roundEnv, logger))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
-    }
-
-    private List<ChangeDiscoverer> getAllChangeDiscoverers() {
-        Set<String> seen = new LinkedHashSet<>();
-        List<ChangeDiscoverer> result = new ArrayList<>();
-
-        ClassLoader[] loaders = new ClassLoader[] {
-                Thread.currentThread().getContextClassLoader(),
-                ChangeDiscoverer.class.getClassLoader(),
-                ClassLoader.getSystemClassLoader()
-        };
-
-        for (ClassLoader cl : loaders) {
-            if (cl == null) continue;
-            ServiceLoader<ChangeDiscoverer> sl = ServiceLoader.load(ChangeDiscoverer.class, cl);
-            for (ChangeDiscoverer d : sl) {
-                if (seen.add(d.getClass().getName())) {
-                    result.add(d);
-                }
-            }
-        }
-        return result;
     }
 
     /**
