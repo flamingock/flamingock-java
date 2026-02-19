@@ -158,4 +158,16 @@ public final class ChangeTemplateManager {
     public static Optional<Class<? extends ChangeTemplate<?, ?, ?>>> getTemplate(String templateName) {
         return Optional.ofNullable(templates.get(templateName));
     }
+
+    /**
+     * Clears all templates from the internal registry.
+     * <p>
+     * This method is intended for use in test environments only to reset the template registry
+     * between tests, ensuring test isolation. It directly modifies the internal template registry
+     * and is not thread-safe.
+     */
+    @TestOnly
+    public static void clearTemplates() {
+        templates.clear();
+    }
 }
