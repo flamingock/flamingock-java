@@ -49,9 +49,27 @@ public class TemplateMetadata {
     private String fullyQualifiedClassName;
 
     /**
+     * Whether this template was discovered via a file-based registration
+     * ({@code META-INF/flamingock/templates}). This is operational metadata
+     * and does not affect identity ({@code equals}/{@code hashCode}).
+     */
+    private boolean fileRegistered;
+
+    /**
      * Default constructor for Jackson deserialization.
      */
     public TemplateMetadata() {
+    }
+
+    /**
+     * Creates a new TemplateMetadata instance with {@code fileRegistered = false}.
+     *
+     * @param id                     the unique template identifier
+     * @param multiStep              whether the template processes multiple steps
+     * @param fullyQualifiedClassName the fully qualified class name
+     */
+    public TemplateMetadata(String id, boolean multiStep, String fullyQualifiedClassName) {
+        this(id, multiStep, fullyQualifiedClassName, false);
     }
 
     /**
@@ -60,11 +78,13 @@ public class TemplateMetadata {
      * @param id                     the unique template identifier
      * @param multiStep              whether the template processes multiple steps
      * @param fullyQualifiedClassName the fully qualified class name
+     * @param fileRegistered         whether this template was discovered via file registration
      */
-    public TemplateMetadata(String id, boolean multiStep, String fullyQualifiedClassName) {
+    public TemplateMetadata(String id, boolean multiStep, String fullyQualifiedClassName, boolean fileRegistered) {
         this.id = id;
         this.multiStep = multiStep;
         this.fullyQualifiedClassName = fullyQualifiedClassName;
+        this.fileRegistered = fileRegistered;
     }
 
     public String getId() {
@@ -91,6 +111,14 @@ public class TemplateMetadata {
         this.fullyQualifiedClassName = fullyQualifiedClassName;
     }
 
+    public boolean isFileRegistered() {
+        return fileRegistered;
+    }
+
+    public void setFileRegistered(boolean fileRegistered) {
+        this.fileRegistered = fileRegistered;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -112,6 +140,7 @@ public class TemplateMetadata {
                 "id='" + id + '\'' +
                 ", multiStep=" + multiStep +
                 ", fullyQualifiedClassName='" + fullyQualifiedClassName + '\'' +
+                ", fileRegistered=" + fileRegistered +
                 '}';
     }
 }

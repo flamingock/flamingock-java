@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Orchestrates template discovery from multiple sources.
@@ -41,22 +40,18 @@ import java.util.Set;
 public class TemplateDiscoveryOrchestrator {
 
     private final List<ChangeTemplateDiscoverer> discoverers;
-    private final FileTemplateDiscoverer fileDiscoverer;
     private final LoggerPreProcessor logger;
 
     /**
      * Creates a new TemplateDiscoveryOrchestrator.
      *
-     * @param discoverers    list of discoverers to use
-     * @param fileDiscoverer the file-based discoverer (for checking unregistered templates)
-     * @param logger         the logger for diagnostic messages
+     * @param discoverers list of discoverers to use
+     * @param logger      the logger for diagnostic messages
      */
     public TemplateDiscoveryOrchestrator(
             List<ChangeTemplateDiscoverer> discoverers,
-            FileTemplateDiscoverer fileDiscoverer,
             LoggerPreProcessor logger) {
         this.discoverers = discoverers;
-        this.fileDiscoverer = fileDiscoverer;
         this.logger = logger;
     }
 
@@ -80,7 +75,10 @@ public class TemplateDiscoveryOrchestrator {
                 // Check for duplicate class names (same template discovered twice)
                 String fqcn = template.getFullyQualifiedClassName();
                 if (templatesByFqcn.containsKey(fqcn)) {
-                    // Same class discovered by multiple discoverers - skip
+                    // Same class discovered by multiple discoverers - merge fileRegistered flag
+                    if (template.isFileRegistered()) {
+                        templatesByFqcn.get(fqcn).setFileRegistered(true);
+                    }
                     continue;
                 }
 
@@ -98,11 +96,8 @@ public class TemplateDiscoveryOrchestrator {
             }
         }
 
-        // 2. Get registered class names from files (for warning)
-        Set<String> fileRegisteredClassNames = fileDiscoverer.getRegisteredClassNames();
-
-        // 3. Warn about annotation-discovered templates not in any file
-        warnAboutUnregisteredTemplates(templatesByFqcn.values(), fileRegisteredClassNames);
+        // 2. Warn about annotation-discovered templates not registered in any file
+        warnAboutUnregisteredTemplates(templatesByFqcn.values());
 
         // 4. Return result
         List<TemplateMetadata> templates = new ArrayList<>(templatesById.values());
@@ -114,15 +109,11 @@ public class TemplateDiscoveryOrchestrator {
     /**
      * Warns about templates discovered via annotation but not registered in any file.
      *
-     * @param templates               all discovered templates
-     * @param fileRegisteredClassNames class names registered in template files
+     * @param templates all discovered templates
      */
-    private void warnAboutUnregisteredTemplates(
-            Collection<TemplateMetadata> templates,
-            Set<String> fileRegisteredClassNames) {
-
+    private void warnAboutUnregisteredTemplates(Collection<TemplateMetadata> templates) {
         for (TemplateMetadata template : templates) {
-            if (!fileRegisteredClassNames.contains(template.getFullyQualifiedClassName())) {
+            if (!template.isFileRegistered()) {
                 logger.warn("Template '" + template.getId() + "' (class: " +
                         template.getFullyQualifiedClassName() + ") was discovered via annotation " +
                         "but is not listed in any META-INF/flamingock/templates file. " +

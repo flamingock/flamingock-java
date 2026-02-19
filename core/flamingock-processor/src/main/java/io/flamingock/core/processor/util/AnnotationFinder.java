@@ -233,11 +233,11 @@ public final class AnnotationFinder {
 
         // Create discoverers
         AnnotationTemplateDiscoverer annotationDiscoverer = new AnnotationTemplateDiscoverer(roundEnv, logger);
-        FileTemplateDiscoverer fileDiscoverer = new FileTemplateDiscoverer(classLoader, logger);
+        FileTemplateDiscoverer fileDiscoverer = new FileTemplateDiscoverer(classLoader, logger, processingEnv);
 
         // Create orchestrator with all discoverers
         List<ChangeTemplateDiscoverer> discoverers = Arrays.asList(annotationDiscoverer, fileDiscoverer);
-        TemplateDiscoveryOrchestrator orchestrator = new TemplateDiscoveryOrchestrator(discoverers, fileDiscoverer, logger);
+        TemplateDiscoveryOrchestrator orchestrator = new TemplateDiscoveryOrchestrator(discoverers, logger);
 
         return orchestrator.discoverAllTemplates();
     }

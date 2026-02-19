@@ -19,6 +19,10 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.internal.common.core.template.TemplateMetadata;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.TypeElement;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,17 +56,19 @@ public class FileTemplateDiscoverer implements ChangeTemplateDiscoverer {
 
     private final ClassLoader classLoader;
     private final LoggerPreProcessor logger;
-    private Set<String> registeredClassNames;
+    private final ProcessingEnvironment processingEnv;
 
     /**
      * Creates a new FileTemplateDiscoverer.
      *
-     * @param classLoader the class loader to use for reading resources and loading classes
-     * @param logger      the logger for diagnostic messages
+     * @param classLoader   the class loader to use for reading resources and loading classes
+     * @param logger        the logger for diagnostic messages
+     * @param processingEnv the annotation processing environment for accessing the compilation classpath
      */
-    public FileTemplateDiscoverer(ClassLoader classLoader, LoggerPreProcessor logger) {
+    public FileTemplateDiscoverer(ClassLoader classLoader, LoggerPreProcessor logger, ProcessingEnvironment processingEnv) {
         this.classLoader = classLoader;
         this.logger = logger;
+        this.processingEnv = processingEnv;
     }
 
     @Override
@@ -70,7 +76,6 @@ public class FileTemplateDiscoverer implements ChangeTemplateDiscoverer {
         logger.verbose("Discovering templates via " + TEMPLATES_FILE_PATH);
 
         Set<String> classNames = readTemplateClassNamesFromFiles();
-        this.registeredClassNames = classNames;
 
         List<TemplateMetadata> templates = classNames.stream()
                 .map(this::loadAndBuildMetadata)
@@ -82,26 +87,69 @@ public class FileTemplateDiscoverer implements ChangeTemplateDiscoverer {
     }
 
     /**
-     * Returns the set of class names registered in template files.
-     * This is used by the orchestrator to check for unregistered local templates.
-     *
-     * @return set of fully qualified class names from template files
-     */
-    public Set<String> getRegisteredClassNames() {
-        if (registeredClassNames == null) {
-            registeredClassNames = readTemplateClassNamesFromFiles();
-        }
-        return registeredClassNames;
-    }
-
-    /**
      * Reads all template class names from META-INF/flamingock/templates files.
+     *
+     * <p>Uses two strategies:
+     * <ol>
+     *   <li>The annotation processing Filer API ({@code StandardLocation.CLASS_PATH}),
+     *       which sees the compilation classpath including dependency JARs and the
+     *       project's own main output.</li>
+     *   <li>The thread context classloader as a fallback.</li>
+     * </ol>
      *
      * @return set of fully qualified class names
      */
     private Set<String> readTemplateClassNamesFromFiles() {
         Set<String> classNames = new HashSet<>();
 
+        // Strategy 1: Use Filer API to read from the compilation classpath.
+        // This is the reliable way to access resources from dependencies and the
+        // project's own main classes during annotation processing.
+        classNames.addAll(readClassNamesViaFiler());
+
+        // Strategy 2: Fall back to classloader for any additional entries.
+        classNames.addAll(readClassNamesViaClassLoader());
+
+        return classNames;
+    }
+
+    /**
+     * Reads template class names via the annotation processing Filer API.
+     *
+     * @return set of class names found via Filer, or empty set on failure
+     */
+    private Set<String> readClassNamesViaFiler() {
+        Set<String> classNames = new HashSet<>();
+        if (processingEnv == null) {
+            return classNames;
+        }
+        try {
+            FileObject resource = processingEnv.getFiler()
+                    .getResource(StandardLocation.CLASS_PATH, "", TEMPLATES_FILE_PATH);
+            try (InputStream is = resource.openInputStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (!line.isEmpty() && !line.startsWith("#")) {
+                        classNames.add(line);
+                    }
+                }
+            }
+            logger.verbose("Found " + classNames.size() + " template class names via Filer API");
+        } catch (Exception e) {
+            logger.verbose("No templates found via Filer API: " + e.getMessage());
+        }
+        return classNames;
+    }
+
+    /**
+     * Reads template class names via the classloader.
+     *
+     * @return set of class names found via classloader
+     */
+    private Set<String> readClassNamesViaClassLoader() {
+        Set<String> classNames = new HashSet<>();
         try {
             Enumeration<URL> resources = classLoader.getResources(TEMPLATES_FILE_PATH);
             while (resources.hasMoreElements()) {
@@ -111,7 +159,6 @@ public class FileTemplateDiscoverer implements ChangeTemplateDiscoverer {
         } catch (IOException e) {
             logger.warn("Failed to read template files: " + e.getMessage());
         }
-
         return classNames;
     }
 
@@ -145,10 +192,35 @@ public class FileTemplateDiscoverer implements ChangeTemplateDiscoverer {
     /**
      * Loads a class and builds TemplateMetadata from its @ChangeTemplate annotation.
      *
+     * <p>Uses two strategies:
+     * <ol>
+     *   <li>Reflective class loading via {@code Class.forName()}</li>
+     *   <li>Annotation processing mirror API via {@code Elements.getTypeElement()},
+     *       which can resolve classes on the compilation classpath even when the
+     *       annotation processor's classloader cannot load them</li>
+     * </ol>
+     *
      * @param className the fully qualified class name
      * @return the template metadata, or null if the class cannot be loaded or lacks annotation
      */
     private TemplateMetadata loadAndBuildMetadata(String className) {
+        // Strategy 1: Try reflective class loading
+        TemplateMetadata result = loadViaReflection(className);
+        if (result != null) {
+            return result;
+        }
+
+        // Strategy 2: Try annotation processing mirror API
+        result = loadViaMirrorApi(className);
+        if (result != null) {
+            return result;
+        }
+
+        logger.warn("Template class not found: " + className);
+        return null;
+    }
+
+    private TemplateMetadata loadViaReflection(String className) {
         try {
             Class<?> clazz = Class.forName(className, false, classLoader);
             ChangeTemplate annotation = clazz.getAnnotation(ChangeTemplate.class);
@@ -158,17 +230,36 @@ public class FileTemplateDiscoverer implements ChangeTemplateDiscoverer {
                 return null;
             }
 
-            String id = annotation.id();
-            boolean multiStep = annotation.multiStep();
-
-            logger.verbose("  Found template: " + id + " (" + className + ")");
-
-            return new TemplateMetadata(id, multiStep, className);
+            logger.verbose("  Found template via reflection: " + annotation.id() + " (" + className + ")");
+            return new TemplateMetadata(annotation.id(), annotation.multiStep(), className, true);
         } catch (ClassNotFoundException e) {
-            logger.warn("Template class not found: " + className);
             return null;
         } catch (Exception e) {
-            logger.warn("Failed to load template class " + className + ": " + e.getMessage());
+            logger.verbose("Failed to load template class via reflection " + className + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    private TemplateMetadata loadViaMirrorApi(String className) {
+        if (processingEnv == null) {
+            return null;
+        }
+        try {
+            TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(className);
+            if (typeElement == null) {
+                return null;
+            }
+
+            ChangeTemplate annotation = typeElement.getAnnotation(ChangeTemplate.class);
+            if (annotation == null) {
+                logger.warn("Class " + className + " in templates file is missing @ChangeTemplate annotation");
+                return null;
+            }
+
+            logger.verbose("  Found template via mirror API: " + annotation.id() + " (" + className + ")");
+            return new TemplateMetadata(annotation.id(), annotation.multiStep(), className, true);
+        } catch (Exception e) {
+            logger.verbose("Failed to load template class via mirror API " + className + ": " + e.getMessage());
             return null;
         }
     }
