@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.discover;
+package io.flamingock.internal.common.core.processor;
 
-import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
 import javax.annotation.processing.RoundEnvironment;
-import java.util.Collection;
-import java.util.Map;
 
-public interface ChangeDiscoverer {
+public interface AnnotationProcessorPlugin {
 
-    //TODO: move configuration properties to another interface
-    Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger, Map<String, String> properties);
+    void initialize(RoundEnvironment roundEnv, LoggerPreProcessor logger);
 }

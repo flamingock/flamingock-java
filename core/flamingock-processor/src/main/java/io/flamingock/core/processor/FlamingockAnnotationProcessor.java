@@ -22,6 +22,7 @@ import io.flamingock.api.annotations.FlamingockCliBuilder;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.PathResolver;
+import io.flamingock.core.processor.util.PluginFinder;
 import io.flamingock.core.processor.util.ProjectRootDetector;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -30,6 +31,8 @@ import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
+import io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin;
+import io.flamingock.internal.common.core.processor.ConfigurationPropertiesProvider;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.common.core.util.Serializer;
@@ -207,9 +210,17 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger, processingEnv);
         EnableFlamingock flamingockAnnotation = annotationFinder.getPipelineAnnotation()
                 .orElseThrow(() -> new RuntimeException("@EnableFlamingock annotation is mandatory. Please annotate a class with @EnableFlamingock to configure the pipeline."));
-        //TODO: get configuration properties from another interface
+
+        // Find plugins and initialize
+        List<AnnotationProcessorPlugin> plugins = PluginFinder.findAnnotationProcessorPlugins();
+        plugins.forEach(p -> p.initialize(roundEnv, logger));
+
+        // Process plugins (ChangeDiscoverer)
+        Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges(plugins);
+
+        // Process plugins (ConfigurationPropertiesProvider)
         Map<String, String> properties = new HashMap<>();
-        Collection<CodePreviewChange> allChanges = annotationFinder.findAnnotatedChanges(properties);
+        processConfigurationPropertiesPlugins(plugins, properties, roundEnv, logger);
 
         // Find @FlamingockCliBuilder annotated method
         Optional<BuilderProviderInfo> builderProvider = annotationFinder.findBuilderProvider();
@@ -249,6 +260,21 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
         hasProcessed = true;
         return true;
+    }
+
+    private void processConfigurationPropertiesPlugins(List<AnnotationProcessorPlugin> plugins,
+                                                       Map<String, String> properties,
+                                                       RoundEnvironment roundEnv,
+                                                       LoggerPreProcessor logger) {
+        // Process all plugins that implements ConfigurationPropertiesProvider interfaces, to get custom properties
+        // and finally add them to 'properties' map.
+        plugins.stream()
+                .filter(p -> p instanceof ConfigurationPropertiesProvider)
+                .map(p -> (ConfigurationPropertiesProvider)p)
+                .map(p -> p.getConfigurationProperties(roundEnv, logger))
+                .flatMap(m -> m.entrySet().stream())
+                .forEach(e -> properties.put(e.getKey(), e.getValue()));
+
     }
 
     private Map<String, List<CodePreviewChange>> getCodeChangesMapByPackage(Collection<CodePreviewChange> changes) {
