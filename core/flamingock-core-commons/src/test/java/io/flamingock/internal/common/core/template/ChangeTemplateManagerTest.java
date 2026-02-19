@@ -24,7 +24,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,7 +46,7 @@ class ChangeTemplateManagerTest {
     }
 
     // Test template for unit tests
-    @ChangeTemplate
+    @ChangeTemplate(id = "UnitTestTemplate")
     public static class UnitTestTemplate extends AbstractChangeTemplate<Void, String, String> {
         public UnitTestTemplate() {
             super();
@@ -57,7 +59,7 @@ class ChangeTemplateManagerTest {
     }
 
     // Second test template for multiple registration tests
-    @ChangeTemplate
+    @ChangeTemplate(id = "SecondUnitTestTemplate")
     public static class SecondUnitTestTemplate extends AbstractChangeTemplate<Void, String, String> {
         public SecondUnitTestTemplate() {
             super();
@@ -70,7 +72,7 @@ class ChangeTemplateManagerTest {
     }
 
     // Third test template for overwrite tests
-    @ChangeTemplate
+    @ChangeTemplate(id = "OverwriteTestTemplate")
     public static class OverwriteTestTemplate extends AbstractChangeTemplate<Void, Integer, Integer> {
         public OverwriteTestTemplate() {
             super();
@@ -104,18 +106,6 @@ class ChangeTemplateManagerTest {
                     ChangeTemplateManager.getTemplate("UnitTestTemplate");
 
             assertTrue(result.isPresent(), "Should return present Optional for registered template");
-            assertEquals(UnitTestTemplate.class, result.get());
-        }
-
-        @Test
-        @DisplayName("Should return template by simple class name")
-        void shouldReturnTemplateBySimpleClassName() {
-            ChangeTemplateManager.addTemplate(UnitTestTemplate.class.getSimpleName(), UnitTestTemplate.class);
-
-            Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> result =
-                    ChangeTemplateManager.getTemplate(UnitTestTemplate.class.getSimpleName());
-
-            assertTrue(result.isPresent());
             assertEquals(UnitTestTemplate.class, result.get());
         }
 
@@ -177,30 +167,6 @@ class ChangeTemplateManagerTest {
             assertEquals(OverwriteTestTemplate.class, result.get(),
                     "Should have overwritten with the new template class");
         }
-
-        @Test
-        @DisplayName("Should handle null template name gracefully")
-        void shouldHandleNullTemplateNameGracefully() {
-            // This tests that the HashMap can accept null keys (it can)
-            // The template manager doesn't explicitly validate for null
-            assertDoesNotThrow(() ->
-                    ChangeTemplateManager.addTemplate(null, UnitTestTemplate.class));
-        }
-
-        @Test
-        @DisplayName("Should handle null template class gracefully")
-        void shouldHandleNullTemplateClassGracefully() {
-            // This tests that the HashMap can accept null values (it can)
-            // The template manager doesn't explicitly validate for null
-            assertDoesNotThrow(() ->
-                    ChangeTemplateManager.addTemplate("NullTemplate", null));
-
-            // Getting a null-valued entry returns empty Optional due to Optional.ofNullable
-            Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> result =
-                    ChangeTemplateManager.getTemplate("NullTemplate");
-
-            assertFalse(result.isPresent(), "Should return empty Optional for null template class");
-        }
     }
 
     @Nested
@@ -230,129 +196,135 @@ class ChangeTemplateManagerTest {
         void shouldBeSafeToClearEmptyRegistry() {
             assertDoesNotThrow(() -> ChangeTemplateManager.clearTemplates());
         }
-    }
-
-    @Nested
-    @DisplayName("loadTemplates tests (SPI integration)")
-    class LoadTemplatesTests {
 
         @Test
-        @DisplayName("Should load templates from SPI and register by simple class name")
-        void shouldLoadTemplatesFromSPIAndRegisterBySimpleClassName() {
-            // Load templates via SPI
-            ChangeTemplateManager.loadTemplates();
+        @DisplayName("Should reset initialized flag when clearing")
+        void shouldResetInitializedFlagWhenClearing() {
+            // Initialize with some templates
+            List<TemplateMetadata> metadataList = Collections.singletonList(
+                    new TemplateMetadata("UnitTestTemplate", false, UnitTestTemplate.class.getName())
+            );
+            ChangeTemplateManager.initializeFromMetadata(metadataList);
+            assertTrue(ChangeTemplateManager.isInitialized());
 
-            // Verify that templates from SPI are loaded
-            // The actual templates depend on what's registered in META-INF/services
-            Collection<io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templates =
-                    ChangeTemplateManager.getTemplates();
+            // Clear templates
+            ChangeTemplateManager.clearTemplates();
 
-            // There should be templates discovered via SPI
-            // (SPITestTemplate, SPITestSteppableTemplate from direct SPI,
-            //  FactoryProvidedTemplate from ChangeTemplateFactory)
-            assertTrue(templates.size() >= 3,
-                    "Should discover at least 3 templates from SPI");
-        }
-
-        @Test
-        @DisplayName("Should register direct SPI templates")
-        void shouldRegisterDirectSPITemplates() {
-            ChangeTemplateManager.loadTemplates();
-
-            // Verify SPITestTemplate is registered (from direct SPI)
-            Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> result =
-                    ChangeTemplateManager.getTemplate("SPITestTemplate");
-
-            assertTrue(result.isPresent(), "SPITestTemplate should be registered via SPI");
-        }
-
-        @Test
-        @DisplayName("Should register steppable SPI templates")
-        void shouldRegisterSteppableSPITemplates() {
-            ChangeTemplateManager.loadTemplates();
-
-            // Verify SPITestSteppableTemplate is registered (from direct SPI)
-            Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> result =
-                    ChangeTemplateManager.getTemplate("SPITestSteppableTemplate");
-
-            assertTrue(result.isPresent(), "SPITestSteppableTemplate should be registered via SPI");
-        }
-
-        @Test
-        @DisplayName("Should register factory-provided templates")
-        void shouldRegisterFactoryProvidedTemplates() {
-            ChangeTemplateManager.loadTemplates();
-
-            // Verify FactoryProvidedTemplate is registered (from ChangeTemplateFactory)
-            Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> result =
-                    ChangeTemplateManager.getTemplate("FactoryProvidedTemplate");
-
-            assertTrue(result.isPresent(),
-                    "FactoryProvidedTemplate should be registered via ChangeTemplateFactory SPI");
+            // Should be able to reinitialize
+            assertFalse(ChangeTemplateManager.isInitialized());
         }
     }
 
     @Nested
-    @DisplayName("getTemplates tests (SPI discovery)")
-    class GetTemplatesTests {
+    @DisplayName("initializeFromMetadata tests")
+    class InitializeFromMetadataTests {
 
         @Test
-        @DisplayName("Should return all SPI-discovered templates")
-        void shouldReturnAllSPIDiscoveredTemplates() {
-            Collection<io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templates =
-                    ChangeTemplateManager.getTemplates();
+        @DisplayName("Should initialize templates from metadata")
+        void shouldInitializeTemplatesFromMetadata() {
+            List<TemplateMetadata> metadataList = Arrays.asList(
+                    new TemplateMetadata("UnitTestTemplate", false, UnitTestTemplate.class.getName()),
+                    new TemplateMetadata("SecondUnitTestTemplate", false, SecondUnitTestTemplate.class.getName())
+            );
 
-            assertNotNull(templates);
-            assertTrue(templates.size() >= 3,
-                    "Should discover at least 3 templates from SPI");
+            ChangeTemplateManager.initializeFromMetadata(metadataList);
+
+            assertTrue(ChangeTemplateManager.isInitialized());
+            assertTrue(ChangeTemplateManager.getTemplate("UnitTestTemplate").isPresent());
+            assertTrue(ChangeTemplateManager.getTemplate("SecondUnitTestTemplate").isPresent());
+            assertEquals(UnitTestTemplate.class, ChangeTemplateManager.getTemplate("UnitTestTemplate").get());
+            assertEquals(SecondUnitTestTemplate.class, ChangeTemplateManager.getTemplate("SecondUnitTestTemplate").get());
         }
 
         @Test
-        @DisplayName("Should include direct SPI implementations")
-        void shouldIncludeDirectSPIImplementations() {
-            Collection<io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templates =
-                    ChangeTemplateManager.getTemplates();
+        @DisplayName("Should handle empty metadata list")
+        void shouldHandleEmptyMetadataList() {
+            ChangeTemplateManager.initializeFromMetadata(Collections.emptyList());
 
-            boolean foundSPITestTemplate = templates.stream()
-                    .anyMatch(t -> t.getClass().getSimpleName().equals("SPITestTemplate"));
-            boolean foundSPITestSteppableTemplate = templates.stream()
-                    .anyMatch(t -> t.getClass().getSimpleName().equals("SPITestSteppableTemplate"));
-
-            assertTrue(foundSPITestTemplate, "Should include SPITestTemplate from direct SPI");
-            assertTrue(foundSPITestSteppableTemplate,
-                    "Should include SPITestSteppableTemplate from direct SPI");
+            assertTrue(ChangeTemplateManager.isInitialized());
+            assertFalse(ChangeTemplateManager.getTemplate("UnitTestTemplate").isPresent());
         }
 
         @Test
-        @DisplayName("Should include factory-provided templates")
-        void shouldIncludeFactoryProvidedTemplates() {
-            Collection<io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templates =
-                    ChangeTemplateManager.getTemplates();
+        @DisplayName("Should handle null metadata list")
+        void shouldHandleNullMetadataList() {
+            ChangeTemplateManager.initializeFromMetadata(null);
 
-            boolean foundFactoryProvidedTemplate = templates.stream()
-                    .anyMatch(t -> t.getClass().getSimpleName().equals("FactoryProvidedTemplate"));
-
-            assertTrue(foundFactoryProvidedTemplate,
-                    "Should include FactoryProvidedTemplate from ChangeTemplateFactory");
+            assertTrue(ChangeTemplateManager.isInitialized());
         }
 
         @Test
-        @DisplayName("Should create new instances on each call")
-        void shouldCreateNewInstancesOnEachCall() {
-            Collection<io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templates1 =
-                    ChangeTemplateManager.getTemplates();
-            Collection<io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templates2 =
-                    ChangeTemplateManager.getTemplates();
+        @DisplayName("Should not reinitialize if already initialized")
+        void shouldNotReinitializeIfAlreadyInitialized() {
+            List<TemplateMetadata> firstMetadata = Collections.singletonList(
+                    new TemplateMetadata("UnitTestTemplate", false, UnitTestTemplate.class.getName())
+            );
+            List<TemplateMetadata> secondMetadata = Collections.singletonList(
+                    new TemplateMetadata("SecondUnitTestTemplate", false, SecondUnitTestTemplate.class.getName())
+            );
 
-            // The collections should contain new instances
-            // We verify this by checking that the template instances are not the same objects
-            io.flamingock.api.template.ChangeTemplate<?, ?, ?> first1 = templates1.iterator().next();
-            io.flamingock.api.template.ChangeTemplate<?, ?, ?> first2 = templates2.iterator().next();
+            ChangeTemplateManager.initializeFromMetadata(firstMetadata);
+            ChangeTemplateManager.initializeFromMetadata(secondMetadata);
 
-            // ServiceLoader creates new instances each time, so they should not be the same object
-            // (though they may be of the same class)
-            assertNotSame(first1, first2,
-                    "Each call to getTemplates() should create new instances");
+            // Only first template should be present (second initialization was skipped)
+            assertTrue(ChangeTemplateManager.getTemplate("UnitTestTemplate").isPresent());
+            assertFalse(ChangeTemplateManager.getTemplate("SecondUnitTestTemplate").isPresent());
+        }
+
+        @Test
+        @DisplayName("Should throw exception for non-existent class")
+        void shouldThrowExceptionForNonExistentClass() {
+            List<TemplateMetadata> metadataList = Collections.singletonList(
+                    new TemplateMetadata("NonExistent", false, "com.example.NonExistentClass")
+            );
+
+            assertThrows(RuntimeException.class, () ->
+                    ChangeTemplateManager.initializeFromMetadata(metadataList));
+        }
+    }
+
+    @Nested
+    @DisplayName("getTemplateMetadata tests")
+    class GetTemplateMetadataTests {
+
+        @Test
+        @DisplayName("Should return metadata when template is registered")
+        void shouldReturnMetadataWhenTemplateIsRegistered() {
+            TemplateMetadata metadata = new TemplateMetadata("UnitTestTemplate", true, UnitTestTemplate.class.getName());
+            ChangeTemplateManager.addTemplate("UnitTestTemplate", UnitTestTemplate.class, metadata);
+
+            Optional<TemplateMetadata> result = ChangeTemplateManager.getTemplateMetadata("UnitTestTemplate");
+
+            assertTrue(result.isPresent());
+            assertEquals("UnitTestTemplate", result.get().getId());
+            assertTrue(result.get().isMultiStep());
+            assertEquals(UnitTestTemplate.class.getName(), result.get().getFullyQualifiedClassName());
+        }
+
+        @Test
+        @DisplayName("Should return empty Optional for non-existent template")
+        void shouldReturnEmptyOptionalForNonExistentTemplate() {
+            Optional<TemplateMetadata> result = ChangeTemplateManager.getTemplateMetadata("NonExistent");
+
+            assertFalse(result.isPresent());
+        }
+    }
+
+    @Nested
+    @DisplayName("isInitialized tests")
+    class IsInitializedTests {
+
+        @Test
+        @DisplayName("Should return false before initialization")
+        void shouldReturnFalseBeforeInitialization() {
+            assertFalse(ChangeTemplateManager.isInitialized());
+        }
+
+        @Test
+        @DisplayName("Should return true after initialization")
+        void shouldReturnTrueAfterInitialization() {
+            ChangeTemplateManager.initializeFromMetadata(Collections.emptyList());
+            assertTrue(ChangeTemplateManager.isInitialized());
         }
     }
 }

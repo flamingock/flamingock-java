@@ -80,7 +80,7 @@ public class AuditEntryTestFactory {
                 "test-stage",                  // stageId
                 changeId,                      // taskId
                 "test-author",                 // author
-                LocalDateTime.now(),           // timestamp
+                LocalDateTime.now().minusSeconds(1),  // timestamp (earlier to simulate previous execution)
                 status,                        // state
                 AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
@@ -110,7 +110,7 @@ public class AuditEntryTestFactory {
                 "test-stage",                  // stageId
                 changeId,                      // taskId
                 "test-author",                 // author
-                LocalDateTime.now(),           // timestamp
+                LocalDateTime.now().minusSeconds(1),  // timestamp (earlier to simulate previous execution)
                 status,                        // state
                 AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
@@ -219,7 +219,7 @@ public class AuditEntryTestFactory {
                 "test-stage",                  // stageId
                 changeId,                      // taskId
                 "test-author",                 // author
-                LocalDateTime.now(),           // timestamp
+                LocalDateTime.now().minusSeconds(1),  // timestamp (earlier to simulate previous execution)
                 status,                        // state
                 AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
@@ -248,7 +248,7 @@ public class AuditEntryTestFactory {
                 "test-stage",                  // stageId
                 changeId,                      // taskId
                 "test-author",                 // author
-                LocalDateTime.now(),           // timestamp
+                LocalDateTime.now().minusSeconds(1),  // timestamp (earlier to simulate previous execution)
                 status,                        // state
                 AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className
@@ -282,7 +282,7 @@ public class AuditEntryTestFactory {
                 "test-stage",                  // stageId
                 changeId,                      // taskId
                 "test-author",                 // author
-                LocalDateTime.now(),           // timestamp
+                LocalDateTime.now().minusSeconds(1),  // timestamp (earlier to simulate previous execution)
                 status,                        // state
                 AuditEntry.ChangeType.STANDARD_CODE,  // type
                 "TestChangeClass",             // className

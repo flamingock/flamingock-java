@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,12 +48,12 @@ public class TemplateValidator {
      */
     public enum TemplateType {
         /**
-         * Template annotated with {@code @ChangeTemplate(steppable = false)} or without annotation.
+         * Template annotated with {@code @ChangeTemplate(multiStep = false)} or without annotation.
          * Uses apply/rollback fields.
          */
         SIMPLE,
         /**
-         * Template annotated with {@code @ChangeTemplate(steppable = true)}.
+         * Template annotated with {@code @ChangeTemplate(multiStep = true)}.
          * Uses steps field.
          */
         STEPPABLE,
@@ -65,10 +66,30 @@ public class TemplateValidator {
     private static final String ENTITY_TYPE = "template-change";
 
     /**
-     * Creates a new TemplateValidator and ensures templates are loaded.
+     * Map of template ID to metadata for compile-time validation.
+     */
+    private final Map<String, TemplateMetadata> templateMetadataMap;
+
+    /**
+     * Creates a TemplateValidator with templates from discovery result.
+     *
+     * @param templates list of discovered template metadata
+     */
+    public TemplateValidator(List<TemplateMetadata> templates) {
+        this.templateMetadataMap = new HashMap<>();
+        if (templates != null) {
+            for (TemplateMetadata meta : templates) {
+                templateMetadataMap.put(meta.getId(), meta);
+            }
+        }
+    }
+
+    /**
+     * Creates a TemplateValidator using ChangeTemplateManager (for runtime validation).
+     * This constructor is used when templates have already been initialized.
      */
     public TemplateValidator() {
-        ChangeTemplateManager.loadTemplates();
+        this.templateMetadataMap = null; // Will use ChangeTemplateManager
     }
 
     /**
@@ -88,19 +109,11 @@ public class TemplateValidator {
             return result;
         }
 
-        Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> templateClassOpt = ChangeTemplateManager.getTemplate(templateName);
+        TemplateType type = getTemplateType(templateName, changeId, result);
 
-        if (!templateClassOpt.isPresent()) {
-            result.add(new ValidationError(
-                    "Template '" + templateName + "' not found. Ensure the template is registered via SPI.",
-                    changeId,
-                    ENTITY_TYPE
-            ));
+        if (result.hasErrors()) {
             return result;
         }
-
-        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = templateClassOpt.get();
-        TemplateType type = getTemplateType(templateClass);
 
         switch (type) {
             case SIMPLE:
@@ -118,17 +131,64 @@ public class TemplateValidator {
     }
 
     /**
+     * Determines the template type based on metadata or runtime lookup.
+     *
+     * @param templateId the template identifier (ID, not class name)
+     * @param changeId   the change ID for error reporting
+     * @param result     the validation result to add errors to
+     * @return the TemplateType
+     */
+    private TemplateType getTemplateType(String templateId, String changeId, ValidationResult result) {
+        // Try compile-time metadata first
+        if (templateMetadataMap != null) {
+            TemplateMetadata meta = templateMetadataMap.get(templateId);
+            if (meta != null) {
+                return meta.isMultiStep() ? TemplateType.STEPPABLE : TemplateType.SIMPLE;
+            }
+            // Template not found in compile-time metadata
+            result.add(new ValidationError(
+                    "Template '" + templateId + "' not found. Ensure the template class has @ChangeTemplate(id = \"" +
+                            templateId + "\") annotation.",
+                    changeId,
+                    ENTITY_TYPE
+            ));
+            return TemplateType.UNKNOWN;
+        }
+
+        // Fall back to runtime lookup via ChangeTemplateManager
+        Optional<TemplateMetadata> metaOpt = ChangeTemplateManager.getTemplateMetadata(templateId);
+        if (metaOpt.isPresent()) {
+            return metaOpt.get().isMultiStep() ? TemplateType.STEPPABLE : TemplateType.SIMPLE;
+        }
+
+        // Try class lookup as fallback for old-style templates
+        Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> templateClassOpt =
+                ChangeTemplateManager.getTemplate(templateId);
+
+        if (!templateClassOpt.isPresent()) {
+            result.add(new ValidationError(
+                    "Template '" + templateId + "' not found. Ensure the template is registered.",
+                    changeId,
+                    ENTITY_TYPE
+            ));
+            return TemplateType.UNKNOWN;
+        }
+
+        return getTemplateTypeFromClass(templateClassOpt.get());
+    }
+
+    /**
      * Determines the template type based on the {@link ChangeTemplate} annotation.
      *
      * @param templateClass the template class to check
      * @return the TemplateType (SIMPLE or STEPPABLE). Returns SIMPLE by default if annotation is missing.
      */
-    public TemplateType getTemplateType(Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass) {
+    public TemplateType getTemplateTypeFromClass(Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass) {
         ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
         if (annotation != null && annotation.multiStep()) {
             return TemplateType.STEPPABLE;
         }
-        // Default to SIMPLE (including when annotation is missing or steppable=false)
+        // Default to SIMPLE (including when annotation is missing or multiStep=false)
         return TemplateType.SIMPLE;
     }
 

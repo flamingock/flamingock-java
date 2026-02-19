@@ -127,7 +127,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     }
 
-    @ChangeTemplate
+    @ChangeTemplate(id = "test-template-simulate")
     public static abstract class TemplateSimulate extends AbstractChangeTemplate<Void, Object, Object> {
         public TemplateSimulate() {
             super();

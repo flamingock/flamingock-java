@@ -24,7 +24,7 @@ import io.flamingock.api.template.AbstractChangeTemplate;
  * This template is registered via META-INF/services/io.flamingock.api.template.ChangeTemplate
  * and is used to verify that ChangeTemplateManager correctly discovers templates via ServiceLoader.
  */
-@ChangeTemplate
+@ChangeTemplate(id = "SPITestTemplate")
 public class SPITestTemplate extends AbstractChangeTemplate<Void, String, String> {
 
     public SPITestTemplate() {

@@ -16,7 +16,9 @@
 package io.flamingock.internal.common.core.metadata;
 
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.template.TemplateMetadata;
 
+import java.util.List;
 import java.util.Map;
 
 public class FlamingockMetadata {
@@ -25,6 +27,7 @@ public class FlamingockMetadata {
     private String configFile;
     private Map<String, String> properties;
     private BuilderProviderInfo builderProvider;
+    private List<TemplateMetadata> templates;
 
     public FlamingockMetadata() {
     }
@@ -75,11 +78,20 @@ public class FlamingockMetadata {
         return builderProvider != null && builderProvider.isValid();
     }
 
+    public List<TemplateMetadata> getTemplates() {
+        return templates;
+    }
+
+    public void setTemplates(List<TemplateMetadata> templates) {
+        this.templates = templates;
+    }
+
     @Override
     public String toString() {
         return "FlamingockMetadata{" + "pipeline=" + pipeline +
                 ", configFile='" + configFile + '\'' +
                 ", builderProvider=" + builderProvider +
+                ", templates=" + templates +
                 '}';
     }
 }

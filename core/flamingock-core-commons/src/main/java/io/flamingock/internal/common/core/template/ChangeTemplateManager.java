@@ -20,45 +20,43 @@ import org.jetbrains.annotations.TestOnly;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 
 /**
- * Manages the discovery, registration, and retrieval of {@link ChangeTemplate} implementations.
- * <p>
- * This class serves two primary purposes in different contexts:
+ * Manages the registration and retrieval of {@link ChangeTemplate} implementations.
+ *
+ * <p>This class serves as a central registry for templates, which are initialized from
+ * {@link TemplateMetadata} discovered during annotation processing. Templates are
+ * indexed by their unique ID (from {@code @ChangeTemplate.id()}).
+ *
+ * <p>The initialization flow:
  * <ol>
- *   <li><strong>GraalVM Build-time Context</strong> - The {@link #getTemplates()} method is called by 
- *       the GraalVM RegistrationFeature to discover all available templates. For each template, 
- *       the feature registers both the template class itself and all classes returned by 
- *       {@link ChangeTemplate#getReflectiveClasses()} for reflection in native images.</li>
- *   <li><strong>Runtime Context</strong> - The {@link #loadTemplates()} method is called during 
- *       Flamingock initialization to populate the internal registry with all available templates 
- *       for use during execution.</li>
+ *   <li>Annotation processor discovers templates and serializes metadata to FlamingockMetadata</li>
+ *   <li>At runtime, {@link #initializeFromMetadata(List)} loads classes from metadata</li>
+ *   <li>Templates are looked up by ID via {@link #getTemplate(String)}</li>
  * </ol>
- * <p>
- * Templates are discovered through Java's {@link ServiceLoader} mechanism from two sources:
- * <ul>
- *   <li>Direct implementations of {@link ChangeTemplate} registered via SPI</li>
- *   <li>Templates provided by {@link ChangeTemplateFactory} implementations registered via SPI</li>
- * </ul>
- * <p>
- * <strong>Thread Safety Note:</strong> This class is not thread-safe during initialization. The 
- * {@link #loadTemplates()} method modifies static state and is intended to be called only once 
- * during application startup from a single thread. After initialization, the template registry 
- * is effectively read-only and can be safely accessed concurrently.
+ *
+ * <p><strong>Thread Safety Note:</strong> This class is not thread-safe during initialization.
+ * The {@link #initializeFromMetadata(List)} method modifies static state and should be called
+ * only once during application startup. After initialization, the registry is read-only and
+ * can be safely accessed concurrently.
  */
-
 public final class ChangeTemplateManager {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("TemplateManager");
 
-    private static final Map<String, Class<? extends ChangeTemplate<?, ?, ?>>> templates = new HashMap<>();
+    /**
+     * Internal storage for template entries, indexed by template ID.
+     */
+    private static final Map<String, TemplateEntry> templates = new HashMap<>();
+
+    /**
+     * Flag to track if templates have been initialized.
+     */
+    private static boolean initialized = false;
 
     /**
      * Private constructor to prevent instantiation of this utility class.
@@ -66,108 +64,150 @@ public final class ChangeTemplateManager {
     private ChangeTemplateManager() {
     }
 
-
     /**
-     * Loads and registers all available templates from the classpath into the internal registry.
-     * <p>
-     * This method is intended to be called once during Flamingock runtime initialization.
-     * It discovers all templates via {@link #getTemplates()} and registers them in the internal
-     * registry, indexed by their simple class name.
-     * <p>
-     * This method is not thread-safe and should be called from a single thread during application
-     * startup before any template lookups are performed.
+     * Initializes the template registry from metadata discovered during annotation processing.
+     *
+     * <p>This method loads template classes using their fully qualified class names from metadata
+     * and registers them by their unique ID. It should be called once during Flamingock
+     * initialization before any template lookups are performed.
+     *
+     * <p>If templates are already initialized, this method returns immediately.
+     *
+     * @param templateMetadataList list of template metadata from annotation processing
+     * @throws RuntimeException if a template class cannot be loaded
      */
     @SuppressWarnings("unchecked")
-    public static void loadTemplates() {
-        logger.debug("Registering templates");
-        getTemplates().forEach(template -> {
-            Class<? extends ChangeTemplate<?, ?, ?>> templateClass = (Class<? extends ChangeTemplate<?, ?, ?>>) template.getClass();
-            templates.put(templateClass.getSimpleName(), templateClass);
-            logger.debug("registered template: {}", templateClass.getSimpleName());
-        });
+    public static void initializeFromMetadata(List<TemplateMetadata> templateMetadataList) {
+        if (initialized) {
+            logger.debug("Templates already initialized, skipping");
+            return;
+        }
 
+        if (templateMetadataList == null || templateMetadataList.isEmpty()) {
+            logger.debug("No templates to initialize");
+            initialized = true;
+            return;
+        }
+
+        logger.debug("Initializing templates from metadata");
+
+        for (TemplateMetadata meta : templateMetadataList) {
+            try {
+                Class<?> clazz = Class.forName(meta.getFullyQualifiedClassName());
+                Class<? extends ChangeTemplate<?, ?, ?>> templateClass =
+                        (Class<? extends ChangeTemplate<?, ?, ?>>) clazz;
+
+                TemplateEntry entry = new TemplateEntry(templateClass, meta);
+
+                // Register by ID only
+                templates.put(meta.getId(), entry);
+                logger.debug("Registered template: {} -> {}", meta.getId(), meta.getFullyQualifiedClassName());
+
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Template class not found: " + meta.getFullyQualifiedClassName(), e);
+            } catch (ClassCastException e) {
+                throw new RuntimeException("Class " + meta.getFullyQualifiedClassName() +
+                        " does not implement ChangeTemplate", e);
+            }
+        }
+
+        initialized = true;
+        logger.debug("Initialized {} templates", templates.size());
     }
 
     /**
-     * Discovers and returns all available templates from the classpath.
-     * <p>
-     * This method is used in two contexts:
-     * <ul>
-     *   <li>By the GraalVM RegistrationFeature during build time to discover templates that need
-     *       reflection registration for native image generation</li>
-     *   <li>By the {@link #loadTemplates()} method during runtime initialization to populate
-     *       the internal template registry</li>
-     * </ul>
-     * <p>
-     * Templates are discovered from two sources:
-     * <ol>
-     *   <li>Direct implementations of {@link ChangeTemplate} registered via SPI</li>
-     *   <li>Templates provided by {@link ChangeTemplateFactory} implementations registered via SPI</li>
-     * </ol>
-     * <p>
-     * This method creates new instances of templates each time it's called and does not modify
-     * any internal state.
+     * Retrieves a template class by its unique ID.
      *
-     * @return A collection of all discovered template instances
+     * <p>Template IDs are defined in the {@code @ChangeTemplate.id()} annotation
+     * and used in YAML files to reference templates (e.g., {@code template: sql}).
+     *
+     * @param templateId the unique template identifier
+     * @return an Optional containing the template class if found, or empty if not found
      */
-    public static Collection<ChangeTemplate<?, ?, ?>> getTemplates() {
-        logger.debug("Retrieving ChangeTemplates");
-
-        //Loads the ChangeTemplates directly registered with SPI
-        List<ChangeTemplate<?, ?, ?>> templateClasses = new ArrayList<>();
-        for (ChangeTemplate<?, ?, ?> template : ServiceLoader.load(ChangeTemplate.class)) {
-            templateClasses.add(template);
-        }
-
-        //Loads the ChangeTemplates from the federated ChangeTemplateFactory, registered with SPI
-        for (ChangeTemplateFactory factory : ServiceLoader.load(ChangeTemplateFactory.class)) {
-            templateClasses.addAll(factory.getTemplates());
-        }
-        logger.debug("returning ChangeTemplates");
-
-        return templateClasses;
+    public static Optional<Class<? extends ChangeTemplate<?, ?, ?>>> getTemplate(String templateId) {
+        TemplateEntry entry = templates.get(templateId);
+        return entry != null ? Optional.of(entry.templateClass) : Optional.empty();
     }
 
+    /**
+     * Retrieves template metadata by its unique ID.
+     *
+     * @param templateId the unique template identifier
+     * @return an Optional containing the template metadata if found, or empty if not found
+     */
+    public static Optional<TemplateMetadata> getTemplateMetadata(String templateId) {
+        TemplateEntry entry = templates.get(templateId);
+        return entry != null ? Optional.of(entry.metadata) : Optional.empty();
+    }
+
+    /**
+     * Checks if the template manager has been initialized.
+     *
+     * @return true if templates have been initialized, false otherwise
+     */
+    public static boolean isInitialized() {
+        return initialized;
+    }
 
     /**
      * Adds a template to the internal registry for testing purposes.
-     * <p>
-     * This method is intended for use in test environments only to register mock or test templates.
+     *
+     * <p>This method is intended for use in test environments only to register mock or test templates.
      * It directly modifies the internal template registry and is not thread-safe.
      *
-     * @param templateName The name to register the template under (typically the simple class name)
-     * @param templateClass The template class to register
+     * @param templateId    the unique template identifier
+     * @param templateClass the template class to register
+     * @param metadata      the template metadata
      */
     @TestOnly
-    public static void addTemplate(String templateName, Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
-        templates.put(templateName, templateClass);
+    public static void addTemplate(String templateId, Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
+                                   TemplateMetadata metadata) {
+        templates.put(templateId, new TemplateEntry(templateClass, metadata));
     }
 
     /**
-     * Retrieves a template class by name from the internal registry.
-     * <p>
-     * This method is used during runtime to look up template classes by their simple name.
-     * It returns an {@link Optional} that will be empty if no template with the specified
-     * name has been registered.
-     * <p>
-     * This method is thread-safe after initialization (after {@link #loadTemplates()} has been called).
+     * Adds a template to the internal registry for testing purposes.
      *
-     * @param templateName The simple class name of the template to retrieve
-     * @return An Optional containing the template class if found, or empty if not found
+     * <p>This is a convenience overload that extracts multiStep from the @ChangeTemplate annotation.
+     *
+     * @param templateId    the unique template identifier
+     * @param templateClass the template class to register
      */
-    public static Optional<Class<? extends ChangeTemplate<?, ?, ?>>> getTemplate(String templateName) {
-        return Optional.ofNullable(templates.get(templateName));
+    @TestOnly
+    public static void addTemplate(String templateId, Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
+        // Extract multiStep from @ChangeTemplate annotation if present
+        boolean multiStep = false;
+        io.flamingock.api.annotations.ChangeTemplate annotation =
+                templateClass.getAnnotation(io.flamingock.api.annotations.ChangeTemplate.class);
+        if (annotation != null) {
+            multiStep = annotation.multiStep();
+        }
+        TemplateMetadata metadata = new TemplateMetadata(templateId, multiStep, templateClass.getName());
+        templates.put(templateId, new TemplateEntry(templateClass, metadata));
     }
 
     /**
-     * Clears all templates from the internal registry.
-     * <p>
-     * This method is intended for use in test environments only to reset the template registry
-     * between tests, ensuring test isolation. It directly modifies the internal template registry
-     * and is not thread-safe.
+     * Clears all templates from the internal registry and resets initialization state.
+     *
+     * <p>This method is intended for use in test environments only to reset the template registry
+     * between tests, ensuring test isolation.
      */
     @TestOnly
     public static void clearTemplates() {
         templates.clear();
+        initialized = false;
+    }
+
+    /**
+     * Internal class to hold template class and metadata together.
+     */
+    private static class TemplateEntry {
+        final Class<? extends ChangeTemplate<?, ?, ?>> templateClass;
+        final TemplateMetadata metadata;
+
+        TemplateEntry(Class<? extends ChangeTemplate<?, ?, ?>> templateClass, TemplateMetadata metadata) {
+            this.templateClass = templateClass;
+            this.metadata = metadata;
+        }
     }
 }

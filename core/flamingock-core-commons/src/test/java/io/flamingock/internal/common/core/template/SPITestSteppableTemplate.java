@@ -24,7 +24,7 @@ import io.flamingock.api.template.AbstractChangeTemplate;
  * This template is registered via META-INF/services/io.flamingock.api.template.ChangeTemplate
  * and is used to verify that ChangeTemplateManager correctly discovers steppable templates via ServiceLoader.
  */
-@ChangeTemplate(multiStep = true)
+@ChangeTemplate(id = "SPITestSteppableTemplate", multiStep = true)
 public class SPITestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
 
     public SPITestSteppableTemplate() {

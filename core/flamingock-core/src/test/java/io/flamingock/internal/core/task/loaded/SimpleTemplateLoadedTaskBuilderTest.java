@@ -36,7 +36,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
     private TemplateLoadedTaskBuilder builder;
 
     // Simple test template implementation using the annotation
-    @ChangeTemplate
+    @ChangeTemplate(id = "test-simple-template")
     public static class TestChangeTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestChangeTemplate() {

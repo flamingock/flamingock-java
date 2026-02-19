@@ -26,20 +26,20 @@ import java.lang.annotation.Target;
  * Marks a class as a Flamingock change template and configures its execution mode.
  *
  * <p>All template classes must extend {@link AbstractChangeTemplate} and be annotated with
- * this annotation to specify whether they process single or multiple steps.
+ * this annotation to specify their unique identifier and whether they process single or multiple steps.
  *
- * <p><b>Simple templates</b> (default, {@code steppable = false}):
+ * <p><b>Simple templates</b> (default, {@code multiStep = false}):
  * <pre>
  * id: create-users-table
- * template: SqlTemplate
+ * template: sql  # Uses the template id
  * apply: "CREATE TABLE users (id INT PRIMARY KEY)"
  * rollback: "DROP TABLE users"
  * </pre>
  *
- * <p><b>Steppable templates</b> ({@code steppable = true}) process multiple operations:
+ * <p><b>Steppable templates</b> ({@code multiStep = true}) process multiple operations:
  * <pre>
  * id: setup-orders
- * template: MongoTemplate
+ * template: mongo  # Uses the template id
  * steps:
  *   - apply: { type: createCollection, collection: orders }
  *     rollback: { type: dropCollection, collection: orders }
@@ -58,6 +58,18 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface ChangeTemplate {
+
+    /**
+     * Unique identifier for the template. Used in YAML files to reference
+     * the template (e.g., {@code template: "sql"}).
+     *
+     * <p>This is a mandatory field - all templates must have a unique identifier.
+     * The id should be short, descriptive, and use lowercase with hyphens
+     * (e.g., "sql", "mongodb", "dynamodb").
+     *
+     * @return the unique template identifier
+     */
+    String id();
 
     /**
      * When {@code true}, the template expects a {@code steps} array in YAML.

@@ -187,14 +187,19 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
     @Override
     public final Runner build() {
 
-        ChangeTemplateManager.loadTemplates();
+        FlamingockMetadata flamingockMetadata = coreConfiguration.getFlamingockMetadata();
+
+        // Initialize templates from metadata (if available)
+        if (flamingockMetadata != null && flamingockMetadata.getTemplates() != null
+                && !flamingockMetadata.getTemplates().isEmpty()) {
+            ChangeTemplateManager.initializeFromMetadata(flamingockMetadata.getTemplates());
+        }
+
         pluginManager.initialize(context);
 
         validateAuditStore();
 
         RunnerId runnerId = generateRunnerId();
-
-        FlamingockMetadata flamingockMetadata = coreConfiguration.getFlamingockMetadata();
 
         PriorityContext hierarchicalContext = buildContext(flamingockMetadata);
 

@@ -37,7 +37,7 @@ class TemplateValidatorTest {
     private TemplateValidator validator;
 
     // Test template with @ChangeTemplate (simple template)
-    @ChangeTemplate
+    @ChangeTemplate(id = "TestSimpleTemplate")
     public static class TestSimpleTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSimpleTemplate() {
             super();
@@ -49,8 +49,8 @@ class TemplateValidatorTest {
         }
     }
 
-    // Test template with @ChangeTemplate(steppable = true)
-    @ChangeTemplate(multiStep = true)
+    // Test template with @ChangeTemplate(multiStep = true)
+    @ChangeTemplate(id = "TestSteppableTemplate", multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSteppableTemplate() {
             super();
@@ -71,20 +71,20 @@ class TemplateValidatorTest {
     }
 
     @Nested
-    @DisplayName("getTemplateType tests")
-    class GetTemplateTypeTests {
+    @DisplayName("getTemplateTypeFromClass tests")
+    class GetTemplateTypeFromClassTests {
 
         @Test
-        @DisplayName("Should return SIMPLE for AbstractSimpleTemplate subclass")
-        void shouldReturnSimpleForAbstractSimpleTemplateSubclass() {
-            TemplateValidator.TemplateType type = validator.getTemplateType(TestSimpleTemplate.class);
+        @DisplayName("Should return SIMPLE for simple template class")
+        void shouldReturnSimpleForSimpleTemplateClass() {
+            TemplateValidator.TemplateType type = validator.getTemplateTypeFromClass(TestSimpleTemplate.class);
             assertEquals(TemplateValidator.TemplateType.SIMPLE, type);
         }
 
         @Test
-        @DisplayName("Should return STEPPABLE for AbstractSteppableTemplate subclass")
-        void shouldReturnSteppableForAbstractSteppableTemplateSubclass() {
-            TemplateValidator.TemplateType type = validator.getTemplateType(TestSteppableTemplate.class);
+        @DisplayName("Should return STEPPABLE for steppable template class")
+        void shouldReturnSteppableForSteppableTemplateClass() {
+            TemplateValidator.TemplateType type = validator.getTemplateTypeFromClass(TestSteppableTemplate.class);
             assertEquals(TemplateValidator.TemplateType.STEPPABLE, type);
         }
     }

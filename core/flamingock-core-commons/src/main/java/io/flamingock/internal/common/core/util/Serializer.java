@@ -23,6 +23,7 @@ import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.template.TemplateMetadata;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.FileObject;
@@ -66,6 +67,18 @@ public class Serializer {
                     writer.write(System.lineSeparator());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                }
+            }
+
+            // Add template classes for GraalVM reflection
+            if (metadata.getTemplates() != null) {
+                for (TemplateMetadata template : metadata.getTemplates()) {
+                    try {
+                        writer.write(template.getFullyQualifiedClassName());
+                        writer.write(System.lineSeparator());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
 

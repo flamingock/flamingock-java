@@ -24,7 +24,7 @@ import io.flamingock.api.template.AbstractChangeTemplate;
  * This template is NOT registered directly via SPI, but is instead provided
  * by a ChangeTemplateFactory implementation to test the federated loading mechanism.
  */
-@ChangeTemplate
+@ChangeTemplate(id = "FactoryProvidedTemplate")
 public class FactoryProvidedTemplate extends AbstractChangeTemplate<Void, String, String> {
 
     public FactoryProvidedTemplate() {

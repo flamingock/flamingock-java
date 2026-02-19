@@ -17,9 +17,11 @@ package io.flamingock.core.processor;
 
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.Change;
+import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.FlamingockCliBuilder;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.core.processor.template.TemplateDiscoveryOrchestrator;
 import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.PathResolver;
 import io.flamingock.core.processor.util.ProjectRootDetector;
@@ -195,6 +197,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         return new HashSet<>(Arrays.asList(
                 EnableFlamingock.class.getName(),
                 Change.class.getName(),
+                ChangeTemplate.class.getName(),
                 FlamingockCliBuilder.class.getName()
         ));
     }
@@ -233,12 +236,24 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         );
 
         validateAllChangesAreMappedToStages(standardChangesMapByPackage, pipeline, flamingockAnnotation.strictStageMapping());
-        validateTemplateStructures(pipeline, flamingockAnnotation.strictTemplateValidation());
+
+        // Discover templates and add to metadata
+        TemplateDiscoveryOrchestrator.DiscoveryResult templateDiscoveryResult = annotationFinder.discoverTemplates();
+        if (templateDiscoveryResult.hasErrors()) {
+            for (String error : templateDiscoveryResult.getErrors()) {
+                logger.error(error);
+            }
+            throw new RuntimeException("Template discovery failed: " + String.join("; ", templateDiscoveryResult.getErrors()));
+        }
+
+        // Validate template structures (needs templates to be discovered first)
+        validateTemplateStructures(pipeline, flamingockAnnotation.strictTemplateValidation(), templateDiscoveryResult);
 
         Serializer serializer = new Serializer(processingEnv, logger);
         String configFile = flamingockAnnotation.configFile();
         FlamingockMetadata flamingockMetadata = new FlamingockMetadata(pipeline, configFile, properties);
         builderProvider.ifPresent(flamingockMetadata::setBuilderProvider);
+        flamingockMetadata.setTemplates(templateDiscoveryResult.getTemplates());
         serializer.serializeFullPipeline(flamingockMetadata);
 
         // Generate summary - count all changes from the final pipeline (code-based + template-based)
@@ -783,9 +798,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
      *
      * @param pipeline the preview pipeline to validate
      * @param strictTemplateValidation if true, validation errors throw RuntimeException; if false, logs warning
+     * @param templateDiscoveryResult the discovered templates to use for validation
      */
-    private void validateTemplateStructures(PreviewPipeline pipeline, Boolean strictTemplateValidation) {
-        TemplateValidator validator = new TemplateValidator();
+    private void validateTemplateStructures(PreviewPipeline pipeline, Boolean strictTemplateValidation,
+                                            TemplateDiscoveryOrchestrator.DiscoveryResult templateDiscoveryResult) {
+        TemplateValidator validator = new TemplateValidator(templateDiscoveryResult.getTemplates());
 
         List<ValidationError> allErrors = new ArrayList<>();
 

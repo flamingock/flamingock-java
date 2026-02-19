@@ -17,6 +17,7 @@ package io.flamingock.graalvm;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.ReflectionMetadataProvider;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.*;
@@ -146,14 +147,35 @@ public class RegistrationFeature implements Feature {
 
     private void registerTemplates() {
         logger.startRegistrationProcess("templates");
+
+        // Register core template infrastructure classes
         registerClassForReflection(ChangeTemplateManager.class);
         registerClassForReflection(ChangeTemplate.class);
         registerClassForReflection(AbstractChangeTemplate.class);
         registerClassForReflection(TemplateStep.class);
-        ChangeTemplateManager.getTemplates().forEach(template -> {
-            registerClassForReflection(template.getClass());
-            template.getReflectiveClasses().forEach(RegistrationFeature::registerClassForReflection);
-        });
+
+        // Template classes are now included in reflection-classes.txt by the annotation processor
+        // For each template class, we also check if it implements ReflectionMetadataProvider
+        // and register those additional classes
+        List<String> classesToRegister = FileUtil.getClassesForRegistration();
+        for (String className : classesToRegister) {
+            try {
+                Class<?> clazz = Class.forName(className);
+
+                // If class implements ReflectionMetadataProvider, register its reflective classes
+                if (ReflectionMetadataProvider.class.isAssignableFrom(clazz)) {
+                    try {
+                        ReflectionMetadataProvider provider =
+                                (ReflectionMetadataProvider) clazz.getDeclaredConstructor().newInstance();
+                        provider.getReflectiveClasses().forEach(RegistrationFeature::registerClassForReflection);
+                    } catch (Exception e) {
+                        System.out.println("[Flamingock] Warning: Failed to get reflective classes from " + className + ": " + e.getMessage());
+                    }
+                }
+            } catch (ClassNotFoundException e) {
+                // Class already handled by registerUserClasses, skip here
+            }
+        }
 
         logger.completedRegistrationProcess("templates");
     }

@@ -17,6 +17,10 @@ package io.flamingock.core.processor.util;
 
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.FlamingockCliBuilder;
+import io.flamingock.core.processor.template.AnnotationTemplateDiscoverer;
+import io.flamingock.core.processor.template.ChangeTemplateDiscoverer;
+import io.flamingock.core.processor.template.FileTemplateDiscoverer;
+import io.flamingock.core.processor.template.TemplateDiscoveryOrchestrator;
 import io.flamingock.internal.common.core.discover.ChangeDiscoverer;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
@@ -214,6 +218,44 @@ public final class AnnotationFinder {
             }
         }
         // If we can't find the builder type (shouldn't happen), we skip validation
+    }
+
+    /**
+     * Discovers all templates via annotation processing and file-based discovery.
+     *
+     * @return the discovery result containing templates and any validation errors
+     */
+    public TemplateDiscoveryOrchestrator.DiscoveryResult discoverTemplates() {
+        logger.info("Searching for @ChangeTemplate annotations and template files");
+
+        // Get class loader - try multiple sources
+        ClassLoader classLoader = getClassLoader();
+
+        // Create discoverers
+        AnnotationTemplateDiscoverer annotationDiscoverer = new AnnotationTemplateDiscoverer(roundEnv, logger);
+        FileTemplateDiscoverer fileDiscoverer = new FileTemplateDiscoverer(classLoader, logger);
+
+        // Create orchestrator with all discoverers
+        List<ChangeTemplateDiscoverer> discoverers = Arrays.asList(annotationDiscoverer, fileDiscoverer);
+        TemplateDiscoveryOrchestrator orchestrator = new TemplateDiscoveryOrchestrator(discoverers, fileDiscoverer, logger);
+
+        return orchestrator.discoverAllTemplates();
+    }
+
+    /**
+     * Gets a suitable ClassLoader for loading template classes.
+     *
+     * @return the class loader to use
+     */
+    private ClassLoader getClassLoader() {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl == null) {
+            cl = getClass().getClassLoader();
+        }
+        if (cl == null) {
+            cl = ClassLoader.getSystemClassLoader();
+        }
+        return cl;
     }
 
 }
