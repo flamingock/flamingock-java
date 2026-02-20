@@ -63,44 +63,12 @@ class TemplateValidatorTest {
         }
     }
 
-    // Test template WITHOUT @ChangeTemplate annotation
-    public static class TestUnannotatedTemplate extends AbstractChangeTemplate<Void, String, String> {
-        public TestUnannotatedTemplate() {
-            super();
-        }
-
-        @Apply
-        public void apply() {
-            // Test implementation
-        }
-    }
-
     @BeforeEach
     void setUp() {
-        // Register test templates
+        // Register test templates (annotation is validated at registration time)
         ChangeTemplateManager.addTemplate("TestSimpleTemplate", TestSimpleTemplate.class);
         ChangeTemplateManager.addTemplate("TestSteppableTemplate", TestSteppableTemplate.class);
-        ChangeTemplateManager.addTemplate("TestUnannotatedTemplate", TestUnannotatedTemplate.class);
         validator = new TemplateValidator();
-    }
-
-    @Nested
-    @DisplayName("getTemplateType tests")
-    class GetTemplateTypeTests {
-
-        @Test
-        @DisplayName("Should return SIMPLE for AbstractSimpleTemplate subclass")
-        void shouldReturnSimpleForAbstractSimpleTemplateSubclass() {
-            TemplateValidator.TemplateType type = validator.getTemplateType(TestSimpleTemplate.class);
-            assertEquals(TemplateValidator.TemplateType.SIMPLE, type);
-        }
-
-        @Test
-        @DisplayName("Should return STEPPABLE for AbstractSteppableTemplate subclass")
-        void shouldReturnSteppableForAbstractSteppableTemplateSubclass() {
-            TemplateValidator.TemplateType type = validator.getTemplateType(TestSteppableTemplate.class);
-            assertEquals(TemplateValidator.TemplateType.STEPPABLE, type);
-        }
     }
 
     @Nested
@@ -279,26 +247,15 @@ class TemplateValidatorTest {
     class ValidateStructureTests {
 
         @Test
-        @DisplayName("Should validate structure correctly with resolved template class")
-        void shouldValidateStructureWithResolvedClass() {
+        @DisplayName("Should validate structure correctly with resolved template definition")
+        void shouldValidateStructureWithResolvedDefinition() {
             TemplatePreviewChange preview = createPreview("test-change-13", "TestSimpleTemplate");
             preview.setApply("CREATE TABLE users");
 
-            ValidationResult result = validator.validateStructure(TestSimpleTemplate.class, preview);
+            ChangeTemplateDefinition definition = new ChangeTemplateDefinition(TestSimpleTemplate.class, false);
+            ValidationResult result = validator.validateStructure(definition, preview);
 
             assertFalse(result.hasErrors(), "Should have no errors: " + result.formatMessage());
-        }
-
-        @Test
-        @DisplayName("Should fail when template class is missing @ChangeTemplate annotation")
-        void shouldFailWhenMissingAnnotation() {
-            TemplatePreviewChange preview = createPreview("test-change-14", "TestUnannotatedTemplate");
-            preview.setApply("some operation");
-
-            ValidationResult result = validator.validateStructure(TestUnannotatedTemplate.class, preview);
-
-            assertTrue(result.hasErrors());
-            assertTrue(result.formatMessage().contains("missing @ChangeTemplate annotation"));
         }
 
         @Test
@@ -307,7 +264,8 @@ class TemplateValidatorTest {
             TemplatePreviewChange preview = createPreview("test-change-15", "TestSteppableTemplate");
             preview.setApply("CREATE TABLE users"); // Wrong for steppable
 
-            ValidationResult result = validator.validateStructure(TestSteppableTemplate.class, preview);
+            ChangeTemplateDefinition definition = new ChangeTemplateDefinition(TestSteppableTemplate.class, true);
+            ValidationResult result = validator.validateStructure(definition, preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("SteppableTemplate must not have 'apply' at root level"));

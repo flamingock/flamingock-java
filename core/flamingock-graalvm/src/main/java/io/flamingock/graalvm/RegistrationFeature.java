@@ -150,7 +150,7 @@ public class RegistrationFeature implements Feature {
         registerClassForReflection(ChangeTemplate.class);
         registerClassForReflection(AbstractChangeTemplate.class);
         registerClassForReflection(TemplateStep.class);
-        ChangeTemplateManager.getTemplates().forEach(template -> {
+        ChangeTemplateManager.getRawTemplates().forEach(template -> {
             registerClassForReflection(template.getClass());
             template.getReflectiveClasses().forEach(RegistrationFeature::registerClassForReflection);
         });

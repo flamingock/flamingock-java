@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
@@ -24,6 +23,7 @@ import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.template.ChangeTemplateDefinition;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.template.TemplateValidator;
 import io.flamingock.internal.util.FileUtil;
@@ -168,30 +168,30 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     @SuppressWarnings("unchecked")
     public AbstractTemplateLoadedChange<?, ?, ?> build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
-        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
+        ChangeTemplateDefinition definition = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
 
+
         if (preview != null) {
-            ValidationResult validationResult = templateValidator.validateStructure(templateClass, preview);
+            ValidationResult validationResult = templateValidator.validateStructure(definition, preview);
             if (validationResult.hasErrors()) {
                 throw new FlamingockException(
                         "Template structure validation failed for change '" + id + "':\n" + validationResult.formatMessage());
             }
         }
 
-        Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
+        Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(definition.getTemplateClass());
 
-        // Determine template type based on @ChangeTemplate annotation
+        // Determine template type from pre-resolved definition metadata.
         // Note: Due to type erasure, we use Object bounds at construction time.
         // The actual type safety comes from the conversion methods that use reflection
         // to determine the real types at runtime.
-        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
-        boolean isSteppable = annotation != null && annotation.multiStep();
+        boolean isSteppable = definition.isMultiStep();
 
         if (isSteppable) {
             Class<? extends AbstractChangeTemplate<Object, Object, Object>> steppableTemplateClass =
                     (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
-                    templateClass.asSubclass(AbstractChangeTemplate.class);
+                            definition.getTemplateClass().asSubclass(AbstractChangeTemplate.class);
 
             // Convert steps at load time
             List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);
@@ -215,7 +215,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
             // Default to SimpleTemplateLoadedChange for simple templates (steppable=false or missing annotation)
             Class<? extends AbstractChangeTemplate<Object, Object, Object>> simpleTemplateClass =
                     (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
-                            templateClass.asSubclass(AbstractChangeTemplate.class);
+                            definition.getTemplateClass().asSubclass(AbstractChangeTemplate.class);
 
             // Convert apply/rollback to typed payloads at load time
             Pair<Object, Object> convertedPayloads = convertPayloads(constructor, apply, rollback);

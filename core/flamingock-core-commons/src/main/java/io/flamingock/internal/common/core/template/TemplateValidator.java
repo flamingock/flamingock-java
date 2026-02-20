@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.common.core.template;
 
-import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
@@ -43,12 +42,12 @@ public class TemplateValidator {
      */
     public enum TemplateType {
         /**
-         * Template annotated with {@code @ChangeTemplate(multiStep = false)} or default.
+         * Template with {@code multiStep = false} (default).
          * Uses apply/rollback fields.
          */
         SIMPLE,
         /**
-         * Template annotated with {@code @ChangeTemplate(multiStep = true)}.
+         * Template with {@code multiStep = true}.
          * Uses steps field.
          */
         STEPPABLE
@@ -72,6 +71,15 @@ public class TemplateValidator {
     public ValidationResult validate(TemplatePreviewChange preview) {
         ValidationResult result = new ValidationResult("Template structure validation");
 
+        if(preview == null) {
+            result.add(new ValidationError(
+                    "Null change not allowed for template",
+                    "unknown",
+                    ENTITY_TYPE
+            ));
+            return result;
+        }
+
         String templateName = preview.getTemplateName();
         String changeId = preview.getId() != null ? preview.getId() : "unknown";
 
@@ -80,9 +88,9 @@ public class TemplateValidator {
             return result;
         }
 
-        Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> templateClassOpt = ChangeTemplateManager.getTemplate(templateName);
+        Optional<ChangeTemplateDefinition> definitionOpt = ChangeTemplateManager.getTemplate(templateName);
 
-        if (!templateClassOpt.isPresent()) {
+        if (!definitionOpt.isPresent()) {
             result.add(new ValidationError(
                     "Template '" + templateName + "' not found. Ensure the template is registered via SPI.",
                     changeId,
@@ -91,35 +99,32 @@ public class TemplateValidator {
             return result;
         }
 
-        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = templateClassOpt.get();
-        return validateStructure(templateClass, preview);
+        return validateStructure(definitionOpt.get(), preview);
     }
 
     /**
-     * Validates the YAML content structure against a resolved template class.
-     * This method is used by {@code TemplateLoadedTaskBuilder} which already has the template class
+     * Validates the YAML content structure against a resolved template definition.
+     * This method is used by {@code TemplateLoadedTaskBuilder} which already has the template definition
      * resolved, avoiding a redundant lookup.
      *
-     * @param templateClass the resolved template class
+     * @param definition the resolved template definition
      * @param preview the template preview change to validate
      * @return ValidationResult containing any validation errors found
      */
-    public ValidationResult validateStructure(Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass, TemplatePreviewChange preview) {
+    public ValidationResult validateStructure(ChangeTemplateDefinition definition, TemplatePreviewChange preview) {
         ValidationResult result = new ValidationResult("Template structure validation");
 
-        String changeId = preview.getId() != null ? preview.getId() : "unknown";
-
-        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
-        if (annotation == null) {
+        if(preview == null) {
             result.add(new ValidationError(
-                    "Template class '" + templateClass.getSimpleName() + "' is missing @ChangeTemplate annotation",
-                    changeId,
+                    "Null change not allowed for template",
+                    definition.getId(),
                     ENTITY_TYPE
             ));
             return result;
         }
+        String changeId = preview.getId() != null ? preview.getId() : "unknown";
 
-        TemplateType type = annotation.multiStep() ? TemplateType.STEPPABLE : TemplateType.SIMPLE;
+        TemplateType type = definition.isMultiStep() ? TemplateType.STEPPABLE : TemplateType.SIMPLE;
 
         switch (type) {
             case SIMPLE:
@@ -131,20 +136,6 @@ public class TemplateValidator {
         }
 
         return result;
-    }
-
-    /**
-     * Determines the template type based on the {@link ChangeTemplate} annotation.
-     *
-     * @param templateClass the template class to check
-     * @return the TemplateType (SIMPLE or STEPPABLE). Returns SIMPLE by default if annotation is missing.
-     */
-    public TemplateType getTemplateType(Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass) {
-        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
-        if (annotation != null && annotation.multiStep()) {
-            return TemplateType.STEPPABLE;
-        }
-        return TemplateType.SIMPLE;
     }
 
     /**
