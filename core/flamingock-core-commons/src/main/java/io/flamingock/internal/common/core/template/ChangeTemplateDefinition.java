@@ -29,18 +29,21 @@ import io.flamingock.api.template.ChangeTemplate;
  */
 public class ChangeTemplateDefinition {
 
+    private final String id;
     private final Class<? extends ChangeTemplate<?, ?, ?>> templateClass;
     private final boolean multiStep;
 
     public ChangeTemplateDefinition(
+            String id,
             Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
             boolean multiStep) {
+        this.id = id;
         this.templateClass = templateClass;
         this.multiStep = multiStep;
     }
 
     public String getId() {
-        return getTemplateClass().getSimpleName();
+        return id;
     }
 
     public Class<? extends ChangeTemplate<?, ?, ?>> getTemplateClass() {

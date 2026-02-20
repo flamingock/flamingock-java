@@ -37,7 +37,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
     private TemplateLoadedTaskBuilder builder;
 
     // Simple test template implementation using the annotation
-    @ChangeTemplate
+    @ChangeTemplate(id = "test-change-template")
     public static class TestChangeTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestChangeTemplate() {
@@ -61,7 +61,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestChangeTemplate.class, false)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-change-template", TestChangeTemplate.class, false)));
 
             builder.setId("test-id")
                     .setOrder("001")
@@ -97,7 +97,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestChangeTemplate.class, false)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-change-template", TestChangeTemplate.class, false)));
 
             builder.setId("test-id")
                     .setOrder("0002")
@@ -128,7 +128,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestChangeTemplate.class, false)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-change-template", TestChangeTemplate.class, false)));
 
             builder.setId("test-id")
                     .setOrder("003")

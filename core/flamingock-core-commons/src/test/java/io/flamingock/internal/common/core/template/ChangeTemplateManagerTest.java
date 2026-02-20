@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ChangeTemplateManagerTest {
 
-    @ChangeTemplate
+    @ChangeTemplate(id = "annotated-simple-template")
     public static class AnnotatedSimpleTemplate extends AbstractChangeTemplate<Void, String, String> {
         public AnnotatedSimpleTemplate() {
             super();
@@ -39,7 +39,7 @@ class ChangeTemplateManagerTest {
         }
     }
 
-    @ChangeTemplate(multiStep = true)
+    @ChangeTemplate(id = "annotated-steppable-template", multiStep = true)
     public static class AnnotatedSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
         public AnnotatedSteppableTemplate() {
             super();
@@ -63,9 +63,9 @@ class ChangeTemplateManagerTest {
     @Test
     @DisplayName("addTemplate with annotated simple class should succeed and return correct definition")
     void addTemplateWithAnnotatedSimpleClassShouldSucceed() {
-        ChangeTemplateManager.addTemplate("AnnotatedSimpleTemplate", AnnotatedSimpleTemplate.class);
+        ChangeTemplateManager.addTemplate(AnnotatedSimpleTemplate.class);
 
-        Optional<ChangeTemplateDefinition> result = ChangeTemplateManager.getTemplate("AnnotatedSimpleTemplate");
+        Optional<ChangeTemplateDefinition> result = ChangeTemplateManager.getTemplate("annotated-simple-template");
 
         assertTrue(result.isPresent());
         assertEquals(AnnotatedSimpleTemplate.class, result.get().getTemplateClass());
@@ -75,9 +75,9 @@ class ChangeTemplateManagerTest {
     @Test
     @DisplayName("addTemplate with annotated steppable class should succeed and return multiStep=true")
     void addTemplateWithAnnotatedSteppableClassShouldSucceed() {
-        ChangeTemplateManager.addTemplate("AnnotatedSteppableTemplate", AnnotatedSteppableTemplate.class);
+        ChangeTemplateManager.addTemplate(AnnotatedSteppableTemplate.class);
 
-        Optional<ChangeTemplateDefinition> result = ChangeTemplateManager.getTemplate("AnnotatedSteppableTemplate");
+        Optional<ChangeTemplateDefinition> result = ChangeTemplateManager.getTemplate("annotated-steppable-template");
 
         assertTrue(result.isPresent());
         assertEquals(AnnotatedSteppableTemplate.class, result.get().getTemplateClass());
@@ -88,7 +88,7 @@ class ChangeTemplateManagerTest {
     @DisplayName("addTemplate with unannotated class should throw FlamingockException")
     void addTemplateWithUnannotatedClassShouldThrow() {
         FlamingockException exception = assertThrows(FlamingockException.class,
-                () -> ChangeTemplateManager.addTemplate("UnannotatedTemplate", UnannotatedTemplate.class));
+                () -> ChangeTemplateManager.addTemplate(UnannotatedTemplate.class));
 
         assertTrue(exception.getMessage().contains("missing required @ChangeTemplate annotation"));
         assertTrue(exception.getMessage().contains("UnannotatedTemplate"));

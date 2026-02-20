@@ -84,8 +84,8 @@ public final class ChangeTemplateManager {
         getRawTemplates().forEach(template -> {
             Class<? extends ChangeTemplate<?, ?, ?>> templateClass = (Class<? extends ChangeTemplate<?, ?, ?>>) template.getClass();
             ChangeTemplateDefinition definition = buildDefinition(templateClass);
-            templates.put(templateClass.getSimpleName(), definition);
-            logger.debug("registered template: {}", templateClass.getSimpleName());
+            templates.put(definition.getId(), definition);
+            logger.debug("registered template: {}", definition.getId());
         });
 
     }
@@ -157,14 +157,14 @@ public final class ChangeTemplateManager {
      * <p>
      * This method is intended for use in test environments only to register mock or test templates.
      * It directly modifies the internal template registry and is not thread-safe.
+     * The template is registered under its {@code @ChangeTemplate} annotation's {@code id}.
      *
-     * @param templateName The name to register the template under (typically the simple class name)
      * @param templateClass The template class to register
      */
     @TestOnly
-    public static void addTemplate(String templateName, Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
+    public static void addTemplate(Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
         ChangeTemplateDefinition definition = buildDefinition(templateClass);
-        templates.put(templateName, definition);
+        templates.put(definition.getId(), definition);
     }
 
 
@@ -184,6 +184,12 @@ public final class ChangeTemplateManager {
                     "Template class '%s' is missing required @ChangeTemplate annotation",
                     templateClass.getSimpleName()));
         }
-        return new ChangeTemplateDefinition(templateClass, annotation.multiStep());
+        String id = annotation.id();
+        if (id == null || id.trim().isEmpty()) {
+            throw new FlamingockException(String.format(
+                    "Template class '%s' has a blank @ChangeTemplate id. The id must be a non-empty string",
+                    templateClass.getSimpleName()));
+        }
+        return new ChangeTemplateDefinition(id, templateClass, annotation.multiStep());
     }
 }

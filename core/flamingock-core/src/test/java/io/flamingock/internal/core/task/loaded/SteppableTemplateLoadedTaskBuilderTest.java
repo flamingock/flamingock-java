@@ -45,7 +45,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
     private TemplateLoadedTaskBuilder builder;
 
     // Steppable test template implementation using the annotation
-    @ChangeTemplate(multiStep = true)
+    @ChangeTemplate(id = "test-steppable-template", multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestSteppableTemplate() {
@@ -59,7 +59,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
     }
 
     // Simple test template implementation
-    @ChangeTemplate
+    @ChangeTemplate(id = "test-simple-template")
     public static class TestSimpleTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestSimpleTemplate() {
@@ -83,7 +83,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMap("apply1", "rollback1"),
@@ -120,7 +120,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Collections.singletonList(
                     createStepMap("apply1", "rollback1")
@@ -154,7 +154,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Collections.singletonList(
                     createStepMap("apply1", "rollback1")
@@ -188,7 +188,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> emptySteps = Collections.emptyList();
 
@@ -219,7 +219,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMap("createCollection", "dropCollection"),
@@ -285,7 +285,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMapApplyOnly("apply1"),
@@ -320,7 +320,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             builder.setId("test-id")
                     .setFileName("test-file.yml")
@@ -364,7 +364,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         void steppableTemplateWithApplyAtRootShouldThrow() {
             try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
                 mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                        .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
                 TemplatePreviewChange preview = new TemplatePreviewChange();
                 preview.setId("bad-steppable");
@@ -385,7 +385,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         void simpleTemplateWithStepsShouldThrow() {
             try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
                 mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-simple-template"))
-                        .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSimpleTemplate.class, false)));
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-simple-template", TestSimpleTemplate.class, false)));
 
                 TemplatePreviewChange preview = new TemplatePreviewChange();
                 preview.setId("bad-simple");
@@ -407,7 +407,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         void customValidatorInjectionShouldWork() {
             try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
                 mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                        .thenReturn(Optional.of(new ChangeTemplateDefinition(TestSteppableTemplate.class, true)));
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
                 TemplateValidator customValidator = new TemplateValidator();
 
