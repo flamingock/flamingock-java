@@ -15,15 +15,17 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.template.ChangeTemplateDefinition;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
+import io.flamingock.internal.common.core.template.TemplateValidator;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.ReflectionUtil;
@@ -37,6 +39,8 @@ import java.util.Map;
 
 //TODO how to set transactional and runAlways
 public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemplateLoadedChange<?, ?, ?>> {
+
+    private static final TemplateValidator DEFAULT_VALIDATOR = new TemplateValidator();
 
     private String fileName;
     private String id;
@@ -53,16 +57,31 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     private Object steps;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
+    private TemplatePreviewChange preview;
+    private final TemplateValidator templateValidator;
 
     private TemplateLoadedTaskBuilder() {
+        this(DEFAULT_VALIDATOR);
+    }
+
+    private TemplateLoadedTaskBuilder(TemplateValidator templateValidator) {
+        this.templateValidator = templateValidator;
     }
 
     static TemplateLoadedTaskBuilder getInstance() {
         return new TemplateLoadedTaskBuilder();
     }
 
+    static TemplateLoadedTaskBuilder getInstance(TemplateValidator templateValidator) {
+        return new TemplateLoadedTaskBuilder(templateValidator);
+    }
+
     static TemplateLoadedTaskBuilder getInstanceFromPreview(TemplatePreviewChange preview) {
         return getInstance().setPreview(preview);
+    }
+
+    static TemplateLoadedTaskBuilder getInstanceFromPreview(TemplatePreviewChange preview, TemplateValidator templateValidator) {
+        return getInstance(templateValidator).setPreview(preview);
     }
 
     public static boolean supportsPreview(AbstractPreviewTask previewTask) {
@@ -149,22 +168,30 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     @SuppressWarnings("unchecked")
     public AbstractTemplateLoadedChange<?, ?, ?> build() {
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
-        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
+        ChangeTemplateDefinition definition = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
 
-        Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
 
-        // Determine template type based on @ChangeTemplate annotation
+        if (preview != null) {
+            ValidationResult validationResult = templateValidator.validateStructure(definition, preview);
+            if (validationResult.hasErrors()) {
+                throw new FlamingockException(
+                        "Template structure validation failed for change '" + id + "':\n" + validationResult.formatMessage());
+            }
+        }
+
+        Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(definition.getTemplateClass());
+
+        // Determine template type from pre-resolved definition metadata.
         // Note: Due to type erasure, we use Object bounds at construction time.
         // The actual type safety comes from the conversion methods that use reflection
         // to determine the real types at runtime.
-        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
-        boolean isSteppable = annotation != null && annotation.multiStep();
+        boolean isSteppable = definition.isMultiStep();
 
         if (isSteppable) {
             Class<? extends AbstractChangeTemplate<Object, Object, Object>> steppableTemplateClass =
                     (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
-                    templateClass.asSubclass(AbstractChangeTemplate.class);
+                            definition.getTemplateClass().asSubclass(AbstractChangeTemplate.class);
 
             // Convert steps at load time
             List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);
@@ -188,7 +215,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
             // Default to SimpleTemplateLoadedChange for simple templates (steppable=false or missing annotation)
             Class<? extends AbstractChangeTemplate<Object, Object, Object>> simpleTemplateClass =
                     (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
-                            templateClass.asSubclass(AbstractChangeTemplate.class);
+                            definition.getTemplateClass().asSubclass(AbstractChangeTemplate.class);
 
             // Convert apply/rollback to typed payloads at load time
             Pair<Object, Object> convertedPayloads = convertPayloads(constructor, apply, rollback);
@@ -301,7 +328,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     }
 
     private TemplateLoadedTaskBuilder setPreview(TemplatePreviewChange preview) {
-
+        this.preview = preview;
         setFileName(preview.getFileName());
         setId(preview.getId());
         setOrder(preview.getOrder().orElse(null));

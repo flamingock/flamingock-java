@@ -20,9 +20,13 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
+import io.flamingock.internal.common.core.template.ChangeTemplateDefinition;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
+import io.flamingock.internal.common.core.template.TemplateValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
@@ -41,7 +45,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
     private TemplateLoadedTaskBuilder builder;
 
     // Steppable test template implementation using the annotation
-    @ChangeTemplate(multiStep = true)
+    @ChangeTemplate(name = "test-steppable-template", multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestSteppableTemplate() {
@@ -51,6 +55,20 @@ class SteppableTemplateLoadedTaskBuilderTest {
         @Apply
         public void apply() {
             // Test implementation - iterates through steps
+        }
+    }
+
+    // Simple test template implementation
+    @ChangeTemplate(name = "test-simple-template")
+    public static class TestSimpleTemplate extends AbstractChangeTemplate<Object, Object, Object> {
+
+        public TestSimpleTemplate() {
+            super();
+        }
+
+        @Apply
+        public void apply() {
+            // Test implementation
         }
     }
 
@@ -65,7 +83,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(TestSteppableTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMap("apply1", "rollback1"),
@@ -102,7 +120,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(TestSteppableTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Collections.singletonList(
                     createStepMap("apply1", "rollback1")
@@ -136,7 +154,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(TestSteppableTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Collections.singletonList(
                     createStepMap("apply1", "rollback1")
@@ -170,7 +188,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(TestSteppableTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> emptySteps = Collections.emptyList();
 
@@ -201,7 +219,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(TestSteppableTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMap("createCollection", "dropCollection"),
@@ -267,7 +285,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(TestSteppableTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMapApplyOnly("apply1"),
@@ -302,7 +320,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(TestSteppableTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
 
             builder.setId("test-id")
                     .setFileName("test-file.yml")
@@ -335,5 +353,76 @@ class SteppableTemplateLoadedTaskBuilderTest {
         Map<String, Object> step = new HashMap<>();
         step.put("apply", apply);
         return step;
+    }
+
+    @Nested
+    @DisplayName("Template structure validation tests")
+    class TemplateStructureValidationTests {
+
+        @Test
+        @DisplayName("Steppable template with apply at root level should throw FlamingockException during build")
+        void steppableTemplateWithApplyAtRootShouldThrow() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+
+                TemplatePreviewChange preview = new TemplatePreviewChange();
+                preview.setId("bad-steppable");
+                preview.setSource("test-steppable-template");
+                preview.setFileName("test-file.yml");
+                preview.setApply("CREATE TABLE users"); // Wrong: root-level apply on steppable
+
+                TemplateLoadedTaskBuilder validatingBuilder = TemplateLoadedTaskBuilder.getInstanceFromPreview(preview);
+
+                FlamingockException exception = assertThrows(FlamingockException.class, validatingBuilder::build);
+                assertTrue(exception.getMessage().contains("Template structure validation failed"));
+                assertTrue(exception.getMessage().contains("SteppableTemplate must not have 'apply' at root level"));
+            }
+        }
+
+        @Test
+        @DisplayName("Simple template with steps field should throw FlamingockException during build")
+        void simpleTemplateWithStepsShouldThrow() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-simple-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-simple-template", TestSimpleTemplate.class, false)));
+
+                TemplatePreviewChange preview = new TemplatePreviewChange();
+                preview.setId("bad-simple");
+                preview.setSource("test-simple-template");
+                preview.setFileName("test-file.yml");
+                preview.setApply("CREATE TABLE users");
+                preview.setSteps(Arrays.asList(createStepMap("step1", null))); // Wrong: steps on simple
+
+                TemplateLoadedTaskBuilder validatingBuilder = TemplateLoadedTaskBuilder.getInstanceFromPreview(preview);
+
+                FlamingockException exception = assertThrows(FlamingockException.class, validatingBuilder::build);
+                assertTrue(exception.getMessage().contains("Template structure validation failed"));
+                assertTrue(exception.getMessage().contains("SimpleTemplate must not have 'steps' field"));
+            }
+        }
+
+        @Test
+        @DisplayName("Custom TemplateValidator injection should work via getInstance")
+        void customValidatorInjectionShouldWork() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+
+                TemplateValidator customValidator = new TemplateValidator();
+
+                TemplatePreviewChange preview = new TemplatePreviewChange();
+                preview.setId("custom-validator-test");
+                preview.setSource("test-steppable-template");
+                preview.setFileName("test-file.yml");
+                preview.setSteps(Arrays.asList(createStepMap("apply1", "rollback1")));
+
+                TemplateLoadedTaskBuilder validatingBuilder = TemplateLoadedTaskBuilder.getInstanceFromPreview(preview, customValidator);
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = validatingBuilder.build();
+                assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+                assertEquals("custom-validator-test", result.getId());
+            }
+        }
     }
 }

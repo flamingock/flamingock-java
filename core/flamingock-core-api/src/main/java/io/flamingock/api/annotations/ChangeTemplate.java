@@ -28,18 +28,21 @@ import java.lang.annotation.Target;
  * <p>All template classes must extend {@link AbstractChangeTemplate} and be annotated with
  * this annotation to specify whether they process single or multiple steps.
  *
- * <p><b>Simple templates</b> (default, {@code steppable = false}):
+ * <p>The {@code id} field is mandatory and must match the {@code template:} field in YAML
+ * pipeline definitions. This decouples template identity from Java class naming.
+ *
+ * <p><b>Simple templates</b> (default, {@code multiStep = false}):
  * <pre>
  * id: create-users-table
- * template: SqlTemplate
+ * template: sql-template
  * apply: "CREATE TABLE users (id INT PRIMARY KEY)"
  * rollback: "DROP TABLE users"
  * </pre>
  *
- * <p><b>Steppable templates</b> ({@code steppable = true}) process multiple operations:
+ * <p><b>Steppable templates</b> ({@code multiStep = true}) process multiple operations:
  * <pre>
  * id: setup-orders
- * template: MongoTemplate
+ * template: mongo-template
  * steps:
  *   - apply: { type: createCollection, collection: orders }
  *     rollback: { type: dropCollection, collection: orders }
@@ -58,6 +61,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface ChangeTemplate {
+
+    /**
+     * Unique identifier for this template. The YAML {@code template:} field must match this ID.
+     *
+     * @return the template identifier
+     */
+    String name();
 
     /**
      * When {@code true}, the template expects a {@code steps} array in YAML.

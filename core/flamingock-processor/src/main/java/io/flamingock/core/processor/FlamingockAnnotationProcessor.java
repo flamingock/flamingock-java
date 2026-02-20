@@ -26,17 +26,12 @@ import io.flamingock.core.processor.util.ProjectRootDetector;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
-import io.flamingock.internal.common.core.error.validation.ValidationError;
-import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
-import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
-import io.flamingock.internal.common.core.template.TemplateValidator;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.common.core.util.Serializer;
 import org.jetbrains.annotations.NotNull;
@@ -233,7 +228,6 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         );
 
         validateAllChangesAreMappedToStages(standardChangesMapByPackage, pipeline, flamingockAnnotation.strictStageMapping());
-        validateTemplateStructures(pipeline, flamingockAnnotation.strictTemplateValidation());
 
         Serializer serializer = new Serializer(processingEnv, logger);
         String configFile = flamingockAnnotation.configFile();
@@ -777,96 +771,4 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    /**
-     * Validates that all template-based changes have YAML structure matching their template type
-     * (SimpleTemplate vs SteppableTemplate).
-     *
-     * @param pipeline the preview pipeline to validate
-     * @param strictTemplateValidation if true, validation errors throw RuntimeException; if false, logs warning
-     */
-    private void validateTemplateStructures(PreviewPipeline pipeline, Boolean strictTemplateValidation) {
-        TemplateValidator validator = new TemplateValidator();
-
-        List<ValidationError> allErrors = new ArrayList<>();
-
-        // Collect errors from system stage
-        if (pipeline.getSystemStage() != null && pipeline.getSystemStage().getTasks() != null) {
-            collectTemplateValidationErrors(validator, pipeline.getSystemStage().getTasks(), allErrors);
-        }
-
-        // Collect errors from regular stages
-        if (pipeline.getStages() != null) {
-            for (PreviewStage stage : pipeline.getStages()) {
-                if (stage.getTasks() != null) {
-                    collectTemplateValidationErrors(validator, stage.getTasks(), allErrors);
-                }
-            }
-        }
-
-        if (!allErrors.isEmpty()) {
-            String message = formatTemplateValidationErrors(allErrors);
-            if (Boolean.TRUE.equals(strictTemplateValidation)) {
-                throw new RuntimeException(message);
-            } else {
-                logger.warn(message);
-            }
-        }
-    }
-
-    /**
-     * Collects validation errors from template-based tasks.
-     *
-     * @param validator the template validator
-     * @param tasks the collection of preview tasks to check
-     * @param errors the list to add validation errors to
-     */
-    private void collectTemplateValidationErrors(
-            TemplateValidator validator,
-            Collection<? extends AbstractPreviewTask> tasks,
-            List<ValidationError> errors) {
-
-        for (AbstractPreviewTask task : tasks) {
-            if (task instanceof TemplatePreviewChange) {
-                TemplatePreviewChange templateTask = (TemplatePreviewChange) task;
-
-                // Build ChangeTemplateFileContent from preview for validation
-                ChangeTemplateFileContent content = toFileContent(templateTask);
-
-                ValidationResult result = validator.validate(content);
-                if (result.hasErrors()) {
-                    errors.addAll(result.getErrors());
-                }
-            }
-        }
-    }
-
-    /**
-     * Converts a TemplatePreviewChange to ChangeTemplateFileContent for validation.
-     *
-     * @param preview the template preview change
-     * @return the file content representation
-     */
-    private ChangeTemplateFileContent toFileContent(TemplatePreviewChange preview) {
-        ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-        content.setId(preview.getId());
-        content.setTemplate(preview.getTemplateName());
-        content.setApply(preview.getApply());
-        content.setRollback(preview.getRollback());
-        content.setSteps(preview.getSteps());
-        return content;
-    }
-
-    /**
-     * Formats template validation errors into a readable message.
-     *
-     * @param errors the list of validation errors
-     * @return formatted error message
-     */
-    private String formatTemplateValidationErrors(List<ValidationError> errors) {
-        StringBuilder sb = new StringBuilder("Template structure validation errors:\n");
-        for (ValidationError error : errors) {
-            sb.append("  - ").append(error.getFormattedMessage()).append("\n");
-        }
-        return sb.toString();
-    }
 }

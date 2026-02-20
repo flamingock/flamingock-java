@@ -15,9 +15,9 @@
  */
 package io.flamingock.internal.common.core.template;
 
-import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 
 import java.util.List;
 import java.util.Map;
@@ -32,13 +32,8 @@ import java.util.Optional;
  *   <li><strong>SteppableTemplate</strong>: Must have {@code steps}, must NOT have {@code apply} or {@code rollback} at root level</li>
  * </ul>
  *
- * <p>The validator is used during compile-time by the annotation processor to catch structural
- * mismatches early. Behavior is controlled by the {@code strictTemplateValidation} flag in
- * {@code @EnableFlamingock}:
- * <ul>
- *   <li>{@code true} (default): Compilation fails with detailed error</li>
- *   <li>{@code false}: Warning logged, compilation continues</li>
- * </ul>
+ * <p>The validator is stateless and used at runtime during pipeline building to catch structural
+ * mismatches before any change execution begins.
  */
 public class TemplateValidator {
 
@@ -47,50 +42,55 @@ public class TemplateValidator {
      */
     public enum TemplateType {
         /**
-         * Template annotated with {@code @ChangeTemplate(steppable = false)} or without annotation.
+         * Template with {@code multiStep = false} (default).
          * Uses apply/rollback fields.
          */
         SIMPLE,
         /**
-         * Template annotated with {@code @ChangeTemplate(steppable = true)}.
+         * Template with {@code multiStep = true}.
          * Uses steps field.
          */
-        STEPPABLE,
-        /**
-         * Template type could not be determined (kept for backward compatibility).
-         */
-        UNKNOWN
+        STEPPABLE
     }
 
     private static final String ENTITY_TYPE = "template-change";
 
     /**
-     * Creates a new TemplateValidator and ensures templates are loaded.
+     * Creates a new TemplateValidator. The validator is stateless.
      */
     public TemplateValidator() {
-        ChangeTemplateManager.loadTemplates();
     }
 
     /**
-     * Validates the YAML content structure against the template type.
+     * Validates the YAML content structure against the template type, performing
+     * template lookup from the registry.
      *
-     * @param content the parsed YAML content
+     * @param preview the template preview change to validate
      * @return ValidationResult containing any validation errors found
      */
-    public ValidationResult validate(ChangeTemplateFileContent content) {
+    public ValidationResult validate(TemplatePreviewChange preview) {
         ValidationResult result = new ValidationResult("Template structure validation");
 
-        String templateName = content.getTemplate();
-        String changeId = content.getId() != null ? content.getId() : "unknown";
+        if(preview == null) {
+            result.add(new ValidationError(
+                    "Null change not allowed for template",
+                    "unknown",
+                    ENTITY_TYPE
+            ));
+            return result;
+        }
+
+        String templateName = preview.getTemplateName();
+        String changeId = preview.getId() != null ? preview.getId() : "unknown";
 
         if (templateName == null || templateName.trim().isEmpty()) {
             result.add(new ValidationError("Template name is required", changeId, ENTITY_TYPE));
             return result;
         }
 
-        Optional<Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>>> templateClassOpt = ChangeTemplateManager.getTemplate(templateName);
+        Optional<ChangeTemplateDefinition> definitionOpt = ChangeTemplateManager.getTemplate(templateName);
 
-        if (!templateClassOpt.isPresent()) {
+        if (!definitionOpt.isPresent()) {
             result.add(new ValidationError(
                     "Template '" + templateName + "' not found. Ensure the template is registered via SPI.",
                     changeId,
@@ -99,37 +99,43 @@ public class TemplateValidator {
             return result;
         }
 
-        Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = templateClassOpt.get();
-        TemplateType type = getTemplateType(templateClass);
+        return validateStructure(definitionOpt.get(), preview);
+    }
+
+    /**
+     * Validates the YAML content structure against a resolved template definition.
+     * This method is used by {@code TemplateLoadedTaskBuilder} which already has the template definition
+     * resolved, avoiding a redundant lookup.
+     *
+     * @param definition the resolved template definition
+     * @param preview the template preview change to validate
+     * @return ValidationResult containing any validation errors found
+     */
+    public ValidationResult validateStructure(ChangeTemplateDefinition definition, TemplatePreviewChange preview) {
+        ValidationResult result = new ValidationResult("Template structure validation");
+
+        if(preview == null) {
+            result.add(new ValidationError(
+                    "Null change not allowed for template",
+                    definition.getId(),
+                    ENTITY_TYPE
+            ));
+            return result;
+        }
+        String changeId = preview.getId() != null ? preview.getId() : "unknown";
+
+        TemplateType type = definition.isMultiStep() ? TemplateType.STEPPABLE : TemplateType.SIMPLE;
 
         switch (type) {
             case SIMPLE:
-                validateSimpleTemplate(content, changeId, result);
+                validateSimpleTemplate(preview, changeId, result);
                 break;
             case STEPPABLE:
-                validateSteppableTemplate(content, changeId, result);
-                break;
-            case UNKNOWN:
-                // Unknown types are valid - they may have custom structure
+                validateSteppableTemplate(preview, changeId, result);
                 break;
         }
 
         return result;
-    }
-
-    /**
-     * Determines the template type based on the {@link ChangeTemplate} annotation.
-     *
-     * @param templateClass the template class to check
-     * @return the TemplateType (SIMPLE or STEPPABLE). Returns SIMPLE by default if annotation is missing.
-     */
-    public TemplateType getTemplateType(Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass) {
-        ChangeTemplate annotation = templateClass.getAnnotation(ChangeTemplate.class);
-        if (annotation != null && annotation.multiStep()) {
-            return TemplateType.STEPPABLE;
-        }
-        // Default to SIMPLE (including when annotation is missing or steppable=false)
-        return TemplateType.SIMPLE;
     }
 
     /**
@@ -138,9 +144,8 @@ public class TemplateValidator {
      * - May have rollback
      * - Must NOT have steps
      */
-    private void validateSimpleTemplate(ChangeTemplateFileContent content, String changeId, ValidationResult result) {
-        // Validate: apply is required
-        if (content.getApply() == null) {
+    private void validateSimpleTemplate(TemplatePreviewChange preview, String changeId, ValidationResult result) {
+        if (preview.getApply() == null) {
             result.add(new ValidationError(
                     "SimpleTemplate requires 'apply' field",
                     changeId,
@@ -148,8 +153,7 @@ public class TemplateValidator {
             ));
         }
 
-        // Validate: steps must NOT be present
-        if (content.getSteps() != null) {
+        if (preview.getSteps() != null) {
             result.add(new ValidationError(
                     "SimpleTemplate must not have 'steps' field. Use 'apply' and 'rollback' instead.",
                     changeId,
@@ -166,9 +170,8 @@ public class TemplateValidator {
      * - Each step must have apply
      */
     @SuppressWarnings("unchecked")
-    private void validateSteppableTemplate(ChangeTemplateFileContent content, String changeId, ValidationResult result) {
-        // Validate: apply must NOT be present at root level
-        if (content.getApply() != null) {
+    private void validateSteppableTemplate(TemplatePreviewChange preview, String changeId, ValidationResult result) {
+        if (preview.getApply() != null) {
             result.add(new ValidationError(
                     "SteppableTemplate must not have 'apply' at root level. Define 'apply' within each step.",
                     changeId,
@@ -176,8 +179,7 @@ public class TemplateValidator {
             ));
         }
 
-        // Validate: rollback must NOT be present at root level
-        if (content.getRollback() != null) {
+        if (preview.getRollback() != null) {
             result.add(new ValidationError(
                     "SteppableTemplate must not have 'rollback' at root level. Define 'rollback' within each step.",
                     changeId,
@@ -185,8 +187,7 @@ public class TemplateValidator {
             ));
         }
 
-        // Validate: steps is required
-        Object steps = content.getSteps();
+        Object steps = preview.getSteps();
         if (steps == null) {
             result.add(new ValidationError(
                     "SteppableTemplate requires 'steps' field",
@@ -196,7 +197,6 @@ public class TemplateValidator {
             return;
         }
 
-        // Validate each step has apply
         if (steps instanceof List) {
             List<?> stepList = (List<?>) steps;
             for (int i = 0; i < stepList.size(); i++) {

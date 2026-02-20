@@ -16,6 +16,7 @@
 package io.flamingock.internal.common.core.template;
 
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import org.jetbrains.annotations.TestOnly;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ import java.util.ServiceLoader;
  * <p>
  * This class serves two primary purposes in different contexts:
  * <ol>
- *   <li><strong>GraalVM Build-time Context</strong> - The {@link #getTemplates()} method is called by 
+ *   <li><strong>GraalVM Build-time Context</strong> - The {@link #getRawTemplates()} method is called by
  *       the GraalVM RegistrationFeature to discover all available templates. For each template, 
  *       the feature registers both the template class itself and all classes returned by 
  *       {@link ChangeTemplate#getReflectiveClasses()} for reflection in native images.</li>
@@ -58,7 +59,7 @@ public final class ChangeTemplateManager {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("TemplateManager");
 
-    private static final Map<String, Class<? extends ChangeTemplate<?, ?, ?>>> templates = new HashMap<>();
+    private static final Map<String, ChangeTemplateDefinition> templates = new HashMap<>();
 
     /**
      * Private constructor to prevent instantiation of this utility class.
@@ -71,7 +72,7 @@ public final class ChangeTemplateManager {
      * Loads and registers all available templates from the classpath into the internal registry.
      * <p>
      * This method is intended to be called once during Flamingock runtime initialization.
-     * It discovers all templates via {@link #getTemplates()} and registers them in the internal
+     * It discovers all templates via {@link #getRawTemplates()} and registers them in the internal
      * registry, indexed by their simple class name.
      * <p>
      * This method is not thread-safe and should be called from a single thread during application
@@ -80,12 +81,34 @@ public final class ChangeTemplateManager {
     @SuppressWarnings("unchecked")
     public static void loadTemplates() {
         logger.debug("Registering templates");
-        getTemplates().forEach(template -> {
+        getRawTemplates().forEach(template -> {
             Class<? extends ChangeTemplate<?, ?, ?>> templateClass = (Class<? extends ChangeTemplate<?, ?, ?>>) template.getClass();
-            templates.put(templateClass.getSimpleName(), templateClass);
-            logger.debug("registered template: {}", templateClass.getSimpleName());
+            ChangeTemplateDefinition definition = buildDefinition(templateClass);
+            templates.put(definition.getId(), definition);
+            logger.debug("registered template: {}", definition.getId());
         });
 
+    }
+
+    /**
+     * Retrieves a template definition by name from the internal registry.
+     * <p>
+     * This method is used during runtime to look up template definitions by their simple name.
+     * It returns an {@link Optional} that will be empty if no template with the specified
+     * name has been registered.
+     * <p>
+     * This method is thread-safe after initialization (after {@link #loadTemplates()} has been called).
+     *
+     * @param templateName The simple class name of the template to retrieve
+     * @return An Optional containing the template definition if found, or empty if not found
+     */
+    public static Optional<ChangeTemplateDefinition> getTemplate(String templateName) {
+        return Optional.ofNullable(templates.get(templateName));
+    }
+
+    public static ChangeTemplateDefinition getTemplateOrFail(String templateName) {
+        return Optional.ofNullable(templates.get(templateName))
+                .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
     }
 
     /**
@@ -110,7 +133,7 @@ public final class ChangeTemplateManager {
      *
      * @return A collection of all discovered template instances
      */
-    public static Collection<ChangeTemplate<?, ?, ?>> getTemplates() {
+    public static Collection<ChangeTemplate<?, ?, ?>> getRawTemplates() {
         logger.debug("Retrieving ChangeTemplates");
 
         //Loads the ChangeTemplates directly registered with SPI
@@ -134,28 +157,39 @@ public final class ChangeTemplateManager {
      * <p>
      * This method is intended for use in test environments only to register mock or test templates.
      * It directly modifies the internal template registry and is not thread-safe.
+     * The template is registered under its {@code @ChangeTemplate} annotation's {@code id}.
      *
-     * @param templateName The name to register the template under (typically the simple class name)
      * @param templateClass The template class to register
      */
     @TestOnly
-    public static void addTemplate(String templateName, Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
-        templates.put(templateName, templateClass);
+    public static void addTemplate(Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
+        ChangeTemplateDefinition definition = buildDefinition(templateClass);
+        templates.put(definition.getId(), definition);
     }
 
+
     /**
-     * Retrieves a template class by name from the internal registry.
-     * <p>
-     * This method is used during runtime to look up template classes by their simple name.
-     * It returns an {@link Optional} that will be empty if no template with the specified
-     * name has been registered.
-     * <p>
-     * This method is thread-safe after initialization (after {@link #loadTemplates()} has been called).
+     * Validates the {@code @ChangeTemplate} annotation on the given class and builds a
+     * {@link ChangeTemplateDefinition} with pre-resolved metadata.
      *
-     * @param templateName The simple class name of the template to retrieve
-     * @return An Optional containing the template class if found, or empty if not found
+     * @param templateClass the template class to validate and wrap
+     * @return a new ChangeTemplateDefinition
+     * @throws FlamingockException if the class is missing the {@code @ChangeTemplate} annotation
      */
-    public static Optional<Class<? extends ChangeTemplate<?, ?, ?>>> getTemplate(String templateName) {
-        return Optional.ofNullable(templates.get(templateName));
+    private static ChangeTemplateDefinition buildDefinition(Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
+        io.flamingock.api.annotations.ChangeTemplate annotation =
+                templateClass.getAnnotation(io.flamingock.api.annotations.ChangeTemplate.class);
+        if (annotation == null) {
+            throw new FlamingockException(String.format(
+                    "Template class '%s' is missing required @ChangeTemplate annotation",
+                    templateClass.getSimpleName()));
+        }
+        String id = annotation.name();
+        if (id == null || id.trim().isEmpty()) {
+            throw new FlamingockException(String.format(
+                    "Template class '%s' has a blank @ChangeTemplate id. The id must be a non-empty string",
+                    templateClass.getSimpleName()));
+        }
+        return new ChangeTemplateDefinition(id, templateClass, annotation.multiStep());
     }
 }

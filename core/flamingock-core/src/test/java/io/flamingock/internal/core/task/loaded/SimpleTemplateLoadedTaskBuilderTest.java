@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.template.ChangeTemplateDefinition;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
@@ -36,7 +37,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
     private TemplateLoadedTaskBuilder builder;
 
     // Simple test template implementation using the annotation
-    @ChangeTemplate
+    @ChangeTemplate(name = "test-change-template")
     public static class TestChangeTemplate extends AbstractChangeTemplate<Object, Object, Object> {
 
         public TestChangeTemplate() {
@@ -60,7 +61,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(TestChangeTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-change-template", TestChangeTemplate.class, false)));
 
             builder.setId("test-id")
                     .setOrder("001")
@@ -96,7 +97,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(TestChangeTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-change-template", TestChangeTemplate.class, false)));
 
             builder.setId("test-id")
                     .setOrder("0002")
@@ -127,7 +128,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-template"))
-                    .thenReturn(Optional.of(TestChangeTemplate.class));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-change-template", TestChangeTemplate.class, false)));
 
             builder.setId("test-id")
                     .setOrder("003")

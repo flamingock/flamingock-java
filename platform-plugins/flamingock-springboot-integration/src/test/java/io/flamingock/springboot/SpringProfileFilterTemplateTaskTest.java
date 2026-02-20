@@ -39,7 +39,7 @@ class SpringProfileFilterTemplateTaskTest {
 
     @BeforeAll
     static void beforeAll() {
-        ChangeTemplateManager.addTemplate(TemplateSimulate.class.getSimpleName(), TemplateSimulate.class);
+        ChangeTemplateManager.addTemplate(TemplateSimulate.class);
     }
 
     @Test
@@ -111,11 +111,11 @@ class SpringProfileFilterTemplateTaskTest {
         ChangeTemplateFileContent changeFileDescriptor = new ChangeTemplateFileContent(
                 "template-base-change-id",
                 "test-author",
-                TemplateSimulate.class.getSimpleName(),
+                "template-simulate",
                 profiles,
                 true,
                 null,
-                null,
+                "dummy-apply",
                 null,
                 null,
                 RecoveryDescriptor.getDefault()
@@ -127,8 +127,8 @@ class SpringProfileFilterTemplateTaskTest {
 
     }
 
-    @ChangeTemplate
-    public static abstract class TemplateSimulate extends AbstractChangeTemplate<Void, Object, Object> {
+    @ChangeTemplate(name = "template-simulate")
+    public static class TemplateSimulate extends AbstractChangeTemplate<Void, Object, Object> {
         public TemplateSimulate() {
             super();
         }
