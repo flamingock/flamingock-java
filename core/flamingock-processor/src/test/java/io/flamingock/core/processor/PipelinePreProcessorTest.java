@@ -513,11 +513,6 @@ public class PipelinePreProcessorTest {
                     return true;
                 }
 
-                @Override
-                public boolean strictTemplateValidation() {
-                    return true;
-                }
-
                 @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return EnableFlamingock.class; }
             };
         }

@@ -115,7 +115,7 @@ class SpringProfileFilterTemplateTaskTest {
                 profiles,
                 true,
                 null,
-                null,
+                "dummy-apply",
                 null,
                 null,
                 RecoveryDescriptor.getDefault()
@@ -128,7 +128,7 @@ class SpringProfileFilterTemplateTaskTest {
     }
 
     @ChangeTemplate
-    public static abstract class TemplateSimulate extends AbstractChangeTemplate<Void, Object, Object> {
+    public static class TemplateSimulate extends AbstractChangeTemplate<Void, Object, Object> {
         public TemplateSimulate() {
             super();
         }

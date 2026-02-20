@@ -19,11 +19,13 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
+import io.flamingock.internal.common.core.template.TemplateValidator;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.ReflectionUtil;
@@ -37,6 +39,8 @@ import java.util.Map;
 
 //TODO how to set transactional and runAlways
 public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemplateLoadedChange<?, ?, ?>> {
+
+    private static final TemplateValidator DEFAULT_VALIDATOR = new TemplateValidator();
 
     private String fileName;
     private String id;
@@ -53,16 +57,31 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     private Object steps;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
+    private TemplatePreviewChange preview;
+    private final TemplateValidator templateValidator;
 
     private TemplateLoadedTaskBuilder() {
+        this(DEFAULT_VALIDATOR);
+    }
+
+    private TemplateLoadedTaskBuilder(TemplateValidator templateValidator) {
+        this.templateValidator = templateValidator;
     }
 
     static TemplateLoadedTaskBuilder getInstance() {
         return new TemplateLoadedTaskBuilder();
     }
 
+    static TemplateLoadedTaskBuilder getInstance(TemplateValidator templateValidator) {
+        return new TemplateLoadedTaskBuilder(templateValidator);
+    }
+
     static TemplateLoadedTaskBuilder getInstanceFromPreview(TemplatePreviewChange preview) {
         return getInstance().setPreview(preview);
+    }
+
+    static TemplateLoadedTaskBuilder getInstanceFromPreview(TemplatePreviewChange preview, TemplateValidator templateValidator) {
+        return getInstance(templateValidator).setPreview(preview);
     }
 
     public static boolean supportsPreview(AbstractPreviewTask previewTask) {
@@ -151,6 +170,14 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         //            boolean isTaskTransactional = true;//TODO implement this. isTaskTransactionalAccordingTemplate(templateSpec);
         Class<? extends io.flamingock.api.template.ChangeTemplate<?, ?, ?>> templateClass = ChangeTemplateManager.getTemplate(templateName)
                 .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
+
+        if (preview != null) {
+            ValidationResult validationResult = templateValidator.validateStructure(templateClass, preview);
+            if (validationResult.hasErrors()) {
+                throw new FlamingockException(
+                        "Template structure validation failed for change '" + id + "':\n" + validationResult.formatMessage());
+            }
+        }
 
         Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(templateClass);
 
@@ -301,7 +328,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     }
 
     private TemplateLoadedTaskBuilder setPreview(TemplatePreviewChange preview) {
-
+        this.preview = preview;
         setFileName(preview.getFileName());
         setId(preview.getId());
         setOrder(preview.getOrder().orElse(null));

@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -49,10 +50,22 @@ class TemplateValidatorTest {
         }
     }
 
-    // Test template with @ChangeTemplate(steppable = true)
+    // Test template with @ChangeTemplate(multiStep = true)
     @ChangeTemplate(multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSteppableTemplate() {
+            super();
+        }
+
+        @Apply
+        public void apply() {
+            // Test implementation
+        }
+    }
+
+    // Test template WITHOUT @ChangeTemplate annotation
+    public static class TestUnannotatedTemplate extends AbstractChangeTemplate<Void, String, String> {
+        public TestUnannotatedTemplate() {
             super();
         }
 
@@ -67,6 +80,7 @@ class TemplateValidatorTest {
         // Register test templates
         ChangeTemplateManager.addTemplate("TestSimpleTemplate", TestSimpleTemplate.class);
         ChangeTemplateManager.addTemplate("TestSteppableTemplate", TestSteppableTemplate.class);
+        ChangeTemplateManager.addTemplate("TestUnannotatedTemplate", TestUnannotatedTemplate.class);
         validator = new TemplateValidator();
     }
 
@@ -96,12 +110,10 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SimpleTemplate with apply only should pass validation")
         void simpleTemplateWithApplyOnlyPasses() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-1");
-            content.setTemplate("TestSimpleTemplate");
-            content.setApply("CREATE TABLE users");
+            TemplatePreviewChange preview = createPreview("test-change-1", "TestSimpleTemplate");
+            preview.setApply("CREATE TABLE users");
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertFalse(result.hasErrors(), "Should have no errors: " + result.formatMessage());
         }
@@ -109,13 +121,11 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SimpleTemplate with apply and rollback should pass validation")
         void simpleTemplateWithApplyAndRollbackPasses() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-2");
-            content.setTemplate("TestSimpleTemplate");
-            content.setApply("CREATE TABLE users");
-            content.setRollback("DROP TABLE users");
+            TemplatePreviewChange preview = createPreview("test-change-2", "TestSimpleTemplate");
+            preview.setApply("CREATE TABLE users");
+            preview.setRollback("DROP TABLE users");
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertFalse(result.hasErrors(), "Should have no errors: " + result.formatMessage());
         }
@@ -123,13 +133,11 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SimpleTemplate with steps should fail validation")
         void simpleTemplateWithStepsFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-3");
-            content.setTemplate("TestSimpleTemplate");
-            content.setApply("CREATE TABLE users");
-            content.setSteps(Arrays.asList(createStep("step1", null)));
+            TemplatePreviewChange preview = createPreview("test-change-3", "TestSimpleTemplate");
+            preview.setApply("CREATE TABLE users");
+            preview.setSteps(Arrays.asList(createStep("step1", null)));
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("SimpleTemplate must not have 'steps' field"));
@@ -138,13 +146,11 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SimpleTemplate missing apply should fail validation")
         void simpleTemplateMissingApplyFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-4");
-            content.setTemplate("TestSimpleTemplate");
-            content.setRollback("DROP TABLE users");
+            TemplatePreviewChange preview = createPreview("test-change-4", "TestSimpleTemplate");
+            preview.setRollback("DROP TABLE users");
             // apply is NOT set
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("SimpleTemplate requires 'apply' field"));
@@ -158,15 +164,13 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SteppableTemplate with valid steps should pass validation")
         void steppableTemplateWithValidStepsPasses() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-5");
-            content.setTemplate("TestSteppableTemplate");
-            content.setSteps(Arrays.asList(
+            TemplatePreviewChange preview = createPreview("test-change-5", "TestSteppableTemplate");
+            preview.setSteps(Arrays.asList(
                     createStep("CREATE TABLE users", null),
                     createStep("CREATE TABLE orders", "DROP TABLE orders")
             ));
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertFalse(result.hasErrors(), "Should have no errors: " + result.formatMessage());
         }
@@ -174,15 +178,13 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SteppableTemplate with steps having apply and rollback should pass validation")
         void steppableTemplateWithStepsHavingApplyAndRollbackPasses() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-6");
-            content.setTemplate("TestSteppableTemplate");
-            content.setSteps(Arrays.asList(
+            TemplatePreviewChange preview = createPreview("test-change-6", "TestSteppableTemplate");
+            preview.setSteps(Arrays.asList(
                     createStep("CREATE TABLE users", "DROP TABLE users"),
                     createStep("CREATE TABLE orders", "DROP TABLE orders")
             ));
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertFalse(result.hasErrors(), "Should have no errors: " + result.formatMessage());
         }
@@ -190,13 +192,11 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SteppableTemplate with apply at root should fail validation")
         void steppableTemplateWithApplyAtRootFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-7");
-            content.setTemplate("TestSteppableTemplate");
-            content.setApply("CREATE TABLE users"); // Should not be at root level
-            content.setSteps(Arrays.asList(createStep("step1", null)));
+            TemplatePreviewChange preview = createPreview("test-change-7", "TestSteppableTemplate");
+            preview.setApply("CREATE TABLE users"); // Should not be at root level
+            preview.setSteps(Arrays.asList(createStep("step1", null)));
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("SteppableTemplate must not have 'apply' at root level"));
@@ -205,13 +205,11 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SteppableTemplate with rollback at root should fail validation")
         void steppableTemplateWithRollbackAtRootFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-8");
-            content.setTemplate("TestSteppableTemplate");
-            content.setRollback("DROP TABLE users"); // Should not be at root level
-            content.setSteps(Arrays.asList(createStep("step1", null)));
+            TemplatePreviewChange preview = createPreview("test-change-8", "TestSteppableTemplate");
+            preview.setRollback("DROP TABLE users"); // Should not be at root level
+            preview.setSteps(Arrays.asList(createStep("step1", null)));
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("SteppableTemplate must not have 'rollback' at root level"));
@@ -220,12 +218,10 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SteppableTemplate missing steps should fail validation")
         void steppableTemplateMissingStepsFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-9");
-            content.setTemplate("TestSteppableTemplate");
+            TemplatePreviewChange preview = createPreview("test-change-9", "TestSteppableTemplate");
             // steps is NOT set
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("SteppableTemplate requires 'steps' field"));
@@ -234,17 +230,15 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("SteppableTemplate with step missing apply should fail validation")
         void steppableTemplateWithStepMissingApplyFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-10");
-            content.setTemplate("TestSteppableTemplate");
+            TemplatePreviewChange preview = createPreview("test-change-10", "TestSteppableTemplate");
 
             List<Map<String, Object>> steps = new ArrayList<>();
             Map<String, Object> step1 = new HashMap<>();
             step1.put("rollback", "DROP TABLE users"); // apply is missing
             steps.add(step1);
-            content.setSteps(steps);
+            preview.setSteps(steps);
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("Step 1 is missing required 'apply' field"));
@@ -258,12 +252,10 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("Unknown template name should fail with template not found error")
         void unknownTemplateNameFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-11");
-            content.setTemplate("UnknownTemplate");
-            content.setApply("some operation");
+            TemplatePreviewChange preview = createPreview("test-change-11", "UnknownTemplate");
+            preview.setApply("some operation");
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("Template 'UnknownTemplate' not found"));
@@ -272,16 +264,64 @@ class TemplateValidatorTest {
         @Test
         @DisplayName("Missing template name should fail validation")
         void missingTemplateNameFails() {
-            ChangeTemplateFileContent content = new ChangeTemplateFileContent();
-            content.setId("test-change-12");
-            // template is NOT set
-            content.setApply("some operation");
+            TemplatePreviewChange preview = createPreview("test-change-12", null);
+            preview.setApply("some operation");
 
-            ValidationResult result = validator.validate(content);
+            ValidationResult result = validator.validate(preview);
 
             assertTrue(result.hasErrors());
             assertTrue(result.formatMessage().contains("Template name is required"));
         }
+    }
+
+    @Nested
+    @DisplayName("validateStructure tests")
+    class ValidateStructureTests {
+
+        @Test
+        @DisplayName("Should validate structure correctly with resolved template class")
+        void shouldValidateStructureWithResolvedClass() {
+            TemplatePreviewChange preview = createPreview("test-change-13", "TestSimpleTemplate");
+            preview.setApply("CREATE TABLE users");
+
+            ValidationResult result = validator.validateStructure(TestSimpleTemplate.class, preview);
+
+            assertFalse(result.hasErrors(), "Should have no errors: " + result.formatMessage());
+        }
+
+        @Test
+        @DisplayName("Should fail when template class is missing @ChangeTemplate annotation")
+        void shouldFailWhenMissingAnnotation() {
+            TemplatePreviewChange preview = createPreview("test-change-14", "TestUnannotatedTemplate");
+            preview.setApply("some operation");
+
+            ValidationResult result = validator.validateStructure(TestUnannotatedTemplate.class, preview);
+
+            assertTrue(result.hasErrors());
+            assertTrue(result.formatMessage().contains("missing @ChangeTemplate annotation"));
+        }
+
+        @Test
+        @DisplayName("Should detect steppable template structure mismatch via validateStructure")
+        void shouldDetectSteppableMismatchViaValidateStructure() {
+            TemplatePreviewChange preview = createPreview("test-change-15", "TestSteppableTemplate");
+            preview.setApply("CREATE TABLE users"); // Wrong for steppable
+
+            ValidationResult result = validator.validateStructure(TestSteppableTemplate.class, preview);
+
+            assertTrue(result.hasErrors());
+            assertTrue(result.formatMessage().contains("SteppableTemplate must not have 'apply' at root level"));
+        }
+    }
+
+    /**
+     * Helper to create a TemplatePreviewChange with id and template name.
+     */
+    private TemplatePreviewChange createPreview(String id, String templateName) {
+        TemplatePreviewChange preview = new TemplatePreviewChange();
+        preview.setId(id);
+        preview.setSource(templateName);
+        return preview;
     }
 
     /**
