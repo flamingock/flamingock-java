@@ -52,7 +52,7 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     // Test template with custom generic types
-    @ChangeTemplate(id = "test-template-with-custom-types")
+    @ChangeTemplate(name = "test-template-with-custom-types")
     public static class TestTemplateWithCustomTypes
             extends AbstractChangeTemplate<TestConfig, TestApplyPayload, TestRollbackPayload> {
 
@@ -67,7 +67,7 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     // Test template with additional reflective classes
-    @ChangeTemplate(id = "test-template-with-additional-classes")
+    @ChangeTemplate(name = "test-template-with-additional-classes")
     public static class TestTemplateWithAdditionalClasses
             extends AbstractChangeTemplate<TestConfig, TestApplyPayload, TestRollbackPayload> {
 
@@ -82,7 +82,7 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     // Test template with Void configuration
-    @ChangeTemplate(id = "test-template-with-void-config")
+    @ChangeTemplate(name = "test-template-with-void-config")
     public static class TestTemplateWithVoidConfig
             extends AbstractChangeTemplate<Void, String, String> {
 

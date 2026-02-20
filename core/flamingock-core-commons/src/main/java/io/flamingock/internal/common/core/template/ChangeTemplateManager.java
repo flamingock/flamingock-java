@@ -184,7 +184,7 @@ public final class ChangeTemplateManager {
                     "Template class '%s' is missing required @ChangeTemplate annotation",
                     templateClass.getSimpleName()));
         }
-        String id = annotation.id();
+        String id = annotation.name();
         if (id == null || id.trim().isEmpty()) {
             throw new FlamingockException(String.format(
                     "Template class '%s' has a blank @ChangeTemplate id. The id must be a non-empty string",

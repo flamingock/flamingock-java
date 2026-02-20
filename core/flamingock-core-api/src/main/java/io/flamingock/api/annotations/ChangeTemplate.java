@@ -67,7 +67,7 @@ public @interface ChangeTemplate {
      *
      * @return the template identifier
      */
-    String id();
+    String name();
 
     /**
      * When {@code true}, the template expects a {@code steps} array in YAML.

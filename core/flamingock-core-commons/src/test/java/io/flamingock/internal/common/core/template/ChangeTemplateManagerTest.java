@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ChangeTemplateManagerTest {
 
-    @ChangeTemplate(id = "annotated-simple-template")
+    @ChangeTemplate(name = "annotated-simple-template")
     public static class AnnotatedSimpleTemplate extends AbstractChangeTemplate<Void, String, String> {
         public AnnotatedSimpleTemplate() {
             super();
@@ -39,7 +39,7 @@ class ChangeTemplateManagerTest {
         }
     }
 
-    @ChangeTemplate(id = "annotated-steppable-template", multiStep = true)
+    @ChangeTemplate(name = "annotated-steppable-template", multiStep = true)
     public static class AnnotatedSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
         public AnnotatedSteppableTemplate() {
             super();

@@ -38,7 +38,7 @@ class TemplateValidatorTest {
     private TemplateValidator validator;
 
     // Test template with @ChangeTemplate (simple template)
-    @ChangeTemplate(id = "test-simple-template")
+    @ChangeTemplate(name = "test-simple-template")
     public static class TestSimpleTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSimpleTemplate() {
             super();
@@ -51,7 +51,7 @@ class TemplateValidatorTest {
     }
 
     // Test template with @ChangeTemplate(multiStep = true)
-    @ChangeTemplate(id = "test-steppable-template", multiStep = true)
+    @ChangeTemplate(name = "test-steppable-template", multiStep = true)
     public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
         public TestSteppableTemplate() {
             super();
