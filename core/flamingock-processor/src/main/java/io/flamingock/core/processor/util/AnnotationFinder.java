@@ -64,14 +64,12 @@ public final class AnnotationFinder {
                 .findFirst();
     }
 
-    public Collection<CodePreviewChange> findAnnotatedChanges(List<AnnotationProcessorPlugin> plugins) {
+    public Collection<CodePreviewChange> findAnnotatedChanges(List<ChangeDiscoverer> changeDiscoverers) {
         logger.info("Searching for code-based changes");
-        return plugins
+        return changeDiscoverers
                 .stream()
-                .filter(p -> p instanceof ChangeDiscoverer)
-                .map(p -> (ChangeDiscoverer)p)
                 .peek(cd -> logger.info(String.format("Using %s for discover changes", cd.getClass().getName())))
-                .map(cd -> cd.findAnnotatedChanges(roundEnv, logger))
+                .map(ChangeDiscoverer::findAnnotatedChanges)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }

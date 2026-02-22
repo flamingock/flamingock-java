@@ -55,17 +55,21 @@ import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPO
 @SuppressWarnings("deprecation")
 public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlugin, ChangeDiscoverer, ConfigurationPropertiesProvider {
 
+    private RoundEnvironment roundEnv;
+    private LoggerPreProcessor logger;
     private MongockSupport mongockSupport;
 
     @Override
     public void initialize(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+        this.roundEnv = roundEnv;
+        this.logger = logger;
         Optional<MongockSupport> mongockSupportOpt = this.getMongockSupportAnnotation(roundEnv, logger);
         logger.info(String.format("Searching for @MongockSupport annotation: %s", mongockSupportOpt.isPresent() ? "Found" : "Not found"));
         mongockSupport = mongockSupportOpt.orElseThrow(() -> new FlamingockException("@MongockSupport annotation must be provided when mongock-support module is present."));
     }
 
     @Override
-    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+    public Collection<CodePreviewChange> findAnnotatedChanges() {
 
         final String mongockTargetSystemId = mongockSupport.targetSystem();
 
@@ -86,7 +90,7 @@ public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlug
     }
 
     @Override
-    public Map<String, String> getConfigurationProperties(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+    public Map<String, String> getConfigurationProperties() {
 
         Map<String, String> properties = new HashMap<>();
 

@@ -16,12 +16,10 @@
 package io.flamingock.internal.common.core.processor;
 
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
-import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
-import javax.annotation.processing.RoundEnvironment;
 import java.util.Collection;
 
 public interface ChangeDiscoverer {
 
-    Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger);
+    Collection<CodePreviewChange> findAnnotatedChanges();
 }

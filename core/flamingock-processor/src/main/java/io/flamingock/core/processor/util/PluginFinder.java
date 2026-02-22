@@ -15,21 +15,51 @@
  */
 package io.flamingock.core.processor.util;
 
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin;
+import io.flamingock.internal.common.core.processor.ChangeDiscoverer;
+import io.flamingock.internal.common.core.processor.ConfigurationPropertiesProvider;
+import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
+import javax.annotation.processing.RoundEnvironment;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public final class PluginFinder {
+public class PluginFinder {
 
-    private PluginFinder() {
+    private boolean initialized = false;
+    private List<AnnotationProcessorPlugin> plugins;
+
+    public PluginFinder() {
         // No-op.
     }
 
-    public static List<AnnotationProcessorPlugin> findAnnotationProcessorPlugins() {
+    public void loadAndInitializePlugins(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+        plugins = findAnnotationProcessorPlugins();
+        plugins.forEach(p -> p.initialize(roundEnv, logger));
+        initialized = true;
+    }
+
+    public List<ChangeDiscoverer> getChangeDiscoverers() {
+        return getPluginsByType(ChangeDiscoverer.class);
+    }
+
+    public List<ConfigurationPropertiesProvider> getConfigurationPropertiesProviders() {
+        return getPluginsByType(ConfigurationPropertiesProvider.class);
+    }
+
+
+    private void checkInitialized() {
+        if (!initialized) {
+            throw new FlamingockException("%s must be initialized before using it.", PluginFinder.class.getSimpleName());
+        }
+    }
+
+    private List<AnnotationProcessorPlugin> findAnnotationProcessorPlugins() {
         Set<String> seen = new LinkedHashSet<>();
         List<AnnotationProcessorPlugin> result = new ArrayList<>();
 
@@ -52,5 +82,13 @@ public final class PluginFinder {
             }
         }
         return result;
+    }
+
+    private <T> List<T> getPluginsByType(Class<T> type) {
+        checkInitialized();
+        return plugins.stream()
+                .filter(type::isInstance)
+                .map(type::cast)
+                .collect(Collectors.toList());
     }
 }

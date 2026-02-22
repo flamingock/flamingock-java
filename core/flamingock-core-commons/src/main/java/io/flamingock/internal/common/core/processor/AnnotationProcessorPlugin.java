@@ -19,6 +19,17 @@ import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
 import javax.annotation.processing.RoundEnvironment;
 
+/**
+ * Extension point for annotation processing plugins.
+ * <p>
+ * Implementations are discovered using {@link java.util.ServiceLoader}. For an implementation to be found at
+ * processing time, the JAR that provides it must be present on the application's {@code annotationProcessor}
+ * classpath.
+ * <p>
+ * The implementation JAR must also include the standard service registration file
+ * {@code META-INF/services/io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin},
+ * listing the implementation class name.
+ */
 public interface AnnotationProcessorPlugin {
 
     void initialize(RoundEnvironment roundEnv, LoggerPreProcessor logger);

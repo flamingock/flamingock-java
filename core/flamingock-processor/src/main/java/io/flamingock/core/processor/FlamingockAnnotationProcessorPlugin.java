@@ -32,13 +32,17 @@ import java.util.stream.Collectors;
 
 public class FlamingockAnnotationProcessorPlugin implements AnnotationProcessorPlugin, ChangeDiscoverer {
 
+    private RoundEnvironment roundEnv;
+    private LoggerPreProcessor logger;
+
     @Override
     public void initialize(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
-        // No-op.
+        this.roundEnv = roundEnv;
+        this.logger = logger;
     }
 
     @Override
-    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+    public Collection<CodePreviewChange> findAnnotatedChanges() {
         logger.info("Searching for code-based changes (Java classes annotated with @Change annotation)");
         return roundEnv.getElementsAnnotatedWith(Change.class)
                 .stream()

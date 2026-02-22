@@ -15,12 +15,9 @@
  */
 package io.flamingock.internal.common.core.processor;
 
-import io.flamingock.internal.common.core.util.LoggerPreProcessor;
-
-import javax.annotation.processing.RoundEnvironment;
 import java.util.Map;
 
 public interface ConfigurationPropertiesProvider {
 
-    Map<String, String> getConfigurationProperties(RoundEnvironment roundEnv, LoggerPreProcessor logger);
+    Map<String, String> getConfigurationProperties();
 }
