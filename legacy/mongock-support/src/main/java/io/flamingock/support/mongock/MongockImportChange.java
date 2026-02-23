@@ -23,6 +23,7 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditWriter;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
+import io.flamingock.internal.common.core.util.ConfigValueParser;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.external.targets.operations.TransactionalTargetSystemOps;
@@ -33,7 +34,7 @@ import javax.inject.Named;
 import java.util.List;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 
 /**
  * This ChangeUnit is intentionally not annotated with @Change, @Apply, or similar,
@@ -47,7 +48,7 @@ public class MongockImportChange {
                               @NonLockGuarded TargetSystemManager targetSystemManager,
                               @NonLockGuarded AuditWriter auditWriter,
                               @NonLockGuarded PipelineDescriptor pipelineDescriptor,
-                              @Nullable @Named(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowed) {
+                              @Nullable @Named(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowed) {
         logger.info("Starting audit log migration from Mongock to Flamingock community audit store");
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
@@ -98,7 +99,7 @@ public class MongockImportChange {
         String v = raw.trim();
         if ("true".equalsIgnoreCase(v)) return true;
         if ("false".equalsIgnoreCase(v)) return false;
-        throw new FlamingockException("Invalid value for emptyOriginAllowed: " + raw
+        throw new FlamingockException("Invalid value for " +  MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY + ": " + raw
                 + " (expected \"true\" or \"false\" or empty)");
     }
 }

@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.support.mongock.processor.discover;
+package io.flamingock.support.mongock.processor;
 
 import com.github.cloudyrock.mongock.ChangeLog;
 import io.flamingock.internal.common.core.audit.AuditWriter;
-import io.flamingock.internal.common.core.discover.ChangeDiscoverer;
+import io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin;
+import io.flamingock.internal.common.core.processor.ChangeDiscoverer;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.builder.CodePreviewTaskBuilder;
+import io.flamingock.internal.common.core.processor.ConfigurationPropertiesProvider;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.util.ConfigValueParser;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.support.mongock.MongockImportChange;
@@ -38,6 +41,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,42 +49,57 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 
 @SuppressWarnings("deprecation")
-public class MongockChangeDiscoverer implements ChangeDiscoverer {
+public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlugin, ChangeDiscoverer, ConfigurationPropertiesProvider {
+
+    private RoundEnvironment roundEnv;
+    private LoggerPreProcessor logger;
+    private MongockSupport mongockSupport;
 
     @Override
-    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger, Map<String, String> properties) {
-
+    public void initialize(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+        this.roundEnv = roundEnv;
+        this.logger = logger;
         Optional<MongockSupport> mongockSupportOpt = this.getMongockSupportAnnotation(roundEnv, logger);
-        final String mongockTargetSystemId = mongockSupportOpt.map(MongockSupport::targetSystem).orElse(null);
-
         logger.info(String.format("Searching for @MongockSupport annotation: %s", mongockSupportOpt.isPresent() ? "Found" : "Not found"));
-
-        if (mongockSupportOpt.isPresent()) {
-            logger.info("Searching for code-based changes (Java classes annotated with @ChangeUnit or @ChangeLog annotations)");
-            List<CodePreviewChange> changes = Stream.concat(
-                            roundEnv.getElementsAnnotatedWith(ChangeUnit.class).stream(),
-                            roundEnv.getElementsAnnotatedWith(ChangeLog.class).stream()
-                    )
-                    .filter(e -> e.getKind() == ElementKind.CLASS)
-                    .map(e -> (TypeElement) e)
-                    .map(e -> buildCodePreviewChange(e, mongockTargetSystemId))
-                    .flatMap(List::stream)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-            changes.add(getImporterChange(mongockTargetSystemId));
-
-            // Adding Mongock specific configuration properties
-            processConfigurationProperties(mongockSupportOpt.get(), properties);
-
-            return changes;
-        } else {
-            throw new FlamingockException("@MongockSupport annotation must be provided when mongock-support module is present.");
-        }
+        mongockSupport = mongockSupportOpt.orElseThrow(() -> new FlamingockException("@MongockSupport annotation must be provided when mongock-support module is present."));
     }
+
+    @Override
+    public Collection<CodePreviewChange> findAnnotatedChanges() {
+
+        final String mongockTargetSystemId = mongockSupport.targetSystem();
+
+        logger.info("Searching for code-based changes (Java classes annotated with @ChangeUnit or @ChangeLog annotations)");
+        List<CodePreviewChange> changes = Stream.concat(
+                        roundEnv.getElementsAnnotatedWith(ChangeUnit.class).stream(),
+                        roundEnv.getElementsAnnotatedWith(ChangeLog.class).stream()
+                )
+                .filter(e -> e.getKind() == ElementKind.CLASS)
+                .map(e -> (TypeElement) e)
+                .map(e -> buildCodePreviewChange(e, mongockTargetSystemId))
+                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        changes.add(getImporterChange(mongockTargetSystemId));
+
+        return changes;
+    }
+
+    @Override
+    public Map<String, String> getConfigurationProperties() {
+
+        Map<String, String> properties = new HashMap<>();
+
+        // Adding Mongock specific configuration properties
+        processConfigurationProperties(mongockSupport, properties);
+
+        return properties;
+    }
+
 
     private CodePreviewChange getImporterChange(String targetSystemId) {
         CodePreviewTaskBuilder builder = CodePreviewTaskBuilder.instance();
@@ -123,23 +142,18 @@ public class MongockChangeDiscoverer implements ChangeDiscoverer {
             throw new IllegalArgumentException("properties");
         }
 
-        if (resolveEmptyOriginAllowed(mongockSupport.emptyOriginAllowed())) {
-            properties.put(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, "true");
+        // Empty Origin Allowed
+        ConfigValueParser.ConfigValue emptyOriginAllowedValue =
+                ConfigValueParser.parse(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, mongockSupport.emptyOriginAllowed(), ConfigValueParser.BOOLEAN_VALUE_VALIDATOR);
+        if (!emptyOriginAllowedValue.isEmpty()) {
+            properties.put(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, emptyOriginAllowedValue.getRaw());
         }
 
-        if (mongockSupport.origin() != null && !mongockSupport.origin().trim().isEmpty()) {
-            properties.put(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, mongockSupport.origin().trim());
+        // Origin
+        ConfigValueParser.ConfigValue originValue =
+                ConfigValueParser.parse(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, mongockSupport.origin());
+        if (!originValue.isEmpty()) {
+            properties.put(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, originValue.getRaw());
         }
-    }
-
-    private boolean resolveEmptyOriginAllowed(String raw) {
-        if (raw == null || raw.trim().isEmpty()) {
-            return false; // default behaviour
-        }
-        String v = raw.trim();
-        if ("true".equalsIgnoreCase(v)) return true;
-        if ("false".equalsIgnoreCase(v)) return false;
-        throw new FlamingockException("Invalid value for emptyOriginAllowed: " + raw
-                + " (expected \"true\" or \"false\" or empty)");
     }
 }

@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.discover;
+package io.flamingock.internal.common.core.processor;
 
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
-import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 
-import javax.annotation.processing.RoundEnvironment;
 import java.util.Collection;
-import java.util.Map;
 
 public interface ChangeDiscoverer {
 
-    //TODO: move configuration properties to another interface
-    Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger, Map<String, String> properties);
+    Collection<CodePreviewChange> findAnnotatedChanges();
 }
