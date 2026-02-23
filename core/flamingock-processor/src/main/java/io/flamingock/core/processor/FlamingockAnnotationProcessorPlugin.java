@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.core.processor.discover;
+package io.flamingock.core.processor;
 
 import io.flamingock.api.annotations.Change;
+import io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
-import io.flamingock.internal.common.core.discover.ChangeDiscoverer;
+import io.flamingock.internal.common.core.processor.ChangeDiscoverer;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.builder.CodePreviewTaskBuilder;
 
@@ -25,15 +26,23 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class FlamingockChangeDiscoverer implements ChangeDiscoverer {
+public class FlamingockAnnotationProcessorPlugin implements AnnotationProcessorPlugin, ChangeDiscoverer {
+
+    private RoundEnvironment roundEnv;
+    private LoggerPreProcessor logger;
 
     @Override
-    public Collection<CodePreviewChange> findAnnotatedChanges(RoundEnvironment roundEnv, LoggerPreProcessor logger, Map<String, String> properties) {
+    public void initialize(RoundEnvironment roundEnv, LoggerPreProcessor logger) {
+        this.roundEnv = roundEnv;
+        this.logger = logger;
+    }
+
+    @Override
+    public Collection<CodePreviewChange> findAnnotatedChanges() {
         logger.info("Searching for code-based changes (Java classes annotated with @Change annotation)");
         return roundEnv.getElementsAnnotatedWith(Change.class)
                 .stream()
