@@ -47,7 +47,7 @@ import java.util.List;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -244,7 +244,7 @@ public class MongoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(mongodbTargetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
+                .setProperty(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
                 .build();
 
         FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
@@ -265,7 +265,7 @@ public class MongoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(mongodbTargetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
+                .setProperty(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
                 .build();
 
         flamingock.run();
@@ -307,11 +307,11 @@ public class MongoDBImporterTest {
 
     @Test
     @DisplayName("GIVEN all Mongock changeUnits already executed" +
-            "AND custom origin repository name provided" +
+            "AND custom origin repository name provided by literal value " +
             "WHEN migrating to Flamingock Community " +
             "THEN should import the entire history " +
             "AND execute the pending flamingock changes")
-    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndCustomOriginProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndCustomOriginProvidedByLiteralValue_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
         // Setup Mongock entries
 
         final String customMongockOrigin = "mongockCustomOriginCollection";

@@ -27,7 +27,6 @@ import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.dynamodb.DynamoDBTargetSystem;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,13 +43,11 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -235,7 +232,7 @@ public class DynamoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(dynamodbTargetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
+                .setProperty(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
                 .build();
 
         FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
@@ -255,7 +252,7 @@ public class DynamoDBImporterTest {
 
         Runner flamingock = testKit.createBuilder()
                 .addTargetSystem(dynamodbTargetSystem)
-                .setProperty(MONGOCK_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
+                .setProperty(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
                 .build();
 
         flamingock.run();

@@ -20,8 +20,10 @@ import io.flamingock.internal.common.core.context.Context;
 import io.flamingock.internal.common.core.context.ContextInjectable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.context.Dependency;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
+import io.flamingock.internal.common.core.util.ConfigValueParser;
 import io.flamingock.internal.core.configuration.EventLifecycleConfigurator;
 import io.flamingock.internal.core.configuration.core.CoreConfiguration;
 import io.flamingock.internal.core.context.PriorityContext;
@@ -80,6 +82,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -247,23 +250,48 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         logger.trace("injecting internal configuration");
         addDependency(coreConfiguration);
         addDependency(targetSystemManager);
-        if (flamingockMetadata != null && flamingockMetadata.getProperties() != null) {
-            flamingockMetadata.getProperties().forEach(this::setProperty);
-        }
         updateContextSpecific();
         List<ContextResolver> dependencyContextsFromPlugins = pluginManager.getPlugins()
                 .stream()
                 .map(Plugin::getDependencyContext)
                 .flatMap(CollectionUtil::optionalToStream)
                 .collect(Collectors.toList());
-        return dependencyContextsFromPlugins
+        PriorityContext priorityContext = dependencyContextsFromPlugins
                 .stream()
                 .filter(Objects::nonNull)
                 .reduce((previous, current) -> new PriorityContextResolver(current, previous))
                 .map(accumulated -> new PriorityContext(context, accumulated))
                 .orElse(new PriorityContext(new SimpleContext(), context));
+
+        if (flamingockMetadata != null && flamingockMetadata.getProperties() != null) {
+            flamingockMetadata.getProperties().forEach((k,v) -> this.processInternalProperty(priorityContext, k, v));
+        }
+
+        return priorityContext;
     }
 
+    private void processInternalProperty(PriorityContext priorityContext, String propertyKey, String propertyValue) {
+
+        ConfigValueParser.ConfigValue configValue = ConfigValueParser.parse(propertyKey, propertyValue);
+
+        if (configValue.getPlaceholder().isPresent()) {
+            ConfigValueParser.Placeholder placeHolder = configValue.getPlaceholder().get();
+            Optional<String> optPropertyValue = priorityContext.getProperty(placeHolder.getName());
+            if (optPropertyValue.isPresent()) {
+                propertyValue = optPropertyValue.get();
+            }
+            else if (placeHolder.hasDefault()) {
+                propertyValue = placeHolder.getDefaultValue();
+            }
+            else {
+                throw new FlamingockException("No property found named '" + placeHolder.getName() + "'.");
+            }
+        }
+
+        if (propertyValue != null && !propertyValue.trim().isEmpty()) {
+            this.setProperty(propertyKey, propertyValue);
+        }
+    }
 
     @NotNull
     private EventPublisher buildEventPublisher() {
