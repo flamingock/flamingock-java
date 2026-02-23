@@ -24,7 +24,6 @@ import io.flamingock.api.annotations.TargetSystem;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Fluent assertion utility for validating that a code-based change class is correctly annotated.
@@ -64,21 +63,6 @@ public final class ChangeValidator extends AbstractChangeValidator<ChangeValidat
     private final Class<?> changeClass;
     private final Change changeAnnotation;
 
-    /**
-     * Creates a {@code ChangeValidator} for the given change class.
-     *
-     * <p>Validates eagerly that the class is annotated with {@code @Change} and declares
-     * at least one method annotated with {@code @Apply}.</p>
-     *
-     * @param changeClass the change class to validate; must not be {@code null}
-     * @return a new validator ready for assertion chaining
-     * @throws NullPointerException     if {@code changeClass} is {@code null}
-     * @throws IllegalArgumentException if {@code @Change} or {@code @Apply} is absent
-     */
-    public static ChangeValidator of(Class<?> changeClass) {
-        return new ChangeValidator(changeClass);
-    }
-
     private ChangeValidator(Class<?> changeClass) {
         super(
                 Objects.requireNonNull(changeClass, "changeClass must not be null").getSimpleName(),
@@ -98,6 +82,21 @@ public final class ChangeValidator extends AbstractChangeValidator<ChangeValidat
             throw new IllegalArgumentException(
                     String.format("Class [%s] must declare a method annotated with @Apply", changeClass.getName()));
         }
+    }
+
+    /**
+     * Creates a {@code ChangeValidator} for the given change class.
+     *
+     * <p>Validates eagerly that the class is annotated with {@code @Change} and declares
+     * at least one method annotated with {@code @Apply}.</p>
+     *
+     * @param changeClass the change class to validate; must not be {@code null}
+     * @return a new validator ready for assertion chaining
+     * @throws NullPointerException     if {@code changeClass} is {@code null}
+     * @throws IllegalArgumentException if {@code @Change} or {@code @Apply} is absent
+     */
+    public static ChangeValidator of(Class<?> changeClass) {
+        return new ChangeValidator(changeClass);
     }
 
     @Override
@@ -123,8 +122,17 @@ public final class ChangeValidator extends AbstractChangeValidator<ChangeValidat
 
     @Override
     protected RecoveryStrategy getRecovery() {
-        Recovery rec = changeClass.getAnnotation(Recovery.class);
-        return rec != null ? rec.strategy() : RecoveryStrategy.MANUAL_INTERVENTION;
+        if (changeClass.isAnnotationPresent(Recovery.class)) {
+            Recovery rec = changeClass.getAnnotation(Recovery.class);
+            return rec != null ? rec.strategy() : null;
+        } else {
+            try {
+                return (RecoveryStrategy) Recovery.class.getMethod("strategy").getDefaultValue();
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
     /**
@@ -140,10 +148,10 @@ public final class ChangeValidator extends AbstractChangeValidator<ChangeValidat
             boolean found = Arrays.stream(changeClass.getDeclaredMethods())
                     .anyMatch(m -> m.isAnnotationPresent(Rollback.class));
             return found
-                    ? Optional.empty()
-                    : Optional.of(String.format(
-                            "hasRollbackMethod: no method annotated with @Rollback found in %s",
-                            changeClass.getSimpleName()));
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format(
+                    "hasRollbackMethod: no method annotated with @Rollback found in %s",
+                    changeClass.getSimpleName()));
         });
         return this;
     }

@@ -16,6 +16,7 @@
 package io.flamingock.support.change;
 
 import io.flamingock.api.RecoveryStrategy;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +56,7 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
      */
     protected final String extractedOrder;
 
-    private final List<Supplier<Optional<String>>> assertions = new ArrayList<>();
+    private final List<Supplier<ChangeValidatorResult>> assertions = new ArrayList<>();
 
     protected AbstractChangeValidator(String displayName, String extractedOrder) {
         this.displayName = displayName;
@@ -82,8 +83,8 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
         addAssertion(() -> {
             String actual = getId();
             return actual.equals(expected)
-                    ? Optional.empty()
-                    : Optional.of(String.format("withId: expected \"%s\" but was \"%s\"", expected, actual));
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format("withId: expected \"%s\" but was \"%s\"", expected, actual));
         });
         return self();
     }
@@ -98,8 +99,8 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
         addAssertion(() -> {
             String actual = getAuthor();
             return actual.equals(expected)
-                    ? Optional.empty()
-                    : Optional.of(String.format("withAuthor: expected \"%s\" but was \"%s\"", expected, actual));
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format("withAuthor: expected \"%s\" but was \"%s\"", expected, actual));
         });
         return self();
     }
@@ -117,14 +118,14 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
     public SELF withOrder(String expected) {
         addAssertion(() -> {
             if (extractedOrder == null) {
-                return Optional.of(String.format(
+                return ChangeValidatorResult.error(String.format(
                         "withOrder: could not extract order from \"%s\". "
                                 + "Name must follow the _ORDER__Name convention (e.g. _0001__MyChange).",
                         displayName));
             }
             return extractedOrder.equals(expected)
-                    ? Optional.empty()
-                    : Optional.of(String.format(
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format(
                             "withOrder: expected \"%s\" but extracted order was \"%s\"",
                             expected, extractedOrder));
         });
@@ -141,13 +142,13 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
         addAssertion(() -> {
             String actual = getTargetSystemId();
             if (actual == null) {
-                return Optional.of(String.format(
+                return ChangeValidatorResult.error(String.format(
                         "withTargetSystem: expected target system \"%s\" but none is declared",
                         expectedId));
             }
             return actual.equals(expectedId)
-                    ? Optional.empty()
-                    : Optional.of(String.format(
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format(
                             "withTargetSystem: expected \"%s\" but was \"%s\"", expectedId, actual));
         });
         return self();
@@ -165,10 +166,11 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
     public SELF withRecovery(RecoveryStrategy expected) {
         addAssertion(() -> {
             RecoveryStrategy actual = getRecovery();
+            String actualName = actual != null ? actual.name() : null;
             return actual == expected
-                    ? Optional.empty()
-                    : Optional.of(String.format(
-                            "withRecovery: expected %s but was %s", expected.name(), actual.name()));
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format(
+                            "withRecovery: expected %s but was %s", expected.name(), actualName));
         });
         return self();
     }
@@ -180,8 +182,8 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
      */
     public SELF isTransactional() {
         addAssertion(() -> isTransactionalValue()
-                ? Optional.empty()
-                : Optional.of("isTransactional: expected transactional=true but was false"));
+                ? ChangeValidatorResult.OK()
+                : ChangeValidatorResult.error("isTransactional: expected transactional=true but was false"));
         return self();
     }
 
@@ -192,8 +194,8 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
      */
     public SELF isNotTransactional() {
         addAssertion(() -> !isTransactionalValue()
-                ? Optional.empty()
-                : Optional.of("isNotTransactional: expected transactional=false but was true"));
+                ? ChangeValidatorResult.OK()
+                : ChangeValidatorResult.error("isNotTransactional: expected transactional=false but was true"));
         return self();
     }
 
@@ -204,7 +206,7 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
      * @param assertion a supplier that returns an error message if the assertion fails,
      *                  or {@link Optional#empty()} if it passes
      */
-    protected final void addAssertion(Supplier<Optional<String>> assertion) {
+    protected final void addAssertion(Supplier<ChangeValidatorResult> assertion) {
         assertions.add(assertion);
     }
 
@@ -217,10 +219,8 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
      * @throws AssertionError if one or more assertions failed, listing all failure messages
      */
     public final void validate() {
-        List<String> errors = assertions.stream()
-                .map(Supplier::get)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        List<String> errors = getErrors().stream()
+                .map(ChangeValidatorResult.Error::getMessage)
                 .collect(Collectors.toList());
 
         if (!errors.isEmpty()) {
@@ -228,6 +228,15 @@ public abstract class AbstractChangeValidator<SELF extends AbstractChangeValidat
                     getClass().getSimpleName() + " failed for " + displayName + ":\n  - "
                             + String.join("\n  - ", errors));
         }
+    }
+
+    @NotNull
+    private List<ChangeValidatorResult.Error> getErrors() {
+        return assertions.stream()
+                .map(Supplier::get)
+                .filter(ChangeValidatorResult::isError)
+                .map(ChangeValidatorResult.Error.class::cast)
+                .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
