@@ -67,7 +67,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass validate() with no assertions added")
         void shouldPassValidateWithNoAssertions() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class);
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class);
 
             assertDoesNotThrow(validator::validate);
         }
@@ -80,7 +80,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when id matches")
         void shouldPassWhenIdMatches() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withId("fully-annotated");
 
             assertDoesNotThrow(validator::validate);
@@ -89,7 +89,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when id does not match")
         void shouldFailWhenIdDoesNotMatch() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withId("wrong-id");
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -107,7 +107,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when author matches")
         void shouldPassWhenAuthorMatches() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withAuthor("test-author");
 
             assertDoesNotThrow(validator::validate);
@@ -116,7 +116,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when author does not match")
         void shouldFailWhenAuthorDoesNotMatch() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withAuthor("wrong-author");
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -134,7 +134,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when order matches the class name prefix")
         void shouldPassWhenOrderMatches() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withOrder("0001");
 
             assertDoesNotThrow(validator::validate);
@@ -143,7 +143,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass for a different valid order prefix")
         void shouldPassForDifferentValidOrderPrefix() {
-            ChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
                     .withOrder("0002");
 
             assertDoesNotThrow(validator::validate);
@@ -152,7 +152,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when order does not match")
         void shouldFailWhenOrderDoesNotMatch() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withOrder("9999");
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -165,7 +165,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail with descriptive message when class name has no order prefix")
         void shouldFailWithDescriptiveMessageWhenNoOrderPrefix() {
-            ChangeValidator validator = ChangeValidator.of(NoOrderPrefixChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(NoOrderPrefixChange.class)
                     .withOrder("0001");
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -183,7 +183,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when change is transactional via explicit annotation value")
         void shouldPassWhenTransactional() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .isTransactional();
 
             assertDoesNotThrow(validator::validate);
@@ -192,7 +192,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when change uses default transactional=true")
         void shouldPassForDefaultTransactional() {
-            ChangeValidator validator = ChangeValidator.of(_0003__NoTargetSystemChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0003__NoTargetSystemChange.class)
                     .isTransactional();
 
             assertDoesNotThrow(validator::validate);
@@ -201,7 +201,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when change is not transactional")
         void shouldFailWhenNotTransactional() {
-            ChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
                     .isTransactional();
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -217,7 +217,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when change is not transactional")
         void shouldPassWhenNotTransactional() {
-            ChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
                     .isNotTransactional();
 
             assertDoesNotThrow(validator::validate);
@@ -226,7 +226,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when change is transactional")
         void shouldFailWhenTransactional() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .isNotTransactional();
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -242,7 +242,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when target system id matches")
         void shouldPassWhenTargetSystemMatches() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withTargetSystem("mongodb");
 
             assertDoesNotThrow(validator::validate);
@@ -251,7 +251,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when target system id does not match")
         void shouldFailWhenTargetSystemDoesNotMatch() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withTargetSystem("postgresql");
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -264,7 +264,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when @TargetSystem annotation is not present")
         void shouldFailWhenTargetSystemAnnotationAbsent() {
-            ChangeValidator validator = ChangeValidator.of(_0003__NoTargetSystemChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0003__NoTargetSystemChange.class)
                     .withTargetSystem("mongodb");
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -281,7 +281,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass for ALWAYS_RETRY when @Recovery is present with ALWAYS_RETRY")
         void shouldPassForAlwaysRetryWhenAnnotationPresent() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withRecovery(RecoveryStrategy.ALWAYS_RETRY);
 
             assertDoesNotThrow(validator::validate);
@@ -290,7 +290,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass for MANUAL_INTERVENTION when @Recovery annotation is absent")
         void shouldPassForDefaultWhenAnnotationAbsent() {
-            ChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
                     .withRecovery(RecoveryStrategy.MANUAL_INTERVENTION);
 
             assertDoesNotThrow(validator::validate);
@@ -299,7 +299,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when recovery strategy does not match")
         void shouldFailWhenRecoveryDoesNotMatch() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withRecovery(RecoveryStrategy.MANUAL_INTERVENTION);
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -312,7 +312,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when ALWAYS_RETRY expected but default MANUAL_INTERVENTION is in effect")
         void shouldFailWhenAlwaysRetryExpectedButDefaultApplies() {
-            ChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
                     .withRecovery(RecoveryStrategy.ALWAYS_RETRY);
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -330,7 +330,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should pass when @Rollback method is present")
         void shouldPassWhenRollbackPresent() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .hasRollbackMethod();
 
             assertDoesNotThrow(validator::validate);
@@ -339,7 +339,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should fail when no @Rollback method is present")
         void shouldFailWhenRollbackAbsent() {
-            ChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
                     .hasRollbackMethod();
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -356,7 +356,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should report all failures in a single AssertionError")
         void shouldReportAllFailuresTogether() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withId("wrong-id")
                     .withAuthor("wrong-author")
                     .withOrder("9999");
@@ -371,7 +371,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should only report failed assertions, not passing ones")
         void shouldOnlyReportFailedAssertions() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withId("fully-annotated")
                     .withAuthor("wrong-author");
 
@@ -384,7 +384,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should include the change class simple name in the error header")
         void shouldIncludeClassNameInErrorHeader() {
-            ChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0001__FullyAnnotatedChange.class)
                     .withId("wrong-id");
 
             AssertionError error = assertThrows(AssertionError.class, validator::validate);
@@ -395,7 +395,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should combine assertions across all assertion types")
         void shouldCombineAssertionsAcrossAllTypes() {
-            ChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
+            CodeBasedChangeValidator validator = ChangeValidator.of(_0002__NonTransactionalChange.class)
                     .withId("wrong-id")
                     .isTransactional()
                     .withTargetSystem("wrong-system")

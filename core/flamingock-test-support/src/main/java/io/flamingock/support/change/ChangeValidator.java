@@ -16,73 +16,36 @@
 package io.flamingock.support.change;
 
 import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Change;
-import io.flamingock.api.annotations.Recovery;
-import io.flamingock.api.annotations.Rollback;
-import io.flamingock.api.annotations.TargetSystem;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
- * Fluent assertion utility for validating that a code-based change class is correctly annotated.
+ * Base class for Flamingock change validators.
  *
- * <p>Reads metadata from {@code @Change}, {@code @TargetSystem}, {@code @Recovery},
- * {@code @Apply}, and {@code @Rollback} via reflection and asserts that the values match
- * expectations. All assertions are soft: they are queued on each chained call and executed
- * together by {@link #validate()}, which collects every failure into a single
- * {@link AssertionError}.</p>
+ * <p>Provides the soft-assertion engine: assertions are queued via
+ * {@link #addAssertion(Supplier)} and executed together by {@link #validate()}, which
+ * collects all failures and throws a single {@link AssertionError} listing every problem.</p>
  *
- * <h2>Implicit validation at construction</h2>
- * <p>{@link #of(Class)} checks eagerly that:
- * <ul>
- *   <li>The class is annotated with {@code @Change}</li>
- *   <li>The class declares at least one method annotated with {@code @Apply}</li>
- * </ul>
+ * <p>Shared assertions that apply to both code-based and template-based changes
+ * ({@code withId}, {@code withAuthor}, {@code withOrder}, {@code withTargetSystem},
+ * {@code withRecovery}, {@code isTransactional}, {@code isNotTransactional}) are declared
+ * here so that concrete subclasses inherit them without duplication.</p>
  *
- * <h2>Usage example</h2>
- * <pre>{@code
- * ChangeValidator.of(_0002__FeedClients.class)
- *     .withId("feed-clients")
- *     .withAuthor("john.doe")
- *     .withOrder("0002")
- *     .isTransactional()
- *     .withTargetSystem("mongodb")
- *     .hasRollbackMethod()
- *     .validate();
- * }</pre>
+ * <p>Subclasses must implement the metadata accessors ({@link #getId()},
+ * {@link #getAuthor()}, etc.) to supply the values that each assertion checks.</p>
  *
- * @see AbstractChangeValidator
- * @see io.flamingock.api.annotations.Change
- * @see io.flamingock.api.annotations.Apply
- * @see io.flamingock.api.annotations.Rollback
+ * <p>Subclasses should return {@code this} from their own assertion methods to allow
+ * fluent chaining.</p>
+ *
+ * @param <SELF> the concrete subclass type, used to preserve the fluent return type
+ * @see CodeBasedChangeValidator
  */
-public final class ChangeValidator extends AbstractChangeValidator<ChangeValidator> {
-
-    private final Class<?> changeClass;
-    private final Change changeAnnotation;
-
-    private ChangeValidator(Class<?> changeClass) {
-        super(
-                Objects.requireNonNull(changeClass, "changeClass must not be null").getSimpleName(),
-                ChangeNamingConvention.extractOrder(changeClass.getSimpleName())
-        );
-        this.changeClass = changeClass;
-
-        this.changeAnnotation = changeClass.getAnnotation(Change.class);
-        if (changeAnnotation == null) {
-            throw new IllegalArgumentException(
-                    String.format("Class [%s] must be annotated with @Change", changeClass.getName()));
-        }
-
-        boolean hasApplyMethod = Arrays.stream(changeClass.getDeclaredMethods())
-                .anyMatch(m -> m.isAnnotationPresent(Apply.class));
-        if (!hasApplyMethod) {
-            throw new IllegalArgumentException(
-                    String.format("Class [%s] must declare a method annotated with @Apply", changeClass.getName()));
-        }
-    }
+public abstract class ChangeValidator<SELF extends ChangeValidator<SELF>> {
 
     /**
      * Creates a {@code ChangeValidator} for the given change class.
@@ -95,64 +58,204 @@ public final class ChangeValidator extends AbstractChangeValidator<ChangeValidat
      * @throws NullPointerException     if {@code changeClass} is {@code null}
      * @throws IllegalArgumentException if {@code @Change} or {@code @Apply} is absent
      */
-    public static ChangeValidator of(Class<?> changeClass) {
-        return new ChangeValidator(changeClass);
+    public static CodeBasedChangeValidator of(Class<?> changeClass) {
+        return new CodeBasedChangeValidator(changeClass);
     }
 
-    @Override
-    protected String getId() {
-        return changeAnnotation.id();
+    /** Display name used in error messages (class simple name or file name). */
+    protected final String displayName;
+
+    /**
+     * Order extracted from the name at construction time via {@link ChangeNamingConvention}.
+     * {@code null} when the name does not follow the {@code _ORDER__Name} convention.
+     */
+    protected final String extractedOrder;
+
+    private final List<Supplier<ChangeValidatorResult>> assertions = new ArrayList<>();
+
+    protected ChangeValidator(String displayName, String extractedOrder) {
+        this.displayName = displayName;
+        this.extractedOrder = extractedOrder;
     }
 
-    @Override
-    protected String getAuthor() {
-        return changeAnnotation.author();
-    }
+    protected abstract String getId();
 
-    @Override
-    protected boolean isTransactionalValue() {
-        return changeAnnotation.transactional();
-    }
+    protected abstract String getAuthor();
 
-    @Override
-    protected String getTargetSystemId() {
-        TargetSystem ts = changeClass.getAnnotation(TargetSystem.class);
-        return ts != null ? ts.id() : null;
-    }
+    protected abstract boolean isTransactionalValue();
 
-    @Override
-    protected RecoveryStrategy getRecovery() {
-        if (changeClass.isAnnotationPresent(Recovery.class)) {
-            Recovery rec = changeClass.getAnnotation(Recovery.class);
-            return rec != null ? rec.strategy() : null;
-        } else {
-            try {
-                return (RecoveryStrategy) Recovery.class.getMethod("strategy").getDefaultValue();
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    protected abstract String getTargetSystemId();
 
+    protected abstract RecoveryStrategy getRecovery();
+
+    /**
+     * Asserts that the change id matches the expected value.
+     *
+     * @param expected the expected id
+     * @return this validator for chaining
+     */
+    public SELF withId(String expected) {
+        addAssertion(() -> {
+            String actual = getId();
+            return actual.equals(expected)
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format("withId: expected \"%s\" but was \"%s\"", expected, actual));
+        });
+        return self();
     }
 
     /**
-     * Asserts that the class declares a method annotated with {@code @Rollback}.
+     * Asserts that the change author matches the expected value.
      *
-     * <p>Only methods directly declared in the class are considered; inherited methods
-     * are not scanned.</p>
+     * @param expected the expected author
+     * @return this validator for chaining
+     */
+    public SELF withAuthor(String expected) {
+        addAssertion(() -> {
+            String actual = getAuthor();
+            return actual.equals(expected)
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format("withAuthor: expected \"%s\" but was \"%s\"", expected, actual));
+        });
+        return self();
+    }
+
+    /**
+     * Asserts that the order extracted from the name matches the expected value.
+     *
+     * <p>Order is derived from the naming convention {@code _ORDER__DescriptiveName}.
+     * For code-based changes the class simple name is used; for template-based changes
+     * the file name (without extension) is used.</p>
+     *
+     * @param expected the exact expected order string (e.g. {@code "0002"}, {@code "20250101_01"})
+     * @return this validator for chaining
+     */
+    public SELF withOrder(String expected) {
+        addAssertion(() -> {
+            if (extractedOrder == null) {
+                return ChangeValidatorResult.error(String.format(
+                        "withOrder: could not extract order from \"%s\". "
+                                + "Name must follow the _ORDER__Name convention (e.g. _0001__MyChange).",
+                        displayName));
+            }
+            return extractedOrder.equals(expected)
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format(
+                            "withOrder: expected \"%s\" but extracted order was \"%s\"",
+                            expected, extractedOrder));
+        });
+        return self();
+    }
+
+    /**
+     * Asserts that a target system is declared with the given id.
+     *
+     * @param expectedId the expected target system id
+     * @return this validator for chaining
+     */
+    public SELF withTargetSystem(String expectedId) {
+        addAssertion(() -> {
+            String actual = getTargetSystemId();
+            if (actual == null) {
+                return ChangeValidatorResult.error(String.format(
+                        "withTargetSystem: expected target system \"%s\" but none is declared",
+                        expectedId));
+            }
+            return actual.equals(expectedId)
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format(
+                            "withTargetSystem: expected \"%s\" but was \"%s\"", expectedId, actual));
+        });
+        return self();
+    }
+
+    /**
+     * Asserts that the recovery strategy matches the expected value.
+     *
+     * <p>When no recovery is explicitly declared, {@link RecoveryStrategy#MANUAL_INTERVENTION}
+     * is assumed, consistent with the Flamingock runtime default.</p>
+     *
+     * @param expected the expected {@link RecoveryStrategy}
+     * @return this validator for chaining
+     */
+    public SELF withRecovery(RecoveryStrategy expected) {
+        addAssertion(() -> {
+            RecoveryStrategy actual = getRecovery();
+            String actualName = actual != null ? actual.name() : null;
+            return actual == expected
+                    ? ChangeValidatorResult.OK()
+                    : ChangeValidatorResult.error(String.format(
+                            "withRecovery: expected %s but was %s", expected.name(), actualName));
+        });
+        return self();
+    }
+
+    /**
+     * Asserts that the change is transactional.
      *
      * @return this validator for chaining
      */
-    public ChangeValidator hasRollbackMethod() {
-        addAssertion(() -> {
-            boolean found = Arrays.stream(changeClass.getDeclaredMethods())
-                    .anyMatch(m -> m.isAnnotationPresent(Rollback.class));
-            return found
-                    ? ChangeValidatorResult.OK()
-                    : ChangeValidatorResult.error(String.format(
-                    "hasRollbackMethod: no method annotated with @Rollback found in %s",
-                    changeClass.getSimpleName()));
-        });
-        return this;
+    public SELF isTransactional() {
+        addAssertion(() -> isTransactionalValue()
+                ? ChangeValidatorResult.OK()
+                : ChangeValidatorResult.error("isTransactional: expected transactional=true but was false"));
+        return self();
+    }
+
+    /**
+     * Asserts that the change is not transactional.
+     *
+     * @return this validator for chaining
+     */
+    public SELF isNotTransactional() {
+        addAssertion(() -> !isTransactionalValue()
+                ? ChangeValidatorResult.OK()
+                : ChangeValidatorResult.error("isNotTransactional: expected transactional=false but was true"));
+        return self();
+    }
+
+
+    /**
+     * Queues an assertion to be evaluated when {@link #validate()} is called.
+     *
+     * @param assertion a supplier that returns an error message if the assertion fails,
+     *                  or {@link Optional#empty()} if it passes
+     */
+    protected final void addAssertion(Supplier<ChangeValidatorResult> assertion) {
+        assertions.add(assertion);
+    }
+
+    /**
+     * Runs all queued assertions and throws an {@link AssertionError} if any fail.
+     *
+     * <p>All assertions are always evaluated; failures are collected and reported together
+     * so every problem is visible in a single test run.</p>
+     *
+     * @throws AssertionError if one or more assertions failed, listing all failure messages
+     */
+    public final void validate() {
+        List<String> errors = getErrors().stream()
+                .map(ChangeValidatorResult.Error::getMessage)
+                .collect(Collectors.toList());
+
+        if (!errors.isEmpty()) {
+            throw new AssertionError(
+                    getClass().getSimpleName() + " failed for " + displayName + ":\n  - "
+                            + String.join("\n  - ", errors));
+        }
+    }
+
+    @NotNull
+    private List<ChangeValidatorResult.Error> getErrors() {
+        return assertions.stream()
+                .map(Supplier::get)
+                .filter(ChangeValidatorResult::isError)
+                .map(ChangeValidatorResult.Error.class::cast)
+                .collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    private SELF self() {
+        return (SELF) this;
     }
 }
