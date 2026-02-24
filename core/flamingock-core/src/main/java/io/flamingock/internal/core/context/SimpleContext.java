@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public class SimpleContext extends AbstractContextResolver implements Context {
+public class SimpleContext extends AbstractSimpleContextResolver implements Context {
 
     private final Map<String, Dependency> dependenciesByName;
     private final Map<Class<?>, Dependency> dependenciesByExactType;

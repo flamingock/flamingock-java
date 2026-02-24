@@ -23,7 +23,7 @@ import io.flamingock.internal.common.core.context.DependencyBuildable;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public abstract class AbstractContextResolver implements ContextResolver {
+public abstract class AbstractSimpleContextResolver implements ContextResolver {
 
     @Override
     public Optional<Dependency> getDependency(Class<?> type) {
