@@ -78,7 +78,7 @@ public class PriorityContextResolver implements ContextResolver {
      */
     @Override
     public Optional<String> getProperty(String key) {
-        return getDependencyValue(key, String.class);
+        return getPropertyAs(key, String.class);
     }
 
     /**
@@ -92,6 +92,11 @@ public class PriorityContextResolver implements ContextResolver {
      */
     @Override
     public <T> Optional<T> getPropertyAs(String key, Class<T> type) {
-        return getDependencyValue(key, type);
+        Optional<T> dependencyValue = getDependencyValue(key, type);
+        if (dependencyValue.isPresent()) {
+            return dependencyValue;
+        } else {
+            return baseContext.getPropertyAs(key, type);
+        }
     }
 }
