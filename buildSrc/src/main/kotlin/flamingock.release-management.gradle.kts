@@ -58,24 +58,7 @@ jreleaser {
         authors.set(setOf("dieppa", "osantana", "bercianor", "dfrigolet"))
     }
 }
-if (project != rootProject) {
-    tasks.named("jreleaserRelease") {
-        enabled = false
-    }
-} else {
-    tasks.register("copyReleaseFiles") {
-        dependsOn(":cli:flamingock-cli:assemble")
-        doLast {
-            mkdir("build/jreleaser/distributions")
-            copy {
-                from("cli/flamingock-cli/build/distributions/")
-                into("build/jreleaser/distributions/")
-            }
-        }
-    }
-    tasks.named("jreleaserRelease") {
-        dependsOn("copyReleaseFiles")
-    }
+if (project == rootProject) {
 
     jreleaser {
         project {
@@ -142,6 +125,10 @@ if (project != rootProject) {
 //                }
 //            }
         }
+    }
+} else {
+    tasks.named("jreleaserRelease") {
+        enabled = false
     }
 }
 

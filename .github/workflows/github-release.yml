@@ -1,6 +1,7 @@
 name: Github release
 
 on:
+  workflow_dispatch:
   workflow_call:
     secrets:
       FLAMINGOCK_JRELEASER_GITHUB_TOKEN:
