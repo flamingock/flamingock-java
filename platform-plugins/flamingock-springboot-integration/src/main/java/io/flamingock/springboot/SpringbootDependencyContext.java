@@ -83,7 +83,7 @@ public class SpringbootDependencyContext implements ContextResolver {
      */
     @Override
     public Optional<String> getProperty(String key) {
-        return Optional.ofNullable(environment.getProperty(flamingockKey(key)));
+        return Optional.ofNullable(environment.getProperty(key));
     }
 
     /**
@@ -97,16 +97,8 @@ public class SpringbootDependencyContext implements ContextResolver {
      */
     @Override
     public <T> Optional<T> getPropertyAs(String key, Class<T> type) {
-        return Optional.ofNullable(environment.getProperty(flamingockKey(key), type));
+        return Optional.ofNullable(environment.getProperty(key, type));
     }
 
-    /**
-     * Adds the {@code flamingock.} namespace prefix to the property key.
-     *
-     * @param key the raw property key
-     * @return the fully qualified key with the {@code flamingock.} prefix
-     */
-    private static String flamingockKey(String key) {
-        return "flamingock." + key;
-    }
+
 }
