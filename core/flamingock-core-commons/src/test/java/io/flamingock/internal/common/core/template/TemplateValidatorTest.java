@@ -17,6 +17,7 @@ package io.flamingock.internal.common.core.template;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
@@ -48,6 +49,10 @@ class TemplateValidatorTest {
         public void apply() {
             // Test implementation
         }
+
+        @Rollback
+        public void rollback() {
+        }
     }
 
     // Test template with @ChangeTemplate(multiStep = true)
@@ -60,6 +65,10 @@ class TemplateValidatorTest {
         @Apply
         public void apply() {
             // Test implementation
+        }
+
+        @Rollback
+        public void rollback() {
         }
     }
 
@@ -252,7 +261,7 @@ class TemplateValidatorTest {
             TemplatePreviewChange preview = createPreview("test-change-13", "test-simple-template");
             preview.setApply("CREATE TABLE users");
 
-            ChangeTemplateDefinition definition = new ChangeTemplateDefinition("test-simple-template", TestSimpleTemplate.class, false);
+            ChangeTemplateDefinition definition = new ChangeTemplateDefinition("test-simple-template", TestSimpleTemplate.class, false, true);
             ValidationResult result = validator.validateStructure(definition, preview);
 
             assertFalse(result.hasErrors(), "Should have no errors: " + result.formatMessage());
@@ -264,7 +273,7 @@ class TemplateValidatorTest {
             TemplatePreviewChange preview = createPreview("test-change-15", "test-steppable-template");
             preview.setApply("CREATE TABLE users"); // Wrong for steppable
 
-            ChangeTemplateDefinition definition = new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true);
+            ChangeTemplateDefinition definition = new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true);
             ValidationResult result = validator.validateStructure(definition, preview);
 
             assertTrue(result.hasErrors());

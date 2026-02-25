@@ -32,14 +32,17 @@ public class ChangeTemplateDefinition {
     private final String id;
     private final Class<? extends ChangeTemplate<?, ?, ?>> templateClass;
     private final boolean multiStep;
+    private final boolean rollbackPayloadRequired;
 
     public ChangeTemplateDefinition(
             String id,
             Class<? extends ChangeTemplate<?, ?, ?>> templateClass,
-            boolean multiStep) {
+            boolean multiStep,
+            boolean rollbackPayloadRequired) {
         this.id = id;
         this.templateClass = templateClass;
         this.multiStep = multiStep;
+        this.rollbackPayloadRequired = rollbackPayloadRequired;
     }
 
     public String getId() {
@@ -52,5 +55,9 @@ public class ChangeTemplateDefinition {
 
     public boolean isMultiStep() {
         return multiStep;
+    }
+
+    public boolean isRollbackPayloadRequired() {
+        return rollbackPayloadRequired;
     }
 }

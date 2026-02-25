@@ -108,7 +108,7 @@ public class TemplateStep<APPLY, ROLLBACK> {
      *
      * @return true if a rollback payload is defined
      */
-    public boolean hasRollback() {
+    public boolean hasRollbackPayload() {
         return rollbackPayload != null;
     }
 

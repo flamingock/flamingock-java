@@ -18,8 +18,10 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import io.flamingock.internal.util.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
@@ -39,7 +41,8 @@ import java.util.Optional;
 public abstract class AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> extends AbstractLoadedChange {
 
     private final List<String> profiles;
-    private final CONFIG configuration;
+    private final CONFIG configurationPayload;
+    protected final boolean rollbackPayloadRequired;
 
     protected AbstractTemplateLoadedChange(String changeFileName,
                                            String id,
@@ -51,18 +54,20 @@ public abstract class AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> exte
                                            boolean transactional,
                                            boolean runAlways,
                                            boolean systemTask,
-                                           CONFIG configuration,
+                                           CONFIG configurationPayload,
                                            TargetSystemDescriptor targetSystem,
-                                           RecoveryDescriptor recovery) {
+                                           RecoveryDescriptor recovery,
+                                           boolean rollbackPayloadRequired) {
         super(changeFileName, id, order, author, templateClass, constructor, runAlways, transactional, systemTask, targetSystem, recovery, false);
         this.profiles = profiles;
         this.transactional = transactional;
-        this.configuration = configuration;
+        this.configurationPayload = configurationPayload;
+        this.rollbackPayloadRequired = rollbackPayloadRequired;
     }
 
 
-    public CONFIG getConfiguration() {
-        return configuration;
+    public CONFIG getConfigurationPayload() {
+        return configurationPayload;
     }
 
     public List<String> getProfiles() {
@@ -87,4 +92,19 @@ public abstract class AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> exte
     public Optional<Method> getRollbackMethod() {
         return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Rollback.class);
     }
+
+    @Override
+    public List<ValidationError> getValidationErrors(StageValidationContext context) {
+        List<ValidationError> errors = super.getValidationErrors(context);
+        errors.addAll(validateConfigurationPayload());
+        errors.addAll(validateApplyPayload());
+        errors.addAll(validateRollbackPayload());
+        return errors;
+    }
+
+    abstract protected List<ValidationError> validateConfigurationPayload();
+
+    abstract protected List<ValidationError> validateApplyPayload();
+
+    abstract protected List<ValidationError> validateRollbackPayload();
 }

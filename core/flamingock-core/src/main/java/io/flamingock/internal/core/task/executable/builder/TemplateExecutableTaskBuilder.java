@@ -22,7 +22,7 @@ import io.flamingock.internal.core.task.executable.SteppableTemplateExecutableTa
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
-import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.MultiStepTemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -79,7 +79,7 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
         if (loadedTask instanceof SimpleTemplateLoadedChange) {
             SimpleTemplateLoadedChange<?, ?, ?> simple = (SimpleTemplateLoadedChange<?, ?, ?>) loadedTask;
             // Only include rollback method if rollback data is present
-            if (simple.hasRollback()) {
+            if (simple.hasRollbackPayload()) {
                 if (rollbackMethod != null) {
                     logger.trace("Change[{}] provides rollback in configuration", loadedTask.getId());
                 } else {
@@ -104,8 +104,8 @@ public class TemplateExecutableTaskBuilder implements ExecutableTaskBuilder<Abst
                     loadedTask.getApplyMethod(),
                     rollbackMethod
             );
-        } else if (loadedTask instanceof SteppableTemplateLoadedChange) {
-            SteppableTemplateLoadedChange<?, ?, ?> steppable = (SteppableTemplateLoadedChange<?, ?, ?>) loadedTask;
+        } else if (loadedTask instanceof MultiStepTemplateLoadedChange) {
+            MultiStepTemplateLoadedChange<?, ?, ?> steppable = (MultiStepTemplateLoadedChange<?, ?, ?>) loadedTask;
             if (rollbackMethod != null) {
                 logger.trace("Change[{}] is a steppable template with rollback method", loadedTask.getId());
             }

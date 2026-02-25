@@ -17,10 +17,13 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,12 +37,12 @@ import java.util.List;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public class SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
+public class MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
         extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> {
 
     private final List<TemplateStep<APPLY, ROLLBACK>> steps;
 
-    SteppableTemplateLoadedChange(String changeFileName,
+    MultiStepTemplateLoadedChange(String changeFileName,
                                   String id,
                                   String order,
                                   String author,
@@ -52,12 +55,48 @@ public class SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
                                   CONFIG configuration,
                                   List<TemplateStep<APPLY, ROLLBACK>> steps,
                                   TargetSystemDescriptor targetSystem,
-                                  RecoveryDescriptor recovery) {
-        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery);
+                                  RecoveryDescriptor recovery,
+                                  boolean rollbackPayloadRequired) {
+        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery, rollbackPayloadRequired);
         this.steps = steps;
     }
 
     public List<TemplateStep<APPLY, ROLLBACK>> getSteps() {
         return steps;
+    }
+
+    @Override
+    protected List<ValidationError> validateConfigurationPayload() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    protected List<ValidationError> validateApplyPayload() {
+        List<ValidationError> errors = new ArrayList<>();
+        if (steps != null) {
+            for (int i = 0; i < steps.size(); i++) {
+                if (steps.get(i).getApplyPayload() == null) {
+                    errors.add(new ValidationError(
+                            String.format("Template '%s', step %d: missing required 'apply' payload", getSource(), i + 1),
+                            getId(), "change"));
+                }
+            }
+        }
+        return errors;
+    }
+
+    @Override
+    protected List<ValidationError> validateRollbackPayload() {
+        List<ValidationError> errors = new ArrayList<>();
+        if (rollbackPayloadRequired && steps != null) {
+            for (int i = 0; i < steps.size(); i++) {
+                if (!steps.get(i).hasRollbackPayload()) {
+                    errors.add(new ValidationError(
+                            String.format("Template '%s', step %d: missing required 'rollback' payload (rollbackPayloadRequired=true)", getSource(), i + 1),
+                            getId(), "change"));
+                }
+            }
+        }
+        return errors;
     }
 }

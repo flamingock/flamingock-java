@@ -17,6 +17,7 @@ package io.flamingock.internal.common.core.template;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,10 @@ class ChangeTemplateManagerTest {
         @Apply
         public void apply() {
         }
+
+        @Rollback
+        public void rollback() {
+        }
     }
 
     @ChangeTemplate(name = "annotated-steppable-template", multiStep = true)
@@ -47,6 +52,10 @@ class ChangeTemplateManagerTest {
 
         @Apply
         public void apply() {
+        }
+
+        @Rollback
+        public void rollback() {
         }
     }
 
@@ -70,6 +79,7 @@ class ChangeTemplateManagerTest {
         assertTrue(result.isPresent());
         assertEquals(AnnotatedSimpleTemplate.class, result.get().getTemplateClass());
         assertFalse(result.get().isMultiStep());
+        assertTrue(result.get().isRollbackPayloadRequired());
     }
 
     @Test
@@ -100,5 +110,53 @@ class ChangeTemplateManagerTest {
         Optional<ChangeTemplateDefinition> result = ChangeTemplateManager.getTemplate("NonExistentTemplate");
 
         assertFalse(result.isPresent());
+    }
+
+    @ChangeTemplate(name = "template-rollback-not-required", rollbackPayloadRequired = false)
+    public static class TemplateWithRollbackNotRequired extends AbstractChangeTemplate<Void, String, String> {
+        public TemplateWithRollbackNotRequired() {
+            super();
+        }
+
+        @Apply
+        public void apply() {
+        }
+
+        @Rollback
+        public void rollback() {
+        }
+    }
+
+    @Test
+    @DisplayName("addTemplate with rollbackPayloadRequired=false should propagate to definition")
+    void addTemplateWithRollbackPayloadRequiredFalseShouldPropagate() {
+        ChangeTemplateManager.addTemplate(TemplateWithRollbackNotRequired.class);
+
+        Optional<ChangeTemplateDefinition> result = ChangeTemplateManager.getTemplate("template-rollback-not-required");
+
+        assertTrue(result.isPresent());
+        assertEquals(TemplateWithRollbackNotRequired.class, result.get().getTemplateClass());
+        assertFalse(result.get().isRollbackPayloadRequired());
+    }
+
+    @ChangeTemplate(name = "template-without-rollback")
+    public static class TemplateWithoutRollback extends AbstractChangeTemplate<Void, String, String> {
+        public TemplateWithoutRollback() {
+            super();
+        }
+
+        @Apply
+        public void apply() {
+        }
+    }
+
+    @Test
+    @DisplayName("addTemplate with class missing @Rollback method should throw FlamingockException")
+    void addTemplateWithMissingRollbackMethodShouldThrow() {
+        FlamingockException exception = assertThrows(FlamingockException.class,
+                () -> ChangeTemplateManager.addTemplate(TemplateWithoutRollback.class));
+
+        assertTrue(exception.getMessage().contains("missing required @Rollback method"));
+        assertTrue(exception.getMessage().contains("TemplateWithoutRollback"));
     }
 }
