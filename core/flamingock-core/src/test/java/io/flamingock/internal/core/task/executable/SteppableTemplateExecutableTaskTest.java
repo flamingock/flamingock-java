@@ -24,7 +24,7 @@ import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.MultiStepTemplateLoadedChange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.*;
 class SteppableTemplateExecutableTaskTest {
 
     private ExecutionRuntime mockRuntime;
-    private SteppableTemplateLoadedChange<Void, String, String> mockDescriptor;
+    private MultiStepTemplateLoadedChange<Void, String, String> mockDescriptor;
     private Method applyMethod;
     private Method rollbackMethod;
 
@@ -83,12 +83,12 @@ class SteppableTemplateExecutableTaskTest {
     }
 
     /**
-     * Test template without rollback method.
+     * Test template used to simulate null rollback method at executable level.
      */
-    @ChangeTemplate(name = "test-template-without-rollback", multiStep = true)
-    public static class TestTemplateWithoutRollback extends AbstractChangeTemplate<Void, String, String> {
+    @ChangeTemplate(name = "test-template-null-rollback-method", multiStep = true)
+    public static class TestTemplateWithNullRollbackMethod extends AbstractChangeTemplate<Void, String, String> {
 
-        public TestTemplateWithoutRollback() {
+        public TestTemplateWithNullRollbackMethod() {
             super();
         }
 
@@ -98,6 +98,10 @@ class SteppableTemplateExecutableTaskTest {
                 throw new RuntimeException("Simulated apply failure at step " + failAtStep);
             }
             appliedPayloads.add(applyPayload);
+        }
+
+        @Rollback
+        public void rollback() {
         }
     }
 
@@ -112,11 +116,11 @@ class SteppableTemplateExecutableTaskTest {
         shouldFailOnRollback = false;
 
         mockRuntime = mock(ExecutionRuntime.class);
-        mockDescriptor = mock(SteppableTemplateLoadedChange.class);
+        mockDescriptor = mock(MultiStepTemplateLoadedChange.class);
 
         when(mockDescriptor.getId()).thenReturn("test-change-id");
         when(mockDescriptor.isTransactional()).thenReturn(true);
-        when(mockDescriptor.getConfiguration()).thenReturn(null);
+        when(mockDescriptor.getConfigurationPayload()).thenReturn(null);
         when(mockDescriptor.getTemplateClass()).thenReturn((Class) TestSteppableTemplate.class);
 
         applyMethod = TestSteppableTemplate.class.getMethod("apply");
@@ -342,11 +346,11 @@ class SteppableTemplateExecutableTaskTest {
     @SuppressWarnings("unchecked")
     void shouldNotRollbackWhenRollbackMethodIsNull() throws Exception {
         // Given - use template without rollback method
-        doReturn(TestTemplateWithoutRollback.class).when(mockDescriptor).getTemplateClass();
-        Constructor<?> constructor = TestTemplateWithoutRollback.class.getConstructor();
+        doReturn(TestTemplateWithNullRollbackMethod.class).when(mockDescriptor).getTemplateClass();
+        Constructor<?> constructor = TestTemplateWithNullRollbackMethod.class.getConstructor();
         doReturn(constructor).when(mockDescriptor).getConstructor();
 
-        Method applyOnlyMethod = TestTemplateWithoutRollback.class.getMethod("apply");
+        Method applyOnlyMethod = TestTemplateWithNullRollbackMethod.class.getMethod("apply");
 
         shouldFailOnApply = true;
         failAtStep = 1;

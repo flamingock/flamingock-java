@@ -33,7 +33,7 @@ import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
 import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
-import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.MultiStepTemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
@@ -75,7 +75,7 @@ public class RegistrationFeature implements Feature {
         registerClassForReflection(CodeLoadedChange.class.getName());
         registerClassForReflection(AbstractTemplateLoadedChange.class);
         registerClassForReflection(SimpleTemplateLoadedChange.class);
-        registerClassForReflection(SteppableTemplateLoadedChange.class);
+        registerClassForReflection(MultiStepTemplateLoadedChange.class);
 
         //others
         registerClassForReflection(CoderResult.class.getName());
@@ -90,7 +90,7 @@ public class RegistrationFeature implements Feature {
         initializeClassAtBuildTime(AbstractLoadedChange.class);
         initializeClassAtBuildTime(AbstractTemplateLoadedChange.class);
         initializeClassAtBuildTime(SimpleTemplateLoadedChange.class);
-        initializeClassAtBuildTime(SteppableTemplateLoadedChange.class);
+        initializeClassAtBuildTime(MultiStepTemplateLoadedChange.class);
         initializeClassAtBuildTime(ChangeTemplateManager.class);
         initializeClassAtBuildTime(RecoveryDescriptor.class);
         initializeClassAtBuildTime(FlamingockLoggerFactory.class);

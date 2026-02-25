@@ -16,10 +16,12 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,8 +56,9 @@ public class SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
                                APPLY applyPayload,
                                ROLLBACK rollbackPayload,
                                TargetSystemDescriptor targetSystem,
-                               RecoveryDescriptor recovery) {
-        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery);
+                               RecoveryDescriptor recovery,
+                               boolean rollbackPayloadRequired) {
+        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery, rollbackPayloadRequired);
         this.applyPayload = applyPayload;
         this.rollbackPayload = rollbackPayload;
     }
@@ -68,7 +71,32 @@ public class SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
         return rollbackPayload;
     }
 
-    public boolean hasRollback() {
+    public boolean hasRollbackPayload() {
         return rollbackPayload != null;
+    }
+
+    @Override
+    protected List<ValidationError> validateConfigurationPayload() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    protected List<ValidationError> validateApplyPayload() {
+        if (applyPayload == null) {
+            return Collections.singletonList(new ValidationError(
+                    String.format("Template '%s' requires 'apply' payload", getSource()),
+                    getId(), "change"));
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    protected List<ValidationError> validateRollbackPayload() {
+        if (rollbackPayloadRequired && rollbackPayload == null) {
+            return Collections.singletonList(new ValidationError(
+                    String.format("Template '%s' requires 'rollback' payload (rollbackPayloadRequired=true)", getSource()),
+                    getId(), "change"));
+        }
+        return Collections.emptyList();
     }
 }

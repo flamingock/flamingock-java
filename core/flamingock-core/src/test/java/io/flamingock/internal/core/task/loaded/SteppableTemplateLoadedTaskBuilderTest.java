@@ -17,13 +17,16 @@ package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.template.ChangeTemplateDefinition;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.template.TemplateValidator;
+import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -56,6 +59,10 @@ class SteppableTemplateLoadedTaskBuilderTest {
         public void apply() {
             // Test implementation - iterates through steps
         }
+
+        @Rollback
+        public void rollback() {
+        }
     }
 
     // Simple test template implementation
@@ -70,6 +77,10 @@ class SteppableTemplateLoadedTaskBuilderTest {
         public void apply() {
             // Test implementation
         }
+
+        @Rollback
+        public void rollback() {
+        }
     }
 
     @BeforeEach
@@ -83,7 +94,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMap("apply1", "rollback1"),
@@ -101,8 +112,8 @@ class SteppableTemplateLoadedTaskBuilderTest {
             AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
-            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
-            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
+            assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
+            MultiStepTemplateLoadedChange<?, ?, ?> steppableResult = (MultiStepTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
@@ -120,7 +131,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
             List<Map<String, Object>> rawSteps = Collections.singletonList(
                     createStepMap("apply1", "rollback1")
@@ -141,7 +152,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
             AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
-            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+            assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
             assertEquals("001", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
@@ -154,7 +165,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
             List<Map<String, Object>> rawSteps = Collections.singletonList(
                     createStepMap("apply1", "rollback1")
@@ -175,7 +186,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
             AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
-            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+            assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
             assertEquals("0002", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_0002__test-file.yml", result.getFileName());
@@ -188,7 +199,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
             List<Map<String, Object>> emptySteps = Collections.emptyList();
 
@@ -203,8 +214,8 @@ class SteppableTemplateLoadedTaskBuilderTest {
             AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
-            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
-            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
+            assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
+            MultiStepTemplateLoadedChange<?, ?, ?> steppableResult = (MultiStepTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
             List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
@@ -219,7 +230,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMap("createCollection", "dropCollection"),
@@ -239,8 +250,8 @@ class SteppableTemplateLoadedTaskBuilderTest {
             AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
-            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
-            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
+            assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
+            MultiStepTemplateLoadedChange<?, ?, ?> steppableResult = (MultiStepTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("multi-step-change", result.getId());
             // Steps are now converted to List<TemplateStep> at load time
@@ -285,7 +296,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
             List<Map<String, Object>> rawSteps = Arrays.asList(
                     createStepMapApplyOnly("apply1"),
@@ -303,8 +314,8 @@ class SteppableTemplateLoadedTaskBuilderTest {
             AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
-            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
-            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
+            assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
+            MultiStepTemplateLoadedChange<?, ?, ?> steppableResult = (MultiStepTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             // Steps are now converted to List<TemplateStep> at load time
             List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
@@ -320,7 +331,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         // Given
         try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
             mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                    .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
             builder.setId("test-id")
                     .setFileName("test-file.yml")
@@ -333,8 +344,8 @@ class SteppableTemplateLoadedTaskBuilderTest {
             AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
 
             // Then
-            assertInstanceOf(SteppableTemplateLoadedChange.class, result);
-            SteppableTemplateLoadedChange<?, ?, ?> steppableResult = (SteppableTemplateLoadedChange<?, ?, ?>) result;
+            assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
+            MultiStepTemplateLoadedChange<?, ?, ?> steppableResult = (MultiStepTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(result);
             assertEquals("test-id", result.getId());
             // Null steps remain null after conversion
@@ -364,7 +375,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         void steppableTemplateWithApplyAtRootShouldThrow() {
             try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
                 mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
                 TemplatePreviewChange preview = new TemplatePreviewChange();
                 preview.setId("bad-steppable");
@@ -385,7 +396,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         void simpleTemplateWithStepsShouldThrow() {
             try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
                 mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-simple-template"))
-                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-simple-template", TestSimpleTemplate.class, false)));
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-simple-template", TestSimpleTemplate.class, false, true)));
 
                 TemplatePreviewChange preview = new TemplatePreviewChange();
                 preview.setId("bad-simple");
@@ -407,7 +418,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
         void customValidatorInjectionShouldWork() {
             try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
                 mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
-                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true)));
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
 
                 TemplateValidator customValidator = new TemplateValidator();
 
@@ -420,8 +431,98 @@ class SteppableTemplateLoadedTaskBuilderTest {
                 TemplateLoadedTaskBuilder validatingBuilder = TemplateLoadedTaskBuilder.getInstanceFromPreview(preview, customValidator);
 
                 AbstractTemplateLoadedChange<?, ?, ?> result = validatingBuilder.build();
-                assertInstanceOf(SteppableTemplateLoadedChange.class, result);
+                assertInstanceOf(MultiStepTemplateLoadedChange.class, result);
                 assertEquals("custom-validator-test", result.getId());
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Payload validation tests")
+    class ValidationTests {
+
+        private final StageValidationContext validationContext = StageValidationContext.builder()
+                .setSorted(StageValidationContext.SortType.UNSORTED)
+                .build();
+
+        @Test
+        @DisplayName("Should report error when step is missing apply payload")
+        void shouldReportErrorWhenStepMissingApplyPayload() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
+
+                List<Map<String, Object>> rawSteps = Arrays.asList(
+                        createStepMapApplyOnly(null),
+                        createStepMap("apply2", "rollback2")
+                );
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactional(true)
+                        .setSteps(rawSteps);
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+                List<ValidationError> errors = result.getValidationErrors(validationContext);
+
+                assertTrue(errors.stream().anyMatch(e -> e.getMessage().contains("missing required 'apply' payload")),
+                        "Expected validation error about missing apply payload, but got: " + errors);
+            }
+        }
+
+        @Test
+        @DisplayName("Should report error when step is missing rollback and required")
+        void shouldReportErrorWhenStepMissingRollbackAndRequired() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
+
+                List<Map<String, Object>> rawSteps = Arrays.asList(
+                        createStepMapApplyOnly("apply1"),
+                        createStepMap("apply2", "rollback2")
+                );
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactional(true)
+                        .setSteps(rawSteps);
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+                List<ValidationError> errors = result.getValidationErrors(validationContext);
+
+                assertTrue(errors.stream().anyMatch(e -> e.getMessage().contains("missing required 'rollback' payload")),
+                        "Expected validation error about missing rollback payload, but got: " + errors);
+            }
+        }
+
+        @Test
+        @DisplayName("Should not report error when step is missing rollback and not required")
+        void shouldNotReportErrorWhenStepMissingRollbackAndNotRequired() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, false)));
+
+                List<Map<String, Object>> rawSteps = Arrays.asList(
+                        createStepMapApplyOnly("apply1"),
+                        createStepMap("apply2", "rollback2")
+                );
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactional(true)
+                        .setSteps(rawSteps);
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+                List<ValidationError> errors = result.getValidationErrors(validationContext);
+
+                assertFalse(errors.stream().anyMatch(e -> e.getMessage().contains("rollback")),
+                        "Expected no rollback-related errors, but got: " + errors);
             }
         }
     }

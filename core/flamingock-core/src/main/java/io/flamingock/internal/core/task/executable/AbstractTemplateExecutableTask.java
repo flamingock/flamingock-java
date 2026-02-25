@@ -17,7 +17,6 @@ package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
@@ -50,7 +49,7 @@ public abstract class AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
 
     protected void setConfigurationData(ChangeTemplate<CONFIG, ?, ?> instance) {
         Class<CONFIG> parameterClass = instance.getConfigurationClass();
-        CONFIG data = descriptor.getConfiguration();
+        CONFIG data = descriptor.getConfigurationPayload();
 
         if (data != null && Void.class != parameterClass) {
             instance.setConfiguration(FileUtil.getFromMap(parameterClass, data));

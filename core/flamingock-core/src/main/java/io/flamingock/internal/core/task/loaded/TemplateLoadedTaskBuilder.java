@@ -29,6 +29,7 @@ import io.flamingock.internal.common.core.template.TemplateValidator;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.ReflectionUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -52,8 +53,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     private boolean transactional;
     private boolean system;
     private Object configuration;
-    private Object apply;
-    private Object rollback;
+    private Object applyPayload;
+    private Object rollbackPayload;
     private Object steps;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
@@ -149,13 +150,13 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         return this;
     }
 
-    public TemplateLoadedTaskBuilder setApply(Object apply) {
-        this.apply = apply;
+    public TemplateLoadedTaskBuilder setApplyPayload(Object applyPayload) {
+        this.applyPayload = applyPayload;
         return this;
     }
 
-    public TemplateLoadedTaskBuilder setRollback(Object rollback) {
-        this.rollback = rollback;
+    public TemplateLoadedTaskBuilder setRollbackPayload(Object rollbackPayload) {
+        this.rollbackPayload = rollbackPayload;
         return this;
     }
 
@@ -186,58 +187,66 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         // Note: Due to type erasure, we use Object bounds at construction time.
         // The actual type safety comes from the conversion methods that use reflection
         // to determine the real types at runtime.
-        boolean isSteppable = definition.isMultiStep();
+        boolean isMultiStep = definition.isMultiStep();
+        boolean rollbackPayloadRequired = definition.isRollbackPayloadRequired();
 
-        if (isSteppable) {
+        if (isMultiStep) {
             Class<? extends AbstractChangeTemplate<Object, Object, Object>> steppableTemplateClass =
                     (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
                             definition.getTemplateClass().asSubclass(AbstractChangeTemplate.class);
 
-            // Convert steps at load time
-            List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);
-
-            return new SteppableTemplateLoadedChange<>(
-                    fileName,
-                    id,
-                    order,
-                    author,
-                    steppableTemplateClass,
-                    constructor,
-                    profiles,
-                    transactional,
-                    runAlways,
-                    system,
-                    configuration,
-                    convertedSteps,
-                    targetSystem,
-                    recovery);
+            return getLoadedMultiStepTemplateChange(steppableTemplateClass, constructor, rollbackPayloadRequired);
         } else {
             // Default to SimpleTemplateLoadedChange for simple templates (steppable=false or missing annotation)
             Class<? extends AbstractChangeTemplate<Object, Object, Object>> simpleTemplateClass =
                     (Class<? extends AbstractChangeTemplate<Object, Object, Object>>)
                             definition.getTemplateClass().asSubclass(AbstractChangeTemplate.class);
 
-            // Convert apply/rollback to typed payloads at load time
-            Pair<Object, Object> convertedPayloads = convertPayloads(constructor, apply, rollback);
-
-            return new SimpleTemplateLoadedChange<>(
-                    fileName,
-                    id,
-                    order,
-                    author,
-                    simpleTemplateClass,
-                    constructor,
-                    profiles,
-                    transactional,
-                    runAlways,
-                    system,
-                    configuration,
-                    convertedPayloads.getFirst(),
-                    convertedPayloads.getSecond(),
-                    targetSystem,
-                    recovery);
+            return getLoadedSimpleTemplateChange(simpleTemplateClass, constructor, rollbackPayloadRequired);
         }
+    }
 
+    @NotNull
+    private MultiStepTemplateLoadedChange<Object, Object, Object> getLoadedMultiStepTemplateChange(Class<? extends AbstractChangeTemplate<Object, Object, Object>> steppableTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
+        List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);// Convert apply/rollback to typed payloads at load time
+        return new MultiStepTemplateLoadedChange<>(
+                fileName,
+                id,
+                order,
+                author,
+                steppableTemplateClass,
+                constructor,
+                profiles,
+                transactional,
+                runAlways,
+                system,
+                configuration,
+                convertedSteps,
+                targetSystem,
+                recovery,
+                rollbackPayloadRequired);
+    }
+
+    @NotNull
+    private SimpleTemplateLoadedChange<Object, Object, Object> getLoadedSimpleTemplateChange(Class<? extends AbstractChangeTemplate<Object, Object, Object>> simpleTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
+        Pair<Object, Object> convertedPayloads = convertPayloads(constructor, applyPayload, rollbackPayload);// Convert apply/rollback to typed payloads at load time
+        return new SimpleTemplateLoadedChange<>(
+                fileName,
+                id,
+                order,
+                author,
+                simpleTemplateClass,
+                constructor,
+                profiles,
+                transactional,
+                runAlways,
+                system,
+                configuration,
+                convertedPayloads.getFirst(),
+                convertedPayloads.getSecond(),
+                targetSystem,
+                recovery,
+                rollbackPayloadRequired);
     }
 
     /**
@@ -339,8 +348,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         setTransactional(preview.isTransactional());
         setSystem(preview.isSystem());
         setConfiguration(preview.getConfiguration());
-        setApply(preview.getApply());
-        setRollback(preview.getRollback());
+        setApplyPayload(preview.getApply());
+        setRollbackPayload(preview.getRollback());
         setSteps(preview.getSteps());
         setTargetSystem(preview.getTargetSystem());
         setRecovery(preview.getRecovery());

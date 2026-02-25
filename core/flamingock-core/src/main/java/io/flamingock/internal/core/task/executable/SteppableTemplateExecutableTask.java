@@ -20,7 +20,7 @@ import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.task.loaded.SteppableTemplateLoadedChange;
+import io.flamingock.internal.core.task.loaded.MultiStepTemplateLoadedChange;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
@@ -36,12 +36,12 @@ import java.util.List;
  */
 public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
         extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
-        SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
+        MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 
     private int stepIndex = -1;
 
     public SteppableTemplateExecutableTask(String stageName,
-                                           SteppableTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> descriptor,
+                                           MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> descriptor,
                                            ChangeAction action,
                                            Method executionMethod,
                                            Method rollbackMethod) {
@@ -73,12 +73,12 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
             List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
             while (stepIndex >= 0 && stepIndex < steps.size()) {
                 TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex);
-                if(currentSep.hasRollback() && rollbackMethod != null) {
+                if(currentSep.hasRollbackPayload() && rollbackMethod != null) {
                     instance.setRollbackPayload(currentSep.getRollbackPayload());
                     executionRuntime.executeMethodWithInjectedDependencies(instance, rollbackMethod);
                 } else {
                     logger.warn("Skipping rollback for change[{}], step[{}] -> payload provided[{}], rollback support in template[{}]",
-                            getId(), stepIndex, currentSep.hasRollback(), rollbackMethod != null);
+                            getId(), stepIndex, currentSep.hasRollbackPayload(), rollbackMethod != null);
                 }
                 stepIndex--;
             }

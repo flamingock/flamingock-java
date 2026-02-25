@@ -132,6 +132,10 @@ class SpringProfileFilterTemplateTaskTest {
         public TemplateSimulate() {
             super();
         }
+
+        @io.flamingock.api.annotations.Rollback
+        public void rollback() {
+        }
     }
 
     @Change(id = "not-annotated", author = "aperezdieppa")

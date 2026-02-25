@@ -17,6 +17,7 @@ package io.flamingock.api.template;
 
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.annotations.Rollback;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -64,6 +65,10 @@ class AbstractChangeTemplateReflectiveClassesTest {
         public void apply() {
             // Test implementation
         }
+
+        @Rollback
+        public void rollback() {
+        }
     }
 
     // Test template with additional reflective classes
@@ -79,6 +84,10 @@ class AbstractChangeTemplateReflectiveClassesTest {
         public void apply() {
             // Test implementation
         }
+
+        @Rollback
+        public void rollback() {
+        }
     }
 
     // Test template with Void configuration
@@ -93,6 +102,10 @@ class AbstractChangeTemplateReflectiveClassesTest {
         @Apply
         public void apply() {
             // Test implementation
+        }
+
+        @Rollback
+        public void rollback() {
         }
     }
 

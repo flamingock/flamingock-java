@@ -15,8 +15,10 @@
  */
 package io.flamingock.internal.common.core.template;
 
+import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.util.ReflectionUtil;
 import org.jetbrains.annotations.TestOnly;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -190,6 +192,11 @@ public final class ChangeTemplateManager {
                     "Template class '%s' has a blank @ChangeTemplate id. The id must be a non-empty string",
                     templateClass.getSimpleName()));
         }
-        return new ChangeTemplateDefinition(id, templateClass, annotation.multiStep());
+        if (!ReflectionUtil.findFirstAnnotatedMethod(templateClass, Rollback.class).isPresent()) {
+            throw new FlamingockException(String.format(
+                    "Template class '%s' is missing required @Rollback method",
+                    templateClass.getSimpleName()));
+        }
+        return new ChangeTemplateDefinition(id, templateClass, annotation.multiStep(), annotation.rollbackPayloadRequired());
     }
 }

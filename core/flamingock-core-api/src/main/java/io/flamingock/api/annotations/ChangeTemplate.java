@@ -76,4 +76,12 @@ public @interface ChangeTemplate {
      * @return {@code true} for steppable templates, {@code false} for simple templates
      */
     boolean multiStep() default false;
+
+    /**
+     * When {@code true} (default), change authors must provide rollback payloads in YAML.
+     * When {@code false}, rollback payloads are optional.
+     *
+     * @return {@code true} if rollback payloads are required, {@code false} otherwise
+     */
+    boolean rollbackPayloadRequired() default true;
 }
