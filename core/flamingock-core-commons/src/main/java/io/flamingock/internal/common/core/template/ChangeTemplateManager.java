@@ -45,11 +45,7 @@ import java.util.ServiceLoader;
  *       for use during execution.</li>
  * </ol>
  * <p>
- * Templates are discovered through Java's {@link ServiceLoader} mechanism from two sources:
- * <ul>
- *   <li>Direct implementations of {@link ChangeTemplate} registered via SPI</li>
- *   <li>Templates provided by {@link ChangeTemplateFactory} implementations registered via SPI</li>
- * </ul>
+ * Templates are discovered through Java's {@link ServiceLoader} mechanism from Direct implementations of {@link ChangeTemplate} registered via SPI
  * <p>
  * <strong>Thread Safety Note:</strong> This class is not thread-safe during initialization. The 
  * {@link #loadTemplates()} method modifies static state and is intended to be called only once 
@@ -124,11 +120,7 @@ public final class ChangeTemplateManager {
      *       the internal template registry</li>
      * </ul>
      * <p>
-     * Templates are discovered from two sources:
-     * <ol>
-     *   <li>Direct implementations of {@link ChangeTemplate} registered via SPI</li>
-     *   <li>Templates provided by {@link ChangeTemplateFactory} implementations registered via SPI</li>
-     * </ol>
+     * Templates are discovered from Direct implementations of {@link ChangeTemplate} registered via SPI
      * <p>
      * This method creates new instances of templates each time it's called and does not modify
      * any internal state.
@@ -142,11 +134,6 @@ public final class ChangeTemplateManager {
         List<ChangeTemplate<?, ?, ?>> templateClasses = new ArrayList<>();
         for (ChangeTemplate<?, ?, ?> template : ServiceLoader.load(ChangeTemplate.class)) {
             templateClasses.add(template);
-        }
-
-        //Loads the ChangeTemplates from the federated ChangeTemplateFactory, registered with SPI
-        for (ChangeTemplateFactory factory : ServiceLoader.load(ChangeTemplateFactory.class)) {
-            templateClasses.addAll(factory.getTemplates());
         }
         logger.debug("returning ChangeTemplates");
 

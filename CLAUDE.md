@@ -368,12 +368,6 @@ META-INF/services/io.flamingock.api.template.ChangeTemplate
 → io.flamingock.template.sql.SqlTemplate
 ```
 
-**Factory Registration** (for multiple templates):
-```
-META-INF/services/io.flamingock.internal.common.core.template.ChangeTemplateFactory
-→ com.example.MyTemplateFactory
-```
-
 **ChangeTemplateManager** loads all templates at startup and provides lookup by simple class name.
 
 ### Ordering
