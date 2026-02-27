@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.runtime.ExecutionRuntime;
@@ -31,7 +32,8 @@ import java.lang.reflect.Method;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public class SimpleTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
+@SuppressWarnings({"rawtypes", "unchecked"})
+public class SimpleTemplateExecutableTask<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
                 SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 
@@ -56,10 +58,9 @@ public class SimpleTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
         executeInternal(executionRuntime, rollbackMethod);
     }
 
-    @SuppressWarnings("unchecked")
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
         try {
-            AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance = (AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>)
+            AbstractChangeTemplate instance = (AbstractChangeTemplate)
                             executionRuntime.getInstance(descriptor.getConstructor());
 
             instance.setTransactional(descriptor.isTransactional());

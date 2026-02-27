@@ -18,10 +18,13 @@ package io.flamingock.api.template;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.template.wrappers.TemplateString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,13 +36,23 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     // Simple test apply payload class
-    public static class TestApplyPayload {
+    public static class TestApplyPayload implements TemplatePayload {
         public String applyData;
+
+        @Override
+        public List<TemplatePayloadValidationError> validate() {
+            return Collections.emptyList();
+        }
     }
 
     // Simple test rollback payload class
-    public static class TestRollbackPayload {
+    public static class TestRollbackPayload implements TemplatePayload {
         public String rollbackData;
+
+        @Override
+        public List<TemplatePayloadValidationError> validate() {
+            return Collections.emptyList();
+        }
     }
 
     // Additional class for reflection
@@ -93,7 +106,7 @@ class AbstractChangeTemplateReflectiveClassesTest {
     // Test template with Void configuration
     @ChangeTemplate(name = "test-template-with-void-config")
     public static class TestTemplateWithVoidConfig
-            extends AbstractChangeTemplate<Void, String, String> {
+            extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
 
         public TestTemplateWithVoidConfig() {
             super();
@@ -191,8 +204,8 @@ class AbstractChangeTemplateReflectiveClassesTest {
 
         assertTrue(reflectiveClasses.contains(Void.class),
                 "Should contain Void class for configuration");
-        assertTrue(reflectiveClasses.contains(String.class),
-                "Should contain String class for apply/rollback payloads");
+        assertTrue(reflectiveClasses.contains(TemplateString.class),
+                "Should contain TemplateString class for apply/rollback payloads");
     }
 
     @Test
