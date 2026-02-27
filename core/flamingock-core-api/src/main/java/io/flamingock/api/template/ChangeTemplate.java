@@ -22,13 +22,13 @@ package io.flamingock.api.template;
  * by extending {@link AbstractChangeTemplate} and annotating with
  * {@link io.flamingock.api.annotations.ChangeTemplate}.
  *
- * @param <SHARED_CONFIG_FIELD> shared configuration type (use {@code Void} if none)
+ * @param <SHARED_CONFIG_FIELD> shared configuration type (use {@code TemplateVoid} if none)
  * @param <APPLY_FIELD> apply payload type parsed from YAML
  * @param <ROLLBACK_FIELD> rollback payload type parsed from YAML
  * @see AbstractChangeTemplate
  * @see io.flamingock.api.annotations.ChangeTemplate
  */
-public interface ChangeTemplate<SHARED_CONFIG_FIELD, APPLY_FIELD extends TemplatePayload, ROLLBACK_FIELD extends TemplatePayload> extends ReflectionMetadataProvider {
+public interface ChangeTemplate<SHARED_CONFIG_FIELD extends TemplatePayload, APPLY_FIELD extends TemplatePayload, ROLLBACK_FIELD extends TemplatePayload> extends ReflectionMetadataProvider {
 
     void setChangeId(String changeId);
 

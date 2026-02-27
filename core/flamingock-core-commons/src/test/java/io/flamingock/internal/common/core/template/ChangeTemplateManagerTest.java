@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.wrappers.TemplateString;
+import io.flamingock.api.template.wrappers.TemplateVoid;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ChangeTemplateManagerTest {
 
     @ChangeTemplate(name = "annotated-simple-template")
-    public static class AnnotatedSimpleTemplate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class AnnotatedSimpleTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
         public AnnotatedSimpleTemplate() {
             super();
         }
@@ -46,7 +47,7 @@ class ChangeTemplateManagerTest {
     }
 
     @ChangeTemplate(name = "annotated-steppable-template", multiStep = true)
-    public static class AnnotatedSteppableTemplate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class AnnotatedSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
         public AnnotatedSteppableTemplate() {
             super();
         }
@@ -60,7 +61,7 @@ class ChangeTemplateManagerTest {
         }
     }
 
-    public static class UnannotatedTemplate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class UnannotatedTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
         public UnannotatedTemplate() {
             super();
         }
@@ -114,7 +115,7 @@ class ChangeTemplateManagerTest {
     }
 
     @ChangeTemplate(name = "template-rollback-not-required", rollbackPayloadRequired = false)
-    public static class TemplateWithRollbackNotRequired extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class TemplateWithRollbackNotRequired extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
         public TemplateWithRollbackNotRequired() {
             super();
         }
@@ -141,7 +142,7 @@ class ChangeTemplateManagerTest {
     }
 
     @ChangeTemplate(name = "template-without-rollback")
-    public static class TemplateWithoutRollback extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class TemplateWithoutRollback extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
         public TemplateWithoutRollback() {
             super();
         }

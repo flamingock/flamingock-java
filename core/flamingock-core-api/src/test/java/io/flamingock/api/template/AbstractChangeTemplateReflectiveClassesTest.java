@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.wrappers.TemplateString;
+import io.flamingock.api.template.wrappers.TemplateVoid;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +32,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class AbstractChangeTemplateReflectiveClassesTest {
 
     // Simple test configuration class
-    public static class TestConfig {
+    public static class TestConfig implements TemplatePayload {
         public String configValue;
+
+        @Override
+        public List<TemplatePayloadValidationError> validate() {
+            return Collections.emptyList();
+        }
     }
 
     // Simple test apply payload class
@@ -103,10 +109,10 @@ class AbstractChangeTemplateReflectiveClassesTest {
         }
     }
 
-    // Test template with Void configuration
+    // Test template with TemplateVoid configuration
     @ChangeTemplate(name = "test-template-with-void-config")
     public static class TestTemplateWithVoidConfig
-            extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+            extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
 
         public TestTemplateWithVoidConfig() {
             super();
@@ -196,14 +202,14 @@ class AbstractChangeTemplateReflectiveClassesTest {
     }
 
     @Test
-    @DisplayName("getReflectiveClasses with Void configuration should include Void class")
-    void getReflectiveClassesWithVoidConfigShouldIncludeVoidClass() {
+    @DisplayName("getReflectiveClasses with TemplateVoid configuration should include TemplateVoid class")
+    void getReflectiveClassesWithVoidConfigShouldIncludeTemplateVoidClass() {
         TestTemplateWithVoidConfig template = new TestTemplateWithVoidConfig();
 
         Collection<Class<?>> reflectiveClasses = template.getReflectiveClasses();
 
-        assertTrue(reflectiveClasses.contains(Void.class),
-                "Should contain Void class for configuration");
+        assertTrue(reflectiveClasses.contains(TemplateVoid.class),
+                "Should contain TemplateVoid class for configuration");
         assertTrue(reflectiveClasses.contains(TemplateString.class),
                 "Should contain TemplateString class for apply/rollback payloads");
     }

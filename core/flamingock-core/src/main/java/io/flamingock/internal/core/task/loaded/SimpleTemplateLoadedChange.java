@@ -38,7 +38,7 @@ import java.util.List;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public class SimpleTemplateLoadedChange<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
+public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> {
 
     // Already converted to typed payload (no longer raw Object from YAML)
@@ -80,6 +80,19 @@ public class SimpleTemplateLoadedChange<CONFIG, APPLY extends TemplatePayload, R
 
     @Override
     protected List<ValidationError> validateConfigurationPayload() {
+        CONFIG config = getConfigurationPayload();
+        if (config != null) {
+            List<TemplatePayloadValidationError> payloadErrors = config.validate();
+            if (!payloadErrors.isEmpty()) {
+                List<ValidationError> errors = new ArrayList<>();
+                for (TemplatePayloadValidationError e : payloadErrors) {
+                    errors.add(new ValidationError(
+                            String.format("Template '%s' configuration payload: %s", getSource(), e.getFormattedMessage()),
+                            getId(), "change"));
+                }
+                return errors;
+            }
+        }
         return Collections.emptyList();
     }
 

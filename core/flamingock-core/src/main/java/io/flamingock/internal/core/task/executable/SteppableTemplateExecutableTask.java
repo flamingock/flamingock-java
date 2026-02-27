@@ -36,7 +36,7 @@ import java.util.List;
  * @param <ROLLBACK> the rollback payload type
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class SteppableTemplateExecutableTask<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
+public class SteppableTemplateExecutableTask<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
         MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 

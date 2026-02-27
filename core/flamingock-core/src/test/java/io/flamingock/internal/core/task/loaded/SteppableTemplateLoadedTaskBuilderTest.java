@@ -21,6 +21,7 @@ import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.api.template.wrappers.TemplateString;
+import io.flamingock.api.template.wrappers.TemplateVoid;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
@@ -50,7 +51,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
 
     // Steppable test template implementation using the annotation
     @ChangeTemplate(name = "test-steppable-template", multiStep = true)
-    public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, TemplateString, TemplateString> {
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
 
         public TestSteppableTemplate() {
             super();
@@ -68,7 +69,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
 
     // Simple test template implementation
     @ChangeTemplate(name = "test-simple-template")
-    public static class TestSimpleTemplate extends AbstractChangeTemplate<Object, TemplateString, TemplateString> {
+    public static class TestSimpleTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
 
         public TestSimpleTemplate() {
             super();
@@ -145,7 +146,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                     .setRunAlways(false)
                     .setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
+                    .setConfiguration(null)
                     .setSteps(rawSteps);
             builder.setProfiles(Arrays.asList("test"));
 
@@ -179,7 +180,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                     .setRunAlways(false)
                     .setTransactional(true)
                     .setSystem(false)
-                    .setConfiguration(new Object())
+                    .setConfiguration(null)
                     .setSteps(rawSteps);
             builder.setProfiles(Arrays.asList("test"));
 

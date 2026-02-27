@@ -39,7 +39,7 @@ import java.util.Optional;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public abstract class AbstractTemplateLoadedChange<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload> extends AbstractLoadedChange {
+public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload> extends AbstractLoadedChange {
 
     private final List<String> profiles;
     private final CONFIG configurationPayload;
