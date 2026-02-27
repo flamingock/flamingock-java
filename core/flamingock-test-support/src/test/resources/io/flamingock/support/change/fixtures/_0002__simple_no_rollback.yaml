@@ -1,0 +1,4 @@
+id: simple-no-rollback
+template: MongoChangeTemplate
+transactional: false
+apply: "db.createCollection('logs')"

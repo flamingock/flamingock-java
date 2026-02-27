@@ -1,0 +1,9 @@
+id: multi-step-all-rollback
+template: MongoChangeTemplate
+steps:
+  - apply: "db.createCollection('users')"
+    rollback: "db.users.drop()"
+  - apply: "db.createCollection('orders')"
+    rollback: "db.orders.drop()"
+  - apply: "db.createCollection('products')"
+    rollback: "db.products.drop()"
