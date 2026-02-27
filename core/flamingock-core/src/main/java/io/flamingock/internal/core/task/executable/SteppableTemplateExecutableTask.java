@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -34,7 +35,8 @@ import java.util.List;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
+@SuppressWarnings({"rawtypes", "unchecked"})
+public class SteppableTemplateExecutableTask<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
         MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 
@@ -50,7 +52,7 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
 
     @Override
     public void apply(ExecutionRuntime executionRuntime) {
-        AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance = buildInstance(executionRuntime);
+        AbstractChangeTemplate instance = buildInstance(executionRuntime);
 
         try {
             List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
@@ -67,7 +69,7 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
 
     @Override
     public void rollback(ExecutionRuntime executionRuntime) {
-        AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance = buildInstance(executionRuntime);
+        AbstractChangeTemplate instance = buildInstance(executionRuntime);
 
         try {
             List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
@@ -88,14 +90,13 @@ public class SteppableTemplateExecutableTask<CONFIG, APPLY, ROLLBACK>
     }
 
     @NotNull
-    @SuppressWarnings("unchecked")
-    private AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> buildInstance(ExecutionRuntime executionRuntime) {
-        AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK> instance;
+    private AbstractChangeTemplate buildInstance(ExecutionRuntime executionRuntime) {
+        AbstractChangeTemplate instance;
         try {
             logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
             logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
 
-            instance = (AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>)
+            instance = (AbstractChangeTemplate)
                     executionRuntime.getInstance(descriptor.getConstructor());
 
             instance.setTransactional(descriptor.isTransactional());

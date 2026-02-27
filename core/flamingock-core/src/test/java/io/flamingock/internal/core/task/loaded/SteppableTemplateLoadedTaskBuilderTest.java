@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
+import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
@@ -49,7 +50,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
 
     // Steppable test template implementation using the annotation
     @ChangeTemplate(name = "test-steppable-template", multiStep = true)
-    public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, Object, Object> {
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<Object, TemplateString, TemplateString> {
 
         public TestSteppableTemplate() {
             super();
@@ -67,7 +68,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
 
     // Simple test template implementation
     @ChangeTemplate(name = "test-simple-template")
-    public static class TestSimpleTemplate extends AbstractChangeTemplate<Object, Object, Object> {
+    public static class TestSimpleTemplate extends AbstractChangeTemplate<Object, TemplateString, TemplateString> {
 
         public TestSimpleTemplate() {
             super();
@@ -258,10 +259,10 @@ class SteppableTemplateLoadedTaskBuilderTest {
             List<? extends TemplateStep<?, ?>> steps = steppableResult.getSteps();
             assertNotNull(steps);
             assertEquals(3, steps.size());
-            // Verify steps are preserved in order - payloads are now typed objects
-            assertEquals("createCollection", steps.get(0).getApplyPayload());
-            assertEquals("insertDocument", steps.get(1).getApplyPayload());
-            assertEquals("createIndex", steps.get(2).getApplyPayload());
+            // Verify steps are preserved in order - payloads are now typed TemplateString objects
+            assertEquals(new TemplateString("createCollection"), steps.get(0).getApplyPayload());
+            assertEquals(new TemplateString("insertDocument"), steps.get(1).getApplyPayload());
+            assertEquals(new TemplateString("createIndex"), steps.get(2).getApplyPayload());
         }
     }
 

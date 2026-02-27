@@ -78,6 +78,21 @@ public final class FileUtil {
     }
 
     public static <T> T getFromMap(Class<T> type, Object source) {
+        // Direct match shortcut
+        if (type.isInstance(source)) {
+            return type.cast(source);
+        }
+        // Scalar-to-constructor conversion: if source is a scalar type and target has a matching constructor
+        if (source instanceof String || source instanceof Number || source instanceof Boolean) {
+            try {
+                java.lang.reflect.Constructor<T> ctor = type.getConstructor(source.getClass());
+                return ctor.newInstance(source);
+            } catch (NoSuchMethodException ignored) {
+                // Fall through to YAML round-trip
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to construct " + type.getSimpleName() + " from scalar: " + e.getMessage(), e);
+            }
+        }
         Yaml yamlWriter = new Yaml();
         StringWriter writer = new StringWriter();
         yamlWriter.dump(source, writer);

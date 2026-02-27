@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 import io.flamingock.internal.util.FileUtil;
@@ -35,7 +36,7 @@ import java.util.Arrays;
  * @param <ROLLBACK> the rollback payload type
  * @param <T>        the type of template loaded change
  */
-public abstract class AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
+public abstract class AbstractTemplateExecutableTask<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload,
         T extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> extends ReflectionExecutableTask<T> {
     protected final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
 

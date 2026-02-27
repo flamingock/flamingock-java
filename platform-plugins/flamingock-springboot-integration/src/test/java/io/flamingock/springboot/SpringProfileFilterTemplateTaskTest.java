@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
@@ -128,7 +129,7 @@ class SpringProfileFilterTemplateTaskTest {
     }
 
     @ChangeTemplate(name = "template-simulate")
-    public static class TemplateSimulate extends AbstractChangeTemplate<Void, Object, Object> {
+    public static class TemplateSimulate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
         public TemplateSimulate() {
             super();
         }

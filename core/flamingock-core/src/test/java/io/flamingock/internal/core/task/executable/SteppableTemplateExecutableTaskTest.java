@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
+import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -44,7 +45,7 @@ import static org.mockito.Mockito.*;
 class SteppableTemplateExecutableTaskTest {
 
     private ExecutionRuntime mockRuntime;
-    private MultiStepTemplateLoadedChange<Void, String, String> mockDescriptor;
+    private MultiStepTemplateLoadedChange<Void, TemplateString, TemplateString> mockDescriptor;
     private Method applyMethod;
     private Method rollbackMethod;
 
@@ -59,7 +60,7 @@ class SteppableTemplateExecutableTaskTest {
      * Test template that tracks apply and rollback invocations.
      */
     @ChangeTemplate(name = "test-steppable-template", multiStep = true)
-    public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, String, String> {
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
 
         public TestSteppableTemplate() {
             super();
@@ -70,7 +71,7 @@ class SteppableTemplateExecutableTaskTest {
             if (shouldFailOnApply && appliedPayloads.size() == failAtStep) {
                 throw new RuntimeException("Simulated apply failure at step " + failAtStep);
             }
-            appliedPayloads.add(applyPayload);
+            appliedPayloads.add(applyPayload.getValue());
         }
 
         @Rollback
@@ -78,7 +79,7 @@ class SteppableTemplateExecutableTaskTest {
             if (shouldFailOnRollback) {
                 throw new RuntimeException("Simulated rollback failure");
             }
-            rolledBackPayloads.add(rollbackPayload);
+            rolledBackPayloads.add(rollbackPayload.getValue());
         }
     }
 
@@ -86,7 +87,7 @@ class SteppableTemplateExecutableTaskTest {
      * Test template used to simulate null rollback method at executable level.
      */
     @ChangeTemplate(name = "test-template-null-rollback-method", multiStep = true)
-    public static class TestTemplateWithNullRollbackMethod extends AbstractChangeTemplate<Void, String, String> {
+    public static class TestTemplateWithNullRollbackMethod extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
 
         public TestTemplateWithNullRollbackMethod() {
             super();
@@ -97,7 +98,7 @@ class SteppableTemplateExecutableTaskTest {
             if (shouldFailOnApply && appliedPayloads.size() == failAtStep) {
                 throw new RuntimeException("Simulated apply failure at step " + failAtStep);
             }
-            appliedPayloads.add(applyPayload);
+            appliedPayloads.add(applyPayload.getValue());
         }
 
         @Rollback
@@ -147,18 +148,22 @@ class SteppableTemplateExecutableTaskTest {
         }).when(mockRuntime).executeMethodWithInjectedDependencies(any(), any(Method.class));
     }
 
+    private static TemplateString ts(String value) {
+        return new TemplateString(value);
+    }
+
     @Test
     @DisplayName("Should apply all steps in sequence (step 0, 1, 2)")
     void shouldApplyAllStepsInOrder() {
         // Given
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-0"),
-                new TemplateStep<>("apply-1", "rollback-1"),
-                new TemplateStep<>("apply-2", "rollback-2")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-0")),
+                new TemplateStep<>(ts("apply-1"), ts("rollback-1")),
+                new TemplateStep<>(ts("apply-2"), ts("rollback-2"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -183,14 +188,14 @@ class SteppableTemplateExecutableTaskTest {
         shouldFailOnApply = true;
         failAtStep = 2; // Fail at step index 2 (third step)
 
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-0"),
-                new TemplateStep<>("apply-1", "rollback-1"),
-                new TemplateStep<>("apply-2", "rollback-2")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-0")),
+                new TemplateStep<>(ts("apply-1"), ts("rollback-1")),
+                new TemplateStep<>(ts("apply-2"), ts("rollback-2"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -221,13 +226,13 @@ class SteppableTemplateExecutableTaskTest {
     @DisplayName("Should set correct apply payload for each step during apply")
     void shouldSetCorrectPayloadDuringApply() {
         // Given
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("payload-A", "rollback-A"),
-                new TemplateStep<>("payload-B", "rollback-B")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("payload-A"), ts("rollback-A")),
+                new TemplateStep<>(ts("payload-B"), ts("rollback-B"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -251,14 +256,14 @@ class SteppableTemplateExecutableTaskTest {
         shouldFailOnApply = true;
         failAtStep = 2;
 
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-payload-X"),
-                new TemplateStep<>("apply-1", "rollback-payload-Y"),
-                new TemplateStep<>("apply-2", "rollback-payload-Z")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-payload-X")),
+                new TemplateStep<>(ts("apply-1"), ts("rollback-payload-Y")),
+                new TemplateStep<>(ts("apply-2"), ts("rollback-payload-Z"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -285,15 +290,15 @@ class SteppableTemplateExecutableTaskTest {
         shouldFailOnApply = true;
         failAtStep = 3; // Fail at step index 3 (fourth step)
 
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-0"),
-                new TemplateStep<>("apply-1", null), // No rollback payload - should be skipped
-                new TemplateStep<>("apply-2", "rollback-2"),
-                new TemplateStep<>("apply-3", "rollback-3")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-0")),
+                new TemplateStep<>(ts("apply-1"), null), // No rollback payload - should be skipped
+                new TemplateStep<>(ts("apply-2"), ts("rollback-2")),
+                new TemplateStep<>(ts("apply-3"), ts("rollback-3"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -321,10 +326,10 @@ class SteppableTemplateExecutableTaskTest {
     @DisplayName("Should handle empty steps list without error")
     void shouldHandleEmptyStepsList() {
         // Given
-        List<TemplateStep<String, String>> emptySteps = Collections.emptyList();
+        List<TemplateStep<TemplateString, TemplateString>> emptySteps = Collections.emptyList();
         when(mockDescriptor.getSteps()).thenReturn(emptySteps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -355,13 +360,13 @@ class SteppableTemplateExecutableTaskTest {
         shouldFailOnApply = true;
         failAtStep = 1;
 
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-0"),
-                new TemplateStep<>("apply-1", "rollback-1")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-0")),
+                new TemplateStep<>(ts("apply-1"), ts("rollback-1"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -384,13 +389,13 @@ class SteppableTemplateExecutableTaskTest {
         shouldFailOnApply = true;
         failAtStep = 1;
 
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-0"),
-                new TemplateStep<>("apply-1", "rollback-1")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-0")),
+                new TemplateStep<>(ts("apply-1"), ts("rollback-1"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -416,13 +421,13 @@ class SteppableTemplateExecutableTaskTest {
         failAtStep = 1;
         shouldFailOnRollback = true;
 
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-0"),
-                new TemplateStep<>("apply-1", "rollback-1")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-0")),
+                new TemplateStep<>(ts("apply-1"), ts("rollback-1"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -450,15 +455,15 @@ class SteppableTemplateExecutableTaskTest {
         shouldFailOnApply = true;
         failAtStep = 2;
 
-        List<TemplateStep<String, String>> steps = Arrays.asList(
-                new TemplateStep<>("apply-0", "rollback-0"),
-                new TemplateStep<>("apply-1", "rollback-1"),
-                new TemplateStep<>("apply-2", "rollback-2"),
-                new TemplateStep<>("apply-3", "rollback-3")
+        List<TemplateStep<TemplateString, TemplateString>> steps = Arrays.asList(
+                new TemplateStep<>(ts("apply-0"), ts("rollback-0")),
+                new TemplateStep<>(ts("apply-1"), ts("rollback-1")),
+                new TemplateStep<>(ts("apply-2"), ts("rollback-2")),
+                new TemplateStep<>(ts("apply-3"), ts("rollback-3"))
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, String, String> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,

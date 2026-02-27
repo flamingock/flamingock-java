@@ -39,7 +39,7 @@ import java.util.Set;
  * @param <ROLLBACK_FIELD> rollback payload type
  * @see io.flamingock.api.annotations.ChangeTemplate
  */
-public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
+public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD extends TemplatePayload, ROLLBACK_FIELD extends TemplatePayload> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
 
     private final Class<SHARED_CONFIGURATION_FIELD> configurationClass;
     private final Class<APPLY_FIELD> applyPayloadClass;

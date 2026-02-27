@@ -16,11 +16,14 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplatePayload;
+import io.flamingock.api.template.TemplatePayloadValidationError;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +38,7 @@ import java.util.List;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public class SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
+public class SimpleTemplateLoadedChange<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> {
 
     // Already converted to typed payload (no longer raw Object from YAML)
@@ -87,6 +90,16 @@ public class SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
                     String.format("Template '%s' requires 'apply' payload", getSource()),
                     getId(), "change"));
         }
+        List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate();
+        if (!payloadErrors.isEmpty()) {
+            List<ValidationError> errors = new ArrayList<>();
+            for (TemplatePayloadValidationError e : payloadErrors) {
+                errors.add(new ValidationError(
+                        String.format("Template '%s' apply payload: %s", getSource(), e.getFormattedMessage()),
+                        getId(), "change"));
+            }
+            return errors;
+        }
         return Collections.emptyList();
     }
 
@@ -96,6 +109,18 @@ public class SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>
             return Collections.singletonList(new ValidationError(
                     String.format("Template '%s' requires 'rollback' payload (rollbackPayloadRequired=true)", getSource()),
                     getId(), "change"));
+        }
+        if (rollbackPayload != null) {
+            List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate();
+            if (!payloadErrors.isEmpty()) {
+                List<ValidationError> errors = new ArrayList<>();
+                for (TemplatePayloadValidationError e : payloadErrors) {
+                    errors.add(new ValidationError(
+                            String.format("Template '%s' rollback payload: %s", getSource(), e.getFormattedMessage()),
+                            getId(), "change"));
+                }
+                return errors;
+            }
         }
         return Collections.emptyList();
     }

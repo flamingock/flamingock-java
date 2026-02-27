@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +44,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
 
     // Simple test template implementation using the annotation
     @ChangeTemplate(name = "test-change-template")
-    public static class TestChangeTemplate extends AbstractChangeTemplate<Object, Object, Object> {
+    public static class TestChangeTemplate extends AbstractChangeTemplate<Object, TemplateString, TemplateString> {
 
         public TestChangeTemplate() {
             super();
