@@ -18,6 +18,7 @@ package io.flamingock.support.change;
 import io.flamingock.api.RecoveryStrategy;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +61,21 @@ public abstract class ChangeValidator<SELF extends ChangeValidator<SELF>> {
      */
     public static CodeBasedChangeValidator of(Class<?> changeClass) {
         return new CodeBasedChangeValidator(changeClass);
+    }
+
+    /**
+     * Creates a {@code ChangeValidator} for the given template-based change YAML file.
+     *
+     * <p>Validates eagerly that the file exists, the {@code id} and {@code template} fields are
+     * present and non-empty, and that either an {@code apply} field or a {@code steps} list is
+     * present.</p>
+     *
+     * @param yamlPath path to the YAML change file; must not be {@code null}
+     * @return a new validator ready for assertion chaining
+     * @throws IllegalArgumentException if the file does not exist or required fields are missing
+     */
+    public static TemplateBasedChangeValidator of(Path yamlPath) {
+        return new TemplateBasedChangeValidator(yamlPath);
     }
 
     /** Display name used in error messages (class simple name or file name). */
