@@ -53,7 +53,7 @@ public abstract class AbstractTemplateExecutableTask<CONFIG, APPLY extends Templ
         CONFIG data = descriptor.getConfigurationPayload();
 
         if (data != null && Void.class != parameterClass) {
-            instance.setConfiguration(FileUtil.getFromMap(parameterClass, data));
+            instance.setConfiguration(FileUtil.convertToType(parameterClass, data));
         } else if (Void.class != parameterClass) {
             logger.warn("No 'Configuration' section provided for template-based change[{}] of type[{}]",
                     descriptor.getId(), descriptor.getTemplateClass().getName());

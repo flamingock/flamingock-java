@@ -267,11 +267,11 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         Class<?> applyClass = templateInstance.getApplyPayloadClass();
         Class<?> rollbackClass = templateInstance.getRollbackPayloadClass();
 
-        Object applyPayload = FileUtil.getFromMap(applyClass, applyData);
+        Object applyPayload = FileUtil.convertToType(applyClass, applyData);
         Object rollbackPayload = null;
 
         if (rollbackData != null && Void.class != rollbackClass) {
-            rollbackPayload = FileUtil.getFromMap(rollbackClass, rollbackData);
+            rollbackPayload = FileUtil.convertToType(rollbackClass, rollbackData);
         }
 
         return new Pair<>(applyPayload, rollbackPayload);
@@ -317,12 +317,12 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
 
                 Object applyItemData = stepMap.get("apply");
                 if (applyItemData != null && Void.class != applyClass) {
-                    step.setApplyPayload(FileUtil.getFromMap(applyClass, applyItemData));
+                    step.setApplyPayload(FileUtil.convertToType(applyClass, applyItemData));
                 }
 
                 Object rollbackItemData = stepMap.get("rollback");
                 if (rollbackItemData != null && Void.class != rollbackClass) {
-                    step.setRollbackPayload(FileUtil.getFromMap(rollbackClass, rollbackItemData));
+                    step.setRollbackPayload(FileUtil.convertToType(rollbackClass, rollbackItemData));
                 }
 
                 result.add(step);
