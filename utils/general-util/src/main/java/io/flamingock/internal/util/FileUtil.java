@@ -28,7 +28,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public final class FileUtil {
@@ -77,7 +76,7 @@ public final class FileUtil {
         }
     }
 
-    public static <T> T getFromMap(Class<T> type, Object source) {
+    public static <T> T convertToType(Class<T> type, Object source) {
         // Direct match shortcut
         if (type.isInstance(source)) {
             return type.cast(source);
