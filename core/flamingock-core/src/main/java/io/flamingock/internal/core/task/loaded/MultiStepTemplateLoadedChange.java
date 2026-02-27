@@ -39,7 +39,7 @@ import java.util.List;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public class MultiStepTemplateLoadedChange<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
+public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> {
 
     private final List<TemplateStep<APPLY, ROLLBACK>> steps;
@@ -69,6 +69,19 @@ public class MultiStepTemplateLoadedChange<CONFIG, APPLY extends TemplatePayload
 
     @Override
     protected List<ValidationError> validateConfigurationPayload() {
+        CONFIG config = getConfigurationPayload();
+        if (config != null) {
+            List<TemplatePayloadValidationError> payloadErrors = config.validate();
+            if (!payloadErrors.isEmpty()) {
+                List<ValidationError> errors = new ArrayList<>();
+                for (TemplatePayloadValidationError e : payloadErrors) {
+                    errors.add(new ValidationError(
+                            String.format("Template '%s' configuration payload: %s", getSource(), e.getFormattedMessage()),
+                            getId(), "change"));
+                }
+                return errors;
+            }
+        }
         return Collections.emptyList();
     }
 

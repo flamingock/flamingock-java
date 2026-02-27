@@ -20,6 +20,7 @@ import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.wrappers.TemplateString;
+import io.flamingock.api.template.wrappers.TemplateVoid;
 import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +42,7 @@ class TemplateValidatorTest {
 
     // Test template with @ChangeTemplate (simple template)
     @ChangeTemplate(name = "test-simple-template")
-    public static class TestSimpleTemplate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class TestSimpleTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
         public TestSimpleTemplate() {
             super();
         }
@@ -58,7 +59,7 @@ class TemplateValidatorTest {
 
     // Test template with @ChangeTemplate(multiStep = true)
     @ChangeTemplate(name = "test-steppable-template", multiStep = true)
-    public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
         public TestSteppableTemplate() {
             super();
         }

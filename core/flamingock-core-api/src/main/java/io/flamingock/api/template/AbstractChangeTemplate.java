@@ -34,12 +34,12 @@ import java.util.Set;
  *
  * <p>Use {@code @ChangeTemplate(steppable = true)} for steppable templates with multiple steps.
  *
- * @param <SHARED_CONFIGURATION_FIELD> shared configuration type (use {@code Void} if none)
+ * @param <SHARED_CONFIGURATION_FIELD> shared configuration type (use {@code TemplateVoid} if none)
  * @param <APPLY_FIELD> apply payload type
  * @param <ROLLBACK_FIELD> rollback payload type
  * @see io.flamingock.api.annotations.ChangeTemplate
  */
-public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD extends TemplatePayload, ROLLBACK_FIELD extends TemplatePayload> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
+public abstract class AbstractChangeTemplate<SHARED_CONFIGURATION_FIELD extends TemplatePayload, APPLY_FIELD extends TemplatePayload, ROLLBACK_FIELD extends TemplatePayload> implements ChangeTemplate<SHARED_CONFIGURATION_FIELD, APPLY_FIELD, ROLLBACK_FIELD> {
 
     private final Class<SHARED_CONFIGURATION_FIELD> configurationClass;
     private final Class<APPLY_FIELD> applyPayloadClass;

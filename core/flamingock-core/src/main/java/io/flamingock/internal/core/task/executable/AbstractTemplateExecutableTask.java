@@ -17,9 +17,9 @@ package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
+import io.flamingock.api.template.wrappers.TemplateVoid;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
-import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -36,7 +36,7 @@ import java.util.Arrays;
  * @param <ROLLBACK> the rollback payload type
  * @param <T>        the type of template loaded change
  */
-public abstract class AbstractTemplateExecutableTask<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload,
+public abstract class AbstractTemplateExecutableTask<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload,
         T extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> extends ReflectionExecutableTask<T> {
     protected final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
 
@@ -52,9 +52,9 @@ public abstract class AbstractTemplateExecutableTask<CONFIG, APPLY extends Templ
         Class<CONFIG> parameterClass = instance.getConfigurationClass();
         CONFIG data = descriptor.getConfigurationPayload();
 
-        if (data != null && Void.class != parameterClass) {
-            instance.setConfiguration(FileUtil.convertToType(parameterClass, data));
-        } else if (Void.class != parameterClass) {
+        if (data != null && TemplateVoid.class != parameterClass) {
+            instance.setConfiguration(data);
+        } else if (TemplateVoid.class != parameterClass) {
             logger.warn("No 'Configuration' section provided for template-based change[{}] of type[{}]",
                     descriptor.getId(), descriptor.getTemplateClass().getName());
         }

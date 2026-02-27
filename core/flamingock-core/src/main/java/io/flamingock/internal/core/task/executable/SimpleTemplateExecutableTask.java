@@ -33,7 +33,7 @@ import java.lang.reflect.Method;
  * @param <ROLLBACK> the rollback payload type
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class SimpleTemplateExecutableTask<CONFIG, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
+public class SimpleTemplateExecutableTask<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
                 SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 

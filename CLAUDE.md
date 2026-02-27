@@ -511,3 +511,24 @@ See `docs/TEMPLATES_EVOLUTION_PROPOSALS.md` for comprehensive proposals includin
 - Explicit dependencies (`depends_on`)
 - Policy as Code
 - And more...
+
+## Commit Message Convention
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) with a well-structured body suitable for changelog extraction from `git log`.
+
+### Format
+
+```
+<type>(<scope>): <concise imperative summary>
+
+<body: precise explanation of what changed and why, using markdown formatting>
+```
+
+### Rules
+
+- **Title**: imperative mood, lowercase, no period, under 72 characters
+- **Type**: `feat`, `fix`, `refactor`, `chore`, `ci`, `docs`, `test`
+- **Scope**: optional but encouraged (e.g., `templates`, `core`, `cli`)
+- **Body**: required for `feat` and `fix`. Explains *what* changed and *why* at a level suitable for a professional changelog. Use bullet points, bold for class/concept names, and keep it concise — no filler, no redundancy
+- **No PR number** in the title when committing locally (GitHub adds it on merge)
+- The body is the source of truth for the changelog — write it as if a technical user will read it to understand the release

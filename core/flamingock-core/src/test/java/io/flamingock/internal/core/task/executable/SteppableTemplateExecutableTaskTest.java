@@ -21,6 +21,7 @@ import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.api.template.wrappers.TemplateString;
+import io.flamingock.api.template.wrappers.TemplateVoid;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.*;
 class SteppableTemplateExecutableTaskTest {
 
     private ExecutionRuntime mockRuntime;
-    private MultiStepTemplateLoadedChange<Void, TemplateString, TemplateString> mockDescriptor;
+    private MultiStepTemplateLoadedChange<TemplateVoid, TemplateString, TemplateString> mockDescriptor;
     private Method applyMethod;
     private Method rollbackMethod;
 
@@ -60,7 +61,7 @@ class SteppableTemplateExecutableTaskTest {
      * Test template that tracks apply and rollback invocations.
      */
     @ChangeTemplate(name = "test-steppable-template", multiStep = true)
-    public static class TestSteppableTemplate extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class TestSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
 
         public TestSteppableTemplate() {
             super();
@@ -87,7 +88,7 @@ class SteppableTemplateExecutableTaskTest {
      * Test template used to simulate null rollback method at executable level.
      */
     @ChangeTemplate(name = "test-template-null-rollback-method", multiStep = true)
-    public static class TestTemplateWithNullRollbackMethod extends AbstractChangeTemplate<Void, TemplateString, TemplateString> {
+    public static class TestTemplateWithNullRollbackMethod extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
 
         public TestTemplateWithNullRollbackMethod() {
             super();
@@ -163,7 +164,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -195,7 +196,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -232,7 +233,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -263,7 +264,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -298,7 +299,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -329,7 +330,7 @@ class SteppableTemplateExecutableTaskTest {
         List<TemplateStep<TemplateString, TemplateString>> emptySteps = Collections.emptyList();
         when(mockDescriptor.getSteps()).thenReturn(emptySteps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -366,7 +367,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -395,7 +396,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -427,7 +428,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
@@ -463,7 +464,7 @@ class SteppableTemplateExecutableTaskTest {
         );
         when(mockDescriptor.getSteps()).thenReturn(steps);
 
-        SteppableTemplateExecutableTask<Void, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
+        SteppableTemplateExecutableTask<TemplateVoid, TemplateString, TemplateString> task = new SteppableTemplateExecutableTask<>(
                 "test-stage",
                 mockDescriptor,
                 ChangeAction.APPLY,
