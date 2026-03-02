@@ -82,6 +82,20 @@ public @interface MongockSupport {
     String targetSystem();
 
     /**
+     * Determines whether Mongock import should be skipped.
+     * <p>
+     * Expected literal values are {@code "true"} or {@code "false"}.
+     * </p>
+     *
+     * <p>
+     * Default value is {@code "false"} (import enabled).
+     * </p>
+     *
+     * @return {@code "true"} to skip import, {@code "false"} to process it
+     */
+    String skipImport() default "false";
+
+    /**
      * Defines the origin collection/table name where Mongock audit entries are stored.
      * <p>
      * This value is optional. When empty (default), Flamingock will use Mongock's
