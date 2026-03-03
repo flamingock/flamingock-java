@@ -17,6 +17,7 @@ package io.flamingock.api.template.wrappers;
 
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadValidationError;
+import io.flamingock.api.template.TemplateValidationContext;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.List;
 public class TemplateVoid implements TemplatePayload {
 
     @Override
-    public List<TemplatePayloadValidationError> validate() {
+    public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
         return Collections.emptyList();
     }
 }

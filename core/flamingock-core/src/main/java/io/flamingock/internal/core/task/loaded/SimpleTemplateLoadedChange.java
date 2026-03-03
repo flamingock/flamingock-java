@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadValidationError;
+import io.flamingock.api.template.TemplateValidationContext;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -82,7 +83,8 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
     protected List<ValidationError> validateConfigurationPayload() {
         CONFIG config = getConfigurationPayload();
         if (config != null) {
-            List<TemplatePayloadValidationError> payloadErrors = config.validate();
+            TemplateValidationContext context = buildValidationContext();
+            List<TemplatePayloadValidationError> payloadErrors = config.validate(context);
             if (!payloadErrors.isEmpty()) {
                 List<ValidationError> errors = new ArrayList<>();
                 for (TemplatePayloadValidationError e : payloadErrors) {
@@ -103,7 +105,8 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
                     String.format("Template '%s' requires 'apply' payload", getSource()),
                     getId(), "change"));
         }
-        List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate();
+        TemplateValidationContext context = buildValidationContext();
+        List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate(context);
         if (!payloadErrors.isEmpty()) {
             List<ValidationError> errors = new ArrayList<>();
             for (TemplatePayloadValidationError e : payloadErrors) {
@@ -124,7 +127,8 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
                     getId(), "change"));
         }
         if (rollbackPayload != null) {
-            List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate();
+            TemplateValidationContext context = buildValidationContext();
+            List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate(context);
             if (!payloadErrors.isEmpty()) {
                 List<ValidationError> errors = new ArrayList<>();
                 for (TemplatePayloadValidationError e : payloadErrors) {

@@ -19,6 +19,7 @@ import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadValidationError;
 import io.flamingock.api.template.TemplateStep;
+import io.flamingock.api.template.TemplateValidationContext;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -71,7 +72,8 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
     protected List<ValidationError> validateConfigurationPayload() {
         CONFIG config = getConfigurationPayload();
         if (config != null) {
-            List<TemplatePayloadValidationError> payloadErrors = config.validate();
+            TemplateValidationContext context = buildValidationContext();
+            List<TemplatePayloadValidationError> payloadErrors = config.validate(context);
             if (!payloadErrors.isEmpty()) {
                 List<ValidationError> errors = new ArrayList<>();
                 for (TemplatePayloadValidationError e : payloadErrors) {
@@ -89,6 +91,7 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
     protected List<ValidationError> validateApplyPayload() {
         List<ValidationError> errors = new ArrayList<>();
         if (steps != null) {
+            TemplateValidationContext context = buildValidationContext();
             for (int i = 0; i < steps.size(); i++) {
                 APPLY applyPayload = steps.get(i).getApplyPayload();
                 if (applyPayload == null) {
@@ -96,7 +99,7 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
                             String.format("Template '%s', step %d: missing required 'apply' payload", getSource(), i + 1),
                             getId(), "change"));
                 } else {
-                    List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate();
+                    List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate(context);
                     for (TemplatePayloadValidationError e : payloadErrors) {
                         errors.add(new ValidationError(
                                 String.format("Template '%s', step %d apply payload: %s", getSource(), i + 1, e.getFormattedMessage()),
@@ -112,6 +115,7 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
     protected List<ValidationError> validateRollbackPayload() {
         List<ValidationError> errors = new ArrayList<>();
         if (steps != null) {
+            TemplateValidationContext context = buildValidationContext();
             for (int i = 0; i < steps.size(); i++) {
                 ROLLBACK rollbackPayload = steps.get(i).getRollbackPayload();
                 if (rollbackPayloadRequired && !steps.get(i).hasRollbackPayload()) {
@@ -119,7 +123,7 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
                             String.format("Template '%s', step %d: missing required 'rollback' payload (rollbackPayloadRequired=true)", getSource(), i + 1),
                             getId(), "change"));
                 } else if (rollbackPayload != null) {
-                    List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate();
+                    List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate(context);
                     for (TemplatePayloadValidationError e : payloadErrors) {
                         errors.add(new ValidationError(
                                 String.format("Template '%s', step %d rollback payload: %s", getSource(), i + 1, e.getFormattedMessage()),
