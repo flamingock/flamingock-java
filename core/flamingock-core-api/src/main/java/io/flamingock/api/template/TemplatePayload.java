@@ -26,9 +26,11 @@ import java.util.List;
 public interface TemplatePayload {
 
     /**
-     * Validates this payload and returns any errors found.
+     * Validates this payload using the supplied change-level context
+     * and returns any errors found.
      *
+     * @param context change-level metadata available during validation
      * @return list of validation errors, empty if payload is valid
      */
-    List<TemplatePayloadValidationError> validate();
+    List<TemplatePayloadValidationError> validate(TemplateValidationContext context);
 }

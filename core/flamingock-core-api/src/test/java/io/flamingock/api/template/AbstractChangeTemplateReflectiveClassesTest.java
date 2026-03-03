@@ -36,7 +36,7 @@ class AbstractChangeTemplateReflectiveClassesTest {
         public String configValue;
 
         @Override
-        public List<TemplatePayloadValidationError> validate() {
+        public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
             return Collections.emptyList();
         }
     }
@@ -46,7 +46,7 @@ class AbstractChangeTemplateReflectiveClassesTest {
         public String applyData;
 
         @Override
-        public List<TemplatePayloadValidationError> validate() {
+        public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
             return Collections.emptyList();
         }
     }
@@ -56,7 +56,7 @@ class AbstractChangeTemplateReflectiveClassesTest {
         public String rollbackData;
 
         @Override
-        public List<TemplatePayloadValidationError> validate() {
+        public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
             return Collections.emptyList();
         }
     }

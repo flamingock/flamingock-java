@@ -19,6 +19,7 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
+import io.flamingock.api.template.TemplateValidationContext;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -101,6 +102,12 @@ public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayloa
         errors.addAll(validateApplyPayload());
         errors.addAll(validateRollbackPayload());
         return errors;
+    }
+
+    protected TemplateValidationContext buildValidationContext() {
+        TemplateValidationContext ctx = new TemplateValidationContext();
+        ctx.setTransactional(isTransactional());
+        return ctx;
     }
 
     abstract protected List<ValidationError> validateConfigurationPayload();
