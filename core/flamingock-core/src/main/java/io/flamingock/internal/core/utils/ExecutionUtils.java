@@ -34,10 +34,6 @@ public final class ExecutionUtils {
     private ExecutionUtils() {
     }
 
-    @SuppressWarnings("unchecked")
-    public static Collection<Class<?>> loadExecutionClassesFromPackage(String packagePath) {
-        return ReflectionUtil.loadAnnotatedClassesFromPackage(packagePath, ExecutionUtils.CHANGE_UNIT_CLASS);
-    }
 
     /**
      * We need this generic method, although currently it only calls `isChange`, but in the future there will
