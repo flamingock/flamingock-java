@@ -25,9 +25,12 @@ import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import io.flamingock.internal.util.ReflectionUtil;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +44,8 @@ import java.util.Optional;
  * @param <ROLLBACK> the rollback payload type
  */
 public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload> extends AbstractLoadedChange {
+
+    protected static final Logger logger = FlamingockLoggerFactory.getLogger(AbstractTemplateLoadedChange.class);
 
     private final List<String> profiles;
     private final CONFIG configurationPayload;
@@ -101,6 +106,7 @@ public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayloa
         errors.addAll(validateConfigurationPayload());
         errors.addAll(validateApplyPayload());
         errors.addAll(validateRollbackPayload());
+        warnIfAllPayloadsSupportTransactions();
         return errors;
     }
 
@@ -110,9 +116,32 @@ public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayloa
         return ctx;
     }
 
+    protected List<ValidationError> checkPayloadTransactionSupport(TemplatePayload payload, String payloadLabel) {
+        if (payload == null) {
+            return Collections.emptyList();
+        }
+        Optional<Boolean> supports = payload.getInfo().getSupportsTransactions();
+        if (isTransactional() && supports.isPresent() && !supports.get()) {
+            return Collections.singletonList(new ValidationError(
+                    String.format("Template '%s' is transactional but %s payload does not support transactions",
+                            getSource(), payloadLabel),
+                    getId(), "change"));
+        }
+        return Collections.emptyList();
+    }
+
+    protected static Boolean getExplicitTransactionSupport(TemplatePayload payload) {
+        if (payload == null) {
+            return null;
+        }
+        return payload.getInfo().getSupportsTransactions().orElse(null);
+    }
+
     abstract protected List<ValidationError> validateConfigurationPayload();
 
     abstract protected List<ValidationError> validateApplyPayload();
 
     abstract protected List<ValidationError> validateRollbackPayload();
+
+    abstract protected void warnIfAllPayloadsSupportTransactions();
 }
