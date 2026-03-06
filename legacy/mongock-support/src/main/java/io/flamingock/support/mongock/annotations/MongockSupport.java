@@ -88,12 +88,12 @@ public @interface MongockSupport {
      * </p>
      *
      * <p>
-     * Default value is {@code "false"} (import enabled).
+     * If empty (default), it will be treated as {@code "false"}.
      * </p>
      *
-     * @return {@code "true"} to skip import, {@code "false"} to process it
+     * @return {@code "true"} to skip import, {@code "false"} to process it; empty treated as {@code "false"}
      */
-    String skipImport() default "false";
+    String skipImport() default "";
 
     /**
      * Defines the origin collection/table name where Mongock audit entries are stored.
