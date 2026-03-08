@@ -15,14 +15,12 @@
  */
 package io.flamingock.internal.core.utils;
 
-import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.NonLockGuarded;
 import io.flamingock.api.NonLockGuardedType;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
