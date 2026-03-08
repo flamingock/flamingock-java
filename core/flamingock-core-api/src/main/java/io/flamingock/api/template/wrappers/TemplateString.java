@@ -16,6 +16,7 @@
 package io.flamingock.api.template.wrappers;
 
 import io.flamingock.api.template.TemplatePayload;
+import io.flamingock.api.template.TemplatePayloadInfo;
 import io.flamingock.api.template.TemplatePayloadValidationError;
 import io.flamingock.api.template.TemplateValidationContext;
 
@@ -65,6 +66,11 @@ public class TemplateString implements TemplatePayload {
                     new TemplatePayloadValidationError("value", "must not be null or blank"));
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public TemplatePayloadInfo getInfo() {
+        return new TemplatePayloadInfo();
     }
 
     @Override

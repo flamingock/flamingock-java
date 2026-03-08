@@ -39,6 +39,11 @@ class AbstractChangeTemplateReflectiveClassesTest {
         public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
             return Collections.emptyList();
         }
+
+        @Override
+        public TemplatePayloadInfo getInfo() {
+            return new TemplatePayloadInfo();
+        }
     }
 
     // Simple test apply payload class
@@ -49,6 +54,11 @@ class AbstractChangeTemplateReflectiveClassesTest {
         public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
             return Collections.emptyList();
         }
+
+        @Override
+        public TemplatePayloadInfo getInfo() {
+            return new TemplatePayloadInfo();
+        }
     }
 
     // Simple test rollback payload class
@@ -58,6 +68,11 @@ class AbstractChangeTemplateReflectiveClassesTest {
         @Override
         public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
             return Collections.emptyList();
+        }
+
+        @Override
+        public TemplatePayloadInfo getInfo() {
+            return new TemplatePayloadInfo();
         }
     }
 

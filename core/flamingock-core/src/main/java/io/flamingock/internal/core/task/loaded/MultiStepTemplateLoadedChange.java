@@ -105,6 +105,7 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
                                 String.format("Template '%s', step %d apply payload: %s", getSource(), i + 1, e.getFormattedMessage()),
                                 getId(), "change"));
                     }
+                    errors.addAll(checkPayloadTransactionSupport(applyPayload, "step " + (i + 1) + " apply"));
                 }
             }
         }
@@ -133,5 +134,30 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
             }
         }
         return errors;
+    }
+
+    @Override
+    protected void warnIfAllPayloadsSupportTransactions() {
+        if (isTransactional()) {
+            return;
+        }
+        if (steps == null || steps.isEmpty()) {
+            return;
+        }
+        boolean atLeastOneExplicit = false;
+        for (TemplateStep<APPLY, ROLLBACK> step : steps) {
+            Boolean supports = getExplicitTransactionSupport(step.getApplyPayload());
+            if (supports == null) {
+                continue;
+            }
+            if (!supports) {
+                return;
+            }
+            atLeastOneExplicit = true;
+        }
+        if (atLeastOneExplicit) {
+            logger.warn("Template '{}': all apply payloads support transactions but change is not transactional. " +
+                    "Consider setting transactional=true", getSource());
+        }
     }
 }

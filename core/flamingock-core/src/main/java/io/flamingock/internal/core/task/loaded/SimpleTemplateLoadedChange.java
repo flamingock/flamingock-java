@@ -105,22 +105,21 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
                     String.format("Template '%s' requires 'apply' payload", getSource()),
                     getId(), "change"));
         }
+        List<ValidationError> errors = new ArrayList<>();
         TemplateValidationContext context = buildValidationContext();
         List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate(context);
-        if (!payloadErrors.isEmpty()) {
-            List<ValidationError> errors = new ArrayList<>();
-            for (TemplatePayloadValidationError e : payloadErrors) {
-                errors.add(new ValidationError(
-                        String.format("Template '%s' apply payload: %s", getSource(), e.getFormattedMessage()),
-                        getId(), "change"));
-            }
-            return errors;
+        for (TemplatePayloadValidationError e : payloadErrors) {
+            errors.add(new ValidationError(
+                    String.format("Template '%s' apply payload: %s", getSource(), e.getFormattedMessage()),
+                    getId(), "change"));
         }
-        return Collections.emptyList();
+        errors.addAll(checkPayloadTransactionSupport(applyPayload, "apply"));
+        return errors;
     }
 
     @Override
     protected List<ValidationError> validateRollbackPayload() {
+        List<ValidationError> errors = new ArrayList<>();
         if (rollbackPayloadRequired && rollbackPayload == null) {
             return Collections.singletonList(new ValidationError(
                     String.format("Template '%s' requires 'rollback' payload (rollbackPayloadRequired=true)", getSource()),
@@ -129,16 +128,24 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
         if (rollbackPayload != null) {
             TemplateValidationContext context = buildValidationContext();
             List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate(context);
-            if (!payloadErrors.isEmpty()) {
-                List<ValidationError> errors = new ArrayList<>();
-                for (TemplatePayloadValidationError e : payloadErrors) {
-                    errors.add(new ValidationError(
-                            String.format("Template '%s' rollback payload: %s", getSource(), e.getFormattedMessage()),
-                            getId(), "change"));
-                }
-                return errors;
+            for (TemplatePayloadValidationError e : payloadErrors) {
+                errors.add(new ValidationError(
+                        String.format("Template '%s' rollback payload: %s", getSource(), e.getFormattedMessage()),
+                        getId(), "change"));
             }
         }
-        return Collections.emptyList();
+        return errors;
+    }
+
+    @Override
+    protected void warnIfAllPayloadsSupportTransactions() {
+        if (isTransactional()) {
+            return;
+        }
+        Boolean supports = getExplicitTransactionSupport(applyPayload);
+        if (Boolean.TRUE.equals(supports)) {
+            logger.warn("Template '{}': apply payload supports transactions but change is not transactional. " +
+                    "Consider setting transactional=true", getSource());
+        }
     }
 }

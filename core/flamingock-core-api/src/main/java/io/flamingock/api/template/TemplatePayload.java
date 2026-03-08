@@ -33,4 +33,12 @@ public interface TemplatePayload {
      * @return list of validation errors, empty if payload is valid
      */
     List<TemplatePayloadValidationError> validate(TemplateValidationContext context);
+
+    /**
+     * Returns metadata about this payload so the framework can make
+     * centralized decisions based on payload characteristics.
+     *
+     * @return payload info; never {@code null}
+     */
+    TemplatePayloadInfo getInfo();
 }
