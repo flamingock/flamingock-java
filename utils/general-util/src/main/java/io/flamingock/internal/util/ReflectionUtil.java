@@ -15,8 +15,6 @@
  */
 package io.flamingock.internal.util;
 
-import org.reflections.Reflections;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -256,15 +254,6 @@ public final class ReflectionUtil {
                 .findFirst();
     }
 
-    //TODO expand this beyond Change
-    @SuppressWarnings("unchecked")
-    public static Collection<Class<?>> loadAnnotatedClassesFromPackage(String packagePath, Class<? extends Annotation>... annotations) {
-        Reflections reflections = new Reflections(packagePath);
-        return Stream.of(annotations)
-                .map(reflections::getTypesAnnotatedWith)
-                .flatMap(Set::stream)
-                .collect(Collectors.toList());
-    }
 
     public static List<Class<?>> getParameters(Executable executable) {
         return Arrays.asList(executable.getParameterTypes());
