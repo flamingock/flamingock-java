@@ -377,7 +377,7 @@ public class CouchbaseImporterTest {
     }
 
     @Test
-    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+    @DisplayName("GIVEN all Mongock changeUnits already executed " +
             "AND skip import flag enabled " +
             "WHEN migrating to Flamingock Community" +
             "THEN should not import any audit history entry " +
@@ -433,7 +433,7 @@ public class CouchbaseImporterTest {
     }
 
     @Test
-    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+    @DisplayName("GIVEN all Mongock changeUnits already executed " +
             "AND skip import flag disabled (explicit) " +
             "WHEN migrating to Flamingock Community " +
             "THEN should import the entire history " +
@@ -482,7 +482,7 @@ public class CouchbaseImporterTest {
     }
 
     @Test
-    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+    @DisplayName("GIVEN all Mongock changeUnits already executed " +
             "AND skip import flag disabled (implicit) " +
             "WHEN migrating to Flamingock Community " +
             "THEN should import the entire history " +
