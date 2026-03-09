@@ -1,0 +1,7 @@
+id: simple-with-rollback
+template: MongoChangeTemplate
+transactional: true
+targetSystem:
+  id: mongodb
+apply: "db.createCollection('users')"
+rollback: "db.users.drop()"
