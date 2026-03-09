@@ -5,7 +5,8 @@ dependencies {
     api(project(":utils:general-util"))//todo implementation
 
     api("javax.inject:javax.inject:1")
-    api("org.reflections:reflections:0.10.1")//TODO remove
+    api("org.javassist:javassist:3.30.2-GA")
+    api("com.google.code.findbugs:jsr305:3.0.2")
     api("org.objenesis:objenesis:3.2")
     api("org.yaml:snakeyaml:2.2")
 

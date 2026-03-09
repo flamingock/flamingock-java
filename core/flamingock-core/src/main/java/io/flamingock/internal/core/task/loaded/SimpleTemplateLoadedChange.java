@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadValidationError;
+import io.flamingock.api.template.TemplateValidationContext;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
@@ -82,7 +83,8 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
     protected List<ValidationError> validateConfigurationPayload() {
         CONFIG config = getConfigurationPayload();
         if (config != null) {
-            List<TemplatePayloadValidationError> payloadErrors = config.validate();
+            TemplateValidationContext context = buildValidationContext();
+            List<TemplatePayloadValidationError> payloadErrors = config.validate(context);
             if (!payloadErrors.isEmpty()) {
                 List<ValidationError> errors = new ArrayList<>();
                 for (TemplatePayloadValidationError e : payloadErrors) {
@@ -103,38 +105,47 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
                     String.format("Template '%s' requires 'apply' payload", getSource()),
                     getId(), "change"));
         }
-        List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate();
-        if (!payloadErrors.isEmpty()) {
-            List<ValidationError> errors = new ArrayList<>();
-            for (TemplatePayloadValidationError e : payloadErrors) {
-                errors.add(new ValidationError(
-                        String.format("Template '%s' apply payload: %s", getSource(), e.getFormattedMessage()),
-                        getId(), "change"));
-            }
-            return errors;
+        List<ValidationError> errors = new ArrayList<>();
+        TemplateValidationContext context = buildValidationContext();
+        List<TemplatePayloadValidationError> payloadErrors = applyPayload.validate(context);
+        for (TemplatePayloadValidationError e : payloadErrors) {
+            errors.add(new ValidationError(
+                    String.format("Template '%s' apply payload: %s", getSource(), e.getFormattedMessage()),
+                    getId(), "change"));
         }
-        return Collections.emptyList();
+        errors.addAll(checkPayloadTransactionSupport(applyPayload, "apply"));
+        return errors;
     }
 
     @Override
     protected List<ValidationError> validateRollbackPayload() {
+        List<ValidationError> errors = new ArrayList<>();
         if (rollbackPayloadRequired && rollbackPayload == null) {
             return Collections.singletonList(new ValidationError(
                     String.format("Template '%s' requires 'rollback' payload (rollbackPayloadRequired=true)", getSource()),
                     getId(), "change"));
         }
         if (rollbackPayload != null) {
-            List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate();
-            if (!payloadErrors.isEmpty()) {
-                List<ValidationError> errors = new ArrayList<>();
-                for (TemplatePayloadValidationError e : payloadErrors) {
-                    errors.add(new ValidationError(
-                            String.format("Template '%s' rollback payload: %s", getSource(), e.getFormattedMessage()),
-                            getId(), "change"));
-                }
-                return errors;
+            TemplateValidationContext context = buildValidationContext();
+            List<TemplatePayloadValidationError> payloadErrors = rollbackPayload.validate(context);
+            for (TemplatePayloadValidationError e : payloadErrors) {
+                errors.add(new ValidationError(
+                        String.format("Template '%s' rollback payload: %s", getSource(), e.getFormattedMessage()),
+                        getId(), "change"));
             }
         }
-        return Collections.emptyList();
+        return errors;
+    }
+
+    @Override
+    protected void warnIfAllPayloadsSupportTransactions() {
+        if (isTransactional()) {
+            return;
+        }
+        Boolean supports = getExplicitTransactionSupport(applyPayload);
+        if (Boolean.TRUE.equals(supports)) {
+            logger.warn("Template '{}': apply payload supports transactions but change is not transactional. " +
+                    "Consider setting transactional=true", getSource());
+        }
     }
 }
