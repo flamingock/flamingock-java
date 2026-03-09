@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_STATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -352,6 +353,183 @@ public class CouchbaseImporterTest {
         assertEquals("APPLIED", auditLog.get(6).getString("state"));
     }
 
+    @Test
+    @DisplayName("GIVEN skip import flag with invalid value " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should throw exception")
+    void GIVEN_skipImportFlagWithInvalidValue_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+
+        final String SKIP_IMPORT_VALUE = "invalid_value";
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
+        assertEquals("Invalid value for " + MONGOCK_IMPORT_SKIP_PROPERTY_KEY + ": " + SKIP_IMPORT_VALUE
+                + " (expected \"true\" or \"false\" or empty)", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+            "AND skip import flag enabled " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should not import any audit history entry " +
+            "AND execute the all mongock and flamingock changes")
+    void GIVEN_skipImportFlagEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldNotMigrateAnyAuditLog() {
+
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("mongock-change-2", createAuditObject("mongock-change-2"));
+
+        final String SKIP_IMPORT_VALUE = "true";
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        flamingock.run();
+
+        List<JsonObject> auditLog = getAuditLog();
+
+        assertEquals(8, auditLog.size());
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(0).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(0).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(1).getString("state"));
+
+        assertEquals("mongock-change-1", auditLog.get(2).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(2).getString("state"));
+
+        assertEquals("mongock-change-1", auditLog.get(3).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(3).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(4).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(5).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(5).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(6).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(7).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(7).getString("state"));
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+            "AND skip import flag disabled (explicit) " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndSkipImportFlagDisabledExplicit_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("mongock-change-2", createAuditObject("mongock-change-2"));
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        final String SKIP_IMPORT_VALUE = "false";
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        flamingock.run();
+
+        List<JsonObject> auditLog = getAuditLog();
+
+        assertEquals(6, auditLog.size());
+
+        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(1).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(1).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(2).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(3).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(3).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(4).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(4).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(5).getString("state"));
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed" +
+            "AND skip import flag disabled (implicit) " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndSkipImportFlagDisabledImplicit_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("mongock-change-2", createAuditObject("mongock-change-2"));
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        final String SKIP_IMPORT_VALUE = "";
+
+        Runner flamingock = FlamingockFactory.getCommunityBuilder()
+                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
+                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
+                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        flamingock.run();
+
+        List<JsonObject> auditLog = getAuditLog();
+
+        assertEquals(6, auditLog.size());
+
+        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+
+        assertEquals("mongock-change-2", auditLog.get(1).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(1).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(2).getString("state"));
+
+        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(3).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(3).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(4).getString("changeId"));
+        assertEquals("STARTED", auditLog.get(4).getString("state"));
+
+        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
+        assertEquals("APPLIED", auditLog.get(5).getString("state"));
+    }
+
 
     private List<JsonObject> getAuditLog() {
         return CouchbaseCollectionHelper.selectAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME)
@@ -379,5 +557,4 @@ public class CouchbaseImporterTest {
                 .put("_doctype", "mongockChangeEntry");
         return doc;
     }
-
 }
