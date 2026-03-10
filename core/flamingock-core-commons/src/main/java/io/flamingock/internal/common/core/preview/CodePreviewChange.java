@@ -40,7 +40,7 @@ public class CodePreviewChange extends AbstractPreviewTask {
                              PreviewMethod applyPreviewMethod,
                              PreviewMethod rollbackPreviewMethod,
                              boolean runAlways,
-                             boolean transactional,
+                             Boolean transactional,
                              boolean system,
                              TargetSystemDescriptor targetSystem,
                              RecoveryDescriptor recovery,
@@ -93,7 +93,7 @@ public class CodePreviewChange extends AbstractPreviewTask {
                 ", author='" + author + '\'' +
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
-                ", transactional=" + transactional +
+                ", transactionalFlag=" + transactionalFlag +
                 (getTargetSystem() != null ? ", targetSystem='" + getTargetSystem().getId() + '\'' : "") +
                 (getRecovery() != null ? ", recovery='" + getRecovery().getStrategy() + '\'' : "") +
                 '}';

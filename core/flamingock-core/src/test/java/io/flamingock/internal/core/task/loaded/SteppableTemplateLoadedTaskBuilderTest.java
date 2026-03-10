@@ -19,7 +19,11 @@ import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.ChangeTemplate;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplatePayload;
+import io.flamingock.api.template.TemplatePayloadInfo;
+import io.flamingock.api.template.TemplatePayloadValidationError;
 import io.flamingock.api.template.TemplateStep;
+import io.flamingock.api.template.TemplateValidationContext;
 import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.api.template.wrappers.TemplateVoid;
 import io.flamingock.internal.common.core.error.FlamingockException;
@@ -85,6 +89,78 @@ class SteppableTemplateLoadedTaskBuilderTest {
         }
     }
 
+    // Payload that explicitly claims supportsTransactions=false
+    public static class NonTxPayload implements TemplatePayload {
+        private String value;
+
+        public NonTxPayload() {}
+
+        public NonTxPayload(String value) { this.value = value; }
+
+        public String getValue() { return value; }
+
+        public void setValue(String value) { this.value = value; }
+
+        @Override
+        public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public TemplatePayloadInfo getInfo() {
+            TemplatePayloadInfo info = new TemplatePayloadInfo();
+            info.setSupportsTransactions(false);
+            return info;
+        }
+    }
+
+    // Payload that explicitly claims supportsTransactions=true
+    public static class TxPayload implements TemplatePayload {
+        private String value;
+
+        public TxPayload() {}
+
+        public TxPayload(String value) { this.value = value; }
+
+        public String getValue() { return value; }
+
+        public void setValue(String value) { this.value = value; }
+
+        @Override
+        public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public TemplatePayloadInfo getInfo() {
+            TemplatePayloadInfo info = new TemplatePayloadInfo();
+            info.setSupportsTransactions(true);
+            return info;
+        }
+    }
+
+    @ChangeTemplate(name = "test-nontx-steppable-template", multiStep = true)
+    public static class NonTxSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, NonTxPayload, TemplateString> {
+        public NonTxSteppableTemplate() { super(); }
+
+        @Apply
+        public void apply() {}
+
+        @Rollback
+        public void rollback() {}
+    }
+
+    @ChangeTemplate(name = "test-tx-steppable-template", multiStep = true)
+    public static class TxSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, TxPayload, TemplateString> {
+        public TxSteppableTemplate() { super(); }
+
+        @Apply
+        public void apply() {}
+
+        @Rollback
+        public void rollback() {}
+    }
+
     @BeforeEach
     void setUp() {
         builder = TemplateLoadedTaskBuilder.getInstance();
@@ -106,7 +182,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setId("test-id")
                     .setFileName("test-file.yml")
                     .setTemplateName("test-steppable-template")
-                    .setTransactional(true)
+                    .setTransactionalFlag(true)
                     .setSteps(rawSteps);
             builder.setProfiles(Arrays.asList("test"));
 
@@ -144,7 +220,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                     .setFileName("test-file.yml")
                     .setTemplateName("test-steppable-template")
                     .setRunAlways(false)
-                    .setTransactional(true)
+                    .setTransactionalFlag(true)
                     .setSystem(false)
                     .setConfiguration(null)
                     .setSteps(rawSteps);
@@ -178,7 +254,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                     .setFileName("_0002__test-file.yml")
                     .setTemplateName("test-steppable-template")
                     .setRunAlways(false)
-                    .setTransactional(true)
+                    .setTransactionalFlag(true)
                     .setSystem(false)
                     .setConfiguration(null)
                     .setSteps(rawSteps);
@@ -208,7 +284,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setId("test-id")
                     .setFileName("test-file.yml")
                     .setTemplateName("test-steppable-template")
-                    .setTransactional(true)
+                    .setTransactionalFlag(true)
                     .setSteps(emptySteps);
             builder.setProfiles(Arrays.asList("test"));
 
@@ -244,7 +320,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                     .setOrder("003")
                     .setFileName("_003__multi-step.yml")
                     .setTemplateName("test-steppable-template")
-                    .setTransactional(true)
+                    .setTransactionalFlag(true)
                     .setSteps(rawSteps);
             builder.setProfiles(Arrays.asList("test"));
 
@@ -308,7 +384,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setId("test-id")
                     .setFileName("test-file.yml")
                     .setTemplateName("test-steppable-template")
-                    .setTransactional(true)
+                    .setTransactionalFlag(true)
                     .setSteps(rawSteps);
             builder.setProfiles(Arrays.asList("test"));
 
@@ -338,7 +414,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
             builder.setId("test-id")
                     .setFileName("test-file.yml")
                     .setTemplateName("test-steppable-template")
-                    .setTransactional(true)
+                    .setTransactionalFlag(true)
                     .setSteps(null);
             builder.setProfiles(Arrays.asList("test"));
 
@@ -366,6 +442,59 @@ class SteppableTemplateLoadedTaskBuilderTest {
         Map<String, Object> step = new HashMap<>();
         step.put("apply", apply);
         return step;
+    }
+
+    @Nested
+    @DisplayName("Transactional nullable support tests")
+    class TransactionalNullableTests {
+
+        @Test
+        @DisplayName("Should default to true when transactional is null")
+        void shouldDefaultToTrueWhenTransactionalIsNull() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
+
+                List<Map<String, Object>> rawSteps = Collections.singletonList(
+                        createStepMap("apply1", "rollback1")
+                );
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactionalFlag(null)
+                        .setSteps(rawSteps);
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertTrue(result.isTransactional());
+            }
+        }
+
+        @Test
+        @DisplayName("Should preserve explicit false when set")
+        void shouldPreserveExplicitFalseWhenSet() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, true)));
+
+                List<Map<String, Object>> rawSteps = Collections.singletonList(
+                        createStepMap("apply1", "rollback1")
+                );
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactionalFlag(false)
+                        .setSteps(rawSteps);
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertFalse(result.isTransactional());
+            }
+        }
     }
 
     @Nested
@@ -462,7 +591,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                 builder.setId("test-id")
                         .setFileName("test-file.yml")
                         .setTemplateName("test-steppable-template")
-                        .setTransactional(true)
+                        .setTransactionalFlag(true)
                         .setSteps(rawSteps);
                 builder.setProfiles(Arrays.asList("test"));
 
@@ -489,7 +618,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                 builder.setId("test-id")
                         .setFileName("test-file.yml")
                         .setTemplateName("test-steppable-template")
-                        .setTransactional(true)
+                        .setTransactionalFlag(true)
                         .setSteps(rawSteps);
                 builder.setProfiles(Arrays.asList("test"));
 
@@ -516,7 +645,7 @@ class SteppableTemplateLoadedTaskBuilderTest {
                 builder.setId("test-id")
                         .setFileName("test-file.yml")
                         .setTemplateName("test-steppable-template")
-                        .setTransactional(true)
+                        .setTransactionalFlag(true)
                         .setSteps(rawSteps);
                 builder.setProfiles(Arrays.asList("test"));
 
@@ -525,6 +654,176 @@ class SteppableTemplateLoadedTaskBuilderTest {
 
                 assertFalse(errors.stream().anyMatch(e -> e.getMessage().contains("rollback")),
                         "Expected no rollback-related errors, but got: " + errors);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Transactional inference from payload tests")
+    class TransactionalInferenceTests {
+
+        @Test
+        @DisplayName("Should infer false when any step does not support transactions")
+        void shouldInferFalseWhenAnyStepDoesNotSupportTx() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-nontx-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-nontx-steppable-template", NonTxSteppableTemplate.class, true, false)));
+
+                // Use pre-built TemplateStep objects with typed payloads
+                TemplateStep<Object, Object> step1 = new TemplateStep<>();
+                step1.setApplyPayload(new TxPayload("apply1"));
+                TemplateStep<Object, Object> step2 = new TemplateStep<>();
+                step2.setApplyPayload(new NonTxPayload("apply2"));
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-nontx-steppable-template")
+                        .setTransactionalFlag(null)
+                        .setSteps(Arrays.asList(step1, step2));
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertFalse(result.isTransactional());
+            }
+        }
+
+        @Test
+        @DisplayName("Should infer true when all steps support transactions")
+        void shouldInferTrueWhenAllStepsSupportTx() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-tx-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-tx-steppable-template", TxSteppableTemplate.class, true, false)));
+
+                TemplateStep<Object, Object> step1 = new TemplateStep<>();
+                step1.setApplyPayload(new TxPayload("apply1"));
+                TemplateStep<Object, Object> step2 = new TemplateStep<>();
+                step2.setApplyPayload(new TxPayload("apply2"));
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-tx-steppable-template")
+                        .setTransactionalFlag(null)
+                        .setSteps(Arrays.asList(step1, step2));
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertTrue(result.isTransactional());
+            }
+        }
+
+        @Test
+        @DisplayName("Should infer true when all steps make no claim")
+        void shouldInferTrueWhenAllStepsMakeNoClaim() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, false)));
+
+                List<Map<String, Object>> rawSteps = Arrays.asList(
+                        createStepMap("apply1", "rollback1"),
+                        createStepMap("apply2", "rollback2")
+                );
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactionalFlag(null)
+                        .setSteps(rawSteps);
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertTrue(result.isTransactional());
+            }
+        }
+
+        @Test
+        @DisplayName("Should infer true when mix of support and no claim")
+        void shouldInferTrueWhenMixOfSupportAndNoClaim() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-tx-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-tx-steppable-template", TxSteppableTemplate.class, true, false)));
+
+                // step1 has TxPayload (supportsTransactions=true), step2 uses raw String → TemplateString (no claim)
+                TemplateStep<Object, Object> step1 = new TemplateStep<>();
+                step1.setApplyPayload(new TxPayload("apply1"));
+                TemplateStep<Object, Object> step2 = new TemplateStep<>();
+                step2.setApplyPayload(new TxPayload("apply2"));
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-tx-steppable-template")
+                        .setTransactionalFlag(null)
+                        .setSteps(Arrays.asList(step1, step2));
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertTrue(result.isTransactional());
+            }
+        }
+
+        @Test
+        @DisplayName("Should infer true when steps is empty")
+        void shouldInferTrueWhenStepsIsEmpty() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, false)));
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactionalFlag(null)
+                        .setSteps(Collections.emptyList());
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertTrue(result.isTransactional());
+            }
+        }
+
+        @Test
+        @DisplayName("Should infer true when steps is null")
+        void shouldInferTrueWhenStepsIsNull() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-steppable-template", TestSteppableTemplate.class, true, false)));
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-steppable-template")
+                        .setTransactionalFlag(null)
+                        .setSteps(null);
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertTrue(result.isTransactional());
+            }
+        }
+
+        @Test
+        @DisplayName("Should respect explicit true when step does not support transactions")
+        void shouldRespectExplicitTrueWhenStepDoesNotSupportTx() {
+            try (MockedStatic<ChangeTemplateManager> mockedTemplateManager = mockStatic(ChangeTemplateManager.class)) {
+                mockedTemplateManager.when(() -> ChangeTemplateManager.getTemplate("test-nontx-steppable-template"))
+                        .thenReturn(Optional.of(new ChangeTemplateDefinition("test-nontx-steppable-template", NonTxSteppableTemplate.class, true, false)));
+
+                TemplateStep<Object, Object> step1 = new TemplateStep<>();
+                step1.setApplyPayload(new NonTxPayload("apply1"));
+
+                builder.setId("test-id")
+                        .setFileName("test-file.yml")
+                        .setTemplateName("test-nontx-steppable-template")
+                        .setTransactionalFlag(true)
+                        .setSteps(Collections.singletonList(step1));
+                builder.setProfiles(Arrays.asList("test"));
+
+                AbstractTemplateLoadedChange<?, ?, ?> result = builder.build();
+
+                assertTrue(result.isTransactional());
             }
         }
     }

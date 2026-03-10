@@ -44,7 +44,7 @@ class CodeLoadedTaskBuilderTest {
                 .setOrder("001")
                 .setChangeClassName(WithoutOrderTestClass.class.getName())
                 .setRunAlways(false)
-                .setTransactional(true)
+                .setTransactionalFlag(true)
                 .setSystem(false);
 
         // When
@@ -64,7 +64,7 @@ class CodeLoadedTaskBuilderTest {
                 .setOrder("001")
                 .setChangeClassName(_002__MyClass.class.getName())
                 .setRunAlways(false)
-                .setTransactional(true)
+                .setTransactionalFlag(true)
                 .setSystem(false);
 
         // When & Then
@@ -82,7 +82,7 @@ class CodeLoadedTaskBuilderTest {
                 .setOrder(null)
                 .setChangeClassName(WithoutOrderTestClass.class.getName())
                 .setRunAlways(false)
-                .setTransactional(true)
+                .setTransactionalFlag(true)
                 .setSystem(false);
 
         // When & Then
@@ -100,7 +100,7 @@ class CodeLoadedTaskBuilderTest {
                 .setOrder("")
                 .setChangeClassName(_002__MyClass.class.getName())
                 .setRunAlways(false)
-                .setTransactional(true)
+                .setTransactionalFlag(true)
                 .setSystem(false);
 
         // When
@@ -119,7 +119,7 @@ class CodeLoadedTaskBuilderTest {
                 .setOrder("   ")
                 .setChangeClassName(_002__MyClass.class.getName())
                 .setRunAlways(false)
-                .setTransactional(true)
+                .setTransactionalFlag(true)
                 .setSystem(false);
 
         // When
@@ -138,7 +138,7 @@ class CodeLoadedTaskBuilderTest {
                 .setOrder("001")
                 .setChangeClassName(WithoutOrderTestClass.class.getName())
                 .setRunAlways(false)
-                .setTransactional(true)
+                .setTransactionalFlag(true)
                 .setSystem(false);
 
         // When
@@ -151,6 +151,24 @@ class CodeLoadedTaskBuilderTest {
         assertFalse(result.isRunAlways());
         assertTrue(result.isTransactional());
         assertFalse(result.isSystem());
+    }
+
+    @Test
+    @DisplayName("Should default to true when transactional is null")
+    void shouldDefaultToTrueWhenTransactionalIsNull() {
+        // Given
+        builder.setId("test-id")
+                .setOrder("001")
+                .setChangeClassName(WithoutOrderTestClass.class.getName())
+                .setRunAlways(false)
+                .setTransactionalFlag(null)
+                .setSystem(false);
+
+        // When
+        CodeLoadedChange result = builder.build();
+
+        // Then
+        assertTrue(result.isTransactional());
     }
 
     // Test class with Change annotation for testing setFromFlamingockChangeAnnotation

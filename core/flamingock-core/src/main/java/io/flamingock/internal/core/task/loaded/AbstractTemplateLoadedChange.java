@@ -58,6 +58,7 @@ public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayloa
                                            Class<? extends ChangeTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                            Constructor<?> constructor,
                                            List<String> profiles,
+                                           Boolean transactionalFlag,
                                            boolean transactional,
                                            boolean runAlways,
                                            boolean systemTask,
@@ -65,9 +66,8 @@ public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayloa
                                            TargetSystemDescriptor targetSystem,
                                            RecoveryDescriptor recovery,
                                            boolean rollbackPayloadRequired) {
-        super(changeFileName, id, order, author, templateClass, constructor, runAlways, transactional, systemTask, targetSystem, recovery, false);
+        super(changeFileName, id, order, author, templateClass, constructor, runAlways, transactionalFlag, transactional, systemTask, targetSystem, recovery, false);
         this.profiles = profiles;
-        this.transactional = transactional;
         this.configurationPayload = configurationPayload;
         this.rollbackPayloadRequired = rollbackPayloadRequired;
     }

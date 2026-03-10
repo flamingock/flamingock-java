@@ -37,7 +37,7 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                                String author,
                                String source,
                                boolean runAlways,
-                               boolean transactional,
+                               Boolean transactional,
                                boolean system,
                                TargetSystemDescriptor targetSystem,
                                RecoveryDescriptor recovery,
@@ -60,7 +60,7 @@ public abstract class AbstractPreviewTask extends AbstractTaskDescriptor {
                 ", order='" + order + '\'' +
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
-                ", transactional=" + transactional +
+                ", transactionalFlag=" + transactionalFlag +
                 ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
                 ", recovery='" + (getRecovery() != null ? getRecovery().getStrategy() : null) + '\'' +
                 '}';

@@ -31,17 +31,22 @@ import io.flamingock.internal.common.core.template.TemplateValidator;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.ReflectionUtil;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 //TODO how to set transactional and runAlways
 public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemplateLoadedChange<?, ?, ?>> {
+
+    private static final Logger logger = FlamingockLoggerFactory.getLogger(TemplateLoadedTaskBuilder.class);
 
     private static final TemplateValidator DEFAULT_VALIDATOR = new TemplateValidator();
 
@@ -52,7 +57,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     private String templateName;
     private List<String> profiles;
     private boolean runAlways;
-    private boolean transactional;
+    private Boolean transactionalFlag;
     private boolean system;
     private Object configuration;
     private Object applyPayload;
@@ -132,8 +137,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         return this;
     }
 
-    public TemplateLoadedTaskBuilder setTransactional(boolean transactional) {
-        this.transactional = transactional;
+    public TemplateLoadedTaskBuilder setTransactionalFlag(Boolean transactionalFlag) {
+        this.transactionalFlag = transactionalFlag;
         return this;
     }
 
@@ -208,6 +213,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     private MultiStepTemplateLoadedChange getLoadedMultiStepTemplateChange(Class<? extends AbstractChangeTemplate> steppableTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
         List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);// Convert apply/rollback to typed payloads at load time
         TemplatePayload convertedConfig = convertConfiguration(constructor, configuration);
+        boolean resolvedTransactional = resolveTransactionalFromSteps(convertedSteps);
         return new MultiStepTemplateLoadedChange(
                 fileName,
                 id,
@@ -216,7 +222,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
                 steppableTemplateClass,
                 constructor,
                 profiles,
-                transactional,
+                transactionalFlag,
+                resolvedTransactional,
                 runAlways,
                 system,
                 convertedConfig,
@@ -231,6 +238,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     private SimpleTemplateLoadedChange getLoadedSimpleTemplateChange(Class<? extends AbstractChangeTemplate> simpleTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
         Pair<Object, Object> convertedPayloads = convertPayloads(constructor, applyPayload, rollbackPayload);// Convert apply/rollback to typed payloads at load time
         TemplatePayload convertedConfig = convertConfiguration(constructor, configuration);
+        boolean resolvedTransactional = resolveTransactional((TemplatePayload) convertedPayloads.getFirst());
         return new SimpleTemplateLoadedChange(
                 fileName,
                 id,
@@ -239,7 +247,8 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
                 simpleTemplateClass,
                 constructor,
                 profiles,
-                transactional,
+                transactionalFlag,
+                resolvedTransactional,
                 runAlways,
                 system,
                 convertedConfig,
@@ -359,6 +368,52 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         return (TemplatePayload) FileUtil.convertToType(configClass, configData);
     }
 
+    /**
+     * Infers transactional from apply payloads when the user didn't specify it.
+     * Any payload claiming supportsTransactions=false makes the change non-transactional.
+     */
+    private static boolean inferTransactionalFromPayloads(List<TemplatePayload> applyPayloads) {
+        for (TemplatePayload payload : applyPayloads) {
+            if (payload == null) continue;
+            Optional<Boolean> supports = payload.getInfo().getSupportsTransactions();
+            if (supports.isPresent() && !supports.get()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean resolveTransactional(TemplatePayload applyPayload) {
+        if (transactionalFlag != null) return transactionalFlag;
+        boolean inferred = inferTransactionalFromPayloads(
+                applyPayload != null ? Collections.singletonList(applyPayload) : Collections.emptyList());
+        logTransactionalInference(inferred);
+        return inferred;
+    }
+
+    private boolean resolveTransactionalFromSteps(List<TemplateStep<Object, Object>> convertedSteps) {
+        if (transactionalFlag != null) return transactionalFlag;
+        if (convertedSteps == null || convertedSteps.isEmpty()) {
+            logTransactionalInference(true);
+            return true;
+        }
+        List<TemplatePayload> applyPayloads = new ArrayList<>();
+        for (TemplateStep<Object, Object> step : convertedSteps) {
+            applyPayloads.add((TemplatePayload) step.getApplyPayload());
+        }
+        boolean inferred = inferTransactionalFromPayloads(applyPayloads);
+        logTransactionalInference(inferred);
+        return inferred;
+    }
+
+    private void logTransactionalInference(boolean inferred) {
+        if (!inferred) {
+            logger.info("Change '{}': transactional not specified, inferred as non-transactional from apply payload(s)", id);
+        } else {
+            logger.debug("Change '{}': transactional not specified, inferred as transactional (default)", id);
+        }
+    }
+
     private TemplateLoadedTaskBuilder setPreview(TemplatePreviewChange preview) {
         this.preview = preview;
         setFileName(preview.getFileName());
@@ -368,7 +423,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
         setTemplateName(preview.getTemplateName());
         setProfiles(preview.getProfiles());
         setRunAlways(preview.isRunAlways());
-        setTransactional(preview.isTransactional());
+        setTransactionalFlag(preview.getTransactionalFlag().orElse(null));
         setSystem(preview.isSystem());
         setConfiguration(preview.getConfiguration());
         setApplyPayload(preview.getApply());

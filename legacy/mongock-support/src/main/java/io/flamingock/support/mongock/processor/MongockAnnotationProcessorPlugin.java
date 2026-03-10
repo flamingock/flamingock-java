@@ -107,7 +107,7 @@ public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlug
         builder.setOrder("00100");
         builder.setAuthor("flamingock-team");
         builder.setTargetSystem(new TargetSystemDescriptor(targetSystemId));
-        builder.setTransactional(true);
+        builder.setTransactionalFlag(true);
         builder.setSystem(true);
         builder.setRecovery(RecoveryDescriptor.getDefault());
 

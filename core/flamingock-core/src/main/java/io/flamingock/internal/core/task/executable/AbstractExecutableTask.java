@@ -16,72 +16,77 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 
 import java.util.Objects;
 import java.util.Optional;
 
-public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> implements ExecutableTask {
+public abstract class AbstractExecutableTask<LOADED_CHANGE extends AbstractLoadedTask> implements ExecutableTask {
 
     private final String stageName;
 
-    protected final DESCRIPTOR descriptor;
+    protected final LOADED_CHANGE loadedChange;
 
     protected final ChangeAction action;
 
     public AbstractExecutableTask(String stageName,
-                                  DESCRIPTOR descriptor,
+                                  LOADED_CHANGE loadedChange,
                                   ChangeAction action) {
-        if (descriptor == null) {
-            throw new IllegalArgumentException("task descriptor cannot be null");
+        if (loadedChange == null) {
+            throw new IllegalArgumentException("loaded change cannot be null");
         }
         if (action == null) {
             throw new IllegalArgumentException("change action cannot be null");
         }
         this.stageName = stageName;
-        this.descriptor = descriptor;
+        this.loadedChange = loadedChange;
         this.action = action;
     }
     @Override
     public String getId() {
-        return descriptor.getId();
+        return loadedChange.getId();
     }
 
     @Override
     public String getAuthor() {
-        return descriptor.getAuthor();
+        return loadedChange.getAuthor();
     }
 
     @Override
     public boolean isRunAlways() {
-        return descriptor.isRunAlways();
+        return loadedChange.isRunAlways();
     }
 
     @Override
     public boolean isTransactional() {
-        return descriptor.isTransactional();
+        return loadedChange.isTransactional();
+    }
+
+    @Override
+    public Optional<Boolean> getTransactionalFlag() {
+        return loadedChange.getTransactionalFlag();
     }
 
     @Override
     public boolean isSystem() {
-        return descriptor.isSystem();
+        return loadedChange.isSystem();
     }
 
     @Override
     public boolean isLegacy() {
-        return descriptor.isLegacy();
+        return loadedChange.isLegacy();
     }
 
     @Override
     public String getSource() {
-        return descriptor.getSource();
+        return loadedChange.getSource();
     }
 
     @Override
     public Optional<String> getOrder() {
-        return descriptor.getOrder();
+        return loadedChange.getOrder();
     }
 
     @Override
@@ -90,18 +95,18 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
     }
 
     @Override
-    public DESCRIPTOR getDescriptor() {
-        return descriptor;
+    public LOADED_CHANGE getLoadedChange() {
+        return loadedChange;
     }
 
     @Override
     public TargetSystemDescriptor getTargetSystem() {
-        return descriptor.getTargetSystem();
+        return loadedChange.getTargetSystem();
     }
 
     @Override
     public RecoveryDescriptor getRecovery() {
-        return descriptor.getRecovery();
+        return loadedChange.getRecovery();
     }
 
     @Override
@@ -119,18 +124,18 @@ public abstract class AbstractExecutableTask<DESCRIPTOR extends TaskDescriptor> 
         if (this == o) return true;
         if (!(o instanceof AbstractExecutableTask)) return false;
         AbstractExecutableTask<?> that = (AbstractExecutableTask<?>) o;
-        return descriptor.equals(that.descriptor);
+        return loadedChange.equals(that.loadedChange);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(descriptor);
+        return Objects.hash(loadedChange);
     }
 
     @Override
     public String toString() {
         return "ExecutableTask{" +
-                "id='" + descriptor.getId() + '\'' +
+                "id='" + loadedChange.getId() + '\'' +
                 ", action=" + action +
                 ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
                 ", recovery='" + (getRecovery() != null ? getRecovery().getStrategy() : null) + '\'' +

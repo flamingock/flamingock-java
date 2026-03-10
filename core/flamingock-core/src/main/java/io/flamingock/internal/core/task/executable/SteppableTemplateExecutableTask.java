@@ -43,11 +43,11 @@ public class SteppableTemplateExecutableTask<CONFIG extends TemplatePayload, APP
     private int stepIndex = -1;
 
     public SteppableTemplateExecutableTask(String stageName,
-                                           MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> descriptor,
+                                           MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> loadedChange,
                                            ChangeAction action,
                                            Method executionMethod,
                                            Method rollbackMethod) {
-        super(stageName, descriptor, action, executionMethod, rollbackMethod);
+        super(stageName, loadedChange, action, executionMethod, rollbackMethod);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class SteppableTemplateExecutableTask<CONFIG extends TemplatePayload, APP
         AbstractChangeTemplate instance = buildInstance(executionRuntime);
 
         try {
-            List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
+            List<TemplateStep<APPLY, ROLLBACK>> steps = loadedChange.getSteps();
             while (stepIndex >= -1 && stepIndex + 1 < steps.size()) {
                 TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex + 1);
                 instance.setApplyPayload(currentSep.getApplyPayload());
@@ -72,7 +72,7 @@ public class SteppableTemplateExecutableTask<CONFIG extends TemplatePayload, APP
         AbstractChangeTemplate instance = buildInstance(executionRuntime);
 
         try {
-            List<TemplateStep<APPLY, ROLLBACK>> steps = descriptor.getSteps();
+            List<TemplateStep<APPLY, ROLLBACK>> steps = loadedChange.getSteps();
             while (stepIndex >= 0 && stepIndex < steps.size()) {
                 TemplateStep<APPLY, ROLLBACK> currentSep = steps.get(stepIndex);
                 if(currentSep.hasRollbackPayload() && rollbackMethod != null) {
@@ -93,14 +93,14 @@ public class SteppableTemplateExecutableTask<CONFIG extends TemplatePayload, APP
     private AbstractChangeTemplate buildInstance(ExecutionRuntime executionRuntime) {
         AbstractChangeTemplate instance;
         try {
-            logger.debug("Starting execution of change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
-            logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
+            logger.debug("Starting execution of change[{}] with template: {}", loadedChange.getId(), loadedChange.getTemplateClass());
+            logger.debug("change[{}] transactional: {}", loadedChange.getId(), loadedChange.isTransactional());
 
             instance = (AbstractChangeTemplate)
-                    executionRuntime.getInstance(descriptor.getConstructor());
+                    executionRuntime.getInstance(loadedChange.getConstructor());
 
-            instance.setTransactional(descriptor.isTransactional());
-            instance.setChangeId(descriptor.getId());
+            instance.setTransactional(loadedChange.isTransactional());
+            instance.setChangeId(loadedChange.getId());
             setConfigurationData(instance);
 
         } catch (Throwable ex) {

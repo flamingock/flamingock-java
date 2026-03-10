@@ -50,7 +50,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
     private PreviewMethod applyMethod;
     private PreviewMethod rollbackMethod;
     private boolean runAlways = false;
-    private boolean transactional;
+    private Boolean transactionalFlag;
     private boolean system;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
@@ -116,8 +116,8 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         return this;
     }
 
-    public CodePreviewTaskBuilder setTransactional(boolean transactional) {
-        this.transactional = transactional;
+    public CodePreviewTaskBuilder setTransactionalFlag(Boolean transactionalFlag) {
+        this.transactionalFlag = transactionalFlag;
         return this;
     }
 
@@ -143,7 +143,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
             setApplyMethod(getAnnotatedMethodInfo(typeElement, Apply.class).orElse(null));
             setRollbackMethod(getAnnotatedMethodInfo(typeElement, Rollback.class).orElse(null));
             setRunAlways(false); //TODO: how to set runAlways
-            setTransactional(changeAnnotation.transactional());
+            setTransactionalFlag(changeAnnotation.transactional());
             setSystem(false);
         }
         if(targetSystemAnnotation != null) {
@@ -175,7 +175,7 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
                 applyMethod,
                 rollbackMethod,
                 runAlways,
-                transactional,
+                transactionalFlag,
                 system,
                 targetSystem,
                 recovery,

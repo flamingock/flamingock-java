@@ -40,7 +40,7 @@ public class ExecutableStage implements StageDescriptor {
 
     @Override
     public Collection<TaskDescriptor> getLoadedTasks() {
-        return tasks.stream().map(ExecutableTask::getDescriptor).collect(Collectors.toList());
+        return tasks.stream().map(ExecutableTask::getLoadedChange).collect(Collectors.toList());
     }
 
     public List<? extends ExecutableTask> getTasks() {

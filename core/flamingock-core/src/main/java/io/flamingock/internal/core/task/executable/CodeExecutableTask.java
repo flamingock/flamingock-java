@@ -21,7 +21,6 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * This class is a reflection version of the ExecutableTask.
@@ -36,16 +35,16 @@ import java.util.List;
  * However, the methods are extracted in advance, so we can spot wrong configuration before starting the process and
  * fail fast.
  */
-public class CodeExecutableTask<REFLECTION_TASK_DESCRIPTOR extends AbstractReflectionLoadedTask>
-        extends ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR> {
+public class CodeExecutableTask<LOADED_CHANGE extends AbstractReflectionLoadedTask>
+        extends ReflectionExecutableTask<LOADED_CHANGE> {
 
 
     public CodeExecutableTask(String stageName,
-                              REFLECTION_TASK_DESCRIPTOR descriptor,
+                              LOADED_CHANGE loadedChange,
                               ChangeAction action,
                               Method executionMethod,
                               Method rollbackMethod) {
-        super(stageName, descriptor, action, executionMethod, rollbackMethod);
+        super(stageName, loadedChange, action, executionMethod, rollbackMethod);
     }
 
 
@@ -61,7 +60,7 @@ public class CodeExecutableTask<REFLECTION_TASK_DESCRIPTOR extends AbstractRefle
     }
 
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method ) {
-        Object instance = executionRuntime.getInstance(descriptor.getConstructor());
+        Object instance = executionRuntime.getInstance(loadedChange.getConstructor());
         try {
             executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {

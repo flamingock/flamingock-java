@@ -31,7 +31,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     protected boolean runAlways;
 
-    protected boolean transactional;
+    protected Boolean transactionalFlag;
 
     protected boolean system;
 
@@ -48,7 +48,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                                   String author,
                                   String source,
                                   boolean runAlways,
-                                  boolean transactional,
+                                  Boolean transactionalFlag,
                                   boolean system,
                                   TargetSystemDescriptor targetSystem,
                                   RecoveryDescriptor recovery,
@@ -58,7 +58,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         this.author = author;
         this.source = source;
         this.runAlways = runAlways;
-        this.transactional = transactional;
+        this.transactionalFlag = transactionalFlag;
         this.system = system;
         this.targetSystem = targetSystem;
         this.recovery = recovery;
@@ -91,8 +91,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
     }
 
     @Override
-    public boolean isTransactional() {
-        return transactional;
+    public Optional<Boolean> getTransactionalFlag() {
+        return Optional.ofNullable(transactionalFlag);
     }
 
     @Override
@@ -135,8 +135,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         this.runAlways = runAlways;
     }
 
-    public void setTransactional(boolean transactional) {
-        this.transactional = transactional;
+    public void setTransactionalFlag(Boolean transactionalFlag) {
+        this.transactionalFlag = transactionalFlag;
     }
 
     public void setSystem(boolean system) {
@@ -179,7 +179,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                 .add("id='" + getId() + "'")
                 .add("author='" + getAuthor() + "'")
                 .add("runAlways=" + isRunAlways())
-                .add("transactional=" + isTransactional())
+                .add("transactionalFlag=" + transactionalFlag)
                 .add("order=" + getOrder())
                 .add("sortable=" + isSortable())
                 .add("targetSystem=" + targetSystem)

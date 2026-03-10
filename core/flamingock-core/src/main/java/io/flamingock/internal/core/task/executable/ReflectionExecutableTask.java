@@ -15,14 +15,10 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.internal.common.core.error.ChangeExecutionException;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 
 import java.lang.reflect.Method;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * This class is a reflection version of the ExecutableTask.
@@ -37,19 +33,19 @@ import java.util.List;
  * However, the methods are extracted in advance, so we can spot wrong configuration before starting the process and
  * fail fast.
  */
-public abstract class ReflectionExecutableTask<REFLECTION_TASK_DESCRIPTOR extends AbstractReflectionLoadedTask>
-        extends AbstractExecutableTask<REFLECTION_TASK_DESCRIPTOR> implements ExecutableTask {
+public abstract class ReflectionExecutableTask<LOADED_CHANGE extends AbstractReflectionLoadedTask>
+        extends AbstractExecutableTask<LOADED_CHANGE> implements ExecutableTask {
 
     protected final Method executionMethod;
     protected final Method rollbackMethod;
 
 
     public ReflectionExecutableTask(String stageName,
-                                    REFLECTION_TASK_DESCRIPTOR descriptor,
+                                    LOADED_CHANGE loadedChange,
                                     ChangeAction action,
                                     Method executionMethod,
                                     Method rollbackMethod) {
-        super(stageName, descriptor, action);
+        super(stageName, loadedChange, action);
         this.executionMethod = executionMethod;
         this.rollbackMethod = rollbackMethod;
     }

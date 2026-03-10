@@ -51,12 +51,13 @@ public abstract class AbstractLoadedChange extends AbstractReflectionLoadedTask 
                                    Class<?> implementationClass,
                                    Constructor<?> constructor,
                                    boolean runAlways,
+                                   Boolean transactionalFlag,
                                    boolean transactional,
                                    boolean system,
                                    TargetSystemDescriptor targetSystem,
                                    RecoveryDescriptor recovery,
                                    boolean legacy) {
-        super(fileName, id, order, author, implementationClass, runAlways, transactional, system, targetSystem, recovery, legacy);
+        super(fileName, id, order, author, implementationClass, runAlways, transactionalFlag, transactional, system, targetSystem, recovery, legacy);
 
         this.constructor = constructor;
     }
