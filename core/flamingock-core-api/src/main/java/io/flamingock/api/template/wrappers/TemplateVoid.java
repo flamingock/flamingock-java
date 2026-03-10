@@ -24,12 +24,11 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A {@link TemplatePayload} sentinel representing "no configuration needed".
+ * A {@link TemplatePayload} sentinel representing "no value needed".
  *
- * <p>Replaces {@code Void} as the CONFIG type parameter in templates that
- * have no shared configuration. Unlike {@code Void}, this class implements
- * {@code TemplatePayload}, satisfying the {@code CONFIG extends TemplatePayload}
- * bound on the template system.
+ * <p>Replaces {@code Void} as a type parameter in templates that have no shared
+ * configuration or no rollback. Implements {@code TemplatePayload} so it can be
+ * used in any template type parameter position (CONFIG, APPLY, or ROLLBACK).
  */
 public class TemplateVoid implements TemplatePayload {
 

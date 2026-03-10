@@ -28,7 +28,7 @@ package io.flamingock.api.template;
  * @see AbstractChangeTemplate
  * @see io.flamingock.api.annotations.ChangeTemplate
  */
-public interface ChangeTemplate<SHARED_CONFIG_FIELD extends TemplatePayload, APPLY_FIELD extends TemplatePayload, ROLLBACK_FIELD extends TemplatePayload> extends ReflectionMetadataProvider {
+public interface ChangeTemplate<SHARED_CONFIG_FIELD extends TemplateField, APPLY_FIELD extends TemplatePayload, ROLLBACK_FIELD extends TemplatePayload> extends ReflectionMetadataProvider {
 
     void setChangeId(String changeId);
 

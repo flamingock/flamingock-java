@@ -515,6 +515,7 @@ See `docs/TEMPLATES_EVOLUTION_PROPOSALS.md` for comprehensive proposals includin
 ## Commit Message Convention
 
 All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) with a well-structured body suitable for changelog extraction from `git log`.
+Don't add co-authored by claude
 
 ### Format
 

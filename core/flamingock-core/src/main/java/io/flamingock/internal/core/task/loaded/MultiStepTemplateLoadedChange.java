@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplateField;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadValidationError;
 import io.flamingock.api.template.TemplateStep;
@@ -40,7 +41,7 @@ import java.util.List;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
+public class MultiStepTemplateLoadedChange<CONFIG extends TemplateField, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> {
 
     private final List<TemplateStep<APPLY, ROLLBACK>> steps;

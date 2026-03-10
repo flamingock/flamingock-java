@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.loaded;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplateField;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.api.template.wrappers.TemplateVoid;
@@ -212,7 +213,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     @SuppressWarnings({"unchecked", "rawtypes"})
     private MultiStepTemplateLoadedChange getLoadedMultiStepTemplateChange(Class<? extends AbstractChangeTemplate> steppableTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
         List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);// Convert apply/rollback to typed payloads at load time
-        TemplatePayload convertedConfig = convertConfiguration(constructor, configuration);
+        TemplateField convertedConfig = convertConfiguration(constructor, configuration);
         boolean resolvedTransactional = resolveTransactionalFromSteps(convertedSteps);
         return new MultiStepTemplateLoadedChange(
                 fileName,
@@ -237,7 +238,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
     @SuppressWarnings({"unchecked", "rawtypes"})
     private SimpleTemplateLoadedChange getLoadedSimpleTemplateChange(Class<? extends AbstractChangeTemplate> simpleTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
         Pair<Object, Object> convertedPayloads = convertPayloads(constructor, applyPayload, rollbackPayload);// Convert apply/rollback to typed payloads at load time
-        TemplatePayload convertedConfig = convertConfiguration(constructor, configuration);
+        TemplateField convertedConfig = convertConfiguration(constructor, configuration);
         boolean resolvedTransactional = resolveTransactional((TemplatePayload) convertedPayloads.getFirst());
         return new SimpleTemplateLoadedChange(
                 fileName,
@@ -350,7 +351,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
      * Converts raw configuration data to typed TemplatePayload at load time.
      * Returns null if no configuration is needed (TemplateVoid config or null data).
      */
-    private TemplatePayload convertConfiguration(Constructor<?> constructor, Object configData) {
+    private TemplateField convertConfiguration(Constructor<?> constructor, Object configData) {
         // Instantiate template temporarily to get config class
         AbstractChangeTemplate<?, ?, ?> templateInstance;
         try {
@@ -365,7 +366,7 @@ public class TemplateLoadedTaskBuilder implements LoadedTaskBuilder<AbstractTemp
             return null;
         }
 
-        return (TemplatePayload) FileUtil.convertToType(configClass, configData);
+        return (TemplateField) FileUtil.convertToType(configClass, configData);
     }
 
     /**

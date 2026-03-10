@@ -18,6 +18,7 @@ package io.flamingock.internal.core.task.loaded;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.Rollback;
 import io.flamingock.api.template.ChangeTemplate;
+import io.flamingock.api.template.TemplateField;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplateValidationContext;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
@@ -43,7 +44,7 @@ import java.util.Optional;
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
  */
-public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload> extends AbstractLoadedChange {
+public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplateField, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload> extends AbstractLoadedChange {
 
     protected static final Logger logger = FlamingockLoggerFactory.getLogger(AbstractTemplateLoadedChange.class);
 
