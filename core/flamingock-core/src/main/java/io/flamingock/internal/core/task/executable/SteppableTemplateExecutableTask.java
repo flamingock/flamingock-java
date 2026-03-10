@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.task.executable;
 
 import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplateField;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.internal.common.core.error.ChangeExecutionException;
@@ -36,7 +37,7 @@ import java.util.List;
  * @param <ROLLBACK> the rollback payload type
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class SteppableTemplateExecutableTask<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
+public class SteppableTemplateExecutableTask<CONFIG extends TemplateField, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload>
         extends AbstractTemplateExecutableTask<CONFIG, APPLY, ROLLBACK,
         MultiStepTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 

@@ -18,19 +18,20 @@ package io.flamingock.api.template;
 import java.util.List;
 
 /**
- * Contract for template payload types (APPLY and ROLLBACK generics).
+ * Base contract for all template field types (configuration, apply, rollback).
  *
- * <p>Extends {@link TemplateField} to inherit structural validation, and adds
- * transactional metadata via {@link #getInfo()}. Configuration fields use
- * {@code TemplateField} directly since they have no transactional semantics.
+ * <p>Provides structural validation at pipeline load time, before any change executes.
+ * Configuration fields extend this directly, while apply/rollback payloads extend
+ * {@link TemplatePayload} which adds transactional metadata via {@code getInfo()}.
  */
-public interface TemplatePayload extends TemplateField {
+public interface TemplateField {
 
     /**
-     * Returns metadata about this payload so the framework can make
-     * centralized decisions based on payload characteristics.
+     * Validates this field using the supplied change-level context
+     * and returns any errors found.
      *
-     * @return payload info; never {@code null}
+     * @param context change-level metadata available during validation
+     * @return list of validation errors, empty if field is valid
      */
-    TemplatePayloadInfo getInfo();
+    List<TemplatePayloadValidationError> validate(TemplateValidationContext context);
 }
