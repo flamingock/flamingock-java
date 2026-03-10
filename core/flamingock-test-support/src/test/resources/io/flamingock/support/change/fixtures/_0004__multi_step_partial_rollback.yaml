@@ -1,0 +1,6 @@
+id: multi-step-partial-rollback
+template: MongoChangeTemplate
+steps:
+  - apply: "db.createCollection('events')"
+    rollback: "db.events.drop()"
+  - apply: "db.createIndex('events', {name: 1})"

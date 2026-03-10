@@ -1,0 +1,9 @@
+id: with-author-and-recovery
+author: test-author
+template: MongoChangeTemplate
+targetSystem:
+  id: mongodb
+recovery:
+  strategy: ALWAYS_RETRY
+apply: "db.createCollection('audit')"
+rollback: "db.audit.drop()"

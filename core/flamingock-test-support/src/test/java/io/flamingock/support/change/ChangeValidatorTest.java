@@ -55,7 +55,7 @@ class ChangeValidatorTest {
         @Test
         @DisplayName("Should throw NullPointerException when changeClass is null")
         void shouldThrowWhenChangeClassIsNull() {
-            assertThrows(NullPointerException.class, () -> ChangeValidator.of(null));
+            assertThrows(NullPointerException.class, () -> ChangeValidator.of((Class<?>) null));
         }
 
         @Test
