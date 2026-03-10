@@ -34,6 +34,7 @@ import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public final class CloudExecutionPlanMapper {
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestStages);
     }
 
-    private static TaskRequest mapToTaskRequest(TaskDescriptor descriptor,
+    private static TaskRequest mapToTaskRequest(AbstractLoadedTask descriptor,
                                                 Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
         if (ongoingStatusesMap.containsKey(descriptor.getId())) {
             if (ongoingStatusesMap.get(descriptor.getId()) == TargetSystemAuditMarkType.ROLLBACK) {

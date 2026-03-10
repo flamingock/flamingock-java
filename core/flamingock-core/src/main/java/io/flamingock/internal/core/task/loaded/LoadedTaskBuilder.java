@@ -55,7 +55,7 @@ public interface LoadedTaskBuilder<LOADED_TASK extends AbstractLoadedTask> {
 
     LoadedTaskBuilder<LOADED_TASK> setRunAlways(boolean runAlways);
 
-    LoadedTaskBuilder<LOADED_TASK> setTransactional(boolean transactional);
+    LoadedTaskBuilder<LOADED_TASK> setTransactionalFlag(Boolean transactionalFlag);
 
     LoadedTaskBuilder<LOADED_TASK> setSystem(boolean system);
 

@@ -29,17 +29,25 @@ import java.util.Optional;
 
 public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implements Validatable<StageValidationContext> {
 
+    private final boolean transactional;
+
     public AbstractLoadedTask(String id,
                               String order,
                               String author,
                               String implementationSourceName,
                               boolean runAlways,
+                              Boolean transactionalFlag,
                               boolean transactional,
                               boolean system,
                               TargetSystemDescriptor targetSystem,
                               RecoveryDescriptor recovery,
                               boolean legacy) {
-        super(id, order, author, implementationSourceName, runAlways, transactional, system, targetSystem, recovery, legacy);
+        super(id, order, author, implementationSourceName, runAlways, transactionalFlag, system, targetSystem, recovery, legacy);
+        this.transactional = transactional;
+    }
+
+    public boolean isTransactional() {
+        return transactional;
     }
 
     public abstract Constructor<?> getConstructor();

@@ -52,6 +52,7 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
                                   Class<? extends AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                   Constructor<?> constructor,
                                   List<String> profiles,
+                                  Boolean transactionalFlag,
                                   boolean transactional,
                                   boolean runAlways,
                                   boolean systemTask,
@@ -60,7 +61,7 @@ public class MultiStepTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY
                                   TargetSystemDescriptor targetSystem,
                                   RecoveryDescriptor recovery,
                                   boolean rollbackPayloadRequired) {
-        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery, rollbackPayloadRequired);
+        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactionalFlag, transactional, runAlways, systemTask, configuration, targetSystem, recovery, rollbackPayloadRequired);
         this.steps = steps;
     }
 

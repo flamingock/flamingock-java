@@ -38,37 +38,37 @@ public class SimpleTemplateExecutableTask<CONFIG extends TemplatePayload, APPLY 
                 SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> {
 
     public SimpleTemplateExecutableTask(String stageName,
-                                        SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> descriptor,
+                                        SimpleTemplateLoadedChange<CONFIG, APPLY, ROLLBACK> loadedChange,
                                         ChangeAction action,
                                         Method executionMethod,
                                         Method rollbackMethod) {
-        super(stageName, descriptor, action, executionMethod, rollbackMethod);
+        super(stageName, loadedChange, action, executionMethod, rollbackMethod);
     }
 
     @Override
     public void apply(ExecutionRuntime executionRuntime) {
-        logger.debug("Applying change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
-        logger.debug("change[{}] transactional: {}", descriptor.getId(), descriptor.isTransactional());
+        logger.debug("Applying change[{}] with template: {}", loadedChange.getId(), loadedChange.getTemplateClass());
+        logger.debug("change[{}] transactional: {}", loadedChange.getId(), loadedChange.isTransactional());
         executeInternal(executionRuntime, executionMethod);
     }
 
     @Override
     public void rollback(ExecutionRuntime executionRuntime) {
-        logger.debug("Rolling back change[{}] with template: {}", descriptor.getId(), descriptor.getTemplateClass());
+        logger.debug("Rolling back change[{}] with template: {}", loadedChange.getId(), loadedChange.getTemplateClass());
         executeInternal(executionRuntime, rollbackMethod);
     }
 
     protected void executeInternal(ExecutionRuntime executionRuntime, Method method) {
         try {
             AbstractChangeTemplate instance = (AbstractChangeTemplate)
-                            executionRuntime.getInstance(descriptor.getConstructor());
+                            executionRuntime.getInstance(loadedChange.getConstructor());
 
-            instance.setTransactional(descriptor.isTransactional());
-            instance.setChangeId(descriptor.getId());
-            logger.trace("Setting payloads for simple template change[{}]", descriptor.getId());
+            instance.setTransactional(loadedChange.isTransactional());
+            instance.setChangeId(loadedChange.getId());
+            logger.trace("Setting payloads for simple template change[{}]", loadedChange.getId());
             setConfigurationData(instance);
-            instance.setApplyPayload(descriptor.getApplyPayload());
-            instance.setRollbackPayload(descriptor.getRollbackPayload());
+            instance.setApplyPayload(loadedChange.getApplyPayload());
+            instance.setRollbackPayload(loadedChange.getRollbackPayload());
 
             executionRuntime.executeMethodWithInjectedDependencies(instance, method);
         } catch (Throwable ex) {

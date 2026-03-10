@@ -36,7 +36,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
     private String templateClassPath;
     private String profilesString;
     private boolean runAlways;
-    private Boolean transactional;
+    private Boolean transactionalFlag;
     private Object configuration;
     private Object apply;
     private Object rollback;
@@ -84,8 +84,8 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         return this;
     }
 
-    public TemplatePreviewTaskBuilder setTransactional(Boolean transactional) {
-        this.transactional = transactional;
+    public TemplatePreviewTaskBuilder setTransactionalFlag(Boolean transactionalFlag) {
+        this.transactionalFlag = transactionalFlag;
         return this;
     }
 
@@ -126,7 +126,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
                 author,
                 templateClassPath,
                 profiles,
-                transactional,
+                transactionalFlag,
                 runAlways,
                 false,
                 configuration,
@@ -160,7 +160,7 @@ class TemplatePreviewTaskBuilder implements PreviewTaskBuilder<TemplatePreviewCh
         setApply(templateTaskDescriptor.getApply());
         setRollback(templateTaskDescriptor.getRollback());
         setSteps(templateTaskDescriptor.getSteps());
-        setTransactional(templateTaskDescriptor.getTransactional() != null ? templateTaskDescriptor.getTransactional() : true);
+        setTransactionalFlag(templateTaskDescriptor.getTransactional());
         setRunAlways(false);
         setTargetSystem(templateTaskDescriptor.getTargetSystem());
         setRecovery(templateTaskDescriptor.getRecovery() != null ? templateTaskDescriptor.getRecovery() : RecoveryDescriptor.getDefault());

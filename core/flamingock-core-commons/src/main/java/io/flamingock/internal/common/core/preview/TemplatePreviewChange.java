@@ -39,7 +39,7 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
                                  String author,
                                  String templateName,
                                  List<String> profiles,
-                                 boolean transactional,
+                                 Boolean transactional,
                                  boolean runAlways,
                                  boolean system,
                                  Object configuration,
@@ -121,7 +121,7 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
                 ", author='" + author + '\'' +
                 ", source='" + source + '\'' +
                 ", runAlways=" + runAlways +
-                ", transactional=" + transactional +
+                ", transactionalFlag=" + transactionalFlag +
                 ", system=" + system +
                 ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
                 ", recovery='" + (getRecovery() != null ? getRecovery().getStrategy() : null) + '\'' +

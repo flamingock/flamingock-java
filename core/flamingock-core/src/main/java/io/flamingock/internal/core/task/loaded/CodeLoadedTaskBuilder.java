@@ -43,7 +43,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private Method applyMethod;
     private Optional<Method> rollbackMethod;
     private boolean isRunAlways;
-    private boolean isTransactional;
+    private Boolean transactionalFlag;
     private boolean isSystem;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
@@ -82,7 +82,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setApplyMethod(getApplyMethodFromPreview(preview));
         setRollbackMethod(getRollbackMethodFromPreview(preview));
         setRunAlways(preview.isRunAlways());
-        setTransactional(preview.isTransactional());
+        setTransactionalFlag(preview.getTransactionalFlag().orElse(null));
         setSystem(preview.isSystem());
         setTargetSystem(preview.getTargetSystem());
         setRecovery(preview.getRecovery());
@@ -146,8 +146,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
-    public CodeLoadedTaskBuilder setTransactional(boolean transactional) {
-        this.isTransactional = transactional;
+    public CodeLoadedTaskBuilder setTransactionalFlag(Boolean transactionalFlag) {
+        this.transactionalFlag = transactionalFlag;
         return this;
     }
 
@@ -177,6 +177,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         Class<?> changeClass = getClassForName(changeClassName);
         String order = ChangeOrderUtil.getMatchedOrderFromClassName(id, orderInContent, changeClassName);
 
+        boolean resolvedTransactional = transactionalFlag != null ? transactionalFlag : true;
         return new CodeLoadedChange(
                 id,
                 order,
@@ -186,7 +187,8 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
                 applyMethod,
                 rollbackMethod,
                 isRunAlways,
-                isTransactional,
+                transactionalFlag,
+                resolvedTransactional,
                 isSystem,
                 targetSystem,
                 recovery,
@@ -203,7 +205,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setConstructor(getConstructor(sourceClass));
         setApplyMethod(getApplyMethodFromAnnotation(sourceClass));
         setRollbackMethod(getRollbackMethodFromAnnotation(sourceClass));
-        setTransactional(annotation.transactional());
+        setTransactionalFlag(annotation.transactional());
         setSystem(false);
         setRecoveryFromClass(sourceClass);
         setLegacy(false);

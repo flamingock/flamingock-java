@@ -20,7 +20,7 @@ import io.flamingock.internal.util.ThrowableUtil;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 
 import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_BEFORE;
 import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_EXECUTION;
@@ -44,14 +44,14 @@ public abstract class AuditContextBundle {
     }
 
     private final Operation operation;
-    private final TaskDescriptor changeDescriptor;
+    private final AbstractLoadedTask changeDescriptor;
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
     private final AuditTxType operationType;
     private final String targetSystemId;
 
     public AuditContextBundle(Operation operation,
-                              TaskDescriptor changeDescriptor,
+                              AbstractLoadedTask changeDescriptor,
                               ExecutionContext executionContext,
                               RuntimeContext runtimeContext,
                               AuditTxType auditTxType,
@@ -68,7 +68,7 @@ public abstract class AuditContextBundle {
         return operation;
     }
 
-    public TaskDescriptor getChangeDescriptor() {
+    public AbstractLoadedTask getChangeDescriptor() {
         return changeDescriptor;
     }
 
@@ -90,7 +90,7 @@ public abstract class AuditContextBundle {
 
 
     public AuditEntry toAuditEntry() {
-        TaskDescriptor loadedChange = getChangeDescriptor();
+        AbstractLoadedTask loadedChange = getChangeDescriptor();
         ExecutionContext stageExecutionContext = getExecutionContext();
         RuntimeContext runtimeContext = getRuntimeContext();
         

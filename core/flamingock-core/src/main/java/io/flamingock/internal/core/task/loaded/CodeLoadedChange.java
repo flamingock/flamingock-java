@@ -36,12 +36,13 @@ public class CodeLoadedChange extends AbstractLoadedChange {
                      Method applyMethod,
                      Optional<Method> rollbackMethod,
                      boolean runAlways,
+                     Boolean transactionalFlag,
                      boolean transactional,
                      boolean systemTask,
                      TargetSystemDescriptor targetSystem,
                      RecoveryDescriptor recovery,
                      boolean legacy) {
-        super(changeClass.getSimpleName(), id, order, author, changeClass, constructor, runAlways, transactional, systemTask, targetSystem, recovery, legacy);
+        super(changeClass.getSimpleName(), id, order, author, changeClass, constructor, runAlways, transactionalFlag, transactional, systemTask, targetSystem, recovery, legacy);
         this.applyMethod = applyMethod;
         this.rollbackMethod = rollbackMethod;
     }

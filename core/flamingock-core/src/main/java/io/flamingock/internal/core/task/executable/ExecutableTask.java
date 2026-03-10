@@ -19,11 +19,11 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.common.core.task.TaskDescriptor;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 
-import java.util.List;
-
 public interface ExecutableTask extends TaskDescriptor {
 
-    TaskDescriptor getDescriptor();
+    boolean isTransactional();
+
+    TaskDescriptor getLoadedChange();
 
     String getStageName();
 

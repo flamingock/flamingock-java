@@ -34,29 +34,29 @@ import java.util.Arrays;
  * @param <CONFIG>   the configuration type for the template
  * @param <APPLY>    the apply payload type
  * @param <ROLLBACK> the rollback payload type
- * @param <T>        the type of template loaded change
+ * @param <LOADED_CHANGE>        the type of template loaded change
  */
 public abstract class AbstractTemplateExecutableTask<CONFIG extends TemplatePayload, APPLY extends TemplatePayload, ROLLBACK extends TemplatePayload,
-        T extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> extends ReflectionExecutableTask<T> {
-    protected final Logger logger = FlamingockLoggerFactory.getLogger("TemplateTask");
+        LOADED_CHANGE extends AbstractTemplateLoadedChange<CONFIG, APPLY, ROLLBACK>> extends ReflectionExecutableTask<LOADED_CHANGE> {
+    protected final Logger logger = FlamingockLoggerFactory.getLogger("TemplateExecutableChange");
 
     public AbstractTemplateExecutableTask(String stageName,
-                                          T descriptor,
+                                          LOADED_CHANGE loadedChange,
                                           ChangeAction action,
                                           Method executionMethod,
                                           Method rollbackMethod) {
-        super(stageName, descriptor, action, executionMethod, rollbackMethod);
+        super(stageName, loadedChange, action, executionMethod, rollbackMethod);
     }
 
     protected void setConfigurationData(ChangeTemplate<CONFIG, ?, ?> instance) {
         Class<CONFIG> parameterClass = instance.getConfigurationClass();
-        CONFIG data = descriptor.getConfigurationPayload();
+        CONFIG data = loadedChange.getConfigurationPayload();
 
         if (data != null && TemplateVoid.class != parameterClass) {
             instance.setConfiguration(data);
         } else if (TemplateVoid.class != parameterClass) {
             logger.warn("No 'Configuration' section provided for template-based change[{}] of type[{}]",
-                    descriptor.getId(), descriptor.getTemplateClass().getName());
+                    loadedChange.getId(), loadedChange.getTemplateClass().getName());
         }
     }
 

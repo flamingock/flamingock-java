@@ -26,7 +26,7 @@ public interface TaskDescriptor extends Comparable<TaskDescriptor> {
 
     boolean isRunAlways();
 
-    boolean isTransactional();
+    Optional<Boolean> getTransactionalFlag();
 
     boolean isSystem();
 

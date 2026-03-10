@@ -53,6 +53,7 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
                                Class<? extends AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>> templateClass,
                                Constructor<?> constructor,
                                List<String> profiles,
+                               Boolean transactionalFlag,
                                boolean transactional,
                                boolean runAlways,
                                boolean systemTask,
@@ -62,7 +63,7 @@ public class SimpleTemplateLoadedChange<CONFIG extends TemplatePayload, APPLY ex
                                TargetSystemDescriptor targetSystem,
                                RecoveryDescriptor recovery,
                                boolean rollbackPayloadRequired) {
-        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactional, runAlways, systemTask, configuration, targetSystem, recovery, rollbackPayloadRequired);
+        super(changeFileName, id, order, author, templateClass, constructor, profiles, transactionalFlag, transactional, runAlways, systemTask, configuration, targetSystem, recovery, rollbackPayloadRequired);
         this.applyPayload = applyPayload;
         this.rollbackPayload = rollbackPayload;
     }

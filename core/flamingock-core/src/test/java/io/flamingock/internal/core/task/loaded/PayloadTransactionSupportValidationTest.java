@@ -120,7 +120,7 @@ class PayloadTransactionSupportValidationTest {
         return new SimpleTemplateLoadedChange(
                 "test-file.yml", "test-id", "001", "author",
                 (Class) DummyTemplate.class, dummyConstructor,
-                Collections.emptyList(), transactional,
+                Collections.emptyList(), transactional, transactional,
                 false, false,
                 config, apply, rollback,
                 null, null, false);
@@ -133,7 +133,7 @@ class PayloadTransactionSupportValidationTest {
         return new MultiStepTemplateLoadedChange(
                 "test-file.yml", "test-id", "001", "author",
                 (Class) DummyTemplate.class, dummyConstructor,
-                Collections.emptyList(), transactional,
+                Collections.emptyList(), transactional, transactional,
                 false, false,
                 config, (List) steps,
                 null, null, false);

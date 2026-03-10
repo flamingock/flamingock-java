@@ -40,7 +40,7 @@ public class ChangeResultBuilder {
     }
 
     public ChangeResultBuilder fromTask(ExecutableTask task) {
-        TaskDescriptor descriptor = task.getDescriptor();
+        TaskDescriptor descriptor = task.getLoadedChange();
         this.changeId = descriptor.getId();
         this.author = descriptor.getAuthor();
         if (descriptor.getTargetSystem() != null) {
