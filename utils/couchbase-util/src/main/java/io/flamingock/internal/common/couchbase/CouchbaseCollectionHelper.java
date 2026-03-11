@@ -159,7 +159,8 @@ public final class CouchbaseCollectionHelper {
     }
 
     public static void deleteAllDocuments(Cluster cluster, String bucketName, String scopeName, String collectionName) {
-        cluster.query(String.format(DELETE_ALL_QUERY_TEMPLATE, bucketName, scopeName, collectionName));
+        cluster.query(String.format(DELETE_ALL_QUERY_TEMPLATE, bucketName, scopeName, collectionName),
+                QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS));
     }
 
     public static void createPrimaryIndexIfNotExists(Cluster cluster, String bucketName, String scopeName, String collectionName) {
@@ -186,7 +187,8 @@ public final class CouchbaseCollectionHelper {
         while (System.nanoTime() < deadline) {
             String countQuery = String.format(SELECT_COUNT_QUERY_TEMPLATE, bucketName, scopeName, collectionName);
 
-            List<JsonObject> rows = cluster.query(countQuery).rowsAsObject();
+            List<JsonObject> rows = cluster.query(countQuery,
+                    QueryOptions.queryOptions().scanConsistency(QueryScanConsistency.REQUEST_PLUS)).rowsAsObject();
             long count = rows.isEmpty() ? 0L : rows.get(0).getLong("cnt");
 
             if (count == 0L) {
