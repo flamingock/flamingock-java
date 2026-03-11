@@ -37,7 +37,7 @@ import static io.flamingock.internal.common.couchbase.CouchbaseUtils.isDefaultCo
 public final class CouchbaseCollectionHelper {
 
     private final static String KEYSPACE_TEMPLATE = "`%s`.`%s`.`%s`";
-    private final static String SELECT_COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) FROM `%s`.`%s`.`%s`";
+    private final static String SELECT_COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) as cnt FROM `%s`.`%s`.`%s`";
     private final static String SELECT_ALL_QUERY_TEMPLATE = "SELECT %s.* FROM `%s`.`%s`.`%s`";
     private final static String DELETE_ALL_QUERY_TEMPLATE = "DELETE FROM `%s`.`%s`.`%s`";
     private final static String CREATE_PRIMARY_INDEX_TEMPLATE = "CREATE PRIMARY INDEX IF NOT EXISTS ON `%s`.`%s`.`%s`";
@@ -172,5 +172,44 @@ public final class CouchbaseCollectionHelper {
 
     public static void dropIndexIfExists(Cluster cluster, String bucketName, String scopeName, String collectionName, String indexName) {
         cluster.query(String.format(DROP_INDEX_TEMPLATE, indexName, bucketName, scopeName, collectionName));
+    }
+
+    public static void waitUntilEmpty(
+            Cluster cluster,
+            String bucketName,
+            String scopeName,
+            String collectionName,
+            Duration timeout
+    ) {
+        long deadline = System.nanoTime() + timeout.toNanos();
+
+        while (System.nanoTime() < deadline) {
+            String countQuery = String.format(SELECT_COUNT_QUERY_TEMPLATE, bucketName, scopeName, collectionName);
+
+            List<JsonObject> rows = cluster.query(countQuery).rowsAsObject();
+            long count = rows.isEmpty() ? 0L : rows.get(0).getLong("cnt");
+
+            if (count == 0L) {
+                return;
+            }
+
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(
+                        "Interrupted while waiting for collection cleanup",
+                        e
+                );
+            }
+        }
+
+        throw new IllegalStateException(String.format(
+                "Timeout waiting for collection %s.%s.%s to be empty after %s",
+                bucketName,
+                scopeName,
+                collectionName,
+                timeout
+        ));
     }
 }

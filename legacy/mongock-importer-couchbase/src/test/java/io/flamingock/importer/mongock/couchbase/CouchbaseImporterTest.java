@@ -54,11 +54,11 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/*@Testcontainers*/
+@Testcontainers
 @MongockSupport(targetSystem = "couchbase-target-system")
 @EnableFlamingock(stages = {@Stage(location = "io.flamingock.importer.mongock.couchbase.changes")})
 public class CouchbaseImporterTest {
-/*
+
     public static final String FLAMINGOCK_BUCKET_NAME = "test";
     public static final String FLAMINGOCK_SCOPE_NAME = "flamingock";
     public static final String FLAMINGOCK_COLLECTION_NAME = CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME;
@@ -66,6 +66,9 @@ public class CouchbaseImporterTest {
     public static final String MONGOCK_BUCKET_NAME = "test";
     public static final String MONGOCK_SCOPE_NAME = CollectionIdentifier.DEFAULT_SCOPE;
     public static final String MONGOCK_COLLECTION_NAME = CollectionIdentifier.DEFAULT_COLLECTION;
+
+    public static final String CUSTOM_MONGOCK_ORIGIN_SCOPE = "mongockCustomScope";
+    public static final String CUSTOM_MONGOCK_ORIGIN_COLLECTION = "mongockCustomOriginCollection";
 
 
     @Container
@@ -102,7 +105,15 @@ public class CouchbaseImporterTest {
     @AfterEach
     void cleanUp() {
         CouchbaseCollectionHelper.deleteAllDocuments(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME);
+        CouchbaseCollectionHelper.waitUntilEmpty(cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME, FLAMINGOCK_COLLECTION_NAME, Duration.ofSeconds(10));
+
         CouchbaseCollectionHelper.deleteAllDocuments(cluster, MONGOCK_BUCKET_NAME, MONGOCK_SCOPE_NAME, MONGOCK_COLLECTION_NAME);
+        CouchbaseCollectionHelper.waitUntilEmpty(cluster, MONGOCK_BUCKET_NAME, MONGOCK_SCOPE_NAME, MONGOCK_COLLECTION_NAME, Duration.ofSeconds(10));
+
+        if (CouchbaseCollectionHelper.collectionExists(cluster, MONGOCK_BUCKET_NAME, CUSTOM_MONGOCK_ORIGIN_SCOPE, CUSTOM_MONGOCK_ORIGIN_COLLECTION)) {
+            CouchbaseCollectionHelper.deleteAllDocuments(cluster, MONGOCK_BUCKET_NAME, CUSTOM_MONGOCK_ORIGIN_SCOPE, CUSTOM_MONGOCK_ORIGIN_COLLECTION);
+            CouchbaseCollectionHelper.waitUntilEmpty(cluster, MONGOCK_BUCKET_NAME, CUSTOM_MONGOCK_ORIGIN_SCOPE, CUSTOM_MONGOCK_ORIGIN_COLLECTION, Duration.ofSeconds(10));
+        }
     }
 
     @Test
@@ -301,15 +312,13 @@ public class CouchbaseImporterTest {
             "AND execute the pending flamingock changes")
     void GIVEN_allMongockChangeUnitsAlreadyExecutedAndCustomOriginProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
         // Setup Mongock entries
-        final String customMongockOriginScope = "mongockCustomScope";
-        final String customMongockOriginCollection = "mongockCustomOriginCollection";
-        final String customMongockOrigin = String.format("%s.%s", customMongockOriginScope, customMongockOriginCollection);
+        final String customMongockOrigin = String.format("%s.%s", CUSTOM_MONGOCK_ORIGIN_SCOPE, CUSTOM_MONGOCK_ORIGIN_COLLECTION);
 
-        CouchbaseCollectionHelper.createScopeIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope);
-        CouchbaseCollectionHelper.createCollectionIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope, customMongockOriginCollection);
-        CouchbaseCollectionHelper.createPrimaryIndexIfNotExists(cluster, MONGOCK_BUCKET_NAME, customMongockOriginScope, customMongockOriginCollection);
+        CouchbaseCollectionHelper.createScopeIfNotExists(cluster, MONGOCK_BUCKET_NAME, CUSTOM_MONGOCK_ORIGIN_SCOPE);
+        CouchbaseCollectionHelper.createCollectionIfNotExists(cluster, MONGOCK_BUCKET_NAME, CUSTOM_MONGOCK_ORIGIN_SCOPE, CUSTOM_MONGOCK_ORIGIN_COLLECTION);
+        CouchbaseCollectionHelper.createPrimaryIndexIfNotExists(cluster, MONGOCK_BUCKET_NAME, CUSTOM_MONGOCK_ORIGIN_SCOPE, CUSTOM_MONGOCK_ORIGIN_COLLECTION);
 
-        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(customMongockOriginScope).collection(customMongockOriginCollection);
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(CUSTOM_MONGOCK_ORIGIN_SCOPE).collection(CUSTOM_MONGOCK_ORIGIN_COLLECTION);
 
         originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
 
@@ -556,5 +565,5 @@ public class CouchbaseImporterTest {
                 .put("systemChange", true)
                 .put("_doctype", "mongockChangeEntry");
         return doc;
-    }*/
+    }
 }
