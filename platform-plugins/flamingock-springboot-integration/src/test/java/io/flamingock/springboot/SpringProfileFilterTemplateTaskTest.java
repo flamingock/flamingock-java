@@ -17,6 +17,7 @@ package io.flamingock.springboot;
 
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.ChangeTemplate;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.api.template.AbstractChangeTemplate;
@@ -135,7 +136,7 @@ class SpringProfileFilterTemplateTaskTest {
             super();
         }
 
-        @io.flamingock.api.annotations.Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }

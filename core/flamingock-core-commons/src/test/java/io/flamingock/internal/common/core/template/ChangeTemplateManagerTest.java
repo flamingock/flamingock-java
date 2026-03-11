@@ -15,9 +15,9 @@
  */
 package io.flamingock.internal.common.core.template;
 
-import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ApplyTemplate;
 import io.flamingock.api.annotations.ChangeTemplate;
-import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.api.template.wrappers.TemplateVoid;
@@ -37,11 +37,11 @@ class ChangeTemplateManagerTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
@@ -52,11 +52,11 @@ class ChangeTemplateManagerTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
@@ -66,7 +66,7 @@ class ChangeTemplateManagerTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
         }
     }
@@ -120,11 +120,11 @@ class ChangeTemplateManagerTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
@@ -147,18 +147,18 @@ class ChangeTemplateManagerTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
         }
     }
 
     @Test
-    @DisplayName("addTemplate with class missing @Rollback method should throw FlamingockException")
+    @DisplayName("addTemplate with class missing @RollbackTemplate method should throw FlamingockException")
     void addTemplateWithMissingRollbackMethodShouldThrow() {
         FlamingockException exception = assertThrows(FlamingockException.class,
                 () -> ChangeTemplateManager.addTemplate(TemplateWithoutRollback.class));
 
-        assertTrue(exception.getMessage().contains("missing required @Rollback method"));
+        assertTrue(exception.getMessage().contains("missing required @RollbackTemplate method"));
         assertTrue(exception.getMessage().contains("TemplateWithoutRollback"));
     }
 }

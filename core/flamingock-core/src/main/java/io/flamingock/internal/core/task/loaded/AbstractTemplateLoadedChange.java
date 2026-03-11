@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.ApplyTemplate;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.api.template.ChangeTemplate;
 import io.flamingock.api.template.TemplateField;
 import io.flamingock.api.template.TemplatePayload;
@@ -89,16 +89,16 @@ public abstract class AbstractTemplateLoadedChange<CONFIG extends TemplateField,
 
     @Override
     public Method getApplyMethod() {
-        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Apply.class)
+        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), ApplyTemplate.class)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(
                         "Templated[%s] without %s method",
                         getSource(),
-                        Apply.class.getSimpleName())));
+                        ApplyTemplate.class.getSimpleName())));
     }
 
     @Override
     public Optional<Method> getRollbackMethod() {
-        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), Rollback.class);
+        return ReflectionUtil.findFirstAnnotatedMethod(getImplementationClass(), RollbackTemplate.class);
     }
 
     @Override

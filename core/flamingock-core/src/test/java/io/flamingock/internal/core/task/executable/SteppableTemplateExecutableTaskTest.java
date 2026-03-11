@@ -15,9 +15,9 @@
  */
 package io.flamingock.internal.core.task.executable;
 
-import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ApplyTemplate;
 import io.flamingock.api.annotations.ChangeTemplate;
-import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplateStep;
 import io.flamingock.api.template.wrappers.TemplateString;
@@ -67,7 +67,7 @@ class SteppableTemplateExecutableTaskTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
             if (shouldFailOnApply && appliedPayloads.size() == failAtStep) {
                 throw new RuntimeException("Simulated apply failure at step " + failAtStep);
@@ -75,7 +75,7 @@ class SteppableTemplateExecutableTaskTest {
             appliedPayloads.add(applyPayload.getValue());
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
             if (shouldFailOnRollback) {
                 throw new RuntimeException("Simulated rollback failure");
@@ -94,7 +94,7 @@ class SteppableTemplateExecutableTaskTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
             if (shouldFailOnApply && appliedPayloads.size() == failAtStep) {
                 throw new RuntimeException("Simulated apply failure at step " + failAtStep);
@@ -102,7 +102,7 @@ class SteppableTemplateExecutableTaskTest {
             appliedPayloads.add(applyPayload.getValue());
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
