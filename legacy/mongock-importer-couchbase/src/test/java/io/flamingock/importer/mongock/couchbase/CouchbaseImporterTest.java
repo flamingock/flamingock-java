@@ -54,9 +54,9 @@ import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/*@Testcontainers
+/*@Testcontainers*/
 @MongockSupport(targetSystem = "couchbase-target-system")
-@EnableFlamingock(stages = {@Stage(location = "io.flamingock.importer.mongock.couchbase.changes")})*/
+@EnableFlamingock(stages = {@Stage(location = "io.flamingock.importer.mongock.couchbase.changes")})
 public class CouchbaseImporterTest {
 /*
     public static final String FLAMINGOCK_BUCKET_NAME = "test";
