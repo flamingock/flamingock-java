@@ -15,9 +15,9 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ApplyTemplate;
 import io.flamingock.api.annotations.ChangeTemplate;
-import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadInfo;
@@ -61,12 +61,12 @@ class SteppableTemplateLoadedTaskBuilderTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
             // Test implementation - iterates through steps
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
@@ -79,12 +79,12 @@ class SteppableTemplateLoadedTaskBuilderTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
             // Test implementation
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
@@ -143,10 +143,10 @@ class SteppableTemplateLoadedTaskBuilderTest {
     public static class NonTxSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, NonTxPayload, TemplateString> {
         public NonTxSteppableTemplate() { super(); }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {}
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {}
     }
 
@@ -154,10 +154,10 @@ class SteppableTemplateLoadedTaskBuilderTest {
     public static class TxSteppableTemplate extends AbstractChangeTemplate<TemplateVoid, TxPayload, TemplateString> {
         public TxSteppableTemplate() { super(); }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {}
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {}
     }
 

@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.core.task.loaded;
 
-import io.flamingock.api.annotations.Apply;
-import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.ApplyTemplate;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadInfo;
@@ -88,11 +88,11 @@ class PayloadTransactionSupportValidationTest {
     // ── Dummy template (never instantiated — only .class is used) ───────
 
     static class DummyTemplate extends AbstractChangeTemplate<TemplateVoid, TemplateString, TemplateString> {
-        @Apply
+        @ApplyTemplate
         public void apply() {
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }

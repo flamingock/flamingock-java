@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.common.core.template.ChangeTemplateDefinition;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.api.annotations.ChangeTemplate;
-import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.TemplatePayload;
 import io.flamingock.api.template.TemplatePayloadInfo;
@@ -28,7 +28,7 @@ import io.flamingock.api.template.TemplatePayloadValidationError;
 import io.flamingock.api.template.TemplateValidationContext;
 import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.api.template.wrappers.TemplateVoid;
-import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ApplyTemplate;
 import io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,12 +56,12 @@ class SimpleTemplateLoadedTaskBuilderTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply(Object config, Object execution, Object context) {
             // Test implementation
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
@@ -120,10 +120,10 @@ class SimpleTemplateLoadedTaskBuilderTest {
     public static class NonTxTemplate extends AbstractChangeTemplate<TemplateVoid, NonTxPayload, TemplateString> {
         public NonTxTemplate() { super(); }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {}
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {}
     }
 
@@ -131,10 +131,10 @@ class SimpleTemplateLoadedTaskBuilderTest {
     public static class TxTemplate extends AbstractChangeTemplate<TemplateVoid, TxPayload, TemplateString> {
         public TxTemplate() { super(); }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {}
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {}
     }
 

@@ -15,9 +15,9 @@
  */
 package io.flamingock.internal.common.core.template;
 
-import io.flamingock.api.annotations.Apply;
+import io.flamingock.api.annotations.ApplyTemplate;
 import io.flamingock.api.annotations.ChangeTemplate;
-import io.flamingock.api.annotations.Rollback;
+import io.flamingock.api.annotations.RollbackTemplate;
 import io.flamingock.api.template.AbstractChangeTemplate;
 import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.api.template.wrappers.TemplateVoid;
@@ -47,12 +47,12 @@ class TemplateValidatorTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
             // Test implementation
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
@@ -64,12 +64,12 @@ class TemplateValidatorTest {
             super();
         }
 
-        @Apply
+        @ApplyTemplate
         public void apply() {
             // Test implementation
         }
 
-        @Rollback
+        @RollbackTemplate
         public void rollback() {
         }
     }
