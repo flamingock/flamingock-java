@@ -8,6 +8,7 @@ val coreProjects = setOf(
     "flamingock-core",
     "flamingock-core-commons",
     "flamingock-core-api",
+    "flamingock-template-api",
     "flamingock-processor",
     "flamingock-graalvm",
     "flamingock-test-support"

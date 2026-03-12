@@ -32,6 +32,8 @@ import java.util.List;
  */
 public class TemplateVoid implements TemplatePayload {
 
+    private static final TemplatePayloadInfo TEMPLATE_PAYLOAD_INFO = new TemplatePayloadInfo(false);
+
     @Override
     public List<TemplatePayloadValidationError> validate(TemplateValidationContext context) {
         return Collections.emptyList();
@@ -39,6 +41,6 @@ public class TemplateVoid implements TemplatePayload {
 
     @Override
     public TemplatePayloadInfo getInfo() {
-        return new TemplatePayloadInfo();
+        return TEMPLATE_PAYLOAD_INFO;
     }
 }

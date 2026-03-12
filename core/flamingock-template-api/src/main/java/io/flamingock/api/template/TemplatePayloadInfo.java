@@ -46,6 +46,13 @@ public class TemplatePayloadInfo {
     }
 
     /**
+     * Creates an info instance with all fields
+     */
+    public TemplatePayloadInfo(boolean supportsTransactions) {
+        this.supportsTransactions = supportsTransactions;
+    }
+
+    /**
      * Returns whether the payload's target system supports transactional
      * execution.
      *

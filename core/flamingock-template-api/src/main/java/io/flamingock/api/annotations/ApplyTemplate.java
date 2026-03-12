@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * including database connections, repositories, and custom dependencies.
  *
  * <p>This annotation is specifically for use in {@link ChangeTemplate} classes.
- * For code-based {@link Change} classes, use {@link Apply} instead.
+ * For code-based changes, use {@code @Apply} instead.
  *
  * @see ChangeTemplate
  * @see RollbackTemplate

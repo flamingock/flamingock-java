@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * safe change reversibility. They receive the same dependency injection as ApplyTemplate methods.
  *
  * <p>This annotation is specifically for use in {@link ChangeTemplate} classes.
- * For code-based {@link Change} classes, use {@link Rollback} instead.
+ * For code-based changes, use {@code @Rollback} instead.
  *
  * @see ChangeTemplate
  * @see ApplyTemplate
