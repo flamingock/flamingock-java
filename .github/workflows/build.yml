@@ -6,7 +6,7 @@ jobs:
 
     steps:
       - name: Checkout project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Java
         uses: graalvm/setup-graalvm@v1
@@ -19,3 +19,12 @@ jobs:
         run: |
           ./gradlew clean build \
             -Psql.test.dialects=mysql
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/**
+            **/build/test-results/**
