@@ -54,6 +54,7 @@ class CodeLoadedTaskBuilderTest {
         assertEquals("001", result.getOrder().orElse(null));
         assertEquals("test-id", result.getId());
         assertEquals(WithoutOrderTestClass.class, result.getImplementationClass());
+        assertNull(result.getSourceFile());
     }
 
     @Test
@@ -151,6 +152,7 @@ class CodeLoadedTaskBuilderTest {
         assertFalse(result.isRunAlways());
         assertTrue(result.isTransactional());
         assertFalse(result.isSystem());
+        assertNull(result.getSourceFile());
     }
 
     @Test
@@ -193,6 +195,7 @@ class CodeLoadedTaskBuilderTest {
         assertEquals("annotation-test", result.getId());
         assertEquals("100", result.getOrder().orElse(null));
         assertEquals(_100__TestChangeClass.class, result.getImplementationClass());
+        assertNull(result.getSourceFile());
         assertFalse(result.isRunAlways()); // Default is false since not specified in annotation
         assertFalse(result.isTransactional()); // Explicitly set to false in annotation
         assertFalse(result.isSystem());
@@ -227,6 +230,7 @@ class CodeLoadedTaskBuilderTest {
         assertEquals("no-order-in_annotation", result.getId());
         assertEquals("0001", result.getOrder().orElse(null));
         assertEquals(_0001__anotherChange.class, result.getImplementationClass());
+        assertNull(result.getSourceFile());
     }
 
 }

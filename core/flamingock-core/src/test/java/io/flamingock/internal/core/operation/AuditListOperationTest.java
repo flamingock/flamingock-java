@@ -164,7 +164,7 @@ class AuditListOperationTest {
                 AuditEntry.ChangeType.STANDARD_CODE,
                 "TestClass",
                 "apply",
-                "TestClass.java",
+                null,
                 100L,
                 "localhost",
                 null,

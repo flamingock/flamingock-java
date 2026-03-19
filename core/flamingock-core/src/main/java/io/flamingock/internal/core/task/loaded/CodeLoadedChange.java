@@ -32,6 +32,7 @@ public class CodeLoadedChange extends AbstractLoadedChange {
                      String order,
                      String author,
                      Class<?> changeClass,
+                     String sourceFile,
                      Constructor<?> constructor,
                      Method applyMethod,
                      Optional<Method> rollbackMethod,
@@ -42,7 +43,7 @@ public class CodeLoadedChange extends AbstractLoadedChange {
                      TargetSystemDescriptor targetSystem,
                      RecoveryDescriptor recovery,
                      boolean legacy) {
-        super(changeClass.getSimpleName(), id, order, author, changeClass, constructor, runAlways, transactionalFlag, transactional, systemTask, targetSystem, recovery, legacy);
+        super(sourceFile, id, order, author, changeClass, constructor, runAlways, transactionalFlag, transactional, systemTask, targetSystem, recovery, legacy);
         this.applyMethod = applyMethod;
         this.rollbackMethod = rollbackMethod;
     }

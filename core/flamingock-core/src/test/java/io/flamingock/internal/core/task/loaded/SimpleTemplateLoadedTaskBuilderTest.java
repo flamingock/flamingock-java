@@ -171,6 +171,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
             assertEquals("001", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("test-file.yml", result.getFileName());
+            assertEquals("test-file.yml", result.getSourceFile());
             // Verify typed payloads are stored
             SimpleTemplateLoadedChange<?, ?, ?> simpleResult = (SimpleTemplateLoadedChange<?, ?, ?>) result;
             assertNotNull(simpleResult.getApplyPayload());
@@ -207,6 +208,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
             assertEquals("0002", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_0002__test-file.yml", result.getFileName());
+            assertEquals("_0002__test-file.yml", result.getSourceFile());
         }
     }
 
@@ -238,6 +240,7 @@ class SimpleTemplateLoadedTaskBuilderTest {
             assertEquals("003", result.getOrder().orElse(null));
             assertEquals("test-id", result.getId());
             assertEquals("_003__test-file.yml", result.getFileName());
+            assertEquals("_003__test-file.yml", result.getSourceFile());
         }
     }
 
