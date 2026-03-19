@@ -16,7 +16,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "1.2.0-SNAPSHOT"
+    version = "1.2.0-beta.1"
 
     repositories {
         mavenCentral()
