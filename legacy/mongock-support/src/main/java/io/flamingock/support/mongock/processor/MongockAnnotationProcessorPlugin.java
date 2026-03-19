@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 
 @SuppressWarnings("deprecation")
@@ -84,6 +85,7 @@ public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlug
                 .flatMap(List::stream)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
         changes.add(getImporterChange(mongockTargetSystemId));
 
         return changes;
@@ -142,16 +144,23 @@ public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlug
             throw new IllegalArgumentException("properties");
         }
 
+        // Skip Import
+        ConfigValueParser.ConfigValue skipImportValue =
+                ConfigValueParser.parse("skipImport", mongockSupport.skipImport(), ConfigValueParser.BOOLEAN_VALUE_VALIDATOR);
+        if (!skipImportValue.isEmpty()) {
+            properties.put(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, skipImportValue.getRaw());
+        }
+
         // Empty Origin Allowed
         ConfigValueParser.ConfigValue emptyOriginAllowedValue =
-                ConfigValueParser.parse(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, mongockSupport.emptyOriginAllowed(), ConfigValueParser.BOOLEAN_VALUE_VALIDATOR);
+                ConfigValueParser.parse("emptyOriginAllowed", mongockSupport.emptyOriginAllowed(), ConfigValueParser.BOOLEAN_VALUE_VALIDATOR);
         if (!emptyOriginAllowedValue.isEmpty()) {
             properties.put(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, emptyOriginAllowedValue.getRaw());
         }
 
         // Origin
         ConfigValueParser.ConfigValue originValue =
-                ConfigValueParser.parse(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, mongockSupport.origin());
+                ConfigValueParser.parse("origin", mongockSupport.origin());
         if (!originValue.isEmpty()) {
             properties.put(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, originValue.getRaw());
         }

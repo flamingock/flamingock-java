@@ -49,6 +49,7 @@ import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -351,6 +352,203 @@ public class MongoDBImporterTest {
         );
 
 
+
+
+        // Validate actual change
+        List<Document> users = database.getCollection("users")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(2, users.size());
+        Assertions.assertEquals("Admin", users.get(0).getString("name"));
+        Assertions.assertEquals("admin@company.com", users.get(0).getString("email"));
+        Assertions.assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
+
+        Assertions.assertEquals("Backup", users.get(1).getString("name"));
+        Assertions.assertEquals("backup@company.com", users.get(1).getString("email"));
+        Assertions.assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
+    }
+
+    @Test
+    @DisplayName("GIVEN skip import flag with invalid value " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should throw exception")
+    void GIVEN_skipImportFlagWithInvalidValue_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        // Setup Mongock entries
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        final String SKIP_IMPORT_VALUE = "invalid_value";
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
+        assertEquals("Invalid value for " + MONGOCK_IMPORT_SKIP_PROPERTY_KEY + ": " + SKIP_IMPORT_VALUE
+                + " (expected \"true\" or \"false\" or empty)", ex.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed " +
+            "AND skip import flag enabled " +
+            "WHEN migrating to Flamingock Community" +
+            "THEN should not import any audit history entry " +
+            "AND execute the all mongock and flamingock changes")
+    void GIVEN_skipImportFlagEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldNotMigrateAnyAuditLog() {
+
+        // Setup Mongock entries
+        mongockTestHelper.setupBasicScenario();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        final String SKIP_IMPORT_VALUE = "true";
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        flamingock.run();
+
+        // Verify audit sequence: 10 total entries as shown in actual execution
+        auditHelper.verifyAuditSequenceStrict(
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+
+                // Legacy changes
+                STARTED("mongock-change-1"),
+                APPLIED("mongock-change-1"),
+                STARTED("mongock-change-2"),
+                APPLIED("mongock-change-2"),
+
+                // Application stage - new changes created by templates
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
+
+
+        // Validate actual change
+        List<Document> users = database.getCollection("users")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(2, users.size());
+        Assertions.assertEquals("Admin", users.get(0).getString("name"));
+        Assertions.assertEquals("admin@company.com", users.get(0).getString("email"));
+        Assertions.assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
+
+        Assertions.assertEquals("Backup", users.get(1).getString("name"));
+        Assertions.assertEquals("backup@company.com", users.get(1).getString("email"));
+        Assertions.assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed " +
+            "AND skip import flag disabled (explicit) " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndSkipImportFlagDisabledExplicit_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+
+        // Setup Mongock entries
+        mongockTestHelper.setupBasicScenario();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        final String SKIP_IMPORT_VALUE = "false";
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        flamingock.run();
+
+        // Verify audit sequence: 11 total entries as shown in actual execution
+        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
+        auditHelper.verifyAuditSequenceStrict(
+                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("mongock-change-1_before"),
+                APPLIED("mongock-change-1"),
+                APPLIED("mongock-change-2"),
+
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+
+                // Application stage - new changes created by templates
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
+
+
+        // Validate actual change
+        List<Document> users = database.getCollection("users")
+                .find()
+                .into(new ArrayList<>());
+
+        assertEquals(2, users.size());
+        Assertions.assertEquals("Admin", users.get(0).getString("name"));
+        Assertions.assertEquals("admin@company.com", users.get(0).getString("email"));
+        Assertions.assertEquals("superuser", users.get(0).getList("roles", String.class).get(0));
+
+        Assertions.assertEquals("Backup", users.get(1).getString("name"));
+        Assertions.assertEquals("backup@company.com", users.get(1).getString("email"));
+        Assertions.assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
+    }
+
+    @Test
+    @DisplayName("GIVEN all Mongock changeUnits already executed " +
+            "AND skip import flag disabled (implicit) " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should import the entire history " +
+            "AND execute the pending flamingock changes")
+    void GIVEN_allMongockChangeUnitsAlreadyExecutedAndSkipImportFlagDisabledImplicit_WHEN_migratingToFlamingockCommunity_THEN_shouldImportEntireHistory() {
+
+        // Setup Mongock entries
+        mongockTestHelper.setupBasicScenario();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        final String SKIP_IMPORT_VALUE = "";
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
+                .build();
+
+        flamingock.run();
+
+        // Verify audit sequence: 11 total entries as shown in actual execution
+        // Legacy imports only show APPLIED (imported from Mongock), new changes show STARTED+APPLIED
+        auditHelper.verifyAuditSequenceStrict(
+                // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("mongock-change-1_before"),
+                APPLIED("mongock-change-1"),
+                APPLIED("mongock-change-2"),
+
+                // System stage - actual system importer change
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+
+                // Application stage - new changes created by templates
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
 
 
         // Validate actual change
