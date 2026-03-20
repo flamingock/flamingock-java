@@ -173,6 +173,10 @@ include("utils:sql-util")
 project(":utils:sql-util").name = "sql-util"
 project(":utils:sql-util").projectDir = file("utils/sql-util")
 
+include("utils:sql-test-kit")
+project(":utils:sql-test-kit").name = "sql-test-kit"
+project(":utils:sql-test-kit").projectDir = file("utils/sql-test-kit")
+
 //////////////////////////////////////
 // LEGACY
 //////////////////////////////////////
