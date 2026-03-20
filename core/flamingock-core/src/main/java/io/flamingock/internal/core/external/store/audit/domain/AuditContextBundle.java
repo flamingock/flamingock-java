@@ -21,10 +21,12 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
 
 import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_BEFORE;
 import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_EXECUTION;
 import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.STANDARD_CODE;
+import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.STANDARD_TEMPLATE;
 
 public abstract class AuditContextBundle {
 
@@ -132,12 +134,12 @@ public abstract class AuditContextBundle {
 
     private AuditEntry.ChangeType getChangeType() {
         if(changeDescriptor.isLegacy()) {
-            //TODO improve the way we retrieve mongock before
             return changeDescriptor.getId().endsWith("_before")
                     ? MONGOCK_BEFORE
                     : MONGOCK_EXECUTION;
+        } else if(changeDescriptor instanceof AbstractTemplateLoadedChange) {
+            return STANDARD_TEMPLATE;
         } else {
-            //TODO update this when template is released
             return STANDARD_CODE;
         }
     }
