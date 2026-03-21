@@ -6,7 +6,7 @@ dependencies {
     compileOnly("com.couchbase.client:java-client:3.6.0")
 }
 
-description = "MongoDB TestKit for Flamingock testing"
+description = "Couchbase TestKit for Flamingock testing"
 
 java {
     toolchain {
