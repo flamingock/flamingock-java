@@ -17,6 +17,7 @@ package io.flamingock.sql.kit;
 
 import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlLockDialectHelper;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.core.external.store.lock.LockServiceException;
@@ -43,7 +44,7 @@ public class SqlLockStorage implements LockStorage {
     private final String lockTableName;
     private final Map<String, Object> metadata = new ConcurrentHashMap<>();
     private final DataSource dataSource;
-    private final SqlDialectHelper dialectHelper;
+    private final SqlLockDialectHelper dialectHelper;
 
     public SqlLockStorage(DataSource dataSource) throws SQLException {
         this(dataSource, DEFAULT_LOCK_STORE_NAME);
@@ -53,7 +54,7 @@ public class SqlLockStorage implements LockStorage {
         this.lockTableName = lockTableName;
         this.dataSource = dataSource;
         try (Connection conn = dataSource.getConnection()) {
-            this.dialectHelper = new SqlDialectHelper(conn);
+            this.dialectHelper = new SqlLockDialectHelper(conn);
         }
     }
 
@@ -241,7 +242,7 @@ public class SqlLockStorage implements LockStorage {
     public void clear() {
         try(Connection connection = dataSource.getConnection();
             Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(dialectHelper.getDeleteAllSqlString(lockTableName));
+            stmt.executeUpdate(String.format("DELETE FROM %s", lockTableName));
         } catch (SQLException e) {
             throw new RuntimeException("Failed to clear lock entries", e);
         }

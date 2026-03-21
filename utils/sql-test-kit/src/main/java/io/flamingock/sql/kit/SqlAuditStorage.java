@@ -19,6 +19,7 @@ import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlAuditorDialectHelper;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -35,7 +36,7 @@ import static io.flamingock.internal.util.constants.CommunityPersistenceConstant
 public class SqlAuditStorage implements AuditStorage {
 
     private final DataSource dataSource;
-    private final SqlDialectHelper dialectHelper;
+    private final SqlAuditorDialectHelper dialectHelper;
     private final String auditTableName;
 
     public SqlAuditStorage(DataSource dataSource) throws SQLException {
@@ -46,7 +47,7 @@ public class SqlAuditStorage implements AuditStorage {
         this.auditTableName = tableName;
         this.dataSource = dataSource;
         try (Connection conn = dataSource.getConnection()) {
-            this.dialectHelper = new SqlDialectHelper(conn);
+            this.dialectHelper = new SqlAuditorDialectHelper(conn);
         }
     }
 
@@ -147,7 +148,7 @@ public class SqlAuditStorage implements AuditStorage {
     public void clear() {
         try(Connection connection = dataSource.getConnection();
             Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(dialectHelper.getDeleteAllSqlString(auditTableName));
+            stmt.executeUpdate(String.format("DELETE FROM %s", auditTableName));
         } catch (SQLException e) {
             throw new RuntimeException("Failed to clear audit entries", e);
         }

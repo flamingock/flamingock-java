@@ -19,6 +19,7 @@ import io.flamingock.core.kit.AbstractTestKit;
 import io.flamingock.core.kit.audit.AuditStorage;
 import io.flamingock.core.kit.lock.LockStorage;
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlTestKitDialectHelper;
 import io.flamingock.internal.core.external.store.CommunityAuditStore;
 
 import javax.sql.DataSource;
@@ -30,13 +31,13 @@ import java.util.List;
 public class SqlTestKit extends AbstractTestKit {
 
     private final DataSource dataSource;
-    private final SqlDialectHelper dialectHelper;
+    private final SqlTestKitDialectHelper dialectHelper;
 
     public SqlTestKit(AuditStorage auditStorage, LockStorage lockStorage, CommunityAuditStore auditStore, DataSource dataSource) throws SQLException {
         super(auditStorage, lockStorage, auditStore);
         this.dataSource = dataSource;
         try (Connection conn = dataSource.getConnection()) {
-            this.dialectHelper = new SqlDialectHelper(conn);
+            this.dialectHelper = new SqlTestKitDialectHelper(conn);
         }
     }
 

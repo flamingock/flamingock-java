@@ -16,6 +16,7 @@
 package io.flamingock.store.sql.internal;
 
 import io.flamingock.internal.common.sql.SqlDialect;
+import io.flamingock.internal.common.sql.dialectHelpers.SqlLockDialectHelper;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.core.external.store.lock.LockServiceException;
