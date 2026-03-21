@@ -158,6 +158,10 @@ include("utils:couchbase-util")
 project(":utils:couchbase-util").name = "couchbase-util"
 project(":utils:couchbase-util").projectDir = file("utils/couchbase-util")
 
+include("utils:couchbase-test-kit")
+project(":utils:couchbase-test-kit").name = "couchbase-test-kit"
+project(":utils:couchbase-test-kit").projectDir = file("utils/couchbase-test-kit")
+
 include("utils:sql-util")
 project(":utils:sql-util").name = "sql-util"
 project(":utils:sql-util").projectDir = file("utils/sql-util")

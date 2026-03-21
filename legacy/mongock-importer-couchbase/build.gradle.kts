@@ -14,6 +14,7 @@ dependencies {
     testImplementation(project(":community:flamingock-auditstore-couchbase"))
     testImplementation(project(":utils:couchbase-util"))
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":utils:couchbase-test-kit"))
 
     testImplementation("org.testcontainers:testcontainers-couchbase:2.0.2")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")

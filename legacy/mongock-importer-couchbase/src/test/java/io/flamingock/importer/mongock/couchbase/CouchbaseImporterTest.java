@@ -23,6 +23,9 @@ import com.couchbase.client.java.manager.bucket.BucketManager;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.audit.AuditTestHelper;
+import io.flamingock.couchbase.kit.CouchbaseTestKit;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.store.couchbase.CouchbaseAuditStore;
 import io.flamingock.internal.common.core.error.FlamingockException;
@@ -46,6 +49,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
@@ -76,6 +81,10 @@ public class CouchbaseImporterTest {
             .withBucket(new org.testcontainers.couchbase.BucketDefinition(FLAMINGOCK_BUCKET_NAME));
 
     private static Cluster cluster;
+    private static CouchbaseTargetSystem targetSystem;
+    private static CouchbaseAuditStore auditStore;
+    private static TestKit testKit;
+    private static AuditTestHelper auditHelper;
 
     @BeforeAll
     static void setupAll() {
@@ -89,6 +98,14 @@ public class CouchbaseImporterTest {
 
         // Setup Mongock Bucket, Scope and Collection
         BucketManager bucketManager = cluster.buckets();
+
+        targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+        auditStore = CouchbaseAuditStore.from(targetSystem)
+            .withScopeName(FLAMINGOCK_SCOPE_NAME)
+            .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME);
+
+        testKit = CouchbaseTestKit.create(auditStore, cluster, FLAMINGOCK_BUCKET_NAME, FLAMINGOCK_SCOPE_NAME);
+        auditHelper = testKit.getAuditHelper();
 
         int ramQuotaMB = 100;
 
@@ -127,38 +144,27 @@ public class CouchbaseImporterTest {
         originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
         originCollection.upsert("mongock-change-2", createAuditObject("mongock-change-2"));
 
-        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
-
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .build();
 
         flamingock.run();
 
-        List<JsonObject> auditLog = getAuditLog();
+        auditHelper.verifyAuditSequenceStrict(
+            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+            APPLIED("mongock-change-1"),
+            APPLIED("mongock-change-2"),
 
-        assertEquals(6, auditLog.size());
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
 
-        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+            // Application stage - new changes
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
 
-        assertEquals("mongock-change-2", auditLog.get(1).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(1).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(2).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(3).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(3).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(4).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(4).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(5).getString("state"));
     }
 
     @Test
@@ -173,41 +179,28 @@ public class CouchbaseImporterTest {
 
         originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
 
-        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
-
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .build();
 
         flamingock.run();
 
-        List<JsonObject> auditLog = getAuditLog();
+        auditHelper.verifyAuditSequenceStrict(
+            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+            APPLIED("mongock-change-1"),
 
-        assertEquals(7, auditLog.size());
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
 
-        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+            // Application stage - new changes
+            STARTED("mongock-change-2"),
+            APPLIED("mongock-change-2"),
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
 
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(1).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(2).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(3).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(3).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(4).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(5).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(6).getString("state"));
     }
 
     @Test
@@ -217,12 +210,8 @@ public class CouchbaseImporterTest {
             "THEN should throw exception")
     void GIVEN_mongockAuditHistoryEmptyAndNoFailIfEmptyOriginValueProvided_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
 
-        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
-
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .build();
 
@@ -238,12 +227,8 @@ public class CouchbaseImporterTest {
             "THEN should throw exception")
     void GIVEN_mongockAuditHistoryEmptyAndFailIfEmptyOriginEnabled_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
 
-        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
-
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .setProperty(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
                 .build();
@@ -263,44 +248,27 @@ public class CouchbaseImporterTest {
 
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .setProperty(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.TRUE.toString())
                 .build();
 
         flamingock.run();
 
+        auditHelper.verifyAuditSequenceStrict(
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
 
-        List<JsonObject> auditLog = getAuditLog();
-
-        assertEquals(8, auditLog.size());
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(0).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(0).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(1).getString("state"));
-
-        assertEquals("mongock-change-1", auditLog.get(2).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(2).getString("state"));
-
-        assertEquals("mongock-change-1", auditLog.get(3).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(3).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(4).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(5).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(5).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(6).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(7).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(7).getString("state"));
+            // Application stage - new changes
+            STARTED("mongock-change-1"),
+            APPLIED("mongock-change-1"),
+            STARTED("mongock-change-2"),
+            APPLIED("mongock-change-2"),
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
 
     }
 
@@ -324,42 +292,29 @@ public class CouchbaseImporterTest {
 
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .setProperty(MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY, customMongockOrigin)
                 .build();
 
         flamingock.run();
 
+        auditHelper.verifyAuditSequenceStrict(
+            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+            APPLIED("mongock-change-1"),
 
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
 
-        List<JsonObject> auditLog = getAuditLog();
+            // Application stage - new changes
+            STARTED("mongock-change-2"),
+            APPLIED("mongock-change-2"),
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
 
-        assertEquals(7, auditLog.size());
-
-        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(0).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(1).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(2).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(3).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(3).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(4).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(5).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(6).getString("state"));
     }
 
     @Test
@@ -372,10 +327,8 @@ public class CouchbaseImporterTest {
 
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
                 .build();
@@ -402,43 +355,28 @@ public class CouchbaseImporterTest {
 
         CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
 
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
                 .build();
 
         flamingock.run();
 
-        List<JsonObject> auditLog = getAuditLog();
+        auditHelper.verifyAuditSequenceStrict(
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
 
-        assertEquals(8, auditLog.size());
+            // Application stage - new changes
+            STARTED("mongock-change-1"),
+            APPLIED("mongock-change-1"),
+            STARTED("mongock-change-2"),
+            APPLIED("mongock-change-2"),
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
 
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(0).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(0).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(1).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(1).getString("state"));
-
-        assertEquals("mongock-change-1", auditLog.get(2).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(2).getString("state"));
-
-        assertEquals("mongock-change-1", auditLog.get(3).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(3).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(4).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(4).getString("state"));
-
-        assertEquals("mongock-change-2", auditLog.get(5).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(5).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(6).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(6).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(7).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(7).getString("state"));
     }
 
     @Test
@@ -457,37 +395,28 @@ public class CouchbaseImporterTest {
 
         final String SKIP_IMPORT_VALUE = "false";
 
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
                 .build();
 
         flamingock.run();
 
-        List<JsonObject> auditLog = getAuditLog();
+        auditHelper.verifyAuditSequenceStrict(
+            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+            APPLIED("mongock-change-1"),
+            APPLIED("mongock-change-2"),
 
-        assertEquals(6, auditLog.size());
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
 
-        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+            // Application stage - new changes
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
 
-        assertEquals("mongock-change-2", auditLog.get(1).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(1).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(2).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(3).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(3).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(4).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(4).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(5).getString("state"));
     }
 
     @Test
@@ -506,37 +435,28 @@ public class CouchbaseImporterTest {
 
         final String SKIP_IMPORT_VALUE = "";
 
-        Runner flamingock = FlamingockFactory.getCommunityBuilder()
-                .setAuditStore(CouchbaseAuditStore.from(targetSystem)
-                        .withScopeName(FLAMINGOCK_SCOPE_NAME)
-                        .withAuditRepositoryName(FLAMINGOCK_COLLECTION_NAME))
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
                 .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
                 .build();
 
         flamingock.run();
 
-        List<JsonObject> auditLog = getAuditLog();
+        auditHelper.verifyAuditSequenceStrict(
+            // Legacy imports from Mongock (APPLIED only - no STARTED for imported changes)
+            APPLIED("mongock-change-1"),
+            APPLIED("mongock-change-2"),
 
-        assertEquals(6, auditLog.size());
+            // System stage - actual system importer change
+            STARTED("migration-mongock-to-flamingock-community"),
+            APPLIED("migration-mongock-to-flamingock-community"),
 
-        assertEquals("mongock-change-1", auditLog.get(0).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(0).getString("state"));
+            // Application stage - new changes
+            STARTED("flamingock-change"),
+            APPLIED("flamingock-change")
+        );
 
-        assertEquals("mongock-change-2", auditLog.get(1).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(1).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(2).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(2).getString("state"));
-
-        assertEquals("migration-mongock-to-flamingock-community", auditLog.get(3).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(3).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(4).getString("changeId"));
-        assertEquals("STARTED", auditLog.get(4).getString("state"));
-
-        assertEquals("flamingock-change", auditLog.get(5).getString("changeId"));
-        assertEquals("APPLIED", auditLog.get(5).getString("state"));
     }
 
 

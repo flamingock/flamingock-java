@@ -7,6 +7,8 @@
 val coreProjects = setOf(
     "flamingock-core",
     "flamingock-core-commons",
+    "flamingock-core-api",
+    "flamingock-template-api",
     "flamingock-processor",
     "flamingock-graalvm",
     "flamingock-test-support"
@@ -49,6 +51,7 @@ val externalSystemProjects = setOf(
 )
 
 val utilProjects = setOf(
+    "general-util",
     "test-util",
     "mongodb-util",
     "dynamodb-util",
@@ -66,7 +69,8 @@ val legacyProjects = setOf(
 val testKitsProjects = setOf(
     "mongodb-test-kit",
     "dynamodb-test-kit",
-    "sql-test-kit"
+    "sql-test-kit",
+    "couchbase-test-kit"
 )
 
 val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + utilProjects + legacyProjects + testKitsProjects
