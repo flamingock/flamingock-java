@@ -20,6 +20,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
     testImplementation("org.testcontainers:testcontainers-mariadb:2.0.2")
     testImplementation(project(":utils:test-util"))
+    testImplementation(project(":utils:sql-test-kit"))
     testImplementation("com.zaxxer:HikariCP:3.4.5")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("com.h2database:h2:2.2.224")
