@@ -18,6 +18,9 @@ allprojects {
     group = "io.flamingock"
     version = "1.2.0-beta.2"
 
+    extra["templateApiVersion"] = "1.3.0"
+    extra["generalUtilVersion"] = "1.3.0"
+
     repositories {
         mavenLocal()
         mavenCentral()

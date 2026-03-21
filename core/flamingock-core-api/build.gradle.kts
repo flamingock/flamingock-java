@@ -1,8 +1,9 @@
 val jacksonVersion = "2.16.0"
-val templateApiVersion = "1.0.0"
+val templateApiVersion: String by extra
+val generalUtilVersion: String by extra
 dependencies {
     api("io.flamingock:flamingock-template-api:${templateApiVersion}")
-    implementation(project(":utils:general-util"))
+    implementation("io.flamingock:flamingock-general-util:${generalUtilVersion}")
     api("jakarta.annotation:jakarta.annotation-api:2.1.1")//todo can this be implementation?
 
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")

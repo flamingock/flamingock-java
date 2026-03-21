@@ -1,7 +1,8 @@
 val jacksonVersion = "2.16.0"
+val generalUtilVersion: String by extra
 dependencies {
 
-    api(project(":utils:general-util"))
+    api("io.flamingock:flamingock-general-util:${generalUtilVersion}")
     api(project(":core:flamingock-core"))
     api(project(":core:flamingock-core-commons"))
     api(project(":core:flamingock-processor"))
