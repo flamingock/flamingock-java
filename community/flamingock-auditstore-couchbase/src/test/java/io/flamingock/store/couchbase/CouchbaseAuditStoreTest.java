@@ -25,7 +25,6 @@ import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.couchbase.kit.CouchbaseTestKit;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
-import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.operation.OperationException;
 import org.junit.jupiter.api.*;
 import org.testcontainers.couchbase.BucketDefinition;
