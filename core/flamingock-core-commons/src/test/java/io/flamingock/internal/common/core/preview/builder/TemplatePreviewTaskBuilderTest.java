@@ -41,6 +41,7 @@ class TemplatePreviewTaskBuilderTest {
                 .build();
 
         assertEquals(Optional.empty(), preview.getTransactionalFlag());
+        assertEquals("_0001__test.yaml", preview.getSourceFile());
     }
 
     @Test
@@ -56,6 +57,7 @@ class TemplatePreviewTaskBuilderTest {
                 .build();
 
         assertEquals(Optional.of(true), preview.getTransactionalFlag());
+        assertEquals("_0001__test.yaml", preview.getSourceFile());
     }
 
     @Test
@@ -71,5 +73,6 @@ class TemplatePreviewTaskBuilderTest {
                 .build();
 
         assertEquals(Optional.of(false), preview.getTransactionalFlag());
+        assertEquals("_0001__test.yaml", preview.getSourceFile());
     }
 }

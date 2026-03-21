@@ -29,6 +29,8 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
 
     protected String source;
 
+    protected String sourceFile;
+
     protected boolean runAlways;
 
     protected Boolean transactionalFlag;
@@ -47,6 +49,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
                                   String order,
                                   String author,
                                   String source,
+                                  String sourceFile,
                                   boolean runAlways,
                                   Boolean transactionalFlag,
                                   boolean system,
@@ -57,6 +60,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         this.order = order;
         this.author = author;
         this.source = source;
+        this.sourceFile = sourceFile;
         this.runAlways = runAlways;
         this.transactionalFlag = transactionalFlag;
         this.system = system;
@@ -83,6 +87,11 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
     @Override
     public String getSource() {
         return source;
+    }
+
+    @Override
+    public String getSourceFile() {
+        return sourceFile;
     }
 
     @Override
@@ -131,6 +140,10 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
         this.source = source;
     }
 
+    public void setSourceFile(String sourceFile) {
+        this.sourceFile = sourceFile;
+    }
+
     public void setRunAlways(boolean runAlways) {
         this.runAlways = runAlways;
     }
@@ -174,6 +187,7 @@ public abstract class AbstractTaskDescriptor implements TaskDescriptor {
     public String toString() {
         return new StringJoiner(", ", AbstractTaskDescriptor.class.getSimpleName() + "[", "]")
                 .add("source=" + source)
+                .add("sourceFile=" + sourceFile)
                 .add("sourceClass=" + getSource())
                 .add("sourceName='" + getSource() + "'")
                 .add("id='" + getId() + "'")

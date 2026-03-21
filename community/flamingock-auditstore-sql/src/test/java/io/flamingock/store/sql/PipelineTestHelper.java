@@ -87,6 +87,7 @@ public class PipelineTestHelper {
                             changeInfo.getOrder(),
                             changeInfo.getAuthor(),
                             trio.getFirst().getName(),
+                            null,
                             PreviewConstructor.getDefault(),
                             new PreviewMethod("apply", getParameterTypes(trio.getSecond())),
                             rollback,

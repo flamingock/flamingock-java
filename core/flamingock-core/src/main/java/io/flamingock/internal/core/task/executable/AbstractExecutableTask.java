@@ -85,6 +85,11 @@ public abstract class AbstractExecutableTask<LOADED_CHANGE extends AbstractLoade
     }
 
     @Override
+    public String getSourceFile() {
+        return loadedChange.getSourceFile();
+    }
+
+    @Override
     public Optional<String> getOrder() {
         return loadedChange.getOrder();
     }

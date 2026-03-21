@@ -32,6 +32,8 @@ public interface TaskDescriptor extends Comparable<TaskDescriptor> {
 
     String getSource();
 
+    String getSourceFile();
+
     Optional<String> getOrder();
 
     TargetSystemDescriptor getTargetSystem();
