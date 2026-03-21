@@ -7,6 +7,7 @@ java {
 }
 
 dependencies {
+    implementation(project(":core:flamingock-core"))
     implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     // SQL Testcontainers
