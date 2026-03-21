@@ -1,7 +1,8 @@
+val coreApiVersion: String by extra
 dependencies {
 // Core
     api(project(":core:flamingock-core"))
-    api(project(":core:flamingock-core-api"))
+    api("io.flamingock:flamingock-core-api:${coreApiVersion}")
 // target systems
     api(project(":core:target-systems:nontransactional-target-system"))
     api(project(":core:target-systems:couchbase-target-system"))
