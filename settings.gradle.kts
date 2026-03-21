@@ -136,10 +136,6 @@ project(":core:target-systems:couchbase-target-system").name = "couchbase-target
 //////////////////////////////////////
 // UTILS
 //////////////////////////////////////
-include("utils:general-util")
-project(":utils:general-util").name = "general-util"
-project(":utils:general-util").projectDir = file("utils/general-util")
-
 include("utils:test-util")
 project(":utils:test-util").name = "test-util"
 project(":utils:test-util").projectDir = file("utils/test-util")

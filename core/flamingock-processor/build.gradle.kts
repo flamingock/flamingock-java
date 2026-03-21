@@ -1,7 +1,8 @@
 val jacksonVersion = "2.16.0"
+val generalUtilVersion: String by extra
 dependencies {
     api(project(":core:flamingock-core-commons"))
-    api(project(":utils:general-util"))//todo implementation
+    api("io.flamingock:flamingock-general-util:${generalUtilVersion}")//todo implementation
     api("org.yaml:snakeyaml:2.2")//todo implementation
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")//todo implementation
 }
