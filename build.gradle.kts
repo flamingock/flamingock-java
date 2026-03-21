@@ -16,7 +16,7 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "1.2.0-beta.2"
+    version = "1.2.0-beta.3"
 
     extra["templateApiVersion"] = "1.3.0"
     extra["generalUtilVersion"] = "1.3.0"
