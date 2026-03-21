@@ -60,10 +60,10 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
     /**
      * The source file name where this change is defined.
      * 
-     * <p>This represents the original source of the change definition:</p>
+     * <p>This represents the original source of the change definition when available:</p>
      * <ul>
      *     <li><b>Template-based:</b> The YAML/JSON template file name (e.g., "create-users.yaml")</li>
-     *     <li><b>Code-based:</b> The Java class name containing the {@code @Change} annotation</li>
+     *     <li><b>Code-based:</b> {@code null} for now</li>
      * </ul>
      * 
      * <p>Note: This may differ from the {@link #implementationClass} in template-based scenarios
@@ -103,7 +103,7 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
                                         TargetSystemDescriptor targetSystem,
                                         RecoveryDescriptor recovery,
                                         boolean legacy) {
-        super(id, order, author, implementationClass.getName(), runAlways, transactionalFlag, transactional, system, targetSystem, recovery, legacy);
+        super(id, order, author, implementationClass.getName(), fileName, runAlways, transactionalFlag, transactional, system, targetSystem, recovery, legacy);
         this.fileName = fileName;
         this.implementationClass = implementationClass;
     }
@@ -111,7 +111,7 @@ public abstract class AbstractReflectionLoadedTask extends AbstractLoadedTask {
     /**
      * Returns the source file name where this change is defined.
      * 
-     * @return the file name (template file for template-based, class name for code-based)
+     * @return the file name for template-based changes, or {@code null} when unavailable
      * @see #fileName
      */
     public String getFileName() {

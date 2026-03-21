@@ -44,6 +44,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
     private Optional<Method> rollbackMethod;
     private boolean isRunAlways;
     private Boolean transactionalFlag;
+    private String sourceFile;
     private boolean isSystem;
     private TargetSystemDescriptor targetSystem;
     private RecoveryDescriptor recovery;
@@ -78,6 +79,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setOrder(preview.getOrder().orElse(null));
         setAuthor(preview.getAuthor());
         setChangeClassName(preview.getSource());
+        setSourceFile(preview.getSourceFile());
         setConstructor(getConstructorFromPreview(preview));
         setApplyMethod(getApplyMethodFromPreview(preview));
         setRollbackMethod(getRollbackMethodFromPreview(preview));
@@ -151,6 +153,11 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         return this;
     }
 
+    public CodeLoadedTaskBuilder setSourceFile(String sourceFile) {
+        this.sourceFile = sourceFile;
+        return this;
+    }
+
     public CodeLoadedTaskBuilder setSystem(boolean system) {
         this.isSystem = system;
         return this;
@@ -183,6 +190,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
                 order,
                 author,
                 changeClass,
+                sourceFile,
                 constructor,
                 applyMethod,
                 rollbackMethod,
@@ -202,6 +210,7 @@ public class CodeLoadedTaskBuilder implements LoadedTaskBuilder<CodeLoadedChange
         setOrder(ChangeOrderExtractor.extractOrderFromClassName(changeId, sourceClass.getName()));
         setAuthor(annotation.author());
         setChangeClassName(sourceClass.getName());
+        setSourceFile(null);
         setConstructor(getConstructor(sourceClass));
         setApplyMethod(getApplyMethodFromAnnotation(sourceClass));
         setRollbackMethod(getRollbackMethodFromAnnotation(sourceClass));

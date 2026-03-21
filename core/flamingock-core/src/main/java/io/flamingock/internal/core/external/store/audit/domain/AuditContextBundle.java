@@ -106,7 +106,7 @@ public abstract class AuditContextBundle {
                 getChangeType(),
                 loadedChange.getSource(),
                 runtimeContext.getMethodExecutor(),
-                null, //TODO: set sourceFile
+                loadedChange.getSourceFile(),
                 runtimeContext.getDuration(),
                 stageExecutionContext.getHostname(),
                 stageExecutionContext.getMetadata(),

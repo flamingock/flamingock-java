@@ -58,6 +58,7 @@ class AuditEntryEntityTest {
         assertEquals(original.getTaskId(), converted.getTaskId());
         assertEquals(original.getAuthor(), converted.getAuthor());
         assertEquals(original.getState(), converted.getState());
+        assertEquals(original.getSourceFile(), converted.getSourceFile());
     }
 
     @Test
@@ -129,6 +130,7 @@ class AuditEntryEntityTest {
         assertEquals(original.getTaskId(), converted.getTaskId());
         assertEquals(original.getAuthor(), converted.getAuthor());
         assertEquals(original.getState(), converted.getState());
+        assertEquals(original.getSourceFile(), converted.getSourceFile());
     }
 
     @Test

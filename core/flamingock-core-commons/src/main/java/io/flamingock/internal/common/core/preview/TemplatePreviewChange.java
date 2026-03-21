@@ -48,7 +48,7 @@ public class TemplatePreviewChange extends AbstractPreviewTask {
                                  Object steps,
                                  TargetSystemDescriptor targetSystem,
                                  RecoveryDescriptor recovery) {
-        super(id, order, author, templateName, runAlways, transactional, system, targetSystem, recovery, false);
+        super(id, order, author, templateName, fileName, runAlways, transactional, system, targetSystem, recovery, false);
         this.fileName = fileName;
         this.profiles = profiles;
         this.configuration = configuration;

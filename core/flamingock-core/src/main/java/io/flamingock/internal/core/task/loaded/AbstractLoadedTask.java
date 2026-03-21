@@ -35,6 +35,7 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
                               String order,
                               String author,
                               String implementationSourceName,
+                              String sourceFile,
                               boolean runAlways,
                               Boolean transactionalFlag,
                               boolean transactional,
@@ -42,7 +43,7 @@ public abstract class AbstractLoadedTask extends AbstractTaskDescriptor implemen
                               TargetSystemDescriptor targetSystem,
                               RecoveryDescriptor recovery,
                               boolean legacy) {
-        super(id, order, author, implementationSourceName, runAlways, transactionalFlag, system, targetSystem, recovery, legacy);
+        super(id, order, author, implementationSourceName, sourceFile, runAlways, transactionalFlag, system, targetSystem, recovery, legacy);
         this.transactional = transactional;
     }
 

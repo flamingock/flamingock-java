@@ -27,7 +27,7 @@ class AbstractTaskDescriptorTest {
 
     private static AbstractTaskDescriptor createDescriptor(Boolean transactional) {
         return new AbstractTaskDescriptor(
-                "test-id", "001", "author", "source",
+                "test-id", "001", "author", "source", "sourceFile",
                 false, transactional, false,
                 null, null, false
         ) {};
