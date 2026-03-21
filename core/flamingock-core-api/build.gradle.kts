@@ -1,5 +1,5 @@
 val jacksonVersion = "2.16.0"
-val templateApiVersion = "1.0.0"
+val templateApiVersion = "1.3.1"
 dependencies {
     api("io.flamingock:flamingock-template-api:${templateApiVersion}")
     implementation(project(":utils:general-util"))
