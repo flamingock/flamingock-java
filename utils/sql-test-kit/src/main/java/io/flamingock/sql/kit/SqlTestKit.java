@@ -63,7 +63,6 @@ public class SqlTestKit extends AbstractTestKit {
                         try (Statement stmt = connection.createStatement()) {
                             stmt.executeUpdate(dialectHelper.getDropTableSql(tableName));
                         } catch (SQLException e) {
-                            // Para Sybase, ignorar si la tabla ya no existe
                             if (dialectHelper.getSqlDialect() != SqlDialect.SYBASE) {
                                 throw e;
                             }
