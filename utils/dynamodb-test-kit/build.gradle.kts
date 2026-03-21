@@ -1,7 +1,8 @@
+val generalUtilVersion: String by extra
 dependencies {
     implementation(project(":core:flamingock-core"))
     implementation(project(":utils:dynamodb-util"))
-    implementation(project(":utils:general-util"))
+    implementation("io.flamingock:flamingock-general-util:${generalUtilVersion}")
     implementation(project(":utils:test-util"))
 
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")

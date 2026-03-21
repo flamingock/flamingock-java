@@ -50,7 +50,6 @@ val externalSystemProjects = setOf(
 )
 
 val utilProjects = setOf(
-    "general-util",
     "test-util",
     "mongodb-util",
     "dynamodb-util",
