@@ -136,7 +136,7 @@ class CouchbaseAuditStoreTest {
             )
             .WHEN(() -> {
                 assertThrows(OperationException.class, () -> {
-                    FlamingockFactory.getCommunityBuilder()
+                    testKit.createBuilder()
                         .setAuditStore(couchbaseAuditStore)
                         .addTargetSystem(couchbaseTargetSystem)
                         .addDependency(testCollection) // for test purpose only
@@ -180,7 +180,7 @@ class CouchbaseAuditStoreTest {
             )
             .WHEN(() -> {
                 assertThrows(OperationException.class, () -> {
-                    FlamingockFactory.getCommunityBuilder()
+                    testKit.createBuilder()
                         .setAuditStore(couchbaseAuditStore)
                         .addTargetSystem(couchbaseTargetSystem)
                         .addDependency(testCollection) // for test purpose only

@@ -86,7 +86,7 @@ public class CouchbaseAuditStorage implements AuditStorage {
         return CouchbaseCollectionHelper.selectAllDocuments(
             cluster, auditCollection.bucketName(), auditCollection.scopeName(), auditCollection.name())
             .stream()
-            .filter(entry -> entry.get(KEY_CHANGE_ID).equals(changeId))
+            .filter(entry -> entry.getString(KEY_CHANGE_ID).equals(changeId))
             .map(mapper::fromDocument)
             .collect(Collectors.toList());
     }
@@ -96,7 +96,7 @@ public class CouchbaseAuditStorage implements AuditStorage {
         return CouchbaseCollectionHelper.selectAllDocuments(
             cluster, auditCollection.bucketName(), auditCollection.scopeName(), auditCollection.name())
             .stream()
-            .filter(entry -> entry.get(KEY_STATE).equals(status))
+            .filter(entry -> entry.getString(KEY_STATE).equals(status.name()))
             .count();
     }
 
