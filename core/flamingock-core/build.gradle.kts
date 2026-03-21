@@ -1,8 +1,9 @@
 val jacksonVersion = "2.16.0"
+val generalUtilVersion: String by extra
 
 dependencies {
     api(project(":core:flamingock-core-commons"))
-    api(project(":utils:general-util"))//todo implementation
+    api("io.flamingock:flamingock-general-util:${generalUtilVersion}")//todo implementation
 
     api("javax.inject:javax.inject:1")
     api("org.javassist:javassist:3.30.2-GA")

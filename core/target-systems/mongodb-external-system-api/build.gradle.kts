@@ -1,5 +1,6 @@
+val coreApiVersion: String by extra
 dependencies {
-    implementation(project(":core:flamingock-core-api"))
+    implementation("io.flamingock:flamingock-core-api:${coreApiVersion}")
 
     // MongoDB driver for storage implementations
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")

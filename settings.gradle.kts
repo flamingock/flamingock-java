@@ -23,13 +23,6 @@ project(":core:flamingock-core-commons").projectDir = file("core/flamingock-core
 
 
 
-include("core:flamingock-core-api")
-project(":core:flamingock-core-api").name = "flamingock-core-api"
-project(":core:flamingock-core-api").projectDir = file("core/flamingock-core-api")
-
-include("core:flamingock-template-api")
-project(":core:flamingock-template-api").name = "flamingock-template-api"
-project(":core:flamingock-template-api").projectDir = file("core/flamingock-template-api")
 
 include("core:flamingock-test-support")
 project(":core:flamingock-test-support").name = "flamingock-test-support"
@@ -140,10 +133,6 @@ project(":core:target-systems:couchbase-target-system").name = "couchbase-target
 //////////////////////////////////////
 // UTILS
 //////////////////////////////////////
-include("utils:general-util")
-project(":utils:general-util").name = "general-util"
-project(":utils:general-util").projectDir = file("utils/general-util")
-
 include("utils:test-util")
 project(":utils:test-util").name = "test-util"
 project(":utils:test-util").projectDir = file("utils/test-util")
