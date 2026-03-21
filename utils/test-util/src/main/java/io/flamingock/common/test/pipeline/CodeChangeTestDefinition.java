@@ -115,6 +115,7 @@ public class CodeChangeTestDefinition extends ChangeTestDefinition {
                 getOrder(),
                 author, // Default author for tests
                 className,
+                null,
                 PreviewConstructor.getDefault(),
                 new PreviewMethod("apply", executionParameterNames),
                 rollback,

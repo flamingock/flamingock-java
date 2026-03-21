@@ -117,6 +117,7 @@ public class PipelineTest {
                 "001",
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -171,6 +172,7 @@ public class PipelineTest {
                 "12", // Too short (only 2 alphanumeric characters)
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -186,6 +188,7 @@ public class PipelineTest {
                 "a_", // Only 1 alphanumeric character
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -225,6 +228,7 @@ public class PipelineTest {
                 "001", // Valid 3 alphanumeric characters
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -240,6 +244,7 @@ public class PipelineTest {
                 "abc", // Valid 3 alphanumeric characters
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -255,6 +260,7 @@ public class PipelineTest {
                 "V1_2_3", // Valid with underscores and alphanumeric chars
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -270,6 +276,7 @@ public class PipelineTest {
                 "20250925_01_migration", // Valid complex format
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -307,6 +314,7 @@ public class PipelineTest {
                 "001", // Valid: 3 alphanumeric characters
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -322,6 +330,7 @@ public class PipelineTest {
                 "002", // Valid: 3 alphanumeric characters
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,
@@ -337,6 +346,7 @@ public class PipelineTest {
                 "003", // Valid: 3 alphanumeric characters
                 "test-author",
                 PipelineTestChange.class.getName(),
+                null,
                 PreviewConstructor.getDefault(),
                 executionMethod,
                 null,

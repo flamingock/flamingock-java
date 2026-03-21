@@ -36,6 +36,7 @@ public class CodePreviewChange extends AbstractPreviewTask {
                              String order,
                              String author,
                              String sourceClassPath,
+                             String sourceFile,
                              PreviewConstructor previewConstructor,
                              PreviewMethod applyPreviewMethod,
                              PreviewMethod rollbackPreviewMethod,
@@ -45,7 +46,7 @@ public class CodePreviewChange extends AbstractPreviewTask {
                              TargetSystemDescriptor targetSystem,
                              RecoveryDescriptor recovery,
                              boolean legacy) {
-        super(id, order, author, sourceClassPath, runAlways, transactional, system, targetSystem, recovery, legacy);
+        super(id, order, author, sourceClassPath, sourceFile, runAlways, transactional, system, targetSystem, recovery, legacy);
         this.previewConstructor = previewConstructor;
         this.applyPreviewMethod = applyPreviewMethod;
         this.rollbackPreviewMethod = rollbackPreviewMethod;
