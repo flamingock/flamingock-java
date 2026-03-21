@@ -17,23 +17,21 @@ package io.flamingock.store.sql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
+import io.flamingock.core.kit.TestKit;
+import io.flamingock.core.kit.audit.AuditTestSupport;
 import io.flamingock.internal.common.sql.SqlDialect;
-import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.operation.OperationException;
-import io.flamingock.internal.util.Trio;
-import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._001__create_index;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._002__insert_document;
 import io.flamingock.store.sql.changes.postgresql.failedWithoutRollback._003__execution_with_exception;
 import io.flamingock.store.sql.changes.postgresql.happyPath._003__insert_another_document;
 import io.flamingock.targetsystem.sql.SqlTargetSystem;
+import io.flamingock.sql.kit.SqlTestKit;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.sqlite.SQLiteDataSource;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -44,6 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.flamingock.core.kit.audit.AuditEntryExpectation.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -282,73 +281,37 @@ class SqlAuditStoreTest {
     @DisplayName("When standalone runs the AuditStore should persist the audit logs and the test data")
     void happyPathWithMockedPipeline(SqlDialect sqlDialect, String dialectName) throws Exception {
         context = setupTest(sqlDialect, dialectName);
+        SqlTargetSystem sqlTargetSystem = new SqlTargetSystem("sql", context.dataSource);
+        SqlAuditStore sqlAuditStore = SqlAuditStore.from(sqlTargetSystem);
+        TestKit testKit = SqlTestKit.create(sqlAuditStore, context.dataSource);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            Class<?>[] changeClasses = getChangeClasses(dialectName, "happyPath");
+        Class<?>[] changeClasses = getChangeClasses(dialectName, "happyPath");
+        String[] expectedTaskIds = {"create-index", "insert-document", "insert-another-document"};
+        //Given-When-Then
+        AuditTestSupport.withTestKit(testKit)
+            .GIVEN_Changes(
+                new CodeChangeTestDefinition(changeClasses[0], Collections.singletonList(Connection.class)),
+                new CodeChangeTestDefinition(changeClasses[1], Collections.singletonList(Connection.class)),
+                new CodeChangeTestDefinition(changeClasses[2], Collections.singletonList(Connection.class))
+            )
+            .WHEN(() -> testKit.createBuilder()
+                .setAuditStore(sqlAuditStore)
+                .addTargetSystem(sqlTargetSystem)
+                .build()
+                .run())
+            .THEN_VerifyAuditSequenceStrict(
+                STARTED(expectedTaskIds[0]),
+                APPLIED(expectedTaskIds[0]),
+                STARTED(expectedTaskIds[1]),
+                APPLIED(expectedTaskIds[1]),
+                STARTED(expectedTaskIds[2]),
+                APPLIED(expectedTaskIds[2])
+            )
+            .run();
 
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
-                    new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
-                    new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
-            ));
-
-            SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
-            SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
-
-            FlamingockFactory.getCommunityBuilder()
-                    .setAuditStore(auditStore)
-                    .addTargetSystem(targetSystem)
-                    .build()
-                    .run();
-        }
-
-        // Verify audit logs
-        try (Connection conn = context.dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT change_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
-             ResultSet rs = ps.executeQuery()) {
-
-            String[] expectedTaskIds = {"create-index", "insert-document", "insert-another-document"};
-            int recordCount = 0;
-            int startedCount = 0;
-            int appliedCount = 0;
-
-            while (rs.next()) {
-                String taskId = rs.getString("change_id");
-                String state = rs.getString("state");
-                assertTrue(
-                        java.util.Arrays.asList(expectedTaskIds).contains(taskId),
-                        "Unexpected change_id: " + taskId
-                );
-                assertTrue(
-                        state.equals("STARTED") || state.equals("APPLIED"),
-                        "Unexpected state: " + state
-                );
-                if (state.equals("STARTED")) startedCount++;
-                if (state.equals("APPLIED")) appliedCount++;
-                recordCount++;
-            }
-
-            assertEquals(6, recordCount, "Audit log should have 6 records");
-            assertEquals(3, startedCount, "Should have 3 STARTED records");
-            assertEquals(3, appliedCount, "Should have 3 APPLIED records");
-        }
-
-        // Verify test data
-        try (Connection conn = context.dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-            ps.setString(1, "test-client-Federico");
-            try (ResultSet rs = ps.executeQuery()) {
-                assertTrue(rs.next());
-                assertEquals("Federico", rs.getString("name"));
-            }
-            ps.setString(1, "test-client-Jorge");
-            try (ResultSet rs = ps.executeQuery()) {
-                assertTrue(rs.next());
-                assertEquals("Jorge", rs.getString("name"));
-            }
-        }
-
+        // Verify index exists and data state
+        SqlAuditTestHelper.verifyIndexExists(context);
+        verifyDataState(context, false);
     }
 
     @ParameterizedTest
@@ -356,86 +319,40 @@ class SqlAuditStoreTest {
     @DisplayName("When standalone runs the AuditStore and execution fails (with rollback method) should persist all the audit logs up to the failed one (ROLLED_BACK)")
     void failedWithRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
         context = setupTest(sqlDialect, dialectName);
+        SqlTargetSystem sqlTargetSystem = new SqlTargetSystem("sql", context.dataSource);
+        SqlAuditStore sqlAuditStore = SqlAuditStore.from(sqlTargetSystem);
+        TestKit testKit = SqlTestKit.create(sqlAuditStore, context.dataSource);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithRollback");
+        Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithRollback");
+        String[] expectedTaskIds = {"create-index", "insert-document", "execution-with-exception"};
+        //Given-When-Then
+        AuditTestSupport.withTestKit(testKit)
+            .GIVEN_Changes(
+                new CodeChangeTestDefinition(changeClasses[0], Collections.singletonList(Connection.class), null),
+                new CodeChangeTestDefinition(changeClasses[1], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class)),
+                new CodeChangeTestDefinition(changeClasses[2], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
+            )
+            .WHEN(() -> assertThrows(OperationException.class, () -> {
+                testKit.createBuilder()
+                    .setAuditStore(sqlAuditStore)
+                    .addTargetSystem(sqlTargetSystem)
+                    .build()
+                    .run();
+            }))
+            .THEN_VerifyAuditSequenceStrict(
+                STARTED(expectedTaskIds[0]),
+                APPLIED(expectedTaskIds[0]),
+                STARTED(expectedTaskIds[1]),
+                APPLIED(expectedTaskIds[1]),
+                STARTED(expectedTaskIds[2]),
+                FAILED(expectedTaskIds[2]),
+                ROLLED_BACK(expectedTaskIds[2])
+            )
+            .run();
 
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
-                    new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class)),
-                    new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
-            ));
-
-            SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
-            SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
-
-            assertThrows(OperationException.class, () -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setAuditStore(auditStore)
-                        .addTargetSystem(targetSystem)
-                        .build()
-                        .run();
-            });
-
-            // Verify audit sequence
-            try (Connection conn = context.dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(
-                         "SELECT change_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
-                 ResultSet rs = ps.executeQuery()) {
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("change_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("change_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("change_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("change_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("change_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("change_id"));
-                assertEquals("FAILED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("change_id"));
-                assertEquals("ROLLED_BACK", rs.getString("state"));
-
-                assertFalse(rs.next());
-            }
-
-            // Verify index exists
-            SqlAuditTestHelper.verifyIndexExists(context);
-
-            // Verify partial data
-            try (Connection conn = context.dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-                ps.setString(1, "test-client-Federico");
-                try (ResultSet rs = ps.executeQuery()) {
-                    assertTrue(rs.next());
-                    assertEquals("Federico", rs.getString("name"));
-                }
-            }
-
-            try (Connection conn = context.dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
-                ps.setString(1, "test-client-Jorge");
-                try (ResultSet rs = ps.executeQuery()) {
-                    assertFalse(rs.next());
-                }
-            }
-        }
-
+        // Verify index exists and data state
+        SqlAuditTestHelper.verifyIndexExists(context);
+        verifyDataState(context, true);
     }
 
     @ParameterizedTest
@@ -443,72 +360,43 @@ class SqlAuditStoreTest {
     @DisplayName("When standalone runs the AuditStore and execution fails (without rollback method) should persist all the audit logs up to the failed one (FAILED)")
     void failedWithoutRollback(SqlDialect sqlDialect, String dialectName) throws Exception {
         context = setupTest(sqlDialect, dialectName);
+        SqlTargetSystem sqlTargetSystem = new SqlTargetSystem("sql", context.dataSource);
+        SqlAuditStore sqlAuditStore = SqlAuditStore.from(sqlTargetSystem);
+        TestKit testKit = SqlTestKit.create(sqlAuditStore, context.dataSource);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithoutRollback");
+        Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithoutRollback");
+        String[] expectedTaskIds = {"create-index", "insert-document", "execution-with-exception"};
+        //Given-When-Then
+        AuditTestSupport.withTestKit(testKit)
+            .GIVEN_Changes(
+                new CodeChangeTestDefinition(changeClasses[0], Collections.singletonList(Connection.class), null),
+                new CodeChangeTestDefinition(changeClasses[1], Collections.singletonList(Connection.class), null),
+                new CodeChangeTestDefinition(changeClasses[2], Collections.singletonList(Connection.class), null)
+            )
+            .WHEN(() -> assertThrows(OperationException.class, () -> {
+                testKit.createBuilder()
+                    .setAuditStore(sqlAuditStore)
+                    .addTargetSystem(sqlTargetSystem)
+                    .build()
+                    .run();
+            }))
+            .THEN_VerifyAuditSequenceStrict(
+                STARTED(expectedTaskIds[0]),
+                APPLIED(expectedTaskIds[0]),
+                STARTED(expectedTaskIds[1]),
+                APPLIED(expectedTaskIds[1]),
+                STARTED(expectedTaskIds[2]),
+                FAILED(expectedTaskIds[2]),
+                ROLLED_BACK(expectedTaskIds[2])
+            )
+            .run();
 
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
-                    new Trio<>(changeClasses[0], Collections.singletonList(Connection.class), null),
-                    new Trio<>(changeClasses[1], Collections.singletonList(Connection.class), null),
-                    new Trio<>(changeClasses[2], Collections.singletonList(Connection.class), null)
-            ));
-
-            SqlTargetSystem targetSystem = new SqlTargetSystem("sql", context.dataSource);
-            SqlAuditStore auditStore = SqlAuditStore.from(targetSystem);
-
-            assertThrows(OperationException.class, () -> {
-                FlamingockFactory.getCommunityBuilder()
-                        .setAuditStore(auditStore)
-                        .addTargetSystem(targetSystem)
-                        .build()
-                        .run();
-            });
-
-            // Verify audit sequence
-            try (Connection conn = context.dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(
-                         "SELECT change_id, state FROM " + CommunityPersistenceConstants.DEFAULT_AUDIT_STORE_NAME + " ORDER BY id ASC");
-                 ResultSet rs = ps.executeQuery()) {
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("change_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("create-index", rs.getString("change_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("change_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("insert-document", rs.getString("change_id"));
-                assertEquals("APPLIED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("change_id"));
-                assertEquals("STARTED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("change_id"));
-                assertEquals("FAILED", rs.getString("state"));
-
-                assertTrue(rs.next());
-                assertEquals("execution-with-exception", rs.getString("change_id"));
-                assertEquals("ROLLED_BACK", rs.getString("state"));
-
-                assertFalse(rs.next());
-            }
-
-            // Verify index exists and data state
-            SqlAuditTestHelper.verifyIndexExists(context);
-            verifyPartialDataState(context);
-        }
-
+        // Verify index exists and data state
+        SqlAuditTestHelper.verifyIndexExists(context);
+        verifyDataState(context, true);
     }
 
-    private void verifyPartialDataState(TestContext context) throws SQLException {
+    private void verifyDataState(TestContext context, Boolean partial) throws SQLException {
         try (Connection conn = context.dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
             ps.setString(1, "test-client-Federico");
@@ -522,7 +410,12 @@ class SqlAuditStoreTest {
              PreparedStatement ps = conn.prepareStatement("SELECT name FROM test_table WHERE id = ?")) {
             ps.setString(1, "test-client-Jorge");
             try (ResultSet rs = ps.executeQuery()) {
-                assertFalse(rs.next());
+                if (partial) {
+                    assertFalse(rs.next());
+                } else {
+                    assertTrue(rs.next());
+                    assertEquals("Jorge", rs.getString("name"));
+                }
             }
         }
     }

@@ -65,7 +65,8 @@ val legacyProjects = setOf(
 
 val testKitsProjects = setOf(
     "mongodb-test-kit",
-    "dynamodb-test-kit"
+    "dynamodb-test-kit",
+    "sql-test-kit"
 )
 
 val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + utilProjects + legacyProjects + testKitsProjects

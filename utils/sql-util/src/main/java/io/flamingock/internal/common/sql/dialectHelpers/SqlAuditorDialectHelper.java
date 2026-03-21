@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.store.sql.internal;
+package io.flamingock.internal.common.sql.dialectHelpers;
 
 import io.flamingock.internal.common.sql.SqlDialectFactory;
 import io.flamingock.internal.common.sql.SqlDialect;
@@ -279,19 +279,36 @@ public final class SqlAuditorDialectHelper {
 
     public String getInsertSqlString(String tableName) {
         return String.format(
-                "INSERT INTO %s (" +
-                        "execution_id, stage_id, change_id, author, created_at, state, invoked_class, invoked_method, source_file, metadata, " +
-                        "execution_millis, execution_hostname, error_trace, type, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag, system_change" +
-                        ") VALUES (" +
-                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
-                        ")", tableName);
+            "INSERT INTO %s (" +
+                "execution_id, stage_id, change_id, author, created_at, state, invoked_class, invoked_method, source_file, metadata, " +
+                "execution_millis, execution_hostname, error_trace, type, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag, system_change" +
+                ") VALUES (" +
+                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
+                ")", tableName);
     }
 
     public String getSelectHistorySqlString(String tableName) {
         return String.format(
-                "SELECT execution_id, stage_id, change_id, author, created_at, state, type, invoked_class, invoked_method, source_file, " +
-                        "execution_millis, execution_hostname, metadata, system_change, error_trace, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag " +
-                        "FROM %s ORDER BY id ASC", tableName);
+            "SELECT execution_id, stage_id, change_id, author, created_at, state, type, invoked_class, invoked_method, source_file, " +
+                "execution_millis, execution_hostname, metadata, system_change, error_trace, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag " +
+                "FROM %s " +
+                "ORDER BY id ASC", tableName);
+    }
+
+    public String getSelectHistoryByChangeIdSqlString(String tableName) {
+        return String.format(
+            "SELECT execution_id, stage_id, change_id, author, created_at, state, type, invoked_class, invoked_method, source_file, " +
+                "execution_millis, execution_hostname, metadata, system_change, error_trace, tx_strategy, target_system_id, change_order, recovery_strategy, transaction_flag " +
+                "FROM %s " +
+                "WHERE change_id = ? " +
+                "ORDER BY id ASC", tableName);
+    }
+
+    public String getCountByStatusSqlString(String tableName) {
+        return String.format(
+            "SELECT COUNT(change_id) " +
+                "FROM %s " +
+                "WHERE state = ?", tableName);
     }
 
     private String getAutoIncrementType() {
