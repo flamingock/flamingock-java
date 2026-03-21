@@ -1,6 +1,7 @@
 val jacksonVersion = "2.16.0"
+val templateApiVersion = "1.0.0"
 dependencies {
-    api(project(":core:flamingock-template-api"))
+    api("io.flamingock:flamingock-template-api:${templateApiVersion}")
     implementation(project(":utils:general-util"))
     api("jakarta.annotation:jakarta.annotation-api:2.1.1")//todo can this be implementation?
 

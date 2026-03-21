@@ -19,6 +19,7 @@ allprojects {
     version = "1.2.0-beta.2"
 
     repositories {
+        mavenLocal()
         mavenCentral()
     }
 }
