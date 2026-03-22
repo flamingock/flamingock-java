@@ -1,7 +1,7 @@
 name: Build Master
 on:
   push:
-    branches: [ master ]
+    branches: [ master, release/* ]
 jobs:
   build:
     runs-on: ubuntu-latest
