@@ -105,7 +105,7 @@ public class SqlLockStorage implements LockStorage {
                             delete.setString(1, keyStr);
                             delete.executeUpdate();
                         }
-                        dialectHelper.upsertLockEntry(connection, lockTableName, keyStr, owner.toString(), expiresAt);
+                        dialectHelper.upsertLockEntry(connection, lockTableName, keyStr, owner.toString(), LockStatus.LOCK_HELD.name(), expiresAt);
                         connection.commit();
                         return;
                     } else {
@@ -119,7 +119,7 @@ public class SqlLockStorage implements LockStorage {
                 if (existing == null ||
                     owner.toString().equals(existing.getOwner()) ||
                     LocalDateTime.now().isAfter(existing.getExpiresAt())) {
-                    dialectHelper.upsertLockEntry(connection, lockTableName, keyStr, owner.toString(), expiresAt);
+                    dialectHelper.upsertLockEntry(connection, lockTableName, keyStr, owner.toString(), LockStatus.LOCK_HELD.name(), expiresAt);
                     // Commit for all dialects except Informix (which uses auto-commit above)
                     if (dialectHelper.getSqlDialect() != SqlDialect.INFORMIX) {
                         connection.commit();
