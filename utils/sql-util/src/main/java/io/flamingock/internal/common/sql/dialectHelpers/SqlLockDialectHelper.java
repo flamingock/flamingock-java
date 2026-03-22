@@ -17,7 +17,6 @@ package io.flamingock.internal.common.sql.dialectHelpers;
 
 import io.flamingock.internal.common.sql.SqlDialectFactory;
 import io.flamingock.internal.common.sql.SqlDialect;
-import io.flamingock.internal.core.external.store.lock.LockStatus;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -254,14 +253,14 @@ public final class SqlLockDialectHelper {
         }
     }
 
-    public void upsertLockEntry(Connection conn, String tableName, String key, String owner, LocalDateTime expiresAt) throws SQLException {
+    public void upsertLockEntry(Connection conn, String tableName, String key, String owner, String lockStatus, LocalDateTime expiresAt) throws SQLException {
         String sql = getInsertOrUpdateLockSqlString(tableName);
 
         if (sqlDialect == SqlDialect.DB2) {
             // UPDATE first
             try (PreparedStatement update = conn.prepareStatement(
                 "UPDATE " + tableName + " SET status = ?, owner = ?, expires_at = ? WHERE lock_key = ?")) {
-                update.setString(1, LockStatus.LOCK_HELD.name());
+                update.setString(1, lockStatus);
                 update.setString(2, owner);
                 update.setTimestamp(3, Timestamp.valueOf(expiresAt));
                 update.setString(4, key);
@@ -275,7 +274,7 @@ public final class SqlLockDialectHelper {
             try (PreparedStatement insert = conn.prepareStatement(
                 "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)")) {
                 insert.setString(1, key);
-                insert.setString(2, LockStatus.LOCK_HELD.name());
+                insert.setString(2, lockStatus);
                 insert.setString(3, owner);
                 insert.setTimestamp(4, Timestamp.valueOf(expiresAt));
                 insert.executeUpdate();
@@ -287,7 +286,7 @@ public final class SqlLockDialectHelper {
             // Try UPDATE first
             try (PreparedStatement update = conn.prepareStatement(
                 "UPDATE " + tableName + " SET status = ?, owner = ?, expires_at = ? WHERE lock_key = ?")) {
-                update.setString(1, LockStatus.LOCK_HELD.name());
+                update.setString(1, lockStatus);
                 update.setString(2, owner);
                 update.setTimestamp(3, Timestamp.valueOf(expiresAt));
                 update.setString(4, key);
@@ -301,7 +300,7 @@ public final class SqlLockDialectHelper {
             try (PreparedStatement insert = conn.prepareStatement(
                 "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)")) {
                 insert.setString(1, key);
-                insert.setString(2, LockStatus.LOCK_HELD.name());
+                insert.setString(2, lockStatus);
                 insert.setString(3, owner);
                 insert.setTimestamp(4, Timestamp.valueOf(expiresAt));
                 insert.executeUpdate();
@@ -313,12 +312,12 @@ public final class SqlLockDialectHelper {
             // For SQL Server/Sybase, use Statement and format SQL
             try (Statement stmt = conn.createStatement()) {
                 String formattedSql = sql
-                    .replaceFirst("\\?", "'" + LockStatus.LOCK_HELD.name() + "'")
+                    .replaceFirst("\\?", "'" + lockStatus + "'")
                     .replaceFirst("\\?", "'" + owner + "'")
                     .replaceFirst("\\?", "'" + Timestamp.valueOf(expiresAt) + "'")
                     .replaceFirst("\\?", "'" + key + "'")
                     .replaceFirst("\\?", "'" + key + "'")
-                    .replaceFirst("\\?", "'" + LockStatus.LOCK_HELD.name() + "'")
+                    .replaceFirst("\\?", "'" + lockStatus + "'")
                     .replaceFirst("\\?", "'" + owner + "'")
                     .replaceFirst("\\?", "'" + Timestamp.valueOf(expiresAt) + "'");
                 stmt.execute(formattedSql);
@@ -328,7 +327,7 @@ public final class SqlLockDialectHelper {
 
         if (sqlDialect == SqlDialect.FIREBIRD) {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, LockStatus.LOCK_HELD.name());
+                ps.setString(1, lockStatus);
                 ps.setString(2, owner);
                 ps.setTimestamp(3, Timestamp.valueOf(expiresAt));
                 ps.setString(4, key);
@@ -337,7 +336,7 @@ public final class SqlLockDialectHelper {
                     String insertSql = "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)";
                     try (PreparedStatement ins = conn.prepareStatement(insertSql)) {
                         ins.setString(1, key);
-                        ins.setString(2, LockStatus.LOCK_HELD.name());
+                        ins.setString(2, lockStatus);
                         ins.setString(3, owner);
                         ins.setTimestamp(4, Timestamp.valueOf(expiresAt));
                         ins.executeUpdate();
@@ -352,7 +351,7 @@ public final class SqlLockDialectHelper {
             try (PreparedStatement insert = conn.prepareStatement(
                 "INSERT INTO " + tableName + " (lock_key, status, owner, expires_at) VALUES (?, ?, ?, ?)")) {
                 insert.setString(1, key);
-                insert.setString(2, LockStatus.LOCK_HELD.name());
+                insert.setString(2, lockStatus);
                 insert.setString(3, owner);
                 insert.setTimestamp(4, Timestamp.valueOf(expiresAt));
                 insert.executeUpdate();
@@ -364,7 +363,7 @@ public final class SqlLockDialectHelper {
         // Default case for other dialects
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, key);
-            ps.setString(2, LockStatus.LOCK_HELD.name());
+            ps.setString(2, lockStatus);
             ps.setString(3, owner);
             ps.setTimestamp(4, Timestamp.valueOf(expiresAt));
             ps.executeUpdate();
