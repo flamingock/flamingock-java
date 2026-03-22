@@ -286,6 +286,6 @@ public class SqlLockService implements CommunityLockService {
 
 
     private void upsertLockEntry(Connection conn, String key, String owner, LocalDateTime expiresAt) throws SQLException {
-        dialectHelper.upsertLockEntry(conn, lockRepositoryName, key, owner, expiresAt);
+        dialectHelper.upsertLockEntry(conn, lockRepositoryName, key, owner, LockStatus.LOCK_HELD.name(), expiresAt);
     }
 }
