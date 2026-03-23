@@ -1,6 +1,7 @@
+val sqlVersion: String by extra
 dependencies {
     implementation(project(":core:flamingock-core"))
-    implementation(project(":utils:sql-util"))
+    implementation("io.flamingock:flamingock-sql-util:${sqlVersion}")
     implementation(project(":utils:test-util"))
 }
 

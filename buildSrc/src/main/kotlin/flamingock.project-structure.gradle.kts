@@ -55,8 +55,7 @@ val utilProjects = setOf(
     "test-util",
     "mongodb-util",
     "dynamodb-util",
-    "couchbase-util",
-    "sql-util"
+    "couchbase-util"
 )
 
 val legacyProjects = setOf(
