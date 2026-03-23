@@ -42,12 +42,12 @@ These modules are designed to be directly imported by end users:
 - `flamingock-graalvm` - GraalVM native image support
 
 #### Target Systems
-- `nontransactional-target-system` - Simple non-transactional execution
-- `mongodb-sync-target-system` - MongoDB sync driver target system
-- `mongodb-springdata-target-system` - Spring Data MongoDB target system
-- `sql-target-system` - SQL database target system
-- `dynamodb-target-system` - DynamoDB target system
-- `couchbase-target-system` - Couchbase target system
+- `flamingock-nontransactional-target-system` - Simple non-transactional execution
+- `flamingock-mongodb-sync-target-system` - MongoDB sync driver target system
+- `flamingock-mongodb-springdata-target-system` - Spring Data MongoDB target system
+- `flamingock-sql-target-system` - SQL database target system
+- `flamingock-dynamodb-target-system` - DynamoDB target system
+- `flamingock-couchbase-target-system` - Couchbase target system
 
 #### Audit Stores (Community Edition)
 - `flamingock-auditstore-mongodb-sync` - MongoDB sync audit store
@@ -82,10 +82,10 @@ These modules are implementation details not exposed to end users:
 - `flamingock-core-commons` - Shared internal utilities and common components
 
 #### External System APIs
-- `mongodb-external-system-api` - MongoDB system abstraction layer
-- `sql-external-system-api` - SQL system abstraction layer
-- `dynamodb-external-system-api` - DynamoDB system abstraction layer
-- `couchbase-external-system-api` - Couchbase system abstraction layer
+- `flamingock-mongodb-external-system-api` - MongoDB system abstraction layer
+- `flamingock-sql-external-system-api` - SQL system abstraction layer
+- `flamingock-dynamodb-external-system-api` - DynamoDB system abstraction layer
+- `flamingock-couchbase-external-system-api` - Couchbase system abstraction layer
 
 #### Database Utilities
 - `general-util` - General-purpose utilities shared across modules
@@ -138,10 +138,10 @@ graph TB
     %% LAYER 4: External System APIs
     subgraph L4["Layer 4: External System APIs"]
         direction LR
-        mongodb-external-system-api[mongodb-external-system-api<br/>Internal]:::internal
-        sql-external-system-api[sql-external-system-api<br/>Internal]:::internal
-        dynamodb-external-system-api[dynamodb-external-system-api<br/>Internal]:::internal
-        couchbase-external-system-api[couchbase-external-system-api<br/>Internal]:::internal
+        flamingock-mongodb-external-system-api[flamingock-mongodb-external-system-api<br/>Internal]:::internal
+        flamingock-sql-external-system-api[flamingock-sql-external-system-api<br/>Internal]:::internal
+        flamingock-dynamodb-external-system-api[flamingock-dynamodb-external-system-api<br/>Internal]:::internal
+        flamingock-couchbase-external-system-api[flamingock-couchbase-external-system-api<br/>Internal]:::internal
     end
 
     %% LAYER 5: DB Utilities
@@ -164,12 +164,12 @@ graph TB
     %% LAYER 7: Target Systems
     subgraph L7["Layer 7: Target Systems"]
         direction LR
-        nontransactional-target-system[nontransactional-target-system<br/>IBU]:::ibu
-        mongodb-sync-target-system[mongodb-sync-target-system<br/>IBU]:::ibu
-        mongodb-springdata-target-system[mongodb-springdata-target-system<br/>IBU]:::ibu
-        sql-target-system[sql-target-system<br/>IBU]:::ibu
-        dynamodb-target-system[dynamodb-target-system<br/>IBU]:::ibu
-        couchbase-target-system[couchbase-target-system<br/>IBU]:::ibu
+        flamingock-nontransactional-target-system[flamingock-nontransactional-target-system<br/>IBU]:::ibu
+        flamingock-mongodb-sync-target-system[flamingock-mongodb-sync-target-system<br/>IBU]:::ibu
+        flamingock-mongodb-springdata-target-system[flamingock-mongodb-springdata-target-system<br/>IBU]:::ibu
+        flamingock-sql-target-system[flamingock-sql-target-system<br/>IBU]:::ibu
+        flamingock-dynamodb-target-system[flamingock-dynamodb-target-system<br/>IBU]:::ibu
+        flamingock-couchbase-target-system[flamingock-couchbase-target-system<br/>IBU]:::ibu
     end
 
     %% LAYER 8: Audit Stores
@@ -219,11 +219,11 @@ graph TB
     flamingock-processor --> general-util
 
     %% Layer 4 → Layer 1 & 0
-    mongodb-external-system-api --> flamingock-core-api
-    sql-external-system-api --> flamingock-core-api
-    sql-external-system-api --> flamingock-sql-util
-    dynamodb-external-system-api --> flamingock-core-api
-    couchbase-external-system-api --> flamingock-core-api
+    flamingock-mongodb-external-system-api --> flamingock-core-api
+    flamingock-sql-external-system-api --> flamingock-core-api
+    flamingock-sql-external-system-api --> flamingock-sql-util
+    flamingock-dynamodb-external-system-api --> flamingock-core-api
+    flamingock-couchbase-external-system-api --> flamingock-core-api
 
     %% Layer 5 → Layer 3 & 0
     mongodb-util --> flamingock-core
@@ -241,51 +241,51 @@ graph TB
     mongock-importer-couchbase --> couchbase-util
 
     %% Layer 7 → Layer 3, 4, 5, 6
-    nontransactional-target-system --> flamingock-core
-    mongodb-sync-target-system --> flamingock-core
-    mongodb-sync-target-system --> mongodb-external-system-api
-    mongodb-sync-target-system --> mongodb-util
-    mongodb-sync-target-system --> mongock-importer-mongodb
-    mongodb-springdata-target-system --> flamingock-core
-    mongodb-springdata-target-system --> mongodb-external-system-api
-    mongodb-springdata-target-system --> mongodb-util
-    mongodb-springdata-target-system --> mongock-importer-mongodb
-    sql-target-system --> flamingock-core
-    sql-target-system --> sql-external-system-api
-    sql-target-system --> flamingock-sql-util
-    dynamodb-target-system --> flamingock-core
-    dynamodb-target-system --> dynamodb-external-system-api
-    dynamodb-target-system --> dynamodb-util
-    dynamodb-target-system --> mongock-importer-dynamodb
-    couchbase-target-system --> flamingock-core
-    couchbase-target-system --> couchbase-external-system-api
-    couchbase-target-system --> couchbase-util
-    couchbase-target-system --> mongock-importer-couchbase
+    flamingock-nontransactional-target-system --> flamingock-core
+    flamingock-mongodb-sync-target-system --> flamingock-core
+    flamingock-mongodb-sync-target-system --> flamingock-mongodb-external-system-api
+    flamingock-mongodb-sync-target-system --> mongodb-util
+    flamingock-mongodb-sync-target-system --> mongock-importer-mongodb
+    flamingock-mongodb-springdata-target-system --> flamingock-core
+    flamingock-mongodb-springdata-target-system --> flamingock-mongodb-external-system-api
+    flamingock-mongodb-springdata-target-system --> mongodb-util
+    flamingock-mongodb-springdata-target-system --> mongock-importer-mongodb
+    flamingock-sql-target-system --> flamingock-core
+    flamingock-sql-target-system --> flamingock-sql-external-system-api
+    flamingock-sql-target-system --> flamingock-sql-util
+    flamingock-dynamodb-target-system --> flamingock-core
+    flamingock-dynamodb-target-system --> flamingock-dynamodb-external-system-api
+    flamingock-dynamodb-target-system --> dynamodb-util
+    flamingock-dynamodb-target-system --> mongock-importer-dynamodb
+    flamingock-couchbase-target-system --> flamingock-core
+    flamingock-couchbase-target-system --> flamingock-couchbase-external-system-api
+    flamingock-couchbase-target-system --> couchbase-util
+    flamingock-couchbase-target-system --> mongock-importer-couchbase
 
     %% Layer 8 → Layer 3, 4, 5, 7
     flamingock-auditstore-mongodb-sync --> flamingock-core
-    flamingock-auditstore-mongodb-sync --> mongodb-external-system-api
+    flamingock-auditstore-mongodb-sync --> flamingock-mongodb-external-system-api
     flamingock-auditstore-mongodb-sync --> mongodb-util
     flamingock-auditstore-sql --> flamingock-core
-    flamingock-auditstore-sql --> sql-external-system-api
-    flamingock-auditstore-sql --> sql-target-system
+    flamingock-auditstore-sql --> flamingock-sql-external-system-api
+    flamingock-auditstore-sql --> flamingock-sql-target-system
     flamingock-auditstore-sql --> flamingock-sql-util
     flamingock-auditstore-dynamodb --> flamingock-core
-    flamingock-auditstore-dynamodb --> dynamodb-external-system-api
+    flamingock-auditstore-dynamodb --> flamingock-dynamodb-external-system-api
     flamingock-auditstore-dynamodb --> dynamodb-util
     flamingock-auditstore-couchbase --> flamingock-core
-    flamingock-auditstore-couchbase --> couchbase-external-system-api
+    flamingock-auditstore-couchbase --> flamingock-couchbase-external-system-api
     flamingock-auditstore-couchbase --> couchbase-util
 
     %% Layer 9 → Layer 1, 2, 3, 7, 8
     flamingock-community --> flamingock-core
     flamingock-community --> flamingock-core-api
-    flamingock-community --> nontransactional-target-system
-    flamingock-community --> mongodb-sync-target-system
-    flamingock-community --> mongodb-springdata-target-system
-    flamingock-community --> sql-target-system
-    flamingock-community --> dynamodb-target-system
-    flamingock-community --> couchbase-target-system
+    flamingock-community --> flamingock-nontransactional-target-system
+    flamingock-community --> flamingock-mongodb-sync-target-system
+    flamingock-community --> flamingock-mongodb-springdata-target-system
+    flamingock-community --> flamingock-sql-target-system
+    flamingock-community --> flamingock-dynamodb-target-system
+    flamingock-community --> flamingock-couchbase-target-system
     flamingock-community --> flamingock-auditstore-mongodb-sync
     flamingock-community --> flamingock-auditstore-sql
     flamingock-community --> flamingock-auditstore-dynamodb
@@ -340,10 +340,10 @@ This section provides a detailed layer-by-layer breakdown of module dependencies
 ### Layer 4: External System APIs
 | Module | Dependencies | Description |
 |--------|--------------|-------------|
-| `mongodb-external-system-api` | flamingock-core-api | MongoDB system abstraction layer |
-| `sql-external-system-api` | flamingock-core-api, flamingock-sql-util _(external)_ | SQL system abstraction layer |
-| `dynamodb-external-system-api` | flamingock-core-api | DynamoDB system abstraction layer |
-| `couchbase-external-system-api` | flamingock-core-api | Couchbase system abstraction layer |
+| `flamingock-mongodb-external-system-api` | flamingock-core-api | MongoDB system abstraction layer |
+| `flamingock-sql-external-system-api` | flamingock-core-api, flamingock-sql-util _(external)_ | SQL system abstraction layer |
+| `flamingock-dynamodb-external-system-api` | flamingock-core-api | DynamoDB system abstraction layer |
+| `flamingock-couchbase-external-system-api` | flamingock-core-api | Couchbase system abstraction layer |
 
 ### Layer 5: Database Utilities
 | Module | Dependencies | Description |
@@ -363,20 +363,20 @@ This section provides a detailed layer-by-layer breakdown of module dependencies
 ### Layer 7: Target Systems
 | Module | Dependencies | Description |
 |--------|--------------|-------------|
-| `nontransactional-target-system` | flamingock-core | Simple non-transactional execution |
-| `mongodb-sync-target-system` | flamingock-core, mongodb-external-system-api, mongodb-util, mongock-importer-mongodb | MongoDB sync driver target |
-| `mongodb-springdata-target-system` | flamingock-core, mongodb-external-system-api, mongodb-util, mongock-importer-mongodb | Spring Data MongoDB target |
-| `sql-target-system` | flamingock-core, sql-external-system-api, flamingock-sql-util _(external)_ | SQL database target |
-| `dynamodb-target-system` | flamingock-core, dynamodb-external-system-api, dynamodb-util, mongock-importer-dynamodb | DynamoDB target |
-| `couchbase-target-system` | flamingock-core, couchbase-external-system-api, couchbase-util, mongock-importer-couchbase | Couchbase target |
+| `flamingock-nontransactional-target-system` | flamingock-core | Simple non-transactional execution |
+| `flamingock-mongodb-sync-target-system` | flamingock-core, flamingock-mongodb-external-system-api, mongodb-util, mongock-importer-mongodb | MongoDB sync driver target |
+| `flamingock-mongodb-springdata-target-system` | flamingock-core, flamingock-mongodb-external-system-api, mongodb-util, mongock-importer-mongodb | Spring Data MongoDB target |
+| `flamingock-sql-target-system` | flamingock-core, flamingock-sql-external-system-api, flamingock-sql-util _(external)_ | SQL database target |
+| `flamingock-dynamodb-target-system` | flamingock-core, flamingock-dynamodb-external-system-api, dynamodb-util, mongock-importer-dynamodb | DynamoDB target |
+| `flamingock-couchbase-target-system` | flamingock-core, flamingock-couchbase-external-system-api, couchbase-util, mongock-importer-couchbase | Couchbase target |
 
 ### Layer 8: Audit Stores
 | Module | Dependencies | Description |
 |--------|--------------|-------------|
-| `flamingock-auditstore-mongodb-sync` | flamingock-core, mongodb-external-system-api, mongodb-util | MongoDB sync audit store |
-| `flamingock-auditstore-sql` | flamingock-core, sql-external-system-api, sql-target-system, flamingock-sql-util _(external)_ | SQL audit store |
-| `flamingock-auditstore-dynamodb` | flamingock-core, dynamodb-external-system-api, dynamodb-util | DynamoDB audit store |
-| `flamingock-auditstore-couchbase` | flamingock-core, couchbase-external-system-api, couchbase-util | Couchbase audit store |
+| `flamingock-auditstore-mongodb-sync` | flamingock-core, flamingock-mongodb-external-system-api, mongodb-util | MongoDB sync audit store |
+| `flamingock-auditstore-sql` | flamingock-core, flamingock-sql-external-system-api, flamingock-sql-target-system, flamingock-sql-util _(external)_ | SQL audit store |
+| `flamingock-auditstore-dynamodb` | flamingock-core, flamingock-dynamodb-external-system-api, dynamodb-util | DynamoDB audit store |
+| `flamingock-auditstore-couchbase` | flamingock-core, flamingock-couchbase-external-system-api, couchbase-util | Couchbase audit store |
 
 ### Layer 9: Aggregates & Platform Integration
 | Module | Dependencies | Description |
@@ -398,23 +398,23 @@ This table helps determine which modules need a version bump when a specific mod
 | If you change... | These modules are affected (need version bump) |
 |------------------|------------------------------------------------|
 | **`general-util`** | **ALL modules** (foundational dependency) |
-| **`flamingock-sql-util`** _(external)_ | sql-external-system-api, sql-target-system, flamingock-auditstore-sql |
+| **`flamingock-sql-util`** _(external)_ | flamingock-sql-external-system-api, flamingock-sql-target-system, flamingock-auditstore-sql |
 | **`flamingock-core-api`** | flamingock-core-commons, all external-system-apis, mongock-support, flamingock-community, and all modules above them |
 | **`flamingock-core-commons`** | flamingock-processor, flamingock-core, all mongock-importers, flamingock-springboot-integration, flamingock-graalvm, flamingock-springboot-test-support |
 | **`flamingock-core`** | mongodb-util, dynamodb-util, couchbase-util, mongock-support, all target-systems, all audit-stores, flamingock-community, flamingock-springboot-integration, flamingock-graalvm, flamingock-test-support, flamingock-springboot-test-support |
 | **`flamingock-processor`** | (annotation processor - typically no runtime impact on other modules) |
-| **`mongodb-util`** | mongodb-sync-target-system, mongodb-springdata-target-system, flamingock-auditstore-mongodb-sync |
-| **`dynamodb-util`** | mongock-importer-dynamodb, dynamodb-target-system, flamingock-auditstore-dynamodb |
-| **`couchbase-util`** | mongock-importer-couchbase, couchbase-target-system, flamingock-auditstore-couchbase |
-| **`mongodb-external-system-api`** | mongodb-sync-target-system, mongodb-springdata-target-system, flamingock-auditstore-mongodb-sync, flamingock-community |
-| **`sql-external-system-api`** | sql-target-system, flamingock-auditstore-sql, flamingock-community |
-| **`dynamodb-external-system-api`** | dynamodb-target-system, flamingock-auditstore-dynamodb, flamingock-community |
-| **`couchbase-external-system-api`** | couchbase-target-system, flamingock-auditstore-couchbase, flamingock-community |
-| **`mongock-importer-mongodb`** | mongodb-sync-target-system, mongodb-springdata-target-system |
-| **`mongock-importer-dynamodb`** | dynamodb-target-system |
-| **`mongock-importer-couchbase`** | couchbase-target-system |
-| **`mongodb-sync-target-system`** | flamingock-community |
-| **`sql-target-system`** | flamingock-auditstore-sql, flamingock-community |
+| **`mongodb-util`** | flamingock-mongodb-sync-target-system, flamingock-mongodb-springdata-target-system, flamingock-auditstore-mongodb-sync |
+| **`dynamodb-util`** | mongock-importer-dynamodb, flamingock-dynamodb-target-system, flamingock-auditstore-dynamodb |
+| **`couchbase-util`** | mongock-importer-couchbase, flamingock-couchbase-target-system, flamingock-auditstore-couchbase |
+| **`flamingock-mongodb-external-system-api`** | flamingock-mongodb-sync-target-system, flamingock-mongodb-springdata-target-system, flamingock-auditstore-mongodb-sync, flamingock-community |
+| **`flamingock-sql-external-system-api`** | flamingock-sql-target-system, flamingock-auditstore-sql, flamingock-community |
+| **`flamingock-dynamodb-external-system-api`** | flamingock-dynamodb-target-system, flamingock-auditstore-dynamodb, flamingock-community |
+| **`flamingock-couchbase-external-system-api`** | flamingock-couchbase-target-system, flamingock-auditstore-couchbase, flamingock-community |
+| **`mongock-importer-mongodb`** | flamingock-mongodb-sync-target-system, flamingock-mongodb-springdata-target-system |
+| **`mongock-importer-dynamodb`** | flamingock-dynamodb-target-system |
+| **`mongock-importer-couchbase`** | flamingock-couchbase-target-system |
+| **`flamingock-mongodb-sync-target-system`** | flamingock-community |
+| **`flamingock-sql-target-system`** | flamingock-auditstore-sql, flamingock-community |
 | **`flamingock-auditstore-*`** | flamingock-community |
 | **`flamingock-community`** | (top-level aggregate - no dependents in scope) |
 | **`flamingock-test-support`** | flamingock-springboot-test-support |
@@ -497,25 +497,25 @@ graph TB
 
     User[User Application]:::external
     User -->|imports| flamingock-auditstore-mongodb-sync
-    User -->|imports| mongodb-sync-target-system
+    User -->|imports| flamingock-mongodb-sync-target-system
 
     flamingock-auditstore-mongodb-sync[flamingock-auditstore-mongodb-sync<br/>IBU]:::ibu
-    mongodb-sync-target-system[mongodb-sync-target-system<br/>IBU]:::ibu
-    mongodb-external-system-api[mongodb-external-system-api<br/>Internal]:::internal
+    flamingock-mongodb-sync-target-system[flamingock-mongodb-sync-target-system<br/>IBU]:::ibu
+    flamingock-mongodb-external-system-api[flamingock-mongodb-external-system-api<br/>Internal]:::internal
     flamingock-core[flamingock-core<br/>Internal]:::internal
     mongodb-util[mongodb-util<br/>Internal]:::internal
     mongock-importer-mongodb[mongock-importer-mongodb<br/>Internal]:::internal
     MongoDriver[MongoDB Driver<br/>4.0.0+]:::external
 
     flamingock-auditstore-mongodb-sync -->|impl| flamingock-core
-    flamingock-auditstore-mongodb-sync -->|api| mongodb-external-system-api
+    flamingock-auditstore-mongodb-sync -->|api| flamingock-mongodb-external-system-api
     flamingock-auditstore-mongodb-sync -->|impl| mongodb-util
     flamingock-auditstore-mongodb-sync -.->|compileOnly| MongoDriver
-    mongodb-sync-target-system -->|api| flamingock-core
-    mongodb-sync-target-system -->|api| mongodb-external-system-api
-    mongodb-sync-target-system -->|impl| mongodb-util
-    mongodb-sync-target-system -->|impl| mongock-importer-mongodb
-    mongodb-sync-target-system -.->|compileOnly| MongoDriver
+    flamingock-mongodb-sync-target-system -->|api| flamingock-core
+    flamingock-mongodb-sync-target-system -->|api| flamingock-mongodb-external-system-api
+    flamingock-mongodb-sync-target-system -->|impl| mongodb-util
+    flamingock-mongodb-sync-target-system -->|impl| mongock-importer-mongodb
+    flamingock-mongodb-sync-target-system -.->|compileOnly| MongoDriver
 ```
 
 ### Spring Data MongoDB Community Edition
@@ -527,24 +527,24 @@ graph TB
     classDef external fill:#f1f8e9,stroke:#33691e,stroke-width:1px
 
     User[User Application]:::external
-    User -->|imports| mongodb-springdata-target-system
+    User -->|imports| flamingock-mongodb-springdata-target-system
     User -->|imports| flamingock-auditstore-mongodb-sync
 
-    mongodb-springdata-target-system[mongodb-springdata-target-system<br/>IBU]:::ibu
+    flamingock-mongodb-springdata-target-system[flamingock-mongodb-springdata-target-system<br/>IBU]:::ibu
     flamingock-auditstore-mongodb-sync[flamingock-auditstore-mongodb-sync<br/>IBU]:::ibu
-    mongodb-external-system-api[mongodb-external-system-api<br/>Internal]:::internal
+    flamingock-mongodb-external-system-api[flamingock-mongodb-external-system-api<br/>Internal]:::internal
     flamingock-core[flamingock-core<br/>Internal]:::internal
     mongodb-util[mongodb-util<br/>Internal]:::internal
     mongock-importer-mongodb[mongock-importer-mongodb<br/>Internal]:::internal
     MongoDriver[MongoDB Driver<br/>4.0.0+]:::external
     SpringData[Spring Data MongoDB<br/>3.1.4+]:::external
 
-    mongodb-springdata-target-system -->|api| flamingock-core
-    mongodb-springdata-target-system -->|api| mongodb-external-system-api
-    mongodb-springdata-target-system -->|impl| mongodb-util
-    mongodb-springdata-target-system -->|impl| mongock-importer-mongodb
-    mongodb-springdata-target-system -.->|compileOnly| MongoDriver
-    mongodb-springdata-target-system -.->|compileOnly| SpringData
+    flamingock-mongodb-springdata-target-system -->|api| flamingock-core
+    flamingock-mongodb-springdata-target-system -->|api| flamingock-mongodb-external-system-api
+    flamingock-mongodb-springdata-target-system -->|impl| mongodb-util
+    flamingock-mongodb-springdata-target-system -->|impl| mongock-importer-mongodb
+    flamingock-mongodb-springdata-target-system -.->|compileOnly| MongoDriver
+    flamingock-mongodb-springdata-target-system -.->|compileOnly| SpringData
 ```
 
 ### SQL Community Edition
@@ -557,22 +557,22 @@ graph TB
 
     User[User Application]:::external
     User -->|imports| flamingock-auditstore-sql
-    User -->|imports| sql-target-system
+    User -->|imports| flamingock-sql-target-system
 
     flamingock-auditstore-sql[flamingock-auditstore-sql<br/>IBU]:::ibu
-    sql-target-system[sql-target-system<br/>IBU]:::ibu
-    sql-external-system-api[sql-external-system-api<br/>Internal]:::internal
+    flamingock-sql-target-system[flamingock-sql-target-system<br/>IBU]:::ibu
+    flamingock-sql-external-system-api[flamingock-sql-external-system-api<br/>Internal]:::internal
     flamingock-core[flamingock-core<br/>Internal]:::internal
     flamingock-sql-util[flamingock-sql-util<br/>External]:::external
     JDBC[JDBC Driver<br/>MySQL/PostgreSQL/Oracle/etc]:::external
 
     flamingock-auditstore-sql -->|api| flamingock-core
-    flamingock-auditstore-sql -->|api| sql-external-system-api
-    flamingock-auditstore-sql -->|api| sql-target-system
+    flamingock-auditstore-sql -->|api| flamingock-sql-external-system-api
+    flamingock-auditstore-sql -->|api| flamingock-sql-target-system
     flamingock-auditstore-sql -->|impl| flamingock-sql-util
-    sql-target-system -->|api| flamingock-core
-    sql-target-system -->|impl| sql-external-system-api
-    sql-target-system -->|impl| flamingock-sql-util
+    flamingock-sql-target-system -->|api| flamingock-core
+    flamingock-sql-target-system -->|impl| flamingock-sql-external-system-api
+    flamingock-sql-target-system -->|impl| flamingock-sql-util
 ```
 
 ### DynamoDB Community Edition
@@ -585,25 +585,25 @@ graph TB
 
     User[User Application]:::external
     User -->|imports| flamingock-auditstore-dynamodb
-    User -->|imports| dynamodb-target-system
+    User -->|imports| flamingock-dynamodb-target-system
 
     flamingock-auditstore-dynamodb[flamingock-auditstore-dynamodb<br/>IBU]:::ibu
-    dynamodb-target-system[dynamodb-target-system<br/>IBU]:::ibu
-    dynamodb-external-system-api[dynamodb-external-system-api<br/>Internal]:::internal
+    flamingock-dynamodb-target-system[flamingock-dynamodb-target-system<br/>IBU]:::ibu
+    flamingock-dynamodb-external-system-api[flamingock-dynamodb-external-system-api<br/>Internal]:::internal
     flamingock-core[flamingock-core<br/>Internal]:::internal
     dynamodb-util[dynamodb-util<br/>Internal]:::internal
     mongock-importer-dynamodb[mongock-importer-dynamodb<br/>Internal]:::internal
     AWSSDK[AWS SDK DynamoDB Enhanced<br/>2.25.x]:::external
 
     flamingock-auditstore-dynamodb -->|impl| flamingock-core
-    flamingock-auditstore-dynamodb -->|api| dynamodb-external-system-api
+    flamingock-auditstore-dynamodb -->|api| flamingock-dynamodb-external-system-api
     flamingock-auditstore-dynamodb -->|impl| dynamodb-util
     flamingock-auditstore-dynamodb -.->|compileOnly| AWSSDK
-    dynamodb-target-system -->|api| flamingock-core
-    dynamodb-target-system -->|api| dynamodb-external-system-api
-    dynamodb-target-system -->|impl| dynamodb-util
-    dynamodb-target-system -->|impl| mongock-importer-dynamodb
-    dynamodb-target-system -.->|compileOnly| AWSSDK
+    flamingock-dynamodb-target-system -->|api| flamingock-core
+    flamingock-dynamodb-target-system -->|api| flamingock-dynamodb-external-system-api
+    flamingock-dynamodb-target-system -->|impl| dynamodb-util
+    flamingock-dynamodb-target-system -->|impl| mongock-importer-dynamodb
+    flamingock-dynamodb-target-system -.->|compileOnly| AWSSDK
 ```
 
 ### Couchbase Community Edition
@@ -616,25 +616,25 @@ graph TB
 
     User[User Application]:::external
     User -->|imports| flamingock-auditstore-couchbase
-    User -->|imports| couchbase-target-system
+    User -->|imports| flamingock-couchbase-target-system
 
     flamingock-auditstore-couchbase[flamingock-auditstore-couchbase<br/>IBU]:::ibu
-    couchbase-target-system[couchbase-target-system<br/>IBU]:::ibu
-    couchbase-external-system-api[couchbase-external-system-api<br/>Internal]:::internal
+    flamingock-couchbase-target-system[flamingock-couchbase-target-system<br/>IBU]:::ibu
+    flamingock-couchbase-external-system-api[flamingock-couchbase-external-system-api<br/>Internal]:::internal
     flamingock-core[flamingock-core<br/>Internal]:::internal
     couchbase-util[couchbase-util<br/>Internal]:::internal
     mongock-importer-couchbase[mongock-importer-couchbase<br/>Internal]:::internal
     CouchbaseClient[Couchbase Client<br/>3.6.0+]:::external
 
     flamingock-auditstore-couchbase -->|api| flamingock-core
-    flamingock-auditstore-couchbase -->|api| couchbase-external-system-api
+    flamingock-auditstore-couchbase -->|api| flamingock-couchbase-external-system-api
     flamingock-auditstore-couchbase -->|impl| couchbase-util
     flamingock-auditstore-couchbase -.->|compileOnly| CouchbaseClient
-    couchbase-target-system -->|api| flamingock-core
-    couchbase-target-system -->|api| couchbase-external-system-api
-    couchbase-target-system -->|impl| couchbase-util
-    couchbase-target-system -->|impl| mongock-importer-couchbase
-    couchbase-target-system -.->|compileOnly| CouchbaseClient
+    flamingock-couchbase-target-system -->|api| flamingock-core
+    flamingock-couchbase-target-system -->|api| flamingock-couchbase-external-system-api
+    flamingock-couchbase-target-system -->|impl| couchbase-util
+    flamingock-couchbase-target-system -->|impl| mongock-importer-couchbase
+    flamingock-couchbase-target-system -.->|compileOnly| CouchbaseClient
 ```
 
 

@@ -85,49 +85,25 @@ project(":platform-plugins:flamingock-springboot-test-support").projectDir =
 // TARGET SYSTEMS
 //////////////////////////////////////
 
-include("core:target-systems:nontransactional-target-system")
-project(":core:target-systems:nontransactional-target-system").projectDir =
-    file("core/target-systems/nontransactional-target-system")
-project(":core:target-systems:nontransactional-target-system").name = "nontransactional-target-system"
+include("core:target-systems:flamingock-nontransactional-target-system")
 
-include("core:target-systems:mongodb-external-system-api")
-project(":core:target-systems:mongodb-external-system-api").projectDir =
-    file("core/target-systems/mongodb-external-system-api")
-project(":core:target-systems:mongodb-external-system-api").name = "mongodb-external-system-api"
+include("core:target-systems:flamingock-mongodb-external-system-api")
 
-include("core:target-systems:mongodb-sync-target-system")
-project(":core:target-systems:mongodb-sync-target-system").projectDir =
-    file("core/target-systems/mongodb-sync-target-system")
-project(":core:target-systems:mongodb-sync-target-system").name = "mongodb-sync-target-system"
+include("core:target-systems:flamingock-mongodb-sync-target-system")
 
-include("core:target-systems:mongodb-springdata-target-system")
-project(":core:target-systems:mongodb-springdata-target-system").projectDir =
-    file("core/target-systems/mongodb-springdata-target-system")
-project(":core:target-systems:mongodb-springdata-target-system").name = "mongodb-springdata-target-system"
+include("core:target-systems:flamingock-mongodb-springdata-target-system")
 
-include("core:target-systems:sql-external-system-api")
-project(":core:target-systems:sql-external-system-api").projectDir = file("core/target-systems/sql-external-system-api")
-project(":core:target-systems:sql-external-system-api").name = "sql-external-system-api"
+include("core:target-systems:flamingock-sql-external-system-api")
 
-include("core:target-systems:sql-target-system")
-project(":core:target-systems:sql-target-system").projectDir = file("core/target-systems/sql-target-system")
-project(":core:target-systems:sql-target-system").name = "sql-target-system"
+include("core:target-systems:flamingock-sql-target-system")
 
-include("core:target-systems:dynamodb-external-system-api")
-project(":core:target-systems:dynamodb-external-system-api").projectDir = file("core/target-systems/dynamodb-external-system-api")
-project(":core:target-systems:dynamodb-external-system-api").name = "dynamodb-external-system-api"
+include("core:target-systems:flamingock-dynamodb-external-system-api")
 
-include("core:target-systems:dynamodb-target-system")
-project(":core:target-systems:dynamodb-target-system").projectDir = file("core/target-systems/dynamodb-target-system")
-project(":core:target-systems:dynamodb-target-system").name = "dynamodb-target-system"
+include("core:target-systems:flamingock-dynamodb-target-system")
 
-include("core:target-systems:couchbase-external-system-api")
-project(":core:target-systems:couchbase-external-system-api").projectDir = file("core/target-systems/couchbase-external-system-api")
-project(":core:target-systems:couchbase-external-system-api").name = "couchbase-external-system-api"
+include("core:target-systems:flamingock-couchbase-external-system-api")
 
-include("core:target-systems:couchbase-target-system")
-project(":core:target-systems:couchbase-target-system").projectDir = file("core/target-systems/couchbase-target-system")
-project(":core:target-systems:couchbase-target-system").name = "couchbase-target-system"
+include("core:target-systems:flamingock-couchbase-target-system")
 
 
 //////////////////////////////////////

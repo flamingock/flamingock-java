@@ -7,6 +7,18 @@ dependencies {
         // Add constraints for BOM managed modules
         api("io.flamingock:flamingock-cloud:${version}")
         api("io.flamingock:flamingock-test-support:${version}")
+
+        //target systems
+        api("io.flamingock:flamingock-nontransactional-target-system:${version}")
+        api("io.flamingock:flamingock-mongodb-external-system-api:${version}")
+        api("io.flamingock:flamingock-mongodb-sync-target-system:${version}")
+        api("io.flamingock:flamingock-mongodb-springdata-target-system:${version}")
+        api("io.flamingock:flamingock-sql-external-system-api:${version}")
+        api("io.flamingock:flamingock-sql-target-system:${version}")
+        api("io.flamingock:flamingock-dynamodb-external-system-api:${version}")
+        api("io.flamingock:flamingock-dynamodb-target-system:${version}")
+        api("io.flamingock:flamingock-couchbase-external-system-api:${version}")
+        api("io.flamingock:flamingock-couchbase-target-system:${version}")
         api("io.flamingock:flamingock-sql-template:$version")
         api("io.flamingock:flamingock-mongodb-sync-template:${version}")
         api("io.flamingock:flamingock-springboot-integration:${version}")

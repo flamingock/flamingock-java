@@ -173,7 +173,7 @@ dependencies {
 dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
-    api(project(":core:target-systems:mongodb-sync-target-system"))
+    api(project(":core:target-systems:flamingock-mongodb-sync-target-system"))
     api(project(":community:flamingock-community"))
     
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
@@ -237,7 +237,7 @@ dependencies {
 
 ### Transactioners
 
-#### `mongodb-sync-target-system`
+#### `flamingock-mongodb-sync-target-system`
 ```gradle
 dependencies {
     api(project(":core:flamingock-core"))

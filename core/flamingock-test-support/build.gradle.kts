@@ -8,7 +8,7 @@ dependencies {
 
     // Add test utilities from the repository so tests can use InMemoryTestKit and pipeline helpers
     testImplementation(project(":utils:test-util"))
-    testImplementation(project(":core:target-systems:nontransactional-target-system"))
+    testImplementation(project(":core:target-systems:flamingock-nontransactional-target-system"))
     api("org.mockito:mockito-inline:4.11.0")
 }
 
