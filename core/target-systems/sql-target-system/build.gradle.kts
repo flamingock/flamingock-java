@@ -1,11 +1,13 @@
 import org.jetbrains.kotlin.gradle.utils.extendsFrom
 import java.time.Duration
 
+val sqlVersion: String by extra
+
 dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
     implementation(project(":core:target-systems:sql-external-system-api"))
-    implementation(project(":utils:sql-util"))
+    implementation("io.flamingock:flamingock-sql-util:${sqlVersion}")
 
     //Test
     testImplementation("org.testcontainers:testcontainers-mysql:2.0.2")

@@ -89,7 +89,7 @@ These modules are implementation details not exposed to end users:
 
 #### Database Utilities
 - `general-util` - General-purpose utilities shared across modules
-- `sql-util` - SQL utilities and dialect helpers
+- `flamingock-sql-util` _(external: `io.flamingock:flamingock-sql-util`)_ - SQL utilities and dialect helpers
 - `mongodb-util` - MongoDB-specific utilities
 - `dynamodb-util` - DynamoDB-specific utilities
 - `couchbase-util` - Couchbase-specific utilities
@@ -115,7 +115,7 @@ graph TB
     subgraph L0["Layer 0: Foundation"]
         direction LR
         general-util[general-util<br/>Internal]:::internal
-        sql-util[sql-util<br/>Internal]:::internal
+        flamingock-sql-util[flamingock-sql-util<br/>External]:::external
     end
 
     %% LAYER 1: Core API
@@ -221,7 +221,7 @@ graph TB
     %% Layer 4 → Layer 1 & 0
     mongodb-external-system-api --> flamingock-core-api
     sql-external-system-api --> flamingock-core-api
-    sql-external-system-api --> sql-util
+    sql-external-system-api --> flamingock-sql-util
     dynamodb-external-system-api --> flamingock-core-api
     couchbase-external-system-api --> flamingock-core-api
 
@@ -252,7 +252,7 @@ graph TB
     mongodb-springdata-target-system --> mongock-importer-mongodb
     sql-target-system --> flamingock-core
     sql-target-system --> sql-external-system-api
-    sql-target-system --> sql-util
+    sql-target-system --> flamingock-sql-util
     dynamodb-target-system --> flamingock-core
     dynamodb-target-system --> dynamodb-external-system-api
     dynamodb-target-system --> dynamodb-util
@@ -269,7 +269,7 @@ graph TB
     flamingock-auditstore-sql --> flamingock-core
     flamingock-auditstore-sql --> sql-external-system-api
     flamingock-auditstore-sql --> sql-target-system
-    flamingock-auditstore-sql --> sql-util
+    flamingock-auditstore-sql --> flamingock-sql-util
     flamingock-auditstore-dynamodb --> flamingock-core
     flamingock-auditstore-dynamodb --> dynamodb-external-system-api
     flamingock-auditstore-dynamodb --> dynamodb-util
@@ -319,7 +319,7 @@ This section provides a detailed layer-by-layer breakdown of module dependencies
 | Module | Description |
 |--------|-------------|
 | `general-util` | General-purpose utilities shared across all modules |
-| `sql-util` | SQL utilities and dialect helpers for database operations |
+| `flamingock-sql-util` _(external)_ | SQL utilities and dialect helpers for database operations |
 
 ### Layer 1: Core API
 | Module | Dependencies | Description |
@@ -341,7 +341,7 @@ This section provides a detailed layer-by-layer breakdown of module dependencies
 | Module | Dependencies | Description |
 |--------|--------------|-------------|
 | `mongodb-external-system-api` | flamingock-core-api | MongoDB system abstraction layer |
-| `sql-external-system-api` | flamingock-core-api, sql-util | SQL system abstraction layer |
+| `sql-external-system-api` | flamingock-core-api, flamingock-sql-util _(external)_ | SQL system abstraction layer |
 | `dynamodb-external-system-api` | flamingock-core-api | DynamoDB system abstraction layer |
 | `couchbase-external-system-api` | flamingock-core-api | Couchbase system abstraction layer |
 
@@ -366,7 +366,7 @@ This section provides a detailed layer-by-layer breakdown of module dependencies
 | `nontransactional-target-system` | flamingock-core | Simple non-transactional execution |
 | `mongodb-sync-target-system` | flamingock-core, mongodb-external-system-api, mongodb-util, mongock-importer-mongodb | MongoDB sync driver target |
 | `mongodb-springdata-target-system` | flamingock-core, mongodb-external-system-api, mongodb-util, mongock-importer-mongodb | Spring Data MongoDB target |
-| `sql-target-system` | flamingock-core, sql-external-system-api, sql-util | SQL database target |
+| `sql-target-system` | flamingock-core, sql-external-system-api, flamingock-sql-util _(external)_ | SQL database target |
 | `dynamodb-target-system` | flamingock-core, dynamodb-external-system-api, dynamodb-util, mongock-importer-dynamodb | DynamoDB target |
 | `couchbase-target-system` | flamingock-core, couchbase-external-system-api, couchbase-util, mongock-importer-couchbase | Couchbase target |
 
@@ -374,7 +374,7 @@ This section provides a detailed layer-by-layer breakdown of module dependencies
 | Module | Dependencies | Description |
 |--------|--------------|-------------|
 | `flamingock-auditstore-mongodb-sync` | flamingock-core, mongodb-external-system-api, mongodb-util | MongoDB sync audit store |
-| `flamingock-auditstore-sql` | flamingock-core, sql-external-system-api, sql-target-system, sql-util | SQL audit store |
+| `flamingock-auditstore-sql` | flamingock-core, sql-external-system-api, sql-target-system, flamingock-sql-util _(external)_ | SQL audit store |
 | `flamingock-auditstore-dynamodb` | flamingock-core, dynamodb-external-system-api, dynamodb-util | DynamoDB audit store |
 | `flamingock-auditstore-couchbase` | flamingock-core, couchbase-external-system-api, couchbase-util | Couchbase audit store |
 
@@ -398,7 +398,7 @@ This table helps determine which modules need a version bump when a specific mod
 | If you change... | These modules are affected (need version bump) |
 |------------------|------------------------------------------------|
 | **`general-util`** | **ALL modules** (foundational dependency) |
-| **`sql-util`** | sql-external-system-api, sql-target-system, flamingock-auditstore-sql |
+| **`flamingock-sql-util`** _(external)_ | sql-external-system-api, sql-target-system, flamingock-auditstore-sql |
 | **`flamingock-core-api`** | flamingock-core-commons, all external-system-apis, mongock-support, flamingock-community, and all modules above them |
 | **`flamingock-core-commons`** | flamingock-processor, flamingock-core, all mongock-importers, flamingock-springboot-integration, flamingock-graalvm, flamingock-springboot-test-support |
 | **`flamingock-core`** | mongodb-util, dynamodb-util, couchbase-util, mongock-support, all target-systems, all audit-stores, flamingock-community, flamingock-springboot-integration, flamingock-graalvm, flamingock-test-support, flamingock-springboot-test-support |
@@ -563,16 +563,16 @@ graph TB
     sql-target-system[sql-target-system<br/>IBU]:::ibu
     sql-external-system-api[sql-external-system-api<br/>Internal]:::internal
     flamingock-core[flamingock-core<br/>Internal]:::internal
-    sql-util[sql-util<br/>Internal]:::internal
+    flamingock-sql-util[flamingock-sql-util<br/>External]:::external
     JDBC[JDBC Driver<br/>MySQL/PostgreSQL/Oracle/etc]:::external
 
     flamingock-auditstore-sql -->|api| flamingock-core
     flamingock-auditstore-sql -->|api| sql-external-system-api
     flamingock-auditstore-sql -->|api| sql-target-system
-    flamingock-auditstore-sql -->|impl| sql-util
+    flamingock-auditstore-sql -->|impl| flamingock-sql-util
     sql-target-system -->|api| flamingock-core
     sql-target-system -->|impl| sql-external-system-api
-    sql-target-system -->|impl| sql-util
+    sql-target-system -->|impl| flamingock-sql-util
 ```
 
 ### DynamoDB Community Edition
@@ -643,7 +643,7 @@ graph TB
 ### Core Dependencies
 - Everything flows through `flamingock-core` and `flamingock-core-commons`
 - `flamingock-core-api` provides stable APIs for users (`@Change`, `@Apply`, etc.)
-- `general-util` and `sql-util` provide foundational shared functionality
+- `general-util` provides foundational shared functionality; `flamingock-sql-util` is now an external artifact (`io.flamingock:flamingock-sql-util`)
 
 ### External System APIs
 - Each database technology has a dedicated external-system-api module

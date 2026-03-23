@@ -1,12 +1,14 @@
 import java.time.Duration
 
+val sqlVersion: String by extra
+
 dependencies {
     api(project(":core:flamingock-core"))
 
     api(project(":core:target-systems:sql-external-system-api"))
 
     api(project(":core:target-systems:sql-target-system"))
-    implementation(project(":utils:sql-util"))
+    implementation("io.flamingock:flamingock-sql-util:${sqlVersion}")
 
     testImplementation(project(":core:target-systems:sql-external-system-api"))
     testImplementation("mysql:mysql-connector-java:8.0.33")
@@ -20,6 +22,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
     testImplementation("org.testcontainers:testcontainers-mariadb:2.0.2")
     testImplementation(project(":utils:test-util"))
+    testImplementation("io.flamingock:flamingock-sql-test-util:${sqlVersion}")
     testImplementation(project(":utils:sql-test-kit"))
     testImplementation("com.zaxxer:HikariCP:3.4.5")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
