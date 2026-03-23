@@ -42,12 +42,12 @@ The Flamingock release system is designed to publish 25 different modules to Mav
 - flamingock-springboot-integration
 
 **Target Systems (6 modules):**
-- nontransactional-target-system
-- mongodb-sync-target-system
-- mongodb-springdata-target-system
-- sql-target-system
-- dynamodb-target-system
-- couchbase-target-system
+- flamingock-nontransactional-target-system
+- flamingock-mongodb-sync-target-system
+- flamingock-mongodb-springdata-target-system
+- flamingock-sql-target-system
+- flamingock-dynamodb-target-system
+- flamingock-couchbase-target-system
 
 **Templates (2 modules, but not published for now):**
 - flamingock-sql-template

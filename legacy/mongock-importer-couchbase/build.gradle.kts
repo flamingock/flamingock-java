@@ -9,7 +9,7 @@ dependencies {
     testAnnotationProcessor(project(":core:flamingock-processor"))
     testAnnotationProcessor(project(":legacy:mongock-support"))
     testImplementation(project(":legacy:mongock-support"))
-    testImplementation(project(":core:target-systems:couchbase-target-system"))
+    testImplementation(project(":core:target-systems:flamingock-couchbase-target-system"))
 
     testImplementation(project(":community:flamingock-auditstore-couchbase"))
     testImplementation(project(":utils:couchbase-util"))

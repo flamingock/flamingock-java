@@ -11,7 +11,7 @@ dependencies {
     api(project(":core:flamingock-core"))
     implementation(project(":utils:mongodb-util"))
     implementation(project(":legacy:mongock-importer-mongodb"))
-    api(project(":core:target-systems:mongodb-external-system-api"))
+    api(project(":core:target-systems:flamingock-mongodb-external-system-api"))
 
     //General
     compileOnly("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")
