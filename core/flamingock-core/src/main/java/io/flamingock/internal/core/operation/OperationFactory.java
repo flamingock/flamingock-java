@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.context.ContextResolver;
+import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.common.core.recovery.Resolution;
 import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
@@ -31,6 +32,7 @@ import io.flamingock.internal.core.operation.audit.AuditListResult;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
 import io.flamingock.internal.core.operation.execute.ExecuteOperation;
 import io.flamingock.internal.core.operation.execute.ExecuteResult;
+import io.flamingock.internal.core.operation.execute.ValidateOperation;
 import io.flamingock.internal.core.operation.issue.IssueGetArgs;
 import io.flamingock.internal.core.operation.issue.IssueGetOperation;
 import io.flamingock.internal.core.operation.issue.IssueGetResult;
@@ -95,9 +97,15 @@ public class OperationFactory {
     }
 
     public RunnableOperation<?, ?> getOperation() {
-        switch (flamingockArgs.getOperation()) {
+        OperationType operationType = flamingockArgs.getOperation();
+        if (operationType == OperationType.EXECUTE_APPLY && coreConfiguration.isValidationOnly()) {
+            operationType = OperationType.EXECUTE_VALIDATE;
+        }
+        switch (operationType) {
             case EXECUTE_APPLY:
                 return getExecuteOperation();
+            case EXECUTE_VALIDATE:
+                return getValidateOperation();
             case AUDIT_LIST:
                 return getAuditListOperation();
             case AUDIT_FIX:
@@ -107,7 +115,7 @@ public class OperationFactory {
             case ISSUE_GET:
                 return getIssueGetOperation();
             default:
-                throw new UnsupportedOperationException(String.format("Operation %s not supported", flamingockArgs.getOperation()));
+                throw new UnsupportedOperationException(String.format("Operation %s not supported", operationType));
         }
     }
 
@@ -151,6 +159,16 @@ public class OperationFactory {
                 isThrowExceptionIfCannotObtainLock,
                 finalizer);
         return new RunnableOperation<>(executeOperation, new ExecuteArgs(pipeline));
+    }
+
+    private RunnableOperation<ExecuteArgs, ExecuteResult> getValidateOperation() {
+        ValidateOperation validateOperation = new ValidateOperation(
+                runnerId,
+                executionPlanner,
+                eventPublisher,
+                isThrowExceptionIfCannotObtainLock,
+                finalizer);
+        return new RunnableOperation<>(validateOperation, new ExecuteArgs(pipeline));
     }
 
     private static OrphanExecutionContext buildExecutionContext(CoreConfigurable configuration) {

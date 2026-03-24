@@ -359,6 +359,15 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         return getSelf();
     }
 
+    public HOLDER setValidationOnly(boolean validationOnly) {
+        coreConfiguration.setValidationOnly(validationOnly);
+        return getSelf();
+    }
+
+    public boolean isValidationOnly() {
+        return coreConfiguration.isValidationOnly();
+    }
+
     @Override
     public HOLDER setServiceIdentifier(String serviceIdentifier) {
         coreConfiguration.setServiceIdentifier(serviceIdentifier);
