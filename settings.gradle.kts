@@ -52,22 +52,22 @@ include("community:flamingock-community-bom")
 project(":community:flamingock-community-bom").name = "flamingock-community-bom"
 project(":community:flamingock-community-bom").projectDir = file("community/flamingock-community-bom")
 
-include("community:flamingock-auditstore-mongodb-sync")
-project(":community:flamingock-auditstore-mongodb-sync").name = "flamingock-auditstore-mongodb-sync"
-project(":community:flamingock-auditstore-mongodb-sync").projectDir =
-    file("community/flamingock-auditstore-mongodb-sync")
+include("community:flamingock-mongodb-sync-auditstore")
+project(":community:flamingock-mongodb-sync-auditstore").name = "flamingock-mongodb-sync-auditstore"
+project(":community:flamingock-mongodb-sync-auditstore").projectDir =
+    file("community/flamingock-mongodb-sync-auditstore")
 
-include("community:flamingock-auditstore-couchbase")
-project(":community:flamingock-auditstore-couchbase").name = "flamingock-auditstore-couchbase"
-project(":community:flamingock-auditstore-couchbase").projectDir = file("community/flamingock-auditstore-couchbase")
+include("community:flamingock-couchbase-auditstore")
+project(":community:flamingock-couchbase-auditstore").name = "flamingock-couchbase-auditstore"
+project(":community:flamingock-couchbase-auditstore").projectDir = file("community/flamingock-couchbase-auditstore")
 
-include("community:flamingock-auditstore-dynamodb")
-project(":community:flamingock-auditstore-dynamodb").name = "flamingock-auditstore-dynamodb"
-project(":community:flamingock-auditstore-dynamodb").projectDir = file("community/flamingock-auditstore-dynamodb")
+include("community:flamingock-dynamodb-auditstore")
+project(":community:flamingock-dynamodb-auditstore").name = "flamingock-dynamodb-auditstore"
+project(":community:flamingock-dynamodb-auditstore").projectDir = file("community/flamingock-dynamodb-auditstore")
 
-include("community:flamingock-auditstore-sql")
-project(":community:flamingock-auditstore-sql").name = "flamingock-auditstore-sql"
-project(":community:flamingock-auditstore-sql").projectDir = file("community/flamingock-auditstore-sql")
+include("community:flamingock-sql-auditstore")
+project(":community:flamingock-sql-auditstore").name = "flamingock-sql-auditstore"
+project(":community:flamingock-sql-auditstore").projectDir = file("community/flamingock-sql-auditstore")
 
 //////////////////////////////////////
 // PLUGINS
@@ -85,25 +85,25 @@ project(":platform-plugins:flamingock-springboot-test-support").projectDir =
 // TARGET SYSTEMS
 //////////////////////////////////////
 
-include("core:target-systems:flamingock-nontransactional-target-system")
+include("core:target-systems:flamingock-nontransactional-targetsystem")
 
-include("core:target-systems:flamingock-mongodb-external-system-api")
+include("core:target-systems:flamingock-mongodb-externalsystem-api")
 
-include("core:target-systems:flamingock-mongodb-sync-target-system")
+include("core:target-systems:flamingock-mongodb-sync-targetsystem")
 
-include("core:target-systems:flamingock-mongodb-springdata-target-system")
+include("core:target-systems:flamingock-mongodb-springdata-targetsystem")
 
-include("core:target-systems:flamingock-sql-external-system-api")
+include("core:target-systems:flamingock-sql-externalsystem-api")
 
-include("core:target-systems:flamingock-sql-target-system")
+include("core:target-systems:flamingock-sql-targetsystem")
 
-include("core:target-systems:flamingock-dynamodb-external-system-api")
+include("core:target-systems:flamingock-dynamodb-externalsystem-api")
 
-include("core:target-systems:flamingock-dynamodb-target-system")
+include("core:target-systems:flamingock-dynamodb-targetsystem")
 
-include("core:target-systems:flamingock-couchbase-external-system-api")
+include("core:target-systems:flamingock-couchbase-externalsystem-api")
 
-include("core:target-systems:flamingock-couchbase-target-system")
+include("core:target-systems:flamingock-couchbase-targetsystem")
 
 
 //////////////////////////////////////

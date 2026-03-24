@@ -22,10 +22,10 @@ val cloudProjects = setOf(
 val communityProjects = setOf(
     "flamingock-community-bom",
     "flamingock-community",
-    "flamingock-auditstore-mongodb-sync",
-    "flamingock-auditstore-couchbase",
-    "flamingock-auditstore-dynamodb",
-    "flamingock-auditstore-sql",
+    "flamingock-mongodb-sync-auditstore",
+    "flamingock-couchbase-auditstore",
+    "flamingock-dynamodb-auditstore",
+    "flamingock-sql-auditstore",
     "flamingock-importer"
 )
 
@@ -35,19 +35,19 @@ val pluginProjects = setOf(
 )
 
 val targetSystemProjects = setOf(
-    "flamingock-nontransactional-target-system",
-    "flamingock-mongodb-sync-target-system",
-    "flamingock-mongodb-springdata-target-system",
-    "flamingock-sql-target-system",
-    "flamingock-dynamodb-target-system",
-    "flamingock-couchbase-target-system"
+    "flamingock-nontransactional-targetsystem",
+    "flamingock-mongodb-sync-targetsystem",
+    "flamingock-mongodb-springdata-targetsystem",
+    "flamingock-sql-targetsystem",
+    "flamingock-dynamodb-targetsystem",
+    "flamingock-couchbase-targetsystem"
 )
 
 val externalSystemProjects = setOf(
-    "flamingock-mongodb-external-system-api",
-    "flamingock-couchbase-external-system-api",
-    "flamingock-dynamodb-external-system-api",
-    "flamingock-sql-external-system-api"
+    "flamingock-mongodb-externalsystem-api",
+    "flamingock-couchbase-externalsystem-api",
+    "flamingock-dynamodb-externalsystem-api",
+    "flamingock-sql-externalsystem-api"
 )
 
 val utilProjects = setOf(

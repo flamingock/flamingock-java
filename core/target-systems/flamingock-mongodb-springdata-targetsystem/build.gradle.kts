@@ -1,13 +1,21 @@
+import org.jetbrains.kotlin.gradle.utils.extendsFrom
 
+
+val versions = mapOf(
+    "mongodb" to "4.0.0",
+    "spring-data" to "3.1.4",
+    "springboot" to "2.0.0.RELEASE"
+)
 dependencies {
     //Flamingock
     api(project(":core:flamingock-core"))
     implementation(project(":utils:mongodb-util"))
     implementation(project(":legacy:mongock-importer-mongodb"))
-    api(project(":core:target-systems:flamingock-mongodb-external-system-api"))
+    api(project(":core:target-systems:flamingock-mongodb-externalsystem-api"))
 
     //General
-    compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
+    compileOnly("org.mongodb:mongodb-driver-sync:${versions["mongodb"]}")
+    compileOnly("org.springframework.data:spring-data-mongodb:${versions["spring-data"]}")
 
     //Test
     testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
@@ -17,7 +25,7 @@ dependencies {
     testImplementation(project(":utils:test-util"))
 }
 
-description = "MongoDB synchronous driver target system for database change operations"
+description = "MongoDB Spring Data target system for Spring-integrated applications"
 
 java {
     toolchain {

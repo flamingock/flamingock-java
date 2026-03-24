@@ -3,15 +3,15 @@ dependencies {
     implementation(project(":core:flamingock-core"))
 
 
-    api(project(":core:target-systems:flamingock-dynamodb-external-system-api"))
+    api(project(":core:target-systems:flamingock-dynamodb-externalsystem-api"))
 
     compileOnly("software.amazon.awssdk:dynamodb-enhanced:2.25.29")
 
 
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":utils:dynamodb-test-kit"))
-    testImplementation(project(":core:target-systems:flamingock-dynamodb-target-system"))
-    testImplementation(project(":core:target-systems:flamingock-nontransactional-target-system"))
+    testImplementation(project(":core:target-systems:flamingock-dynamodb-targetsystem"))
+    testImplementation(project(":core:target-systems:flamingock-nontransactional-targetsystem"))
 
     testImplementation("software.amazon.awssdk:url-connection-client:2.24.11")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
