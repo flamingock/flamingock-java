@@ -28,7 +28,7 @@ dependencies {
     testImplementation(project(":utils:test-util"))
 
     // Non-transactional target system for tests
-    testImplementation(project(":core:target-systems:flamingock-nontransactional-target-system"))
+    testImplementation(project(":core:target-systems:flamingock-nontransactional-targetsystem"))
 }
 
 description = "Spring Boot testing integration module for Flamingock. Compatible with JDK 17 and above."

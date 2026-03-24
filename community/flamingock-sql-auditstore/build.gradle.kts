@@ -5,12 +5,12 @@ val sqlVersion: String by extra
 dependencies {
     api(project(":core:flamingock-core"))
 
-    api(project(":core:target-systems:flamingock-sql-external-system-api"))
+    api(project(":core:target-systems:flamingock-sql-externalsystem-api"))
 
-    api(project(":core:target-systems:flamingock-sql-target-system"))
+    api(project(":core:target-systems:flamingock-sql-targetsystem"))
     implementation("io.flamingock:flamingock-sql-util:${sqlVersion}")
 
-    testImplementation(project(":core:target-systems:flamingock-sql-external-system-api"))
+    testImplementation(project(":core:target-systems:flamingock-sql-externalsystem-api"))
     testImplementation("mysql:mysql-connector-java:8.0.33")
     testImplementation("com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre8")
     testImplementation("com.oracle.database.jdbc:ojdbc8:21.9.0.0")

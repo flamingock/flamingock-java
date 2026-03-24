@@ -33,7 +33,7 @@ jobs:
         env:
           ENABLED_DIALECTS: ${{ github.event.inputs.dialects || 'mysql,postgresql,mariadb' }}
         run: |
-          ./gradlew :community:flamingock-auditstore-sql:test \
+          ./gradlew :community:flamingock-sql-auditstore:test \
             -Psql.test.dialects="${ENABLED_DIALECTS}" \
             --info
 
@@ -43,6 +43,6 @@ jobs:
         with:
           name: sql-audit-test-reports
           path: |
-            community/flamingock-auditstore-sql/build/reports/tests/
-            community/flamingock-auditstore-sql/build/test-results/
+            community/flamingock-sql-auditstore/build/reports/tests/
+            community/flamingock-sql-auditstore/build/test-results/
           retention-days: 7

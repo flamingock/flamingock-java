@@ -4,7 +4,7 @@ dependencies {
     implementation(project(":utils:mongodb-util"))
     implementation(project(":core:flamingock-core"))
 
-    api(project(":core:target-systems:flamingock-mongodb-external-system-api"))
+    api(project(":core:target-systems:flamingock-mongodb-externalsystem-api"))
 //    api(project(":community:flamingock-community"))
 
     compileOnly("org.mongodb:mongodb-driver-sync:4.0.0")
@@ -12,8 +12,8 @@ dependencies {
 
     testImplementation(project(":utils:test-util"))
     testImplementation(project(":utils:mongodb-test-kit"))
-    testImplementation(project(":core:target-systems:flamingock-nontransactional-target-system"))
-    testImplementation(project(":core:target-systems:flamingock-mongodb-sync-target-system"))
+    testImplementation(project(":core:target-systems:flamingock-nontransactional-targetsystem"))
+    testImplementation(project(":core:target-systems:flamingock-mongodb-sync-targetsystem"))
 
     testImplementation(project(":e2e:core-e2e"))
     testImplementation("org.testcontainers:testcontainers-mongodb:2.0.2")
