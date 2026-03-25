@@ -98,7 +98,7 @@ public class OperationFactory {
 
     public RunnableOperation<?, ?> getOperation() {
         OperationType operationType = flamingockArgs.getOperation();
-        if (operationType == OperationType.EXECUTE_APPLY && coreConfiguration.isValidationOnly()) {
+        if (operationType == OperationType.EXECUTE_APPLY && coreConfiguration.isValidationOnly() && !flamingockArgs.isCliMode()) {
             operationType = OperationType.VALIDATE;
         }
         switch (operationType) {
