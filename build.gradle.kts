@@ -18,9 +18,9 @@ allprojects {
     group = "io.flamingock"
     version = "1.2.0-beta.7"
 
-    extra["templateApiVersion"] = "1.3.1"
-    extra["generalUtilVersion"] = "1.5.0"
-    extra["coreApiVersion"] = "1.3.0"
+    extra["generalUtilVersion"] = "1.5.1"
+    extra["templateApiVersion"] = "1.3.2"
+    extra["coreApiVersion"] = "1.3.1"
     extra["sqlVersion"] = "1.2.0-beta.5"
     extra["mongodbTemplateVersion"] = "1.2.0-beta.4"
 
