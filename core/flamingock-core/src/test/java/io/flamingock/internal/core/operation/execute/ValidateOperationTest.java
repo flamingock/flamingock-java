@@ -20,6 +20,8 @@ import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
+import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
+import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlan;
@@ -36,6 +38,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.Collections;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,6 +60,9 @@ class ValidateOperationTest {
     private ExecutionPlanner executionPlanner;
 
     @Mock
+    private StageExecutor stageExecutor;
+
+    @Mock
     private EventPublisher eventPublisher;
 
     @Mock
@@ -70,20 +76,24 @@ class ValidateOperationTest {
 
     private ValidateOperation operation;
     private RunnerId runnerId;
+    private OrphanExecutionContext orphanContext;
     private Runnable noOpFinalizer;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         runnerId = RunnerId.fromString("test-runner@localhost#test-uuid");
+        orphanContext = new OrphanExecutionContext("localhost", new HashMap<>());
         noOpFinalizer = () -> {};
 
         operation = new ValidateOperation(
-                runnerId,
-                executionPlanner,
-                eventPublisher,
-                true,
-                noOpFinalizer
+            runnerId,
+            executionPlanner,
+            stageExecutor,
+            orphanContext,
+            eventPublisher,
+            true,
+            noOpFinalizer
         );
     }
 
@@ -106,8 +116,8 @@ class ValidateOperationTest {
         // Then
         assertNotNull(result);
         assertNotNull(result.getData());
-        // ValidateOperation uses resultBuilder.noChanges() — status is NO_CHANGES when no pending changes
-        assertEquals(ExecutionStatus.NO_CHANGES, result.getData().getStatus());
+        // ValidateOperation uses resultBuilder.noChanges() — status is SUCCESS when no pending changes
+        assertEquals(ExecutionStatus.SUCCESS, result.getData().getStatus());
     }
 
     @Test

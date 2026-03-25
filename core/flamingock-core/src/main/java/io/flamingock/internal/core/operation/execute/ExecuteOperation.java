@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.operation.execute;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.error.PendingChangesException;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.StageResult;
@@ -66,7 +67,7 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
 
     private final OrphanExecutionContext orphanExecutionContext;
 
-    private final Runnable finalizer;
+    protected final Runnable finalizer;
 
     public ExecuteOperation(RunnerId runnerId,
                             ExecutionPlanner executionPlanner,
@@ -89,7 +90,7 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
     public ExecuteResult execute(ExecuteArgs args) {
         ExecuteResponseData result;
         try {
-            result = this.execute(args.getPipeline());
+            result = this.execute(args.getPipeline(), false);
         } catch (OperationException operationException) {
             result = operationException.getResult();
             throw operationException;
@@ -111,7 +112,7 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
         return stages;
     }
 
-    private ExecuteResponseData execute(LoadedPipeline pipeline) throws FlamingockException {
+    protected ExecuteResponseData execute(LoadedPipeline pipeline, Boolean validateOnly) throws FlamingockException {
         List<AbstractLoadedStage> allStages = validateAndGetExecutableStages(pipeline);
         int stageCount = allStages.size();
         long changeCount = allStages.stream()
@@ -130,6 +131,9 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
                 execution.validate();
 
                 if (execution.isExecutionRequired()) {
+                    if (validateOnly) {
+                        throw new PendingChangesException();
+                    }
                     execution.applyOnEach((executionId, lock, executableStage) -> {
                         StageResult stageResult = runStage(executionId, lock, executableStage);
                         resultBuilder.addStage(stageResult);

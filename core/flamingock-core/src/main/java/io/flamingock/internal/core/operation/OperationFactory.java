@@ -162,12 +162,15 @@ public class OperationFactory {
     }
 
     private RunnableOperation<ExecuteArgs, ExecuteResult> getValidateOperation() {
+        final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
         ValidateOperation validateOperation = new ValidateOperation(
-                runnerId,
-                executionPlanner,
-                eventPublisher,
-                isThrowExceptionIfCannotObtainLock,
-                finalizer);
+            runnerId,
+            executionPlanner,
+            stageExecutor,
+            buildExecutionContext(coreConfiguration),
+            eventPublisher,
+            isThrowExceptionIfCannotObtainLock,
+            finalizer);
         return new RunnableOperation<>(validateOperation, new ExecuteArgs(pipeline));
     }
 
