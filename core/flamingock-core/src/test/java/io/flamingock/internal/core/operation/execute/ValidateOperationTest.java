@@ -141,42 +141,6 @@ class ValidateOperationTest {
                 PendingChangesException.class,
                 () -> operation.execute(args)
         );
-        assertEquals(2, thrown.getPendingCount(),
-                "Expected 2 pending changes to be counted");
-    }
-
-    @Test
-    @DisplayName("pendingCount counts only non-applied tasks across multiple stages")
-    void shouldCountOnlyNonAppliedTasks() throws Exception {
-        // Given
-        ExecutableTask pendingTask = mock(ExecutableTask.class);
-        ExecutableTask alreadyAppliedTask = mock(ExecutableTask.class);
-        when(pendingTask.isAlreadyApplied()).thenReturn(false);
-        when(alreadyAppliedTask.isAlreadyApplied()).thenReturn(true);
-
-        List<ExecutableTask> mixedTasks = Arrays.asList(pendingTask, alreadyAppliedTask);
-        ExecutableStage executableStage = mock(ExecutableStage.class);
-        doReturn(mixedTasks).when(executableStage).getTasks();
-
-        ExecutablePipeline executablePipeline = mock(ExecutablePipeline.class);
-        when(executablePipeline.getExecutableStages()).thenReturn(Collections.singletonList(executableStage));
-
-        ExecutionPlan executionPlan = mockPendingPlan(executablePipeline);
-
-        when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
-        when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
-        when(loadedStage.getTasks()).thenReturn(Arrays.asList(loadedTask, loadedTask));
-        when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
-
-        ExecuteArgs args = new ExecuteArgs(pipeline);
-
-        // When / Then — only 1 pending (the non-applied one)
-        PendingChangesException thrown = assertThrows(
-                PendingChangesException.class,
-                () -> operation.execute(args)
-        );
-        assertEquals(1, thrown.getPendingCount(),
-                "Expected only 1 pending change (already-applied task should not be counted)");
     }
 
     // ─────────────────────────── Helpers ───────────────────────────

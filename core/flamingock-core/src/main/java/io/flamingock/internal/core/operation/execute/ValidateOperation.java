@@ -110,8 +110,7 @@ public class ValidateOperation implements Operation<ExecuteArgs, ExecuteResult> 
                 execution.validate();
 
                 if (execution.isExecutionRequired()) {
-                    int pendingCount = countPendingTasks(execution);
-                    throw new PendingChangesException(pendingCount);
+                    throw new PendingChangesException();
                 } else {
                     break;
                 }
@@ -134,17 +133,5 @@ public class ValidateOperation implements Operation<ExecuteArgs, ExecuteResult> 
         eventPublisher.publish(new PipelineCompletedEvent());
 
         return result;
-    }
-
-    private static int countPendingTasks(ExecutionPlan execution) {
-        int count = 0;
-        for (ExecutableStage stage : execution.getPipeline().getExecutableStages()) {
-            for (ExecutableTask task : stage.getTasks()) {
-                if (!task.isAlreadyApplied()) {
-                    count++;
-                }
-            }
-        }
-        return count;
     }
 }

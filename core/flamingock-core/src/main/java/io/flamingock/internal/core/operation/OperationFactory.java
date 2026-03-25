@@ -99,12 +99,12 @@ public class OperationFactory {
     public RunnableOperation<?, ?> getOperation() {
         OperationType operationType = flamingockArgs.getOperation();
         if (operationType == OperationType.EXECUTE_APPLY && coreConfiguration.isValidationOnly()) {
-            operationType = OperationType.EXECUTE_VALIDATE;
+            operationType = OperationType.VALIDATE;
         }
         switch (operationType) {
             case EXECUTE_APPLY:
                 return getExecuteOperation();
-            case EXECUTE_VALIDATE:
+            case VALIDATE:
                 return getValidateOperation();
             case AUDIT_LIST:
                 return getAuditListOperation();

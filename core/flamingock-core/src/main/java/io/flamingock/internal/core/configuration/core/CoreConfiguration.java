@@ -36,7 +36,9 @@ public class CoreConfiguration implements CoreConfigurable {
     private boolean enabled = true;
 
     /**
-     * If true, Flamingock will only validate that no pending changes exist without applying them. Default false
+     * If true, Flamingock will only validate that no pending changes exist without applying them
+     * When Flamingock runs through the CLI, the CLI operation takes precedence over this flag
+     * Default false
      */
     private boolean validationOnly = false;
 

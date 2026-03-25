@@ -20,14 +20,7 @@ package io.flamingock.internal.common.core.error;
  */
 public class PendingChangesException extends FlamingockException {
 
-    private final int pendingCount;
-
-    public PendingChangesException(int pendingCount) {
-        super("Flamingock validationOnly=true: %d pending change(s) detected. Apply them before running in validation-only mode.", pendingCount);
-        this.pendingCount = pendingCount;
-    }
-
-    public int getPendingCount() {
-        return pendingCount;
+    public PendingChangesException() {
+        super("Flamingock validationOnly=true: pending changes detected. Apply them before running in validation-only mode.");
     }
 }
