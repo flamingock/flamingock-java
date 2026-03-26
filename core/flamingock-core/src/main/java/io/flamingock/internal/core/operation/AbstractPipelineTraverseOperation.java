@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation.execute;
+package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.PendingChangesException;
@@ -27,8 +27,8 @@ import io.flamingock.internal.core.event.model.impl.PipelineStartedEvent;
 import io.flamingock.internal.core.event.model.impl.StageCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.StageFailedEvent;
 import io.flamingock.internal.core.event.model.impl.StageStartedEvent;
-import io.flamingock.internal.core.operation.Operation;
-import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.core.operation.execute.ExecuteArgs;
+import io.flamingock.internal.core.operation.execute.ExecuteResult;
 import io.flamingock.internal.core.operation.result.ExecutionResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
@@ -49,9 +49,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Executes the pipeline and returns structured result data.
+ * Common execution flow for Apply and Validate operations
  */
-public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
+public abstract class AbstractPipelineTraverseOperation implements Operation<ExecuteArgs, ExecuteResult> {
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger("PipelineRunner");
 
@@ -69,13 +69,13 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
 
     protected final Runnable finalizer;
 
-    public ExecuteOperation(RunnerId runnerId,
-                            ExecutionPlanner executionPlanner,
-                            StageExecutor stageExecutor,
-                            OrphanExecutionContext orphanExecutionContext,
-                            EventPublisher eventPublisher,
-                            boolean throwExceptionIfCannotObtainLock,
-                            Runnable finalizer) {
+    public AbstractPipelineTraverseOperation(RunnerId runnerId,
+                                             ExecutionPlanner executionPlanner,
+                                             StageExecutor stageExecutor,
+                                             OrphanExecutionContext orphanExecutionContext,
+                                             EventPublisher eventPublisher,
+                                             boolean throwExceptionIfCannotObtainLock,
+                                             Runnable finalizer) {
         this.runnerId = runnerId;
         this.executionPlanner = executionPlanner;
         this.stageExecutor = stageExecutor;
@@ -83,23 +83,6 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
         this.eventPublisher = eventPublisher;
         this.throwExceptionIfCannotObtainLock = throwExceptionIfCannotObtainLock;
         this.finalizer = finalizer;
-    }
-
-
-    @Override
-    public ExecuteResult execute(ExecuteArgs args) {
-        ExecuteResponseData result;
-        try {
-            result = this.execute(args.getPipeline(), false);
-        } catch (OperationException operationException) {
-            result = operationException.getResult();
-            throw operationException;
-        } catch (Throwable throwable) {
-            throw processAndGetFlamingockException(throwable, null);
-        } finally {
-            finalizer.run();
-        }
-        return new ExecuteResult(result);
     }
 
     private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
@@ -193,7 +176,7 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
         return executionOutput.getResult();
     }
 
-    private FlamingockException processAndGetFlamingockException(Throwable exception, ExecutionResultBuilder resultBuilder) throws FlamingockException {
+    protected FlamingockException processAndGetFlamingockException(Throwable exception, ExecutionResultBuilder resultBuilder) throws FlamingockException {
         FlamingockException flamingockException;
         if (exception instanceof OperationException) {
             OperationException pipelineException = (OperationException) exception;
@@ -212,5 +195,4 @@ public class ExecuteOperation implements Operation<ExecuteArgs, ExecuteResult> {
         eventPublisher.publish(new PipelineFailedEvent(flamingockException));
         return flamingockException;
     }
-
 }

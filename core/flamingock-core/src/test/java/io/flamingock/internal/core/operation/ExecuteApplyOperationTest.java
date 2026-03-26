@@ -21,8 +21,8 @@ import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageStatus;
 import io.flamingock.internal.core.event.EventPublisher;
+import io.flamingock.internal.core.operation.execute.ExecuteApplyOperation;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
-import io.flamingock.internal.core.operation.execute.ExecuteOperation;
 import io.flamingock.internal.core.operation.execute.ExecuteResult;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
@@ -48,9 +48,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for ExecuteOperation - executes the pipeline and returns structured result data.
+ * Tests for ExecuteApplyOperation - executes the pipeline and returns structured result data.
  */
-class ExecuteOperationTest {
+class ExecuteApplyOperationTest {
 
     @Mock
     private ExecutionPlanner executionPlanner;
@@ -70,7 +70,7 @@ class ExecuteOperationTest {
     @Mock
     private AbstractLoadedTask loadedTask;
 
-    private ExecuteOperation operation;
+    private ExecuteApplyOperation operation;
     private RunnerId runnerId;
     private OrphanExecutionContext orphanContext;
     private Runnable noOpFinalizer;
@@ -82,7 +82,7 @@ class ExecuteOperationTest {
         orphanContext = new OrphanExecutionContext("localhost", new HashMap<>());
         noOpFinalizer = () -> {};
 
-        operation = new ExecuteOperation(
+        operation = new ExecuteApplyOperation(
                 runnerId,
                 executionPlanner,
                 stageExecutor,

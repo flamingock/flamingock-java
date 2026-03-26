@@ -21,7 +21,7 @@ import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
-import io.flamingock.internal.core.operation.execute.ValidateOperation;
+import io.flamingock.internal.core.operation.validate.ValidateOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
@@ -37,15 +37,16 @@ import org.mockito.MockitoAnnotations;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for OperationFactory — routing logic for creating the appropriate operation.
+ * Tests for OperationResolver — routing logic for creating the appropriate operation.
  */
-class OperationFactoryTest {
+class OperationResolverTest {
 
     @Mock
     private FlamingockArguments flamingockArgs;
@@ -86,7 +87,7 @@ class OperationFactoryTest {
         runnerId = RunnerId.fromString("test-runner@localhost#test-uuid");
         noOpFinalizer = () -> {};
 
-        // Default pipeline setup so OperationFactory does not NPE on pipeline access
+        // Default pipeline setup so OperationResolver does not NPE on pipeline access
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
         when(loadedStage.getTasks()).thenReturn(Collections.singletonList(loadedTask));
@@ -99,10 +100,10 @@ class OperationFactoryTest {
     @DisplayName("validationOnly=true with EXECUTE_APPLY → getOperation() routes to ValidateOperation")
     void shouldRouteToValidateOperationWhenValidationOnlyIsTrue() throws Exception {
         // Given
-        when(flamingockArgs.getOperation()).thenReturn(OperationType.EXECUTE_APPLY);
+        when(flamingockArgs.getOperation()).thenReturn(Optional.of(OperationType.VALIDATE));
         when(coreConfiguration.isValidationOnly()).thenReturn(true);
 
-        OperationFactory factory = new OperationFactory(
+        OperationResolver factory = new OperationResolver(
                 runnerId,
                 flamingockArgs,
                 pipeline,
@@ -131,10 +132,10 @@ class OperationFactoryTest {
     @DisplayName("validationOnly=false with EXECUTE_APPLY → getOperation() does NOT route to ValidateOperation")
     void shouldNotRouteToValidateOperationWhenValidationOnlyIsFalse() throws Exception {
         // Given
-        when(flamingockArgs.getOperation()).thenReturn(OperationType.EXECUTE_APPLY);
+        when(flamingockArgs.getOperation()).thenReturn(Optional.of(OperationType.EXECUTE_APPLY));
         when(coreConfiguration.isValidationOnly()).thenReturn(false);
 
-        OperationFactory factory = new OperationFactory(
+        OperationResolver factory = new OperationResolver(
                 runnerId,
                 flamingockArgs,
                 pipeline,
@@ -155,7 +156,7 @@ class OperationFactoryTest {
         // Then
         assertNotNull(runnableOperation);
         Operation<?, ?> innerOperation = extractInnerOperation(runnableOperation);
-        // When validationOnly=false the standard ExecuteOperation is used, not ValidateOperation
+        // When validationOnly=false the standard AbstractPipelineTraverseOperation is used, not ValidateOperation
         assertNotNull(innerOperation);
         // Verify it is NOT a ValidateOperation
         boolean isValidateOp = innerOperation instanceof ValidateOperation;

@@ -15,28 +15,26 @@
  */
 package io.flamingock.internal.core.operation.execute;
 
-import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.error.PendingChangesException;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.core.event.EventPublisher;
-import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
-import io.flamingock.internal.core.pipeline.execution.StageExecutor;
+import io.flamingock.internal.core.operation.AbstractPipelineTraverseOperation;
+import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.core.pipeline.execution.*;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.util.id.RunnerId;
 
 /**
- * Validates the pipeline without executing any changes.
- * If pending changes exist, throws {@link PendingChangesException}.
+ * Executes the pipeline and returns structured result data.
  */
-public class ValidateOperation extends ExecuteOperation {
+public class ExecuteApplyOperation extends AbstractPipelineTraverseOperation {
 
-    public ValidateOperation(RunnerId runnerId,
-                             ExecutionPlanner executionPlanner,
-                             StageExecutor stageExecutor,
-                             OrphanExecutionContext orphanExecutionContext,
-                             EventPublisher eventPublisher,
-                             boolean throwExceptionIfCannotObtainLock,
-                             Runnable finalizer) {
+    public ExecuteApplyOperation(RunnerId runnerId,
+                                 ExecutionPlanner executionPlanner,
+                                 StageExecutor stageExecutor,
+                                 OrphanExecutionContext orphanExecutionContext,
+                                 EventPublisher eventPublisher,
+                                 boolean throwExceptionIfCannotObtainLock,
+                                 Runnable finalizer) {
         super(runnerId, executionPlanner, stageExecutor, orphanExecutionContext, eventPublisher, throwExceptionIfCannotObtainLock, finalizer);
     }
 
@@ -44,13 +42,14 @@ public class ValidateOperation extends ExecuteOperation {
     public ExecuteResult execute(ExecuteArgs args) {
         ExecuteResponseData result;
         try {
-            result = super.execute(args.getPipeline(), true);
-        } catch (FlamingockException flamingockException) {
-            throw flamingockException;
+            result = this.execute(args.getPipeline(), false);
+        } catch (OperationException operationException) {
+            result = operationException.getResult();
+            throw operationException;
         } catch (Throwable throwable) {
-            throw new FlamingockException(throwable);
+            throw processAndGetFlamingockException(throwable, null);
         } finally {
-            super.finalizer.run();
+            finalizer.run();
         }
         return new ExecuteResult(result);
     }

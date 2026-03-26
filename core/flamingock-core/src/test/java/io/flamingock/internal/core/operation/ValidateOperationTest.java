@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.operation.execute;
+package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.PendingChangesException;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.core.event.EventPublisher;
+import io.flamingock.internal.core.operation.execute.ExecuteArgs;
+import io.flamingock.internal.core.operation.execute.ExecuteResult;
+import io.flamingock.internal.core.operation.validate.ValidateOperation;
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;

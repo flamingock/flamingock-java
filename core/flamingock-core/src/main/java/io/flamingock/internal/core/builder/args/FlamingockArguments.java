@@ -53,7 +53,7 @@ public class FlamingockArguments {
 
     public static FlamingockArguments parse(String[] args) {
         if (args == null || args.length == 0) {
-            return new FlamingockArguments(false, OperationType.EXECUTE_APPLY, false, null, Collections.emptyMap());
+            return new FlamingockArguments(false, null, false, null, Collections.emptyMap());
         }
 
         boolean cliMode = false;
@@ -150,8 +150,8 @@ public class FlamingockArguments {
         return cliMode;
     }
 
-    public OperationType getOperation() {
-        return operation;
+    public Optional<OperationType> getOperation() {
+        return Optional.ofNullable(operation);
     }
 
     public boolean isOperationProvided() {

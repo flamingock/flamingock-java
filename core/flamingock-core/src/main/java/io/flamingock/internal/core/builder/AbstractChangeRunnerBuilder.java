@@ -31,6 +31,7 @@ import io.flamingock.internal.core.context.PriorityContextResolver;
 import io.flamingock.internal.core.context.SimpleContext;
 import io.flamingock.internal.core.external.store.AuditStore;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
+import io.flamingock.internal.core.operation.OperationResolver;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -43,7 +44,6 @@ import io.flamingock.internal.core.event.model.IStageCompletedEvent;
 import io.flamingock.internal.core.event.model.IStageFailedEvent;
 import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
 import io.flamingock.internal.core.event.model.IStageStartedEvent;
-import io.flamingock.internal.core.operation.OperationFactory;
 import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.plugin.Plugin;
@@ -213,7 +213,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
         FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);
 
-        OperationFactory operationFactory = new OperationFactory(
+        OperationResolver operationResolver = new OperationResolver(
                 runnerId,
                 flamingockArgs,
                 pipeline,
@@ -227,7 +227,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 coreConfiguration.isThrowExceptionIfCannotObtainLock(),
                 persistence.getCloser()
         );
-        RunnableOperation<?, ?> operation = operationFactory.getOperation();
+        RunnableOperation<?, ?> operation = operationResolver.getOperation();
 
         return new RunnerFactory(runnerId, flamingockArgs, operation, persistence.getCloser()).create();
     }

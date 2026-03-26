@@ -29,16 +29,14 @@ import io.flamingock.internal.core.operation.audit.AuditFixResult;
 import io.flamingock.internal.core.operation.audit.AuditListArgs;
 import io.flamingock.internal.core.operation.audit.AuditListOperation;
 import io.flamingock.internal.core.operation.audit.AuditListResult;
-import io.flamingock.internal.core.operation.execute.ExecuteArgs;
-import io.flamingock.internal.core.operation.execute.ExecuteOperation;
-import io.flamingock.internal.core.operation.execute.ExecuteResult;
-import io.flamingock.internal.core.operation.execute.ValidateOperation;
+import io.flamingock.internal.core.operation.execute.*;
 import io.flamingock.internal.core.operation.issue.IssueGetArgs;
 import io.flamingock.internal.core.operation.issue.IssueGetOperation;
 import io.flamingock.internal.core.operation.issue.IssueGetResult;
 import io.flamingock.internal.core.operation.issue.IssueListArgs;
 import io.flamingock.internal.core.operation.issue.IssueListOperation;
 import io.flamingock.internal.core.operation.issue.IssueListResult;
+import io.flamingock.internal.core.operation.validate.ValidateOperation;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
@@ -48,7 +46,7 @@ import io.flamingock.internal.util.id.RunnerId;
 
 import java.util.Set;
 
-public class OperationFactory {
+public class OperationResolver {
 
     private static final String ARG_HISTORY = "flamingock.audit.history";
     private static final String ARG_SINCE = "flamingock.audit.since";
@@ -70,7 +68,7 @@ public class OperationFactory {
     private final boolean isThrowExceptionIfCannotObtainLock;
     private final Runnable finalizer;
 
-    public OperationFactory(RunnerId runnerId,
+    public OperationResolver(RunnerId runnerId,
                              FlamingockArguments flamingockArgs,
                              LoadedPipeline pipeline,
                              AuditPersistence persistence,
@@ -97,13 +95,12 @@ public class OperationFactory {
     }
 
     public RunnableOperation<?, ?> getOperation() {
-        OperationType operationType = flamingockArgs.getOperation();
-        if (operationType == OperationType.EXECUTE_APPLY && coreConfiguration.isValidationOnly() && !flamingockArgs.isCliMode()) {
-            operationType = OperationType.VALIDATE;
-        }
+        OperationType operationType = flamingockArgs.getOperation().orElse(
+            coreConfiguration.isValidationOnly() ? OperationType.VALIDATE : OperationType.EXECUTE_APPLY
+        );
         switch (operationType) {
             case EXECUTE_APPLY:
-                return getExecuteOperation();
+                return getExecuteApplyOperation();
             case VALIDATE:
                 return getValidateOperation();
             case AUDIT_LIST:
@@ -148,17 +145,17 @@ public class OperationFactory {
         return new RunnableOperation<>(issueGetOperation, new IssueGetArgs(changeId, guidance));
     }
 
-    private RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteOperation() {
+    private RunnableOperation<ExecuteArgs, ExecuteResult> getExecuteApplyOperation() {
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
-        ExecuteOperation executeOperation = new ExecuteOperation(
-                runnerId,
-                executionPlanner,
-                stageExecutor,
-                buildExecutionContext(coreConfiguration),
-                eventPublisher,
-                isThrowExceptionIfCannotObtainLock,
-                finalizer);
-        return new RunnableOperation<>(executeOperation, new ExecuteArgs(pipeline));
+        ExecuteApplyOperation executeApplyOperation = new ExecuteApplyOperation(
+            runnerId,
+            executionPlanner,
+            stageExecutor,
+            buildExecutionContext(coreConfiguration),
+            eventPublisher,
+            isThrowExceptionIfCannotObtainLock,
+            finalizer);
+        return new RunnableOperation<>(executeApplyOperation, new ExecuteArgs(pipeline));
     }
 
     private RunnableOperation<ExecuteArgs, ExecuteResult> getValidateOperation() {
