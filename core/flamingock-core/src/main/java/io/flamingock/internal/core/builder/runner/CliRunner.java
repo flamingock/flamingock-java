@@ -18,8 +18,8 @@ package io.flamingock.internal.core.builder.runner;
 import io.flamingock.internal.common.core.response.ResponseChannel;
 import io.flamingock.internal.common.core.response.ResponseEnvelope;
 import io.flamingock.internal.common.core.response.ResponseError;
+import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.operation.AbstractOperationResult;
-import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.core.operation.RunnableOperation;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -35,16 +35,16 @@ public class CliRunner implements Runner {
     private final RunnableOperation<?, ?> operation;
     private final Runnable finalizer;
     private final ResponseChannel channel;
-    private final OperationType operationType;
+    private final FlamingockArguments flamingockArgs;
 
     public CliRunner(RunnableOperation<?, ?> operation,
                      Runnable finalizer,
                      ResponseChannel channel,
-                     OperationType operationType) {
+                     FlamingockArguments flamingockArgs) {
         this.operation = operation;
         this.finalizer = finalizer;
         this.channel = channel;
-        this.operationType = operationType;
+        this.flamingockArgs = flamingockArgs;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class CliRunner implements Runner {
 
     private void writeResponse(AbstractOperationResult result, Throwable error, long durationMs) {
         ResponseEnvelope envelope;
-        String operationName = operationType.name();
+        String operationName = flamingockArgs.getOperation().isPresent() ? flamingockArgs.getOperation().get().name() : "unknown operation";
 
         if (error != null) {
             envelope = ResponseEnvelope.failure(operationName, ResponseError.from(error), durationMs);

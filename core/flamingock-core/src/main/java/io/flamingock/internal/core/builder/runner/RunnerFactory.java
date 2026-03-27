@@ -60,7 +60,7 @@ public class RunnerFactory {
                 .map(outputFile -> (ResponseChannel) new FileResponseChannel(outputFile, JsonObjectMapper.DEFAULT_INSTANCE))
                 .orElseGet(NoOpResponseChannel::new);
 
-        return new CliRunner(operation, finalizer, channel, flamingockArgs.getOperation().get());
+        return new CliRunner(operation, finalizer, channel, flamingockArgs);
     }
 
     private Runner createDefaultRunner() {

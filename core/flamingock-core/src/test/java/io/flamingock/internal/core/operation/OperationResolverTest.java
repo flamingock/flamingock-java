@@ -97,10 +97,10 @@ class OperationResolverTest {
     }
 
     @Test
-    @DisplayName("validationOnly=true with EXECUTE_APPLY → getOperation() routes to ValidateOperation")
+    @DisplayName("validationOnly=true with no operation → getOperation() routes to ValidateOperation")
     void shouldRouteToValidateOperationWhenValidationOnlyIsTrue() throws Exception {
         // Given
-        when(flamingockArgs.getOperation()).thenReturn(Optional.of(OperationType.VALIDATE));
+        when(flamingockArgs.getOperation()).thenReturn(Optional.empty());
         when(coreConfiguration.isValidationOnly()).thenReturn(true);
 
         OperationResolver factory = new OperationResolver(

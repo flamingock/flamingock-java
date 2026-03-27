@@ -42,7 +42,7 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isCliMode());
-        assertTrue(arguments.isOperationProvided());
+        assertTrue(arguments.getOperation().isPresent());
         assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation().get());
         assertTrue(arguments.getOutputFile().isPresent());
         assertEquals("/tmp/output.json", arguments.getOutputFile().orElse(null));
@@ -60,6 +60,7 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isCliMode());
+        assertTrue(arguments.getOperation().isPresent());
         assertEquals(OperationType.EXECUTE_ROLLBACK, arguments.getOperation().get());
         assertEquals("/var/log/flamingock.log", arguments.getOutputFile().orElse(null));
     }
@@ -84,7 +85,7 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(null);
 
         assertFalse(arguments.isCliMode());
-        assertFalse(arguments.isOperationProvided());
+        assertFalse(arguments.getOperation().isPresent());
         assertEquals(Optional.empty(), arguments.getOperation());
         assertFalse(arguments.getOutputFile().isPresent());
         assertTrue(arguments.getRemainingArgs().isEmpty());
@@ -95,7 +96,7 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(new String[0]);
 
         assertFalse(arguments.isCliMode());
-        assertFalse(arguments.isOperationProvided());
+        assertFalse(arguments.getOperation().isPresent());
         assertEquals(Optional.empty(), arguments.getOperation());
         assertFalse(arguments.getOutputFile().isPresent());
         assertTrue(arguments.getRemainingArgs().isEmpty());
@@ -129,17 +130,18 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isCliMode());
+        assertTrue(arguments.getOperation().isPresent());
         assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation().get());
     }
 
     @Test
-    void shouldReturnDefaultOperationWhenNotProvided() {
+    void shouldReturnNullOperationWhenNotProvided() {
         String[] args = {"--flamingock.cli.mode=true"};
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
-        assertFalse(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation().get());
+        assertFalse(arguments.getOperation().isPresent());
+        assertNull(arguments.getOperation().orElse(null));
     }
 
     @Test
@@ -149,7 +151,7 @@ class FlamingockArgumentsTest {
 
             FlamingockArguments arguments = FlamingockArguments.parse(args);
 
-            assertTrue(arguments.isOperationProvided());
+            assertTrue(arguments.getOperation().isPresent());
             assertEquals(expectedType, arguments.getOperation().get(),
                     "Failed to parse operation type: " + expectedType);
         }
@@ -161,6 +163,7 @@ class FlamingockArgumentsTest {
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
+        assertTrue(arguments.getOperation().isPresent());
         assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation().get());
     }
 
@@ -276,6 +279,7 @@ class FlamingockArgumentsTest {
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
         assertTrue(arguments.isCliMode());
+        assertTrue(arguments.getOperation().isPresent());
         assertEquals(OperationType.EXECUTE_DRYRUN, arguments.getOperation().get());
         assertEquals("/output.json", arguments.getOutputFile().orElse(null));
         assertEquals("customValue", arguments.getRemainingArgs().get("custom.prop"));
@@ -300,17 +304,7 @@ class FlamingockArgumentsTest {
 
         FlamingockArguments arguments = FlamingockArguments.parse(args);
 
-        assertTrue(arguments.isOperationProvided());
-        assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation().get());
-    }
-
-    @Test
-    void shouldReturnIsOperationProvidedFalseWhenUsingDefault() {
-        String[] args = {"--flamingock.cli.mode=true"};
-
-        FlamingockArguments arguments = FlamingockArguments.parse(args);
-
-        assertFalse(arguments.isOperationProvided());
+        assertTrue(arguments.getOperation().isPresent());
         assertEquals(OperationType.EXECUTE_APPLY, arguments.getOperation().get());
     }
 
