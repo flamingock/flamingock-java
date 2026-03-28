@@ -112,7 +112,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         return stages;
     }
 
-    protected ExecuteResponseData execute(LoadedPipeline pipeline) throws FlamingockException {
+    private ExecuteResponseData execute(LoadedPipeline pipeline) throws FlamingockException {
         List<AbstractLoadedStage> allStages = validateAndGetExecutableStages(pipeline);
         int stageCount = allStages.size();
         long changeCount = allStages.stream()
@@ -193,7 +193,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         return executionOutput.getResult();
     }
 
-    protected FlamingockException processAndGetFlamingockException(Throwable exception, ExecutionResultBuilder resultBuilder) throws FlamingockException {
+    private FlamingockException processAndGetFlamingockException(Throwable exception, ExecutionResultBuilder resultBuilder) throws FlamingockException {
         FlamingockException flamingockException;
         if (exception instanceof OperationException) {
             OperationException pipelineException = (OperationException) exception;
