@@ -92,7 +92,9 @@ public class CliRunner implements Runner {
 
     private void writeResponse(AbstractOperationResult result, Throwable error, long durationMs) {
         ResponseEnvelope envelope;
-        String operationName = flamingockArgs.getOperation().isPresent() ? flamingockArgs.getOperation().get().name() : "unknown";
+        String operationName = flamingockArgs.getOperation()
+            .map(Enum::name)
+            .orElse("unknown");
 
         if (error != null) {
             envelope = ResponseEnvelope.failure(operationName, ResponseError.from(error), durationMs);

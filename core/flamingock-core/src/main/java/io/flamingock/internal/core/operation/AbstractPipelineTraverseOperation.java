@@ -85,6 +85,23 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         this.finalizer = finalizer;
     }
 
+    protected abstract boolean validateOnlyMode();
+
+    @Override
+    public ExecuteResult execute(ExecuteArgs args) {
+        ExecuteResponseData result;
+        try {
+            result = this.execute(args.getPipeline());
+        } catch (OperationException operationException) {
+            throw operationException;
+        } catch (Throwable throwable) {
+            throw processAndGetFlamingockException(throwable, null);
+        } finally {
+            this.finalizer.run();
+        }
+        return new ExecuteResult(result);
+    }
+
     private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
         pipeline.validate();
         List<AbstractLoadedStage> stages = new ArrayList<>();
@@ -95,7 +112,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         return stages;
     }
 
-    protected ExecuteResponseData execute(LoadedPipeline pipeline, Boolean validateOnly) throws FlamingockException {
+    protected ExecuteResponseData execute(LoadedPipeline pipeline) throws FlamingockException {
         List<AbstractLoadedStage> allStages = validateAndGetExecutableStages(pipeline);
         int stageCount = allStages.size();
         long changeCount = allStages.stream()
@@ -114,7 +131,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
                 execution.validate();
 
                 if (execution.isExecutionRequired()) {
-                    if (validateOnly) {
+                    if (validateOnlyMode()) {
                         throw new PendingChangesException();
                     }
                     execution.applyOnEach((executionId, lock, executableStage) -> {

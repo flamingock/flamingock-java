@@ -15,10 +15,8 @@
  */
 package io.flamingock.internal.core.operation.execute;
 
-import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.AbstractPipelineTraverseOperation;
-import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.internal.core.pipeline.execution.*;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.util.id.RunnerId;
@@ -39,18 +37,7 @@ public class ExecuteApplyOperation extends AbstractPipelineTraverseOperation {
     }
 
     @Override
-    public ExecuteResult execute(ExecuteArgs args) {
-        ExecuteResponseData result;
-        try {
-            result = this.execute(args.getPipeline(), false);
-        } catch (OperationException operationException) {
-            result = operationException.getResult();
-            throw operationException;
-        } catch (Throwable throwable) {
-            throw processAndGetFlamingockException(throwable, null);
-        } finally {
-            finalizer.run();
-        }
-        return new ExecuteResult(result);
+    protected boolean validateOnlyMode() {
+        return false;
     }
 }

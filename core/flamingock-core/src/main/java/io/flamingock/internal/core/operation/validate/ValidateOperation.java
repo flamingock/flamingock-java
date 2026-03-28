@@ -15,13 +15,9 @@
  */
 package io.flamingock.internal.core.operation.validate;
 
-import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.error.PendingChangesException;
-import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.AbstractPipelineTraverseOperation;
-import io.flamingock.internal.core.operation.execute.ExecuteArgs;
-import io.flamingock.internal.core.operation.execute.ExecuteResult;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
@@ -44,17 +40,7 @@ public class ValidateOperation extends AbstractPipelineTraverseOperation {
     }
 
     @Override
-    public ExecuteResult execute(ExecuteArgs args) {
-        ExecuteResponseData result;
-        try {
-            result = super.execute(args.getPipeline(), true);
-        } catch (FlamingockException flamingockException) {
-            throw flamingockException;
-        } catch (Throwable throwable) {
-            throw new FlamingockException(throwable);
-        } finally {
-            super.finalizer.run();
-        }
-        return new ExecuteResult(result);
+    protected boolean validateOnlyMode() {
+        return true;
     }
 }
