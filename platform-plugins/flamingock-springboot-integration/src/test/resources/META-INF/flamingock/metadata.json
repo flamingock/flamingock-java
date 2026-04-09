@@ -1,12 +1,38 @@
 {
-  "setup": "DEFAULT",
-  "stages": [
-    {
-      "name": "test-stage",
-      "type": "USER",
-      "sourcesPackage": "io.flamingock.springboot.test",
-      "tasks": [],
-      "parallel": false
-    }
-  ]
+  "pipeline" : {
+    "stages" : [ {
+      "name" : "test-stage",
+      "type" : "DEFAULT",
+      "sourcesPackage" : "io.flamingock.springboot.test",
+      "tasks" : [ {
+        "type" : "codePreviewChange",
+        "id" : "validation-only-test-change",
+        "order" : "001",
+        "author" : "test",
+        "source" : "io.flamingock.springboot.test._001__ValidationOnlyTestChange",
+        "runAlways" : false,
+        "transactionalFlag" : false,
+        "system" : false,
+        "targetSystem" : {
+          "id" : "test-system"
+        },
+        "recovery" : {
+          "strategy" : "MANUAL_INTERVENTION",
+          "alwaysRetry" : false
+        },
+        "legacy" : false,
+        "previewConstructor" : {
+          "parameterTypes" : [ ]
+        },
+        "applyPreviewMethod" : {
+          "name" : "apply",
+          "parameterTypes" : [ ]
+        },
+        "standard" : true,
+        "sortable" : true
+      } ]
+    } ]
+  },
+  "properties" : { },
+  "pipelineFile" : ""
 }

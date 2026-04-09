@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.operation;
+package io.flamingock.internal.common.core.error;
 
-public enum OperationType {
-    EXECUTE_APPLY,
-    EXECUTE_ROLLBACK,
-    EXECUTE_DRYRUN,
-    VALIDATE_APPLY,
-    AUDIT_LIST,
-    AUDIT_FIX,
-    ISSUE_LIST,
-    ISSUE_GET
+/**
+ * Exception thrown when Flamingock runs in validation-only mode and detects pending changes.
+ */
+public class PendingChangesException extends FlamingockException {
+
+    public PendingChangesException() {
+        super("Flamingock validationOnly=true: pending changes detected. Apply them before running in validation-only mode.");
+    }
 }

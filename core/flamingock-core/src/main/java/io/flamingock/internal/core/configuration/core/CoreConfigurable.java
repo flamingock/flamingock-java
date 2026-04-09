@@ -38,6 +38,10 @@ public interface CoreConfigurable {
 
     void setEnabled(boolean enabled);
 
+    void setValidationOnly(boolean validationOnly);
+
+    boolean isValidationOnly();
+
     void setServiceIdentifier(String serviceIdentifier);
 
     void setMetadata(Map<String, Object> metadata);

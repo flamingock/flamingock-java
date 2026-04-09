@@ -96,6 +96,11 @@ public class SpringbootProperties
     }
 
     @Override
+    public void setValidationOnly(boolean validationOnly) {
+        coreConfiguration.setValidationOnly(validationOnly);
+    }
+
+    @Override
     public void setServiceIdentifier(String serviceIdentifier) {
         coreConfiguration.setServiceIdentifier(serviceIdentifier);
     }
@@ -129,6 +134,11 @@ public class SpringbootProperties
     @Override
     public boolean isEnabled() {
         return coreConfiguration.isEnabled();
+    }
+
+    @Override
+    public boolean isValidationOnly() {
+        return coreConfiguration.isValidationOnly();
     }
 
     @Override
