@@ -5,8 +5,8 @@ plugins {
 
 fun Project.isBomModule(): Boolean = name.endsWith("-bom")
 fun Project.isLibraryModule(): Boolean = name !in setOf(
-    "flamingock-community-bom",
-    "flamingock-cloud-bom"
+    "flamingock-bom",
+    "flamingock-community-bom"
 )
 
 val fromComponentPublishing = if (isBomModule()) "javaPlatform" else "java"
