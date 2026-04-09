@@ -27,15 +27,15 @@ import io.flamingock.internal.util.id.RunnerId;
  * Validates the pipeline without executing any changes.
  * If pending changes exist, throws {@link PendingChangesException}.
  */
-public class ValidateOperation extends AbstractPipelineTraverseOperation {
+public class ValidateApplyOperation extends AbstractPipelineTraverseOperation {
 
-    public ValidateOperation(RunnerId runnerId,
-                             ExecutionPlanner executionPlanner,
-                             StageExecutor stageExecutor,
-                             OrphanExecutionContext orphanExecutionContext,
-                             EventPublisher eventPublisher,
-                             boolean throwExceptionIfCannotObtainLock,
-                             Runnable finalizer) {
+    public ValidateApplyOperation(RunnerId runnerId,
+                                  ExecutionPlanner executionPlanner,
+                                  StageExecutor stageExecutor,
+                                  OrphanExecutionContext orphanExecutionContext,
+                                  EventPublisher eventPublisher,
+                                  boolean throwExceptionIfCannotObtainLock,
+                                  Runnable finalizer) {
         super(runnerId, executionPlanner, stageExecutor, orphanExecutionContext, eventPublisher, throwExceptionIfCannotObtainLock, finalizer);
     }
 

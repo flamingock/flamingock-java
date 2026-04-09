@@ -21,7 +21,7 @@ import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.external.store.audit.AuditPersistence;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
-import io.flamingock.internal.core.operation.validate.ValidateOperation;
+import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
@@ -97,7 +97,7 @@ class OperationResolverTest {
     }
 
     @Test
-    @DisplayName("validationOnly=true with no operation → getOperation() routes to ValidateOperation")
+    @DisplayName("validationOnly=true with no operation → getOperation() routes to ValidateApplyOperation")
     void shouldRouteToValidateOperationWhenValidationOnlyIsTrue() throws Exception {
         // Given
         when(flamingockArgs.getOperation()).thenReturn(Optional.empty());
@@ -124,12 +124,12 @@ class OperationResolverTest {
         // Then
         assertNotNull(runnableOperation);
         Operation<?, ?> innerOperation = extractInnerOperation(runnableOperation);
-        assertInstanceOf(ValidateOperation.class, innerOperation,
-                "Expected the factory to route to ValidateOperation when validationOnly=true");
+        assertInstanceOf(ValidateApplyOperation.class, innerOperation,
+                "Expected the factory to route to ValidateApplyOperation when validationOnly=true");
     }
 
     @Test
-    @DisplayName("validationOnly=false with EXECUTE_APPLY → getOperation() does NOT route to ValidateOperation")
+    @DisplayName("validationOnly=false with EXECUTE_APPLY → getOperation() does NOT route to ValidateApplyOperation")
     void shouldNotRouteToValidateOperationWhenValidationOnlyIsFalse() throws Exception {
         // Given
         when(flamingockArgs.getOperation()).thenReturn(Optional.of(OperationType.EXECUTE_APPLY));
@@ -156,12 +156,12 @@ class OperationResolverTest {
         // Then
         assertNotNull(runnableOperation);
         Operation<?, ?> innerOperation = extractInnerOperation(runnableOperation);
-        // When validationOnly=false the standard AbstractPipelineTraverseOperation is used, not ValidateOperation
+        // When validationOnly=false the standard AbstractPipelineTraverseOperation is used, not ValidateApplyOperation
         assertNotNull(innerOperation);
-        // Verify it is NOT a ValidateOperation
-        boolean isValidateOp = innerOperation instanceof ValidateOperation;
+        // Verify it is NOT a ValidateApplyOperation
+        boolean isValidateOp = innerOperation instanceof ValidateApplyOperation;
         org.junit.jupiter.api.Assertions.assertFalse(isValidateOp,
-                "Expected the factory NOT to route to ValidateOperation when validationOnly=false");
+                "Expected the factory NOT to route to ValidateApplyOperation when validationOnly=false");
     }
 
     // ─────────────────────────── Helpers ───────────────────────────

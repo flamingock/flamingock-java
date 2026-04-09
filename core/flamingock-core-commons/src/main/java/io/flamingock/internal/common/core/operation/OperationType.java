@@ -19,7 +19,7 @@ public enum OperationType {
     EXECUTE_APPLY,
     EXECUTE_ROLLBACK,
     EXECUTE_DRYRUN,
-    VALIDATE,
+    VALIDATE_APPLY,
     AUDIT_LIST,
     AUDIT_FIX,
     ISSUE_LIST,

@@ -36,7 +36,7 @@ import io.flamingock.internal.core.operation.issue.IssueGetResult;
 import io.flamingock.internal.core.operation.issue.IssueListArgs;
 import io.flamingock.internal.core.operation.issue.IssueListOperation;
 import io.flamingock.internal.core.operation.issue.IssueListResult;
-import io.flamingock.internal.core.operation.validate.ValidateOperation;
+import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
@@ -96,13 +96,13 @@ public class OperationResolver {
 
     public RunnableOperation<?, ?> getOperation() {
         OperationType operationType = flamingockArgs.getOperation().orElse(
-            coreConfiguration.isValidationOnly() ? OperationType.VALIDATE : OperationType.EXECUTE_APPLY
+            coreConfiguration.isValidationOnly() ? OperationType.VALIDATE_APPLY : OperationType.EXECUTE_APPLY
         );
         switch (operationType) {
             case EXECUTE_APPLY:
                 return getExecuteApplyOperation();
-            case VALIDATE:
-                return getValidateOperation();
+            case VALIDATE_APPLY:
+                return getValidateApplyOperation();
             case AUDIT_LIST:
                 return getAuditListOperation();
             case AUDIT_FIX:
@@ -158,9 +158,9 @@ public class OperationResolver {
         return new RunnableOperation<>(executeApplyOperation, new ExecuteArgs(pipeline));
     }
 
-    private RunnableOperation<ExecuteArgs, ExecuteResult> getValidateOperation() {
+    private RunnableOperation<ExecuteArgs, ExecuteResult> getValidateApplyOperation() {
         final StageExecutor stageExecutor = new StageExecutor(dependencyContext, nonGuardedTypes, persistence, targetSystemManager, null);
-        ValidateOperation validateOperation = new ValidateOperation(
+        ValidateApplyOperation validateApplyOperation = new ValidateApplyOperation(
             runnerId,
             executionPlanner,
             stageExecutor,
@@ -168,7 +168,7 @@ public class OperationResolver {
             eventPublisher,
             isThrowExceptionIfCannotObtainLock,
             finalizer);
-        return new RunnableOperation<>(validateOperation, new ExecuteArgs(pipeline));
+        return new RunnableOperation<>(validateApplyOperation, new ExecuteArgs(pipeline));
     }
 
     private static OrphanExecutionContext buildExecutionContext(CoreConfigurable configuration) {

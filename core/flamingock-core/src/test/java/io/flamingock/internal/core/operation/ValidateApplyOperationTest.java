@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
 import io.flamingock.internal.core.operation.execute.ExecuteResult;
-import io.flamingock.internal.core.operation.validate.ValidateOperation;
+import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
@@ -54,10 +54,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for ValidateOperation — validation-only mode that checks for pending changes
+ * Tests for ValidateApplyOperation — validation-only mode that checks for pending changes
  * without executing them.
  */
-class ValidateOperationTest {
+class ValidateApplyOperationTest {
 
     @Mock
     private ExecutionPlanner executionPlanner;
@@ -77,7 +77,7 @@ class ValidateOperationTest {
     @Mock
     private AbstractLoadedTask loadedTask;
 
-    private ValidateOperation operation;
+    private ValidateApplyOperation operation;
     private RunnerId runnerId;
     private OrphanExecutionContext orphanContext;
     private Runnable noOpFinalizer;
@@ -89,7 +89,7 @@ class ValidateOperationTest {
         orphanContext = new OrphanExecutionContext("localhost", new HashMap<>());
         noOpFinalizer = () -> {};
 
-        operation = new ValidateOperation(
+        operation = new ValidateApplyOperation(
             runnerId,
             executionPlanner,
             stageExecutor,
@@ -119,7 +119,7 @@ class ValidateOperationTest {
         // Then
         assertNotNull(result);
         assertNotNull(result.getData());
-        // ValidateOperation uses resultBuilder.noChanges() — status is SUCCESS when no pending changes
+        // ValidateApplyOperation uses resultBuilder.noChanges() — status is SUCCESS when no pending changes
         assertEquals(ExecutionStatus.SUCCESS, result.getData().getStatus());
     }
 
