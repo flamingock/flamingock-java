@@ -21,11 +21,14 @@ import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 //TODO add recoveryStrategy, so we can determin the acction in the server
 public class TaskRequest {
 
-    private final String id;
+    private String id;
 
-    private final TargetSystemAuditMarkType ongoingStatus;
+    private TargetSystemAuditMarkType ongoingStatus;
 
-    private final boolean transactional;
+    private boolean transactional;
+
+    public TaskRequest() {
+    }
 
     public static TaskRequest task(String id, boolean transactional) {
         return new TaskRequest(id, TargetSystemAuditMarkType.NONE, transactional);
@@ -55,5 +58,17 @@ public class TaskRequest {
 
     public boolean isTransactional() {
         return transactional;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setOngoingStatus(TargetSystemAuditMarkType ongoingStatus) {
+        this.ongoingStatus = ongoingStatus;
+    }
+
+    public void setTransactional(boolean transactional) {
+        this.transactional = transactional;
     }
 }

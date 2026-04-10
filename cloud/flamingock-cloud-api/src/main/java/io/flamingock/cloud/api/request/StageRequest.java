@@ -18,11 +18,14 @@ package io.flamingock.cloud.api.request;
 import java.util.List;
 
 public class StageRequest {
-    private final String name;
+    private String name;
 
-    private final int order;
+    private int order;
 
-    private final List<TaskRequest> tasks;
+    private List<TaskRequest> tasks;
+
+    public StageRequest() {
+    }
 
     public StageRequest(String name, int order, List<TaskRequest> tasks) {
         this.name = name;
@@ -42,5 +45,15 @@ public class StageRequest {
         return tasks;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
 
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
+    public void setTasks(List<TaskRequest> tasks) {
+        this.tasks = tasks;
+    }
 }

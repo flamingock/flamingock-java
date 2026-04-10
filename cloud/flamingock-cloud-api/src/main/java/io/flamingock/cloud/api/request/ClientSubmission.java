@@ -18,7 +18,10 @@ package io.flamingock.cloud.api.request;
 import java.util.List;
 
 public class ClientSubmission {
-    private final List<StageRequest> stages;
+    private List<StageRequest> stages;
+
+    public ClientSubmission() {
+    }
 
     public ClientSubmission(List<StageRequest> stages) {
         this.stages = stages;
@@ -26,5 +29,9 @@ public class ClientSubmission {
 
     public List<StageRequest> getStages() {
         return stages;
+    }
+
+    public void setStages(List<StageRequest> stages) {
+        this.stages = stages;
     }
 }
