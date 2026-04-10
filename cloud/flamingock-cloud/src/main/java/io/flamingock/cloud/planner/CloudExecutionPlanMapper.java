@@ -23,7 +23,7 @@ import io.flamingock.cloud.api.request.StageRequest;
 import io.flamingock.cloud.api.request.TaskRequest;
 import io.flamingock.cloud.api.response.StageResponse;
 import io.flamingock.cloud.api.response.TaskResponse;
-import io.flamingock.cloud.api.response.CloudChangeAction;
+import io.flamingock.cloud.api.vo.CloudChangeAction;
 import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;

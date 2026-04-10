@@ -15,6 +15,6 @@
  */
 package io.flamingock.cloud.api.vo;
 
-public enum ActionResponse {
-    CONTINUE, EXECUTE, AWAIT
+public enum ExecutionAction {
+    CONTINUE, EXECUTE, AWAIT, ABORT
 }

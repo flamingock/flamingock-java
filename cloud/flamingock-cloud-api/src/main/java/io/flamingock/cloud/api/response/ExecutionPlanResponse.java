@@ -15,7 +15,7 @@
  */
 package io.flamingock.cloud.api.response;
 
-import io.flamingock.cloud.api.vo.ActionResponse;
+import io.flamingock.cloud.api.vo.ExecutionAction;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,11 +23,11 @@ import java.util.List;
 public class ExecutionPlanResponse {
 
 
-    private ActionResponse action;
+    private ExecutionAction action;
 
     private String executionId;
 
-    private LockResponse lock;
+    private LockInfo lock;
 
     private List<StageResponse> stages;
 
@@ -35,15 +35,15 @@ public class ExecutionPlanResponse {
     public ExecutionPlanResponse() {
     }
 
-    public ExecutionPlanResponse(ActionResponse action,
+    public ExecutionPlanResponse(ExecutionAction action,
                                  String executionId,
-                                 LockResponse lock) {
+                                 LockInfo lock) {
         this(action, executionId, lock, Collections.emptyList());
     }
 
-    public ExecutionPlanResponse(ActionResponse action,
+    public ExecutionPlanResponse(ExecutionAction action,
                                  String executionId,
-                                 LockResponse lock,
+                                 LockInfo lock,
                                  List<StageResponse> stages) {
         this.action = action;
         this.executionId = executionId;
@@ -51,7 +51,7 @@ public class ExecutionPlanResponse {
         this.stages = stages;
     }
 
-    public void setAction(ActionResponse action) {
+    public void setAction(ExecutionAction action) {
         this.action = action;
     }
 
@@ -63,11 +63,11 @@ public class ExecutionPlanResponse {
         this.executionId = executionId;
     }
 
-    public LockResponse getLock() {
+    public LockInfo getLock() {
         return lock;
     }
 
-    public void setLock(LockResponse lock) {
+    public void setLock(LockInfo lock) {
         this.lock = lock;
     }
 
@@ -80,19 +80,19 @@ public class ExecutionPlanResponse {
     }
 
     public boolean isContinue() {
-        return action == ActionResponse.CONTINUE;
+        return action == ExecutionAction.CONTINUE;
     }
 
-    public ActionResponse getAction() {
+    public ExecutionAction getAction() {
         return action;
     }
 
     public boolean isExecute() {
-        return action == ActionResponse.EXECUTE;
+        return action == ExecutionAction.EXECUTE;
     }
 
     public boolean isAwait() {
-        return action == ActionResponse.AWAIT;
+        return action == ExecutionAction.AWAIT;
     }
 
     public void validate() {

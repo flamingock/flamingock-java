@@ -24,17 +24,17 @@ import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.request.StageRequest;
 import io.flamingock.cloud.api.request.TaskRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
-import io.flamingock.cloud.api.response.LockResponse;
+import io.flamingock.cloud.api.response.LockInfo;
 import io.flamingock.cloud.api.response.StageResponse;
 import io.flamingock.cloud.api.response.TaskResponse;
-import io.flamingock.cloud.api.vo.ActionResponse;
+import io.flamingock.cloud.api.vo.ExecutionAction;
 import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static io.flamingock.cloud.api.response.CloudChangeAction.APPLY;
+import static io.flamingock.cloud.api.vo.CloudChangeAction.APPLY;
 
 public class MockExecutionPlanBuilder {
 
@@ -76,23 +76,23 @@ public class MockExecutionPlanBuilder {
                             transformTaskResponses(stagePrototype.getTasks(), mockRequestResponse))
                     ).collect(Collectors.toList());
 
-            LockResponse lock = new LockResponse();
+            LockInfo lock = new LockInfo();
             lock.setAcquisitionId(mockRequestResponse.getAcquisitionId());
             lock.setKey(serviceId);
             lock.setOwner(runnerId);
-            return new ExecutionPlanResponse(ActionResponse.EXECUTE, executionId, lock, stages);
+            return new ExecutionPlanResponse(ExecutionAction.EXECUTE, executionId, lock, stages);
 
         } else if (mockRequestResponse instanceof ExecutionAwaitRequestResponseMock) {
-            LockResponse lock = new LockResponse();
+            LockInfo lock = new LockInfo();
             lock.setAcquisitionId(mockRequestResponse.getAcquisitionId());
             lock.setKey(serviceId);
             lock.setOwner(runnerId);
             lock.setAcquiredForMillis(mockRequestResponse.getAcquiredForMillis());
-            return new ExecutionPlanResponse(ActionResponse.AWAIT, executionId, lock);
+            return new ExecutionPlanResponse(ExecutionAction.AWAIT, executionId, lock);
         } else {
             //IT'S CONTINUE
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
-            executionPlanResponse.setAction(ActionResponse.CONTINUE);
+            executionPlanResponse.setAction(ExecutionAction.CONTINUE);
             return executionPlanResponse;
         }
 

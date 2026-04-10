@@ -15,6 +15,8 @@
  */
 package io.flamingock.cloud.api.response;
 
+import io.flamingock.cloud.api.vo.CloudChangeAction;
+
 public class TaskResponse {
     private String id;
     private CloudChangeAction action;

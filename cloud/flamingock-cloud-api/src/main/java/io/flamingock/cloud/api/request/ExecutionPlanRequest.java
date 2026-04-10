@@ -19,9 +19,9 @@ import java.util.List;
 
 public class ExecutionPlanRequest {
 
+    private final ClientSubmission clientSubmission;
     private final long lockAcquiredForMillis;
 
-    private final ClientSubmission clientSubmission;
 
     public ExecutionPlanRequest(long lockAcquiredForMillis, List<StageRequest> stages) {
         this.lockAcquiredForMillis = lockAcquiredForMillis;

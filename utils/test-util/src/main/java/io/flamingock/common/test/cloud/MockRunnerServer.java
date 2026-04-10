@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.flamingock.common.test.cloud.utils.JsonMapper.toJson;
-import static io.flamingock.cloud.api.response.CloudChangeAction.APPLY;
+import static io.flamingock.cloud.api.vo.CloudChangeAction.APPLY;
 
 public final class MockRunnerServer {
 

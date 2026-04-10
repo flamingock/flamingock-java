@@ -15,7 +15,7 @@
  */
 package io.flamingock.cloud.api.response;
 
-public class LockResponse {
+public class LockInfo {
 
     private String key;
 
@@ -26,7 +26,7 @@ public class LockResponse {
     private long acquiredForMillis;
 
 
-    public LockResponse() {
+    public LockInfo() {
     }
 
     public String getKey() {

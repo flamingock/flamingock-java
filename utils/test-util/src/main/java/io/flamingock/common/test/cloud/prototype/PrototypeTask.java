@@ -18,7 +18,7 @@ package io.flamingock.common.test.cloud.prototype;
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
 import io.flamingock.cloud.api.request.TaskRequest;
-import io.flamingock.cloud.api.response.CloudChangeAction;
+import io.flamingock.cloud.api.vo.CloudChangeAction;
 import io.flamingock.cloud.api.response.TaskResponse;
 import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 
