@@ -14,13 +14,10 @@ get_version() {
   echo "${version:-NOT FOUND}"
 }
 
-printf "%-40s %s\n" "ARTIFACT" "LATEST VERSION"
-printf "%-40s %s\n" "----------------------------------------" "---------------"
-
-printf "%-40s %s\n" "General utils"            "$(get_version flamingock-general-util)"
-printf "%-40s %s\n" "Template API"             "$(get_version flamingock-template-api)"
-printf "%-40s %s\n" "Core API"                 "$(get_version flamingock-core-api)"
-printf "%-40s %s\n" "SQL tools"                "$(get_version flamingock-sql-template)"
-printf "%-40s %s\n" "MongoDB template"         "$(get_version flamingock-mongodb-sync-template)"
+echo "    extra[\"generalUtilVersion\"] = \"$(get_version flamingock-general-util)\""
+echo "    extra[\"templateApiVersion\"] = \"$(get_version flamingock-template-api)\""
+echo "    extra[\"coreApiVersion\"] = \"$(get_version flamingock-core-api)\""
+echo "    extra[\"sqlVersion\"] = \"$(get_version flamingock-sql-template)\""
+echo "    extra[\"mongodbTemplateVersion\"] = \"$(get_version flamingock-mongodb-sync-template)\""
 echo
-printf "%-40s %s\n" "Core BOM"                 "$(get_version flamingock-bom)"
+echo "    Core BOM: $(get_version flamingock-bom)"
