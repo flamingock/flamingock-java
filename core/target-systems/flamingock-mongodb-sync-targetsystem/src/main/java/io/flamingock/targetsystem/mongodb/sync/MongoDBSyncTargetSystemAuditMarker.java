@@ -26,7 +26,7 @@ import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
 import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;

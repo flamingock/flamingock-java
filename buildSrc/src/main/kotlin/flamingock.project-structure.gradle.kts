@@ -11,12 +11,13 @@ val coreProjects = setOf(
     "flamingock-template-api",
     "flamingock-processor",
     "flamingock-graalvm",
-    "flamingock-test-support"
+    "flamingock-test-support",
+    "flamingock-bom"
 )
 
 val cloudProjects = setOf(
     "flamingock-cloud",
-    "flamingock-cloud-bom"
+    "flamingock-cloud-api"
 )
 
 val communityProjects = setOf(
@@ -76,7 +77,7 @@ val allProjects = coreProjects + cloudProjects + communityProjects + pluginProje
 
 // Project classification utilities
 fun Project.isBomModule(): Boolean = name.endsWith("-bom")
-fun Project.isLibraryModule(): Boolean = name !in setOf("flamingock-community-bom", "flamingock-cloud-bom", "flamingock-community-bom")
+fun Project.isLibraryModule(): Boolean = name !in setOf("flamingock-bom", "flamingock-community-bom")
 
 // Module category lookup
 fun Project.getProjectCategory(): String? = when (name) {

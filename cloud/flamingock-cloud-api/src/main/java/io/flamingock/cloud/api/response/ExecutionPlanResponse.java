@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.cloud.planner.response;
+package io.flamingock.cloud.api.response;
 
-import io.flamingock.internal.common.cloud.vo.ActionResponse;
+import io.flamingock.cloud.api.vo.ActionResponse;
 
 import java.util.Collections;
 import java.util.List;

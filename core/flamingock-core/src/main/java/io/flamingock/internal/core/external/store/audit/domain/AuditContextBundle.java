@@ -18,7 +18,7 @@ package io.flamingock.internal.core.external.store.audit.domain;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.util.ThrowableUtil;
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
 import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;

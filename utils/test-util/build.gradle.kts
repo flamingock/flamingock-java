@@ -3,6 +3,7 @@ val generalUtilVersion: String by extra
 dependencies {
 
     api("io.flamingock:flamingock-general-util:${generalUtilVersion}")
+    api(project(":cloud:flamingock-cloud-api"))
     api(project(":core:flamingock-core"))
     api(project(":core:flamingock-core-commons"))
     api(project(":core:flamingock-processor"))

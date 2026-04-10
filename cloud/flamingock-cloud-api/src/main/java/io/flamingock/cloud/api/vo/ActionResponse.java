@@ -13,33 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.cloud.planner.response;
+package io.flamingock.cloud.api.vo;
 
-public class TaskResponse {
-    private String id;
-    private CloudChangeAction action;
-
-    public TaskResponse() {
-    }
-
-    public TaskResponse(String id, CloudChangeAction action) {
-        this.id = id;
-        this.action = action;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public CloudChangeAction getAction() {
-        return action;
-    }
-
-    public void setAction(CloudChangeAction action) {
-        this.action = action;
-    }
+public enum ActionResponse {
+    CONTINUE, EXECUTE, AWAIT
 }

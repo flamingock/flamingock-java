@@ -15,11 +15,11 @@
  */
 package io.flamingock.common.test.cloud.deprecated;
 
-import io.flamingock.internal.common.cloud.planner.response.LockResponse;
-import io.flamingock.internal.common.cloud.planner.response.StageResponse;
-import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
-import io.flamingock.internal.common.cloud.vo.ActionResponse;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.response.LockResponse;
+import io.flamingock.cloud.api.response.StageResponse;
+import io.flamingock.cloud.api.response.TaskResponse;
+import io.flamingock.cloud.api.vo.ActionResponse;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
@@ -27,9 +27,9 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import io.flamingock.internal.common.cloud.auth.AuthRequest;
 import io.flamingock.internal.common.cloud.auth.AuthResponse;
-import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
-import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
-import io.flamingock.internal.common.cloud.planner.request.StageRequest; import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
+import io.flamingock.cloud.api.request.ExecutionPlanRequest;
+import io.flamingock.cloud.api.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.request.StageRequest; import io.flamingock.cloud.api.request.TaskRequest;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 
 import java.util.*;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.flamingock.common.test.cloud.utils.JsonMapper.toJson;
-import static io.flamingock.internal.common.cloud.planner.response.CloudChangeAction.APPLY;
+import static io.flamingock.cloud.api.response.CloudChangeAction.APPLY;
 
 @Deprecated
 public final class MockRunnerServerOld {

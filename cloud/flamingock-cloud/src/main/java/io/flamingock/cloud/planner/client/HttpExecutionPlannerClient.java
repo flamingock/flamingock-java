@@ -16,8 +16,8 @@
 package io.flamingock.cloud.planner.client;
 
 import io.flamingock.cloud.auth.AuthManager;
-import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
-import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.request.ExecutionPlanRequest;
+import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.util.id.RunnerId;
