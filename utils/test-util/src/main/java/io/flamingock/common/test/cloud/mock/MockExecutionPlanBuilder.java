@@ -20,21 +20,21 @@ import io.flamingock.common.test.cloud.prototype.PrototypeTask;
 import io.flamingock.common.test.cloud.execution.ExecutionAwaitRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
-import io.flamingock.internal.common.cloud.planner.request.ExecutionPlanRequest;
-import io.flamingock.internal.common.cloud.planner.request.StageRequest;
-import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
-import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
-import io.flamingock.internal.common.cloud.planner.response.LockResponse;
-import io.flamingock.internal.common.cloud.planner.response.StageResponse;
-import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
-import io.flamingock.internal.common.cloud.vo.ActionResponse;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.request.ExecutionPlanRequest;
+import io.flamingock.cloud.api.request.StageRequest;
+import io.flamingock.cloud.api.request.TaskRequest;
+import io.flamingock.cloud.api.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.response.LockInfo;
+import io.flamingock.cloud.api.response.StageResponse;
+import io.flamingock.cloud.api.response.TaskResponse;
+import io.flamingock.cloud.api.vo.ExecutionAction;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.cloud.planner.response.CloudChangeAction.APPLY;
+import static io.flamingock.cloud.api.vo.CloudChangeAction.APPLY;
 
 public class MockExecutionPlanBuilder {
 
@@ -76,23 +76,23 @@ public class MockExecutionPlanBuilder {
                             transformTaskResponses(stagePrototype.getTasks(), mockRequestResponse))
                     ).collect(Collectors.toList());
 
-            LockResponse lock = new LockResponse();
+            LockInfo lock = new LockInfo();
             lock.setAcquisitionId(mockRequestResponse.getAcquisitionId());
             lock.setKey(serviceId);
             lock.setOwner(runnerId);
-            return new ExecutionPlanResponse(ActionResponse.EXECUTE, executionId, lock, stages);
+            return new ExecutionPlanResponse(ExecutionAction.EXECUTE, executionId, lock, stages);
 
         } else if (mockRequestResponse instanceof ExecutionAwaitRequestResponseMock) {
-            LockResponse lock = new LockResponse();
+            LockInfo lock = new LockInfo();
             lock.setAcquisitionId(mockRequestResponse.getAcquisitionId());
             lock.setKey(serviceId);
             lock.setOwner(runnerId);
             lock.setAcquiredForMillis(mockRequestResponse.getAcquiredForMillis());
-            return new ExecutionPlanResponse(ActionResponse.AWAIT, executionId, lock);
+            return new ExecutionPlanResponse(ExecutionAction.AWAIT, executionId, lock);
         } else {
             //IT'S CONTINUE
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
-            executionPlanResponse.setAction(ActionResponse.CONTINUE);
+            executionPlanResponse.setAction(ExecutionAction.CONTINUE);
             return executionPlanResponse;
         }
 

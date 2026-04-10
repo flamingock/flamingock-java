@@ -17,10 +17,10 @@ package io.flamingock.common.test.cloud.prototype;
 
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
-import io.flamingock.internal.common.cloud.planner.request.TaskRequest;
-import io.flamingock.internal.common.cloud.planner.response.CloudChangeAction;
-import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.request.TaskRequest;
+import io.flamingock.cloud.api.vo.CloudChangeAction;
+import io.flamingock.cloud.api.response.TaskResponse;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 
 public class PrototypeTask {
     private final String taskId;

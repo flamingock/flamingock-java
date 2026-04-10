@@ -1,6 +1,7 @@
 val coreApiVersion: String by extra
 dependencies {
 // Core
+    api(project(":cloud:flamingock-cloud-api"))
     implementation(project(":core:flamingock-core"))
     api("io.flamingock:flamingock-core-api:${coreApiVersion}")
 // target systems

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.cloud.planner.response;
+package io.flamingock.cloud.api.response;
 
-public class LockResponse {
+public class LockInfo {
 
     private String key;
 
@@ -26,7 +26,7 @@ public class LockResponse {
     private long acquiredForMillis;
 
 
-    public LockResponse() {
+    public LockInfo() {
     }
 
     public String getKey() {

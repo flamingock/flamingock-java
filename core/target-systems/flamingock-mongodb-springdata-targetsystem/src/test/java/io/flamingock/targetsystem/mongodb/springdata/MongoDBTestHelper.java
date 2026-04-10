@@ -17,7 +17,7 @@ package io.flamingock.targetsystem.mongodb.springdata;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.store.audit.domain.AuditContextBundle;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;

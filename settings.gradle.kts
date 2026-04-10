@@ -28,6 +28,10 @@ include("core:flamingock-test-support")
 project(":core:flamingock-test-support").name = "flamingock-test-support"
 project(":core:flamingock-test-support").projectDir = file("core/flamingock-test-support")
 
+include("core:flamingock-bom")
+project(":core:flamingock-bom").name = "flamingock-bom"
+project(":core:flamingock-bom").projectDir = file("core/flamingock-bom")
+
 
 //////////////////////////////////////
 // CLOUD
@@ -36,9 +40,9 @@ include("cloud:flamingock-cloud")
 project(":cloud:flamingock-cloud").name = "flamingock-cloud"
 project(":cloud:flamingock-cloud").projectDir = file("cloud/flamingock-cloud")
 
-include("cloud:flamingock-cloud-bom")
-project(":cloud:flamingock-cloud-bom").name = "flamingock-cloud-bom"
-project(":cloud:flamingock-cloud-bom").projectDir = file("cloud/flamingock-cloud-bom")
+include("cloud:flamingock-cloud-api")
+project(":cloud:flamingock-cloud-api").name = "flamingock-cloud-api"
+project(":cloud:flamingock-cloud-api").projectDir = file("cloud/flamingock-cloud-api")
 
 //////////////////////////////////////
 // COMMUNITY

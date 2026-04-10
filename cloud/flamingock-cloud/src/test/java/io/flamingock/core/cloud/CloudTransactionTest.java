@@ -23,7 +23,7 @@ import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.AfterEach;

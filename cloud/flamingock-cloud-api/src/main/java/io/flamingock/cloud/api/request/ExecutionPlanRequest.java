@@ -13,19 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.cloud.planner.request;
+package io.flamingock.cloud.api.request;
 
 import java.util.List;
 
 public class ExecutionPlanRequest {
 
-    private final long lockAcquiredForMillis;
+    private ClientSubmission clientSubmission;
+    private long lockAcquiredForMillis;
 
-    private final ClientSubmission clientSubmission;
+    public ExecutionPlanRequest() {
+    }
 
     public ExecutionPlanRequest(long lockAcquiredForMillis, List<StageRequest> stages) {
         this.lockAcquiredForMillis = lockAcquiredForMillis;
         this.clientSubmission = new ClientSubmission(stages);
+    }
+
+    public void setClientSubmission(ClientSubmission clientSubmission) {
+        this.clientSubmission = clientSubmission;
+    }
+
+    public void setLockAcquiredForMillis(long lockAcquiredForMillis) {
+        this.lockAcquiredForMillis = lockAcquiredForMillis;
     }
 
     public long getLockAcquiredForMillis() {
@@ -35,5 +45,6 @@ public class ExecutionPlanRequest {
     public ClientSubmission getClientSubmission() {
         return clientSubmission;
     }
+
 }
 

@@ -27,10 +27,10 @@ import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.common.test.cloud.prototype.PrototypeTask;
 import io.flamingock.internal.common.cloud.auth.AuthRequest;
 import io.flamingock.internal.common.cloud.auth.AuthResponse;
-import io.flamingock.internal.common.cloud.planner.request.StageRequest;
-import io.flamingock.internal.common.cloud.planner.response.ExecutionPlanResponse;
-import io.flamingock.internal.common.cloud.planner.response.StageResponse;
-import io.flamingock.internal.common.cloud.planner.response.TaskResponse;
+import io.flamingock.cloud.api.request.StageRequest;
+import io.flamingock.cloud.api.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.response.StageResponse;
+import io.flamingock.cloud.api.response.TaskResponse;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.util.*;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.flamingock.common.test.cloud.utils.JsonMapper.toJson;
-import static io.flamingock.internal.common.cloud.planner.response.CloudChangeAction.APPLY;
+import static io.flamingock.cloud.api.vo.CloudChangeAction.APPLY;
 
 public final class MockRunnerServer {
 

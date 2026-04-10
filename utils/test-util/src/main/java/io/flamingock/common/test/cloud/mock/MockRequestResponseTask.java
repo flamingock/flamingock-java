@@ -15,8 +15,8 @@
  */
 package io.flamingock.common.test.cloud.mock;
 
-import io.flamingock.internal.common.cloud.planner.response.CloudChangeAction;
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.CloudChangeAction;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 
 public class MockRequestResponseTask {
     private final String taskId;

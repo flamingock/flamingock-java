@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.external.targets.mark;
 
-import io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 
 public class TargetSystemAuditMark {
 

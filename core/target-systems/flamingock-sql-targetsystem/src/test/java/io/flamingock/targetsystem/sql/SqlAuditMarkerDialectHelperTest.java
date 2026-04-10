@@ -17,6 +17,7 @@ package io.flamingock.targetsystem.sql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.transaction.TransactionManager;
@@ -174,7 +175,7 @@ public class SqlAuditMarkerDialectHelperTest {
             // GIVEN
             String taskId1 = "test-task-id1";
             String taskId2 = "test-task-id2";
-            io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType operation = io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType.ROLLBACK;
+            TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLBACK;
 
             TargetSystemAuditMark mark1 = new TargetSystemAuditMark(taskId1, operation);
             TargetSystemAuditMark mark2 = new TargetSystemAuditMark(taskId2, operation);
@@ -220,7 +221,7 @@ public class SqlAuditMarkerDialectHelperTest {
             // GIVEN
             String taskId1 = "test-task-id1";
             String taskId2 = "test-task-id2";
-            io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType operation = io.flamingock.internal.common.cloud.vo.TargetSystemAuditMarkType.ROLLBACK;
+            TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLBACK;
 
             TargetSystemAuditMark mark1 = new TargetSystemAuditMark(taskId1, operation);
             TargetSystemAuditMark mark2 = new TargetSystemAuditMark(taskId2, operation);
