@@ -16,9 +16,9 @@
 package io.flamingock.cloud.auth;
 
 
-import io.flamingock.internal.common.cloud.auth.AuthRequest;
-import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.cloud.api.request.TokenExchangeRequest;
+import io.flamingock.cloud.api.response.TokenExchangeResponse;
 
 public interface AuthClient {
-    AuthResponse getToken(AuthRequest request);
+    TokenExchangeResponse getToken(TokenExchangeRequest request);
 }

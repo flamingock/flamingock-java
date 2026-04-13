@@ -25,8 +25,8 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import io.flamingock.internal.common.cloud.auth.AuthRequest;
-import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.cloud.api.request.TokenExchangeRequest;
+import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.cloud.api.request.StageRequest; import io.flamingock.cloud.api.request.TaskRequest;
@@ -57,16 +57,16 @@ public final class MockRunnerServerOld {
 
     private int serverPort = 8888;
 
-    private String organisationId = "default-organisation-id";
+    private long organisationId = 1L;
     private String organisationName = "default-organisation-name";
 
-    private String projectId = "default-project-id";
+    private long projectId = 2L;
     private String projectName = "default-project-name";
 
-    private String serviceId = "default-service-id";
+    private long serviceId = 3L;
     private String serviceName = "default-service-name";
 
-    private String environmentId = "default-environment-name";
+    private long environmentId = 4L;
     private String environmentName = "default-environment-name";
 
     private String runnerId = "default-runner-name";
@@ -75,7 +75,7 @@ public final class MockRunnerServerOld {
 
     private String apiToken = "default-api-token";
 
-    private String credentialId = "default-credential-id";
+    private long credentialId = 5L;
 
     public MockRunnerServerOld setServerPort(int serverPort) {
         this.serverPort = serverPort;
@@ -87,7 +87,7 @@ public final class MockRunnerServerOld {
         return this;
     }
 
-    public MockRunnerServerOld setOrganisationId(String organisationId) {
+    public MockRunnerServerOld setOrganisationId(long organisationId) {
         this.organisationId = organisationId;
         return this;
     }
@@ -97,7 +97,7 @@ public final class MockRunnerServerOld {
         return this;
     }
 
-    public MockRunnerServerOld setProjectId(String projectId) {
+    public MockRunnerServerOld setProjectId(long projectId) {
         this.projectId = projectId;
         return this;
     }
@@ -107,12 +107,12 @@ public final class MockRunnerServerOld {
         return this;
     }
 
-    public MockRunnerServerOld setCredentialId(String credentialId) {
+    public MockRunnerServerOld setCredentialId(long credentialId) {
         this.credentialId = credentialId;
         return this;
     }
 
-    public MockRunnerServerOld setServiceId(String serviceId) {
+    public MockRunnerServerOld setServiceId(long serviceId) {
         this.serviceId = serviceId;
         return this;
     }
@@ -122,7 +122,7 @@ public final class MockRunnerServerOld {
         return this;
     }
 
-    public MockRunnerServerOld setEnvironmentId(String environmentId) {
+    public MockRunnerServerOld setEnvironmentId(long environmentId) {
         this.environmentId = environmentId;
         return this;
     }
@@ -251,7 +251,7 @@ public final class MockRunnerServerOld {
 
     private void importerCall() {
         String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/import"//?elapsedMillis={elapsedMillis}"
-                .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId);
+                .replace("{environmentId}", String.valueOf(environmentId)).replace("{serviceId}", String.valueOf(serviceId));
 
         wireMockServer.stubFor(post(urlPathEqualTo(executionUrl))
                 .withRequestBody(equalToJson(toJson(importerExecutionRequest)))
@@ -290,9 +290,9 @@ public final class MockRunnerServerOld {
 
     private void mockAuthEndpoint() {
 
-        AuthRequest authRequest = new AuthRequest(apiToken, serviceName, environmentName);
+        TokenExchangeRequest authRequest = new TokenExchangeRequest(apiToken, serviceName, environmentName);
 
-        AuthResponse tokenResponse = new AuthResponse();
+        TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
         tokenResponse.setJwt(jwt);
         tokenResponse.setCredentialId(credentialId);
         tokenResponse.setOrganisationId(organisationId);
@@ -312,7 +312,7 @@ public final class MockRunnerServerOld {
 
     private void mockExecutionEndpoint() {
         String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution"//?elapsedMillis={elapsedMillis}"
-                .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId)
+                .replace("{environmentId}", String.valueOf(environmentId)).replace("{serviceId}", String.valueOf(serviceId))
 //                .replace("{elapsedMillis}", String.valueOf(executionExpectation.getElapsedMillis()))
                 ;
 
@@ -347,8 +347,8 @@ public final class MockRunnerServerOld {
 
         if(executionExpectation != null) {
             String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/task/{taskId}/audit"
-                    .replace("{environmentId}", environmentId)
-                    .replace("{serviceId}", serviceId)
+                    .replace("{environmentId}", String.valueOf(environmentId))
+                    .replace("{serviceId}", String.valueOf(serviceId))
                     .replace("{executionId}", executionExpectation.getExecutionId());
 
             List<AuditEntryMatcher> auditEntryExpectations = executionExpectation.getAuditEntryExpectations();
@@ -392,14 +392,14 @@ public final class MockRunnerServerOld {
 
     private void mockReleaseLockEndpoint() {
         LockInfo lockResponse = new LockInfo();
-        lockResponse.setKey(serviceId);
+        lockResponse.setKey(String.valueOf(serviceId));
         lockResponse.setOwner(runnerId);
         if(executionExpectation != null) {
             lockResponse.setAcquiredForMillis(executionExpectation.getAcquiredForMillis());
         }
         lockResponse.setAcquisitionId(DEFAULT_LOCK_ACQUISITION_ID);
 
-        String url = "/api/v1/{key}/lock".replace("{key}", serviceId);
+        String url = "/api/v1/{key}/lock".replace("{key}", String.valueOf(serviceId));
         wireMockServer.stubFor(delete(urlPathEqualTo(url)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(toJson(lockResponse))));
     }
 
@@ -417,7 +417,7 @@ public final class MockRunnerServerOld {
             executionPlanResponse.setAction(ExecutionAction.EXECUTE);
 
             LockInfo lockMock = new LockInfo();
-            lockMock.setKey(serviceId);
+            lockMock.setKey(String.valueOf(serviceId));
             lockMock.setOwner(runnerId);
             lockMock.setAcquiredForMillis(requestResponse.getAcquiredForMillis());
             lockMock.setAcquisitionId(requestResponse.getAcquisitionId());

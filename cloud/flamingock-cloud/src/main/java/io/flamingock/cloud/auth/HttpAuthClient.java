@@ -16,8 +16,8 @@
 package io.flamingock.cloud.auth;
 
 import io.flamingock.internal.util.http.Http;
-import io.flamingock.internal.common.cloud.auth.AuthRequest;
-import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.cloud.api.request.TokenExchangeRequest;
+import io.flamingock.cloud.api.response.TokenExchangeResponse;
 
 public class HttpAuthClient implements AuthClient {
 
@@ -34,10 +34,10 @@ public class HttpAuthClient implements AuthClient {
     }
 
     @Override
-    public AuthResponse getToken(AuthRequest request) {
+    public TokenExchangeResponse getToken(TokenExchangeRequest request) {
         return requestBuilder
                 .POST(pathTemplate)
                 .setBody(request)
-                .execute(AuthResponse.class);
+                .execute(TokenExchangeResponse.class);
     }
 }
