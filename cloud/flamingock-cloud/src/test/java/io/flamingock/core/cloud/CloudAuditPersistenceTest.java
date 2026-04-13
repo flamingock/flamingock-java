@@ -26,7 +26,7 @@ import io.flamingock.internal.util.ThreadSleeper;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
 import io.flamingock.internal.core.external.store.lock.LockException;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
@@ -80,7 +80,7 @@ public class CloudAuditPersistenceTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template",
-                AuditEntryRequest.Status.APPLIED,
+                AuditEntryRequest.AuditEntryStatus.APPLIED,
                 _001__CloudChange1.class.getName(),
                 "apply"
         ));
@@ -88,7 +88,7 @@ public class CloudAuditPersistenceTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template-2",
-                AuditEntryRequest.Status.APPLIED,
+                AuditEntryRequest.AuditEntryStatus.APPLIED,
                 _002__CloudChange2.class.getName(),
                 "apply"
         ));

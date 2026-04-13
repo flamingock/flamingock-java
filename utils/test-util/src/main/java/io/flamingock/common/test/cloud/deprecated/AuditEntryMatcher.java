@@ -16,23 +16,23 @@
 package io.flamingock.common.test.cloud.deprecated;
 
 
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
 
 import java.beans.Transient;
 
 @Deprecated
 public class AuditEntryMatcher {
     private final String taskId;
-    private final AuditEntryRequest.Status state;
+    private final AuditEntryRequest.AuditEntryStatus state;
     private final String className;
     private final String methodName;
     private final boolean transactional;
 
-    public AuditEntryMatcher(String taskId, AuditEntryRequest.Status state, String className, String methodName) {
+    public AuditEntryMatcher(String taskId, AuditEntryRequest.AuditEntryStatus state, String className, String methodName) {
         this(taskId, state, className, methodName, true);
     }
 
-    public AuditEntryMatcher(String taskId, AuditEntryRequest.Status state, String className, String methodName, boolean transactional) {
+    public AuditEntryMatcher(String taskId, AuditEntryRequest.AuditEntryStatus state, String className, String methodName, boolean transactional) {
         this.taskId = taskId;
         this.state = state;
         this.className = className;
@@ -44,7 +44,7 @@ public class AuditEntryMatcher {
         return taskId;
     }
 
-    public AuditEntryRequest.Status getState() {
+    public AuditEntryRequest.AuditEntryStatus getState() {
         return state;
     }
 

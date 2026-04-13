@@ -59,9 +59,9 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
 
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.APPLIED;
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.FAILED;
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
+import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.APPLIED;
+import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.FAILED;
+import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.ROLLED_BACK;
 
 @Testcontainers
 public class CouchbaseTargetSystemTest {

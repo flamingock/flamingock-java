@@ -22,7 +22,7 @@ import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
 import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.builder.runner.Runner;
@@ -73,7 +73,7 @@ public class CloudTransactionTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template",
-                AuditEntryRequest.Status.APPLIED,
+                AuditEntryRequest.AuditEntryStatus.APPLIED,
                 _001__CloudChange1.class.getName(),
                 "apply"
         ));
@@ -81,7 +81,7 @@ public class CloudTransactionTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template-2",
-                AuditEntryRequest.Status.APPLIED,
+                AuditEntryRequest.AuditEntryStatus.APPLIED,
                 _002__CloudChange2.class.getName(),
                 "apply"
         ));

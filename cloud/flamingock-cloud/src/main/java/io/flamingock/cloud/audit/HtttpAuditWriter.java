@@ -15,8 +15,9 @@
  */
 package io.flamingock.cloud.audit;
 
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
 import io.flamingock.cloud.auth.AuthManager;
+import io.flamingock.cloud.api.request.CloudAuditTxType;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -85,6 +86,7 @@ public class HtttpAuditWriter implements CloudAuditWriter {
 
     private AuditEntryRequest buildRequest(AuditEntry auditEntry) {
         long appliedAtEpochMillis = ZonedDateTime.of(auditEntry.getCreatedAt(), ZoneId.systemDefault()).toInstant().toEpochMilli();
+        CloudAuditTxType txType = auditEntry.getTxType() != null ? auditEntry.getTxType().toCloud() : null;
         return new AuditEntryRequest(
                 auditEntry.getStageId(),
                 auditEntry.getTaskId(),
@@ -99,7 +101,7 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange() != null ? auditEntry.getSystemChange() : false,
                 auditEntry.getErrorTrace(),
-                auditEntry.getTxType(),
+                txType,
                 auditEntry.getTargetSystemId(),
                 auditEntry.getOrder(),
                 auditEntry.getRecoveryStrategy(),
