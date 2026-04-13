@@ -64,7 +64,7 @@ class HttpAuditWriterMapperTest {
         );
 
         // Then
-        assertEquals(AuditTxType.TX_SHARED, request.getTxStrategy());
+        assertEquals(CloudAuditTxType.TX_SHARED, request.getTxStrategy());
     }
 
     @Test
@@ -96,6 +96,6 @@ class HttpAuditWriterMapperTest {
         );
 
         // Then
-        assertEquals(AuditTxType.NON_TX, request.getTxStrategy());
+        assertEquals(CloudAuditTxType.NON_TX, request.getTxStrategy());
     }
 }

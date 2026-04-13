@@ -15,8 +15,8 @@
  */
 package io.flamingock.cloud.lock;
 
-import io.flamingock.internal.common.cloud.lock.LockExtensionRequest;
-import io.flamingock.internal.common.cloud.lock.LockResponse;
+import io.flamingock.cloud.api.request.LockExtensionRequest;
+import io.flamingock.cloud.api.response.LockInfo;
 import io.flamingock.cloud.lock.client.LockServiceClient;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
 import io.flamingock.internal.core.external.store.lock.LockKey;
@@ -40,8 +40,8 @@ public class CloudLockService implements LockService {
     @Override
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
         try {
-            LockResponse lockExtension = client.extendLock(key, owner, new LockExtensionRequest(leaseMillis));
-            return new LockAcquisition(RunnerId.fromString(lockExtension.getOwner()), lockExtension.getLockAcquiredForMillis());
+            LockInfo lockExtension = client.extendLock(key, owner, new LockExtensionRequest(leaseMillis));
+            return new LockAcquisition(RunnerId.fromString(lockExtension.getOwner()), lockExtension.getAcquiredForMillis());
 
         } catch (ServerException ex) {
             throw new LockServiceException(
@@ -61,8 +61,8 @@ public class CloudLockService implements LockService {
     @Override
     public LockAcquisition getLock(LockKey lockKey) {
         try {
-            LockResponse response = client.getLock(lockKey);
-            return new LockAcquisition(RunnerId.fromString(response.getOwner()), response.getLockAcquiredForMillis());
+            LockInfo response = client.getLock(lockKey);
+            return new LockAcquisition(RunnerId.fromString(response.getOwner()), response.getAcquiredForMillis());
 
         } catch (ServerException ex) {
             throw new LockServiceException(

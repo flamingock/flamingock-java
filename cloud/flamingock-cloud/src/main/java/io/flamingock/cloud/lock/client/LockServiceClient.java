@@ -15,18 +15,18 @@
  */
 package io.flamingock.cloud.lock.client;
 
-import io.flamingock.internal.common.cloud.lock.LockExtensionRequest;
-import io.flamingock.internal.common.cloud.lock.LockResponse;
+import io.flamingock.cloud.api.request.LockExtensionRequest;
+import io.flamingock.cloud.api.response.LockInfo;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
 
 public interface LockServiceClient {
 
-    LockResponse extendLock(LockKey lockKey,
-                            RunnerId runnerId,
-                            LockExtensionRequest lockRequest);
+    LockInfo extendLock(LockKey lockKey,
+                        RunnerId runnerId,
+                        LockExtensionRequest lockRequest);
 
-    LockResponse getLock(LockKey lockKey);
+    LockInfo getLock(LockKey lockKey);
 
     void releaseLock(LockKey lockKey, RunnerId runnerId);
 }
