@@ -15,7 +15,7 @@
  */
 package io.flamingock.targetsystem.dynamodb;
 
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;

@@ -17,7 +17,6 @@ package io.flamingock.internal.common.core.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.cloud.api.request.AuditEntryRequest;
 
 import java.time.LocalDateTime;
 
@@ -314,10 +313,6 @@ public class AuditEntry implements Comparable<AuditEntry> {
             return this.priority > other.priority;
         }
 
-        public AuditEntryRequest.AuditEntryStatus toRequestStatus() {
-            return AuditEntryRequest.AuditEntryStatus.valueOf(name());
-        }
-
     }
 
     //TODO remove this
@@ -328,9 +323,6 @@ public class AuditEntry implements Comparable<AuditEntry> {
             return this == MONGOCK_EXECUTION || this == MONGOCK_BEFORE;
         }
 
-        public AuditEntryRequest.ChangeType toRequestExecutionType() {
-            return AuditEntryRequest.ChangeType.valueOf(name());
-        }
     }
 
 

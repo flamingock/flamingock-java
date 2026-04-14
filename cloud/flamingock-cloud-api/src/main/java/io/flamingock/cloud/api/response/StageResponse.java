@@ -22,12 +22,12 @@ public  class StageResponse {
 
     private int order;
 
-    private List<TaskResponse> tasks;
+    private List<ChangeResponse> tasks;
 
     public StageResponse() {
     }
 
-    public StageResponse(String name, int order, List<TaskResponse> tasks) {
+    public StageResponse(String name, int order, List<ChangeResponse> tasks) {
         this.name = name;
         this.order = order;
         this.tasks = tasks;
@@ -41,11 +41,11 @@ public  class StageResponse {
         this.name = name;
     }
 
-    public List<TaskResponse> getTasks() {
+    public List<ChangeResponse> getTasks() {
         return tasks;
     }
 
-    public void setTasks(List<TaskResponse> tasks) {
+    public void setTasks(List<ChangeResponse> tasks) {
         this.tasks = tasks;
     }
 
@@ -55,5 +55,20 @@ public  class StageResponse {
 
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StageResponse that = (StageResponse) o;
+        return order == that.order
+                && java.util.Objects.equals(name, that.name)
+                && java.util.Objects.equals(tasks, that.tasks);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(name, order, tasks);
     }
 }

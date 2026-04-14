@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.api.request;
+package io.flamingock.cloud.api.vo;
 
-public enum CloudAuditTxType {
+public enum CloudTxStrategy {
     NON_TX,
     TX_SHARED,                  // SharedTx (Target system the same as the audit store)
     TX_SEPARATE_WITH_MARKER,    // SimpleTx (Target system is not the audit store). With marker

@@ -22,8 +22,8 @@ import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
 import io.flamingock.common.test.cloud.deprecated.MockRunnerServerOld;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.cloud.api.request.AuditEntryRequest;
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.CloudAuditStatus;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
@@ -73,7 +73,7 @@ public class CloudTransactionTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template",
-                AuditEntryRequest.AuditEntryStatus.APPLIED,
+                CloudAuditStatus.APPLIED,
                 _001__CloudChange1.class.getName(),
                 "apply"
         ));
@@ -81,7 +81,7 @@ public class CloudTransactionTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template-2",
-                AuditEntryRequest.AuditEntryStatus.APPLIED,
+                CloudAuditStatus.APPLIED,
                 _002__CloudChange2.class.getName(),
                 "apply"
         ));

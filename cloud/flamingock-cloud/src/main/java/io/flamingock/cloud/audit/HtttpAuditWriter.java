@@ -15,9 +15,11 @@
  */
 package io.flamingock.cloud.audit;
 
+import io.flamingock.cloud.CloudApiMapper;
 import io.flamingock.cloud.api.request.AuditEntryRequest;
 import io.flamingock.cloud.auth.AuthManager;
-import io.flamingock.cloud.api.request.CloudAuditTxType;
+import io.flamingock.cloud.api.vo.CloudRecoveryStrategy;
+import io.flamingock.cloud.api.vo.CloudTxStrategy;
 import io.flamingock.internal.util.id.EnvironmentId;
 import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.common.core.audit.AuditEntry;
@@ -86,14 +88,14 @@ public class HtttpAuditWriter implements CloudAuditWriter {
 
     private AuditEntryRequest buildRequest(AuditEntry auditEntry) {
         long appliedAtEpochMillis = ZonedDateTime.of(auditEntry.getCreatedAt(), ZoneId.systemDefault()).toInstant().toEpochMilli();
-        CloudAuditTxType txType = auditEntry.getTxType() != null ? auditEntry.getTxType().toCloud() : null;
+        CloudTxStrategy txType = auditEntry.getTxType() != null ? CloudApiMapper.toCloud(auditEntry.getTxType()) : null;
         return new AuditEntryRequest(
                 auditEntry.getStageId(),
                 auditEntry.getTaskId(),
                 auditEntry.getAuthor(),
                 appliedAtEpochMillis,
-                auditEntry.getState().toRequestStatus(),
-                auditEntry.getType().toRequestExecutionType(),
+                CloudApiMapper.toCloud(auditEntry.getState()),
+                CloudApiMapper.toCloud(auditEntry.getType()),
                 auditEntry.getClassName(),
                 auditEntry.getMethodName(),
                 auditEntry.getExecutionMillis(),
@@ -104,7 +106,7 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                 txType,
                 auditEntry.getTargetSystemId(),
                 auditEntry.getOrder(),
-                auditEntry.getRecoveryStrategy(),
+                auditEntry.getRecoveryStrategy() != null ? CloudRecoveryStrategy.valueOf(auditEntry.getRecoveryStrategy().name()) : null,
                 auditEntry.getTransactionFlag()
         );
     }

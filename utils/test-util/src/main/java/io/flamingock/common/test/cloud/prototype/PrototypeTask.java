@@ -16,11 +16,12 @@
 package io.flamingock.common.test.cloud.prototype;
 
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
-import io.flamingock.cloud.api.request.AuditEntryRequest;
-import io.flamingock.cloud.api.request.TaskRequest;
+import io.flamingock.cloud.api.vo.CloudAuditStatus;
+import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.vo.CloudChangeAction;
-import io.flamingock.cloud.api.response.TaskResponse;
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.response.ChangeResponse;
+import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 
 public class PrototypeTask {
     private final String taskId;
@@ -47,31 +48,26 @@ public class PrototypeTask {
         return transactional;
     }
 
-    public TaskRequest toExecutionPlanTaskRequest(TargetSystemAuditMarkType ongoingStatus) {
-        return new TaskRequest(
-                taskId,
-                ongoingStatus != null ? ongoingStatus : TargetSystemAuditMarkType.NONE,
-                transactional
-        );
+    public ChangeRequest toExecutionPlanChangeRequest(TargetSystemAuditMarkType ongoingStatus) {
+        CloudTargetSystemAuditMarkType cloudStatus = ongoingStatus != null
+                ? CloudTargetSystemAuditMarkType.valueOf(ongoingStatus.name())
+                : CloudTargetSystemAuditMarkType.NONE;
+        return new ChangeRequest(taskId, cloudStatus, transactional);
     }
 
-    public TaskRequest toExecutionPlanTaskRequest() {
-        return new TaskRequest(
-                taskId,
-                TargetSystemAuditMarkType.NONE,
-                transactional
-        );
+    public ChangeRequest toExecutionPlanChangeRequest() {
+        return new ChangeRequest(taskId, CloudTargetSystemAuditMarkType.NONE, transactional);
     }
 
-    public TaskResponse toExecutionPlanTaskResponse(CloudChangeAction state) {
-        return new TaskResponse(taskId, state != null ? state: CloudChangeAction.APPLY);
+    public ChangeResponse toExecutionPlanChangeResponse(CloudChangeAction state) {
+        return new ChangeResponse(taskId, state != null ? state: CloudChangeAction.APPLY);
     }
 
-    public TaskResponse toResponse() {
-        return new TaskResponse(taskId, CloudChangeAction.APPLY);
+    public ChangeResponse toResponse() {
+        return new ChangeResponse(taskId, CloudChangeAction.APPLY);
     }
 
-    public AuditEntryMatcher toAuditExpectation(AuditEntryRequest.AuditEntryStatus status) {
+    public AuditEntryMatcher toAuditExpectation(CloudAuditStatus status) {
         return new AuditEntryMatcher(
                 taskId,
                 status,

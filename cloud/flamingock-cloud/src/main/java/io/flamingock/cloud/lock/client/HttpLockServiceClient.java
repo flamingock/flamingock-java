@@ -17,7 +17,7 @@ package io.flamingock.cloud.lock.client;
 
 import io.flamingock.cloud.auth.AuthManager;
 import io.flamingock.cloud.api.request.LockExtensionRequest;
-import io.flamingock.cloud.api.response.LockInfo;
+import io.flamingock.cloud.api.response.LockInfoResponse;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.http.Http;
@@ -42,7 +42,7 @@ public class HttpLockServiceClient implements LockServiceClient {
     }
 
     @Override
-    public LockInfo extendLock(LockKey lockKey,
+    public LockInfoResponse extendLock(LockKey lockKey,
                                RunnerId runnerId,
                                LockExtensionRequest extensionRequest) {
         return httpFactory
@@ -51,16 +51,16 @@ public class HttpLockServiceClient implements LockServiceClient {
                 .addPathParameter(SERVICE_PARAM, lockKey.toString())
                 .withRunnerId(runnerId)
                 .setBody(extensionRequest)
-                .execute(LockInfo.class);
+                .execute(LockInfoResponse.class);
     }
 
     @Override
-    public LockInfo getLock(LockKey lockKey) {
+    public LockInfoResponse getLock(LockKey lockKey) {
         return httpFactory
                 .GET(pathTemplate)
                 .withBearerToken(authManager.getJwtToken())
                 .addPathParameter(SERVICE_PARAM, lockKey.toString())
-                .execute(LockInfo.class);
+                .execute(LockInfoResponse.class);
     }
 
     @Override

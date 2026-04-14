@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.api.response;
+package io.flamingock.cloud.api.vo;
 
-public class LogAuditEntryAlreadyCreatedResponse extends LogAuditEntryResponse {
-
-    public LogAuditEntryAlreadyCreatedResponse() {
-    }
-
-    public LogAuditEntryAlreadyCreatedResponse(LockInfo lock) {
-        super(lock);
-    }
+public enum CloudAuditStatus {
+    STARTED,
+    APPLIED,
+    FAILED,
+    ROLLED_BACK,
+    ROLLBACK_FAILED,
+    MANUAL_MARKED_AS_APPLIED,
+    MANUAL_MARKED_AS_ROLLED_BACK
 }

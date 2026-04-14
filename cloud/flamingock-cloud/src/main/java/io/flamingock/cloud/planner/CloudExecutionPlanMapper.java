@@ -20,11 +20,13 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.cloud.api.request.StageRequest;
-import io.flamingock.cloud.api.request.TaskRequest;
+import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.StageResponse;
-import io.flamingock.cloud.api.response.TaskResponse;
+import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.cloud.api.vo.CloudChangeAction;
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
+import io.flamingock.cloud.CloudApiMapper;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
@@ -56,10 +58,10 @@ public final class CloudExecutionPlanMapper {
         List<StageRequest> requestStages = new ArrayList<>(loadedStages.size());
         for (int i = 0; i < loadedStages.size(); i++) {
             AbstractLoadedStage currentStage = loadedStages.get(i);
-            List<TaskRequest> stageTasks = currentStage
+            List<ChangeRequest> stageTasks = currentStage
                     .getTasks()
                     .stream()
-                    .map(descriptor -> CloudExecutionPlanMapper.mapToTaskRequest(descriptor, ongoingStatusesMap))
+                    .map(descriptor -> CloudExecutionPlanMapper.mapToChangeRequest(descriptor, ongoingStatusesMap))
                     .collect(Collectors.toList());
             requestStages.add(new StageRequest(currentStage.getName(), i, stageTasks));
         }
@@ -67,17 +69,13 @@ public final class CloudExecutionPlanMapper {
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestStages);
     }
 
-    private static TaskRequest mapToTaskRequest(AbstractLoadedTask descriptor,
+    private static ChangeRequest mapToChangeRequest(AbstractLoadedTask descriptor,
                                                 Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
-        if (ongoingStatusesMap.containsKey(descriptor.getId())) {
-            if (ongoingStatusesMap.get(descriptor.getId()) == TargetSystemAuditMarkType.ROLLBACK) {
-                return TaskRequest.ongoingRollback(descriptor.getId(), descriptor.isTransactional());
-            } else {
-                return TaskRequest.ongoingExecution(descriptor.getId(), descriptor.isTransactional());
-            }
-        } else {
-            return TaskRequest.task(descriptor.getId(), descriptor.isTransactional());
-        }
+        TargetSystemAuditMarkType domainStatus = ongoingStatusesMap.get(descriptor.getId());
+        CloudTargetSystemAuditMarkType cloudStatus = domainStatus != null
+                ? CloudApiMapper.toCloud(domainStatus)
+                : CloudTargetSystemAuditMarkType.NONE;
+        return new ChangeRequest(descriptor.getId(), cloudStatus, descriptor.isTransactional());
     }
 
     static List<ExecutableStage> getExecutableStages(ExecutionPlanResponse response, List<AbstractLoadedStage> loadedStages) {
@@ -100,7 +98,7 @@ public final class CloudExecutionPlanMapper {
     private static ExecutableStage mapToExecutable(AbstractLoadedStage loadedStage, StageResponse stageResponse) {
         Map<String, CloudChangeAction> taskStateMap = stageResponse.getTasks()
                 .stream()
-                .collect(Collectors.toMap(TaskResponse::getId, TaskResponse::getAction));
+                .collect(Collectors.toMap(ChangeResponse::getId, ChangeResponse::getAction));
 
         // Build action map using anti-corruption layer
         ChangeActionMap actionPlan = getChangeActionMap(loadedStage, taskStateMap);

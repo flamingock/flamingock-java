@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,42 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.core.external.targets.mark;
+package io.flamingock.cloud.api.request;
 
-import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
+import java.util.List;
 
-public class TargetSystemAuditMark {
+public class ClientSubmissionRequest {
+    private List<StageRequest> stages;
 
-
-    private final String taskId;
-
-    private final TargetSystemAuditMarkType operation;
-
-    public TargetSystemAuditMark(String taskId, TargetSystemAuditMarkType operation) {
-        this.taskId = taskId;
-        this.operation = operation;
+    public ClientSubmissionRequest() {
     }
 
-    public String getTaskId() {
-        return taskId;
+    public ClientSubmissionRequest(List<StageRequest> stages) {
+        this.stages = stages;
     }
 
-    public TargetSystemAuditMarkType getOperation() {
-        return operation;
+    public List<StageRequest> getStages() {
+        return stages;
+    }
+
+    public void setStages(List<StageRequest> stages) {
+        this.stages = stages;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
-        TargetSystemAuditMark that = (TargetSystemAuditMark) o;
-
-        return taskId.equals(that.taskId);
+        ClientSubmissionRequest that = (ClientSubmissionRequest) o;
+        return java.util.Objects.equals(stages, that.stages);
     }
 
     @Override
     public int hashCode() {
-        return taskId.hashCode();
+        return java.util.Objects.hash(stages);
     }
 }

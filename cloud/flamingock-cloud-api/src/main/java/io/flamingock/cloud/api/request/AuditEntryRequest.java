@@ -15,7 +15,10 @@
  */
 package io.flamingock.cloud.api.request;
 
-import io.flamingock.api.RecoveryStrategy;
+import io.flamingock.cloud.api.vo.CloudRecoveryStrategy;
+import io.flamingock.cloud.api.vo.CloudAuditStatus;
+import io.flamingock.cloud.api.vo.CloudChangeType;
+import io.flamingock.cloud.api.vo.CloudTxStrategy;
 
 public class AuditEntryRequest {
 
@@ -23,18 +26,18 @@ public class AuditEntryRequest {
     private String taskId;
     private String author;
     private long appliedAtEpochMillis;
-    private AuditEntryStatus state;
+    private CloudAuditStatus state;
     private String className;
     private String methodName;
     private Object metadata;
     private long executionMillis;
     private String executionHostname;
     private String errorTrace;
-    private ChangeType type;
-    private CloudAuditTxType txStrategy;
+    private CloudChangeType type;
+    private CloudTxStrategy txStrategy;
     private String targetSystemId;
     private String order;
-    private RecoveryStrategy recoveryStrategy;
+    private CloudRecoveryStrategy recoveryStrategy;
     private Boolean transactionFlag;
     protected Boolean systemChange;//TODO not in server
 
@@ -45,8 +48,8 @@ public class AuditEntryRequest {
                              String taskId,
                              String author,
                              long appliedAtEpochMillis,
-                             AuditEntryStatus state,
-                             ChangeType type,
+                             CloudAuditStatus state,
+                             CloudChangeType type,
                              String className,
                              String methodName,
                              long executionMillis,
@@ -54,10 +57,10 @@ public class AuditEntryRequest {
                              Object metadata,
                              boolean systemChange,
                              String errorTrace,
-                             CloudAuditTxType txStrategy,
+                             CloudTxStrategy txStrategy,
                              String targetSystemId,
                              String order,
-                             RecoveryStrategy recoveryStrategy,
+                             CloudRecoveryStrategy recoveryStrategy,
                              Boolean transactionFlag) {
         this.stageId = stageId;
         this.taskId = taskId;
@@ -96,7 +99,7 @@ public class AuditEntryRequest {
         return appliedAtEpochMillis;
     }
 
-    public AuditEntryStatus getState() {
+    public CloudAuditStatus getState() {
         return state;
     }
 
@@ -128,11 +131,11 @@ public class AuditEntryRequest {
         return systemChange;
     }
 
-    public ChangeType getType() {
+    public CloudChangeType getType() {
         return type;
     }
 
-    public CloudAuditTxType getTxStrategy() {
+    public CloudTxStrategy getTxStrategy() {
         return txStrategy;
     }
 
@@ -144,7 +147,7 @@ public class AuditEntryRequest {
         return order;
     }
 
-    public RecoveryStrategy getRecoveryStrategy() {
+    public CloudRecoveryStrategy getRecoveryStrategy() {
         return recoveryStrategy;
     }
 
@@ -152,20 +155,4 @@ public class AuditEntryRequest {
         return transactionFlag;
     }
 
-    public enum ChangeType {STANDARD_CODE, STANDARD_TEMPLATE, MONGOCK_EXECUTION, MONGOCK_BEFORE}
-
-    public enum AuditEntryStatus {
-        STARTED,
-        APPLIED,
-        FAILED,
-        ROLLED_BACK,
-        ROLLBACK_FAILED,
-        MANUAL_MARKED_AS_APPLIED,
-        MANUAL_MARKED_AS_ROLLED_BACK
-    }
-
-
 }
-
-
-

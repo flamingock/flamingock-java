@@ -15,11 +15,12 @@
  */
 package io.flamingock.common.test.cloud.deprecated;
 
-import io.flamingock.cloud.api.response.LockInfo;
+import io.flamingock.cloud.api.response.LockInfoResponse;
 import io.flamingock.cloud.api.response.StageResponse;
-import io.flamingock.cloud.api.response.TaskResponse;
-import io.flamingock.cloud.api.vo.ExecutionAction;
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.response.ChangeResponse;
+import io.flamingock.cloud.api.vo.CloudExecutionAction;
+import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ScenarioMappingBuilder;
@@ -29,7 +30,7 @@ import io.flamingock.cloud.api.request.TokenExchangeRequest;
 import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
-import io.flamingock.cloud.api.request.StageRequest; import io.flamingock.cloud.api.request.TaskRequest;
+import io.flamingock.cloud.api.request.StageRequest; import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 
 import java.util.*;
@@ -178,18 +179,15 @@ public final class MockRunnerServerOld {
                 .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
 
         Set<String> alreadyAddedTasks = new HashSet<>();
-        List<TaskRequest> tasks = auditEntries.stream()
+        List<ChangeRequest> tasks = auditEntries.stream()
                 .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
                 .map(auditEntryExpectation -> {
                     alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
                     TargetSystemAuditMarkType operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
-                    if (operation == null) {
-                        return TaskRequest.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else if (operation == TargetSystemAuditMarkType.ROLLBACK) {
-                        return TaskRequest.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else {
-                        return TaskRequest.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    }
+                    CloudTargetSystemAuditMarkType cloudStatus = operation != null
+                            ? CloudTargetSystemAuditMarkType.valueOf(operation.name())
+                            : CloudTargetSystemAuditMarkType.NONE;
+                    return new ChangeRequest(auditEntryExpectation.getTaskId(), cloudStatus, auditEntryExpectation.isTransactional());
                 })
                 .collect(Collectors.toList());
 
@@ -209,18 +207,15 @@ public final class MockRunnerServerOld {
                 .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
 
         Set<String> alreadyAddedTasks = new HashSet<>();
-        List<TaskRequest> tasks = auditEntries.stream()
+        List<ChangeRequest> tasks = auditEntries.stream()
                 .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
                 .map(auditEntryExpectation -> {
                     alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
                     TargetSystemAuditMarkType operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
-                    if (operation == null) {
-                        return TaskRequest.task(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else if (operation == TargetSystemAuditMarkType.ROLLBACK) {
-                        return TaskRequest.ongoingRollback(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    } else {
-                        return TaskRequest.ongoingExecution(auditEntryExpectation.getTaskId(), auditEntryExpectation.isTransactional());
-                    }
+                    CloudTargetSystemAuditMarkType cloudStatus = operation != null
+                            ? CloudTargetSystemAuditMarkType.valueOf(operation.name())
+                            : CloudTargetSystemAuditMarkType.NONE;
+                    return new ChangeRequest(auditEntryExpectation.getTaskId(), cloudStatus, auditEntryExpectation.isTransactional());
                 })
                 .collect(Collectors.toList());
 
@@ -391,7 +386,7 @@ public final class MockRunnerServerOld {
     }
 
     private void mockReleaseLockEndpoint() {
-        LockInfo lockResponse = new LockInfo();
+        LockInfoResponse lockResponse = new LockInfoResponse();
         lockResponse.setKey(String.valueOf(serviceId));
         lockResponse.setOwner(runnerId);
         if(executionExpectation != null) {
@@ -414,9 +409,9 @@ public final class MockRunnerServerOld {
             ExecutePlanRequestResponse requestResponse = (ExecutePlanRequestResponse) executionRequestResponses.get(index);
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
             executionPlanResponse.setExecutionId(requestResponse.executionId);
-            executionPlanResponse.setAction(ExecutionAction.EXECUTE);
+            executionPlanResponse.setAction(CloudExecutionAction.EXECUTE);
 
-            LockInfo lockMock = new LockInfo();
+            LockInfoResponse lockMock = new LockInfoResponse();
             lockMock.setKey(String.valueOf(serviceId));
             lockMock.setOwner(runnerId);
             lockMock.setAcquiredForMillis(requestResponse.getAcquiredForMillis());
@@ -432,9 +427,9 @@ public final class MockRunnerServerOld {
 
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
             executionPlanResponse.setExecutionId(requestResponse.executionId);
-            executionPlanResponse.setAction(ExecutionAction.AWAIT);
+            executionPlanResponse.setAction(CloudExecutionAction.AWAIT);
 
-            LockInfo lock = new LockInfo();
+            LockInfoResponse lock = new LockInfoResponse();
             lock.setAcquisitionId(requestResponse.getAcquisitionId());
             lock.setKey(serviceName);
             lock.setOwner(runnerId);
@@ -444,7 +439,7 @@ public final class MockRunnerServerOld {
         } else {
             //IT'S CONTINUE
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
-            executionPlanResponse.setAction(ExecutionAction.CONTINUE);
+            executionPlanResponse.setAction(CloudExecutionAction.CONTINUE);
             return executionPlanResponse;
         }
 
@@ -454,7 +449,7 @@ public final class MockRunnerServerOld {
         StageResponse stage = new StageResponse();
         stage.setName(stageRequest.getName());
         stage.setTasks(stageRequest.getTasks().stream()
-                .map(onGoingTask -> new TaskResponse(onGoingTask.getId(), APPLY))
+                .map(onGoingTask -> new ChangeResponse(onGoingTask.getId(), APPLY))
                 .collect(Collectors.toList()));
         return stage;
     }

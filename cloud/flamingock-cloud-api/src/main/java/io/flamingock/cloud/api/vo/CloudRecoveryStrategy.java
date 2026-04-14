@@ -13,24 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.api.response;
+package io.flamingock.cloud.api.vo;
 
-public abstract class LogAuditEntryResponse {
-
-    private LockInfo lock;
-
-    public LogAuditEntryResponse() {
-    }
-
-    public LogAuditEntryResponse(LockInfo lock) {
-        this.lock = lock;
-    }
-
-    public LockInfo getLock() {
-        return lock;
-    }
-
-    public void setLock(LockInfo lock) {
-        this.lock = lock;
-    }
+public enum CloudRecoveryStrategy {
+    ALWAYS_RETRY, MANUAL_INTERVENTION
 }

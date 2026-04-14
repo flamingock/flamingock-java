@@ -13,8 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.api.vo;
+package io.flamingock.cloud.api.error;
 
-public enum LockStatus {
-    ACQUIRED, LOCKED_BY_OTHER, EXTENDED
+import java.util.Map;
+
+public interface CloudFlamingockError {
+
+    String getCode();
+
+    boolean getRecoverable();
+
+    String getPublicMessage();
+
+    String getInternalMessage();
+
+    Map<String, Object> getParameters();
 }

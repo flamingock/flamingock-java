@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.api.vo;
+package io.flamingock.cloud.api.response;
 
-public enum ExecutionAction {
-    CONTINUE, EXECUTE, AWAIT, ABORT
+public class AuditEntryIdempotentResponse extends AuditEntryResponse {
+
+    public AuditEntryIdempotentResponse() {
+    }
+
+    public AuditEntryIdempotentResponse(LockInfoResponse lock) {
+        super(lock);
+    }
 }

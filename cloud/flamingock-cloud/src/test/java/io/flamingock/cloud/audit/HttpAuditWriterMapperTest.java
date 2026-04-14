@@ -17,7 +17,9 @@ package io.flamingock.cloud.audit;
 
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.cloud.api.request.AuditEntryRequest;
-import io.flamingock.cloud.api.request.CloudAuditTxType;
+import io.flamingock.cloud.CloudApiMapper;
+import io.flamingock.cloud.api.vo.CloudRecoveryStrategy;
+import io.flamingock.cloud.api.vo.CloudTxStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import org.junit.jupiter.api.Test;
@@ -39,7 +41,7 @@ class HttpAuditWriterMapperTest {
     void shouldIncludeTxTypeInRequest() {
         // Given
         AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, _001__TestManualInterventionChange.class);
-        CloudAuditTxType txType = auditEntry.getTxType() != null ? auditEntry.getTxType().toCloud() : null;
+        CloudTxStrategy txType = auditEntry.getTxType() != null ? CloudApiMapper.toCloud(auditEntry.getTxType()) : null;
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -47,8 +49,8 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getTaskId(),
                 auditEntry.getAuthor(),
                 System.currentTimeMillis(),
-                auditEntry.getState().toRequestStatus(),
-                auditEntry.getType().toRequestExecutionType(),
+                CloudApiMapper.toCloud(auditEntry.getState()),
+                CloudApiMapper.toCloud(auditEntry.getType()),
                 auditEntry.getClassName(),
                 auditEntry.getMethodName(),
                 auditEntry.getExecutionMillis(),
@@ -59,19 +61,19 @@ class HttpAuditWriterMapperTest {
                 txType,
                 auditEntry.getTargetSystemId(),
                 auditEntry.getOrder(),
-                auditEntry.getRecoveryStrategy(),
+                auditEntry.getRecoveryStrategy() != null ? CloudRecoveryStrategy.valueOf(auditEntry.getRecoveryStrategy().name()) : null,
                 auditEntry.getTransactionFlag()
         );
 
         // Then
-        assertEquals(CloudAuditTxType.TX_SHARED, request.getTxStrategy());
+        assertEquals(CloudTxStrategy.TX_SHARED, request.getTxStrategy());
     }
 
     @Test
     void shouldHandleNullTxType() {
         // Given
         AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, _001__TestDefaultRecoveryChange.class);
-        CloudAuditTxType txType = auditEntry.getTxType() != null ? auditEntry.getTxType().toCloud() : null;
+        CloudTxStrategy txType = auditEntry.getTxType() != null ? CloudApiMapper.toCloud(auditEntry.getTxType()) : null;
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -79,8 +81,8 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getTaskId(),
                 auditEntry.getAuthor(),
                 System.currentTimeMillis(),
-                auditEntry.getState().toRequestStatus(),
-                auditEntry.getType().toRequestExecutionType(),
+                CloudApiMapper.toCloud(auditEntry.getState()),
+                CloudApiMapper.toCloud(auditEntry.getType()),
                 auditEntry.getClassName(),
                 auditEntry.getMethodName(),
                 auditEntry.getExecutionMillis(),
@@ -91,11 +93,11 @@ class HttpAuditWriterMapperTest {
                 txType,
                 auditEntry.getTargetSystemId(),
                 auditEntry.getOrder(),
-                auditEntry.getRecoveryStrategy(),
+                auditEntry.getRecoveryStrategy() != null ? CloudRecoveryStrategy.valueOf(auditEntry.getRecoveryStrategy().name()) : null,
                 auditEntry.getTransactionFlag()
         );
 
         // Then
-        assertEquals(CloudAuditTxType.NON_TX, request.getTxStrategy());
+        assertEquals(CloudTxStrategy.NON_TX, request.getTxStrategy());
     }
 }

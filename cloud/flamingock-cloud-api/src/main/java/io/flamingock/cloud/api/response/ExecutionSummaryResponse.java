@@ -17,7 +17,7 @@ package io.flamingock.cloud.api.response;
 
 import java.time.Instant;
 
-public class ExecutionResponse {
+public class ExecutionSummaryResponse {
 
     private String executionId;
     private long environmentId;
@@ -25,10 +25,10 @@ public class ExecutionResponse {
     private String runnerId;
     private Instant startedAt;
 
-    public ExecutionResponse() {
+    public ExecutionSummaryResponse() {
     }
 
-    public ExecutionResponse(String executionId, long environmentId, long serviceId, String runnerId, Instant startedAt) {
+    public ExecutionSummaryResponse(String executionId, long environmentId, long serviceId, String runnerId, Instant startedAt) {
         this.executionId = executionId;
         this.environmentId = environmentId;
         this.serviceId = serviceId;
@@ -55,7 +55,7 @@ public class ExecutionResponse {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ExecutionResponse that = (ExecutionResponse) o;
+        ExecutionSummaryResponse that = (ExecutionSummaryResponse) o;
         return environmentId == that.environmentId && serviceId == that.serviceId
                 && java.util.Objects.equals(executionId, that.executionId)
                 && java.util.Objects.equals(runnerId, that.runnerId)

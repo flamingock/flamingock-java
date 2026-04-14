@@ -22,7 +22,7 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;

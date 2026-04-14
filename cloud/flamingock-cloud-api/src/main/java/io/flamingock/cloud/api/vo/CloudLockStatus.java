@@ -13,14 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.api.response;
+package io.flamingock.cloud.api.vo;
 
-public class LogAuditEntryCreatedResponse extends LogAuditEntryResponse {
-
-    public LogAuditEntryCreatedResponse() {
-    }
-
-    public LogAuditEntryCreatedResponse(LockInfo lock) {
-        super(lock);
-    }
+public enum CloudLockStatus {
+    ACQUIRED, LOCKED_BY_OTHER, EXTENDED
 }
