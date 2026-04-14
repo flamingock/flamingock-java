@@ -22,13 +22,13 @@ import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMoc
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.request.StageRequest;
-import io.flamingock.cloud.api.request.TaskRequest;
+import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
-import io.flamingock.cloud.api.response.LockInfo;
+import io.flamingock.cloud.api.response.LockInfoResponse;
 import io.flamingock.cloud.api.response.StageResponse;
-import io.flamingock.cloud.api.response.TaskResponse;
-import io.flamingock.cloud.api.vo.ExecutionAction;
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.cloud.api.response.ChangeResponse;
+import io.flamingock.cloud.api.vo.CloudExecutionAction;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 
 import java.util.List;
 import java.util.Optional;
@@ -58,7 +58,7 @@ public class MockExecutionPlanBuilder {
                 .map(stagePrototype -> new StageRequest(
                         stagePrototype.getName(),
                         stagePrototype.getOrder(),
-                        transformTaskRequests(stagePrototype.getTasks(), requestResponse))
+                        transformChangeRequests(stagePrototype.getTasks(), requestResponse))
                 ).collect(Collectors.toList());
 
         return new ExecutionPlanRequest(requestResponse.getAcquiredForMillis(), stages);
@@ -73,48 +73,48 @@ public class MockExecutionPlanBuilder {
                     .map(stagePrototype -> new StageResponse(
                             stagePrototype.getName(),
                             stagePrototype.getOrder(),
-                            transformTaskResponses(stagePrototype.getTasks(), mockRequestResponse))
+                            transformChangeResponses(stagePrototype.getTasks(), mockRequestResponse))
                     ).collect(Collectors.toList());
 
-            LockInfo lock = new LockInfo();
+            LockInfoResponse lock = new LockInfoResponse();
             lock.setAcquisitionId(mockRequestResponse.getAcquisitionId());
             lock.setKey(serviceId);
             lock.setOwner(runnerId);
-            return new ExecutionPlanResponse(ExecutionAction.EXECUTE, executionId, lock, stages);
+            return new ExecutionPlanResponse(CloudExecutionAction.EXECUTE, executionId, lock, stages);
 
         } else if (mockRequestResponse instanceof ExecutionAwaitRequestResponseMock) {
-            LockInfo lock = new LockInfo();
+            LockInfoResponse lock = new LockInfoResponse();
             lock.setAcquisitionId(mockRequestResponse.getAcquisitionId());
             lock.setKey(serviceId);
             lock.setOwner(runnerId);
             lock.setAcquiredForMillis(mockRequestResponse.getAcquiredForMillis());
-            return new ExecutionPlanResponse(ExecutionAction.AWAIT, executionId, lock);
+            return new ExecutionPlanResponse(CloudExecutionAction.AWAIT, executionId, lock);
         } else {
             //IT'S CONTINUE
             ExecutionPlanResponse executionPlanResponse = new ExecutionPlanResponse();
-            executionPlanResponse.setAction(ExecutionAction.CONTINUE);
+            executionPlanResponse.setAction(CloudExecutionAction.CONTINUE);
             return executionPlanResponse;
         }
 
     }
 
-    private List<TaskRequest> transformTaskRequests(List<PrototypeTask> prototypeTasks,
+    private List<ChangeRequest> transformChangeRequests(List<PrototypeTask> prototypeTasks,
                                                     ExecutionBaseRequestResponseMock requestResponse) {
         return prototypeTasks.stream()
                 .map(prototypeTask -> {
                             Optional<MockRequestResponseTask> requestResponseTask = requestResponse.getTaskById(prototypeTask.getTaskId());
-                            return prototypeTask.toExecutionPlanTaskRequest(
+                            return prototypeTask.toExecutionPlanChangeRequest(
                                     requestResponseTask.map(MockRequestResponseTask::getOngoingStatus).orElse(TargetSystemAuditMarkType.NONE));
                         }
                 ).collect(Collectors.toList());
     }
 
-    private List<TaskResponse> transformTaskResponses(List<PrototypeTask> prototypeTasks,
+    private List<ChangeResponse> transformChangeResponses(List<PrototypeTask> prototypeTasks,
                                                       ExecutionBaseRequestResponseMock responseExecutionPlan) {
         return prototypeTasks.stream()
                 .map(prototypeTask -> {
                             Optional<MockRequestResponseTask> requestResponseTask = responseExecutionPlan.getTaskById(prototypeTask.getTaskId());
-                            return prototypeTask.toExecutionPlanTaskResponse(
+                            return prototypeTask.toExecutionPlanChangeResponse(
                                     requestResponseTask.map(MockRequestResponseTask::getRequiredAction).orElse(APPLY));
                         }
                 ).collect(Collectors.toList());

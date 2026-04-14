@@ -15,6 +15,6 @@
  */
 package io.flamingock.cloud.api.vo;
 
-public enum LockStatus {
-    ACQUIRED, LOCKED_BY_OTHER, EXTENDED
+public enum CloudRecoveryStrategy {
+    ALWAYS_RETRY, MANUAL_INTERVENTION
 }

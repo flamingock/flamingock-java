@@ -15,8 +15,6 @@
  */
 package io.flamingock.internal.common.core.audit;
 
-import io.flamingock.cloud.api.request.CloudAuditTxType;
-
 public enum AuditTxType {
     NON_TX,
     TX_SHARED,                  // SharedTx (Target system the same as the audit store)
@@ -47,7 +45,4 @@ public enum AuditTxType {
         return strategy.name();
     }
 
-    public CloudAuditTxType toCloud() {
-        return CloudAuditTxType.valueOf(this.name());
-    }
 }

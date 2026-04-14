@@ -15,7 +15,7 @@
  */
 package io.flamingock.cloud.api.response;
 
-import io.flamingock.cloud.api.vo.ExecutionAction;
+import io.flamingock.cloud.api.vo.CloudExecutionAction;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,11 +23,11 @@ import java.util.List;
 public class ExecutionPlanResponse {
 
 
-    private ExecutionAction action;
+    private CloudExecutionAction action;
 
     private String executionId;
 
-    private LockInfo lock;
+    private LockInfoResponse lock;
 
     private List<StageResponse> stages;
 
@@ -35,15 +35,15 @@ public class ExecutionPlanResponse {
     public ExecutionPlanResponse() {
     }
 
-    public ExecutionPlanResponse(ExecutionAction action,
+    public ExecutionPlanResponse(CloudExecutionAction action,
                                  String executionId,
-                                 LockInfo lock) {
+                                 LockInfoResponse lock) {
         this(action, executionId, lock, Collections.emptyList());
     }
 
-    public ExecutionPlanResponse(ExecutionAction action,
+    public ExecutionPlanResponse(CloudExecutionAction action,
                                  String executionId,
-                                 LockInfo lock,
+                                 LockInfoResponse lock,
                                  List<StageResponse> stages) {
         this.action = action;
         this.executionId = executionId;
@@ -51,7 +51,7 @@ public class ExecutionPlanResponse {
         this.stages = stages;
     }
 
-    public void setAction(ExecutionAction action) {
+    public void setAction(CloudExecutionAction action) {
         this.action = action;
     }
 
@@ -63,11 +63,11 @@ public class ExecutionPlanResponse {
         this.executionId = executionId;
     }
 
-    public LockInfo getLock() {
+    public LockInfoResponse getLock() {
         return lock;
     }
 
-    public void setLock(LockInfo lock) {
+    public void setLock(LockInfoResponse lock) {
         this.lock = lock;
     }
 
@@ -80,19 +80,19 @@ public class ExecutionPlanResponse {
     }
 
     public boolean isContinue() {
-        return action == ExecutionAction.CONTINUE;
+        return action == CloudExecutionAction.CONTINUE;
     }
 
-    public ExecutionAction getAction() {
+    public CloudExecutionAction getAction() {
         return action;
     }
 
     public boolean isExecute() {
-        return action == ExecutionAction.EXECUTE;
+        return action == CloudExecutionAction.EXECUTE;
     }
 
     public boolean isAwait() {
-        return action == ExecutionAction.AWAIT;
+        return action == CloudExecutionAction.AWAIT;
     }
 
     public void validate() {

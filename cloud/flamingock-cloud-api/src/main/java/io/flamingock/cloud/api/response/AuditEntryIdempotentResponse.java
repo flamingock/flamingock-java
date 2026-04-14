@@ -15,22 +15,12 @@
  */
 package io.flamingock.cloud.api.response;
 
-public abstract class LogAuditEntryResponse {
+public class AuditEntryIdempotentResponse extends AuditEntryResponse {
 
-    private LockInfo lock;
-
-    public LogAuditEntryResponse() {
+    public AuditEntryIdempotentResponse() {
     }
 
-    public LogAuditEntryResponse(LockInfo lock) {
-        this.lock = lock;
-    }
-
-    public LockInfo getLock() {
-        return lock;
-    }
-
-    public void setLock(LockInfo lock) {
-        this.lock = lock;
+    public AuditEntryIdempotentResponse(LockInfoResponse lock) {
+        super(lock);
     }
 }

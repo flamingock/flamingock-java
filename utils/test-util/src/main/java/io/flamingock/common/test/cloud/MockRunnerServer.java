@@ -30,7 +30,7 @@ import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.api.request.StageRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.cloud.api.response.StageResponse;
-import io.flamingock.cloud.api.response.TaskResponse;
+import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 
 import java.util.*;
@@ -72,7 +72,7 @@ public final class MockRunnerServer {
         StageResponse stage = new StageResponse();
         stage.setName(stageRequest.getName());
         stage.setTasks(stageRequest.getTasks().stream()
-                .map(onGoingTask -> new TaskResponse(onGoingTask.getId(), APPLY))
+                .map(onGoingTask -> new ChangeResponse(onGoingTask.getId(), APPLY))
                 .collect(Collectors.toList()));
         return stage;
     }

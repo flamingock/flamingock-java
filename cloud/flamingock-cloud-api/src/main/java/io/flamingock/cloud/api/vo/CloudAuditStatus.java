@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,12 @@
  */
 package io.flamingock.cloud.api.vo;
 
-public enum ExecutionAction {
-    CONTINUE, EXECUTE, AWAIT, ABORT
+public enum CloudAuditStatus {
+    STARTED,
+    APPLIED,
+    FAILED,
+    ROLLED_BACK,
+    ROLLBACK_FAILED,
+    MANUAL_MARKED_AS_APPLIED,
+    MANUAL_MARKED_AS_ROLLED_BACK
 }

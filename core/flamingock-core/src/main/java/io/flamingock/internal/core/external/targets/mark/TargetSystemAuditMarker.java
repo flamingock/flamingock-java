@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.external.targets.mark;
 
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.task.executable.ExecutableTask;
 import java.util.Set;

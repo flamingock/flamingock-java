@@ -15,34 +15,34 @@
  */
 package io.flamingock.cloud.api.response;
 
-import io.flamingock.cloud.api.vo.LockStatus;
+import io.flamingock.cloud.api.vo.CloudLockStatus;
 
 public class LockResponse {
 
-    private LockInfo lock;
-    private LockStatus status;
+    private LockInfoResponse lock;
+    private CloudLockStatus status;
 
     public LockResponse() {
     }
 
-    public LockResponse(LockStatus status, LockInfo lock) {
+    public LockResponse(CloudLockStatus status, LockInfoResponse lock) {
         this.lock = lock;
         this.status = status;
     }
 
-    public LockInfo getLock() {
+    public LockInfoResponse getLock() {
         return lock;
     }
 
-    public void setLock(LockInfo lock) {
+    public void setLock(LockInfoResponse lock) {
         this.lock = lock;
     }
 
-    public LockStatus getStatus() {
+    public CloudLockStatus getStatus() {
         return status;
     }
 
-    public void setStatus(LockStatus status) {
+    public void setStatus(CloudLockStatus status) {
         this.status = status;
     }
 }

@@ -33,7 +33,7 @@ import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
-import io.flamingock.cloud.api.vo.TargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.common.core.util.Deserializer;
@@ -52,9 +52,9 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.Collections;
 import java.util.UUID;
 
-import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.APPLIED;
-import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.FAILED;
-import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.ROLLED_BACK;
+import static io.flamingock.cloud.api.vo.CloudAuditStatus.APPLIED;
+import static io.flamingock.cloud.api.vo.CloudAuditStatus.FAILED;
+import static io.flamingock.cloud.api.vo.CloudAuditStatus.ROLLED_BACK;
 
 @Testcontainers
 public class MongoDBSyncTargetSystemTest {

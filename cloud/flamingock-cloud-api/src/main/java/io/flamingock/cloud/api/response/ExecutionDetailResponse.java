@@ -15,25 +15,25 @@
  */
 package io.flamingock.cloud.api.response;
 
-import io.flamingock.cloud.api.request.ClientSubmission;
+import io.flamingock.cloud.api.request.ClientSubmissionRequest;
 
 import java.time.Instant;
 
-public class ExecutionFullResponse {
+public class ExecutionDetailResponse {
 
     private String executionId;
     private long environmentId;
     private long serviceId;
     private String runnerId;
     private Instant startedAt;
-    private ClientSubmission clientSubmission;
+    private ClientSubmissionRequest clientSubmission;
     private PipelineResponse pipeline;
 
-    public ExecutionFullResponse() {
+    public ExecutionDetailResponse() {
     }
 
-    public ExecutionFullResponse(String executionId, long environmentId, long serviceId, String runnerId,
-                                 Instant startedAt, ClientSubmission clientSubmission, PipelineResponse pipeline) {
+    public ExecutionDetailResponse(String executionId, long environmentId, long serviceId, String runnerId,
+                                 Instant startedAt, ClientSubmissionRequest clientSubmission, PipelineResponse pipeline) {
         this.executionId = executionId;
         this.environmentId = environmentId;
         this.serviceId = serviceId;
@@ -58,8 +58,8 @@ public class ExecutionFullResponse {
     public Instant getStartedAt() { return startedAt; }
     public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
 
-    public ClientSubmission getClientSubmission() { return clientSubmission; }
-    public void setClientSubmission(ClientSubmission clientSubmission) { this.clientSubmission = clientSubmission; }
+    public ClientSubmissionRequest getClientSubmission() { return clientSubmission; }
+    public void setClientSubmission(ClientSubmissionRequest clientSubmission) { this.clientSubmission = clientSubmission; }
 
     public PipelineResponse getPipeline() { return pipeline; }
     public void setPipeline(PipelineResponse pipeline) { this.pipeline = pipeline; }
@@ -68,7 +68,7 @@ public class ExecutionFullResponse {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ExecutionFullResponse that = (ExecutionFullResponse) o;
+        ExecutionDetailResponse that = (ExecutionDetailResponse) o;
         return environmentId == that.environmentId && serviceId == that.serviceId
                 && java.util.Objects.equals(executionId, that.executionId)
                 && java.util.Objects.equals(runnerId, that.runnerId)

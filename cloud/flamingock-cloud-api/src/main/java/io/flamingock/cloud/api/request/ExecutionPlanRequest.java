@@ -19,7 +19,7 @@ import java.util.List;
 
 public class ExecutionPlanRequest {
 
-    private ClientSubmission clientSubmission;
+    private ClientSubmissionRequest clientSubmission;
     private long lockAcquiredForMillis;
 
     public ExecutionPlanRequest() {
@@ -27,10 +27,10 @@ public class ExecutionPlanRequest {
 
     public ExecutionPlanRequest(long lockAcquiredForMillis, List<StageRequest> stages) {
         this.lockAcquiredForMillis = lockAcquiredForMillis;
-        this.clientSubmission = new ClientSubmission(stages);
+        this.clientSubmission = new ClientSubmissionRequest(stages);
     }
 
-    public void setClientSubmission(ClientSubmission clientSubmission) {
+    public void setClientSubmission(ClientSubmissionRequest clientSubmission) {
         this.clientSubmission = clientSubmission;
     }
 
@@ -42,7 +42,7 @@ public class ExecutionPlanRequest {
         return lockAcquiredForMillis;
     }
 
-    public ClientSubmission getClientSubmission() {
+    public ClientSubmissionRequest getClientSubmission() {
         return clientSubmission;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.api.request;
+package io.flamingock.cloud.api.response;
 
-import java.util.List;
+public abstract class AuditEntryResponse {
 
-public class ClientSubmission {
-    private List<StageRequest> stages;
+    private LockInfoResponse lock;
 
-    public ClientSubmission() {
+    public AuditEntryResponse() {
     }
 
-    public ClientSubmission(List<StageRequest> stages) {
-        this.stages = stages;
+    public AuditEntryResponse(LockInfoResponse lock) {
+        this.lock = lock;
     }
 
-    public List<StageRequest> getStages() {
-        return stages;
+    public LockInfoResponse getLock() {
+        return lock;
     }
 
-    public void setStages(List<StageRequest> stages) {
-        this.stages = stages;
+    public void setLock(LockInfoResponse lock) {
+        this.lock = lock;
     }
 }
