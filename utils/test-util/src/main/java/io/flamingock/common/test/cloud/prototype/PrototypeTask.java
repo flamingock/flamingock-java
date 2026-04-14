@@ -16,7 +16,7 @@
 package io.flamingock.common.test.cloud.prototype;
 
 import io.flamingock.common.test.cloud.deprecated.AuditEntryMatcher;
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
 import io.flamingock.cloud.api.request.TaskRequest;
 import io.flamingock.cloud.api.vo.CloudChangeAction;
 import io.flamingock.cloud.api.response.TaskResponse;
@@ -71,7 +71,7 @@ public class PrototypeTask {
         return new TaskResponse(taskId, CloudChangeAction.APPLY);
     }
 
-    public AuditEntryMatcher toAuditExpectation(AuditEntryRequest.Status status) {
+    public AuditEntryMatcher toAuditExpectation(AuditEntryRequest.AuditEntryStatus status) {
         return new AuditEntryMatcher(
                 taskId,
                 status,

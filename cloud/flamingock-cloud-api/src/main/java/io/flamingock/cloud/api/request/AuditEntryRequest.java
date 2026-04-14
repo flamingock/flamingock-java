@@ -13,37 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.cloud.audit;
+package io.flamingock.cloud.api.request;
 
 import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.internal.common.core.audit.AuditTxType;
 
 public class AuditEntryRequest {
 
-    private final String stageId;
-    private final String taskId;
-    private final String author;
-    private final long appliedAtEpochMillis;
-    private final Status state;
-    private final String className;
-    private final String methodName;
-    private final Object metadata;
-    private final long executionMillis;
-    private final String executionHostname;
-    private final String errorTrace;
-    private final ChangeType type;
-    private final AuditTxType txStrategy;
-    private final String targetSystemId;
-    private final String order;
-    private final RecoveryStrategy recoveryStrategy;
-    private final Boolean transactionFlag;
+    private String stageId;
+    private String taskId;
+    private String author;
+    private long appliedAtEpochMillis;
+    private AuditEntryStatus state;
+    private String className;
+    private String methodName;
+    private Object metadata;
+    private long executionMillis;
+    private String executionHostname;
+    private String errorTrace;
+    private ChangeType type;
+    private CloudAuditTxType txStrategy;
+    private String targetSystemId;
+    private String order;
+    private RecoveryStrategy recoveryStrategy;
+    private Boolean transactionFlag;
     protected Boolean systemChange;//TODO not in server
+
+    public AuditEntryRequest() {
+    }
 
     public AuditEntryRequest(String stageId,
                              String taskId,
                              String author,
                              long appliedAtEpochMillis,
-                             Status state,
+                             AuditEntryStatus state,
                              ChangeType type,
                              String className,
                              String methodName,
@@ -52,7 +54,7 @@ public class AuditEntryRequest {
                              Object metadata,
                              boolean systemChange,
                              String errorTrace,
-                             AuditTxType txStrategy,
+                             CloudAuditTxType txStrategy,
                              String targetSystemId,
                              String order,
                              RecoveryStrategy recoveryStrategy,
@@ -94,7 +96,7 @@ public class AuditEntryRequest {
         return appliedAtEpochMillis;
     }
 
-    public Status getState() {
+    public AuditEntryStatus getState() {
         return state;
     }
 
@@ -130,7 +132,7 @@ public class AuditEntryRequest {
         return type;
     }
 
-    public AuditTxType getTxStrategy() {
+    public CloudAuditTxType getTxStrategy() {
         return txStrategy;
     }
 
@@ -152,7 +154,7 @@ public class AuditEntryRequest {
 
     public enum ChangeType {STANDARD_CODE, STANDARD_TEMPLATE, MONGOCK_EXECUTION, MONGOCK_BEFORE}
 
-    public enum Status {
+    public enum AuditEntryStatus {
         STARTED,
         APPLIED,
         FAILED,

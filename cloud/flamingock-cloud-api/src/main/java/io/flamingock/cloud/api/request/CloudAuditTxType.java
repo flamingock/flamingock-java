@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.auth;
+package io.flamingock.cloud.api.request;
 
+public enum CloudAuditTxType {
+    NON_TX,
+    TX_SHARED,                  // SharedTx (Target system the same as the audit store)
+    TX_SEPARATE_WITH_MARKER,    // SimpleTx (Target system is not the audit store). With marker
+    TX_SEPARATE_NO_MARKER;      // SimpleTx (Target system is not the audit store). Without marker
 
-import io.flamingock.cloud.api.request.TokenExchangeRequest;
-import io.flamingock.cloud.api.response.TokenExchangeResponse;
-
-public interface AuthClient {
-    TokenExchangeResponse getToken(TokenExchangeRequest request);
 }

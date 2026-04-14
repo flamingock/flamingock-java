@@ -59,9 +59,9 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
 
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.APPLIED;
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.FAILED;
-import static io.flamingock.internal.common.cloud.audit.AuditEntryRequest.Status.ROLLED_BACK;
+import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.APPLIED;
+import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.FAILED;
+import static io.flamingock.cloud.api.request.AuditEntryRequest.AuditEntryStatus.ROLLED_BACK;
 
 @Testcontainers
 public class CouchbaseTargetSystemTest {
@@ -77,15 +77,15 @@ public class CouchbaseTargetSystemTest {
     private static CouchbaseTestHelper couchbaseTestHelper;
 
     private final String apiToken = "FAKE_API_TOKEN";
-    private final String organisationId = UUID.randomUUID().toString();
+    private final long organisationId = 1L;
     private final String organisationName = "MyOrganisation";
-    private final String projectId = UUID.randomUUID().toString();
+    private final long projectId = 2L;
     private final String projectName = "MyOrganisation";
     private final String serviceName = "clients-service";
     private final String environmentName = "development";
-    private final String serviceId = "clients-service-id";
-    private final String environmentId = "development-env-id";
-    private final String credentialId = UUID.randomUUID().toString();
+    private final long serviceId = 3L;
+    private final long environmentId = 4L;
+    private final long credentialId = 5L;
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 

@@ -16,7 +16,8 @@
 package io.flamingock.cloud.audit;
 
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
+import io.flamingock.cloud.api.request.CloudAuditTxType;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ class HttpAuditWriterMapperTest {
     void shouldIncludeTxTypeInRequest() {
         // Given
         AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, _001__TestManualInterventionChange.class);
+        CloudAuditTxType txType = auditEntry.getTxType() != null ? auditEntry.getTxType().toCloud() : null;
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -54,7 +56,7 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange() != null ? auditEntry.getSystemChange() : false,
                 auditEntry.getErrorTrace(),
-                auditEntry.getTxType(),
+                txType,
                 auditEntry.getTargetSystemId(),
                 auditEntry.getOrder(),
                 auditEntry.getRecoveryStrategy(),
@@ -62,13 +64,14 @@ class HttpAuditWriterMapperTest {
         );
 
         // Then
-        assertEquals(AuditTxType.TX_SHARED, request.getTxStrategy());
+        assertEquals(CloudAuditTxType.TX_SHARED, request.getTxStrategy());
     }
 
     @Test
     void shouldHandleNullTxType() {
         // Given
         AuditEntry auditEntry = AuditEntryTestFactory.createTestAuditEntry("test-change", AuditEntry.Status.APPLIED, null, _001__TestDefaultRecoveryChange.class);
+        CloudAuditTxType txType = auditEntry.getTxType() != null ? auditEntry.getTxType().toCloud() : null;
 
         // When
         AuditEntryRequest request = new AuditEntryRequest(
@@ -85,7 +88,7 @@ class HttpAuditWriterMapperTest {
                 auditEntry.getMetadata(),
                 auditEntry.getSystemChange() != null ? auditEntry.getSystemChange() : false,
                 auditEntry.getErrorTrace(),
-                auditEntry.getTxType(),
+                txType,
                 auditEntry.getTargetSystemId(),
                 auditEntry.getOrder(),
                 auditEntry.getRecoveryStrategy(),
@@ -93,6 +96,6 @@ class HttpAuditWriterMapperTest {
         );
 
         // Then
-        assertEquals(AuditTxType.NON_TX, request.getTxStrategy());
+        assertEquals(CloudAuditTxType.NON_TX, request.getTxStrategy());
     }
 }

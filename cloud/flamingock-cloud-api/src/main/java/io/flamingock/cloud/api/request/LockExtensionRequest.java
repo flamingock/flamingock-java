@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.lock.client;
+package io.flamingock.cloud.api.request;
 
-import io.flamingock.cloud.api.request.LockExtensionRequest;
-import io.flamingock.cloud.api.response.LockInfo;
-import io.flamingock.internal.core.external.store.lock.LockKey;
-import io.flamingock.internal.util.id.RunnerId;
+public class LockExtensionRequest {
 
-public interface LockServiceClient {
+    private final long lockAcquiredForMills;
 
-    LockInfo extendLock(LockKey lockKey,
-                        RunnerId runnerId,
-                        LockExtensionRequest lockRequest);
+    public LockExtensionRequest(long lockAcquiredForMills) {
+        this.lockAcquiredForMills = lockAcquiredForMills;
+    }
 
-    LockInfo getLock(LockKey lockKey);
+    public long getLockAcquiredForMills() {
+        return lockAcquiredForMills;
+    }
 
-    void releaseLock(LockKey lockKey, RunnerId runnerId);
+    @Override
+    public String toString() {
+        return "{\"lockAcquiredForMills\":" + lockAcquiredForMills +"}";
+    }
 }

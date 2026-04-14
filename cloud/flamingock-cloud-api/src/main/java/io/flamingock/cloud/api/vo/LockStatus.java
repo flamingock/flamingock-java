@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.cloud.lock;
+package io.flamingock.cloud.api.vo;
 
-public class LockExtensionRequest {
-
-    private final long lockAcquiredForMills;
-
-    public LockExtensionRequest(long lockAcquiredForMills) {
-        this.lockAcquiredForMills = lockAcquiredForMills;
-    }
-
-    public long getLockAcquiredForMills() {
-        return lockAcquiredForMills;
-    }
-
-    @Override
-    public String toString() {
-        return "{\"lockAcquiredForMills\":" + lockAcquiredForMills +"}";
-    }
+public enum LockStatus {
+    ACQUIRED, LOCKED_BY_OTHER, EXTENDED
 }

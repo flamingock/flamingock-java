@@ -25,8 +25,8 @@ import io.flamingock.common.test.cloud.mock.MockExecutionPlanBuilder;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.common.test.cloud.prototype.PrototypeTask;
-import io.flamingock.internal.common.cloud.auth.AuthRequest;
-import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.cloud.api.request.TokenExchangeRequest;
+import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.api.request.StageRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
 import io.flamingock.cloud.api.response.StageResponse;
@@ -54,18 +54,18 @@ public final class MockRunnerServer {
 
     private WireMockServer wireMockServer;
     private int serverPort = 8888;
-    private String organisationId = "default-organisation-id";
+    private long organisationId = 1L;
     private String organisationName = "default-organisation-name";
-    private String projectId = "default-project-id";
+    private long projectId = 2L;
     private String projectName = "default-project-name";
-    private String serviceId = "default-service-id";
+    private long serviceId = 3L;
     private String serviceName = "default-service-name";
-    private String environmentId = "default-environment-name";
+    private long environmentId = 4L;
     private String environmentName = "default-environment-name";
     private String runnerId = "default-runner-name";
     private String jwt = "default-jwt";
     private String apiToken = "default-api-token";
-    private String credentialId = "default-credential-id";
+    private long credentialId = 5L;
     private boolean importerCall = false;
 
     private static StageResponse toStageResponse(StageRequest stageRequest) {
@@ -92,7 +92,7 @@ public final class MockRunnerServer {
         return this;
     }
 
-    public MockRunnerServer setOrganisationId(String organisationId) {
+    public MockRunnerServer setOrganisationId(long organisationId) {
         this.organisationId = organisationId;
         return this;
     }
@@ -102,7 +102,7 @@ public final class MockRunnerServer {
         return this;
     }
 
-    public MockRunnerServer setProjectId(String projectId) {
+    public MockRunnerServer setProjectId(long projectId) {
         this.projectId = projectId;
         return this;
     }
@@ -112,12 +112,12 @@ public final class MockRunnerServer {
         return this;
     }
 
-    public MockRunnerServer setCredentialId(String credentialId) {
+    public MockRunnerServer setCredentialId(long credentialId) {
         this.credentialId = credentialId;
         return this;
     }
 
-    public MockRunnerServer setServiceId(String serviceId) {
+    public MockRunnerServer setServiceId(long serviceId) {
         this.serviceId = serviceId;
         return this;
     }
@@ -127,7 +127,7 @@ public final class MockRunnerServer {
         return this;
     }
 
-    public MockRunnerServer setEnvironmentId(String environmentId) {
+    public MockRunnerServer setEnvironmentId(long environmentId) {
         this.environmentId = environmentId;
         return this;
     }
@@ -200,9 +200,9 @@ public final class MockRunnerServer {
 
     private void mockAuthEndpoint() {
 
-        AuthRequest authRequest = new AuthRequest(apiToken, serviceName, environmentName);
+        TokenExchangeRequest authRequest = new TokenExchangeRequest(apiToken, serviceName, environmentName);
 
-        AuthResponse tokenResponse = new AuthResponse();
+        TokenExchangeResponse tokenResponse = new TokenExchangeResponse();
         tokenResponse.setJwt(jwt);
         tokenResponse.setCredentialId(credentialId);
         tokenResponse.setOrganisationId(organisationId);
@@ -221,13 +221,13 @@ public final class MockRunnerServer {
 
     private void mockExecutionEndpoint() {
         String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution"//?elapsedMillis={elapsedMillis}"
-                .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId)
+                .replace("{environmentId}", String.valueOf(environmentId)).replace("{serviceId}", String.valueOf(serviceId))
 //                .replace("{elapsedMillis}", String.valueOf(executionExpectation.getElapsedMillis()))
                 ;
 
         MockExecutionPlanBuilder executionPlanBuilder = new MockExecutionPlanBuilder(
                 runnerId,
-                serviceId,
+                String.valueOf(serviceId),
                 clientSubmission);
         if (requestResponseList.size() == 1) {
 
@@ -280,8 +280,8 @@ public final class MockRunnerServer {
             //TODO should we add the stage to the url too
 
             String auditUrlTemplate = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/task/{taskId}/audit"///{auditId}"
-                    .replace("{environmentId}", environmentId)
-                    .replace("{serviceId}", serviceId)
+                    .replace("{environmentId}", String.valueOf(environmentId))
+                    .replace("{serviceId}", String.valueOf(serviceId))
                     .replace("{executionId}", auditWrite.getExecutionId());
 
             PrototypeTask taskPrototype = getTaskPrototype(auditWrite.getTaskId());
@@ -328,7 +328,7 @@ public final class MockRunnerServer {
 
     private void importerCall() {
         String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/import"//?elapsedMillis={elapsedMillis}"
-                .replace("{environmentId}", environmentId).replace("{serviceId}", serviceId);
+                .replace("{environmentId}", String.valueOf(environmentId)).replace("{serviceId}", String.valueOf(serviceId));
 
         wireMockServer.stubFor(post(urlPathEqualTo(executionUrl))
                 .withRequestBody(equalToJson(toJson(importerExecutionRequest)))
@@ -343,7 +343,7 @@ public final class MockRunnerServer {
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json");
         wireMockServer
-                .stubFor(delete(urlPathEqualTo("/api/v1/{key}/lock".replace("{key}", serviceId)))
+                .stubFor(delete(urlPathEqualTo("/api/v1/{key}/lock".replace("{key}", String.valueOf(serviceId))))
                         .willReturn(responseDefBuilder));
     }
 

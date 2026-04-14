@@ -25,7 +25,7 @@ import io.flamingock.internal.util.id.ServiceId;
 import io.flamingock.internal.core.configuration.cloud.CloudConfigurable;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.CloudAuditStore;
-import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.audit.HtttpAuditWriter;
 import io.flamingock.cloud.auth.AuthManager;
 import io.flamingock.cloud.auth.HttpAuthClient;
@@ -89,10 +89,10 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                 cloudConfiguration.getServiceName(),
                 cloudConfiguration.getEnvironmentName(),
                 getAuthClient(cloudConfiguration, requestBuilderFactory));
-        AuthResponse authResponse = authManager.authenticate();
+        TokenExchangeResponse authResponse = authManager.authenticate();
 
-        EnvironmentId environmentId = EnvironmentId.fromString(authResponse.getEnvironmentId());
-        ServiceId serviceId = ServiceId.fromString(authResponse.getServiceId());
+        EnvironmentId environmentId = EnvironmentId.fromLong(authResponse.getEnvironmentId());
+        ServiceId serviceId = ServiceId.fromLong(authResponse.getServiceId());
 
         LifecycleAuditWriter auditWriter = new HtttpAuditWriter(
                 cloudConfiguration.getHost(),

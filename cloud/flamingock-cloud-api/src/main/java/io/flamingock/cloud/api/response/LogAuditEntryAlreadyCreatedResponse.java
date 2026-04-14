@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Flamingock (https://www.flamingock.io)
+ * Copyright 2026 Flamingock (https://www.flamingock.io)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.cloud.auth;
+package io.flamingock.cloud.api.response;
 
+public class LogAuditEntryAlreadyCreatedResponse extends LogAuditEntryResponse {
 
-import io.flamingock.cloud.api.request.TokenExchangeRequest;
-import io.flamingock.cloud.api.response.TokenExchangeResponse;
+    public LogAuditEntryAlreadyCreatedResponse() {
+    }
 
-public interface AuthClient {
-    TokenExchangeResponse getToken(TokenExchangeRequest request);
+    public LogAuditEntryAlreadyCreatedResponse(LockInfo lock) {
+        super(lock);
+    }
 }

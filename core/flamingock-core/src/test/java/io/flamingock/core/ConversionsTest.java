@@ -15,7 +15,7 @@
  */
 package io.flamingock.core;
 
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,8 +53,8 @@ public class ConversionsTest {
     @DisplayName("AuditEntryRequest.Status should match AuditEntry.Status")
     void auditEntryStateShouldAuditEntryRequestState() {
         Set<String> auditEntryRequestExecutionTypeValues = Arrays
-                .stream(AuditEntryRequest.Status.values())
-                .map(AuditEntryRequest.Status::name)
+                .stream(AuditEntryRequest.AuditEntryStatus.values())
+                .map(AuditEntryRequest.AuditEntryStatus::name)
                 .collect(Collectors.toSet());
         List<String> auditEntryExecutionTypeValues = Arrays.stream(AuditEntry.Status.values())
                 .map(AuditEntry.Status::name)

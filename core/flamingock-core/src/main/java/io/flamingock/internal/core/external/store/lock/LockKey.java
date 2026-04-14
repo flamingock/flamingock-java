@@ -16,9 +16,9 @@
 package io.flamingock.internal.core.external.store.lock;
 
 
-import io.flamingock.internal.util.id.Id;
+import io.flamingock.internal.util.id.StringId;
 
-public class LockKey extends Id {
+public class LockKey extends StringId {
 
     public static LockKey fromString(String value) {
         return new LockKey(value);

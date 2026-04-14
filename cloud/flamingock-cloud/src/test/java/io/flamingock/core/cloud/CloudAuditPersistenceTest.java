@@ -26,7 +26,7 @@ import io.flamingock.internal.util.ThreadSleeper;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
-import io.flamingock.internal.common.cloud.audit.AuditEntryRequest;
+import io.flamingock.cloud.api.request.AuditEntryRequest;
 import io.flamingock.internal.core.external.store.lock.LockException;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
@@ -55,17 +55,17 @@ import static org.mockito.Mockito.verify;
 public class CloudAuditPersistenceTest {
 
     private final String apiToken = "FAKE_API_TOKEN";
-    private final String organisationId = UUID.randomUUID().toString();
+    private final long organisationId = 1L;
     private final String organisationName = "MyOrganisation";
 
-    private final String projectId = UUID.randomUUID().toString();
+    private final long projectId = 2L;
     private final String projectName = "MyOrganisation";
 
     private final String serviceName = "clients-service";
     private final String environmentName = "development";
-    private final String serviceId = "clients-service-id";
-    private final String environmentId = "development-env-id";
-    private final String credentialId = UUID.randomUUID().toString();
+    private final long serviceId = 3L;
+    private final long environmentId = 4L;
+    private final long credentialId = 5L;
     private final int runnerServerPort = 8888;
     private final String jwt = "fake_jwt";
 
@@ -80,7 +80,7 @@ public class CloudAuditPersistenceTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template",
-                AuditEntryRequest.Status.APPLIED,
+                AuditEntryRequest.AuditEntryStatus.APPLIED,
                 _001__CloudChange1.class.getName(),
                 "apply"
         ));
@@ -88,7 +88,7 @@ public class CloudAuditPersistenceTest {
 
                 AuditEntryMatcher(
                 "create-persons-table-from-template-2",
-                AuditEntryRequest.Status.APPLIED,
+                AuditEntryRequest.AuditEntryStatus.APPLIED,
                 _002__CloudChange2.class.getName(),
                 "apply"
         ));

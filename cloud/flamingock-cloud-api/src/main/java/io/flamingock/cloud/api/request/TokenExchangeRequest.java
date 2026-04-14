@@ -13,17 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.cloud.auth;
+package io.flamingock.cloud.api.request;
 
-public class AuthRequest {
+public class TokenExchangeRequest {
 
-    private final String apiToken;
-    private final String serviceName;
-    private final String environmentName;
+    private String apiToken;
+    private String serviceName;
+    private String environmentName;
 
-    public AuthRequest(String apiToken, String serviceName, String environmentName) {
+    public TokenExchangeRequest() {
+    }
+
+    public TokenExchangeRequest(String apiToken, String serviceName, String environmentName) {
         this.apiToken = apiToken;
         this.serviceName = serviceName;
+        this.environmentName = environmentName;
+    }
+
+    public void setApiToken(String apiToken) {
+        this.apiToken = apiToken;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public void setEnvironmentName(String environmentName) {
         this.environmentName = environmentName;
     }
 

@@ -15,14 +15,14 @@
  */
 package io.flamingock.cloud.auth;
 
-import io.flamingock.internal.common.cloud.auth.AuthRequest;
-import io.flamingock.internal.common.cloud.auth.AuthResponse;
+import io.flamingock.cloud.api.request.TokenExchangeRequest;
+import io.flamingock.cloud.api.response.TokenExchangeResponse;
 
 public class AuthManager {
 
     private final AuthClient authClient;
 
-    private final AuthRequest tokenRequest;
+    private final TokenExchangeRequest tokenRequest;
 
     private String jwtToken;
 
@@ -31,14 +31,14 @@ public class AuthManager {
                        String environmentName,
                        AuthClient authClient) {
         this.authClient = authClient;
-        this.tokenRequest = new AuthRequest(
+        this.tokenRequest = new TokenExchangeRequest(
                 apiToken,
                 serviceName,
                 environmentName);
     }
 
-    public AuthResponse authenticate() {
-        AuthResponse token = authClient.getToken(tokenRequest);
+    public TokenExchangeResponse authenticate() {
+        TokenExchangeResponse token = authClient.getToken(tokenRequest);
         jwtToken = token.getJwt();
         return token;
     }
