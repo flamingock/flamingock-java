@@ -17,7 +17,7 @@ package io.flamingock.cloud.api.error;
 
 import java.util.Map;
 
-public interface FlamingockError {
+public interface CloudFlamingockError {
 
     String getCode();
 
