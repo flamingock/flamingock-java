@@ -25,19 +25,19 @@ public class PrototypeStage {
 
     private final int order;
 
-    private final List<PrototypeTask> tasks;
+    private final List<PrototypeChange> changes;
 
     public PrototypeStage(String name, int order) {
         this.name = name;
         this.order = order;
-        this.tasks = new LinkedList<>();
+        this.changes = new LinkedList<>();
     }
 
-    public PrototypeStage addTask(String taskId,
+    public PrototypeStage addChange(String changeId,
                                   String className,
                                   String methodName,
                                   boolean transactional) {
-        tasks.add(new PrototypeTask(taskId, className, methodName, transactional));
+        changes.add(new PrototypeChange(changeId, className, methodName, transactional));
         return this;
     }
 
@@ -49,8 +49,8 @@ public class PrototypeStage {
         return order;
     }
 
-    public List<PrototypeTask> getTasks() {
-        return tasks;
+    public List<PrototypeChange> getChanges() {
+        return changes;
     }
 
 

@@ -143,12 +143,12 @@ class DynamoDBAuditStoreTest {
                             .run();
                 })
                 .THEN_VerifyAuditSequenceStrict(
-                        auditEntry().withTaskId("table-create").withState(AuditEntry.Status.STARTED),
-                        auditEntry().withTaskId("table-create").withState(AuditEntry.Status.APPLIED),
-                        auditEntry().withTaskId("insert-user").withState(AuditEntry.Status.STARTED),
-                        auditEntry().withTaskId("insert-user").withState(AuditEntry.Status.APPLIED),
-                        auditEntry().withTaskId("insert-another-user").withState(AuditEntry.Status.STARTED),
-                        auditEntry().withTaskId("insert-another-user").withState(AuditEntry.Status.APPLIED)
+                        auditEntry().withChangeId("table-create").withState(AuditEntry.Status.STARTED),
+                        auditEntry().withChangeId("table-create").withState(AuditEntry.Status.APPLIED),
+                        auditEntry().withChangeId("insert-user").withState(AuditEntry.Status.STARTED),
+                        auditEntry().withChangeId("insert-user").withState(AuditEntry.Status.APPLIED),
+                        auditEntry().withChangeId("insert-another-user").withState(AuditEntry.Status.STARTED),
+                        auditEntry().withChangeId("insert-another-user").withState(AuditEntry.Status.APPLIED)
                 )
                 .run();
 

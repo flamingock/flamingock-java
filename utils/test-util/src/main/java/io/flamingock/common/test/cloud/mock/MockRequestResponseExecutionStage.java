@@ -21,25 +21,25 @@ public class MockRequestResponseExecutionStage {
 
     private final String stageName;
 
-    private final List<MockRequestResponseTask> tasks;
+    private final List<MockRequestResponseChange> changes;
 
-    public MockRequestResponseExecutionStage(String stageName, List<MockRequestResponseTask> tasks) {
+    public MockRequestResponseExecutionStage(String stageName, List<MockRequestResponseChange> changes) {
         this.stageName = stageName;
-        this.tasks = tasks;
+        this.changes = changes;
     }
 
     public String getStageName() {
         return stageName;
     }
 
-    public List<MockRequestResponseTask> getTasks() {
-        return tasks;
+    public List<MockRequestResponseChange> getChanges() {
+        return changes;
     }
 
-    public MockRequestResponseTask getTaskById(String taskId) {
-        return tasks.stream()
-                .filter(task-> taskId.equals(task.getTaskId()))
+    public MockRequestResponseChange getChangeById(String changeId) {
+        return changes.stream()
+                .filter(change-> changeId.equals(change.getChangeId()))
                 .findFirst()
-                .orElseThrow(()-> new RuntimeException("Task not found with id: " + taskId));
+                .orElseThrow(()-> new RuntimeException("Change not found with id: " + changeId));
     }
 }

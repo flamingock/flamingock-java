@@ -19,7 +19,7 @@ import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
@@ -73,14 +73,14 @@ public class ExecutionPlan implements AutoCloseable {
 
     /**
      * Validates the execution plan for manual intervention requirements.
-     * This method analyzes all executable stages and their tasks to identify
+     * This method analyzes all executable stages and their changes to identify
      * any that require manual intervention, throwing an exception if found.
      * <p>
      * This centralized validation follows DDD principles by keeping validation
      * logic at the appropriate architectural layer (ExecutionPlan domain).
      * </p>
      * 
-     * @throws ManualInterventionRequiredException if any tasks require manual intervention
+     * @throws ManualInterventionRequiredException if any changes require manual intervention
      */
     public void validate() {
         List<RecoveryIssue> recoveryIssues = new ArrayList<>();
@@ -93,9 +93,9 @@ public class ExecutionPlan implements AutoCloseable {
                 hasStages = true;
             }
             
-            for (ExecutableTask task : stage.getTasks()) {
-                if (task.getAction() == ChangeAction.MANUAL_INTERVENTION) {
-                    recoveryIssues.add(new RecoveryIssue(task.getId()));
+            for (ExecutableChange change : stage.getChanges()) {
+                if (change.getAction() == ChangeAction.MANUAL_INTERVENTION) {
+                    recoveryIssues.add(new RecoveryIssue(change.getId()));
                 }
             }
         }

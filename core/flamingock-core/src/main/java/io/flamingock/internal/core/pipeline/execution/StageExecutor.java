@@ -24,11 +24,11 @@ import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.internal.core.operation.result.StageResultBuilder;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.navigation.FailedChangeProcessResult;
-import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessResult;
-import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategy;
-import io.flamingock.internal.core.task.navigation.navigator.ChangeProcessStrategyFactory;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
+import io.flamingock.internal.core.change.navigation.FailedChangeProcessResult;
+import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessResult;
+import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategy;
+import io.flamingock.internal.core.change.navigation.navigator.ChangeProcessStrategyFactory;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
@@ -68,11 +68,11 @@ public class StageExecutor {
                                Lock lock) throws StageExecutionException {
         LocalDateTime stageStart = LocalDateTime.now();
         String stageName = executableStage.getName();
-        long taskCount = getTasksStream(executableStage).count();
+        long changeCount = getChangesStream(executableStage).count();
 
         logger.info("Stage started [stage={}]", stageName);
-        logger.debug("Stage execution context [stage={} tasks={} execution_id={}]",
-                stageName, taskCount, executionContext.getExecutionId());
+        logger.debug("Stage execution context [stage={} changes={} execution_id={}]",
+                stageName, changeCount, executionContext.getExecutionId());
 
         StageResultBuilder resultBuilder = new StageResultBuilder()
                 .stageId(stageName)
@@ -86,7 +86,7 @@ public class StageExecutor {
         try {
             logger.debug("Processing changes [stage={} context={}]", stageName, executionContext.getExecutionId());
 
-            getTasksStream(executableStage)
+            getChangesStream(executableStage)
                     .map(changeProcessFactory::setChange)
                     .map(ChangeProcessStrategyFactory::build)
                     .map(ChangeProcessStrategy::applyChange)
@@ -142,8 +142,8 @@ public class StageExecutor {
                 .setNonGuardedTypes(nonGuardedTypes);
     }
 
-    protected Stream<? extends ExecutableTask> getTasksStream(ExecutableStage executableStage) {
-        return executableStage.getTasks().stream();
+    protected Stream<? extends ExecutableChange> getChangesStream(ExecutableStage executableStage) {
+        return executableStage.getChanges().stream();
     }
 
     public static class Output {

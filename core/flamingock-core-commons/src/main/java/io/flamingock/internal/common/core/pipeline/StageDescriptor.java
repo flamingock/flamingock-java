@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.common.core.pipeline;
 
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
 
 import java.util.Collection;
 
@@ -23,5 +23,5 @@ public interface StageDescriptor {
 
     String getName();
 
-    Collection<TaskDescriptor> getLoadedTasks();
+    Collection<ChangeDescriptor> getLoadedChanges();
 }

@@ -29,8 +29,8 @@ import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -75,7 +75,7 @@ class ValidateApplyOperationTest {
     private AbstractLoadedStage loadedStage;
 
     @Mock
-    private AbstractLoadedTask loadedTask;
+    private AbstractLoadedChange loadedChange;
 
     private ValidateApplyOperation operation;
     private RunnerId runnerId;
@@ -108,7 +108,7 @@ class ValidateApplyOperationTest {
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
-        when(loadedStage.getTasks()).thenReturn(Collections.singletonList(loadedTask));
+        when(loadedStage.getChanges()).thenReturn(Collections.singletonList(loadedChange));
         when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
 
         ExecuteArgs args = new ExecuteArgs(pipeline);
@@ -127,15 +127,15 @@ class ValidateApplyOperationTest {
     @DisplayName("validationOnly: pending changes exist → execute() throws PendingChangesException with correct count")
     void shouldThrowPendingChangesExceptionWhenPendingChangesExist() throws Exception {
         // Given
-        // Two pending tasks (isAlreadyApplied = false)
-        ExecutableTask pendingTask1 = mock(ExecutableTask.class);
-        ExecutableTask pendingTask2 = mock(ExecutableTask.class);
-        when(pendingTask1.isAlreadyApplied()).thenReturn(false);
-        when(pendingTask2.isAlreadyApplied()).thenReturn(false);
+        // Two pending changes (isAlreadyApplied = false)
+        ExecutableChange pendingChange1 = mock(ExecutableChange.class);
+        ExecutableChange pendingChange2 = mock(ExecutableChange.class);
+        when(pendingChange1.isAlreadyApplied()).thenReturn(false);
+        when(pendingChange2.isAlreadyApplied()).thenReturn(false);
 
-        List<ExecutableTask> pendingTasks = Arrays.asList(pendingTask1, pendingTask2);
+        List<ExecutableChange> pendingChanges = Arrays.asList(pendingChange1, pendingChange2);
         ExecutableStage executableStage = mock(ExecutableStage.class);
-        doReturn(pendingTasks).when(executableStage).getTasks();
+        doReturn(pendingChanges).when(executableStage).getChanges();
 
         ExecutablePipeline executablePipeline = mock(ExecutablePipeline.class);
         when(executablePipeline.getExecutableStages()).thenReturn(Collections.singletonList(executableStage));
@@ -144,7 +144,7 @@ class ValidateApplyOperationTest {
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
-        when(loadedStage.getTasks()).thenReturn(Arrays.asList(loadedTask, loadedTask));
+        when(loadedStage.getChanges()).thenReturn(Arrays.asList(loadedChange, loadedChange));
         when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
 
         ExecuteArgs args = new ExecuteArgs(pipeline);

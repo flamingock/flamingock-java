@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class SqlAuditMarkerDialectHelperTest {
 
-    private static final String ONGOING_TASKS_TABLE = "FLAMINGOCK_ONGOING_TASKS";
+    private static final String ONGOING_CHANGES_TABLE = "FLAMINGOCK_ONGOING_CHANGES";
 
     private DataSource dataSource;
     private SqlTargetSystemAuditMarker sqlTargetSystemAuditMarker;
@@ -127,13 +127,13 @@ public class SqlAuditMarkerDialectHelperTest {
         });
 
         sqlTargetSystemAuditMarker = SqlTargetSystemAuditMarker.builder(dataSource, txManager)
-            .withTableName(ONGOING_TASKS_TABLE)
+            .withTableName(ONGOING_CHANGES_TABLE)
             .build();
     }
 
     private void dropTable() throws SQLException {
         try (Connection c = dataSource.getConnection(); Statement s = c.createStatement()) {
-            s.execute("DROP TABLE IF EXISTS " + ONGOING_TASKS_TABLE);
+            s.execute("DROP TABLE IF EXISTS " + ONGOING_CHANGES_TABLE);
         }
     }
 
@@ -163,7 +163,7 @@ public class SqlAuditMarkerDialectHelperTest {
 
     @ParameterizedTest(name = "[{index}] dialect={0} - Should add and list two marks successfully")
     @MethodSource("dialectProvider")
-    void addOngoingTaskMark(SqlDialect dialect) {
+    void addOngoingChangeMark(SqlDialect dialect) {
         JdbcDatabaseContainer<?> container = createContainerForDialect(dialect);
         Assumptions.assumeTrue(container != null ||
                 (dialect != SqlDialect.FIREBIRD && dialect != SqlDialect.INFORMIX),
@@ -173,20 +173,20 @@ public class SqlAuditMarkerDialectHelperTest {
             initForDialect(dialect, container);
 
             // GIVEN
-            String taskId1 = "test-task-id1";
-            String taskId2 = "test-task-id2";
+            String changeId1 = "test-change-id1";
+            String changeId2 = "test-change-id2";
             TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLBACK;
 
-            TargetSystemAuditMark mark1 = new TargetSystemAuditMark(taskId1, operation);
-            TargetSystemAuditMark mark2 = new TargetSystemAuditMark(taskId2, operation);
+            TargetSystemAuditMark mark1 = new TargetSystemAuditMark(changeId1, operation);
+            TargetSystemAuditMark mark2 = new TargetSystemAuditMark(changeId2, operation);
 
             // WHEN
-            txManager.startSession(taskId1);
+            txManager.startSession(changeId1);
             sqlTargetSystemAuditMarker.mark(mark1);
-            txManager.closeSession(taskId1);
-            txManager.startSession(taskId2);
+            txManager.closeSession(changeId1);
+            txManager.startSession(changeId2);
             sqlTargetSystemAuditMarker.mark(mark2);
-            txManager.closeSession(taskId2);
+            txManager.closeSession(changeId2);
             Set<TargetSystemAuditMark> marks = sqlTargetSystemAuditMarker.listAll();
 
             // THEN
@@ -209,7 +209,7 @@ public class SqlAuditMarkerDialectHelperTest {
 
     @ParameterizedTest(name = "[{index}] dialect={0} - Should remove all marks successfully")
     @MethodSource("dialectProvider")
-    void removeOngoingTaskMark(SqlDialect dialect) {
+    void removeOngoingChangeMark(SqlDialect dialect) {
         JdbcDatabaseContainer<?> container = createContainerForDialect(dialect);
         Assumptions.assumeTrue(container != null ||
                 (dialect != SqlDialect.FIREBIRD && dialect != SqlDialect.INFORMIX),
@@ -219,24 +219,24 @@ public class SqlAuditMarkerDialectHelperTest {
             initForDialect(dialect, container);
 
             // GIVEN
-            String taskId1 = "test-task-id1";
-            String taskId2 = "test-task-id2";
+            String changeId1 = "test-change-id1";
+            String changeId2 = "test-change-id2";
             TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLBACK;
 
-            TargetSystemAuditMark mark1 = new TargetSystemAuditMark(taskId1, operation);
-            TargetSystemAuditMark mark2 = new TargetSystemAuditMark(taskId2, operation);
-            txManager.startSession(taskId1);
+            TargetSystemAuditMark mark1 = new TargetSystemAuditMark(changeId1, operation);
+            TargetSystemAuditMark mark2 = new TargetSystemAuditMark(changeId2, operation);
+            txManager.startSession(changeId1);
             sqlTargetSystemAuditMarker.mark(mark1);
-            txManager.closeSession(taskId1);
-            txManager.startSession(taskId2);
+            txManager.closeSession(changeId1);
+            txManager.startSession(changeId2);
             sqlTargetSystemAuditMarker.mark(mark2);
-            txManager.closeSession(taskId2);
+            txManager.closeSession(changeId2);
 
             Set<TargetSystemAuditMark> marks = sqlTargetSystemAuditMarker.listAll();
 
             // WHEN
             for (TargetSystemAuditMark mark : marks) {
-                sqlTargetSystemAuditMarker.clearMark(mark.getTaskId());
+                sqlTargetSystemAuditMarker.clearMark(mark.getChangeId());
             }
 
             // THEN

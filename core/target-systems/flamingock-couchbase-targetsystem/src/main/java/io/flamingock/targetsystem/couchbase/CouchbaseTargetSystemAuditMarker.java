@@ -40,9 +40,9 @@ import java.util.stream.Collectors;
 
 public class CouchbaseTargetSystemAuditMarker implements TargetSystemAuditMarker {
     private static final String OPERATION = "operation";
-    private static final String TASK_ID = "taskId";
+    private static final String CHANGE_ID = "changeId";
     private final Cluster cluster;
-    private final Collection onGoingTaskStatusCollection;
+    private final Collection onGoingChangeStatusCollection;
     private final TransactionManager<TransactionAttemptContext> txManager;
 
     public static Builder builder(Cluster cluster,
@@ -51,18 +51,18 @@ public class CouchbaseTargetSystemAuditMarker implements TargetSystemAuditMarker
         return new Builder(cluster, bucket, txManager);
     }
 
-    public CouchbaseTargetSystemAuditMarker(Cluster cluster, Collection onGoingTaskStatusCollection, TransactionManager<TransactionAttemptContext> txManager) {
+    public CouchbaseTargetSystemAuditMarker(Cluster cluster, Collection onGoingChangeStatusCollection, TransactionManager<TransactionAttemptContext> txManager) {
         this.cluster = cluster;
-        this.onGoingTaskStatusCollection = onGoingTaskStatusCollection;
+        this.onGoingChangeStatusCollection = onGoingChangeStatusCollection;
         this.txManager = txManager;
     }
 
     @Override
     public Set<TargetSystemAuditMark> listAll() {
         List<JsonObject> results = CouchbaseCollectionHelper.selectAllDocuments(cluster,
-                                                                                onGoingTaskStatusCollection.bucketName(),
-                                                                                onGoingTaskStatusCollection.scopeName(),
-                                                                                onGoingTaskStatusCollection.name());
+                                                                                onGoingChangeStatusCollection.bucketName(),
+                                                                                onGoingChangeStatusCollection.scopeName(),
+                                                                                onGoingChangeStatusCollection.name());
         return results
                 .stream()
                 .map(CouchbaseTargetSystemAuditMarker::mapToOnGoingStatus)
@@ -74,10 +74,10 @@ public class CouchbaseTargetSystemAuditMarker implements TargetSystemAuditMarker
         cluster.query(
                 String.format(
                         "DELETE FROM `%s`.`%s`.`%s` WHERE `%s`= $p1",
-                        onGoingTaskStatusCollection.bucketName(),
-                        onGoingTaskStatusCollection.scopeName(),
-                        onGoingTaskStatusCollection.name(),
-                        TASK_ID),
+                        onGoingChangeStatusCollection.bucketName(),
+                        onGoingChangeStatusCollection.scopeName(),
+                        onGoingChangeStatusCollection.name(),
+                        CHANGE_ID),
                 QueryOptions.queryOptions()
                         .scanConsistency(QueryScanConsistency.REQUEST_PLUS)
                         .parameters(JsonObject.create().put("p1", changeId)));
@@ -86,25 +86,25 @@ public class CouchbaseTargetSystemAuditMarker implements TargetSystemAuditMarker
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
 
-        String key = auditMark.getTaskId();
+        String key = auditMark.getChangeId();
 
         JsonObject document = JsonObject.create()
-                .put(TASK_ID, auditMark.getTaskId())
+                .put(CHANGE_ID, auditMark.getChangeId())
                 .put(OPERATION, auditMark.getOperation().name());
 
-        TransactionAttemptContext ctx = txManager.getSessionOrThrow(auditMark.getTaskId());
+        TransactionAttemptContext ctx = txManager.getSessionOrThrow(auditMark.getChangeId());
 
         try {
-            TransactionGetResult existing = ctx.get(onGoingTaskStatusCollection, key);
+            TransactionGetResult existing = ctx.get(onGoingChangeStatusCollection, key);
             ctx.replace(existing, document);
         } catch (DocumentNotFoundException e) {
-            ctx.insert(onGoingTaskStatusCollection, key, document);
+            ctx.insert(onGoingChangeStatusCollection, key, document);
         }
     }
 
     public static TargetSystemAuditMark mapToOnGoingStatus(JsonObject jsonObject) {
         TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(jsonObject.getString(OPERATION));
-        return new TargetSystemAuditMark(jsonObject.getString(TASK_ID), operation);
+        return new TargetSystemAuditMark(jsonObject.getString(CHANGE_ID), operation);
     }
 
 
@@ -141,8 +141,8 @@ public class CouchbaseTargetSystemAuditMarker implements TargetSystemAuditMarker
         public CouchbaseTargetSystemAuditMarker build() {
             CouchbaseCollectionInitializator collectionInitializator = new CouchbaseCollectionInitializator(cluster, bucket, scopeName, collectionName);
             collectionInitializator.initialize(autoCreate);
-            Collection onGoingTasksStatusCollection = this.bucket.scope(scopeName).collection(collectionName);
-            return new CouchbaseTargetSystemAuditMarker(cluster, onGoingTasksStatusCollection, txManager);
+            Collection onGoingChangesStatusCollection = this.bucket.scope(scopeName).collection(collectionName);
+            return new CouchbaseTargetSystemAuditMarker(cluster, onGoingChangesStatusCollection, txManager);
         }
     }
 }

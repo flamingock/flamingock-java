@@ -22,26 +22,26 @@ import java.beans.Transient;
 
 @Deprecated
 public class AuditEntryMatcher {
-    private final String taskId;
+    private final String changeId;
     private final CloudAuditStatus state;
     private final String className;
     private final String methodName;
     private final boolean transactional;
 
-    public AuditEntryMatcher(String taskId, CloudAuditStatus state, String className, String methodName) {
-        this(taskId, state, className, methodName, true);
+    public AuditEntryMatcher(String changeId, CloudAuditStatus state, String className, String methodName) {
+        this(changeId, state, className, methodName, true);
     }
 
-    public AuditEntryMatcher(String taskId, CloudAuditStatus state, String className, String methodName, boolean transactional) {
-        this.taskId = taskId;
+    public AuditEntryMatcher(String changeId, CloudAuditStatus state, String className, String methodName, boolean transactional) {
+        this.changeId = changeId;
         this.state = state;
         this.className = className;
         this.methodName = methodName;
         this.transactional = transactional;
     }
 
-    public String getTaskId() {
-        return taskId;
+    public String getChangeId() {
+        return changeId;
     }
 
     public CloudAuditStatus getState() {

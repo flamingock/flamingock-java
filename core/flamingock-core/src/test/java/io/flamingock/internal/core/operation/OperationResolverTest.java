@@ -25,7 +25,7 @@ import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.common.core.operation.OperationType;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +76,7 @@ class OperationResolverTest {
     private AbstractLoadedStage loadedStage;
 
     @Mock
-    private AbstractLoadedTask loadedTask;
+    private AbstractLoadedChange loadedChange;
 
     private RunnerId runnerId;
     private Runnable noOpFinalizer;
@@ -90,7 +90,7 @@ class OperationResolverTest {
         // Default pipeline setup so OperationResolver does not NPE on pipeline access
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
-        when(loadedStage.getTasks()).thenReturn(Collections.singletonList(loadedTask));
+        when(loadedStage.getChanges()).thenReturn(Collections.singletonList(loadedChange));
 
         // Default coreConfiguration stubs
         when(coreConfiguration.getMetadata()).thenReturn(Collections.emptyMap());

@@ -133,7 +133,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
         Map<String, TargetSystemAuditMarkType> auditMarks = getOngoingStatuses()
                 .stream()
-                .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
+                .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
         ExecutionPlanRequest requestBody = CloudExecutionPlanMapper.toRequest(
                 loadedStages,

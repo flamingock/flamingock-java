@@ -18,18 +18,18 @@ package io.flamingock.common.test.cloud;
 import io.flamingock.cloud.api.vo.CloudAuditStatus;
 
 public class AuditRequestExpectation {
-    private final String taskId;
+    private final String changeId;
     private final CloudAuditStatus state;
     private final String executionId;
 
-    public AuditRequestExpectation(String executionId, String taskId, CloudAuditStatus state) {
+    public AuditRequestExpectation(String executionId, String changeId, CloudAuditStatus state) {
         this.executionId = executionId;
-        this.taskId = taskId;
+        this.changeId = changeId;
         this.state = state;
     }
 
-    public String getTaskId() {
-        return taskId;
+    public String getChangeId() {
+        return changeId;
     }
 
     public CloudAuditStatus getState() {

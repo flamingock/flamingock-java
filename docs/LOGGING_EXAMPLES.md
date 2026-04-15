@@ -11,7 +11,7 @@ This document shows real-world examples of what users will see in their logs dur
 INFO  - Starting Flamingock process successfully
 
 DEBUG - Starting lock refresh daemon [lock_key=pipeline-process]
-INFO  - Starting stage execution [stage=system tasks=3 execution_id=exec-001]
+INFO  - Starting stage execution [stage=system changes=3 execution_id=exec-001]
 
 DEBUG - Starting change execution [change=create-user-table]
 DEBUG - Starting SQL transaction [isolation=READ_COMMITTED connection=user@jdbc:mysql://localhost/db]
@@ -34,14 +34,14 @@ DEBUG - Committing successful SQL transaction [duration=80ms]
 DEBUG - SQL transaction commit completed successfully [duration=80ms]
 DEBUG - Audit operation completed successfully [change=seed-admin-user operation=execution]
 
-INFO  - Stage execution completed successfully [stage=system duration=1.2s tasks=3]
+INFO  - Stage execution completed successfully [stage=system duration=1.2s changes=3]
 DEBUG - Lock refresh daemon stopped [lock_key=pipeline-process]
 
 INFO  - Finished Flamingock process successfully
 Stage: system
-Task: create-user-table
-Task: add-user-indexes  
-Task: seed-admin-user
+Change: create-user-table
+Change: add-user-indexes  
+Change: seed-admin-user
 ```
 
 ---
@@ -55,7 +55,7 @@ Task: seed-admin-user
 INFO  - Starting Flamingock process successfully
 
 DEBUG - Starting lock refresh daemon [lock_key=pipeline-process]
-INFO  - Starting stage execution [stage=system tasks=3 execution_id=exec-002]
+INFO  - Starting stage execution [stage=system changes=3 execution_id=exec-002]
 
 DEBUG - Starting change execution [change=create-user-table]
 DEBUG - Starting SQL transaction [isolation=READ_COMMITTED connection=user@jdbc:mysql://localhost/db]
@@ -139,7 +139,7 @@ INFO  - Finished Flamingock process successfully
 INFO  - Starting Flamingock process successfully
 
 DEBUG - Starting lock refresh daemon [lock_key=pipeline-process]
-INFO  - Starting stage execution [stage=system tasks=4 execution_id=exec-003]
+INFO  - Starting stage execution [stage=system changes=4 execution_id=exec-003]
 
 DEBUG - Starting change execution [change=create-schema]
 DEBUG - Starting SQL transaction [isolation=READ_COMMITTED connection=user@jdbc:mysql://localhost/db]
@@ -187,7 +187,7 @@ Caused by: java.io.IOException: Permission denied: /etc/app/config.properties
 INFO  - Starting Flamingock process successfully
 
 DEBUG - Starting lock refresh daemon [lock_key=pipeline-process]
-INFO  - Starting stage execution [stage=system tasks=2 execution_id=exec-004]
+INFO  - Starting stage execution [stage=system changes=2 execution_id=exec-004]
 
 DEBUG - Starting change execution [change=create-user-collection]
 DEBUG - Starting MongoDB transaction [connection=session_507f1f77bcf86cd799439011]
@@ -226,7 +226,7 @@ Caused by: com.mongodb.MongoWriteException: Document failed validation
 INFO  - Starting Flamingock process successfully
 
 DEBUG - Starting lock refresh daemon [lock_key=pipeline-process] 
-INFO  - Starting stage execution [stage=system tasks=2 execution_id=exec-005]
+INFO  - Starting stage execution [stage=system changes=2 execution_id=exec-005]
 
 DEBUG - Starting change execution [change=create-user-table]
 DEBUG - Starting DynamoDB transaction [connection=DynamoDB Enhanced Client]
@@ -284,7 +284,7 @@ io.flamingock.internal.common.core.error.TargetSystemException: Target system 'p
 INFO  - Starting Flamingock process successfully
 
 DEBUG - Starting lock refresh daemon [lock_key=pipeline-process]
-INFO  - Starting stage execution [stage=system tasks=1 execution_id=exec-006]
+INFO  - Starting stage execution [stage=system changes=1 execution_id=exec-006]
 
 DEBUG - Starting change execution [change=critical-schema-change]
 DEBUG - Starting SQL transaction [isolation=SERIALIZABLE connection=admin@jdbc:mysql://prod/db]
@@ -322,10 +322,10 @@ TRACE - Lock daemon refreshing lock [lock_key=pipeline-process]
 TRACE - Lock daemon sleeping [lock_key=pipeline-process expires_at=2024-01-15T10:35:00 sleep_until=2024-01-15T10:30:00 sleep_duration=5.0m]
 TRACE - Lock daemon refreshing lock [lock_key=pipeline-process]
 
-INFO  - Starting stage execution [stage=system tasks=1 execution_id=exec-007]
+INFO  - Starting stage execution [stage=system changes=1 execution_id=exec-007]
 DEBUG - Starting change execution [change=simple-change]
 INFO  - Change execution completed successfully [change=simple-change duration=200ms]
-INFO  - Stage execution completed successfully [stage=system duration=250ms tasks=1]
+INFO  - Stage execution completed successfully [stage=system duration=250ms changes=1]
 
 TRACE - Lock daemon detected expired lock [expires_at=2024-01-15T10:30:00 lock_key=pipeline-process]
 DEBUG - Lock refresh daemon stopped [lock_key=pipeline-process]

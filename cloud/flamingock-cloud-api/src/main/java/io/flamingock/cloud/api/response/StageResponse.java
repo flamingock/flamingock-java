@@ -22,15 +22,15 @@ public  class StageResponse {
 
     private int order;
 
-    private List<ChangeResponse> tasks;
+    private List<ChangeResponse> changes;
 
     public StageResponse() {
     }
 
-    public StageResponse(String name, int order, List<ChangeResponse> tasks) {
+    public StageResponse(String name, int order, List<ChangeResponse> changes) {
         this.name = name;
         this.order = order;
-        this.tasks = tasks;
+        this.changes = changes;
     }
 
     public String getName() {
@@ -41,12 +41,12 @@ public  class StageResponse {
         this.name = name;
     }
 
-    public List<ChangeResponse> getTasks() {
-        return tasks;
+    public List<ChangeResponse> getChanges() {
+        return changes;
     }
 
-    public void setTasks(List<ChangeResponse> tasks) {
-        this.tasks = tasks;
+    public void setChanges(List<ChangeResponse> changes) {
+        this.changes = changes;
     }
 
     public int getOrder() {
@@ -64,11 +64,11 @@ public  class StageResponse {
         StageResponse that = (StageResponse) o;
         return order == that.order
                 && java.util.Objects.equals(name, that.name)
-                && java.util.Objects.equals(tasks, that.tasks);
+                && java.util.Objects.equals(changes, that.changes);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(name, order, tasks);
+        return java.util.Objects.hash(name, order, changes);
     }
 }

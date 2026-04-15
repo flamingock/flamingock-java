@@ -104,7 +104,7 @@ public class TemplateValidator {
 
     /**
      * Validates the YAML content structure against a resolved template definition.
-     * This method is used by {@code TemplateLoadedTaskBuilder} which already has the template definition
+     * This method is used by {@code TemplateLoadedChangeBuilder} which already has the template definition
      * resolved, avoiding a redundant lookup.
      *
      * @param definition the resolved template definition

@@ -63,7 +63,7 @@ public class InternalInMemoryAuditStorage implements AuditStorage {
 
     public synchronized List<AuditEntry> getAuditEntriesForChange(String changeId) {
         return auditEntries.stream()
-                .filter(entry -> changeId.equals(entry.getTaskId()))
+                .filter(entry -> changeId.equals(entry.getChangeId()))
                 .collect(Collectors.toList());
     }
 

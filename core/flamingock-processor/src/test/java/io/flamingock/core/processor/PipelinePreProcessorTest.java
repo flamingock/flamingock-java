@@ -18,10 +18,10 @@ package io.flamingock.core.processor;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +66,7 @@ public class PipelinePreProcessorTest {
     void shouldCreateCorrectPipelineStructureForAnnotationConfiguration() throws Exception {
         // Given - create annotation with stages including system stage
         EnableFlamingock annotation = createMockAnnotationWithStages();
-        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         
         // When - build pipeline from annotation using processor logic
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
@@ -100,7 +100,7 @@ public class PipelinePreProcessorTest {
         // Given - create pipeline YAML file
         createPipelineYamlFile();
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
-        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         
         // When - build pipeline from file using processor logic
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
@@ -138,7 +138,7 @@ public class PipelinePreProcessorTest {
         EnableFlamingock annotation = new MockFlamingockBuilder()
             .withStages() // Empty stages array
             .build();
-        Map<String, List<AbstractPreviewTask>> changes = new HashMap<>();
+        Map<String, List<AbstractPreviewChange>> changes = new HashMap<>();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
 
         // When & Then - should NOT throw exception (empty stages should be allowed)
@@ -154,7 +154,7 @@ public class PipelinePreProcessorTest {
     void shouldCreatePipelineWithCorrectObjectStructure() throws Exception {
         // Given - create a pipeline
         EnableFlamingock annotation = createMockAnnotationWithStages();
-        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changes);
         
@@ -186,7 +186,7 @@ public class PipelinePreProcessorTest {
                 createMockStage("", "com.example.migrations3")
             )
             .build();
-        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When - build pipeline (should not throw exception)
@@ -215,7 +215,7 @@ public class PipelinePreProcessorTest {
         Files.write(configFile, yamlContent.getBytes());
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
-        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When - build pipeline from file
@@ -260,7 +260,7 @@ public class PipelinePreProcessorTest {
         Files.write(configFile, yamlContent.getBytes());
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
-        Map<String, List<AbstractPreviewTask>> changes = createMockChangesMap();
+        Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
         
         // When & Then - should throw RuntimeException
@@ -319,7 +319,7 @@ public class PipelinePreProcessorTest {
 
 
     // Helper methods using reflection to test the internal pipeline building logic
-    private PreviewPipeline buildPipelineFromAnnotation(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changes) throws Exception {
+    private PreviewPipeline buildPipelineFromAnnotation(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewChange>> changes) throws Exception {
         // Set up minimal processor state
         setProcessorField(processor, "resourcesRoot", tempDir.toString());
         setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
@@ -334,7 +334,7 @@ public class PipelinePreProcessorTest {
         return (PreviewPipeline) method.invoke(processor, annotation, Collections.emptyList(), Collections.emptyList(), changes);
     }
 
-    private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewTask>> changes, EnableFlamingock annotation) throws Exception {
+    private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewChange>> changes, EnableFlamingock annotation) throws Exception {
         // Set up minimal processor state
         setProcessorField(processor, "resourcesRoot", tempDir.toString());
         setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
@@ -349,7 +349,7 @@ public class PipelinePreProcessorTest {
         return (PreviewPipeline) method.invoke(processor, Collections.emptyList(), Collections.emptyList(), changes, annotation);
     }
 
-    private PreviewPipeline buildPipelineFromFile(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewTask>> changes) throws Exception {
+    private PreviewPipeline buildPipelineFromFile(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewChange>> changes) throws Exception {
         // Set up minimal processor state
         setProcessorField(processor, "resourcesRoot", tempDir.toString());
         setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
@@ -440,23 +440,23 @@ public class PipelinePreProcessorTest {
         Files.write(configFile, yamlContent.getBytes());
     }
 
-    private Map<String, List<AbstractPreviewTask>> createMockChangesMap() {
-        Map<String, List<AbstractPreviewTask>> map = new HashMap<>();
-        // Create mock tasks for each package so stages can be built
-        AbstractPreviewTask mockTask = new AbstractPreviewTask("mock-task", "001", "test-author", "test-source", "test-source-file", false, true, false, null, RecoveryDescriptor.getDefault(), false) {};
+    private Map<String, List<AbstractPreviewChange>> createMockChangesMap() {
+        Map<String, List<AbstractPreviewChange>> map = new HashMap<>();
+        // Create mock changes for each package so stages can be built
+        AbstractPreviewChange mockChange = new AbstractPreviewChange("mock-change", "001", "test-author", "test-source", "test-source-file", false, true, false, null, RecoveryDescriptor.getDefault(), false) {};
         
-        map.put("com.example.system", Collections.singletonList(mockTask));
-        map.put("com.example.system1", Collections.singletonList(mockTask));
-        map.put("com.example.system2", Collections.singletonList(mockTask));
-        map.put("com.example.init", Collections.singletonList(mockTask));
-        map.put("com.example.legacy1", Collections.singletonList(mockTask));
-        map.put("com.example.legacy2", Collections.singletonList(mockTask));
-        map.put("com.example.migrations", Collections.singletonList(mockTask));
-        map.put("com.example.migrations1", Collections.singletonList(mockTask));
-        map.put("com.example.migrations2", Collections.singletonList(mockTask));
-        map.put("com.example.migrations3", Collections.singletonList(mockTask));
-        map.put("com.example.changes", Collections.singletonList(mockTask));
-        map.put("com.example.cleanup", Collections.singletonList(mockTask));
+        map.put("com.example.system", Collections.singletonList(mockChange));
+        map.put("com.example.system1", Collections.singletonList(mockChange));
+        map.put("com.example.system2", Collections.singletonList(mockChange));
+        map.put("com.example.init", Collections.singletonList(mockChange));
+        map.put("com.example.legacy1", Collections.singletonList(mockChange));
+        map.put("com.example.legacy2", Collections.singletonList(mockChange));
+        map.put("com.example.migrations", Collections.singletonList(mockChange));
+        map.put("com.example.migrations1", Collections.singletonList(mockChange));
+        map.put("com.example.migrations2", Collections.singletonList(mockChange));
+        map.put("com.example.migrations3", Collections.singletonList(mockChange));
+        map.put("com.example.changes", Collections.singletonList(mockChange));
+        map.put("com.example.cleanup", Collections.singletonList(mockChange));
         return map;
     }
 

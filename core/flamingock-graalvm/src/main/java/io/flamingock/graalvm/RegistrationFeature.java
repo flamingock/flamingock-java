@@ -24,20 +24,19 @@ import io.flamingock.api.template.wrappers.TemplateString;
 import io.flamingock.api.template.wrappers.TemplateVoid;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.*;
-import io.flamingock.internal.common.core.task.AbstractTaskDescriptor;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.change.AbstractChangeDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
 import io.flamingock.internal.common.core.template.ChangeTemplateManager;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedChange;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
-import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
-import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
-import io.flamingock.internal.core.task.loaded.MultiStepTemplateLoadedChange;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
+import io.flamingock.internal.core.change.loaded.AbstractReflectionLoadedChange;
+import io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange;
+import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
+import io.flamingock.internal.core.change.loaded.SimpleTemplateLoadedChange;
+import io.flamingock.internal.core.change.loaded.MultiStepTemplateLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
@@ -55,8 +54,8 @@ public class RegistrationFeature implements Feature {
     private static void registerInternalClasses() {
         logger.startRegistrationProcess("internal classes");
 
-        registerClassForReflection(TaskDescriptor.class.getName());
-        registerClassForReflection(AbstractTaskDescriptor.class.getName());
+        registerClassForReflection(ChangeDescriptor.class.getName());
+        registerClassForReflection(AbstractChangeDescriptor.class.getName());
 
         //preview
         registerClassForReflection(PreviewPipeline.class.getName());
@@ -73,9 +72,8 @@ public class RegistrationFeature implements Feature {
         //Loaded
         registerClassForReflection(LoadedPipeline.class.getName());
         registerClassForReflection(AbstractLoadedStage.class.getName());
-        registerClassForReflection(AbstractLoadedTask.class.getName());
-        registerClassForReflection(AbstractReflectionLoadedTask.class.getName());
         registerClassForReflection(AbstractLoadedChange.class.getName());
+        registerClassForReflection(AbstractReflectionLoadedChange.class.getName());
         registerClassForReflection(CodeLoadedChange.class.getName());
         registerClassForReflection(AbstractTemplateLoadedChange.class);
         registerClassForReflection(SimpleTemplateLoadedChange.class);
@@ -91,7 +89,6 @@ public class RegistrationFeature implements Feature {
     private static void initializeInternalClassesAtBuildTime() {
         logger.startInitializationProcess("internal classes");
         initializeClassAtBuildTime(CodeLoadedChange.class);
-        initializeClassAtBuildTime(AbstractLoadedChange.class);
         initializeClassAtBuildTime(AbstractTemplateLoadedChange.class);
         initializeClassAtBuildTime(SimpleTemplateLoadedChange.class);
         initializeClassAtBuildTime(MultiStepTemplateLoadedChange.class);

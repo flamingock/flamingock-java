@@ -189,7 +189,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core:4.11.0")
 }
 
-tasks.jar {
+changes.jar {
     manifest {
         attributes(
             "Main-Class" to "io.flamingock.cli.executor.FlamingockExecutorCli",
@@ -199,13 +199,13 @@ tasks.jar {
     }
 }
 
-tasks.shadowJar {
+changes.shadowJar {
     archiveBaseName.set("flamingock-cli")
     archiveClassifier.set("uber")
     mergeServiceFiles()
 }
 
-tasks.test {
+changes.test {
     useJUnitPlatform()
 }
 ```
@@ -1014,7 +1014,7 @@ import java.lang.annotation.Target;
  * {@code
  * @Component
  * @ExcludeFromCliMode
- * public class MyScheduledTasks {
+ * public class MyScheduledChanges {
  *     @Scheduled(fixedRate = 5000)
  *     public void process() { ... }
  * }
@@ -1057,7 +1057,7 @@ public @interface ExcludeFromCliMode {
 | Aspect                              | Description                                              | Recommended Solution                                 |
 |-------------------------------------|----------------------------------------------------------|------------------------------------------------------|
 | **Other runners don't execute**     | External ApplicationRunner/CommandLineRunner may execute | Dedicated module or `@ExcludeFromCliMode`            |
-| **Scheduling disabled**             | `@Scheduled` tasks may execute                           | `@Profile("!flamingock-cli")` on `@EnableScheduling` |
+| **Scheduling disabled**             | `@Scheduled` changes may execute                           | `@Profile("!flamingock-cli")` on `@EnableScheduling` |
 | **Listeners disabled**              | Kafka/RabbitMQ listeners may connect                     | `auto-startup: false` in profile                     |
 | **`@PostConstruct` / constructors** | Execute if bean is created                               | Dedicated module or conditional bean                 |
 | **Initialization logic**            | Code in constructors/InitializingBean                    | Dedicated module                                     |

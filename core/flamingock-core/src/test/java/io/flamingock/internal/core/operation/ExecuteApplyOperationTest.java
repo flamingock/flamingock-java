@@ -31,7 +31,7 @@ import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +68,7 @@ class ExecuteApplyOperationTest {
     private AbstractLoadedStage loadedStage;
 
     @Mock
-    private AbstractLoadedTask loadedTask;
+    private AbstractLoadedChange loadedChange;
 
     private ExecuteApplyOperation operation;
     private RunnerId runnerId;
@@ -102,7 +102,7 @@ class ExecuteApplyOperationTest {
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
-        when(loadedStage.getTasks()).thenReturn(Collections.singletonList(loadedTask));
+        when(loadedStage.getChanges()).thenReturn(Collections.singletonList(loadedChange));
         when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
 
         ExecuteArgs args = new ExecuteArgs(pipeline);
@@ -125,7 +125,7 @@ class ExecuteApplyOperationTest {
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
-        when(loadedStage.getTasks()).thenReturn(Arrays.asList(loadedTask, loadedTask, loadedTask));
+        when(loadedStage.getChanges()).thenReturn(Arrays.asList(loadedChange, loadedChange, loadedChange));
         when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
 
         ExecuteArgs args = new ExecuteArgs(pipeline);
@@ -156,7 +156,7 @@ class ExecuteApplyOperationTest {
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
-        when(loadedStage.getTasks()).thenReturn(Collections.singletonList(loadedTask));
+        when(loadedStage.getChanges()).thenReturn(Collections.singletonList(loadedChange));
         when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
 
         ExecuteArgs args = new ExecuteArgs(pipeline);

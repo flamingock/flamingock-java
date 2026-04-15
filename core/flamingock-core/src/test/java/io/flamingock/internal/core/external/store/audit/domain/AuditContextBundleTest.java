@@ -20,14 +20,14 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.task.executable.CodeExecutableTask;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
-import io.flamingock.internal.core.task.loaded.CodeLoadedTaskBuilder;
-import io.flamingock.internal.core.task.navigation.step.StartStep;
+import io.flamingock.internal.core.change.executable.CodeExecutableChange;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
+import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
+import io.flamingock.internal.core.change.loaded.CodeLoadedChangeBuilder;
+import io.flamingock.internal.core.change.navigation.step.StartStep;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -49,9 +49,9 @@ class AuditContextBundleTest {
     }
 
     @Test
-    void shouldPopulateAuditEntrySourceFileFromLoadedTask() {
+    void shouldPopulateAuditEntrySourceFileFromLoadedChange() {
         CodeLoadedChange loadedChange = buildLoadedChange(_001__AuditSourceFileChange.class);
-        CodeExecutableTask<CodeLoadedChange> executableTask = new CodeExecutableTask<>(
+        CodeExecutableChange<CodeLoadedChange> executableChange = new CodeExecutableChange<>(
                 "test-stage",
                 loadedChange,
                 ChangeAction.APPLY,
@@ -59,7 +59,7 @@ class AuditContextBundleTest {
                 loadedChange.getRollbackMethod().orElse(null)
         );
         RuntimeContext runtimeContext = RuntimeContext.builder()
-                .setStartStep(new StartStep(executableTask))
+                .setStartStep(new StartStep(executableChange))
                 .setAppliedAt(LocalDateTime.now())
                 .build();
         ExecutionContext executionContext = new ExecutionContext("execution-id", "test-host", Collections.emptyMap());
@@ -77,7 +77,7 @@ class AuditContextBundleTest {
 
     @Test
     void shouldPopulateAuditEntrySourceFileForTemplateBasedChanges() {
-        AbstractLoadedTask loadedChange = Mockito.mock(AbstractLoadedTask.class);
+        AbstractLoadedChange loadedChange = Mockito.mock(AbstractLoadedChange.class);
         Mockito.when(loadedChange.getId()).thenReturn("template-change");
         Mockito.when(loadedChange.getAuthor()).thenReturn("author");
         Mockito.when(loadedChange.getSource()).thenReturn("io.flamingock.TemplateChange");
@@ -87,12 +87,12 @@ class AuditContextBundleTest {
         Mockito.when(loadedChange.getRecovery()).thenReturn(RecoveryDescriptor.getDefault());
         Mockito.when(loadedChange.isTransactional()).thenReturn(true);
 
-        ExecutableTask executableTask = Mockito.mock(ExecutableTask.class);
-        Mockito.when(executableTask.getApplyMethodName()).thenReturn("apply");
-        Mockito.when(executableTask.getStageName()).thenReturn("test-stage");
+        ExecutableChange executableChange = Mockito.mock(ExecutableChange.class);
+        Mockito.when(executableChange.getApplyMethodName()).thenReturn("apply");
+        Mockito.when(executableChange.getStageName()).thenReturn("test-stage");
 
         RuntimeContext runtimeContext = RuntimeContext.builder()
-                .setStartStep(new StartStep(executableTask))
+                .setStartStep(new StartStep(executableChange))
                 .setAppliedAt(LocalDateTime.now())
                 .build();
         ExecutionContext executionContext = new ExecutionContext("execution-id", "test-host", Collections.emptyMap());
@@ -110,10 +110,10 @@ class AuditContextBundleTest {
 
     private CodeLoadedChange buildLoadedChange(Class<?> changeClass) {
         try {
-            Method factoryMethod = CodeLoadedTaskBuilder.class.getDeclaredMethod("getInstanceFromClass", Class.class);
+            Method factoryMethod = CodeLoadedChangeBuilder.class.getDeclaredMethod("getInstanceFromClass", Class.class);
             factoryMethod.setAccessible(true);
             Object builder = factoryMethod.invoke(null, changeClass);
-            return ((CodeLoadedTaskBuilder) builder).build();
+            return ((CodeLoadedChangeBuilder) builder).build();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

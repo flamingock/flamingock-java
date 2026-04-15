@@ -17,13 +17,13 @@ package io.flamingock.internal.core.external.store.audit.domain;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
-import io.flamingock.internal.core.task.loaded.SimpleTemplateLoadedChange;
-import io.flamingock.internal.core.task.navigation.step.StartStep;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
+import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
+import io.flamingock.internal.core.change.loaded.SimpleTemplateLoadedChange;
+import io.flamingock.internal.core.change.navigation.step.StartStep;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -57,14 +57,14 @@ class AuditContextBundleChangeTypeTest {
         assertEquals(AuditEntry.ChangeType.MONGOCK_EXECUTION, entry.getType());
     }
 
-    private AuditEntry buildAuditEntry(AbstractLoadedTask loadedChange) {
+    private AuditEntry buildAuditEntry(AbstractLoadedChange loadedChange) {
         ExecutionContext executionContext = new ExecutionContext("exec-1", "localhost", Collections.emptyMap());
 
-        ExecutableTask executableTask = mock(ExecutableTask.class);
-        when(executableTask.getApplyMethodName()).thenReturn("apply");
-        when(executableTask.getStageName()).thenReturn("stage-1");
+        ExecutableChange executableChange = mock(ExecutableChange.class);
+        when(executableChange.getApplyMethodName()).thenReturn("apply");
+        when(executableChange.getStageName()).thenReturn("stage-1");
 
-        StartStep startStep = new StartStep(executableTask);
+        StartStep startStep = new StartStep(executableChange);
         RuntimeContext runtimeContext = RuntimeContext.builder()
                 .setStartStep(startStep)
                 .setAppliedAt(LocalDateTime.now())

@@ -15,18 +15,18 @@
  */
 package io.flamingock.springboot;
 
-import io.flamingock.internal.core.task.filter.TaskFilter;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.AbstractReflectionLoadedTask;
-import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
-import io.flamingock.internal.core.task.loaded.CodeLoadedChange;
+import io.flamingock.internal.core.change.filter.ChangeFilter;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
+import io.flamingock.internal.core.change.loaded.AbstractReflectionLoadedChange;
+import io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange;
+import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
 import org.springframework.context.annotation.Profile;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class SpringbootProfileFilter implements TaskFilter {
+public class SpringbootProfileFilter implements ChangeFilter {
 
     private final List<String> activeProfiles;
 
@@ -39,16 +39,16 @@ public class SpringbootProfileFilter implements TaskFilter {
     }
 
     @Override
-    public boolean filter(AbstractLoadedTask descriptor) {
-        if (AbstractReflectionLoadedTask.class.isAssignableFrom(descriptor.getClass())) {
-            return filter((AbstractReflectionLoadedTask) descriptor);
+    public boolean filter(AbstractLoadedChange descriptor) {
+        if (AbstractReflectionLoadedChange.class.isAssignableFrom(descriptor.getClass())) {
+            return filter((AbstractReflectionLoadedChange) descriptor);
         } else {
             throw new RuntimeException("Filter cannot be applied to descriptor: " + descriptor.getClass().getSimpleName());
         }
 
     }
 
-    private boolean filter(AbstractReflectionLoadedTask reflectionDescriptor) {
+    private boolean filter(AbstractReflectionLoadedChange reflectionDescriptor) {
         if (AbstractTemplateLoadedChange.class.isAssignableFrom(reflectionDescriptor.getClass())) {
             return filterTemplateChange((AbstractTemplateLoadedChange) reflectionDescriptor);
 
@@ -57,7 +57,7 @@ public class SpringbootProfileFilter implements TaskFilter {
 
         } else {
             String message = String.format(
-                    "Non-Filterable task[%s]: %s",
+                    "Non-Filterable change[%s]: %s",
                     reflectionDescriptor.getImplementationClass(),
                     reflectionDescriptor.getClass());
             throw new RuntimeException(message);
@@ -75,13 +75,13 @@ public class SpringbootProfileFilter implements TaskFilter {
         if (!sourceClass.isAnnotationPresent(Profile.class)) {
             return true; // no-profiled changeset always matches
         }
-        List<String> taskProfile = Arrays.asList(sourceClass.getAnnotation(Profile.class).value());
-        return filterProfiles(taskProfile);
+        List<String> changeProfile = Arrays.asList(sourceClass.getAnnotation(Profile.class).value());
+        return filterProfiles(changeProfile);
     }
 
-    private boolean filterProfiles(List<String> taskProfile) {
-        boolean taskHasAtLeastOneProfileApplied = false;
-        for (String profile : taskProfile) {
+    private boolean filterProfiles(List<String> changeProfile) {
+        boolean changeHasAtLeastOneProfileApplied = false;
+        for (String profile : changeProfile) {
             if ((profile == null || "".equals(profile))) {
                 continue;
             }
@@ -90,13 +90,13 @@ public class SpringbootProfileFilter implements TaskFilter {
                     return false;
                 }
             } else {
-                taskHasAtLeastOneProfileApplied = true;
+                changeHasAtLeastOneProfileApplied = true;
                 if (activeProfiles.contains(profile)) {
                     return true;
                 }
             }
         }
-        return !taskHasAtLeastOneProfileApplied;
+        return !changeHasAtLeastOneProfileApplied;
     }
 
     private boolean containsNegativeProfile(List<String> activeProfiles, String profile) {

@@ -1,0 +1,69 @@
+/*
+ * Copyright 2023 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.internal.common.core.preview;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.flamingock.internal.common.core.change.AbstractChangeDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = CodePreviewChange.class, name = "codePreviewChange"),
+        @JsonSubTypes.Type(value = TemplatePreviewChange.class, name = "templatePreviewChange")
+})
+public abstract class AbstractPreviewChange extends AbstractChangeDescriptor {
+
+    public AbstractPreviewChange() {
+        super();
+    }
+
+    public AbstractPreviewChange(String id,
+                                 String order,
+                                 String author,
+                                 String source,
+                                 String sourceFile,
+                                 boolean runAlways,
+                                 Boolean transactional,
+                                 boolean system,
+                                 TargetSystemDescriptor targetSystem,
+                                 RecoveryDescriptor recovery,
+                                 boolean legacy) {
+        super(id, order, author, source, sourceFile, runAlways, transactional, system, targetSystem, recovery, legacy);
+    }
+
+    @Override
+    public String pretty() {
+        String fromParent = super.pretty();
+        String targetInfo = String.format(", targetSystem='%s'", getTargetSystem().getId());
+        String recoveryInfo = String.format(", recovery='%s'", getRecovery() != null ? getRecovery().getStrategy() : "MANUAL_INTERVENTION");
+        return fromParent + targetInfo + recoveryInfo;
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractPreviewChange{" +
+                "id='" + id + '\'' +
+                ", order='" + order + '\'' +
+                ", source='" + source + '\'' +
+                ", runAlways=" + runAlways +
+                ", transactionalFlag=" + transactionalFlag +
+                ", targetSystem='" + (getTargetSystem() != null ? getTargetSystem().getId() : null) + '\'' +
+                ", recovery='" + (getRecovery() != null ? getRecovery().getStrategy() : null) + '\'' +
+                '}';
+    }
+}

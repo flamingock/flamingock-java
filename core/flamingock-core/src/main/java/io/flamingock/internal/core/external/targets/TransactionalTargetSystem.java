@@ -45,7 +45,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         extends AbstractTargetSystem<HOLDER>
         implements ContextInitializable {
 
-    protected String onGoingTasksRepositoryName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
+    protected String onGoingChangesRepositoryName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
     protected boolean autoCreate = true;
     protected TargetSystemAuditMarker markerRepository;
 
@@ -54,8 +54,8 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
     }
 
     public boolean hasMarker() {
-        TargetSystemAuditMarker onGoingTaskStatusRepository = getOnGoingTaskStatusRepository();
-        return onGoingTaskStatusRepository != null && !(onGoingTaskStatusRepository instanceof NoOpTargetSystemAuditMarker);
+        TargetSystemAuditMarker onGoingChangeStatusRepository = getOnGoingChangeStatusRepository();
+        return onGoingChangeStatusRepository != null && !(onGoingChangeStatusRepository instanceof NoOpTargetSystemAuditMarker);
     }
 
     /**
@@ -87,7 +87,7 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      *
      * @return the audit marker instance
      */
-    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
+    public TargetSystemAuditMarker getOnGoingChangeStatusRepository() {
         return markerRepository;
     }
 

@@ -27,7 +27,7 @@ import io.flamingock.internal.core.event.model.IStageFailedEvent;
 import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
 import io.flamingock.internal.core.event.model.IStageStartedEvent;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.task.filter.TaskFilter;
+import io.flamingock.internal.core.change.filter.ChangeFilter;
 import io.flamingock.springboot.event.SpringPipelineCompletedEvent;
 import io.flamingock.springboot.event.SpringPipelineFailedEvent;
 import io.flamingock.springboot.event.SpringPipelineIgnoredEvent;
@@ -93,7 +93,7 @@ public class SpringbootPlugin implements Plugin {
     }
 
     @Override
-    public List<TaskFilter> getTaskFilters() {
+    public List<ChangeFilter> getChangeFilters() {
         if (applicationContext != null) {
             String[] activeProfiles = SpringbootUtil.getActiveProfiles(applicationContext);
             return Collections.singletonList(new SpringbootProfileFilter(activeProfiles));

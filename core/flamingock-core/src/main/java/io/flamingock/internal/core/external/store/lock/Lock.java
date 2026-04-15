@@ -139,7 +139,7 @@ public class Lock {
 
     /**
      * This should be called once all the process guarded by the lock(those who assumed the lock is ensured) has finished.
-     * Otherwise, a race condition where a process A ensures the lock, starts a task that takes 2 seconds, but before finishing,
+     * Otherwise, a race condition where a process A ensures the lock, starts a change that takes 2 seconds, but before finishing,
      * the lock is released(closed) and another instances acquire the lock, before process A has finished.
      */
     public final void release() {

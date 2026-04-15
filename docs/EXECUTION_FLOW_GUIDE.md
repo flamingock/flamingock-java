@@ -9,7 +9,7 @@
 
 This guide explains Flamingock's complete execution journey from builder initialization through pipeline completion. It focuses on the architectural decisions, component interactions, and execution flow concepts that developers need to understand when working with the system.
 
-For detailed task-level navigation and step transitions, see **[Task Step Navigation Guide](TASK-STEP-NAVIGATION.md)**.  
+For detailed change-level navigation and step transitions, see **[Change Step Navigation Guide](CHANGE-STEP-NAVIGATION.md)**.  
 For module architecture and dependencies, see **[Architecture Overview](ARCHITECTURE_OVERVIEW.md)**.
 
 ## Complete Execution Flow Diagram
@@ -39,7 +39,7 @@ graph TB
         InitPlugins --> BuildHierarchical[4. Build Hierarchical Context<br/>⚠️ CRITICAL: External dependencies<br/>merged before AuditStore init]
         BuildHierarchical --> InitAuditStore[5. Initialize AuditStore<br/>• Database-specific setup<br/>• Requires full context]
         InitAuditStore --> GetEngine[6. Get Connection Engine<br/>• Audit writer registration]
-        GetEngine --> BuildPipeline[7. Build Pipeline<br/>• Load stages and tasks<br/>• Apply filters]
+        GetEngine --> BuildPipeline[7. Build Pipeline<br/>• Load stages and changes<br/>• Apply filters]
         BuildPipeline --> CreateRunner[8. Create PipelineRunner<br/>• All components assembled]
     end
     
@@ -63,11 +63,11 @@ graph TB
         
         StageExecution --> StageLoop{For Each Stage<br/>in Execution Plan}
         StageLoop --> StageStart[Stage Started Event]
-        StageStart --> TaskProcessing[Task Processing<br/>• Sequential or Parallel<br/>• StepNavigator per task]
+        StageStart --> ChangeProcessing[Change Processing<br/>• Sequential or Parallel<br/>• StepNavigator per change]
         
-        TaskProcessing --> TaskResults{All Tasks<br/>Successful?}
-        TaskResults -->|No| StageFailure[Stage Failed Event<br/>• Summary with failure details]
-        TaskResults -->|Yes| StageSuccess[Stage Completed Event<br/>• Summary with execution stats]
+        ChangeProcessing --> ChangeResults{All Changes<br/>Successful?}
+        ChangeResults -->|No| StageFailure[Stage Failed Event<br/>• Summary with failure details]
+        ChangeResults -->|Yes| StageSuccess[Stage Completed Event<br/>• Summary with execution stats]
         
         StageSuccess --> MoreStages{More Stages<br/>to Execute?}
         MoreStages -->|Yes| StageLoop
@@ -76,11 +76,11 @@ graph TB
         StageFailure --> PipelineFailure[Pipeline Failed Event]
     end
     
-    %% TASK EXECUTION DETAIL
-    subgraph TaskDetail["🎯 Task Execution Detail (per task)"]
+    %% CHANGE EXECUTION DETAIL
+    subgraph ChangeDetail["🎯 Change Execution Detail (per change)"]
         direction TB
         
-        TaskStart([Task Execution Request]) --> AlreadyApplied{Already<br/>Applied?}
+        ChangeStart([Change Execution Request]) --> AlreadyApplied{Already<br/>Applied?}
         AlreadyApplied -->|Yes| MarkApplied[Mark as Already Applied]
         AlreadyApplied -->|No| StartStep[Create StartStep]
         
@@ -90,18 +90,18 @@ graph TB
         TransactionDecision -->|Transactional| TransactionPath[Transactional Execution<br/>• Cloud: Set ongoing status<br/>• Database transaction wrapper<br/>• Auto-rollback on failure]
         TransactionDecision -->|Non-Transactional| DirectPath[Direct Execution<br/>• No transaction wrapper<br/>• Manual rollback on failure]
         
-        TransactionPath --> TaskExecution[Execute Task Logic]
-        DirectPath --> TaskExecution
+        TransactionPath --> ChangeExecution[Execute Change Logic]
+        DirectPath --> ChangeExecution
         
-        TaskExecution --> ExecutionResult{Execution<br/>Result}
+        ChangeExecution --> ExecutionResult{Execution<br/>Result}
         ExecutionResult -->|Success| AuditSuccess[Audit Successful Execution<br/>• Record completion<br/>• Update audit trail]
         ExecutionResult -->|Failure| RollbackProcess[Rollback Process<br/>• Auto for transactional<br/>• Manual for non-transactional]
         
-        AuditSuccess --> TaskComplete[Task Completed Successfully]
+        AuditSuccess --> ChangeComplete[Change Completed Successfully]
         RollbackProcess --> AuditRollback[Audit Rollback Operations]
-        AuditRollback --> TaskFailed[Task Failed with Rollback]
+        AuditRollback --> ChangeFailed[Change Failed with Rollback]
         
-        MarkApplied --> TaskComplete
+        MarkApplied --> ChangeComplete
     end
     
     %% COMPLETION PHASE
@@ -121,16 +121,16 @@ graph TB
     %% Apply Styles
     class Entry,BuilderCreated,ConfigBuilder,BuildCall builderClass
     class CreateRunner,RunnerRun,PipelineStart,ExecutionLoop,PlannerCheck orchestrationClass
-    class StageExecution,StageLoop,StageStart,TaskProcessing,TaskStart,TaskExecution executionClass
-    class CriticalOrder,ExecutionRequired,LockSuccess,TaskResults,MoreStages,AlreadyApplied,TransactionDecision,ExecutionResult decisionClass
+    class StageExecution,StageLoop,StageStart,ChangeProcessing,ChangeStart,ChangeExecution executionClass
+    class CriticalOrder,ExecutionRequired,LockSuccess,ChangeResults,MoreStages,AlreadyApplied,TransactionDecision,ExecutionResult decisionClass
     class AuditStart,AuditSuccess,AuditRollback,AuditAutoRollback auditClass
-    class PipelineComplete,ExecutionEnd,TaskComplete,TaskFailed terminalClass
+    class PipelineComplete,ExecutionEnd,ChangeComplete,ChangeFailed terminalClass
     
     %% Connect the subgraphs
     CreateRunner -.-> RunnerRun
-    TaskProcessing -.-> TaskStart
-    TaskComplete -.-> TaskResults
-    TaskFailed -.-> TaskResults
+    ChangeProcessing -.-> ChangeStart
+    ChangeComplete -.-> ChangeResults
+    ChangeFailed -.-> ChangeResults
     PipelineComplete -.-> PipelineCompleteEvent
     PipelineFailure -.-> PipelineFailedEvent
 ```
@@ -151,7 +151,7 @@ The builder pattern follows a **strictly ordered initialization sequence** that 
 4. **Hierarchical Context Building**: This is the **most critical step** - external dependency sources are merged
 5. **AuditStore Initialization**: Database-specific auditStores are initialized with the complete context
 6. **Engine Setup**: Connection engines and audit writers are configured
-7. **Pipeline Building**: Stages and tasks are loaded with applied filters
+7. **Pipeline Building**: Stages and changes are loaded with applied filters
 8. **Runner Creation**: The final executable runner is assembled
 
 #### Why Order Matters
@@ -188,13 +188,13 @@ Throughout execution, Flamingock publishes events at both pipeline and stage lev
 - **Framework integration** (Spring application events)
 - **Custom business logic** triggered by execution milestones
 
-### Phase 3: Stage and Task Processing 🎯
+### Phase 3: Stage and Change Processing 🎯
 
-Each stage in the execution plan is processed by the `StageExecutor`, which handles both sequential and parallel task execution modes.
+Each stage in the execution plan is processed by the `StageExecutor`, which handles both sequential and parallel change execution modes.
 
-#### Task Execution Context
+#### Change Execution Context
 
-For each task, a complete execution context is assembled:
+For each change, a complete execution context is assembled:
 - **Dependency injection context** with database connections and business objects
 - **Audit writer** for execution tracking
 - **Lock reference** for concurrency control
@@ -204,12 +204,12 @@ For each task, a complete execution context is assembled:
 #### Sequential vs. Parallel Processing
 
 Stage configuration determines processing mode:
-- **Sequential**: Tasks execute one after another, typical for data migrations with dependencies
-- **Parallel**: Tasks execute concurrently, suitable for independent operations
+- **Sequential**: Changes execute one after another, typical for data migrations with dependencies
+- **Parallel**: Changes execute concurrently, suitable for independent operations
 
 #### StepNavigator Orchestration
 
-Each task is managed by a `StepNavigator` instance that handles the complete task lifecycle. For detailed information about the step-by-step navigation process, see **[Task Step Navigation Guide](TASK-STEP-NAVIGATION.md)**.
+Each change is managed by a `StepNavigator` instance that handles the complete change lifecycle. For detailed information about the step-by-step navigation process, see **[Change Step Navigation Guide](CHANGE-STEP-NAVIGATION.md)**.
 
 ### Phase 4: Transaction and Rollback Management 💾
 
@@ -217,9 +217,9 @@ Flamingock's transaction handling is sophisticated and context-aware.
 
 #### Transaction Decision Logic
 
-A task executes within a transaction when **all** conditions are met:
+A change executes within a transaction when **all** conditions are met:
 1. **TransactionWrapper available** - AuditStore supports transactions
-2. **Task configured as transactional** - `@Change(transactional = true)` (default)
+2. **Change configured as transactional** - `@Change(transactional = true)` (default)
 3. **Database supports transactions** - Not all databases/operations are transactional
 
 #### Rollback Strategies
@@ -323,7 +323,7 @@ Monitoring systems integrate through the **event publishing system**:
 
 ### When Extending Functionality
 
-**Plugin System**: Leverage the plugin system to contribute task filters, event publishers, or dependency contexts.
+**Plugin System**: Leverage the plugin system to contribute change filters, event publishers, or dependency contexts.
 
 **Template System**: Create custom templates for common patterns in your organization.
 

@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
  * <p><strong>Usage Example:</strong></p>
  * <pre>{@code
  * AuditEntryExpectation expected = auditEntry()
- *     .withTaskId("test-change-id")
+ *     .withChangeId("test-change-id")
  *     .withState(APPLIED)
  *     .withTxType(TX_SHARED)
  *     .withTargetSystemId("custom-target")
@@ -43,7 +43,7 @@ public class AuditEntryExpectation {
     
     private String expectedExecutionId;
     private String expectedStageId;
-    private String expectedTaskId;
+    private String expectedChangeId;
     private String expectedAuthor;
     private LocalDateTime expectedCreatedAt;
     private AuditEntry.Status expectedState;
@@ -83,51 +83,51 @@ public class AuditEntryExpectation {
     /**
      * Creates an expectation for a STARTED audit entry.
      * 
-     * @param taskId the task ID
+     * @param changeId the change ID
      * @return audit expectation for STARTED state
      */
-    public static AuditEntryExpectation STARTED(String taskId) {
-        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.STARTED);
+    public static AuditEntryExpectation STARTED(String changeId) {
+        return new AuditEntryExpectation().withChangeId(changeId).withState(AuditEntry.Status.STARTED);
     }
     
     /**
      * Creates an expectation for an APPLIED audit entry.
      * 
-     * @param taskId the task ID
+     * @param changeId the change ID
      * @return audit expectation for APPLIED state
      */
-    public static AuditEntryExpectation APPLIED(String taskId) {
-        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.APPLIED);
+    public static AuditEntryExpectation APPLIED(String changeId) {
+        return new AuditEntryExpectation().withChangeId(changeId).withState(AuditEntry.Status.APPLIED);
     }
     
     /**
      * Creates an expectation for an EXECUTION_FAILED audit entry.
      * 
-     * @param taskId the task ID
+     * @param changeId the change ID
      * @return audit expectation for EXECUTION_FAILED state
      */
-    public static AuditEntryExpectation FAILED(String taskId) {
-        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.FAILED);
+    public static AuditEntryExpectation FAILED(String changeId) {
+        return new AuditEntryExpectation().withChangeId(changeId).withState(AuditEntry.Status.FAILED);
     }
     
     /**
      * Creates an expectation for a ROLLED_BACK audit entry.
      * 
-     * @param taskId the task ID
+     * @param changeId the change ID
      * @return audit expectation for ROLLED_BACK state
      */
-    public static AuditEntryExpectation ROLLED_BACK(String taskId) {
-        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.ROLLED_BACK);
+    public static AuditEntryExpectation ROLLED_BACK(String changeId) {
+        return new AuditEntryExpectation().withChangeId(changeId).withState(AuditEntry.Status.ROLLED_BACK);
     }
 
     /**
      * Creates an expectation for a ROLLBACK_FAILED audit entry.
      *
-     * @param taskId the task ID
+     * @param changeId the change ID
      * @return audit expectation for ROLLBACK_FAILED state
      */
-    public static AuditEntryExpectation ROLLBACK_FAILED(String taskId) {
-        return new AuditEntryExpectation().withTaskId(taskId).withState(AuditEntry.Status.ROLLBACK_FAILED);
+    public static AuditEntryExpectation ROLLBACK_FAILED(String changeId) {
+        return new AuditEntryExpectation().withChangeId(changeId).withState(AuditEntry.Status.ROLLBACK_FAILED);
     }
     
     // Backward compatibility methods matching old AuditExpectation class
@@ -173,12 +173,12 @@ public class AuditEntryExpectation {
     }
     
     /**
-     * Gets the expected change ID (alias for task ID for backward compatibility).
+     * Gets the expected change ID (alias for change ID for backward compatibility).
      * 
-     * @return the task ID
+     * @return the change ID
      */
     public String getChangeId() {
-        return expectedTaskId;
+        return expectedChangeId;
     }
     
     // Identity fields
@@ -194,8 +194,8 @@ public class AuditEntryExpectation {
         return this;
     }
     
-    public AuditEntryExpectation withTaskId(String taskId) {
-        this.expectedTaskId = taskId;
+    public AuditEntryExpectation withChangeId(String changeId) {
+        this.expectedChangeId = changeId;
         return this;
     }
     
@@ -311,7 +311,7 @@ public class AuditEntryExpectation {
     // Getters for AuditEntryAssertions
     public String getExpectedExecutionId() { return expectedExecutionId; }
     public String getExpectedStageId() { return expectedStageId; }
-    public String getExpectedTaskId() { return expectedTaskId; }
+    public String getExpectedChangeId() { return expectedChangeId; }
     public String getExpectedAuthor() { return expectedAuthor; }
     public LocalDateTime getExpectedCreatedAt() { return expectedCreatedAt; }
     public AuditEntry.Status getExpectedState() { return expectedState; }

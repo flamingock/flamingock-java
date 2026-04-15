@@ -38,12 +38,12 @@ public class NoOpTargetSystemAuditMarker implements TargetSystemAuditMarker {
 
     @Override
     public void clearMark(String changeId) {
-        logger.debug("Ignoring 'clean' operation for task '{}': no-op repository for target system '{}'", changeId, targetSystemId);
+        logger.debug("Ignoring 'clean' operation for change '{}': no-op repository for target system '{}'", changeId, targetSystemId);
     }
 
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
-        logger.debug("Ignoring 'register' operation for task '{}': no-op repository for target system '{}'", auditMark.getTaskId(), targetSystemId);
+        logger.debug("Ignoring 'register' operation for change '{}': no-op repository for target system '{}'", auditMark.getChangeId(), targetSystemId);
     }
 }
 

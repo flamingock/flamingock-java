@@ -52,7 +52,7 @@ import io.flamingock.internal.core.builder.args.FlamingockArguments;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.builder.runner.RunnerBuilder;
 import io.flamingock.internal.core.builder.runner.RunnerFactory;
-import io.flamingock.internal.core.task.filter.TaskFilter;
+import io.flamingock.internal.core.change.filter.ChangeFilter;
 import io.flamingock.internal.util.CollectionUtil;
 import io.flamingock.internal.util.Property;
 import io.flamingock.internal.util.id.RunnerId;
@@ -178,7 +178,7 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
      * <h3>Integration Points:</h3>
      * <ul>
      * <li><strong>Plugins</strong>: External context merged via {@code buildHierarchicalContext()}</li>
-     * <li><strong>Plugins</strong>: Contribute task filters and event publishers</li>
+     * <li><strong>Plugins</strong>: Contribute change filters and event publishers</li>
      * <li><strong>Templates</strong>: Loaded for YAML-based pipeline definitions</li>
      * </ul>
      *
@@ -234,14 +234,14 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
 
 
     private LoadedPipeline loadPipeline(FlamingockMetadata flamingockMetadata) {
-        List<TaskFilter> taskFiltersFromPlugins = pluginManager.getPlugins()
+        List<ChangeFilter> changeFiltersFromPlugins = pluginManager.getPlugins()
                 .stream()
-                .map(Plugin::getTaskFilters)
+                .map(Plugin::getChangeFilters)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
         return LoadedPipeline.builder()
-                .addFilters(taskFiltersFromPlugins)
+                .addFilters(changeFiltersFromPlugins)
                 .addPreviewPipeline(flamingockMetadata.getPipeline())
                 .build();
     }

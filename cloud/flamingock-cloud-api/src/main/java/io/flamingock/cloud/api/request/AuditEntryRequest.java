@@ -22,8 +22,8 @@ import io.flamingock.cloud.api.vo.CloudTxStrategy;
 
 public class AuditEntryRequest {
 
+    private String changeId;
     private String stageId;
-    private String taskId;
     private String author;
     private long appliedAtEpochMillis;
     private CloudAuditStatus state;
@@ -45,7 +45,7 @@ public class AuditEntryRequest {
     }
 
     public AuditEntryRequest(String stageId,
-                             String taskId,
+                             String changeId,
                              String author,
                              long appliedAtEpochMillis,
                              CloudAuditStatus state,
@@ -63,7 +63,7 @@ public class AuditEntryRequest {
                              CloudRecoveryStrategy recoveryStrategy,
                              Boolean transactionFlag) {
         this.stageId = stageId;
-        this.taskId = taskId;
+        this.changeId = changeId;
         this.author = author;
         this.appliedAtEpochMillis = appliedAtEpochMillis;
         this.state = state;
@@ -87,8 +87,8 @@ public class AuditEntryRequest {
         return stageId;
     }
 
-    public String getTaskId() {
-        return taskId;
+    public String getChangeId() {
+        return changeId;
     }
 
     public String getAuthor() {

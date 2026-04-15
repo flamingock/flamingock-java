@@ -16,8 +16,8 @@
 package io.flamingock.internal.core.pipeline.execution;
 
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
 
 import java.util.Collection;
 import java.util.List;
@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 
 public class ExecutableStage implements StageDescriptor {
 
-    protected final List<? extends ExecutableTask> tasks;
+    protected final List<? extends ExecutableChange> changes;
     private final String name;
 
-    public ExecutableStage(String name, List<? extends ExecutableTask> tasks) {
+    public ExecutableStage(String name, List<? extends ExecutableChange> changes) {
         this.name = name;
-        this.tasks = tasks;
+        this.changes = changes;
     }
 
     public String getName() {
@@ -39,19 +39,19 @@ public class ExecutableStage implements StageDescriptor {
     }
 
     @Override
-    public Collection<TaskDescriptor> getLoadedTasks() {
-        return tasks.stream().map(ExecutableTask::getLoadedChange).collect(Collectors.toList());
+    public Collection<ChangeDescriptor> getLoadedChanges() {
+        return changes.stream().map(ExecutableChange::getLoadedChange).collect(Collectors.toList());
     }
 
-    public List<? extends ExecutableTask> getTasks() {
-        return tasks;
+    public List<? extends ExecutableChange> getChanges() {
+        return changes;
     }
 
 
     public boolean isExecutionRequired() {
-        return tasks.stream()
+        return changes.stream()
                 .filter(Objects::nonNull)
-                .anyMatch(executableTask -> !executableTask.isAlreadyApplied());
+                .anyMatch(executableChange -> !executableChange.isAlreadyApplied());
     }
 
 

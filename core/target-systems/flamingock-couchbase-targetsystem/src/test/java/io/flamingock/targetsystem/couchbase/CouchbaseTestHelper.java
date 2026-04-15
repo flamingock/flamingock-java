@@ -45,7 +45,7 @@ public class CouchbaseTestHelper {
         this.collectionName = collectionName;
     }
 
-    public void insertOngoingExecution(String taskId) {
+    public void insertOngoingExecution(String changeId) {
 
         CouchbaseCollectionInitializator collectionInitializator =
                 new CouchbaseCollectionInitializator(cluster, bucket, scopeName, collectionName);
@@ -53,10 +53,10 @@ public class CouchbaseTestHelper {
 
         Collection collection = this.getOnGoingStatusCollection();
 
-        String key = taskId;
+        String key = changeId;
 
         JsonObject document = JsonObject.create()
-                .put("taskId", taskId)
+                .put("changeId", changeId)
                 .put("operation", AuditContextBundle.Operation.EXECUTION.toString());
 
         try {
@@ -77,10 +77,10 @@ public class CouchbaseTestHelper {
     }
 
     public void checkEmptyTargetSystemAuditMarker() {
-        checkOngoingTask(result -> result == 0);
+        checkOngoingChange(result -> result == 0);
     }
 
-    public void checkOngoingTask(Predicate<Long> predicate) {
+    public void checkOngoingChange(Predicate<Long> predicate) {
         Collection collection = this.getOnGoingStatusCollection();
         long result = CouchbaseCollectionHelper.selectAllDocuments(cluster,
                 collection.bucketName(),
@@ -91,7 +91,7 @@ public class CouchbaseTestHelper {
 
     public static TargetSystemAuditMark mapToOnGoingStatus(JsonObject document) {
         TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(document.getString("operation"));
-        return new TargetSystemAuditMark(document.getString("taskId"), operation);
+        return new TargetSystemAuditMark(document.getString("changeId"), operation);
     }
 
     private Collection getOnGoingStatusCollection() {

@@ -45,7 +45,7 @@ public class AuditExpectation {
      */
     public static AuditEntryExpectation STARTED(String changeId) {
         return AuditEntryExpectation.auditEntry()
-            .withTaskId(changeId)
+            .withChangeId(changeId)
             .withState(AuditEntry.Status.STARTED);
     }
     
@@ -57,7 +57,7 @@ public class AuditExpectation {
      */
     public static AuditEntryExpectation APPLIED(String changeId) {
         return AuditEntryExpectation.auditEntry()
-            .withTaskId(changeId)
+            .withChangeId(changeId)
             .withState(AuditEntry.Status.APPLIED);
     }
     
@@ -69,7 +69,7 @@ public class AuditExpectation {
      */
     public static AuditEntryExpectation EXECUTION_FAILED(String changeId) {
         return AuditEntryExpectation.auditEntry()
-            .withTaskId(changeId)
+            .withChangeId(changeId)
             .withState(AuditEntry.Status.FAILED);
     }
     
@@ -81,7 +81,7 @@ public class AuditExpectation {
      */
     public static AuditEntryExpectation ROLLED_BACK(String changeId) {
         return AuditEntryExpectation.auditEntry()
-            .withTaskId(changeId)
+            .withChangeId(changeId)
             .withState(AuditEntry.Status.ROLLED_BACK);
     }
     
@@ -93,7 +93,7 @@ public class AuditExpectation {
      */
     public static AuditEntryExpectation ROLLBACK_FAILED(String changeId) {
         return AuditEntryExpectation.auditEntry()
-            .withTaskId(changeId)
+            .withChangeId(changeId)
             .withState(AuditEntry.Status.ROLLBACK_FAILED);
     }
     
@@ -109,7 +109,7 @@ public class AuditExpectation {
      */
     public static AuditEntryExpectation withState(String changeId, AuditEntry.Status expectedState) {
         return AuditEntryExpectation.auditEntry()
-            .withTaskId(changeId)
+            .withChangeId(changeId)
             .withState(expectedState);
     }
 }

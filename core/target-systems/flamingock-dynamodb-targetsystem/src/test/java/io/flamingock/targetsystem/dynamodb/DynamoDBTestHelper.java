@@ -46,20 +46,20 @@ public class DynamoDBTestHelper {
         return dynamoDBUtil.getDynamoDBClient();
     }
 
-    public void insertOngoingExecution(String taskId) {
+    public void insertOngoingExecution(String changeId) {
         dynamoDBUtil.createTable(
-                dynamoDBUtil.getAttributeDefinitions("taskId", null),
-                dynamoDBUtil.getKeySchemas("taskId", null),
+                dynamoDBUtil.getAttributeDefinitions("changeId", null),
+                dynamoDBUtil.getKeySchemas("changeId", null),
                 dynamoDBUtil.getProvisionedThroughput(5L, 5L),
                 tableName,
                 emptyList(),
                 emptyList()
         );
 
-        DynamoDbTable<OngoingTaskEntity> table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(OngoingTaskEntity.class));
+        DynamoDbTable<OngoingChangeEntity> table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(OngoingChangeEntity.class));
         table.putItem(
-                PutItemEnhancedRequest.builder(OngoingTaskEntity.class)
-                        .item(new OngoingTaskEntity(taskId, AuditContextBundle.Operation.EXECUTION.toString()))
+                PutItemEnhancedRequest.builder(OngoingChangeEntity.class)
+                        .item(new OngoingChangeEntity(changeId, AuditContextBundle.Operation.EXECUTION.toString()))
                         .build()
         );
         checkEmptyTargetSystemAudiMarker();
@@ -78,11 +78,11 @@ public class DynamoDBTestHelper {
     }
 
     public void checkEmptyTargetSystemAudiMarker() {
-        checkOngoingTask(result -> result == 0);
+        checkOngoingChange(result -> result == 0);
     }
 
-    public void checkOngoingTask(Predicate<Long> predicate) {
-        DynamoDbTable<OngoingTaskEntity> table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(OngoingTaskEntity.class));
+    public void checkOngoingChange(Predicate<Long> predicate) {
+        DynamoDbTable<OngoingChangeEntity> table = dynamoDBUtil.getEnhancedClient().table(tableName, TableSchema.fromBean(OngoingChangeEntity.class));
         long result = table
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)

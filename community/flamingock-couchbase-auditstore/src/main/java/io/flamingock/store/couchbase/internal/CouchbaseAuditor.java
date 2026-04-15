@@ -92,7 +92,7 @@ public class CouchbaseAuditor implements LifecycleAuditWriter, AuditReader {
     private String toKey(AuditEntry auditEntry) {
         return auditEntry.getExecutionId() +
                 '#' +
-                auditEntry.getTaskId() +
+                auditEntry.getChangeId() +
                 '#' +
                 auditEntry.getState().name();
     }

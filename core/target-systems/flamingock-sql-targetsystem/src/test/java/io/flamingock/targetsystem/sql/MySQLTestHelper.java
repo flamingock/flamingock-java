@@ -24,7 +24,7 @@ import java.util.function.Function;
 public class MySQLTestHelper {
 
     private final DataSource dataSource;
-    private static final String ONGOING_TASKS_TABLE = "FLAMINGOCK_ONGOING_TASKS";
+    private static final String ONGOING_CHANGES_TABLE = "FLAMINGOCK_ONGOING_CHANGES";
 
     public MySQLTestHelper(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -58,31 +58,31 @@ public class MySQLTestHelper {
         }
     }
 
-    public void checkOngoingTask(Function<Integer, Boolean> predicate) {
+    public void checkOngoingChange(Function<Integer, Boolean> predicate) {
         try (Connection connection = dataSource.getConnection()) {
-            String sql = String.format("SELECT COUNT(*) FROM %s", ONGOING_TASKS_TABLE);
+            String sql = String.format("SELECT COUNT(*) FROM %s", ONGOING_CHANGES_TABLE);
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
                     int count = rs.getInt(1);
                     Assertions.assertTrue(predicate.apply(count),
-                            String.format("Ongoing task count predicate failed for count: %d", count));
+                            String.format("Ongoing change count predicate failed for count: %d", count));
                 }
             }
         } catch (SQLException e) {
             Assertions.assertTrue(predicate.apply(0),
-                    "Ongoing task count predicate failed for count: 0 (table doesn't exist)");
+                    "Ongoing change count predicate failed for count: 0 (table doesn't exist)");
         }
     }
 
-    public void insertOngoingExecution(String taskId) {
+    public void insertOngoingExecution(String changeId) {
         try (Connection connection = dataSource.getConnection()) {
             // Create table if it doesn't exist
-            createOngoingTasksTableIfNotExists(connection);
+            createOngoingChangesTableIfNotExists(connection);
 
-            String sql = String.format("INSERT INTO %s (change_id, operation) VALUES (?, ?)", ONGOING_TASKS_TABLE);
+            String sql = String.format("INSERT INTO %s (change_id, operation) VALUES (?, ?)", ONGOING_CHANGES_TABLE);
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-                stmt.setString(1, taskId);
+                stmt.setString(1, changeId);
                 stmt.setString(2, "EXECUTION");
                 stmt.executeUpdate();
             }
@@ -100,18 +100,18 @@ public class MySQLTestHelper {
     }
 
     public void checkEmptyTargetSystemAudiMarker() {
-        checkOngoingTask(ongoingCount -> ongoingCount == 0);
+        checkOngoingChange(ongoingCount -> ongoingCount == 0);
     }
 
-    public void createOngoingTasksTableIfNotExists(Connection connection) throws SQLException {
+    public void createOngoingChangesTableIfNotExists(Connection connection) throws SQLException {
         DatabaseMetaData meta = connection.getMetaData();
-        ResultSet resultSet = meta.getTables(null, null, ONGOING_TASKS_TABLE, new String[]{"TABLE"});
+        ResultSet resultSet = meta.getTables(null, null, ONGOING_CHANGES_TABLE, new String[]{"TABLE"});
         if (!resultSet.next()) {
             String createTableSql = String.format(
                     "CREATE TABLE %s (" +
                             "change_id VARCHAR(255) PRIMARY KEY, " +
                             "operation VARCHAR(50) NOT NULL" +
-                            ")", ONGOING_TASKS_TABLE);
+                            ")", ONGOING_CHANGES_TABLE);
             try (Statement stmt = connection.createStatement()) {
                 stmt.executeUpdate(createTableSql);
             }

@@ -22,7 +22,7 @@ import java.util.Collection;
 
 /**
  * This class represents the process defined by the user in the builder, yaml, etc.
- * It doesn't necessary contain directly the tasks, it can contain the code packages, etc.
+ * It doesn't necessary contain directly the changes, it can contain the code packages, etc.
  */
 
 public class SystemPreviewStage extends PreviewStage {
@@ -36,8 +36,8 @@ public class SystemPreviewStage extends PreviewStage {
                               String description,
                               String sourcesPackage,
                               String resourcesDir,
-                              Collection<? extends AbstractPreviewTask> tasks) {
-        super(name, StageType.SYSTEM, description, sourcesPackage, resourcesDir, tasks);
+                              Collection<? extends AbstractPreviewChange> changes) {
+        super(name, StageType.SYSTEM, description, sourcesPackage, resourcesDir, changes);
 
     }
 
@@ -53,7 +53,7 @@ public class SystemPreviewStage extends PreviewStage {
                                              String description,
                                              String sourcesPackage,
                                              String resourcesDir,
-                                             Collection<AbstractPreviewTask> allDescriptors) {
+                                             Collection<AbstractPreviewChange> allDescriptors) {
             return new SystemPreviewStage(name, description, sourcesPackage, resourcesDir, allDescriptors);
         }
     }

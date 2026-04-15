@@ -24,9 +24,9 @@ import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
-import io.flamingock.internal.core.task.loaded.ChangeOrderUtil;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
+import io.flamingock.internal.core.change.loaded.ChangeOrderUtil;
 import io.flamingock.internal.util.Pair;
 import io.flamingock.internal.util.Trio;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +74,7 @@ public class PipelineTestHelper {
     @SafeVarargs
     public static FlamingockMetadata getPreviewPipeline(String stageName, Trio<Class<?>, List<Class<?>>, List<Class<?>>>... changeDefinitions) {
 
-        List<CodePreviewChange> tasks = Arrays.stream(changeDefinitions)
+        List<CodePreviewChange> changes = Arrays.stream(changeDefinitions)
                 .map(trio -> {
                     Function<Class<?>, ChangeInfo> extractor = infoExtractor;
                     ChangeInfo changeInfo = extractor.apply(trio.getFirst());
@@ -83,8 +83,8 @@ public class PipelineTestHelper {
                         rollback = new PreviewMethod("rollback", getParameterTypes(trio.getThird()));
                     }
 
-                    List<CodePreviewChange> changes = new ArrayList<>();
-                    changes.add(new CodePreviewChange(
+                    List<CodePreviewChange> changeList = new ArrayList<>();
+                    changeList.add(new CodePreviewChange(
                             changeInfo.getChangeId(),
                             changeInfo.getOrder(),
                             changeInfo.getAuthor(),
@@ -100,7 +100,7 @@ public class PipelineTestHelper {
                             RecoveryDescriptor.getDefault(),
                             false
                     ));
-                    return changes;
+                    return changeList;
                 })
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
@@ -111,7 +111,7 @@ public class PipelineTestHelper {
                 "some description",
                 null,
                 null,
-                tasks
+                changes
         );
 
         PreviewPipeline previewPipeline = new PreviewPipeline(Collections.singletonList(stage));

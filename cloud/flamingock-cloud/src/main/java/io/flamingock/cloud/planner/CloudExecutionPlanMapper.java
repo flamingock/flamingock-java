@@ -35,8 +35,8 @@ import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -58,19 +58,19 @@ public final class CloudExecutionPlanMapper {
         List<StageRequest> requestStages = new ArrayList<>(loadedStages.size());
         for (int i = 0; i < loadedStages.size(); i++) {
             AbstractLoadedStage currentStage = loadedStages.get(i);
-            List<ChangeRequest> stageTasks = currentStage
-                    .getTasks()
+            List<ChangeRequest> stageChanges = currentStage
+                    .getChanges()
                     .stream()
                     .map(descriptor -> CloudExecutionPlanMapper.mapToChangeRequest(descriptor, ongoingStatusesMap))
                     .collect(Collectors.toList());
-            requestStages.add(new StageRequest(currentStage.getName(), i, stageTasks));
+            requestStages.add(new StageRequest(currentStage.getName(), i, stageChanges));
         }
 
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestStages);
     }
 
-    private static ChangeRequest mapToChangeRequest(AbstractLoadedTask descriptor,
-                                                Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
+    private static ChangeRequest mapToChangeRequest(AbstractLoadedChange descriptor,
+                                                    Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
         TargetSystemAuditMarkType domainStatus = ongoingStatusesMap.get(descriptor.getId());
         CloudTargetSystemAuditMarkType cloudStatus = domainStatus != null
                 ? CloudApiMapper.toCloud(domainStatus)
@@ -96,12 +96,12 @@ public final class CloudExecutionPlanMapper {
     }
 
     private static ExecutableStage mapToExecutable(AbstractLoadedStage loadedStage, StageResponse stageResponse) {
-        Map<String, CloudChangeAction> taskStateMap = stageResponse.getTasks()
+        Map<String, CloudChangeAction> changeStateMap = stageResponse.getChanges()
                 .stream()
                 .collect(Collectors.toMap(ChangeResponse::getId, ChangeResponse::getAction));
 
         // Build action map using anti-corruption layer
-        ChangeActionMap actionPlan = getChangeActionMap(loadedStage, taskStateMap);
+        ChangeActionMap actionPlan = getChangeActionMap(loadedStage, changeStateMap);
         return loadedStage.applyActions(actionPlan);
     }
 
@@ -109,16 +109,16 @@ public final class CloudExecutionPlanMapper {
     private static ChangeActionMap getChangeActionMap(AbstractLoadedStage loadedStage, Map<String, CloudChangeAction> actionsMapByChangeId) {
         Map<String, ChangeAction> actionMap = new HashMap<>();
 
-        for (TaskDescriptor task : loadedStage.getTasks()) {
-            String taskId = task.getId();
-            CloudChangeAction cloudAction = actionsMapByChangeId.get(taskId);
+        for (ChangeDescriptor change : loadedStage.getChanges()) {
+            String changeId = change.getId();
+            CloudChangeAction cloudAction = actionsMapByChangeId.get(changeId);
 
-            // If task not in response, assume it's already applied (cloud orchestrator decision)
+            // If change not in response, assume it's already applied (cloud orchestrator decision)
             if (cloudAction == null) {
-                actionMap.put(taskId, ChangeAction.SKIP);
+                actionMap.put(changeId, ChangeAction.SKIP);
             } else {
                 // Use anti-corruption layer to map cloud domain to internal domain
-                actionMap.put(taskId, mapCloudActionToChangeAction(cloudAction));
+                actionMap.put(changeId, mapCloudActionToChangeAction(cloudAction));
             }
         }
 

@@ -208,7 +208,7 @@ public class AuditTestHelper {
         for (int i = 0; i < actualEntries.size(); i++) {
             if (i > 0) sb.append(", ");
             AuditEntry entry = actualEntries.get(i);
-            sb.append(String.format("(%s, %s)", entry.getTaskId(), entry.getState()));
+            sb.append(String.format("(%s, %s)", entry.getChangeId(), entry.getState()));
         }
         sb.append("]");
         return sb.toString();

@@ -46,7 +46,7 @@ class HttpAuditWriterMapperTest {
         // When
         AuditEntryRequest request = new AuditEntryRequest(
                 auditEntry.getStageId(),
-                auditEntry.getTaskId(),
+                auditEntry.getChangeId(),
                 auditEntry.getAuthor(),
                 System.currentTimeMillis(),
                 CloudApiMapper.toCloud(auditEntry.getState()),
@@ -78,7 +78,7 @@ class HttpAuditWriterMapperTest {
         // When
         AuditEntryRequest request = new AuditEntryRequest(
                 auditEntry.getStageId(),
-                auditEntry.getTaskId(),
+                auditEntry.getChangeId(),
                 auditEntry.getAuthor(),
                 System.currentTimeMillis(),
                 CloudApiMapper.toCloud(auditEntry.getState()),

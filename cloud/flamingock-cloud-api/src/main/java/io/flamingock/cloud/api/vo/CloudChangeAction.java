@@ -18,25 +18,25 @@ package io.flamingock.cloud.api.vo;
 
 /**
  * Represents the cloud orchestrator's decision about what action should be taken
- * for a specific task. This enum maintains separation from the internal ChangeAction
+ * for a specific change. This enum maintains separation from the internal ChangeAction
  * to preserve cloud domain boundaries while keeping aligned enum values.
  */
 public enum CloudChangeAction {
     
     /**
-     * The task needs to be applied/applied - cloud orchestrator determined it should run.
+     * The change needs to be applied/applied - cloud orchestrator determined it should run.
      * Maps to ChangeAction.APPLY.
      */
     APPLY,
     
     /**
-     * The task should be skipped as it has already been successfully applied.
+     * The change should be skipped as it has already been successfully applied.
      * Maps to ChangeAction.SKIP.
      */
     SKIP,
     
     /**
-     * Manual intervention is required for this task.
+     * Manual intervention is required for this change.
      * Maps to ChangeAction.MANUAL_INTERVENTION.
      */
     MANUAL_INTERVENTION

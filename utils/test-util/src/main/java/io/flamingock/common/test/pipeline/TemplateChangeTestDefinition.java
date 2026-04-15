@@ -15,10 +15,10 @@
  */
 package io.flamingock.common.test.pipeline;
 
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 
 import java.util.Collections;
 
@@ -64,7 +64,7 @@ public class TemplateChangeTestDefinition extends ChangeTestDefinition {
 
 
     @Override
-    public AbstractPreviewTask toPreview() {
+    public AbstractPreviewChange toPreview() {
         return new TemplatePreviewChange(
                 fileName,
                 getId(),

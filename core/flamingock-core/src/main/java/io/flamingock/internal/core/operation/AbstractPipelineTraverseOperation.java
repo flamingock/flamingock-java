@@ -116,7 +116,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         List<AbstractLoadedStage> allStages = validateAndGetExecutableStages(pipeline);
         int stageCount = allStages.size();
         long changeCount = allStages.stream()
-                .mapToLong(stage -> stage.getTasks().size())
+                .mapToLong(stage -> stage.getChanges().size())
                 .sum();
         logger.info("Flamingock execution started [stages={} changes={}]", stageCount, changeCount);
 

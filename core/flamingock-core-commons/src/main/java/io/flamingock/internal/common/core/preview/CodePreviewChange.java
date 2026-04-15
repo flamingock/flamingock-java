@@ -15,12 +15,12 @@
  */
 package io.flamingock.internal.common.core.preview;
 
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 
 import java.beans.Transient;
 
-public class CodePreviewChange extends AbstractPreviewTask {
+public class CodePreviewChange extends AbstractPreviewChange {
 
     private PreviewConstructor previewConstructor;
     private PreviewMethod applyPreviewMethod;

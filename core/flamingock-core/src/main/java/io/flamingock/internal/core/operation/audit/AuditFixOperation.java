@@ -46,7 +46,7 @@ public class AuditFixOperation implements Operation<AuditFixArgs, AuditFixResult
         AuditEntry fixedAuditEntry = new AuditEntry(
                 ExecutionId.getNewExecutionId(),
                 currentEntry.getStageId(),
-                currentEntry.getTaskId(),
+                currentEntry.getChangeId(),
                 "flamingock-cli",
                 LocalDateTime.now(),
                 getState(args.getResolution()),

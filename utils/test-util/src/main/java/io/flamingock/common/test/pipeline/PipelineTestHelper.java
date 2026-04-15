@@ -18,7 +18,7 @@ package io.flamingock.common.test.pipeline;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.util.Deserializer;
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +54,7 @@ public class PipelineTestHelper {
 
     public static FlamingockMetadata getPreviewPipeline(String stageName, List<ChangeTestDefinition> changeDefinitions) {
 
-        List<AbstractPreviewTask> tasks = changeDefinitions.stream()
+        List<AbstractPreviewChange> changes = changeDefinitions.stream()
                 .map(ChangeTestDefinition::toPreview)
                 .collect(Collectors.toList());
 
@@ -64,7 +64,7 @@ public class PipelineTestHelper {
                 "some description",
                 null,
                 null,
-                tasks
+                changes
         );
 
         PreviewPipeline previewPipeline = new PreviewPipeline(Collections.singletonList(stage));

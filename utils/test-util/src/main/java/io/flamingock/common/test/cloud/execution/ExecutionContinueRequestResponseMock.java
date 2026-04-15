@@ -16,16 +16,16 @@
 package io.flamingock.common.test.cloud.execution;
 
 
-import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
+import io.flamingock.common.test.cloud.mock.MockRequestResponseChange;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 
 public class ExecutionContinueRequestResponseMock extends ExecutionBaseRequestResponseMock {
 
-    public ExecutionContinueRequestResponseMock(long acquiredForMillis, MockRequestResponseTask... stages) {
+    public ExecutionContinueRequestResponseMock(long acquiredForMillis, MockRequestResponseChange... stages) {
         super(null, acquiredForMillis, null, stages);
     }
 
-    public ExecutionContinueRequestResponseMock(MockRequestResponseTask... stages) {
+    public ExecutionContinueRequestResponseMock(MockRequestResponseChange... stages) {
         super(null, MockRunnerServer.DEFAULT_ACQUIRED_FOR_MILLIS, null, stages);
     }
 }

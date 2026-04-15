@@ -111,7 +111,7 @@ class DynamoDBAuditPersistenceE2ETest {
                 })
                 .THEN_VerifyAuditSequenceStrict(
                         auditEntry()
-                                .withTaskId(changeId)
+                                .withChangeId(changeId)
                                 .withState(AuditEntry.Status.STARTED)
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClassName("io.flamingock.store.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")
@@ -120,7 +120,7 @@ class DynamoDBAuditPersistenceE2ETest {
                                 .withTargetSystemId("dynamodb")
                                 .withSystemChange(false),
                         auditEntry()
-                                .withTaskId(changeId)
+                                .withChangeId(changeId)
                                 .withState(AuditEntry.Status.APPLIED)
                                 .withType(AuditEntry.ChangeType.STANDARD_CODE)
                                 .withClassName("io.flamingock.store.dynamodb.changes.audit._001__NonTxTransactionalFalseChange")

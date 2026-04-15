@@ -53,8 +53,8 @@ public class AuditEntryExpectation {
         List<FieldMismatchError> errors = new ArrayList<>();
 
         // Required fields - always verified
-        if (!definition.getChangeId().equals(actual.getTaskId())) {
-            errors.add(new FieldMismatchError("changeId", definition.getChangeId(), actual.getTaskId()));
+        if (!definition.getChangeId().equals(actual.getChangeId())) {
+            errors.add(new FieldMismatchError("changeId", definition.getChangeId(), actual.getChangeId()));
         }
 
         if (definition.getState() != actual.getState()) {

@@ -203,7 +203,7 @@ class AuditPersistenceE2ETest {
         // Then - Verify each change has correct audit characteristics using unified approach
 
         List<AuditEntry> auditEntriesSorted = auditHelper.getAuditEntriesSorted();
-        auditEntriesSorted.forEach(c-> System.out.println("id: " + c.getTaskId() + ", state: " + c.getState() + ", time: " +c.getCreatedAt()));
+        auditEntriesSorted.forEach(c-> System.out.println("id: " + c.getChangeId() + ", state: " + c.getState() + ", time: " +c.getCreatedAt()));
 
         auditHelper.verifyAuditSequenceStrict(
                 // First change (SimpleNonTransactionalChange) - STARTED & APPLIED

@@ -16,7 +16,7 @@
 package io.flamingock.internal.common.core.preview;
 
 import io.flamingock.api.StageType;
-import io.flamingock.internal.common.core.preview.builder.PreviewTaskBuilder;
+import io.flamingock.internal.common.core.preview.builder.PreviewChangeBuilder;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.util.FileUtil;
 import io.flamingock.internal.util.Pair;
@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 
 /**
  * This class represents the process defined by the user in the builder, yaml, etc.
- * It doesn't necessary contain directly the tasks, it can contain the code packages, etc.
+ * It doesn't necessary contain directly the changes, it can contain the code packages, etc.
  */
 
 public class PreviewStage {
@@ -47,7 +47,7 @@ public class PreviewStage {
 
     private String resourcesDir;
 
-    private Collection<? extends AbstractPreviewTask> tasks;
+    private Collection<? extends AbstractPreviewChange> changes;
 
 
     public PreviewStage() {
@@ -59,13 +59,13 @@ public class PreviewStage {
                         String description,
                         String sourcesPackage,
                         String resourcesDir,
-                        Collection<? extends AbstractPreviewTask> tasks) {
+                        Collection<? extends AbstractPreviewChange> changes) {
         this.name = name;
         this.type = type;
         this.description = description;
         this.sourcesPackage = sourcesPackage;
         this.resourcesDir = resourcesDir;
-        this.tasks = tasks;
+        this.changes = changes;
     }
 
     public static DefaultBuilder defaultBuilder(StageType type) {
@@ -119,12 +119,12 @@ public class PreviewStage {
         this.resourcesDir = resourcesDir;
     }
 
-    public Collection<? extends AbstractPreviewTask> getTasks() {
-        return tasks;
+    public Collection<? extends AbstractPreviewChange> getChanges() {
+        return changes;
     }
 
-    public void setTasks(Collection<? extends AbstractPreviewTask> tasks) {
-        this.tasks = tasks;
+    public void setChanges(Collection<? extends AbstractPreviewChange> changes) {
+        this.changes = changes;
     }
 
 
@@ -148,7 +148,7 @@ public class PreviewStage {
                 ", description='" + description + '\'' +
                 ", sourcesPackage='" + sourcesPackage + '\'' +
                 ", resourcesDir='" + resourcesDir + '\'' +
-                ", tasks=" + tasks +
+                ", changes=" + changes +
                 '}';
     }
 
@@ -168,7 +168,7 @@ public class PreviewStage {
                                              String description,
                                              String sourcesPackage,
                                              String resourcesDir,
-                                             Collection<AbstractPreviewTask> allDescriptors) {
+                                             Collection<AbstractPreviewChange> allDescriptors) {
             return new PreviewStage(name, type, description, sourcesPackage, resourcesDir, allDescriptors);
         }
     }
@@ -176,18 +176,18 @@ public class PreviewStage {
     /**
      * Builder for constructing {@link PreviewStage} instances.
      * <p>
-     * A {@code PreviewStage} represents a stage containing one or more {@link AbstractPreviewTask} units,
+     * A {@code PreviewStage} represents a stage containing one or more {@link AbstractPreviewChange} units,
      * which can be defined either:
      * <ul>
      *     <li>Explicitly via {@link #setChanges(Collection)}</li>
      *     <li>Implicitly by parsing templated YAML files located in a specified resources directory or source package</li>
      * </ul>
      * <p>
-     * If tasks are to be loaded from a source package, both {@link #setSourcesPackage(String)} and
+     * If changes are to be loaded from a source package, both {@link #setSourcesPackage(String)} and
      * {@link #setSourcesRoots(Collection)} must be provided. Optionally, {@link #setResourcesRoot(String)} should be set
      * to specify the root of the source tree (e.g., {@code src/main/java}, {@code src/main/kotlin}, etc.).
      * <p>
-     * The builder enforces consistency in task ordering: if all tasks are {@link AbstractPreviewTask#isSortable() sortable},
+     * The builder enforces consistency in change ordering: if all changes are {@link AbstractPreviewChange#isSortable() sortable},
      * they will be sorted; if only some are sortable, an exception will be thrown.
      */
     public abstract static class AbstractBuilder<T extends PreviewStage> {
@@ -198,7 +198,7 @@ public class PreviewStage {
         private String sourcesPackage;
         private String resourcesRoot;
         private Collection<String> sourcesRoots;
-        private Collection<? extends AbstractPreviewTask> changes;
+        private Collection<? extends AbstractPreviewChange> changes;
         private boolean parallel = false;
 
         protected AbstractBuilder() {
@@ -275,18 +275,18 @@ public class PreviewStage {
         }
 
         /**
-         * Sets a collection of {@link AbstractPreviewTask} implementations directly.
+         * Sets a collection of {@link AbstractPreviewChange} implementations directly.
          *
-         * @param changes the collection of change task classes
+         * @param changes the collection of change change classes
          * @return this builder instance
          */
-        public AbstractBuilder<T> setChanges(Collection<? extends AbstractPreviewTask> changes) {
+        public AbstractBuilder<T> setChanges(Collection<? extends AbstractPreviewChange> changes) {
             this.changes = changes;
             return this;
         }
 
         /**
-         * Sets whether tasks should be applied in parallel.
+         * Sets whether changes should be applied in parallel.
          *
          * @param parallel {@code true} to enable parallel execution; {@code false} otherwise
          * @return this builder instance
@@ -325,7 +325,7 @@ public class PreviewStage {
                 throw new RuntimeException("Stage requires name");
             }
 
-            Collection<? extends AbstractPreviewTask> changeClassesList = changes != null
+            Collection<? extends AbstractPreviewChange> changeClassesList = changes != null
                     ? changes
                     : Collections.emptyList();
 
@@ -333,8 +333,8 @@ public class PreviewStage {
                 throw new RuntimeException("No changes provided for stage: " + name);
             }
 
-            Collection<AbstractPreviewTask> templatedTasksDescriptors = getTemplatedTaskDescriptors(resourcesDirectories);
-            Collection<AbstractPreviewTask> allDescriptors = Stream.concat(templatedTasksDescriptors.stream(), changeClassesList.stream())
+            Collection<AbstractPreviewChange> templatedChangesDescriptors = getTemplatedChangeDescriptors(resourcesDirectories);
+            Collection<AbstractPreviewChange> allDescriptors = Stream.concat(templatedChangesDescriptors.stream(), changeClassesList.stream())
                     .collect(Collectors.toList());
 
 
@@ -346,15 +346,15 @@ public class PreviewStage {
                                            String description,
                                            String sourcesPackage,
                                            String resourcesDir,
-                                           Collection<AbstractPreviewTask> allDescriptors);
+                                           Collection<AbstractPreviewChange> allDescriptors);
 
         /**
-         * Parses and builds templated {@link AbstractPreviewTask} descriptors from YAML files located in the given directories.
+         * Parses and builds templated {@link AbstractPreviewChange} descriptors from YAML files located in the given directories.
          *
          * @param resourcesDirectories collection of directories to scan
-         * @return collection of parsed and built {@link AbstractPreviewTask} instances
+         * @return collection of parsed and built {@link AbstractPreviewChange} instances
          */
-        private Collection<AbstractPreviewTask> getTemplatedTaskDescriptors(Collection<File> resourcesDirectories) {
+        private Collection<AbstractPreviewChange> getTemplatedChangeDescriptors(Collection<File> resourcesDirectories) {
             if (resourcesDirectories == null) {
                 return Collections.emptyList();
             }
@@ -366,9 +366,9 @@ public class PreviewStage {
                             file.getName(),
                             FileUtil.getFromYamlFile(file, ChangeTemplateFileContent.class)
                     ))
-                    .map(pairWithFileName -> PreviewTaskBuilder
+                    .map(pairWithFileName -> PreviewChangeBuilder
                             .getTemplateBuilder(pairWithFileName.getFirst(), pairWithFileName.getSecond()))
-                    .map(PreviewTaskBuilder::build)
+                    .map(PreviewChangeBuilder::build)
                     .collect(Collectors.toList());
         }
 

@@ -78,7 +78,7 @@ public class AuditEntryTestFactory {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
-                changeId,                      // taskId
+                changeId,                      // changeId
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
@@ -108,7 +108,7 @@ public class AuditEntryTestFactory {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
-                changeId,                      // taskId
+                changeId,                      // changeId
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
@@ -217,7 +217,7 @@ public class AuditEntryTestFactory {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
-                changeId,                      // taskId
+                changeId,                      // changeId
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
@@ -246,7 +246,7 @@ public class AuditEntryTestFactory {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
-                changeId,                      // taskId
+                changeId,                      // changeId
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state
@@ -280,7 +280,7 @@ public class AuditEntryTestFactory {
         return new AuditEntry(
                 UUID.randomUUID().toString(),  // executionId
                 "test-stage",                  // stageId
-                changeId,                      // taskId
+                changeId,                      // changeId
                 "test-author",                 // author
                 LocalDateTime.now(),           // timestamp
                 status,                        // state

@@ -24,7 +24,7 @@ import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMoc
 import io.flamingock.common.test.cloud.mock.MockExecutionPlanBuilder;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
-import io.flamingock.common.test.cloud.prototype.PrototypeTask;
+import io.flamingock.common.test.cloud.prototype.PrototypeChange;
 import io.flamingock.cloud.api.request.TokenExchangeRequest;
 import io.flamingock.cloud.api.response.TokenExchangeResponse;
 import io.flamingock.cloud.api.request.StageRequest;
@@ -71,8 +71,8 @@ public final class MockRunnerServer {
     private static StageResponse toStageResponse(StageRequest stageRequest) {
         StageResponse stage = new StageResponse();
         stage.setName(stageRequest.getName());
-        stage.setTasks(stageRequest.getTasks().stream()
-                .map(onGoingTask -> new ChangeResponse(onGoingTask.getId(), APPLY))
+        stage.setChanges(stageRequest.getChanges().stream()
+                .map(onGoingChange -> new ChangeResponse(onGoingChange.getId(), APPLY))
                 .collect(Collectors.toList()));
         return stage;
     }
@@ -279,17 +279,17 @@ public final class MockRunnerServer {
             //TODO we need to change the audit's endpoint in the server to have the auditId in the path
             //TODO should we add the stage to the url too
 
-            String auditUrlTemplate = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/task/{taskId}/audit"///{auditId}"
+            String auditUrlTemplate = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/change/{changeId}/audit"///{auditId}"
                     .replace("{environmentId}", String.valueOf(environmentId))
                     .replace("{serviceId}", String.valueOf(serviceId))
                     .replace("{executionId}", auditWrite.getExecutionId());
 
-            PrototypeTask taskPrototype = getTaskPrototype(auditWrite.getTaskId());
-            String auditUrl = auditUrlTemplate.replace("{auditId}", taskPrototype.getTaskId());
-            String requestJson = toJson(taskPrototype.toAuditExpectation(auditWrite.getState()));
+            PrototypeChange changePrototype = getChangePrototype(auditWrite.getChangeId());
+            String auditUrl = auditUrlTemplate.replace("{auditId}", changePrototype.getChangeId());
+            String requestJson = toJson(changePrototype.toAuditExpectation(auditWrite.getState()));
             if (auditEntryWriteExpectations.size() == 1) {
                 wireMockServer.stubFor(
-                        post(urlPathEqualTo(auditUrl.replace("{taskId}", auditWrite.getTaskId())))
+                        post(urlPathEqualTo(auditUrl.replace("{changeId}", auditWrite.getChangeId())))
                                 .withRequestBody(equalToJson(requestJson, true, true))
                                 .willReturn(aResponse()
                                         .withStatus(201)
@@ -305,7 +305,7 @@ public final class MockRunnerServer {
                 String scenarioName = "audit-logs";
                 String scenarioState = i == 0 ? Scenario.STARTED : "audit-log-state-" + i;
                 wireMockServer.stubFor(
-                        post(urlPathEqualTo(auditUrl.replace("{taskId}", auditWrite.getTaskId())))
+                        post(urlPathEqualTo(auditUrl.replace("{changeId}", auditWrite.getChangeId())))
                                 .withName("audit-stub" + i)
                                 .inScenario(scenarioName)
                                 .whenScenarioStateIs(scenarioState)
@@ -347,15 +347,15 @@ public final class MockRunnerServer {
                         .willReturn(responseDefBuilder));
     }
 
-    private PrototypeTask getTaskPrototype(String taskId) {
+    private PrototypeChange getChangePrototype(String changeId) {
         return clientSubmission
                 .getStages()
                 .stream()
-                .map(PrototypeStage::getTasks)
+                .map(PrototypeStage::getChanges)
                 .flatMap(List::stream)
-                .filter(task -> taskId.equals(task.getTaskId()))
+                .filter(change -> changeId.equals(change.getChangeId()))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Task not found with id " + taskId));
+                .orElseThrow(() -> new RuntimeException("Change not found with id " + changeId));
     }
 
 

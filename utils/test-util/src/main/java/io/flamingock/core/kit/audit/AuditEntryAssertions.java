@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <pre>{@code
  * // Complete audit entry verification
  * AuditEntryExpectation expected = auditEntry()
- *     .withTaskId("test-change")
+ *     .withChangeId("test-change")
  *     .withState(EXECUTED)
  *     .withTxType(TX_SHARED);
  * 
@@ -70,9 +70,9 @@ public class AuditEntryAssertions {
                 "StageId mismatch");
         }
         
-        if (expected.getExpectedTaskId() != null) {
-            assertEquals(expected.getExpectedTaskId(), actual.getTaskId(),
-                "TaskId mismatch");
+        if (expected.getExpectedChangeId() != null) {
+            assertEquals(expected.getExpectedChangeId(), actual.getChangeId(),
+                "ChangeId mismatch");
         }
         
         // Metadata fields
@@ -164,15 +164,15 @@ public class AuditEntryAssertions {
      * Quick verification of basic audit entry identity fields.
      * 
      * @param entry the audit entry to verify
-     * @param expectedTaskId expected task ID
+     * @param expectedChangeId expected change ID
      * @param expectedAuthor expected author
      * @param expectedState expected audit entry state
      */
     //TODO add author check, when CodeChangeTestDefinition adds it
-    public static void assertBasicFields(AuditEntry entry, String expectedTaskId, String expectedAuthor, 
+    public static void assertBasicFields(AuditEntry entry, String expectedChangeId, String expectedAuthor, 
                                        AuditEntry.Status expectedState) {
         assertNotNull(entry, "Audit entry should not be null");
-        assertEquals(expectedTaskId, entry.getTaskId(), "TaskId mismatch");
+        assertEquals(expectedChangeId, entry.getChangeId(), "ChangeId mismatch");
 //        assertEquals(expectedAuthor, entry.getAuthor(), "Author mismatch");
         assertEquals(expectedState, entry.getState(), "State mismatch");
     }
@@ -281,15 +281,15 @@ public class AuditEntryAssertions {
         
         String expectedExecutionId = entries.get(0).getExecutionId();
         String expectedStageId = entries.get(0).getStageId();
-        String expectedTaskId = entries.get(0).getTaskId();
+        String expectedChangeId = entries.get(0).getChangeId();
         
         for (AuditEntry entry : entries) {
             assertEquals(expectedExecutionId, entry.getExecutionId(), 
                 "All entries should have same executionId");
             assertEquals(expectedStageId, entry.getStageId(), 
                 "All entries should have same stageId");
-            assertEquals(expectedTaskId, entry.getTaskId(), 
-                "All entries should have same taskId");
+            assertEquals(expectedChangeId, entry.getChangeId(),
+                "All entries should have same changeId");
         }
     }
     
@@ -309,8 +309,8 @@ public class AuditEntryAssertions {
         assertNotNull(entry.getStageId(), "StageId should not be null");
         assertFalse(entry.getStageId().trim().isEmpty(), "StageId should not be empty");
         
-        assertNotNull(entry.getTaskId(), "TaskId should not be null");
-        assertFalse(entry.getTaskId().trim().isEmpty(), "TaskId should not be empty");
+        assertNotNull(entry.getChangeId(), "ChangeId should not be null");
+        assertFalse(entry.getChangeId().trim().isEmpty(), "ChangeId should not be empty");
         
         assertNotNull(entry.getAuthor(), "Author should not be null");
         assertFalse(entry.getAuthor().trim().isEmpty(), "Author should not be empty");

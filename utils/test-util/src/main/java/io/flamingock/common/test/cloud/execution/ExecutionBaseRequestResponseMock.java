@@ -15,7 +15,7 @@
  */
 package io.flamingock.common.test.cloud.execution;
 
-import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
+import io.flamingock.common.test.cloud.mock.MockRequestResponseChange;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,16 +27,16 @@ public class ExecutionBaseRequestResponseMock {
     private final String executionId;
     private final long acquiredForMillis;
     private final String acquisitionId;
-    private final List<MockRequestResponseTask> tasks;
+    private final List<MockRequestResponseChange> changes;
 
     public ExecutionBaseRequestResponseMock(String executionId,
                                             long acquiredForMillis,
                                             String acquisitionId,
-                                            MockRequestResponseTask...tasks) {
+                                            MockRequestResponseChange...changes) {
         this.executionId = executionId;
         this.acquiredForMillis = acquiredForMillis;
         this.acquisitionId = acquisitionId;
-        this.tasks = Arrays.asList(tasks);
+        this.changes = Arrays.asList(changes);
     }
 
     public String getExecutionId() {
@@ -51,13 +51,13 @@ public class ExecutionBaseRequestResponseMock {
         return acquisitionId;
     }
 
-    public List<MockRequestResponseTask> getTasks() {
-        return tasks;
+    public List<MockRequestResponseChange> getChanges() {
+        return changes;
     }
 
-    public Optional<MockRequestResponseTask> getTaskById(String taskId) {
-        return tasks.stream()
-                .filter(task -> taskId.equals(task.getTaskId()))
+    public Optional<MockRequestResponseChange> getChangeById(String changeId) {
+        return changes.stream()
+                .filter(change -> changeId.equals(change.getChangeId()))
                 .findFirst();
     }
 }

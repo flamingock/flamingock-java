@@ -63,7 +63,7 @@ public class SqlAuditStorage implements AuditStorage {
                 dialectHelper.getInsertSqlString(auditTableName))) {
                 ps.setString(1, auditEntry.getExecutionId());
                 ps.setString(2, auditEntry.getStageId());
-                ps.setString(3, auditEntry.getTaskId());
+                ps.setString(3, auditEntry.getChangeId());
                 ps.setString(4, auditEntry.getAuthor());
                 ps.setTimestamp(5, Timestamp.valueOf(auditEntry.getCreatedAt()));
                 ps.setString(6, auditEntry.getState() != null ? auditEntry.getState().name() : null);

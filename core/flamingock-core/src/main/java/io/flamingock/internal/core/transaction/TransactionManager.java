@@ -35,7 +35,7 @@ public class TransactionManager<CLIENT_SESSION> {
     /**
      * Starts a session, if not already created or is closed. Otherwise, it returns the existing one.
      *
-     * @param sessionId ClientSession identifier. Will be the taskId most of the time(if not always)
+     * @param sessionId ClientSession identifier. Will be the changeId most of the time(if not always)
      * @return ClientSession
      */
     public CLIENT_SESSION startSession(String sessionId) {
@@ -47,7 +47,7 @@ public class TransactionManager<CLIENT_SESSION> {
     /**
      * Starts a session, if not already created or is closed. Otherwise, it returns the existing one.
      *
-     * @param sessionId ClientSession identifier. Will be the taskId most of the time(if not always)
+     * @param sessionId ClientSession identifier. Will be the changeId most of the time(if not always)
      * @param clientSession ClientSession instance
      * @return ClientSession
      */

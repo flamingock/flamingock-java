@@ -128,7 +128,7 @@ public class CloudTransactionTest {
         String executionId = "execution-1";
         mockRunnerServer
                 .addSimpleStageExecutionPlan(executionId, "changes", auditEntries)
-                .addExecutionWithAllTasksRequestResponse(executionId)
+                .addExecutionWithAllChangesRequestResponse(executionId)
                 .addExecutionContinueRequestResponse();
 
         mockRunnerServer.start();
@@ -142,12 +142,12 @@ public class CloudTransactionTest {
         runner.execute();
 
         //THEN
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).listAll();
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template", TargetSystemAuditMarkType.APPLIED));
+        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(2)).listAll();
+        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template", TargetSystemAuditMarkType.APPLIED));
 
         ArgumentCaptor<String> changeIdValuesCaptor = ArgumentCaptor.forClass(String.class);
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template-2", TargetSystemAuditMarkType.APPLIED));
-        verify(cloudTargetSystem.getOnGoingTaskStatusRepository(), new Times(2)).clearMark(changeIdValuesCaptor.capture());
+        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template-2", TargetSystemAuditMarkType.APPLIED));
+        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(2)).clearMark(changeIdValuesCaptor.capture());
         List<String> allValues = changeIdValuesCaptor.getAllValues();
 
         Assertions.assertEquals("create-persons-table-from-template", allValues.get(0));

@@ -141,7 +141,7 @@ This is a multi-module Gradle project using Kotlin DSL.
 - AuditStore initialization requires full hierarchical context for dependency resolution
 
 **Plugin System**: Extensible architecture via `Plugin` interface:
-- Contribute task filters, event publishers, and dependency contexts
+- Contribute change filters, event publishers, and dependency contexts
 - Platform plugins (e.g., `flamingock-springboot-integration`) provide framework integration
 - Initialized after base context setup but before hierarchical context building
 
@@ -339,24 +339,24 @@ YAML File
 ChangeTemplateFileContent
     ↓ (preview building)
 TemplatePreviewChange (unified)
-    ↓ (loaded task building - template lookup from registry)
+    ↓ (loaded change building - template lookup from registry)
 AbstractTemplateLoadedChange
     ├── SimpleTemplateLoadedChange (for AbstractSimpleTemplate)
     └── SteppableTemplateLoadedChange (for AbstractSteppableTemplate)
     ↓ (execution preparation)
-TemplateExecutableTask<T>
-    ├── SimpleTemplateExecutableTask (calls setStep())
-    └── SteppableTemplateExecutableTask (calls setSteps())
+TemplateExecutableChange<T>
+    ├── SimpleTemplateExecutableChange (calls setStep())
+    └── SteppableTemplateExecutableChange (calls setSteps())
     ↓ (runtime execution)
 Template instance with injected dependencies
 ```
 
 **Key Classes in Flow**:
 - `ChangeTemplateFileContent` - YAML parsed data (`core/flamingock-core-commons`)
-- `TemplatePreviewTaskBuilder` - Builds preview from file content (`core/flamingock-core-commons`)
-- `TemplateLoadedTaskBuilder` - Resolves template class, builds type-specific loaded change (`core/flamingock-core`)
-- `TemplateExecutableTaskBuilder` - Builds type-specific executable task (`core/flamingock-core`)
-- `TemplateExecutableTask<T>` - Abstract base for template execution (`core/flamingock-core`)
+- `TemplatePreviewChangeBuilder` - Builds preview from file content (`core/flamingock-core-commons`)
+- `TemplateLoadedChangeBuilder` - Resolves template class, builds type-specific loaded change (`core/flamingock-core`)
+- `TemplateExecutableChangeBuilder` - Builds type-specific executable change (`core/flamingock-core`)
+- `TemplateExecutableChange<T>` - Abstract base for template execution (`core/flamingock-core`)
 
 ### Discovery Mechanism (SPI)
 
@@ -444,20 +444,20 @@ AbstractTemplateLoadedChange (abstract base)
 
 **Executable Phase:**
 ```
-TemplateExecutableTask<T> (abstract base)
-├── SimpleTemplateExecutableTask (calls setStep())
-└── SteppableTemplateExecutableTask (calls setSteps())
+TemplateExecutableChange<T> (abstract base)
+├── SimpleTemplateExecutableChange (calls setStep())
+└── SteppableTemplateExecutableChange (calls setSteps())
 ```
 
-**Type Detection:** Happens in `TemplateLoadedTaskBuilder.build()` using:
+**Type Detection:** Happens in `TemplateLoadedChangeBuilder.build()` using:
 - `AbstractSteppableTemplate.class.isAssignableFrom(templateClass)` → SteppableTemplateLoadedChange
 - Otherwise → SimpleTemplateLoadedChange (default for AbstractSimpleTemplate and unknown types)
 
 **Note:** Preview phase (`TemplatePreviewChange`) remains unified since YAML is parsed before template type is known.
 
-### SteppableTemplateExecutableTask Apply/Rollback Lifecycle
+### SteppableTemplateExecutableChange Apply/Rollback Lifecycle
 
-The `SteppableTemplateExecutableTask` manages multi-step execution with per-step rollback:
+The `SteppableTemplateExecutableChange` manages multi-step execution with per-step rollback:
 
 **Apply Phase:**
 - Iterates through steps in order (0 → N-1)
@@ -471,7 +471,7 @@ The `SteppableTemplateExecutableTask` manages multi-step execution with per-step
 - **Skips steps without rollback payload** (`hasRollback()` returns false)
 - **Skips if template has no `@Rollback` method** (logs warning)
 
-**Key Design Decision:** Same `SteppableTemplateExecutableTask` instance is used for both apply and rollback (no retry). The `stepIndex` state persists to enable rollback from the exact failure point.
+**Key Design Decision:** Same `SteppableTemplateExecutableChange` instance is used for both apply and rollback (no retry). The `stepIndex` state persists to enable rollback from the exact failure point.
 
 ### Dependency Injection in Templates
 

@@ -186,7 +186,7 @@ export JRELEASER_GPG_PASSPHRASE="your_passphrase"
 
 2. **Copy artifacts to jReleaser directory:**
 
-   The `copyReleaseFiles` task (automatically executed as a dependency of `jreleaserRelease`) copies files from:
+   The `copyReleaseFiles` change (automatically executed as a dependency of `jreleaserRelease`) copies files from:
    - **Source:** `cli/flamingock-cli/build/distributions/`
    - **Destination:** `build/jreleaser/distributions/`
 
@@ -296,7 +296,7 @@ rm -rf */build/staging-deploy/
 ./gradlew clean
 ```
 
-### 9. Advanced jReleaser Tasks
+### 9. Advanced jReleaser Changes
 
 ```bash
 # Assemble all distributions
@@ -315,14 +315,14 @@ rm -rf */build/staging-deploy/
 ./gradlew jreleaserJsonSchema --stacktrace
 ```
 
-### 10. Verify Task Dependencies
+### 10. Verify Change Dependencies
 
 ```bash
-# View dependency tree of a task
+# View dependency tree of a change
 ./gradlew jreleaserRelease --dry-run --stacktrace
 
-# View all available jReleaser tasks
-./gradlew tasks --group=jreleaser
+# View all available jReleaser changes
+./gradlew changes --group=jreleaser
 ```
 
 ### 11. Diagnostic Commands

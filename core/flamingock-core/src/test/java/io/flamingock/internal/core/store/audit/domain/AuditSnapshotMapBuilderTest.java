@@ -44,12 +44,12 @@ class AuditSnapshotMapBuilderTest {
         assertEquals(2, infoMap.size());
 
         AuditEntry info1 = infoMap.get("change-1");
-        assertEquals("change-1", info1.getTaskId());
+        assertEquals("change-1", info1.getChangeId());
         assertEquals(AuditEntry.Status.APPLIED, info1.getState());
         assertEquals(AuditTxType.NON_TX, info1.getTxType());
 
         AuditEntry info2 = infoMap.get("change-2");
-        assertEquals("change-2", info2.getTaskId());
+        assertEquals("change-2", info2.getChangeId());
         assertEquals(AuditEntry.Status.STARTED, info2.getState());
         assertEquals(AuditTxType.TX_SHARED, info2.getTxType());
     }
@@ -115,15 +115,15 @@ class AuditSnapshotMapBuilderTest {
         }
     }
 
-    private AuditEntry createAuditEntry(String taskId, AuditEntry.Status status, AuditTxType txStrategy) {
-        return createAuditEntry(taskId, status, txStrategy, LocalDateTime.now());
+    private AuditEntry createAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy) {
+        return createAuditEntry(changeId, status, txStrategy, LocalDateTime.now());
     }
 
-    private AuditEntry createAuditEntry(String taskId, AuditEntry.Status status, AuditTxType txStrategy, LocalDateTime timestamp) {
+    private AuditEntry createAuditEntry(String changeId, AuditEntry.Status status, AuditTxType txStrategy, LocalDateTime timestamp) {
         return new AuditEntry(
                 "test-execution",
                 "test-stage",
-                taskId,
+                changeId,
                 "test-author",
                 timestamp,
                 status,

@@ -23,10 +23,10 @@ import io.flamingock.internal.common.core.error.validation.ValidationResult;
 import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.task.filter.TaskFilter;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.change.filter.ChangeFilter;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -44,7 +44,7 @@ public class LoadedPipeline implements PipelineDescriptor {
     private static final PipelineValidationContext DEFAULT_CONTEXT = new PipelineValidationContext();
 
 
-    private final Collection<TaskFilter> taskFilters;
+    private final Collection<ChangeFilter> changeFilters;
 
     private final AbstractLoadedStage systemStage;
     private final List<AbstractLoadedStage> loadedStages;
@@ -54,16 +54,16 @@ public class LoadedPipeline implements PipelineDescriptor {
     }
 
     private LoadedPipeline(List<AbstractLoadedStage> loadedStages,
-                           Collection<TaskFilter> taskFilters) {
-        this(null, loadedStages, taskFilters);
+                           Collection<ChangeFilter> changeFilters) {
+        this(null, loadedStages, changeFilters);
     }
 
     private LoadedPipeline(AbstractLoadedStage systemStage,
                            List<AbstractLoadedStage> loadedStages,
-                           Collection<TaskFilter> taskFilters) {
+                           Collection<ChangeFilter> changeFilters) {
         this.systemStage = systemStage;
         this.loadedStages = loadedStages;
-        this.taskFilters = taskFilters;
+        this.changeFilters = changeFilters;
     }
 
 
@@ -73,7 +73,7 @@ public class LoadedPipeline implements PipelineDescriptor {
      * <ul>
      *   <li>Ensures the pipeline contains at least one stage</li>
      *   <li>Validates each individual stage within the pipeline</li>
-     *   <li>Checks for duplicate task IDs across all stages</li>
+     *   <li>Checks for duplicate change IDs across all stages</li>
      * </ul>
      *
      * @throws FlamingockException if any validation errors are found, containing a formatted
@@ -109,19 +109,19 @@ public class LoadedPipeline implements PipelineDescriptor {
     }
 
     @Override
-    public Optional<AbstractLoadedTask> getLoadedTask(String taskId) {
+    public Optional<AbstractLoadedChange> getLoadedChange(String changeId) {
         return loadedStages.stream()
-                .map(AbstractLoadedStage::getTasks)
+                .map(AbstractLoadedStage::getChanges)
                 .flatMap(Collection::stream)
-                .filter(loadedTask -> loadedTask.getId().equals(taskId))
+                .filter(loadedChange -> loadedChange.getId().equals(changeId))
                 .findFirst();
     }
 
     @Override
-    public Optional<String> getStageByTask(String taskId) {
+    public Optional<String> getStageByChange(String changeId) {
         for (AbstractLoadedStage loadedStage : loadedStages) {
-            for (TaskDescriptor loadedTask : loadedStage.getTasks()) {
-                if (loadedTask.getId().equals(taskId)) {
+            for (ChangeDescriptor loadedChange : loadedStage.getChanges()) {
+                if (loadedChange.getId().equals(changeId)) {
                     return Optional.of(loadedStage.getName());
                 }
             }
@@ -141,7 +141,7 @@ public class LoadedPipeline implements PipelineDescriptor {
         Set<String> duplicateIds = new HashSet<>();
 
         for (AbstractLoadedStage stage : loadedStages) {
-            for (String id : stage.getTaskIds()) {
+            for (String id : stage.getChangeIds()) {
                 if (!seenIds.add(id)) {
                     duplicateIds.add(id);
                 }
@@ -167,7 +167,7 @@ public class LoadedPipeline implements PipelineDescriptor {
         private Collection<PreviewStage> beforeUserStages = new LinkedHashSet<>();
         private PreviewPipeline previewPipeline;
         private Collection<PreviewStage> afterUserStages = new LinkedHashSet<>();
-        private Collection<TaskFilter> taskFilters = new LinkedHashSet<>();
+        private Collection<ChangeFilter> changeFilters = new LinkedHashSet<>();
 
         private LoadedPipelineBuilder() {
         }
@@ -187,8 +187,8 @@ public class LoadedPipeline implements PipelineDescriptor {
             return this;
         }
 
-        public LoadedPipelineBuilder addFilters(Collection<TaskFilter> taskFilters) {
-            this.taskFilters.addAll(taskFilters);
+        public LoadedPipelineBuilder addFilters(Collection<ChangeFilter> changeFilters) {
+            this.changeFilters.addAll(changeFilters);
             return this;
         }
 
@@ -202,8 +202,8 @@ public class LoadedPipeline implements PipelineDescriptor {
                     .map(abstractLoadedStage -> new LoadedPipeline(
                             abstractLoadedStage,
                             allSortedStages,
-                            taskFilters
-                    )).orElseGet(() -> new LoadedPipeline(allSortedStages, taskFilters));
+                            changeFilters
+                    )).orElseGet(() -> new LoadedPipeline(allSortedStages, changeFilters));
         }
 
         @NotNull

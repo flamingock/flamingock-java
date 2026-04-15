@@ -25,7 +25,7 @@ import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import org.junit.jupiter.api.Assertions;
@@ -83,7 +83,7 @@ public class PipelineTest {
 
         FlamingockException exception = Assertions.assertThrows(FlamingockException.class, pipeline::validate);
 
-        Assertions.assertTrue(exception.getMessage().contains("Stage[failing-stage-1] must contain at least one task"));
+        Assertions.assertTrue(exception.getMessage().contains("Stage[failing-stage-1] must contain at least one change"));
 
     }
 
@@ -102,8 +102,8 @@ public class PipelineTest {
 
         FlamingockException exception = Assertions.assertThrows(FlamingockException.class, pipeline::validate);
 
-        Assertions.assertTrue(exception.getMessage().contains("Stage[failing-stage-1] must contain at least one task"));
-        Assertions.assertTrue(exception.getMessage().contains("Stage[failing-stage-2] must contain at least one task"));
+        Assertions.assertTrue(exception.getMessage().contains("Stage[failing-stage-1] must contain at least one change"));
+        Assertions.assertTrue(exception.getMessage().contains("Stage[failing-stage-2] must contain at least one change"));
 
     }
 
@@ -112,8 +112,8 @@ public class PipelineTest {
     void shouldThrowExceptionOnlyForEmptyStageWhenMixedWithNonEmptyStages() {
         PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
 
-        CodePreviewChange validTask = new CodePreviewChange(
-                "valid-task",
+        CodePreviewChange validChange = new CodePreviewChange(
+                "valid-change",
                 "001",
                 "test-author",
                 PipelineTestChange.class.getName(),
@@ -128,13 +128,13 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault(),
                 false);
 
-        // Stage with a valid task
+        // Stage with a valid change
         PreviewStage stageWithChanges = Mockito.mock(PreviewStage.class);
         Mockito.when(stageWithChanges.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stageWithChanges.getName()).thenReturn("stage-with-changes");
-        Mockito.when(stageWithChanges.getTasks()).thenReturn((Collection) Collections.singletonList(validTask));
+        Mockito.when(stageWithChanges.getChanges()).thenReturn((Collection) Collections.singletonList(validChange));
 
-        // Stage without any tasks (empty)
+        // Stage without any changes (empty)
         PreviewStage emptyStage = getPreviewStage("empty-stage");
 
         PreviewPipeline previewPipeline = new PreviewPipeline();
@@ -147,7 +147,7 @@ public class PipelineTest {
         FlamingockException exception = Assertions.assertThrows(FlamingockException.class, pipeline::validate);
 
         // Should only fail for the empty stage
-        Assertions.assertTrue(exception.getMessage().contains("Stage[empty-stage] must contain at least one task"),
+        Assertions.assertTrue(exception.getMessage().contains("Stage[empty-stage] must contain at least one change"),
                 "Error message should mention the empty stage");
         Assertions.assertFalse(exception.getMessage().contains("stage-with-changes"),
                 "Error message should NOT mention the stage with changes");
@@ -158,17 +158,17 @@ public class PipelineTest {
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage.getName()).thenReturn(name);
-        Mockito.when(stage.getTasks()).thenReturn(Collections.emptyList());
+        Mockito.when(stage.getChanges()).thenReturn(Collections.emptyList());
         return stage;
     }
 
     @Test
-    @DisplayName("Should throw an exception when a task has an invalid order format")
-    void shouldThrowExceptionWhenTaskHasInvalidOrderFormat() {
+    @DisplayName("Should throw an exception when a change has an invalid order format")
+    void shouldThrowExceptionWhenChangeHasInvalidOrderFormat() {
         PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
 
-        CodePreviewChange taskWithInvalidOrder1 = new CodePreviewChange(
-                "task-with-invalid-order-1",
+        CodePreviewChange changeWithInvalidOrder1 = new CodePreviewChange(
+                "change-with-invalid-order-1",
                 "12", // Too short (only 2 alphanumeric characters)
                 "test-author",
                 PipelineTestChange.class.getName(),
@@ -183,8 +183,8 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault(),
                 false);
 
-        CodePreviewChange taskWithInvalidOrder2 = new CodePreviewChange(
-                "task-with-invalid-order-2",
+        CodePreviewChange changeWithInvalidOrder2 = new CodePreviewChange(
+                "change-with-invalid-order-2",
                 "a_", // Only 1 alphanumeric character
                 "test-author",
                 PipelineTestChange.class.getName(),
@@ -201,8 +201,8 @@ public class PipelineTest {
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
-        Mockito.when(stage.getName()).thenReturn("stage-with-invalid-order-tasks");
-        Mockito.when(stage.getTasks()).thenReturn((Collection) Arrays.asList(taskWithInvalidOrder1, taskWithInvalidOrder2));
+        Mockito.when(stage.getName()).thenReturn("stage-with-invalid-order-changes");
+        Mockito.when(stage.getChanges()).thenReturn((Collection) Arrays.asList(changeWithInvalidOrder1, changeWithInvalidOrder2));
 
         PreviewPipeline previewPipeline = new PreviewPipeline();
         previewPipeline.setStages(Collections.singletonList(stage));
@@ -214,17 +214,17 @@ public class PipelineTest {
         FlamingockException exception = Assertions.assertThrows(FlamingockException.class, pipeline::validate);
         Assertions.assertTrue(exception.getMessage().contains("Invalid order field format"), 
                 "Error message should mention invalid order field format");
-        Assertions.assertTrue(exception.getMessage().contains("task-with-invalid-order-1"), 
-                "Error message should mention the task with invalid order");
+        Assertions.assertTrue(exception.getMessage().contains("change-with-invalid-order-1"), 
+                "Error message should mention the change with invalid order");
     }
 
     @Test
-    @DisplayName("Should validate successfully when tasks have valid order formats")
-    void shouldValidateSuccessfullyWhenTasksHaveValidOrderFormats() {
+    @DisplayName("Should validate successfully when changes have valid order formats")
+    void shouldValidateSuccessfullyWhenChangesHaveValidOrderFormats() {
         PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
 
-        CodePreviewChange taskWithValidOrder1 = new CodePreviewChange(
-                "task-with-valid-order-1",
+        CodePreviewChange changeWithValidOrder1 = new CodePreviewChange(
+                "change-with-valid-order-1",
                 "001", // Valid 3 alphanumeric characters
                 "test-author",
                 PipelineTestChange.class.getName(),
@@ -239,8 +239,8 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault(),
                 false);
 
-        CodePreviewChange taskWithValidOrder2 = new CodePreviewChange(
-                "task-with-valid-order-2",
+        CodePreviewChange changeWithValidOrder2 = new CodePreviewChange(
+                "change-with-valid-order-2",
                 "abc", // Valid 3 alphanumeric characters
                 "test-author",
                 PipelineTestChange.class.getName(),
@@ -255,8 +255,8 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault(),
                 false);
 
-        CodePreviewChange taskWithValidOrder3 = new CodePreviewChange(
-                "task-with-valid-order-3",
+        CodePreviewChange changeWithValidOrder3 = new CodePreviewChange(
+                "change-with-valid-order-3",
                 "V1_2_3", // Valid with underscores and alphanumeric chars
                 "test-author",
                 PipelineTestChange.class.getName(),
@@ -271,8 +271,8 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault(),
                 false);
 
-        CodePreviewChange taskWithValidOrder4 = new CodePreviewChange(
-                "task-with-valid-order-4",
+        CodePreviewChange changeWithValidOrder4 = new CodePreviewChange(
+                "change-with-valid-order-4",
                 "20250925_01_migration", // Valid complex format
                 "test-author",
                 PipelineTestChange.class.getName(),
@@ -289,9 +289,9 @@ public class PipelineTest {
 
         PreviewStage stage = Mockito.mock(PreviewStage.class);
         Mockito.when(stage.getType()).thenReturn(StageType.DEFAULT);
-        Mockito.when(stage.getName()).thenReturn("stage-with-valid-order-tasks");
-        Mockito.when(stage.getTasks()).thenReturn((Collection) Arrays.asList(
-                taskWithValidOrder1, taskWithValidOrder2, taskWithValidOrder3, taskWithValidOrder4));
+        Mockito.when(stage.getName()).thenReturn("stage-with-valid-order-changes");
+        Mockito.when(stage.getChanges()).thenReturn((Collection) Arrays.asList(
+                changeWithValidOrder1, changeWithValidOrder2, changeWithValidOrder3, changeWithValidOrder4));
 
         PreviewPipeline previewPipeline = new PreviewPipeline();
         previewPipeline.setStages(Collections.singletonList(stage));
@@ -309,7 +309,7 @@ public class PipelineTest {
         // Create a preview method for execution
         PreviewMethod executionMethod = new PreviewMethod("apply", Collections.emptyList());
 
-        CodePreviewChange task1 = new CodePreviewChange(
+        CodePreviewChange change1 = new CodePreviewChange(
                 "duplicate-id",
                 "001", // Valid: 3 alphanumeric characters
                 "test-author",
@@ -325,7 +325,7 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault(),
                 false);
 
-        CodePreviewChange task2 = new CodePreviewChange(
+        CodePreviewChange change2 = new CodePreviewChange(
                 "unique-id",
                 "002", // Valid: 3 alphanumeric characters
                 "test-author",
@@ -341,7 +341,7 @@ public class PipelineTest {
                 RecoveryDescriptor.getDefault(),
                 false);
 
-        CodePreviewChange task3 = new CodePreviewChange(
+        CodePreviewChange change3 = new CodePreviewChange(
                 "duplicate-id",
                 "003", // Valid: 3 alphanumeric characters
                 "test-author",
@@ -360,12 +360,12 @@ public class PipelineTest {
         PreviewStage stage1 = Mockito.mock(PreviewStage.class);
         Mockito.when(stage1.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage1.getName()).thenReturn("stage1");
-        Mockito.when(stage1.getTasks()).thenReturn((Collection) Arrays.asList(task1, task2));
+        Mockito.when(stage1.getChanges()).thenReturn((Collection) Arrays.asList(change1, change2));
 
         PreviewStage stage2 = Mockito.mock(PreviewStage.class);
         Mockito.when(stage2.getType()).thenReturn(StageType.DEFAULT);
         Mockito.when(stage2.getName()).thenReturn("stage2");
-        Mockito.when(stage2.getTasks()).thenReturn((Collection) Collections.singletonList(task3));
+        Mockito.when(stage2.getChanges()).thenReturn((Collection) Collections.singletonList(change3));
 
         PreviewPipeline previewPipeline = new PreviewPipeline();
         previewPipeline.setStages(Arrays.asList(stage1, stage2));

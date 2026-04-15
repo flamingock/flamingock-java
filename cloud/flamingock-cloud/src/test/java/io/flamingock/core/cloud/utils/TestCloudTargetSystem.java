@@ -40,7 +40,7 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
         this.txWrapper = Mockito.spy(new TestCloudTxWrapper());
     }
 
-    public TargetSystemAuditMarker getOnGoingTaskStatusRepository() {
+    public TargetSystemAuditMarker getOnGoingChangeStatusRepository() {
         return ongoignRepo;
     }
 
@@ -84,7 +84,7 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
 
         @Override
         public void clearMark(String changeId) {
-            ongoingStatuses.removeIf(status -> changeId.equals(status.getTaskId()));
+            ongoingStatuses.removeIf(status -> changeId.equals(status.getChangeId()));
         }
 
         @Override

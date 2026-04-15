@@ -24,8 +24,8 @@ public class ValidationError {
      * Creates a new validation error.
      *
      * @param message    error message
-     * @param entityId   ID of the entity that failed (task ID, stage name, order...)
-     * @param entityType The type of entity that failed ("task", "stage", "pipeline")
+     * @param entityId   ID of the entity that failed (change ID, stage name, order...)
+     * @param entityType The type of entity that failed ("change", "stage", "pipeline")
      */
     public ValidationError(String message, String entityId, String entityType) {
         this.message = message;

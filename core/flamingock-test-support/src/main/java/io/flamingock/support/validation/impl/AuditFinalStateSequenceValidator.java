@@ -110,7 +110,7 @@ public class AuditFinalStateSequenceValidator implements SimpleValidator {
         return auditEntries.stream()
                 .filter(entry -> !EXCLUDED_STATES.contains(entry.getState()))
                 .filter(auditEntry -> !Boolean.TRUE.equals(auditEntry.getSystemChange()))
-                .filter(auditEntry -> !(auditEntry.isLegacy() && auditEntry.getTaskId().endsWith("_before")))
+                .filter(auditEntry -> !(auditEntry.isLegacy() && auditEntry.getChangeId().endsWith("_before")))
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -133,7 +133,7 @@ public class AuditFinalStateSequenceValidator implements SimpleValidator {
                 allErrors.add(new MissingEntryError(i, def.getChangeId(), def.getState()));
             } else {
                 assert actual != null;
-                allErrors.add(new UnexpectedEntryError(i, actual.getTaskId(), actual.getState()));
+                allErrors.add(new UnexpectedEntryError(i, actual.getChangeId(), actual.getState()));
             }
 
         }
@@ -163,7 +163,7 @@ public class AuditFinalStateSequenceValidator implements SimpleValidator {
 
     private List<String> getActualChangeIds() {
         return actualEntries.stream()
-                .map(AuditEntry::getTaskId)
+                .map(AuditEntry::getChangeId)
                 .collect(Collectors.toList());
     }
 

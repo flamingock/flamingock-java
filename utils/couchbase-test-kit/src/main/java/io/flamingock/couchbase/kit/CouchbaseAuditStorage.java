@@ -16,12 +16,9 @@
 package io.flamingock.couchbase.kit;
 
 import com.couchbase.client.core.error.CouchbaseException;
-import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
-import com.couchbase.client.java.json.JsonValue;
-import com.couchbase.client.java.kv.GetResult;
 import com.couchbase.client.java.kv.PersistTo;
 import com.couchbase.client.java.kv.ReplicateTo;
 import com.couchbase.client.java.kv.UpsertOptions;
@@ -113,7 +110,7 @@ public class CouchbaseAuditStorage implements AuditStorage {
     private String toKey(AuditEntry auditEntry) {
         return auditEntry.getExecutionId() +
             '#' +
-            auditEntry.getTaskId() +
+            auditEntry.getChangeId() +
             '#' +
             auditEntry.getState().name();
     }

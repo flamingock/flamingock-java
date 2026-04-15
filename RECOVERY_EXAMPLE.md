@@ -96,8 +96,8 @@ stages:
 The recovery strategy is available throughout the execution pipeline:
 
 ```java
-// In ExecutableTask (available during execution)
-ExecutableTask task = // ... get from pipeline
+// In ExecutableChange (available during execution)
+ExecutableChange task = // ... get from pipeline
 RecoveryDescriptor recovery = task.getRecovery();
 RecoveryStrategy strategy = recovery.getStrategy();
 

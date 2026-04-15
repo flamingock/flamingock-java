@@ -48,7 +48,7 @@ public class CouchbaseAuditMapper {
         JsonObject document = JsonObject.create();
         CouchbaseUtils.addFieldToDocument(document, KEY_EXECUTION_ID, auditEntry.getExecutionId());
         CouchbaseUtils.addFieldToDocument(document, KEY_STAGE_ID, auditEntry.getStageId());
-        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_ID, auditEntry.getTaskId());
+        CouchbaseUtils.addFieldToDocument(document, KEY_CHANGE_ID, auditEntry.getChangeId());
         CouchbaseUtils.addFieldToDocument(document, KEY_AUTHOR, auditEntry.getAuthor());
         CouchbaseUtils.addFieldToDocument(document, KEY_CREATED_AT, TimeUtil.toDate(auditEntry.getCreatedAt()));
         CouchbaseUtils.addFieldToDocument(document, KEY_STATE, auditEntry.getState().name());

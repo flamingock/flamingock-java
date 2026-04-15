@@ -18,12 +18,12 @@ package io.flamingock.core.cloud.changes;
 import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.api.annotations.TargetSystem;
-import io.flamingock.core.utils.TaskExecutionChecker;
+import io.flamingock.core.utils.ChangeExecutionChecker;
 
 @TargetSystem(id = "auth0")
 @Change(id = "create-persons-table-from-template", author = "aperezdieppa")
 public class _001__CloudChange1 {
-    public static final TaskExecutionChecker checker = new TaskExecutionChecker();
+    public static final ChangeExecutionChecker checker = new ChangeExecutionChecker();
 
     @Apply
     public void apply() {

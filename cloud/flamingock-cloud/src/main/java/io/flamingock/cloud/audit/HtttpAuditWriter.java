@@ -56,7 +56,7 @@ public class HtttpAuditWriter implements CloudAuditWriter {
         this.runnerId = runnerId;
 
         this.pathTemplate = String.format(
-                "/api/%s/environment/%s/service/%s/execution/{executionId}/task/{taskId}/audit",
+                "/api/%s/environment/%s/service/%s/execution/{executionId}/change/{changeId}/audit",
                 apiVersion,
                 environmentId.toString(),
                 serviceId.toString());
@@ -74,12 +74,12 @@ public class HtttpAuditWriter implements CloudAuditWriter {
                     .withRunnerId(runnerId)
                     .withBearerToken(authManager.getJwtToken())
                     .addPathParameter("executionId", auditEntry.getExecutionId())
-                    .addPathParameter("taskId", auditEntry.getTaskId())
+                    .addPathParameter("changeId", auditEntry.getChangeId())
                     .setBody(auditEntryRequest)
                     .execute();
             return Result.OK();
         } catch (Throwable throwable) {
-            logger.debug("Error writing audit [{}]  :\n{}", auditEntry.getTaskId(), throwable.toString());
+            logger.debug("Error writing audit [{}]  :\n{}", auditEntry.getChangeId(), throwable.toString());
             return new Result.Error(throwable);
         }
 
@@ -91,7 +91,7 @@ public class HtttpAuditWriter implements CloudAuditWriter {
         CloudTxStrategy txType = auditEntry.getTxType() != null ? CloudApiMapper.toCloud(auditEntry.getTxType()) : null;
         return new AuditEntryRequest(
                 auditEntry.getStageId(),
-                auditEntry.getTaskId(),
+                auditEntry.getChangeId(),
                 auditEntry.getAuthor(),
                 appliedAtEpochMillis,
                 CloudApiMapper.toCloud(auditEntry.getState()),

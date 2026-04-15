@@ -15,8 +15,8 @@
  */
 package io.flamingock.internal.common.core.template;
 
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 
 public class ChangeTemplateFileContent {
     private String id;
