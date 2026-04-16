@@ -45,6 +45,8 @@ public abstract class AuditContextBundle {
 
     }
 
+    private final String DEFAULT_AUTHOR = "not-specified";
+
     private final Operation operation;
     private final AbstractLoadedChange changeDescriptor;
     private final ExecutionContext executionContext;
@@ -95,12 +97,12 @@ public abstract class AuditContextBundle {
         AbstractLoadedChange loadedChange = getChangeDescriptor();
         ExecutionContext stageExecutionContext = getExecutionContext();
         RuntimeContext runtimeContext = getRuntimeContext();
-        
+        String author = loadedChange.getAuthor() != null ? loadedChange.getAuthor() : DEFAULT_AUTHOR;
         return new AuditEntry(
                 stageExecutionContext.getExecutionId(),
                 runtimeContext.getStageName(),
                 loadedChange.getId(),
-                loadedChange.getAuthor(),
+                author,
                 runtimeContext.getAppliedAt(),
                 getAuditStatus(),
                 getChangeType(),
