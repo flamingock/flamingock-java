@@ -15,12 +15,12 @@
  */
 package io.flamingock.internal.core.external.store.audit.domain;
 
-import io.flamingock.internal.core.task.navigation.step.FailedWithErrorStep;
-import io.flamingock.internal.core.task.navigation.step.StartStep;
-import io.flamingock.internal.core.task.navigation.step.TaskStep;
-import io.flamingock.internal.core.task.navigation.step.complete.failed.CompleteAutoRolledBackStep;
-import io.flamingock.internal.core.task.navigation.step.execution.ExecutionStep;
-import io.flamingock.internal.core.task.navigation.step.rolledback.ManualRolledBackStep;
+import io.flamingock.internal.core.change.navigation.step.FailedWithErrorStep;
+import io.flamingock.internal.core.change.navigation.step.StartStep;
+import io.flamingock.internal.core.change.navigation.step.ChangeStep;
+import io.flamingock.internal.core.change.navigation.step.complete.failed.CompleteAutoRolledBackStep;
+import io.flamingock.internal.core.change.navigation.step.execution.ExecutionStep;
+import io.flamingock.internal.core.change.navigation.step.rolledback.ManualRolledBackStep;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -104,26 +104,26 @@ public final class RuntimeContext {
         private Builder() {
         }
 
-        public Builder setStartStep(StartStep taskStep) {
+        public Builder setStartStep(StartStep changeStep) {
             duration = 0L;
-            methodExecutor = taskStep.getTask().getApplyMethodName();
-            stageName = taskStep.getTask().getStageName();
-            setResult(taskStep);
+            methodExecutor = changeStep.getChange().getApplyMethodName();
+            stageName = changeStep.getChange().getStageName();
+            setResult(changeStep);
             return this;
         }
 
-        public Builder setExecutionStep(ExecutionStep taskStep) {
-            duration = taskStep.getDuration();
-            methodExecutor = taskStep.getTask().getApplyMethodName();
-            stageName = taskStep.getTask().getStageName();
-            setResult(taskStep);
+        public Builder setExecutionStep(ExecutionStep changeStep) {
+            duration = changeStep.getDuration();
+            methodExecutor = changeStep.getChange().getApplyMethodName();
+            stageName = changeStep.getChange().getStageName();
+            setResult(changeStep);
             return this;
         }
 
         public Builder setManualRollbackStep(ManualRolledBackStep rolledBackStep) {
             duration = rolledBackStep.getDuration();
-            methodExecutor = rolledBackStep.getTask().getRollbackMethodName();
-            stageName = rolledBackStep.getTask().getStageName();
+            methodExecutor = rolledBackStep.getChange().getRollbackMethodName();
+            stageName = rolledBackStep.getChange().getStageName();
             setResult(rolledBackStep);
             return this;
         }
@@ -131,15 +131,15 @@ public final class RuntimeContext {
         public Builder setAutoRollbackStep(CompleteAutoRolledBackStep rolledBackStep) {
             duration = 0L;
             methodExecutor = "native_db_engine";
-            stageName = rolledBackStep.getTask().getStageName();
+            stageName = rolledBackStep.getChange().getStageName();
             setResult(rolledBackStep);
             return this;
         }
 
-        private void setResult(TaskStep taskStep) {
-            if (taskStep instanceof FailedWithErrorStep) {
+        private void setResult(ChangeStep changeStep) {
+            if (changeStep instanceof FailedWithErrorStep) {
                 executionResult = ExecutionResult.FAILED;
-                error = ((FailedWithErrorStep) taskStep).getMainError();
+                error = ((FailedWithErrorStep) changeStep).getMainError();
             } else {
                 executionResult = ExecutionResult.SUCCESS;
                 error = null;

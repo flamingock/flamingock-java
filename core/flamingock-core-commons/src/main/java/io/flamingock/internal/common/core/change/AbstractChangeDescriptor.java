@@ -1,0 +1,207 @@
+/*
+ * Copyright 2023 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.internal.common.core.change;
+
+import java.util.Optional;
+import java.util.StringJoiner;
+
+public abstract class AbstractChangeDescriptor implements ChangeDescriptor {
+
+
+    protected String id;
+
+    protected String order;
+
+    protected String author;
+
+    protected String source;
+
+    protected String sourceFile;
+
+    protected boolean runAlways;
+
+    protected Boolean transactionalFlag;
+
+    protected boolean system;
+
+    protected TargetSystemDescriptor targetSystem;
+
+    protected RecoveryDescriptor recovery;
+
+    protected boolean legacy;
+
+    public AbstractChangeDescriptor(){}
+
+    public AbstractChangeDescriptor(String id,
+                                    String order,
+                                    String author,
+                                    String source,
+                                    String sourceFile,
+                                    boolean runAlways,
+                                    Boolean transactionalFlag,
+                                    boolean system,
+                                    TargetSystemDescriptor targetSystem,
+                                    RecoveryDescriptor recovery,
+                                    boolean legacy) {
+        this.id = id;
+        this.order = order;
+        this.author = author;
+        this.source = source;
+        this.sourceFile = sourceFile;
+        this.runAlways = runAlways;
+        this.transactionalFlag = transactionalFlag;
+        this.system = system;
+        this.targetSystem = targetSystem;
+        this.recovery = recovery;
+        this.legacy = legacy;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public Optional<String> getOrder() {
+        return Optional.ofNullable(order);
+    }
+
+    @Override
+    public String getAuthor() {
+        return author;
+    }
+
+    @Override
+    public String getSource() {
+        return source;
+    }
+
+    @Override
+    public String getSourceFile() {
+        return sourceFile;
+    }
+
+    @Override
+    public boolean isRunAlways() {
+        return runAlways;
+    }
+
+    @Override
+    public Optional<Boolean> getTransactionalFlag() {
+        return Optional.ofNullable(transactionalFlag);
+    }
+
+    @Override
+    public boolean isSystem() {
+        return system;
+    }
+
+    @Override
+    public TargetSystemDescriptor getTargetSystem() {
+        return targetSystem;
+    }
+
+    @Override
+    public RecoveryDescriptor getRecovery() {
+        return recovery;
+    }
+
+    @Override
+    public boolean isLegacy() {
+        return legacy;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setOrder(String order) {
+        this.order = order;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public void setSourceFile(String sourceFile) {
+        this.sourceFile = sourceFile;
+    }
+
+    public void setRunAlways(boolean runAlways) {
+        this.runAlways = runAlways;
+    }
+
+    public void setTransactionalFlag(Boolean transactionalFlag) {
+        this.transactionalFlag = transactionalFlag;
+    }
+
+    public void setSystem(boolean system) {
+        this.system = system;
+    }
+
+    public void setTargetSystem(TargetSystemDescriptor targetSystem) {
+        this.targetSystem = targetSystem;
+    }
+
+    public void setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
+    }
+
+    public void setLegacy(boolean legacy) {
+        this.legacy = legacy;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AbstractChangeDescriptor that = (AbstractChangeDescriptor) o;
+
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", AbstractChangeDescriptor.class.getSimpleName() + "[", "]")
+                .add("source=" + source)
+                .add("sourceFile=" + sourceFile)
+                .add("sourceClass=" + getSource())
+                .add("sourceName='" + getSource() + "'")
+                .add("id='" + getId() + "'")
+                .add("author='" + getAuthor() + "'")
+                .add("runAlways=" + isRunAlways())
+                .add("transactionalFlag=" + transactionalFlag)
+                .add("order=" + getOrder())
+                .add("sortable=" + isSortable())
+                .add("targetSystem=" + targetSystem)
+                .add("recovery=" + recovery)
+                .add("legacy=" + isLegacy())
+                .toString();
+    }
+
+
+
+}

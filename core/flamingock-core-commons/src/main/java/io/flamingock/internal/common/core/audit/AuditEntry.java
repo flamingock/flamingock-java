@@ -25,7 +25,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     private final String executionId;
     private final String stageId;
     //TODO move to changeId
-    private final String taskId;
+    private final String changeId;
     private final String author;
     private final LocalDateTime createdAt;
     private final Status state;
@@ -45,7 +45,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
 
     public AuditEntry(String executionId,
                       String stageId,
-                      String taskId,
+                      String changeId,
                       String author,
                       LocalDateTime timestamp,
                       Status state,
@@ -65,7 +65,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       Boolean transactionFlag) {
         this.executionId = executionId;
         this.stageId = stageId;
-        this.taskId = taskId;
+        this.changeId = changeId;
         this.author = author;
         this.createdAt = timestamp;
         this.state = state;
@@ -92,7 +92,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     @Deprecated
     public AuditEntry(String executionId,
                       String stageId,
-                      String taskId,
+                      String changeId,
                       String author,
                       LocalDateTime timestamp,
                       Status state,
@@ -106,7 +106,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       boolean systemChange,
                       String errorTrace,
                       AuditTxType txStrategy) {
-        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, sourceFile,
+        this(executionId, stageId, changeId, author, timestamp, state, type, className, methodName, sourceFile,
              executionMillis, executionHostname, metadata, systemChange, errorTrace, txStrategy, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
@@ -117,7 +117,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
     @Deprecated
     public AuditEntry(String executionId,
                       String stageId,
-                      String taskId,
+                      String changeId,
                       String author,
                       LocalDateTime timestamp,
                       Status state,
@@ -130,7 +130,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
                       Object metadata,
                       boolean systemChange,
                       String errorTrace) {
-        this(executionId, stageId, taskId, author, timestamp, state, type, className, methodName, sourceFile,
+        this(executionId, stageId, changeId, author, timestamp, state, type, className, methodName, sourceFile,
              executionMillis, executionHostname, metadata, systemChange, errorTrace, null, null, null, RecoveryStrategy.MANUAL_INTERVENTION, null);
     }
 
@@ -152,8 +152,8 @@ public class AuditEntry implements Comparable<AuditEntry> {
         return stageId;
     }
 
-    public String getTaskId() {
-        return taskId;
+    public String getChangeId() {
+        return changeId;
     }
 
     public String getAuthor() {
@@ -277,7 +277,7 @@ public class AuditEntry implements Comparable<AuditEntry> {
             return timeComparison;
         }
 
-        if(taskId.equals(other.getTaskId())) {
+        if(changeId.equals(other.getChangeId())) {
             // Level 2: Sort by state priority (if timestamps and order are equal)
             return Integer.compare(this.state.getPriority(), other.state.getPriority());
         }

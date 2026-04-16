@@ -20,17 +20,17 @@ import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 public class TargetSystemAuditMark {
 
 
-    private final String taskId;
+    private final String changeId;
 
     private final TargetSystemAuditMarkType operation;
 
-    public TargetSystemAuditMark(String taskId, TargetSystemAuditMarkType operation) {
-        this.taskId = taskId;
+    public TargetSystemAuditMark(String changeId, TargetSystemAuditMarkType operation) {
+        this.changeId = changeId;
         this.operation = operation;
     }
 
-    public String getTaskId() {
-        return taskId;
+    public String getChangeId() {
+        return changeId;
     }
 
     public TargetSystemAuditMarkType getOperation() {
@@ -44,11 +44,11 @@ public class TargetSystemAuditMark {
 
         TargetSystemAuditMark that = (TargetSystemAuditMark) o;
 
-        return taskId.equals(that.taskId);
+        return changeId.equals(that.changeId);
     }
 
     @Override
     public int hashCode() {
-        return taskId.hashCode();
+        return changeId.hashCode();
     }
 }

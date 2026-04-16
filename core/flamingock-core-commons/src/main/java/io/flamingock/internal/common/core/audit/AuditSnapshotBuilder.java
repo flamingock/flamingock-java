@@ -25,16 +25,16 @@ public class AuditSnapshotBuilder {
     private final Map<String, AuditEntry> entryMap = new LinkedHashMap<>();
 
     public void addEntry(AuditEntry newEntry) {
-        if(!entryMap.containsKey(newEntry.getTaskId())) {
-            entryMap.put(newEntry.getTaskId(), newEntry);
+        if(!entryMap.containsKey(newEntry.getChangeId())) {
+            entryMap.put(newEntry.getChangeId(), newEntry);
         } else {
-            AuditEntry currentEntry = entryMap.get(newEntry.getTaskId());
+            AuditEntry currentEntry = entryMap.get(newEntry.getChangeId());
             AuditEntry winner = AuditEntry.getMostRelevant(currentEntry, newEntry);
             if(winner.equals(newEntry)) {
                 //we need to remove it first because LinkedHashMap keeps the original key position,
                 //and in case to replace it, we want to update the position
-                entryMap.remove(currentEntry.getTaskId());
-                entryMap.put(newEntry.getTaskId(), winner);
+                entryMap.remove(currentEntry.getChangeId());
+                entryMap.put(newEntry.getChangeId(), winner);
             }
         }
     }

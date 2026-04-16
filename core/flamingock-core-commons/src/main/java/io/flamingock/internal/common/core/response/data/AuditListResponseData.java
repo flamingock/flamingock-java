@@ -49,7 +49,7 @@ public class AuditListResponseData {
      * DTO representing a single audit entry for CLI response.
      */
     public static class AuditEntryDto {
-        private String taskId;
+        private String changeId;
         private String author;
         private String state;
         private String stageId;
@@ -66,8 +66,8 @@ public class AuditListResponseData {
         public AuditEntryDto() {
         }
 
-        public AuditEntryDto(String taskId, String author, String state, String stageId, LocalDateTime createdAt, long executionMillis) {
-            this.taskId = taskId;
+        public AuditEntryDto(String changeId, String author, String state, String stageId, LocalDateTime createdAt, long executionMillis) {
+            this.changeId = changeId;
             this.author = author;
             this.state = state;
             this.stageId = stageId;
@@ -75,9 +75,9 @@ public class AuditListResponseData {
             this.executionMillis = executionMillis;
         }
 
-        public AuditEntryDto(String taskId, String author, String state, String stageId, LocalDateTime createdAt, long executionMillis,
+        public AuditEntryDto(String changeId, String author, String state, String stageId, LocalDateTime createdAt, long executionMillis,
                              String executionId, String className, String methodName, String executionHostname, String targetSystemId) {
-            this.taskId = taskId;
+            this.changeId = changeId;
             this.author = author;
             this.state = state;
             this.stageId = stageId;
@@ -90,12 +90,12 @@ public class AuditListResponseData {
             this.targetSystemId = targetSystemId;
         }
 
-        public String getTaskId() {
-            return taskId;
+        public String getChangeId() {
+            return changeId;
         }
 
-        public void setTaskId(String taskId) {
-            this.taskId = taskId;
+        public void setChangeId(String changeId) {
+            this.changeId = changeId;
         }
 
         public String getAuthor() {

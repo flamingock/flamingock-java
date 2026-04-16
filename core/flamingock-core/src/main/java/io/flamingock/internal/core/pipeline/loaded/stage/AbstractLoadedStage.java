@@ -25,10 +25,10 @@ import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
-import io.flamingock.internal.core.task.executable.builder.ExecutableTaskBuilder;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.LoadedTaskBuilder;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
+import io.flamingock.internal.core.change.executable.builder.ExecutableChangeBuilder;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
+import io.flamingock.internal.core.change.loaded.LoadedChangeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * It's the result of adding the loaded task to the ProcessDefinition
+ * It's the result of adding the loaded change to the ProcessDefinition
  */
 public abstract class AbstractLoadedStage implements Validatable<PipelineValidationContext> {
 
@@ -56,15 +56,15 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
     private final StageType type;
 
-    private final Collection<AbstractLoadedTask> tasks;
+    private final Collection<AbstractLoadedChange> changes;
 
     public AbstractLoadedStage(String name,
                                StageType type,
-                               Collection<AbstractLoadedTask> tasks,
+                               Collection<AbstractLoadedChange> changes,
                                StageValidationContext validationContext) {
         this.name = name;
         this.type = type;
-        this.tasks = tasks;
+        this.changes = changes;
         this.validationContext = validationContext;
     }
 
@@ -72,7 +72,7 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
 
     /**
      * Applies the specified action plan to this stage, creating an ExecutableStage
-     * with tasks configured according to their assigned actions.
+     * with changes configured according to their assigned actions.
      * This method provides a unified interface for both community (audit-based)
      * and cloud (orchestrator-based) execution planning.
      * 
@@ -80,15 +80,15 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
      * @return an ExecutableStage ready for execution
      */
     public ExecutableStage applyActions(ChangeActionMap actionPlan) {
-        List<ExecutableTask> tasks = this.tasks
+        List<ExecutableChange> changes = this.changes
                 .stream()
-                .map(loadedTask -> {
-                    ChangeAction action = actionPlan.getActionFor(loadedTask.getId());
-                    return ExecutableTaskBuilder.build(loadedTask, name, action);
+                .map(loadedChange -> {
+                    ChangeAction action = actionPlan.getActionFor(loadedChange.getId());
+                    return ExecutableChangeBuilder.build(loadedChange, name, action);
                 })
                 .collect(Collectors.toCollection(LinkedList::new));
 
-        return new ExecutableStage(name, tasks);
+        return new ExecutableStage(name, changes);
     }
 
     public String getName() {
@@ -99,24 +99,24 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         return type;
     }
 
-    public Collection<AbstractLoadedTask> getTasks() {
-        return tasks;
+    public Collection<AbstractLoadedChange> getChanges() {
+        return changes;
     }
 
 
 
     /**
-     * Returns a set of all task IDs defined within this stage.
+     * Returns a set of all change IDs defined within this stage.
      * <p>
-     * It is assumed that task IDs within a stage are unique,
+     * It is assumed that change IDs within a stage are unique,
      * so the returned {@code Set} will not contain duplicates.
      * </p>
      * 
-     * @return a set of task IDs in this stage
+     * @return a set of change IDs in this stage
      */
-    public Set<String> getTaskIds() {
-        return getTasks().stream()
-                .map(AbstractLoadedTask::getId)
+    public Set<String> getChangeIds() {
+        return getChanges().stream()
+                .map(AbstractLoadedChange::getId)
                 .collect(Collectors.toSet());
     }
 
@@ -124,8 +124,8 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
      * Validates the stage and returns a list of validation errors
      * Validations:
      * 1. has name
-     * 2. no duplicate task IDs within stage
-     * 3. all tasks in the stage are valid
+     * 2. no duplicate change IDs within stage
+     * 3. all changes in the stage are valid
      * 
      * @return list of validation errors, or empty list if the stage is valid
      */
@@ -140,28 +140,28 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         }
 
         // Check if stage is empty
-        if (tasks == null || tasks.isEmpty()) {
-            String message = String.format("Stage[%s] must contain at least one task", name);
+        if (changes == null || changes.isEmpty()) {
+            String message = String.format("Stage[%s] must contain at least one change", name);
             return Collections.singletonList(new ValidationError(message, name, "stage"));
         }
-        getTaskIdDuplicationError().ifPresent(errors::add);
-        getTasks().stream().map(task -> task.getValidationErrors(validationContext)).forEach(errors::addAll);
+        getChangeIdDuplicationError().ifPresent(errors::add);
+        getChanges().stream().map(change -> change.getValidationErrors(validationContext)).forEach(errors::addAll);
         return errors;
     }
 
     @Override
     public String toString() {
         return "LoadedStage{" + "name='" + name + '\'' +
-                ", loadedTasks=" + tasks +
+                ", loadedChanges=" + changes +
                 '}';
     }
 
-    protected Optional<ValidationError> getTaskIdDuplicationError() {
+    protected Optional<ValidationError> getChangeIdDuplicationError() {
         Set<String> seen = new HashSet<>();
         Set<String> duplicates = new HashSet<>();
 
-        for (AbstractLoadedTask task : getTasks()) {
-            String id = task.getId();
+        for (AbstractLoadedChange change : getChanges()) {
+            String id = change.getId();
             if (!seen.add(id)) {
                 duplicates.add(id);
             }
@@ -189,19 +189,19 @@ public abstract class AbstractLoadedStage implements Validatable<PipelineValidat
         }
 
         public AbstractLoadedStage build() {
-            List<AbstractLoadedTask> loadedTasks = previewStage.getTasks()
+            List<AbstractLoadedChange> loadedChanges = previewStage.getChanges()
                     .stream()
-                    .map(LoadedTaskBuilder::build)
+                    .map(LoadedChangeBuilder::build)
                     .sorted()
                     .collect(Collectors.toList());
             switch(previewStage.getType()) {
                 case LEGACY:
-                    return new LegacyLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks);
+                    return new LegacyLoadedStage(previewStage.getName(), previewStage.getType(), loadedChanges);
                 case SYSTEM:
-                    return new SystemLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks);
+                    return new SystemLoadedStage(previewStage.getName(), previewStage.getType(), loadedChanges);
                 case DEFAULT:
                 default:
-                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getType(), loadedTasks);
+                    return new DefaultLoadedStage(previewStage.getName(), previewStage.getType(), loadedChanges);
             }
 
         }

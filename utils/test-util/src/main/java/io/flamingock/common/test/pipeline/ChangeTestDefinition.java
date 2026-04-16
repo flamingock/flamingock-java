@@ -15,7 +15,7 @@
  */
 package io.flamingock.common.test.pipeline;
 
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 
 public abstract class ChangeTestDefinition {
 
@@ -45,5 +45,5 @@ public abstract class ChangeTestDefinition {
         return transactional;
     }
 
-    public abstract AbstractPreviewTask toPreview();
+    public abstract AbstractPreviewChange toPreview();
 }

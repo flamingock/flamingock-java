@@ -4,7 +4,7 @@
       "name" : "test-stage",
       "type" : "DEFAULT",
       "sourcesPackage" : "io.flamingock.springboot.test",
-      "tasks" : [ {
+      "changes" : [ {
         "type" : "codePreviewChange",
         "id" : "validation-only-test-change",
         "order" : "001",

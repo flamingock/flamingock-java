@@ -20,8 +20,8 @@ import io.flamingock.internal.util.ThrowableUtil;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
-import io.flamingock.internal.core.task.loaded.AbstractTemplateLoadedChange;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
+import io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange;
 
 import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_BEFORE;
 import static io.flamingock.internal.common.core.audit.AuditEntry.ChangeType.MONGOCK_EXECUTION;
@@ -46,14 +46,14 @@ public abstract class AuditContextBundle {
     }
 
     private final Operation operation;
-    private final AbstractLoadedTask changeDescriptor;
+    private final AbstractLoadedChange changeDescriptor;
     private final ExecutionContext executionContext;
     private final RuntimeContext runtimeContext;
     private final AuditTxType operationType;
     private final String targetSystemId;
 
     public AuditContextBundle(Operation operation,
-                              AbstractLoadedTask changeDescriptor,
+                              AbstractLoadedChange changeDescriptor,
                               ExecutionContext executionContext,
                               RuntimeContext runtimeContext,
                               AuditTxType auditTxType,
@@ -70,7 +70,7 @@ public abstract class AuditContextBundle {
         return operation;
     }
 
-    public AbstractLoadedTask getChangeDescriptor() {
+    public AbstractLoadedChange getChangeDescriptor() {
         return changeDescriptor;
     }
 
@@ -92,7 +92,7 @@ public abstract class AuditContextBundle {
 
 
     public AuditEntry toAuditEntry() {
-        AbstractLoadedTask loadedChange = getChangeDescriptor();
+        AbstractLoadedChange loadedChange = getChangeDescriptor();
         ExecutionContext stageExecutionContext = getExecutionContext();
         RuntimeContext runtimeContext = getRuntimeContext();
         

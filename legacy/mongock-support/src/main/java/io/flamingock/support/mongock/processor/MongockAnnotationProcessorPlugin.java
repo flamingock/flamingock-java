@@ -24,10 +24,10 @@ import io.flamingock.internal.common.core.pipeline.PipelineDescriptor;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
-import io.flamingock.internal.common.core.preview.builder.CodePreviewTaskBuilder;
+import io.flamingock.internal.common.core.preview.builder.CodePreviewChangeBuilder;
 import io.flamingock.internal.common.core.processor.ConfigurationPropertiesProvider;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 import io.flamingock.internal.common.core.util.ConfigValueParser;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
@@ -104,7 +104,7 @@ public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlug
 
 
     private CodePreviewChange getImporterChange(String targetSystemId) {
-        CodePreviewTaskBuilder builder = CodePreviewTaskBuilder.instance();
+        CodePreviewChangeBuilder builder = CodePreviewChangeBuilder.instance();
         builder.setId("migration-mongock-to-flamingock-community");
         builder.setOrder("00100");
         builder.setAuthor("flamingock-team");

@@ -55,7 +55,7 @@ public class MongoDBAuditMapper<DOCUMENT_WRAPPER extends DocumentHelper> {
         DOCUMENT_WRAPPER document = documentckSupplier.get();
         document.append(KEY_EXECUTION_ID, auditEntry.getExecutionId());
         document.append(KEY_STAGE_ID, auditEntry.getStageId());
-        document.append(KEY_CHANGE_ID, auditEntry.getTaskId());
+        document.append(KEY_CHANGE_ID, auditEntry.getChangeId());
         document.append(KEY_AUTHOR, auditEntry.getAuthor());
         document.append(KEY_CREATED_AT, TimeUtil.toDate(auditEntry.getCreatedAt()));
         document.append(KEY_STATE, auditEntry.getState().name());

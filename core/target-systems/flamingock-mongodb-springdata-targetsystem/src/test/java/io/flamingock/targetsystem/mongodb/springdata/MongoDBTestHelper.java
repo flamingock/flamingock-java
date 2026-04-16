@@ -43,24 +43,24 @@ public class MongoDBTestHelper {
         this.mongoDatabase = mongoDatabase;
     }
 
-    public void insertOngoingExecution(String taskId) {
+    public void insertOngoingExecution(String changeId) {
 
-        MongoCollection<Document> onGoingTasksCollection = mongoDatabase.getCollection(CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME);
+        MongoCollection<Document> onGoingChangesCollection = mongoDatabase.getCollection(CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME);
 
         CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
-                new MongoDBSyncCollectionHelper(onGoingTasksCollection),
+                new MongoDBSyncCollectionHelper(onGoingChangesCollection),
                 () -> new MongoDBSyncDocumentHelper(new Document()),
-                new String[]{"taskId"}
+                new String[]{"changeId"}
         );
         initializer.initialize();
 
 
-        Document filter = new Document("taskId", taskId);
+        Document filter = new Document("changeId", changeId);
 
-        Document newDocument = new Document("taskId", taskId)
+        Document newDocument = new Document("changeId", changeId)
                 .append("operation", AuditContextBundle.Operation.EXECUTION.toString());
 
-        onGoingTasksCollection.updateOne(
+        onGoingChangesCollection.updateOne(
                 filter,
                 new Document("$set", newDocument),
                 new com.mongodb.client.model.UpdateOptions().upsert(true));
@@ -77,13 +77,13 @@ public class MongoDBTestHelper {
     }
 
     public void checkEmptyTargetSystemAudiMarker() {
-        checkOngoingTask(result -> result == 0);
+        checkOngoingChange(result -> result == 0);
     }
 
-    public void checkOngoingTask(Predicate<Long> predicate) {
-        MongoCollection<Document> onGoingTasksCollection = mongoDatabase.getCollection("flamingockOnGoingTasks");
+    public void checkOngoingChange(Predicate<Long> predicate) {
+        MongoCollection<Document> onGoingChangesCollection = mongoDatabase.getCollection("flamingockOnGoingChanges");
 
-        long result = onGoingTasksCollection.find()
+        long result = onGoingChangesCollection.find()
                 .map(MongoDBTestHelper::mapToOnGoingStatus)
                 .into(new HashSet<>())
                 .size();
@@ -93,7 +93,7 @@ public class MongoDBTestHelper {
 
     public static TargetSystemAuditMark mapToOnGoingStatus(Document document) {
         TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(document.getString("operation"));
-        return new TargetSystemAuditMark(document.getString("taskId"), operation);
+        return new TargetSystemAuditMark(document.getString("changeId"), operation);
     }
 
 

@@ -25,7 +25,7 @@ import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
-import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
+import io.flamingock.common.test.cloud.mock.MockRequestResponseChange;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
@@ -48,7 +48,6 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.Collections;
-import java.util.UUID;
 
 import static io.flamingock.cloud.api.vo.CloudAuditStatus.APPLIED;
 import static io.flamingock.cloud.api.vo.CloudAuditStatus.FAILED;
@@ -126,8 +125,8 @@ public class DynamoDBCloudTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "apply", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
+                        .addChange("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -171,21 +170,21 @@ public class DynamoDBCloudTargetSystemTest {
 
             //TODO when cloud enabled
             // check ongoing status
-//            dynamoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
+//            dynamoDBTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
         }
     }
 
     @Test
     @Disabled("adapt when adding cloud support")
-    @DisplayName("Should rollback the ongoing deletion when a task fails")
-    void failedTasks() {
+    @DisplayName("Should rollback the ongoing deletion when a change fails")
+    void failedChanges() {
         String executionId = "execution-1";
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("unhappy-create-table-clients", _001__UnhappyCreateTableClientsChange.class.getName(), "apply", false)
-                        .addTask("unhappy-insert-clients", _002__UnhappyInsertionClientsChange.class.getName(), "apply", true)
+                        .addChange("unhappy-create-table-clients", _001__UnhappyCreateTableClientsChange.class.getName(), "apply", false)
+                        .addChange("unhappy-insert-clients", _002__UnhappyInsertionClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -237,15 +236,15 @@ public class DynamoDBCloudTargetSystemTest {
     //TODO verify the server is called with the right parameters. among other, it sends the ongoing status
     @Test
     @Disabled("adapt when adding cloud support")
-    @DisplayName("Should send ongoing task in execution when is present in local database")
-    void shouldSendOngoingTaskInExecutionPlan() {
+    @DisplayName("Should send ongoing change in execution when is present in local database")
+    void shouldSendOngoingChangeInExecutionPlan() {
         String executionId = "execution-1";
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "apply", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
+                        .addChange("create-table-clients", _001__HappyCreateTableClientsChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -257,7 +256,7 @@ public class DynamoDBCloudTargetSystemTest {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
-                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", TargetSystemAuditMarkType.APPLIED)),
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseChange("insert-clients", TargetSystemAuditMarkType.APPLIED)),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
                             new AuditRequestExpectation(executionId, "create-table-clients", APPLIED),
@@ -289,7 +288,7 @@ public class DynamoDBCloudTargetSystemTest {
                             .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
                     1);
             // check ongoing status
-            dynamoDBTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
+            dynamoDBTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
         }
     }
 

@@ -15,12 +15,12 @@
  */
 package io.flamingock.internal.common.core.preview;
 
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 
 import java.util.List;
 
-public class TemplatePreviewChange extends AbstractPreviewTask {
+public class TemplatePreviewChange extends AbstractPreviewChange {
 
     private String fileName;
     private List<String> profiles;

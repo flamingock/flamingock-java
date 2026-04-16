@@ -38,43 +38,43 @@ import java.util.Set;
 
 public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMarker {
     public static final String OPERATION = "operation";
-    private static final String TASK_ID = "taskId";
-    private final MongoCollection<Document> onGoingTaskStatusCollection;
+    private static final String CHANGE_ID = "changeId";
+    private final MongoCollection<Document> onGoingChangeStatusCollection;
     private final TransactionManager<ClientSession> txManager;
 
     public static Builder builder(MongoDatabase mongoDatabase, TransactionManager<ClientSession> txManager) {
         return new Builder(mongoDatabase, txManager);
     }
 
-    public MongoDBSyncTargetSystemAuditMarker(MongoCollection<Document> onGoingTaskStatusCollection,
+    public MongoDBSyncTargetSystemAuditMarker(MongoCollection<Document> onGoingChangeStatusCollection,
                                             TransactionManager<ClientSession> txManager) {
-        this.onGoingTaskStatusCollection = onGoingTaskStatusCollection;
+        this.onGoingChangeStatusCollection = onGoingChangeStatusCollection;
         this.txManager = txManager;
     }
 
     @Override
     public Set<TargetSystemAuditMark> listAll() {
-        return onGoingTaskStatusCollection.find()
+        return onGoingChangeStatusCollection.find()
                 .map(MongoDBSyncTargetSystemAuditMarker::mapToOnGoingStatus)
                 .into(new HashSet<>());
     }
 
     @Override
     public void clearMark(String changeId) {
-        onGoingTaskStatusCollection.deleteMany(Filters.eq(TASK_ID, changeId));
+        onGoingChangeStatusCollection.deleteMany(Filters.eq(CHANGE_ID, changeId));
     }
 
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
 
-        Document filter = new Document(TASK_ID, auditMark.getTaskId());
+        Document filter = new Document(CHANGE_ID, auditMark.getChangeId());
 
         // Define the new document to replace or insert
-        Document newDocument = new Document(TASK_ID, auditMark.getTaskId())
+        Document newDocument = new Document(CHANGE_ID, auditMark.getChangeId())
                 .append(OPERATION, auditMark.getOperation().name());
 
-        ClientSession clientSession = txManager.getSessionOrThrow(auditMark.getTaskId());
-        onGoingTaskStatusCollection.updateOne(
+        ClientSession clientSession = txManager.getSessionOrThrow(auditMark.getChangeId());
+        onGoingChangeStatusCollection.updateOne(
                 clientSession,
                 filter,
                 new Document("$set", newDocument),
@@ -83,7 +83,7 @@ public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMark
 
     public static TargetSystemAuditMark mapToOnGoingStatus(Document document) {
         TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(document.getString(OPERATION));
-        return new TargetSystemAuditMark(document.getString(TASK_ID), operation);
+        return new TargetSystemAuditMark(document.getString(CHANGE_ID), operation);
     }
 
 
@@ -137,7 +137,7 @@ public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMark
             CollectionInitializator<MongoDBSyncDocumentHelper> initializer = new CollectionInitializator<>(
                     new MongoDBSyncCollectionHelper(collection),
                     () -> new MongoDBSyncDocumentHelper(new Document()),
-                    new String[]{TASK_ID}
+                    new String[]{CHANGE_ID}
             );
             if (autoCreate) {
                 initializer.initialize();

@@ -16,7 +16,7 @@
 package io.flamingock.common.test.cloud.mock;
 
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
-import io.flamingock.common.test.cloud.prototype.PrototypeTask;
+import io.flamingock.common.test.cloud.prototype.PrototypeChange;
 import io.flamingock.common.test.cloud.execution.ExecutionAwaitRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
@@ -58,7 +58,7 @@ public class MockExecutionPlanBuilder {
                 .map(stagePrototype -> new StageRequest(
                         stagePrototype.getName(),
                         stagePrototype.getOrder(),
-                        transformChangeRequests(stagePrototype.getTasks(), requestResponse))
+                        transformChangeRequests(stagePrototype.getChanges(), requestResponse))
                 ).collect(Collectors.toList());
 
         return new ExecutionPlanRequest(requestResponse.getAcquiredForMillis(), stages);
@@ -73,7 +73,7 @@ public class MockExecutionPlanBuilder {
                     .map(stagePrototype -> new StageResponse(
                             stagePrototype.getName(),
                             stagePrototype.getOrder(),
-                            transformChangeResponses(stagePrototype.getTasks(), mockRequestResponse))
+                            transformChangeResponses(stagePrototype.getChanges(), mockRequestResponse))
                     ).collect(Collectors.toList());
 
             LockInfoResponse lock = new LockInfoResponse();
@@ -98,24 +98,24 @@ public class MockExecutionPlanBuilder {
 
     }
 
-    private List<ChangeRequest> transformChangeRequests(List<PrototypeTask> prototypeTasks,
+    private List<ChangeRequest> transformChangeRequests(List<PrototypeChange> prototypeChanges,
                                                     ExecutionBaseRequestResponseMock requestResponse) {
-        return prototypeTasks.stream()
-                .map(prototypeTask -> {
-                            Optional<MockRequestResponseTask> requestResponseTask = requestResponse.getTaskById(prototypeTask.getTaskId());
-                            return prototypeTask.toExecutionPlanChangeRequest(
-                                    requestResponseTask.map(MockRequestResponseTask::getOngoingStatus).orElse(TargetSystemAuditMarkType.NONE));
+        return prototypeChanges.stream()
+                .map(prototypeChange -> {
+                            Optional<MockRequestResponseChange> requestResponseChange = requestResponse.getChangeById(prototypeChange.getChangeId());
+                            return prototypeChange.toExecutionPlanChangeRequest(
+                                    requestResponseChange.map(MockRequestResponseChange::getOngoingStatus).orElse(TargetSystemAuditMarkType.NONE));
                         }
                 ).collect(Collectors.toList());
     }
 
-    private List<ChangeResponse> transformChangeResponses(List<PrototypeTask> prototypeTasks,
+    private List<ChangeResponse> transformChangeResponses(List<PrototypeChange> prototypeChanges,
                                                       ExecutionBaseRequestResponseMock responseExecutionPlan) {
-        return prototypeTasks.stream()
-                .map(prototypeTask -> {
-                            Optional<MockRequestResponseTask> requestResponseTask = responseExecutionPlan.getTaskById(prototypeTask.getTaskId());
-                            return prototypeTask.toExecutionPlanChangeResponse(
-                                    requestResponseTask.map(MockRequestResponseTask::getRequiredAction).orElse(APPLY));
+        return prototypeChanges.stream()
+                .map(prototypeChange -> {
+                            Optional<MockRequestResponseChange> requestResponseChange = responseExecutionPlan.getChangeById(prototypeChange.getChangeId());
+                            return prototypeChange.toExecutionPlanChangeResponse(
+                                    requestResponseChange.map(MockRequestResponseChange::getRequiredAction).orElse(APPLY));
                         }
                 ).collect(Collectors.toList());
     }

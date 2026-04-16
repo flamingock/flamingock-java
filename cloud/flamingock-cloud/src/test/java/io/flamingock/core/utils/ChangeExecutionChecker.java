@@ -1,0 +1,95 @@
+/*
+ * Copyright 2025 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.core.utils;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class ChangeExecutionChecker {
+
+    private final List<TestChangeExecution> history = new ArrayList<>();
+
+    public ChangeExecutionChecker() {
+    }
+
+    public void reset() {
+        history.clear();
+    }
+
+    public boolean isApplied() {
+        return history.contains(TestChangeExecution.EXECUTION);
+    }
+
+    public void markExecution() {
+        history.add(TestChangeExecution.EXECUTION);
+    }
+
+    public boolean isRolledBack() {
+        return history.contains(TestChangeExecution.ROLLBACK_EXECUTION);
+    }
+
+    public void markRollBackExecution() {
+        history.add(TestChangeExecution.ROLLBACK_EXECUTION);
+    }
+
+    public void checkOrderStrict(TestChangeExecution execution, TestChangeExecution... otherExecutions) {
+        List<TestChangeExecution> allExecutions = new ArrayList<>();
+        allExecutions.add(execution);
+        allExecutions.addAll(Arrays.asList(otherExecutions));
+        checkOrderStrict(allExecutions);
+    }
+
+    public void checkOrderStrict(List<TestChangeExecution> executions) {
+        if(executions.size() != history.size()) {
+            throw new RuntimeException(String.format("(strict)Expected executions[%d] doesn't match actual executions[%d]" +
+                            "\nexpected:\n\t%s" +
+                            "\nactual:\n\t%s\n",
+                    executions.size(),
+                    history.size(),
+                    executions.stream().map(TestChangeExecution::name).collect(Collectors.joining(",\n\t")),
+                    history.stream().map(TestChangeExecution::name).collect(Collectors.joining(",\n\t"))
+            ));
+        }
+        checkExecutions(executions);
+    }
+
+
+    public void checkOrder(TestChangeExecution execution, TestChangeExecution... otherExecutions) {
+
+        List<TestChangeExecution> allExecutions = new ArrayList<>();
+        allExecutions.add(execution);
+        allExecutions.addAll(Arrays.asList(otherExecutions));
+
+        checkExecutions(allExecutions);
+    }
+
+    private void checkExecutions(List<TestChangeExecution> allExecutions) {
+        for (int index = 0; index < allExecutions.size(); index++) {
+            if (history.size() <= index) {
+                throw new RuntimeException(String.format("history[%d executions] shorter than expected history",
+                        history.size()));
+            }
+
+            if (allExecutions.get(index) != history.get(index)) {
+                throw new RuntimeException(String.format("Execution not matched at index[%d]. Expected[%s] actual[%s]",
+                        index, allExecutions.get(index), history.get(index)));
+            }
+        }
+    }
+
+}

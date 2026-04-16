@@ -30,7 +30,7 @@ public class ChangeRequest {
     public ChangeRequest() {
     }
 
-    public static ChangeRequest task(String id, boolean transactional) {
+    public static ChangeRequest change(String id, boolean transactional) {
         return new ChangeRequest(id, CloudTargetSystemAuditMarkType.NONE, transactional);
     }
 

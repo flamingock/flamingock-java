@@ -89,7 +89,7 @@ public class OpsClient implements AuditSnapshotReader, AuditHistoryReader, Audit
         AuditEntry fixedAuditEntry = new AuditEntry(
                 ExecutionId.getNewExecutionId(),
                 currentEntry.getStageId(),
-                currentEntry.getTaskId(),
+                currentEntry.getChangeId(),
                 "flamingock-cli",//TODO in cloud this will be retrieved from the token
                 LocalDateTime.now(),
                 getState(resolution),

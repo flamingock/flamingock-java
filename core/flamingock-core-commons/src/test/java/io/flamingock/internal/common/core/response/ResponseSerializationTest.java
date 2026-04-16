@@ -135,14 +135,14 @@ class ResponseSerializationTest {
         assertEquals(2, deserialized.getEntries().size());
 
         AuditListResponseData.AuditEntryDto first = deserialized.getEntries().get(0);
-        assertEquals("change-001", first.getTaskId());
+        assertEquals("change-001", first.getChangeId());
         assertEquals("developer", first.getAuthor());
         assertEquals("APPLIED", first.getState());
         assertEquals("stage-1", first.getStageId());
         assertEquals(100, first.getExecutionMillis());
 
         AuditListResponseData.AuditEntryDto second = deserialized.getEntries().get(1);
-        assertEquals("change-002", second.getTaskId());
+        assertEquals("change-002", second.getChangeId());
         assertEquals(150, second.getExecutionMillis());
     }
 

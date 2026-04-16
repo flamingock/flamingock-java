@@ -19,7 +19,7 @@ import io.flamingock.api.external.TargetSystem;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOps;
 import io.flamingock.internal.core.external.targets.operations.TargetSystemOpsImpl;
 import io.flamingock.internal.core.external.targets.operations.TransactionalTargetSystemOpsImpl;

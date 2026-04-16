@@ -87,7 +87,7 @@ class MongoDBAuditMapperTest {
         TestDocumentWrapper document = new TestDocumentWrapper();
         document.append("executionId", "test-execution");
         document.append("stageId", "test-stage");
-        document.append("taskId", "test-task");
+        document.append("changeId", "test-change");
         document.append("author", "test-author");
         document.append("state", AuditEntry.Status.APPLIED.name());
         document.append("type", AuditEntry.ChangeType.STANDARD_CODE.name());

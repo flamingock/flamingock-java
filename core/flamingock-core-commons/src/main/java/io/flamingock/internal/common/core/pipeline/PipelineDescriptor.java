@@ -16,13 +16,13 @@
 package io.flamingock.internal.common.core.pipeline;
 
 import io.flamingock.internal.common.core.context.ContextContributor;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
 
 import java.util.Optional;
 
 public interface PipelineDescriptor extends ContextContributor {
 
-    Optional<? extends TaskDescriptor> getLoadedTask(String taskId);
+    Optional<? extends ChangeDescriptor> getLoadedChange(String changeId);
 
-    Optional<String> getStageByTask(String taskId);
+    Optional<String> getStageByChange(String changeId);
 }

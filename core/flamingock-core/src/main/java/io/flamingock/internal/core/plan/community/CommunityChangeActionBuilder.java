@@ -16,13 +16,12 @@
 package io.flamingock.internal.core.plan.community;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.audit.AuditTxType;
 
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionResolver;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -51,9 +50,9 @@ public class CommunityChangeActionBuilder {
      * @throws ManualInterventionRequiredException
      *         if any changes require manual intervention
      */
-    public static ChangeActionMap build(Collection<AbstractLoadedTask> changes, Map<String, AuditEntry> auditSnapshot) {
+    public static ChangeActionMap build(Collection<AbstractLoadedChange> changes, Map<String, AuditEntry> auditSnapshot) {
         Map<String, ChangeAction> actionMap = new HashMap<>();
-        for(AbstractLoadedTask change: changes) {
+        for(AbstractLoadedChange change: changes) {
             AuditEntry auditEntry = auditSnapshot.get(change.getId());
             if (auditEntry == null || auditEntry.getState() == null) {
                 // No audit entry found - first execution

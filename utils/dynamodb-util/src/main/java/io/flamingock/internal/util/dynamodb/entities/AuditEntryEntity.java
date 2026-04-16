@@ -33,7 +33,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
 
     protected Boolean systemChange;
     private String partitionKey;
-    private String taskId;
+    private String changeId;
     private String stageId;
     private String executionId;
     private String author;
@@ -58,8 +58,8 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     }
 
     public AuditEntryEntity(AuditEntry auditEntry) {
-        this.partitionKey = partitionKey(auditEntry.getExecutionId(), auditEntry.getTaskId(), auditEntry.getState());
-        this.taskId = auditEntry.getTaskId();
+        this.partitionKey = partitionKey(auditEntry.getExecutionId(), auditEntry.getChangeId(), auditEntry.getState());
+        this.changeId = auditEntry.getChangeId();
         this.stageId = auditEntry.getStageId();
         this.executionId = auditEntry.getExecutionId();
         this.author = auditEntry.getAuthor();
@@ -84,8 +84,8 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     public AuditEntryEntity() {
     }
 
-    public static String partitionKey(String executionId, String taskId, AuditEntry.Status state) {
-        return executionId + '#' + taskId + '#' + state.name();
+    public static String partitionKey(String executionId, String changeId, AuditEntry.Status state) {
+        return executionId + '#' + changeId + '#' + state.name();
     }
 
     @DynamoDbPartitionKey
@@ -99,12 +99,12 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
     }
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_CHANGE_ID)
-    public String getTaskId() {
-        return taskId;
+    public String getChangeId() {
+        return changeId;
     }
 
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
+    public void setChangeId(String changeId) {
+        this.changeId = changeId;
     }
 
     @DynamoDbAttribute(AuditEntryFieldConstants.KEY_STAGE_ID)
@@ -306,7 +306,7 @@ public class AuditEntryEntity implements Comparable<AuditEntryEntity> {
         return new AuditEntry(
                 executionId,
                 stageId,
-                taskId,
+                changeId,
                 author,
                 createdAt,
                 state,

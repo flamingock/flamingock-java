@@ -20,7 +20,7 @@ import io.flamingock.internal.common.core.processor.AnnotationProcessorPlugin;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.common.core.processor.ChangeDiscoverer;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
-import io.flamingock.internal.common.core.preview.builder.CodePreviewTaskBuilder;
+import io.flamingock.internal.common.core.preview.builder.CodePreviewChangeBuilder;
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
@@ -54,7 +54,7 @@ public class FlamingockAnnotationProcessorPlugin implements AnnotationProcessorP
     }
 
     private CodePreviewChange buildCodePreviewChange(TypeElement typeElement) {
-        return Optional.ofNullable(CodePreviewTaskBuilder.instance(typeElement).build())
+        return Optional.ofNullable(CodePreviewChangeBuilder.instance(typeElement).build())
                 .map(CodePreviewChange.class::cast)
                 .orElse(null);
     }

@@ -1,0 +1,438 @@
+/*
+ * Copyright 2023 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.internal.core.change.loaded;
+
+import io.flamingock.api.template.AbstractChangeTemplate;
+import io.flamingock.api.template.TemplateField;
+import io.flamingock.api.template.TemplatePayload;
+import io.flamingock.api.template.TemplateStep;
+import io.flamingock.api.template.wrappers.TemplateVoid;
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.error.validation.ValidationResult;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
+import io.flamingock.internal.common.core.preview.TemplatePreviewChange;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.template.ChangeTemplateDefinition;
+import io.flamingock.internal.common.core.template.ChangeTemplateManager;
+import io.flamingock.internal.common.core.template.TemplateValidator;
+import io.flamingock.internal.util.FileUtil;
+import io.flamingock.internal.util.Pair;
+import io.flamingock.internal.util.ReflectionUtil;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+
+//TODO how to set transactional and runAlways
+public class TemplateLoadedChangeBuilder implements LoadedChangeBuilder<AbstractTemplateLoadedChange<?, ?, ?>> {
+
+    private static final Logger logger = FlamingockLoggerFactory.getLogger(TemplateLoadedChangeBuilder.class);
+
+    private static final TemplateValidator DEFAULT_VALIDATOR = new TemplateValidator();
+
+    private String fileName;
+    private String id;
+    private String order;
+    private String author;
+    private String templateName;
+    private List<String> profiles;
+    private boolean runAlways;
+    private Boolean transactionalFlag;
+    private boolean system;
+    private Object configuration;
+    private Object applyPayload;
+    private Object rollbackPayload;
+    private Object steps;
+    private TargetSystemDescriptor targetSystem;
+    private RecoveryDescriptor recovery;
+    private TemplatePreviewChange preview;
+    private final TemplateValidator templateValidator;
+
+    private TemplateLoadedChangeBuilder() {
+        this(DEFAULT_VALIDATOR);
+    }
+
+    private TemplateLoadedChangeBuilder(TemplateValidator templateValidator) {
+        this.templateValidator = templateValidator;
+    }
+
+    static TemplateLoadedChangeBuilder getInstance() {
+        return new TemplateLoadedChangeBuilder();
+    }
+
+    static TemplateLoadedChangeBuilder getInstance(TemplateValidator templateValidator) {
+        return new TemplateLoadedChangeBuilder(templateValidator);
+    }
+
+    static TemplateLoadedChangeBuilder getInstanceFromPreview(TemplatePreviewChange preview) {
+        return getInstance().setPreview(preview);
+    }
+
+    static TemplateLoadedChangeBuilder getInstanceFromPreview(TemplatePreviewChange preview, TemplateValidator templateValidator) {
+        return getInstance(templateValidator).setPreview(preview);
+    }
+
+    public static boolean supportsPreview(AbstractPreviewChange previewChange) {
+        return TemplatePreviewChange.class.isAssignableFrom(previewChange.getClass());
+    }
+
+    public TemplateLoadedChangeBuilder setId(String id) {
+        this.id = id;
+        return this;
+    }
+
+    @Override
+    public TemplateLoadedChangeBuilder setTargetSystem(TargetSystemDescriptor targetSystem) {
+        this.targetSystem = targetSystem;
+        return this;
+    }
+
+    @Override
+    public TemplateLoadedChangeBuilder setRecovery(RecoveryDescriptor recovery) {
+        this.recovery = recovery;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setOrder(String order) {
+        this.order = order;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setAuthor(String author) {
+        this.author = author;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setTemplateName(String templateName) {
+        this.templateName = templateName;
+        return this;
+    }
+
+    public void setProfiles(List<String> profiles) {
+        this.profiles = profiles;
+    }
+
+    public TemplateLoadedChangeBuilder setRunAlways(boolean runAlways) {
+        this.runAlways = runAlways;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setTransactionalFlag(Boolean transactionalFlag) {
+        this.transactionalFlag = transactionalFlag;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setSystem(boolean system) {
+        this.system = system;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setFileName(String fileName) {
+        this.fileName = fileName;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setConfiguration(Object configuration) {
+        this.configuration = configuration;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setApplyPayload(Object applyPayload) {
+        this.applyPayload = applyPayload;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setRollbackPayload(Object rollbackPayload) {
+        this.rollbackPayload = rollbackPayload;
+        return this;
+    }
+
+    public TemplateLoadedChangeBuilder setSteps(Object steps) {
+        this.steps = steps;
+        return this;
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public AbstractTemplateLoadedChange<?, ?, ?> build() {
+        //            boolean isChangeTransactional = true;//TODO implement this. isChangeTransactionalAccordingTemplate(templateSpec);
+        ChangeTemplateDefinition definition = ChangeTemplateManager.getTemplate(templateName)
+                .orElseThrow(()-> new FlamingockException(String.format("Template[%s] not found. This is probably because template's name is wrong or template's library not imported", templateName)));
+
+
+        if (preview != null) {
+            ValidationResult validationResult = templateValidator.validateStructure(definition, preview);
+            if (validationResult.hasErrors()) {
+                throw new FlamingockException(
+                        "Template structure validation failed for change '" + id + "':\n" + validationResult.formatMessage());
+            }
+        }
+
+        Constructor<?> constructor = ReflectionUtil.getDefaultConstructor(definition.getTemplateClass());
+
+        // Determine template type from pre-resolved definition metadata.
+        // Note: Due to type erasure, we use raw types at construction time.
+        // The actual type safety comes from the conversion methods that use reflection
+        // to determine the real types at runtime.
+        boolean isMultiStep = definition.isMultiStep();
+        boolean rollbackPayloadRequired = definition.isRollbackPayloadRequired();
+
+        Class<? extends AbstractChangeTemplate> templateClass =
+                definition.getTemplateClass().asSubclass(AbstractChangeTemplate.class);
+
+        if (isMultiStep) {
+            return getLoadedMultiStepTemplateChange(templateClass, constructor, rollbackPayloadRequired);
+        } else {
+            // Default to SimpleTemplateLoadedChange for simple templates (steppable=false or missing annotation)
+            return getLoadedSimpleTemplateChange(templateClass, constructor, rollbackPayloadRequired);
+        }
+    }
+
+    @NotNull
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private MultiStepTemplateLoadedChange getLoadedMultiStepTemplateChange(Class<? extends AbstractChangeTemplate> steppableTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
+        List<TemplateStep<Object, Object>> convertedSteps = convertSteps(constructor, steps);// Convert apply/rollback to typed payloads at load time
+        TemplateField convertedConfig = convertConfiguration(constructor, configuration);
+        boolean resolvedTransactional = resolveTransactionalFromSteps(convertedSteps);
+        return new MultiStepTemplateLoadedChange(
+                fileName,
+                id,
+                order,
+                author,
+                steppableTemplateClass,
+                constructor,
+                profiles,
+                transactionalFlag,
+                resolvedTransactional,
+                runAlways,
+                system,
+                convertedConfig,
+                convertedSteps,
+                targetSystem,
+                recovery,
+                rollbackPayloadRequired);
+    }
+
+    @NotNull
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private SimpleTemplateLoadedChange getLoadedSimpleTemplateChange(Class<? extends AbstractChangeTemplate> simpleTemplateClass, Constructor<?> constructor, boolean rollbackPayloadRequired) {
+        Pair<Object, Object> convertedPayloads = convertPayloads(constructor, applyPayload, rollbackPayload);// Convert apply/rollback to typed payloads at load time
+        TemplateField convertedConfig = convertConfiguration(constructor, configuration);
+        boolean resolvedTransactional = resolveTransactional((TemplatePayload) convertedPayloads.getFirst());
+        return new SimpleTemplateLoadedChange(
+                fileName,
+                id,
+                order,
+                author,
+                simpleTemplateClass,
+                constructor,
+                profiles,
+                transactionalFlag,
+                resolvedTransactional,
+                runAlways,
+                system,
+                convertedConfig,
+                (TemplatePayload) convertedPayloads.getFirst(),
+                (TemplatePayload) convertedPayloads.getSecond(),
+                targetSystem,
+                recovery,
+                rollbackPayloadRequired);
+    }
+
+    /**
+     * Converts raw apply/rollback data to typed payloads for simple templates.
+     * Returns Pair<applyPayload, rollbackPayload>.
+     */
+    private Pair<Object, Object> convertPayloads(Constructor<?> constructor, Object applyData, Object rollbackData) {
+        if (applyData == null) {
+            return new Pair<>(null, null);
+        }
+
+        // Instantiate template temporarily to get payload types
+        AbstractChangeTemplate<?, ?, ?> templateInstance;
+        try {
+            templateInstance = (AbstractChangeTemplate<?, ?, ?>) constructor.newInstance();
+        } catch (Exception e) {
+            throw new FlamingockException("Failed to instantiate template for type resolution: " + e.getMessage(), e);
+        }
+
+        Class<?> applyClass = templateInstance.getApplyPayloadClass();
+        Class<?> rollbackClass = templateInstance.getRollbackPayloadClass();
+
+        Object applyPayload = FileUtil.convertToType(applyClass, applyData);
+        Object rollbackPayload = null;
+
+        if (rollbackData != null) {
+            rollbackPayload = FileUtil.convertToType(rollbackClass, rollbackData);
+        }
+
+        return new Pair<>(applyPayload, rollbackPayload);
+    }
+
+    /**
+     * Converts raw steps data from YAML to typed TemplateStep objects.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private List<TemplateStep<Object, Object>> convertSteps(Constructor<?> constructor, Object stepsData) {
+        if (stepsData == null) {
+            return null;
+        }
+
+        if (!(stepsData instanceof List)) {
+            throw new FlamingockException(String.format(
+                "Steps must be a List for steppable template change[%s], but got: %s",
+                id, stepsData.getClass().getSimpleName()));
+        }
+
+        List<?> stepsList = (List<?>) stepsData;
+        if (stepsList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Instantiate template temporarily to get payload types
+        AbstractChangeTemplate<?, ?, ?> templateInstance;
+        try {
+            templateInstance = (AbstractChangeTemplate<?, ?, ?>) constructor.newInstance();
+        } catch (Exception e) {
+            throw new FlamingockException("Failed to instantiate template for type resolution: " + e.getMessage(), e);
+        }
+
+        Class<?> applyClass = templateInstance.getApplyPayloadClass();
+        Class<?> rollbackClass = templateInstance.getRollbackPayloadClass();
+
+        List<TemplateStep<Object, Object>> result = new ArrayList<>();
+
+        for (Object stepItem : stepsList) {
+            if (stepItem instanceof Map) {
+                Map<String, Object> stepMap = (Map<String, Object>) stepItem;
+                TemplateStep<Object, Object> step = new TemplateStep<>();
+
+                Object applyItemData = stepMap.get("apply");
+                if (applyItemData != null) {
+                    step.setApplyPayload(FileUtil.convertToType(applyClass, applyItemData));
+                }
+
+                Object rollbackItemData = stepMap.get("rollback");
+                if (rollbackItemData != null) {
+                    step.setRollbackPayload(FileUtil.convertToType(rollbackClass, rollbackItemData));
+                }
+
+                result.add(step);
+            } else if (stepItem instanceof TemplateStep) {
+                result.add((TemplateStep<Object, Object>) stepItem);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Converts raw configuration data to typed TemplatePayload at load time.
+     * Returns null if no configuration is needed (TemplateVoid config or null data).
+     */
+    private TemplateField convertConfiguration(Constructor<?> constructor, Object configData) {
+        // Instantiate template temporarily to get config class
+        AbstractChangeTemplate<?, ?, ?> templateInstance;
+        try {
+            templateInstance = (AbstractChangeTemplate<?, ?, ?>) constructor.newInstance();
+        } catch (Exception e) {
+            throw new FlamingockException("Failed to instantiate template for config type resolution: " + e.getMessage(), e);
+        }
+
+        Class<?> configClass = templateInstance.getConfigurationClass();
+
+        if (configData == null || configClass == TemplateVoid.class) {
+            return null;
+        }
+
+        return (TemplateField) FileUtil.convertToType(configClass, configData);
+    }
+
+    /**
+     * Infers transactional from apply payloads when the user didn't specify it.
+     * Any payload claiming supportsTransactions=false makes the change non-transactional.
+     */
+    private static boolean inferTransactionalFromPayloads(List<TemplatePayload> applyPayloads) {
+        for (TemplatePayload payload : applyPayloads) {
+            if (payload == null) continue;
+            Optional<Boolean> supports = payload.getInfo().getSupportsTransactions();
+            if (supports.isPresent() && !supports.get()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean resolveTransactional(TemplatePayload applyPayload) {
+        if (transactionalFlag != null) return transactionalFlag;
+        boolean inferred = inferTransactionalFromPayloads(
+                applyPayload != null ? Collections.singletonList(applyPayload) : Collections.emptyList());
+        logTransactionalInference(inferred);
+        return inferred;
+    }
+
+    private boolean resolveTransactionalFromSteps(List<TemplateStep<Object, Object>> convertedSteps) {
+        if (transactionalFlag != null) return transactionalFlag;
+        if (convertedSteps == null || convertedSteps.isEmpty()) {
+            logTransactionalInference(true);
+            return true;
+        }
+        List<TemplatePayload> applyPayloads = new ArrayList<>();
+        for (TemplateStep<Object, Object> step : convertedSteps) {
+            applyPayloads.add((TemplatePayload) step.getApplyPayload());
+        }
+        boolean inferred = inferTransactionalFromPayloads(applyPayloads);
+        logTransactionalInference(inferred);
+        return inferred;
+    }
+
+    private void logTransactionalInference(boolean inferred) {
+        if (!inferred) {
+            logger.info("Change '{}': transactional not specified, inferred as non-transactional from apply payload(s)", id);
+        } else {
+            logger.debug("Change '{}': transactional not specified, inferred as transactional (default)", id);
+        }
+    }
+
+    private TemplateLoadedChangeBuilder setPreview(TemplatePreviewChange preview) {
+        this.preview = preview;
+        setFileName(preview.getFileName());
+        setId(preview.getId());
+        setOrder(preview.getOrder().orElse(null));
+        setAuthor(preview.getAuthor());
+        setTemplateName(preview.getTemplateName());
+        setProfiles(preview.getProfiles());
+        setRunAlways(preview.isRunAlways());
+        setTransactionalFlag(preview.getTransactionalFlag().orElse(null));
+        setSystem(preview.isSystem());
+        setConfiguration(preview.getConfiguration());
+        setApplyPayload(preview.getApply());
+        setRollbackPayload(preview.getRollback());
+        setSteps(preview.getSteps());
+        setTargetSystem(preview.getTargetSystem());
+        setRecovery(preview.getRecovery());
+        return this;
+    }
+
+}

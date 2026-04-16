@@ -55,7 +55,7 @@ public class AuditListResult extends AbstractOperationResult {
     private AuditEntryDto toDto(AuditEntry entry) {
         if (extended) {
             return new AuditEntryDto(
-                    entry.getTaskId(),
+                    entry.getChangeId(),
                     entry.getAuthor(),
                     entry.getState() != null ? entry.getState().name() : null,
                     entry.getStageId(),
@@ -69,7 +69,7 @@ public class AuditListResult extends AbstractOperationResult {
             );
         } else {
             return new AuditEntryDto(
-                    entry.getTaskId(),
+                    entry.getChangeId(),
                     entry.getAuthor(),
                     entry.getState() != null ? entry.getState().name() : null,
                     entry.getStageId(),

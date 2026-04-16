@@ -17,7 +17,7 @@ package io.flamingock.internal.core.external.targets.mark;
 
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
 import java.util.Set;
 
 /**
@@ -85,7 +85,7 @@ public interface TargetSystemAuditMarker {
      * @param change the applied change to be marked locally.
      * @throws FlamingockException if the operation fails (e.g., storage unavailable).
      */
-    default void markApplied(ExecutableTask change) {
+    default void markApplied(ExecutableChange change) {
         mark(new TargetSystemAuditMark(change.getId(), TargetSystemAuditMarkType.APPLIED));
     }
 }

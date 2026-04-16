@@ -16,7 +16,7 @@
 package io.flamingock.support.change;
 
 import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.internal.common.core.task.RecoveryDescriptor;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import io.flamingock.internal.common.core.template.ChangeTemplateFileContent;
 import io.flamingock.internal.util.FileUtil;
 

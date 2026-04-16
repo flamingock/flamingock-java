@@ -65,17 +65,17 @@ public class TransactionalTargetSystemOpsImpl
 
     @Override
     public Set<TargetSystemAuditMark> listAll() {
-        return targetSystem.getOnGoingTaskStatusRepository().listAll();
+        return targetSystem.getOnGoingChangeStatusRepository().listAll();
     }
 
     @Override
     public void clearMark(String changeId) {
-        targetSystem.getOnGoingTaskStatusRepository().clearMark(changeId);
+        targetSystem.getOnGoingChangeStatusRepository().clearMark(changeId);
     }
 
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
-        targetSystem.getOnGoingTaskStatusRepository().mark(auditMark);
+        targetSystem.getOnGoingChangeStatusRepository().mark(auditMark);
     }
 
     private OperationType internalGetOperationType(AbstractTargetSystem<?> auditStoreTargetSystem) {

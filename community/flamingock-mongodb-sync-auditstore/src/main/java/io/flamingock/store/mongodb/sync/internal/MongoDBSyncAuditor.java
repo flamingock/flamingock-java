@@ -80,7 +80,7 @@ public class MongoDBSyncAuditor implements LifecycleAuditWriter, AuditReader {
     public Result writeEntry(AuditEntry auditEntry) {
         Bson filter = Filters.and(
                 Filters.eq(KEY_EXECUTION_ID, auditEntry.getExecutionId()),
-                Filters.eq(KEY_CHANGE_ID, auditEntry.getTaskId()),
+                Filters.eq(KEY_CHANGE_ID, auditEntry.getChangeId()),
                 Filters.eq(KEY_STATE, auditEntry.getState().name())
         );
 

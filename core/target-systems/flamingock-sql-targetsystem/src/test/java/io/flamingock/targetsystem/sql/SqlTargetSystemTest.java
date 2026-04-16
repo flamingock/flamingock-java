@@ -25,7 +25,7 @@ import io.flamingock.common.test.cloud.AuditRequestExpectation;
 import io.flamingock.common.test.cloud.MockRunnerServer;
 import io.flamingock.common.test.cloud.execution.ExecutionContinueRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
-import io.flamingock.common.test.cloud.mock.MockRequestResponseTask;
+import io.flamingock.common.test.cloud.mock.MockRequestResponseChange;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
@@ -46,7 +46,6 @@ import org.testcontainers.utility.DockerImageName;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Collections;
-import java.util.UUID;
 
 import static io.flamingock.cloud.api.vo.CloudAuditStatus.APPLIED;
 import static io.flamingock.cloud.api.vo.CloudAuditStatus.FAILED;
@@ -57,7 +56,7 @@ import static io.flamingock.cloud.api.vo.CloudAuditStatus.ROLLED_BACK;
 public class SqlTargetSystemTest {
 
     private static final String CLIENTS_TABLE = "client_table";
-    private static final String ONGOING_TASKS_TABLE = "flamingock_ongoing_tasks";
+    private static final String ONGOING_CHANGES_TABLE = "flamingock_ongoing_changes";
 
     private static DataSource dataSource;
     private static MySQLTestHelper mysqlTestHelper;
@@ -123,7 +122,7 @@ public class SqlTargetSystemTest {
     void afterEach() throws Exception {
         mockRunnerServer.stop();
         mysqlTestHelper.dropTable(CLIENTS_TABLE);
-        mysqlTestHelper.dropTable(ONGOING_TASKS_TABLE);
+        mysqlTestHelper.dropTable(ONGOING_CHANGES_TABLE);
     }
 
     @Test
@@ -134,8 +133,8 @@ public class SqlTargetSystemTest {
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-table", _001__HappyCreateClientsTableChange.class.getName(), "apply", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
+                        .addChange("create-clients-table", _001__HappyCreateClientsTableChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -169,20 +168,20 @@ public class SqlTargetSystemTest {
 
             mysqlTestHelper.checkTableExists(CLIENTS_TABLE);
             mysqlTestHelper.checkCount(CLIENTS_TABLE, 1);
-            mysqlTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
+            mysqlTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
         }
     }
 
     @Test
-    @DisplayName("Should keep the ongoing task when task fails")
-    void failedTasks() {
+    @DisplayName("Should keep the ongoing change when change fails")
+    void failedChanges() {
         String executionId = "execution-1";
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-table", _001__UnhappyCreateClientsTableChange.class.getName(), "apply", false)
-                        .addTask("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "apply", true)
+                        .addChange("create-clients-table", _001__UnhappyCreateClientsTableChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__UnhappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -223,15 +222,15 @@ public class SqlTargetSystemTest {
 
     @Test
     @Disabled("adapt when adding cloud support")
-    @DisplayName("Should send ongoing task in execution when is present in local database")
-    void shouldSendOngoingTaskInExecutionPlan() {
+    @DisplayName("Should send ongoing change in execution when is present in local database")
+    void shouldSendOngoingChangeInExecutionPlan() {
         String executionId = "execution-1";
         String stageName = "stage-1";
 
         PrototypeClientSubmission prototypeClientSubmission = new PrototypeClientSubmission(
                 new PrototypeStage(stageName, 0)
-                        .addTask("create-clients-table", _001__HappyCreateClientsTableChange.class.getName(), "apply", false)
-                        .addTask("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
+                        .addChange("create-clients-table", _001__HappyCreateClientsTableChange.class.getName(), "apply", false)
+                        .addChange("insert-clients", _002__HappyInsertClientsChange.class.getName(), "apply", true)
         );
 
         //GIVEN
@@ -240,7 +239,7 @@ public class SqlTargetSystemTest {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
-                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseTask("insert-clients", TargetSystemAuditMarkType.APPLIED)),
+                            new ExecutionPlanRequestResponseMock(executionId, new MockRequestResponseChange("insert-clients", TargetSystemAuditMarkType.APPLIED)),
                             new ExecutionContinueRequestResponseMock()
                     ).withAuditRequestsExpectation(
                             new AuditRequestExpectation(executionId, "create-clients-table", APPLIED),
@@ -265,7 +264,7 @@ public class SqlTargetSystemTest {
 
             mysqlTestHelper.checkTableExists(CLIENTS_TABLE);
             mysqlTestHelper.checkCount(CLIENTS_TABLE, 1);
-            mysqlTestHelper.checkOngoingTask(ongoingCount -> ongoingCount == 0);
+            mysqlTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
         }
     }
 }

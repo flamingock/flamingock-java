@@ -192,7 +192,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
         return loadedStages.stream()
                 .map(loadedStage -> {
                     ChangeActionMap changeActionMap = CommunityChangeActionBuilder.build(
-                        loadedStage.getTasks(),
+                        loadedStage.getChanges(),
                         auditSnapshot
                     );
                     return loadedStage.applyActions(changeActionMap);
@@ -229,32 +229,32 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      * @param validatedStages the validated stages after lock acquisition
      */
     private void logPlanChanges(List<ExecutableStage> initialStages, List<ExecutableStage> validatedStages) {
-        long initialCount = countExecutableTasks(initialStages);
-        long validatedCount = countExecutableTasks(validatedStages);
+        long initialCount = countExecutableChanges(initialStages);
+        long validatedCount = countExecutableChanges(validatedStages);
 
         if (initialCount != validatedCount) {
             logger.warn(
-                "Execution plan changed during lock acquisition: {} -> {} executable tasks. " +
-                "This indicates concurrent execution - {} tasks were executed by another instance.",
+                "Execution plan changed during lock acquisition: {} -> {} executable changes. " +
+                "This indicates concurrent execution - {} changes were executed by another instance.",
                 initialCount,
                 validatedCount,
                 initialCount - validatedCount
             );
         } else {
-            logger.debug("Execution plan validated after lock acquisition: {} executable tasks", validatedCount);
+            logger.debug("Execution plan validated after lock acquisition: {} executable changes", validatedCount);
         }
     }
 
     /**
-     * Counts the number of executable tasks across all stages.
+     * Counts the number of executable changes across all stages.
      *
      * @param stages the list of stages
-     * @return total count of executable tasks
+     * @return total count of executable changes
      */
-    private long countExecutableTasks(List<ExecutableStage> stages) {
+    private long countExecutableChanges(List<ExecutableStage> stages) {
         return stages.stream()
                 .filter(ExecutableStage::isExecutionRequired)
-                .mapToLong(stage -> stage.getTasks().size())
+                .mapToLong(stage -> stage.getChanges().size())
                 .sum();
     }
 

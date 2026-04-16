@@ -286,7 +286,7 @@ class SqlAuditStoreTest {
         TestKit testKit = SqlTestKit.create(sqlAuditStore, context.dataSource);
 
         Class<?>[] changeClasses = getChangeClasses(dialectName, "happyPath");
-        String[] expectedTaskIds = {"create-index", "insert-document", "insert-another-document"};
+        String[] expectedChangeIds = {"create-index", "insert-document", "insert-another-document"};
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
             .GIVEN_Changes(
@@ -300,12 +300,12 @@ class SqlAuditStoreTest {
                 .build()
                 .run())
             .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedTaskIds[0]),
-                APPLIED(expectedTaskIds[0]),
-                STARTED(expectedTaskIds[1]),
-                APPLIED(expectedTaskIds[1]),
-                STARTED(expectedTaskIds[2]),
-                APPLIED(expectedTaskIds[2])
+                STARTED(expectedChangeIds[0]),
+                APPLIED(expectedChangeIds[0]),
+                STARTED(expectedChangeIds[1]),
+                APPLIED(expectedChangeIds[1]),
+                STARTED(expectedChangeIds[2]),
+                APPLIED(expectedChangeIds[2])
             )
             .run();
 
@@ -324,7 +324,7 @@ class SqlAuditStoreTest {
         TestKit testKit = SqlTestKit.create(sqlAuditStore, context.dataSource);
 
         Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithRollback");
-        String[] expectedTaskIds = {"create-index", "insert-document", "execution-with-exception"};
+        String[] expectedChangeIds = {"create-index", "insert-document", "execution-with-exception"};
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
             .GIVEN_Changes(
@@ -340,13 +340,13 @@ class SqlAuditStoreTest {
                     .run();
             }))
             .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedTaskIds[0]),
-                APPLIED(expectedTaskIds[0]),
-                STARTED(expectedTaskIds[1]),
-                APPLIED(expectedTaskIds[1]),
-                STARTED(expectedTaskIds[2]),
-                FAILED(expectedTaskIds[2]),
-                ROLLED_BACK(expectedTaskIds[2])
+                STARTED(expectedChangeIds[0]),
+                APPLIED(expectedChangeIds[0]),
+                STARTED(expectedChangeIds[1]),
+                APPLIED(expectedChangeIds[1]),
+                STARTED(expectedChangeIds[2]),
+                FAILED(expectedChangeIds[2]),
+                ROLLED_BACK(expectedChangeIds[2])
             )
             .run();
 
@@ -365,7 +365,7 @@ class SqlAuditStoreTest {
         TestKit testKit = SqlTestKit.create(sqlAuditStore, context.dataSource);
 
         Class<?>[] changeClasses = getChangeClasses(dialectName, "failedWithoutRollback");
-        String[] expectedTaskIds = {"create-index", "insert-document", "execution-with-exception"};
+        String[] expectedChangeIds = {"create-index", "insert-document", "execution-with-exception"};
         //Given-When-Then
         AuditTestSupport.withTestKit(testKit)
             .GIVEN_Changes(
@@ -381,13 +381,13 @@ class SqlAuditStoreTest {
                     .run();
             }))
             .THEN_VerifyAuditSequenceStrict(
-                STARTED(expectedTaskIds[0]),
-                APPLIED(expectedTaskIds[0]),
-                STARTED(expectedTaskIds[1]),
-                APPLIED(expectedTaskIds[1]),
-                STARTED(expectedTaskIds[2]),
-                FAILED(expectedTaskIds[2]),
-                ROLLED_BACK(expectedTaskIds[2])
+                STARTED(expectedChangeIds[0]),
+                APPLIED(expectedChangeIds[0]),
+                STARTED(expectedChangeIds[1]),
+                APPLIED(expectedChangeIds[1]),
+                STARTED(expectedChangeIds[2]),
+                FAILED(expectedChangeIds[2]),
+                ROLLED_BACK(expectedChangeIds[2])
             )
             .run();
 

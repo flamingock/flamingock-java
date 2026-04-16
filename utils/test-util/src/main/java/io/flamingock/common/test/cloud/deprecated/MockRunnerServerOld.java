@@ -158,13 +158,13 @@ public final class MockRunnerServerOld {
     }
 
 
-    public MockRunnerServerOld addExecutionWithAllTasksRequestResponse(String executionId) {
+    public MockRunnerServerOld addExecutionWithAllChangesRequestResponse(String executionId) {
         executionRequestResponses.add(new ExecutePlanRequestResponse(executionId, DEFAULT_ACQUIRED_FOR_MILLIS, DEFAULT_LOCK_ACQUISITION_ID));
         return this;
     }
 
 
-    public MockRunnerServerOld addExecutionWithAllTasksRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
+    public MockRunnerServerOld addExecutionWithAllChangesRequestResponse(String executionId, long acquiredForMillis, String acquisitionId) {
         executionRequestResponses.add(new ExecutePlanRequestResponse(executionId, acquiredForMillis, acquisitionId));
         return this;
     }
@@ -175,23 +175,23 @@ public final class MockRunnerServerOld {
 
     public MockRunnerServerOld addSimpleStageExecutionPlan(String executionId, String stageName, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
 
-        Map<String, TargetSystemAuditMarkType> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
+        Map<String, TargetSystemAuditMarkType> ongoingOperationByChange = ongoingStatuses.stream()
+                .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
-        Set<String> alreadyAddedTasks = new HashSet<>();
-        List<ChangeRequest> tasks = auditEntries.stream()
-                .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
+        Set<String> alreadyAddedChanges = new HashSet<>();
+        List<ChangeRequest> changes = auditEntries.stream()
+                .filter(auditEntryExpectation -> !alreadyAddedChanges.contains(auditEntryExpectation.getChangeId()))
                 .map(auditEntryExpectation -> {
-                    alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
-                    TargetSystemAuditMarkType operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
+                    alreadyAddedChanges.add(auditEntryExpectation.getChangeId());
+                    TargetSystemAuditMarkType operation = ongoingOperationByChange.get(auditEntryExpectation.getChangeId());
                     CloudTargetSystemAuditMarkType cloudStatus = operation != null
                             ? CloudTargetSystemAuditMarkType.valueOf(operation.name())
                             : CloudTargetSystemAuditMarkType.NONE;
-                    return new ChangeRequest(auditEntryExpectation.getTaskId(), cloudStatus, auditEntryExpectation.isTransactional());
+                    return new ChangeRequest(auditEntryExpectation.getChangeId(), cloudStatus, auditEntryExpectation.isTransactional());
                 })
                 .collect(Collectors.toList());
 
-        List<StageRequest> stageRequest = Collections.singletonList(new StageRequest(stageName, 0, tasks));
+        List<StageRequest> stageRequest = Collections.singletonList(new StageRequest(stageName, 0, changes));
 
         executionExpectation = new ExecutionExpectation(executionId, stageRequest, auditEntries, 60000, 0);
         return this;
@@ -203,26 +203,26 @@ public final class MockRunnerServerOld {
 
     public MockRunnerServerOld addMultipleStageExecutionPlan(String executionId, List<String> stageNames, List<AuditEntryMatcher> auditEntries, List<TargetSystemAuditMark> ongoingStatuses) {
 
-        Map<String, TargetSystemAuditMarkType> ongoingOperationByTask = ongoingStatuses.stream()
-                .collect(Collectors.toMap(TargetSystemAuditMark::getTaskId, TargetSystemAuditMark::getOperation));
+        Map<String, TargetSystemAuditMarkType> ongoingOperationByChange = ongoingStatuses.stream()
+                .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
-        Set<String> alreadyAddedTasks = new HashSet<>();
-        List<ChangeRequest> tasks = auditEntries.stream()
-                .filter(auditEntryExpectation -> !alreadyAddedTasks.contains(auditEntryExpectation.getTaskId()))
+        Set<String> alreadyAddedChanges = new HashSet<>();
+        List<ChangeRequest> changes = auditEntries.stream()
+                .filter(auditEntryExpectation -> !alreadyAddedChanges.contains(auditEntryExpectation.getChangeId()))
                 .map(auditEntryExpectation -> {
-                    alreadyAddedTasks.add(auditEntryExpectation.getTaskId());
-                    TargetSystemAuditMarkType operation = ongoingOperationByTask.get(auditEntryExpectation.getTaskId());
+                    alreadyAddedChanges.add(auditEntryExpectation.getChangeId());
+                    TargetSystemAuditMarkType operation = ongoingOperationByChange.get(auditEntryExpectation.getChangeId());
                     CloudTargetSystemAuditMarkType cloudStatus = operation != null
                             ? CloudTargetSystemAuditMarkType.valueOf(operation.name())
                             : CloudTargetSystemAuditMarkType.NONE;
-                    return new ChangeRequest(auditEntryExpectation.getTaskId(), cloudStatus, auditEntryExpectation.isTransactional());
+                    return new ChangeRequest(auditEntryExpectation.getChangeId(), cloudStatus, auditEntryExpectation.isTransactional());
                 })
                 .collect(Collectors.toList());
 
         List<StageRequest> stageRequest = new ArrayList<>();
         int i = 0;
         for (String stageName : stageNames) {
-            stageRequest.add(new StageRequest(stageName, i, Collections.singletonList(tasks.get(i))));
+            stageRequest.add(new StageRequest(stageName, i, Collections.singletonList(changes.get(i))));
             i++;
         }
 
@@ -341,7 +341,7 @@ public final class MockRunnerServerOld {
     private void mockAuditWriteEndpoint() {
 
         if(executionExpectation != null) {
-            String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/task/{taskId}/audit"
+            String executionUrl = "/api/v1/environment/{environmentId}/service/{serviceId}/execution/{executionId}/change/{changeId}/audit"
                     .replace("{environmentId}", String.valueOf(environmentId))
                     .replace("{serviceId}", String.valueOf(serviceId))
                     .replace("{executionId}", executionExpectation.getExecutionId());
@@ -352,7 +352,7 @@ public final class MockRunnerServerOld {
 
                 AuditEntryMatcher request = auditEntryExpectations.get(0);
                 wireMockServer.stubFor(
-                        post(urlPathEqualTo(executionUrl.replace("{taskId}", request.getTaskId())))
+                        post(urlPathEqualTo(executionUrl.replace("{changeId}", request.getChangeId())))
                                 .withRequestBody(equalToJson(toJson(request), true, true))
                                 .willReturn(aResponse()
                                         .withStatus(201)
@@ -367,7 +367,7 @@ public final class MockRunnerServerOld {
                     AuditEntryMatcher request = auditEntryExpectations.get(i);
                     String json = toJson(request);
                     wireMockServer.stubFor(
-                            post(urlPathEqualTo(executionUrl.replace("{taskId}", request.getTaskId())))
+                            post(urlPathEqualTo(executionUrl.replace("{changeId}", request.getChangeId())))
                                     .withName("audit-stub" + i)
                                     .inScenario(scenarioName)
                                     .whenScenarioStateIs(scenarioState)
@@ -448,8 +448,8 @@ public final class MockRunnerServerOld {
     private static StageResponse toStageResponse(StageRequest stageRequest) {
         StageResponse stage = new StageResponse();
         stage.setName(stageRequest.getName());
-        stage.setTasks(stageRequest.getTasks().stream()
-                .map(onGoingTask -> new ChangeResponse(onGoingTask.getId(), APPLY))
+        stage.setChanges(stageRequest.getChanges().stream()
+                .map(onGoingChange -> new ChangeResponse(onGoingChange.getId(), APPLY))
                 .collect(Collectors.toList()));
         return stage;
     }

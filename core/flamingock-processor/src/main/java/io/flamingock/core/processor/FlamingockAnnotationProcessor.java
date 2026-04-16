@@ -27,13 +27,13 @@ import io.flamingock.core.processor.util.ProjectRootDetector;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
-import io.flamingock.internal.common.core.preview.AbstractPreviewTask;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import io.flamingock.internal.common.core.processor.ConfigurationPropertiesProvider;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.common.core.util.Serializer;
 import org.jetbrains.annotations.NotNull;
@@ -226,9 +226,9 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         // Find @FlamingockCliBuilder annotated method
         Optional<BuilderProviderInfo> builderProvider = annotationFinder.findBuilderProvider();
 
-        List<CodePreviewChange> systemChanges = allChanges.stream().filter(TaskDescriptor::isSystem).collect(Collectors.toList());
+        List<CodePreviewChange> systemChanges = allChanges.stream().filter(ChangeDescriptor::isSystem).collect(Collectors.toList());
         List<CodePreviewChange> legacyChanges = allChanges.stream().filter(CodePreviewChange::isLegacy).collect(Collectors.toList());
-        List<CodePreviewChange> standardChanges = allChanges.stream().filter(TaskDescriptor::isStandard).collect(Collectors.toList());
+        List<CodePreviewChange> standardChanges = allChanges.stream().filter(ChangeDescriptor::isStandard).collect(Collectors.toList());
 
         Map<String, List<CodePreviewChange>> standardChangesMapByPackage = getCodeChangesMapByPackage(standardChanges);
         PreviewPipeline pipeline = getPipelineFromProcessChanges(
@@ -249,12 +249,12 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         // Generate summary - count all changes from the final pipeline (code-based + template-based)
         int totalStages = pipeline.getStages().size() + (pipeline.getSystemStage() != null ? 1 : 0);
         int totalChanges = 0;
-        if (pipeline.getSystemStage() != null && pipeline.getSystemStage().getTasks() != null) {
-            totalChanges += pipeline.getSystemStage().getTasks().size();
+        if (pipeline.getSystemStage() != null && pipeline.getSystemStage().getChanges() != null) {
+            totalChanges += pipeline.getSystemStage().getChanges().size();
         }
         for (PreviewStage stage : pipeline.getStages()) {
-            if (stage.getTasks() != null) {
-                totalChanges += stage.getTasks().size();
+            if (stage.getChanges() != null) {
+                totalChanges += stage.getChanges().size();
             }
         }
         logger.info("Generated metadata: " + totalStages + " stages, " + totalChanges + " changes");
@@ -742,11 +742,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 String sysPkg = system.getSourcesPackage();
                 if (covers.test(sysPkg, pkg)) {
                     matched = true;
-                } else if (system.getTasks() != null) {
-                    for (io.flamingock.internal.common.core.preview.AbstractPreviewTask task : system.getTasks()) {
-                        if (task instanceof CodePreviewChange) {
-                            String taskPkg = ((CodePreviewChange) task).getSourcePackage();
-                            if (covers.test(taskPkg, pkg)) {
+                } else if (system.getChanges() != null) {
+                    for (AbstractPreviewChange change : system.getChanges()) {
+                        if (change instanceof CodePreviewChange) {
+                            String changePkg = ((CodePreviewChange) change).getSourcePackage();
+                            if (covers.test(changePkg, pkg)) {
                                 matched = true;
                                 break;
                             }
@@ -763,11 +763,11 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                         matched = true;
                         break;
                     }
-                    if (stage.getTasks() != null) {
-                        for (io.flamingock.internal.common.core.preview.AbstractPreviewTask task : stage.getTasks()) {
-                            if (task instanceof CodePreviewChange) {
-                                String taskPkg = ((CodePreviewChange) task).getSourcePackage();
-                                if (covers.test(taskPkg, pkg)) {
+                    if (stage.getChanges() != null) {
+                        for (AbstractPreviewChange change : stage.getChanges()) {
+                            if (change instanceof CodePreviewChange) {
+                                String changePkg = ((CodePreviewChange) change).getSourcePackage();
+                                if (covers.test(changePkg, pkg)) {
                                     matched = true;
                                     break;
                                 }

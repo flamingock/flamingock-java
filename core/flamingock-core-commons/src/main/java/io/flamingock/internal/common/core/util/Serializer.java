@@ -22,7 +22,7 @@ import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.PreviewStage;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.FileObject;
@@ -81,11 +81,11 @@ public class Serializer {
     }
 
     private static void serializeClassesFromStage(Writer writer, PreviewStage stage) {
-        for (TaskDescriptor task : stage.getTasks()) {
+        for (ChangeDescriptor change : stage.getChanges()) {
 
-            if(CodePreviewChange.class.isAssignableFrom(task.getClass())) {
+            if(CodePreviewChange.class.isAssignableFrom(change.getClass())) {
                 try {
-                    writer.write(task.getSource());
+                    writer.write(change.getSource());
                     writer.write(System.lineSeparator());
                 } catch (IOException e) {
                     throw new RuntimeException(e);

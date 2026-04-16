@@ -136,7 +136,7 @@ public class CloudAuditPersistenceTest {
         String executionId = "execution-1";
         mockRunnerServer
                 .addSimpleStageExecutionPlan(executionId, "changes", auditEntryExpectations)
-                .addExecutionWithAllTasksRequestResponse(executionId)
+                .addExecutionWithAllChangesRequestResponse(executionId)
                 .addExecutionContinueRequestResponse();
 
         mockRunnerServer.start();
@@ -160,7 +160,7 @@ public class CloudAuditPersistenceTest {
             mockRunnerServer
                     .addSimpleStageExecutionPlan(executionId, "changes", auditEntryExpectations)
                     .addExecutionAwaitRequestResponse(executionId)
-                    .addExecutionWithAllTasksRequestResponse(executionId)
+                    .addExecutionWithAllChangesRequestResponse(executionId)
                     .addExecutionContinueRequestResponse()
                     .start();
 

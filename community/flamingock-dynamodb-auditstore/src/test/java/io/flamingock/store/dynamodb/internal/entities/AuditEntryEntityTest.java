@@ -55,7 +55,7 @@ class AuditEntryEntityTest {
         // Then
         assertEquals(AuditTxType.TX_SEPARATE_NO_MARKER, converted.getTxType());
         assertEquals(original.getExecutionId(), converted.getExecutionId());
-        assertEquals(original.getTaskId(), converted.getTaskId());
+        assertEquals(original.getChangeId(), converted.getChangeId());
         assertEquals(original.getAuthor(), converted.getAuthor());
         assertEquals(original.getState(), converted.getState());
         assertEquals(original.getSourceFile(), converted.getSourceFile());
@@ -127,7 +127,7 @@ class AuditEntryEntityTest {
         // Then
         assertEquals(expectedTargetSystemId, converted.getTargetSystemId());
         assertEquals(original.getExecutionId(), converted.getExecutionId());
-        assertEquals(original.getTaskId(), converted.getTaskId());
+        assertEquals(original.getChangeId(), converted.getChangeId());
         assertEquals(original.getAuthor(), converted.getAuthor());
         assertEquals(original.getState(), converted.getState());
         assertEquals(original.getSourceFile(), converted.getSourceFile());

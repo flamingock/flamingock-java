@@ -66,8 +66,8 @@ class AuditListOperationTest {
     @DisplayName("Should return audit entries from snapshot when no history flag")
     void shouldReturnAuditEntriesFromSnapshotWhenNoHistoryFlag() {
         // Given
-        AuditEntry entry1 = createAuditEntry("exec-1", "task-1");
-        AuditEntry entry2 = createAuditEntry("exec-2", "task-2");
+        AuditEntry entry1 = createAuditEntry("exec-1", "change-1");
+        AuditEntry entry2 = createAuditEntry("exec-2", "change-2");
         List<AuditEntry> entries = Arrays.asList(entry1, entry2);
         when(persistence.getAuditSnapshot()).thenReturn(entries);
         AuditListArgs args = new AuditListArgs();
@@ -119,8 +119,8 @@ class AuditListOperationTest {
         LocalDateTime yesterday = now.minusDays(1);
         LocalDateTime twoDaysAgo = now.minusDays(2);
 
-        AuditEntry oldEntry = createAuditEntryWithTime("exec-1", "task-1", twoDaysAgo);
-        AuditEntry newEntry = createAuditEntryWithTime("exec-2", "task-2", now);
+        AuditEntry oldEntry = createAuditEntryWithTime("exec-1", "change-1", twoDaysAgo);
+        AuditEntry newEntry = createAuditEntryWithTime("exec-2", "change-2", now);
         List<AuditEntry> entries = Arrays.asList(oldEntry, newEntry);
         when(persistence.getAuditSnapshot()).thenReturn(entries);
 
@@ -132,7 +132,7 @@ class AuditListOperationTest {
         // Then
         assertNotNull(result);
         assertEquals(1, result.getAuditEntries().size());
-        assertEquals("task-2", result.getAuditEntries().get(0).getTaskId());
+        assertEquals("change-2", result.getAuditEntries().get(0).getChangeId());
     }
 
     @Test
@@ -149,15 +149,15 @@ class AuditListOperationTest {
         assertTrue(result.isExtended());
     }
 
-    private AuditEntry createAuditEntry(String executionId, String taskId) {
-        return createAuditEntryWithTime(executionId, taskId, LocalDateTime.now());
+    private AuditEntry createAuditEntry(String executionId, String changeId) {
+        return createAuditEntryWithTime(executionId, changeId, LocalDateTime.now());
     }
 
-    private AuditEntry createAuditEntryWithTime(String executionId, String taskId, LocalDateTime time) {
+    private AuditEntry createAuditEntryWithTime(String executionId, String changeId, LocalDateTime time) {
         return new AuditEntry(
                 executionId,
                 "stage-1",
-                taskId,
+                changeId,
                 "test-author",
                 time,
                 AuditEntry.Status.APPLIED,

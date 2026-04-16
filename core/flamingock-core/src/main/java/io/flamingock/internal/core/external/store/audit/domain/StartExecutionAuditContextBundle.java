@@ -17,11 +17,11 @@ package io.flamingock.internal.core.external.store.audit.domain;
 
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 
 public class StartExecutionAuditContextBundle extends AuditContextBundle {
 
-    public StartExecutionAuditContextBundle(AbstractLoadedTask loadedTask, ExecutionContext executionContext, RuntimeContext runtimeContext, AuditTxType auditTxType, String targetSystemId) {
-        super(Operation.START_EXECUTION, loadedTask, executionContext, runtimeContext, auditTxType, targetSystemId);
+    public StartExecutionAuditContextBundle(AbstractLoadedChange loadedChange, ExecutionContext executionContext, RuntimeContext runtimeContext, AuditTxType auditTxType, String targetSystemId) {
+        super(Operation.START_EXECUTION, loadedChange, executionContext, runtimeContext, auditTxType, targetSystemId);
     }
 }

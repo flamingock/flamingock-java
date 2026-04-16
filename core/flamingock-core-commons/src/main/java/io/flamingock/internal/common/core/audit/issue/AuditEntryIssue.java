@@ -26,7 +26,7 @@ public abstract class AuditEntryIssue {
     }
 
     public String getChangeId() {
-        return auditEntry.getTaskId();
+        return auditEntry.getChangeId();
     }
 
     public AuditEntry getAuditEntry() {

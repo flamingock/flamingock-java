@@ -17,14 +17,14 @@ package io.flamingock.internal.core.operation.result;
 
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
-import io.flamingock.internal.common.core.task.TaskDescriptor;
-import io.flamingock.internal.core.task.executable.ExecutableTask;
+import io.flamingock.internal.common.core.change.ChangeDescriptor;
+import io.flamingock.internal.core.change.executable.ExecutableChange;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
- * Builder for creating ChangeResult instances from task execution data.
+ * Builder for creating ChangeResult instances from change execution data.
  */
 public class ChangeResultBuilder {
 
@@ -39,8 +39,8 @@ public class ChangeResultBuilder {
     public ChangeResultBuilder() {
     }
 
-    public ChangeResultBuilder fromTask(ExecutableTask task) {
-        TaskDescriptor descriptor = task.getLoadedChange();
+    public ChangeResultBuilder fromChange(ExecutableChange change) {
+        ChangeDescriptor descriptor = change.getLoadedChange();
         this.changeId = descriptor.getId();
         this.author = descriptor.getAuthor();
         if (descriptor.getTargetSystem() != null) {

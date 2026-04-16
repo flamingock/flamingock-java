@@ -62,7 +62,7 @@ public class MongockImportChange {
         legacyHistory.forEach(auditEntryFromOrigin -> {
             //This is the changeId present in the pipeline. If it's a system change or '..._before' won't appear
             AuditEntry auditEntryWithStageId = auditEntryFromOrigin.copyWithNewIdAndStageId(
-                    pipelineHelper.getStorableTaskId(auditEntryFromOrigin),
+                    pipelineHelper.getStorableChangeId(auditEntryFromOrigin),
                     pipelineHelper.getStageId(auditEntryFromOrigin));
             auditWriter.writeEntry(auditEntryWithStageId);
         });

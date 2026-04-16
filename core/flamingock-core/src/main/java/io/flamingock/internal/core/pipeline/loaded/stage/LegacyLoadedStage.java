@@ -19,8 +19,7 @@ package io.flamingock.internal.core.pipeline.loaded.stage;
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.error.validation.ValidationError;
 import io.flamingock.internal.core.pipeline.loaded.PipelineValidationContext;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedChange;
-import io.flamingock.internal.core.task.loaded.AbstractLoadedTask;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 
 import java.util.Collection;
 import java.util.List;
@@ -28,7 +27,7 @@ import java.util.List;
 import static io.flamingock.internal.core.pipeline.loaded.stage.StageValidationContext.SortType.SEQUENTIAL_SIMPLE;
 
 /**
- * It's the result of adding the loaded task to the ProcessDefinition
+ * It's the result of adding the loaded change to the ProcessDefinition
  */
 public class LegacyLoadedStage extends AbstractLoadedStage {
 
@@ -40,8 +39,8 @@ public class LegacyLoadedStage extends AbstractLoadedStage {
 
     public LegacyLoadedStage(String name,
                              StageType type,
-                             Collection<AbstractLoadedTask> loadedTasks) {
-        super(name, type, loadedTasks, validationContext);
+                             Collection<AbstractLoadedChange> loadedChanges) {
+        super(name, type, loadedChanges, validationContext);
 
     }
 
@@ -49,14 +48,13 @@ public class LegacyLoadedStage extends AbstractLoadedStage {
     public List<ValidationError> getValidationErrors(PipelineValidationContext context) {
         List<ValidationError> errors = super.getValidationErrors(context);
 
-        for (AbstractLoadedTask task : getTasks()) {
-            if (task instanceof AbstractLoadedChange) {
-                AbstractLoadedChange change = (AbstractLoadedChange) task;
+        for (AbstractLoadedChange change : getChanges()) {
+            if (change != null) {
                 if (!change.isLegacy()) {
-                    errors.add(new ValidationError(INVALID_CHANGE_TYPE_MSG, task.getId(), "change"));
+                    errors.add(new ValidationError(INVALID_CHANGE_TYPE_MSG, change.getId(), "change"));
                 }
             } else {
-                errors.add(new ValidationError("Task in legacy stage must be a ChangeUnit", task.getId(), "change"));
+                errors.add(new ValidationError("Null changes are not allowed in default stage", "unknown", "change"));
             }
 
         }

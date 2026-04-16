@@ -65,9 +65,9 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
 
             Set<TargetSystemAuditMark> ongoingStatuses = new HashSet<>();
             while (resultSet.next()) {
-                String taskId = resultSet.getString("change_id");
+                String changeId = resultSet.getString("change_id");
                 AuditContextBundle.Operation operation = AuditContextBundle.Operation.valueOf(resultSet.getString("operation"));
-                ongoingStatuses.add(new TargetSystemAuditMark(taskId, operation.toOngoingStatusOperation()));
+                ongoingStatuses.add(new TargetSystemAuditMark(changeId, operation.toOngoingStatusOperation()));
             }
             return ongoingStatuses;
         } catch (SQLException ex) {
@@ -90,9 +90,9 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
         String sql = dialectHelper.getMarkSqlString(tableName);
-        Connection connection = txManager.getSessionOrThrow(auditMark.getTaskId());
+        Connection connection = txManager.getSessionOrThrow(auditMark.getChangeId());
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, auditMark.getTaskId());
+            preparedStatement.setString(1, auditMark.getChangeId());
             preparedStatement.setString(2, auditMark.getOperation().toString());
             preparedStatement.executeUpdate();
             if(!connection.getAutoCommit())  {
@@ -107,7 +107,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
         private final DataSource dataSource;
         private final TransactionManager<Connection> txManager;
         private SqlAuditMarkerDialectHelper dialectHelper;
-        private String tableName = "FLAMINGOCK_ONGOING_TASKS";
+        private String tableName = "FLAMINGOCK_ONGOING_CHANGES";
         private boolean autoCreate = true;
 
         public Builder(DataSource dataSource, TransactionManager<Connection> txManager) {

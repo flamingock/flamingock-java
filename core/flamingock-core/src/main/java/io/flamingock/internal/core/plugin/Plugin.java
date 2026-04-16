@@ -18,7 +18,7 @@ package io.flamingock.internal.core.plugin;
 import io.flamingock.internal.common.core.context.ContextInitializable;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.common.core.context.ContextResolver;
-import io.flamingock.internal.core.task.filter.TaskFilter;
+import io.flamingock.internal.core.change.filter.ChangeFilter;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +34,7 @@ public interface Plugin extends ContextInitializable {
         return Optional.empty();
     }
 
-    default List<TaskFilter> getTaskFilters() {
+    default List<ChangeFilter> getChangeFilters() {
         return Collections.emptyList();
     }
 

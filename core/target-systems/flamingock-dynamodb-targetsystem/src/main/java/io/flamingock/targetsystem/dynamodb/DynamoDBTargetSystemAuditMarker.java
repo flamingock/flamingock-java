@@ -40,56 +40,56 @@ public class DynamoDBTargetSystemAuditMarker implements TargetSystemAuditMarker 
     protected static final Logger logger = FlamingockLoggerFactory.getLogger("DynamoAuditMarker");
 
     public static final String OPERATION = "operation";
-    private static final String TASK_ID = "taskId";
+    private static final String CHANGE_ID = "changeId";
     private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
-    protected DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable;
+    protected DynamoDbTable<OngoingChangeEntity> onGoingChangeStatusTable;
 
     public static Builder builder(DynamoDbClient dynamoDBClient,
                                   TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
         return new Builder(dynamoDBClient, txManager);
     }
 
-    public DynamoDBTargetSystemAuditMarker(DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable,
+    public DynamoDBTargetSystemAuditMarker(DynamoDbTable<OngoingChangeEntity> onGoingChangeStatusTable,
                                            TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
-        this.onGoingTaskStatusTable = onGoingTaskStatusTable;
+        this.onGoingChangeStatusTable = onGoingChangeStatusTable;
         this.txManager = txManager;
     }
 
     @Override
     public Set<TargetSystemAuditMark> listAll() {
 
-        return onGoingTaskStatusTable
+        return onGoingChangeStatusTable
                 .scan(ScanEnhancedRequest.builder()
                         .consistentRead(true)
                         .build()
                 )
                 .items()
                 .stream()
-                .map(OngoingTaskEntity::toOngoingStatus)
+                .map(OngoingChangeEntity::toOngoingStatus)
                 .collect(Collectors.toSet());
     }
 
     @Override
     public void clearMark(String changeId) {
-        onGoingTaskStatusTable.deleteItem(
+        onGoingChangeStatusTable.deleteItem(
                 DeleteItemEnhancedRequest.builder()
                         .key(Key.builder().partitionValue(changeId).build())
                         .build()
         );
-        logger.trace("removed ongoing task[{}]", changeId);
+        logger.trace("removed ongoing change[{}]", changeId);
     }
 
     @Override
     public void mark(TargetSystemAuditMark auditMark) {
         TransactWriteItemsEnhancedRequest.Builder tx =
-                txManager.getSessionOrThrow(auditMark.getTaskId());
+                txManager.getSessionOrThrow(auditMark.getChangeId());
 
-        OngoingTaskEntity entity =
-                new OngoingTaskEntity(auditMark.getTaskId(), auditMark.getOperation().toString());
+        OngoingChangeEntity entity =
+                new OngoingChangeEntity(auditMark.getChangeId(), auditMark.getOperation().toString());
 
-        tx.addPutItem(onGoingTaskStatusTable, entity);
+        tx.addPutItem(onGoingChangeStatusTable, entity);
 
-        logger.debug("queued local audit mark [{}] into transaction session", auditMark.getTaskId());
+        logger.debug("queued local audit mark [{}] into transaction session", auditMark.getChangeId());
     }
 
 
@@ -98,7 +98,7 @@ public class DynamoDBTargetSystemAuditMarker implements TargetSystemAuditMarker 
         private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
         private String tableName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
         private boolean autoCreate = true;
-        protected DynamoDbTable<OngoingTaskEntity> onGoingTaskStatusTable;
+        protected DynamoDbTable<OngoingChangeEntity> onGoingChangeStatusTable;
 
         public Builder(DynamoDbClient dynamoDBClient, TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager) {
             dynamoDBUtil = new DynamoDBUtil(dynamoDBClient);
@@ -118,20 +118,20 @@ public class DynamoDBTargetSystemAuditMarker implements TargetSystemAuditMarker 
         public DynamoDBTargetSystemAuditMarker build() {
             if (autoCreate) {
                 dynamoDBUtil.createTable(
-                        dynamoDBUtil.getAttributeDefinitions("taskId", null),
-                        dynamoDBUtil.getKeySchemas("taskId", null),
+                        dynamoDBUtil.getAttributeDefinitions("changeId", null),
+                        dynamoDBUtil.getKeySchemas("changeId", null),
                         dynamoDBUtil.getProvisionedThroughput(5L, 5L),
                         this.tableName,
                         emptyList(),
                         emptyList()
                 );
-                this.onGoingTaskStatusTable = dynamoDBUtil.getEnhancedClient().table(this.tableName, TableSchema.fromBean(OngoingTaskEntity.class));
-                logger.info("table {} created successfully", this.onGoingTaskStatusTable.tableName());
+                this.onGoingChangeStatusTable = dynamoDBUtil.getEnhancedClient().table(this.tableName, TableSchema.fromBean(OngoingChangeEntity.class));
+                logger.info("table {} created successfully", this.onGoingChangeStatusTable.tableName());
             } else {
-                this.onGoingTaskStatusTable = dynamoDBUtil.getEnhancedClient().table(this.tableName, TableSchema.fromBean(OngoingTaskEntity.class));
+                this.onGoingChangeStatusTable = dynamoDBUtil.getEnhancedClient().table(this.tableName, TableSchema.fromBean(OngoingChangeEntity.class));
             }
 
-            return new DynamoDBTargetSystemAuditMarker(this.onGoingTaskStatusTable, txManager);
+            return new DynamoDBTargetSystemAuditMarker(this.onGoingChangeStatusTable, txManager);
         }
     }
 }

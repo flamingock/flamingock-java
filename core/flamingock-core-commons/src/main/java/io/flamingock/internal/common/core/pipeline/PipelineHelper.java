@@ -35,25 +35,25 @@ public class PipelineHelper {
         if (Boolean.TRUE.equals(auditEntryFromOrigin.getSystemChange())) {
             return LEGACY_STAGE_ID;
         } else {
-            String taskIdInPipeline = getBaseTaskId(auditEntryFromOrigin);
-            return pipelineDescriptor.getStageByTask(taskIdInPipeline).orElseThrow(() -> generateTaskIdException(taskIdInPipeline));
+            String changeIdInPipeline = getBaseChangeId(auditEntryFromOrigin);
+            return pipelineDescriptor.getStageByChange(changeIdInPipeline).orElseThrow(() -> generateChangeIdException(changeIdInPipeline));
         }
     }
 
 
 
-    public String getBaseTaskId(AuditEntry auditEntry) {
-        String originalTaskId = auditEntry.getTaskId();
-        int index = originalTaskId.indexOf("_before");
-        return index >= 0 ? originalTaskId.substring(0, index) : originalTaskId;
+    public String getBaseChangeId(AuditEntry auditEntry) {
+        String originalChangeId = auditEntry.getChangeId();
+        int index = originalChangeId.indexOf("_before");
+        return index >= 0 ? originalChangeId.substring(0, index) : originalChangeId;
     }
 
-    public String getStorableTaskId(AuditEntry auditEntry) {
-        return auditEntry.getTaskId();
+    public String getStorableChangeId(AuditEntry auditEntry) {
+        return auditEntry.getChangeId();
     }
 
     @NotNull
-    public IllegalArgumentException generateTaskIdException(String taskIdInPipeline) {
-        return new IllegalArgumentException(String.format(errorTemplate, taskIdInPipeline));
+    public IllegalArgumentException generateChangeIdException(String changeIdInPipeline) {
+        return new IllegalArgumentException(String.format(errorTemplate, changeIdInPipeline));
     }
 }

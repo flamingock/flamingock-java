@@ -5,7 +5,7 @@
         "name": "test-stage",
         "type": "DEFAULT",
         "sourcesPackage": "io.flamingock.springboot.test",
-        "tasks": [],
+        "changes": [],
         "parallel": false
       }
     ]
