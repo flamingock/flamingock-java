@@ -168,6 +168,13 @@ project(":legacy:mongock-importer-couchbase").projectDir = file("legacy/mongock-
 
 
 //////////////////////////////////////
+// GRADLE PLUGIN
+//////////////////////////////////////
+include("flamingock-gradle-plugin")
+project(":flamingock-gradle-plugin").projectDir = file("flamingock-gradle-plugin")
+
+
+//////////////////////////////////////
 // E2E TESTS
 //////////////////////////////////////
 include("e2e:core-e2e")

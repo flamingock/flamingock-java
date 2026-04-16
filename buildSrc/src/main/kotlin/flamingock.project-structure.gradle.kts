@@ -73,6 +73,10 @@ val testKitsProjects = setOf(
     "couchbase-test-kit"
 )
 
+val gradlePluginProjects = setOf(
+    "flamingock-gradle-plugin"
+)
+
 val allProjects = coreProjects + cloudProjects + communityProjects + pluginProjects + targetSystemProjects + externalSystemProjects + utilProjects + legacyProjects + testKitsProjects
 
 // Project classification utilities
@@ -118,11 +122,16 @@ extra["externalSystemProjects"] = externalSystemProjects
 extra["utilProjects"] = utilProjects
 extra["legacyProjects"] = legacyProjects
 extra["testKitsProjects"] = testKitsProjects
+extra["gradlePluginProjects"] = gradlePluginProjects
 extra["allProjects"] = allProjects
 
 // Apply appropriate plugins based on project type
 when {
     project == rootProject -> { /* Do not publish root project */ }
+    name in gradlePluginProjects -> {
+        // Gradle plugin handles its own publishing via com.gradle.plugin-publish
+        apply(plugin = "flamingock.license")
+    }
     isBomModule() -> {
         apply(plugin = "java-platform")
         apply(plugin = "flamingock.license")
