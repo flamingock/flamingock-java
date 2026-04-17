@@ -39,7 +39,7 @@ public class ChangeRequest {
     }
 
     public static ChangeRequest ongoingRollback(String id, boolean transactional) {
-        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.ROLLBACK, transactional);
+        return new ChangeRequest(id, CloudTargetSystemAuditMarkType.ROLLED_BACK, transactional);
     }
 
     public ChangeRequest(String id, CloudTargetSystemAuditMarkType ongoingStatus, boolean transactional) {

@@ -16,5 +16,5 @@
 package io.flamingock.internal.common.core.targets;
 
 public enum TargetSystemAuditMarkType {
-    NONE, APPLIED, ROLLBACK
+    NONE, APPLIED, ROLLED_BACK
 }
