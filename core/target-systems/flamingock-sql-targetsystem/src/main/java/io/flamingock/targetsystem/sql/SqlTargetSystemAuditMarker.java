@@ -18,7 +18,7 @@ package io.flamingock.targetsystem.sql;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.sql.SqlDialect;
 import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.external.store.audit.domain.AuditContextBundle;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 
@@ -66,8 +66,8 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
             Set<TargetSystemAuditMark> ongoingStatuses = new HashSet<>();
             while (resultSet.next()) {
                 String changeId = resultSet.getString("change_id");
-                AuditContextBundle.Operation operation = AuditContextBundle.Operation.valueOf(resultSet.getString("operation"));
-                ongoingStatuses.add(new TargetSystemAuditMark(changeId, operation.toOngoingStatusOperation()));
+                TargetSystemAuditMarkType markType = TargetSystemAuditMarkType.valueOf(resultSet.getString("operation"));
+                ongoingStatuses.add(new TargetSystemAuditMark(changeId, markType));
             }
             return ongoingStatuses;
         } catch (SQLException ex) {

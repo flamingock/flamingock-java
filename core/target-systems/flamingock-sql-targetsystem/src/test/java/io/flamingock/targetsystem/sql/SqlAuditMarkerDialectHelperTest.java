@@ -175,7 +175,7 @@ public class SqlAuditMarkerDialectHelperTest {
             // GIVEN
             String changeId1 = "test-change-id1";
             String changeId2 = "test-change-id2";
-            TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLBACK;
+            TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLED_BACK;
 
             TargetSystemAuditMark mark1 = new TargetSystemAuditMark(changeId1, operation);
             TargetSystemAuditMark mark2 = new TargetSystemAuditMark(changeId2, operation);
@@ -221,7 +221,7 @@ public class SqlAuditMarkerDialectHelperTest {
             // GIVEN
             String changeId1 = "test-change-id1";
             String changeId2 = "test-change-id2";
-            TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLBACK;
+            TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.ROLLED_BACK;
 
             TargetSystemAuditMark mark1 = new TargetSystemAuditMark(changeId1, operation);
             TargetSystemAuditMark mark2 = new TargetSystemAuditMark(changeId2, operation);

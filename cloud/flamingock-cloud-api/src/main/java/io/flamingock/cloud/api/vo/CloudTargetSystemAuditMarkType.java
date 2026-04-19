@@ -16,5 +16,5 @@
 package io.flamingock.cloud.api.vo;
 
 public enum CloudTargetSystemAuditMarkType {
-    NONE, APPLIED, ROLLBACK
+    NONE, APPLIED, ROLLED_BACK
 }
