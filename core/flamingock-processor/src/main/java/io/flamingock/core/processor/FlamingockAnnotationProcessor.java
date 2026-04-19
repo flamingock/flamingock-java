@@ -779,7 +779,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             }
 
             if (!matched) {
-                unmapped.add(pkg);
+                unmapped.add(formatPackageForMessage(pkg));
             }
         }
 
@@ -791,6 +791,10 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 logger.warn(message);
             }
         }
+    }
+
+    private String formatPackageForMessage(String pkg) {
+        return pkg.isEmpty() ? "<default-package>" : pkg;
     }
 
 }

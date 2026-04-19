@@ -29,10 +29,10 @@ public final class ChangeOrderExtractor {
     // Captures ORDER before double underscore separator
     private static final Pattern SIMPLE_FILE_ORDER_REGEX_PATTERN = Pattern.compile("^_(.+?)__(.+)$");
 
-    // For class names: must have _order__ at the beginning of the class name after package
-    // (e.g., com.mycompany.mypackage._002__MyChange or com.mycompany.OuterClass$_V1_2_3__InnerChange)
+    // For class names: must have _order__ at the beginning of the class name, after package, or after enclosing class
+    // (e.g., _001__MyChange, com.mycompany.mypackage._002__MyChange or com.mycompany.OuterClass$_V1_2_3__InnerChange)
     // Captures ORDER before double underscore separator
-    private static final Pattern FILE_WITH_PACKAGE_ORDER_REGEX_PATTERN = Pattern.compile("[.$]_(.+?)__(.+)$");
+    private static final Pattern FILE_WITH_PACKAGE_ORDER_REGEX_PATTERN = Pattern.compile("(?:^|[.$])_(.+?)__(.+)$");
 
     private ChangeOrderExtractor() {
     }

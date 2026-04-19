@@ -18,11 +18,23 @@ package io.flamingock.importer.mongock.mongodb.changes;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 
-@ChangeUnit(id = "mongock-change-1", order = "1", author = "flamingock-team")
-public class MongockChange1 {
+public class MongockChangeGroup {
 
-    @Execution
-    public void apply() {
-        System.out.println("Client Initializer");
+    @ChangeUnit(id = "mongock-change-1", order = "1", author = "flamingock-team")
+    public static class MongockChange1 {
+
+        @Execution
+        public void apply() {
+            System.out.println("Client Initializer");
+        }
+    }
+
+    @ChangeUnit(id = "mongock-change-2", order = "2", author = "flamingock-team")
+    public static class MongockChange2 {
+
+        @Execution
+        public void apply() {
+            System.out.println("Client Initializer");
+        }
     }
 }

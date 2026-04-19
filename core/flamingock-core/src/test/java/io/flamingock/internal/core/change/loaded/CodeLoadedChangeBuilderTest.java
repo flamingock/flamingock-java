@@ -18,9 +18,15 @@ package io.flamingock.internal.core.change.loaded;
 import io.flamingock.api.annotations.Apply;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.api.annotations.Change;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
+import io.flamingock.internal.common.core.preview.PreviewMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -173,6 +179,14 @@ class CodeLoadedChangeBuilderTest {
         assertTrue(result.isTransactional());
     }
 
+    @Test
+    @DisplayName("Should load preview with nested class binary name")
+    void shouldLoadPreviewWithNestedClassBinaryName() {
+        CodeLoadedChange change = CodeLoadedChangeBuilder.getInstanceFromPreview(preview(Group.NestedChange.class.getName())).build();
+
+        assertEquals(Group.NestedChange.class, change.getImplementationClass());
+    }
+
     // Test class with Change annotation for testing setFromFlamingockChangeAnnotation
     @Change(id = "annotation-test", transactional = false, author = "aperezdieppa")
     public static class _100__TestChangeClass {
@@ -231,6 +245,34 @@ class CodeLoadedChangeBuilderTest {
         assertEquals("0001", result.getOrder().orElse(null));
         assertEquals(_0001__anotherChange.class, result.getImplementationClass());
         assertNull(result.getSourceFile());
+    }
+
+    private CodePreviewChange preview(String sourceClassPath) {
+        return new CodePreviewChange(
+                "nested-change",
+                "001",
+                "flamingock",
+                sourceClassPath,
+                null,
+                PreviewConstructor.getDefault(),
+                new PreviewMethod("apply", Collections.emptyList()),
+                null,
+                false,
+                true,
+                false,
+                null,
+                RecoveryDescriptor.getDefault(),
+                false);
+    }
+
+    static class Group {
+
+        static class NestedChange {
+
+            @Apply
+            void apply() {
+            }
+        }
     }
 
 }
