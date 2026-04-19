@@ -50,7 +50,12 @@ public class CodePreviewChange extends AbstractPreviewChange {
         this.previewConstructor = previewConstructor;
         this.applyPreviewMethod = applyPreviewMethod;
         this.rollbackPreviewMethod = rollbackPreviewMethod;
-        this.sourcePackage = sourceClassPath.substring(0, sourceClassPath.lastIndexOf("."));
+        this.sourcePackage = extractSourcePackage(sourceClassPath);
+    }
+
+    private String extractSourcePackage(String sourceClassPath) {
+        int packageEndIndex = sourceClassPath != null ? sourceClassPath.lastIndexOf(".") : -1;
+        return packageEndIndex > 0 ? sourceClassPath.substring(0, packageEndIndex) : "";
     }
 
     public PreviewConstructor getPreviewConstructor() { return previewConstructor; }

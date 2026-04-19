@@ -316,6 +316,37 @@ public class PipelinePreProcessorTest {
         assertTrue(cause.getMessage().contains("com.example.unmapped"), "Should mention the unmapped package");
     }
 
+    @Test
+    @DisplayName("Should report default package when empty package changes are not mapped")
+    void shouldReportDefaultPackageForUnmappedEmptyPackageChanges() throws Exception {
+        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+
+        Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
+        changesByPackage.put("", Collections.emptyList());
+
+        PreviewStage mappedStage = PreviewStage.defaultBuilder(StageType.DEFAULT)
+                .setName("migrations")
+                .setSourcesPackage("com.example.migrations")
+                .setSourcesRoots(Collections.emptyList())
+                .setResourcesRoot("src/main/resources")
+                .setChanges(Collections.singletonList(new io.flamingock.internal.common.core.preview.CodePreviewChange()))
+                .build();
+
+        PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
+
+        Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
+                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class, Boolean.class);
+        validator.setAccessible(true);
+
+        InvocationTargetException ex = assertThrows(InvocationTargetException.class, () ->
+                validator.invoke(processor, changesByPackage, pipeline, true));
+
+        Throwable cause = ex.getCause();
+        assertNotNull(cause, "Validator should throw a RuntimeException cause");
+        assertInstanceOf(RuntimeException.class, cause, "Cause should be RuntimeException");
+        assertEquals("Changes are not mapped to any stage: <default-package>", cause.getMessage());
+    }
+
 
 
     // Helper methods using reflection to test the internal pipeline building logic
