@@ -28,6 +28,7 @@ import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.util.TypeElementNameUtils;
 import io.flamingock.internal.util.ReflectionUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -132,8 +133,9 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
         Recovery recoveryAnnotation = typeElement.getAnnotation(Recovery.class);
 
         if(changeAnnotation != null) {
+            validateNestedChangeClass(typeElement);
             String changeId = changeAnnotation.id();
-            String classPath = typeElement.getQualifiedName().toString();
+            String classPath = TypeElementNameUtils.getBinaryName(typeElement);
             String order = ChangeOrderExtractor.extractOrderFromClassName(changeId, classPath);
             setId(changeId);
             setOrder(order);
@@ -155,6 +157,14 @@ public class CodePreviewTaskBuilder implements PreviewTaskBuilder<CodePreviewCha
             setRecovery(RecoveryDescriptor.getDefault());
         }
         return this;
+    }
+
+    private void validateNestedChangeClass(TypeElement typeElement) {
+        if (TypeElementNameUtils.isNonStaticNestedType(typeElement)) {
+            throw new FlamingockException(
+                    "Change class [%s] is a non-static nested class. Nested change classes must be static so Flamingock can instantiate them without an enclosing class instance.",
+                    TypeElementNameUtils.getBinaryName(typeElement));
+        }
     }
 
 

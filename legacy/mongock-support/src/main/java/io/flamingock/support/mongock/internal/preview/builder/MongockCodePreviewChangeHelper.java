@@ -23,6 +23,7 @@ import io.flamingock.internal.common.core.preview.PreviewConstructor;
 import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.task.RecoveryDescriptor;
 import io.flamingock.internal.common.core.task.TargetSystemDescriptor;
+import io.flamingock.internal.common.core.util.TypeElementNameUtils;
 import io.flamingock.internal.util.ReflectionUtil;
 import io.mongock.api.annotations.BeforeExecution;
 import io.mongock.api.annotations.ChangeUnit;
@@ -52,6 +53,8 @@ public class MongockCodePreviewChangeHelper {
     @NotNull
     public List<CodePreviewChange> getCodePreviewChanges(TypeElement typeElement, String mongockTargetSystemId) {
 
+        validateNestedChangeClass(typeElement);
+
         ChangeUnit changeUnitAnnotation = typeElement.getAnnotation(ChangeUnit.class);
         if (changeUnitAnnotation != null) {
             return getCodePreviewChangesFromChangeUnit(typeElement, mongockTargetSystemId, changeUnitAnnotation);
@@ -68,6 +71,14 @@ public class MongockCodePreviewChangeHelper {
         }
     }
 
+    private void validateNestedChangeClass(TypeElement typeElement) {
+        if (TypeElementNameUtils.isNonStaticNestedType(typeElement)) {
+            throw new FlamingockException(
+                    "Mongock change class [%s] is a non-static nested class. Nested change classes must be static so Flamingock can instantiate them without an enclosing class instance.",
+                    TypeElementNameUtils.getBinaryName(typeElement));
+        }
+    }
+
 
     @NotNull
     private List<CodePreviewChange> getCodePreviewChangesFromChangeUnit(TypeElement typeElement, String mongockTargetSystemId, ChangeUnit changeUnitAnnotation) {
@@ -80,7 +91,7 @@ public class MongockCodePreviewChangeHelper {
         List<CodePreviewChange> changes = new ArrayList<>();
 
         String id = changeUnitAnnotation.id();
-        String sourceClassPath = typeElement.getQualifiedName().toString();
+        String sourceClassPath = TypeElementNameUtils.getBinaryName(typeElement);
         String order = getChangeUnitOrder(changeUnitAnnotation.order(), sourceClassPath);
         String author = changeUnitAnnotation.author();
         PreviewConstructor constructor = getPreviewConstructor(typeElement);
@@ -211,7 +222,7 @@ public class MongockCodePreviewChangeHelper {
 
         List<CodePreviewChange> changes = new ArrayList<>();
 
-        String sourceClassPath = typeElement.getQualifiedName().toString();
+        String sourceClassPath = TypeElementNameUtils.getBinaryName(typeElement);
         boolean transactional = true;
         boolean system = false;
         TargetSystemDescriptor targetSystem = TargetSystemDescriptor.fromId(mongockTargetSystemId);
