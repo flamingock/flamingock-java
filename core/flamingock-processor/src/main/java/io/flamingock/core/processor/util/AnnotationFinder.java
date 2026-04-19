@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.processor.ChangeDiscoverer;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
+import io.flamingock.internal.common.core.util.TypeElementNameUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -112,7 +113,7 @@ public final class AnnotationFinder {
         validateReturnType(method);
 
         TypeElement enclosingClass = (TypeElement) method.getEnclosingElement();
-        String className = enclosingClass.getQualifiedName().toString();
+        String className = TypeElementNameUtils.getBinaryName(enclosingClass);
         String methodName = method.getSimpleName().toString();
 
         String signature = acceptsArgs ? "(String[] args)" : "()";
