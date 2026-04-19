@@ -35,12 +35,33 @@ public abstract class AuditContextBundle {
 
         START_EXECUTION, EXECUTION, ROLLBACK;
 
-        public TargetSystemAuditMarkType toOngoingStatusOperation() {
-            return TargetSystemAuditMarkType.valueOf(this.name());
+        private static final java.util.Map<Operation, TargetSystemAuditMarkType> TO_MARK_TYPE;
+        private static final java.util.Map<TargetSystemAuditMarkType, Operation> FROM_MARK_TYPE;
+
+        static {
+            TO_MARK_TYPE = new java.util.EnumMap<>(Operation.class);
+            TO_MARK_TYPE.put(EXECUTION, TargetSystemAuditMarkType.APPLIED);
+            TO_MARK_TYPE.put(ROLLBACK, TargetSystemAuditMarkType.ROLLED_BACK);
+
+            FROM_MARK_TYPE = new java.util.EnumMap<>(TargetSystemAuditMarkType.class);
+            FROM_MARK_TYPE.put(TargetSystemAuditMarkType.APPLIED, EXECUTION);
+            FROM_MARK_TYPE.put(TargetSystemAuditMarkType.ROLLED_BACK, ROLLBACK);
         }
 
-        public static AuditContextBundle.Operation fromOngoingStatusOperation(TargetSystemAuditMarkType ongoingOperation) {
-            return AuditContextBundle.Operation.valueOf(ongoingOperation.name());
+        public TargetSystemAuditMarkType toOngoingStatusOperation() {
+            TargetSystemAuditMarkType result = TO_MARK_TYPE.get(this);
+            if (result == null) {
+                throw new IllegalArgumentException("No TargetSystemAuditMarkType mapping for Operation." + this.name());
+            }
+            return result;
+        }
+
+        public static Operation fromOngoingStatusOperation(TargetSystemAuditMarkType ongoingOperation) {
+            Operation result = FROM_MARK_TYPE.get(ongoingOperation);
+            if (result == null) {
+                throw new IllegalArgumentException("No Operation mapping for TargetSystemAuditMarkType." + ongoingOperation.name());
+            }
+            return result;
         }
 
     }
