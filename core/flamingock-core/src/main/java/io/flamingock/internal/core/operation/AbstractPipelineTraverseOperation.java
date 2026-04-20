@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.error.PendingChangesException;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
@@ -207,7 +208,12 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         } else {
             flamingockException = new FlamingockException(exception);
         }
-        logger.debug("Error executing the process. ABORTED OPERATION", exception);
+        if (flamingockException instanceof ManualInterventionRequiredException) {
+            ManualInterventionRequiredException miException = (ManualInterventionRequiredException) flamingockException;
+            logger.error("ABORTED OPERATION - Manual intervention required for changes: [{}]", miException.getConflictingSummary());
+        } else {
+            logger.debug("Error executing the process. ABORTED OPERATION", exception);
+        }
         eventPublisher.publish(new StageFailedEvent(flamingockException));
         eventPublisher.publish(new PipelineFailedEvent(flamingockException));
         return flamingockException;
