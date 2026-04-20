@@ -44,8 +44,15 @@ public class ChangeActionMap {
 
 
     /**
+     * Returns true if any change in this action map requires manual intervention.
+     */
+    public boolean hasManualInterventionActions() {
+        return actionMap.containsValue(ChangeAction.MANUAL_INTERVENTION);
+    }
+
+    /**
      * Returns true if the action plan is empty (no actions specified).
-     * 
+     *
      * @return true if the action plan is empty
      */
     public boolean isEmpty() {
