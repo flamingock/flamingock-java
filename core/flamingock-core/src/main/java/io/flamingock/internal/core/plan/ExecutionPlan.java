@@ -20,6 +20,7 @@ import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
@@ -37,7 +38,11 @@ public class ExecutionPlan implements AutoCloseable {
     }
 
     public static ExecutionPlan CONTINUE(List<ExecutableStage> stages) {
-        return new ExecutionPlan(stages);
+        return new ExecutionPlan(false, stages);
+    }
+
+    public static ExecutionPlan ABORT(List<ExecutableStage> stages) {
+        return new ExecutionPlan(true, stages);
     }
 
     private final String executionId;
@@ -46,18 +51,29 @@ public class ExecutionPlan implements AutoCloseable {
 
     private final ExecutablePipeline pipeline;
 
-    private ExecutionPlan(List<ExecutableStage> stages) {
-        this(null, null, stages);
+    private final boolean aborted;
+
+    private ExecutionPlan(boolean aborted, List<ExecutableStage> stages) {
+        this(null, null, aborted, stages);
     }
 
     private ExecutionPlan(String executionId, Lock lock, List<ExecutableStage> stages) {
+        this(executionId, lock, false, stages);
+    }
+
+    private ExecutionPlan(String executionId, Lock lock, boolean aborted, List<ExecutableStage> stages) {
         this.executionId = executionId;
         this.lock = lock;
+        this.aborted = aborted;
         this.pipeline = new ExecutablePipeline(stages);
     }
 
+    public boolean isAborted() {
+        return aborted;
+    }
+
     public boolean isExecutionRequired() {
-        return pipeline.isExecutionRequired();
+        return !aborted && pipeline.isExecutionRequired();
     }
 
     public ExecutablePipeline getPipeline() {
@@ -72,36 +88,42 @@ public class ExecutionPlan implements AutoCloseable {
     }
 
     /**
-     * Validates the execution plan for manual intervention requirements.
-     * This method analyzes all executable stages and their changes to identify
-     * any that require manual intervention, throwing an exception if found.
+     * Validates the execution plan.
      * <p>
-     * This centralized validation follows DDD principles by keeping validation
-     * logic at the appropriate architectural layer (ExecutionPlan domain).
-     * </p>
-     * 
+     * Checks two conditions:
+     * <ol>
+     *   <li>If any changes require manual intervention, throws {@link ManualInterventionRequiredException}</li>
+     *   <li>If the plan is aborted (even without MI changes), throws {@link FlamingockException}
+     *       — the execution planner decided to abort for reasons beyond individual change state</li>
+     * </ol>
+     *
      * @throws ManualInterventionRequiredException if any changes require manual intervention
+     * @throws FlamingockException if the plan is aborted without specific MI changes
      */
     public void validate() {
         List<RecoveryIssue> recoveryIssues = new ArrayList<>();
         String firstStageName = "unknown";
         boolean hasStages = false;
-        
+
         for (ExecutableStage stage : pipeline.getExecutableStages()) {
             if (!hasStages) {
                 firstStageName = stage.getName();
                 hasStages = true;
             }
-            
+
             for (ExecutableChange change : stage.getChanges()) {
                 if (change.getAction() == ChangeAction.MANUAL_INTERVENTION) {
                     recoveryIssues.add(new RecoveryIssue(change.getId()));
                 }
             }
         }
-        
+
         if (!recoveryIssues.isEmpty()) {
             throw new ManualInterventionRequiredException(recoveryIssues, firstStageName);
+        }
+
+        if (aborted) {
+            throw new FlamingockException("Execution aborted by the execution planner");
         }
     }
 

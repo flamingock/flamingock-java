@@ -116,8 +116,12 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                             Math.min(remainingTimeForSameGuid, coreConfiguration.getLockTryFrequencyMillis())
                     );
 
+                } else if (response.isAbort()) {
+                    List<ExecutableStage> stages = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
+                    return ExecutionPlan.ABORT(stages);
+
                 } else {
-                    throw new RuntimeException("Unrecognized action from response. Not within(CONTINUE, EXECUTE, AWAIT)");
+                    throw new RuntimeException("Unrecognized action from response. Not within(CONTINUE, EXECUTE, AWAIT, ABORT)");
                 }
 
             } catch (FlamingockException ex) {

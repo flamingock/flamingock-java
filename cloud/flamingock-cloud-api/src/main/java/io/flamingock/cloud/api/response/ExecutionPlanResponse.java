@@ -95,6 +95,10 @@ public class ExecutionPlanResponse {
         return action == CloudExecutionAction.AWAIT;
     }
 
+    public boolean isAbort() {
+        return action == CloudExecutionAction.ABORT;
+    }
+
     public void validate() {
         if (isExecute() && executionId == null) {
             throw new RuntimeException("ExecutionPlan must contain a valid executionId");

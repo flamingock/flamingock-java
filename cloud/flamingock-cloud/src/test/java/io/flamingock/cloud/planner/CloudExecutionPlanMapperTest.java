@@ -165,6 +165,29 @@ class CloudExecutionPlanMapperTest {
         assertThrows(ManualInterventionRequiredException.class, plan::validate);
     }
 
+    @Test
+    @DisplayName("Should build stages from ABORT response preserving MANUAL_INTERVENTION actions")
+    void shouldBuildAbortPlanFromAbortResponse() {
+        List<AbstractLoadedStage> loadedStages = Arrays.asList(buildStage("stage-1", change1, change2));
+        ExecutionPlanResponse response = new ExecutionPlanResponse(
+                CloudExecutionAction.ABORT, "exec-1", null,
+                Arrays.asList(buildStageResponse("stage-1", 0,
+                        changeResponse(change1.getId(), CloudChangeAction.MANUAL_INTERVENTION),
+                        changeResponse(change2.getId(), CloudChangeAction.APPLY)))
+        );
+
+        List<ExecutableStage> result = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
+        ExecutionPlan plan = ExecutionPlan.ABORT(result);
+
+        assertTrue(plan.isAborted());
+        assertFalse(plan.isExecutionRequired());
+
+        Map<String, ChangeAction> actions = result.get(0).getChanges().stream()
+                .collect(Collectors.toMap(ExecutableChange::getId, ExecutableChange::getAction));
+        assertEquals(ChangeAction.MANUAL_INTERVENTION, actions.get(change1.getId()));
+        assertEquals(ChangeAction.APPLY, actions.get(change2.getId()));
+    }
+
     private static DefaultLoadedStage buildStage(String name, AbstractLoadedChange... changes) {
         return new DefaultLoadedStage(name, StageType.DEFAULT, Arrays.asList(changes));
     }
