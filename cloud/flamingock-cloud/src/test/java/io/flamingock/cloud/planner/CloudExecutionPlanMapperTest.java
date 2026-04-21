@@ -36,7 +36,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import io.flamingock.cloud.api.request.ExecutionPlanRequest;
+import io.flamingock.cloud.api.request.ChangeRequest;
+import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
+
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -186,6 +192,23 @@ class CloudExecutionPlanMapperTest {
                 .collect(Collectors.toMap(ExecutableChange::getId, ExecutableChange::getAction));
         assertEquals(ChangeAction.MANUAL_INTERVENTION, actions.get(change1.getId()));
         assertEquals(ChangeAction.APPLY, actions.get(change2.getId()));
+    }
+
+    @Test
+    @DisplayName("Should map ongoing status from audit marks to ChangeRequests in toRequest()")
+    void shouldMapOngoingStatusFromAuditMarksToChangeRequests() {
+        List<AbstractLoadedStage> loadedStages = Arrays.asList(buildStage("stage-1", change1, change2));
+
+        HashMap<String, TargetSystemAuditMarkType> ongoingStatusesMap = new HashMap<>();
+        ongoingStatusesMap.put(change1.getId(), TargetSystemAuditMarkType.APPLIED);
+
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(loadedStages, 60000L, ongoingStatusesMap);
+
+        Map<String, CloudTargetSystemAuditMarkType> marksByChangeId = request.getClientSubmission().getStages().get(0).getChanges().stream()
+                .collect(Collectors.toMap(ChangeRequest::getId, ChangeRequest::getOngoingStatus));
+
+        assertEquals(CloudTargetSystemAuditMarkType.APPLIED, marksByChangeId.get(change1.getId()));
+        assertEquals(CloudTargetSystemAuditMarkType.NONE, marksByChangeId.get(change2.getId()));
     }
 
     private static DefaultLoadedStage buildStage(String name, AbstractLoadedChange... changes) {

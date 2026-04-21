@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CloudExecutionPlanner extends ExecutionPlanner {
@@ -56,19 +57,19 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private final ExecutionPlannerClient client;
 
-    private final TargetSystemAuditMarker auditMarker;
+    private final List<TargetSystemAuditMarker> auditMarkers;
 
     public CloudExecutionPlanner(RunnerId runnerId,
                                  ExecutionPlannerClient client,
                                  CoreConfigurable coreConfiguration,
                                  CloudLockService lockService,
-                                 TargetSystemAuditMarker auditMarker,
+                                 List<TargetSystemAuditMarker> auditMarkers,
                                  TimeService timeService) {
         this.client = client;
         this.runnerId = runnerId;
         this.coreConfiguration = coreConfiguration;
         this.lockService = lockService;
-        this.auditMarker = auditMarker;
+        this.auditMarkers = auditMarkers;
         this.timeService = timeService;
     }
 
@@ -150,7 +151,13 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     }
 
     private Collection<TargetSystemAuditMark> getAuditMarkers() {
-        return auditMarker != null ? auditMarker.listAll() : Collections.emptySet();
+        if (auditMarkers == null || auditMarkers.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return auditMarkers.stream()
+                .map(TargetSystemAuditMarker::listAll)
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
     }
 
     private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {

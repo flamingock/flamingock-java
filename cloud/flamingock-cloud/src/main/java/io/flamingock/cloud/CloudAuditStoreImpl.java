@@ -36,6 +36,9 @@ import io.flamingock.cloud.planner.CloudExecutionPlanner;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
 import io.flamingock.cloud.planner.client.HttpExecutionPlannerClient;
 import io.flamingock.internal.core.external.store.audit.LifecycleAuditWriter;
+import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.external.targets.TargetSystemManager;
+import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import org.apache.http.impl.client.HttpClients;
@@ -44,6 +47,8 @@ import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CloudAuditStoreImpl implements CloudAuditStore {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudAuditStore");
@@ -61,6 +66,12 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
         CoreConfigurable coreConfiguration = baseContext.getRequiredDependencyValue(CoreConfigurable.class);
         CloudConfigurable cloudConfiguration = baseContext.getRequiredDependencyValue(CloudConfigurable.class);
 
+        TargetSystemManager targetSystemManager = baseContext.getRequiredDependencyValue(TargetSystemManager.class);
+        List<TargetSystemAuditMarker> auditMarkers = targetSystemManager.getTransactionalTargetSystems().stream()
+                .filter(TransactionalTargetSystem::hasMarker)
+                .map(TransactionalTargetSystem::getAuditMarker)
+                .collect(Collectors.toList());
+
         Http.RequestBuilderFactory requestBuilderFactory =
                 Http.builderFactory(HttpClients.createDefault(), JsonObjectMapper.DEFAULT_INSTANCE);
 
@@ -69,7 +80,8 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                     runnerId,
                     coreConfiguration,
                     cloudConfiguration,
-                    requestBuilderFactory
+                    requestBuilderFactory,
+                    auditMarkers
             );
         }
     }
@@ -83,7 +95,8 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
     private CloudAuditPersistenceImpl buildPersistence(RunnerId runnerId,
                                                        CoreConfigurable coreConfiguration,
                                                        CloudConfigurable cloudConfiguration,
-                                                       Http.RequestBuilderFactory requestBuilderFactory) {
+                                                       Http.RequestBuilderFactory requestBuilderFactory,
+                                                       List<TargetSystemAuditMarker> auditMarkers) {
         AuthManager authManager = new AuthManager(
                 cloudConfiguration.getApiToken(),
                 cloudConfiguration.getServiceName(),
@@ -111,7 +124,8 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                 requestBuilderFactory,
                 authManager,
                 environmentId,
-                serviceId);
+                serviceId,
+                auditMarkers);
 
         return new CloudAuditPersistenceImpl(
                 environmentId,
@@ -139,7 +153,8 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                                                  Http.RequestBuilderFactory requestBuilderFactory,
                                                  AuthManager authManager,
                                                  EnvironmentId environmentId,
-                                                 ServiceId serviceId) {
+                                                 ServiceId serviceId,
+                                                 List<TargetSystemAuditMarker> auditMarkers) {
         LockServiceClient lockClient = new HttpLockServiceClient(
                 cloudConfiguration.getHost(),
                 cloudConfiguration.getApiVersion(),
@@ -162,7 +177,7 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                 executionPlannerClient,
                 coreConfiguration,
                 new CloudLockService(lockClient),
-                null,
+                auditMarkers,
                 TimeService.getDefault()
         );
     }
