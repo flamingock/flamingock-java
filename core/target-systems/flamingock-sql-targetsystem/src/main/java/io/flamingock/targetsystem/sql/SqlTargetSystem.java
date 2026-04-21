@@ -18,18 +18,23 @@ package io.flamingock.targetsystem.sql;
 import io.flamingock.externalsystem.sql.api.SqlExternalSystem;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.runtime.ExecutionRuntime;
-import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.runtime.ExecutionRuntime;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
+
+import static io.flamingock.internal.core.builder.FlamingockEdition.CLOUD;
+import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
 public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> implements SqlExternalSystem {
 
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
     private SqlTxWrapper txWrapper;
 
@@ -48,10 +53,15 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
         this.validate();
         targetSystemContext.addDependency(dataSource);
 
-        txWrapper = createTxWrapper();
+        TransactionManager<Connection> txManager = getTxManager();
+        txWrapper = createTxWrapper(txManager);
 
         //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
-        markerRepository = new NoOpTargetSystemAuditMarker(this.getId());
+        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
+        auditMarker = edition == CLOUD
+                ? SqlTargetSystemAuditMarker.builder(dataSource, txManager).build()
+                : new NoOpTargetSystemAuditMarker(this.getId());
+
     }
 
     private void validate() {
@@ -73,7 +83,7 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
     @Override
     protected void enhanceExecutionRuntime(ExecutionRuntime executionRuntime, boolean isTransactional) {
         //if transactional, the connection is injected in the wrapInTransaction
-        if(!isTransactional) {
+        if (!isTransactional) {
             try {
                 executionRuntime.addDependency(dataSource.getConnection());
             } catch (SQLException e) {
@@ -83,13 +93,17 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
 
     }
 
-    private SqlTxWrapper createTxWrapper() {
-        return new SqlTxWrapper(new TransactionManager<>(() -> {
+    private SqlTxWrapper createTxWrapper(TransactionManager<Connection> txManager) {
+        return new SqlTxWrapper(txManager);
+    }
+
+    private TransactionManager<Connection> getTxManager() {
+        return new TransactionManager<>(() -> {
             try {
                 return dataSource.getConnection();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        }));
+        });
     }
 }

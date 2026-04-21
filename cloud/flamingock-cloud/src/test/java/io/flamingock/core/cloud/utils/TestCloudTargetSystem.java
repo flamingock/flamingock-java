@@ -40,7 +40,7 @@ public class TestCloudTargetSystem extends TransactionalTargetSystem<TestCloudTa
         this.txWrapper = Mockito.spy(new TestCloudTxWrapper());
     }
 
-    public TargetSystemAuditMarker getOnGoingChangeStatusRepository() {
+    public TargetSystemAuditMarker getAuditMarker() {
         return ongoignRepo;
     }
 

@@ -42,7 +42,7 @@ public interface TransactionWrapper {
      * <p>
      * The implementation should follow this pattern:
      * <ol>
-     *   <li>Start a transaction</li>
+     *   <li>Start a transaction using the changeId as sessionId(executionRuntime.getSessionId() should contain the changeId)</li>
      *   <li>Inject transaction-scoped dependencies into the runtime</li>
      *   <li>Execute the operation</li>
      *   <li>Commit on success or rollback on failure</li>

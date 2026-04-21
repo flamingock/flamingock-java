@@ -56,19 +56,19 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private final ExecutionPlannerClient client;
 
-    private final TargetSystemAuditMarker ongoingStatusRepository;
+    private final TargetSystemAuditMarker auditMarker;
 
     public CloudExecutionPlanner(RunnerId runnerId,
                                  ExecutionPlannerClient client,
                                  CoreConfigurable coreConfiguration,
                                  CloudLockService lockService,
-                                 TargetSystemAuditMarker ongoingStatusRepository,
+                                 TargetSystemAuditMarker auditMarker,
                                  TimeService timeService) {
         this.client = client;
         this.runnerId = runnerId;
         this.coreConfiguration = coreConfiguration;
         this.lockService = lockService;
-        this.ongoingStatusRepository = ongoingStatusRepository;
+        this.auditMarker = auditMarker;
         this.timeService = timeService;
     }
 
@@ -135,7 +135,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
 
-        Map<String, TargetSystemAuditMarkType> auditMarks = getOngoingStatuses()
+        Map<String, TargetSystemAuditMarkType> auditMarks = getAuditMarkers()
                 .stream()
                 .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
@@ -149,8 +149,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return responsePlan;
     }
 
-    private Collection<TargetSystemAuditMark> getOngoingStatuses() {
-        return ongoingStatusRepository != null ? ongoingStatusRepository.listAll() : Collections.emptySet();
+    private Collection<TargetSystemAuditMark> getAuditMarkers() {
+        return auditMarker != null ? auditMarker.listAll() : Collections.emptySet();
     }
 
     private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {

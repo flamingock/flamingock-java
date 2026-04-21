@@ -22,7 +22,6 @@ import io.flamingock.internal.core.runtime.ExecutionRuntime;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -45,16 +44,15 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
         extends AbstractTargetSystem<HOLDER>
         implements ContextInitializable {
 
-    protected String onGoingChangesRepositoryName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
     protected boolean autoCreate = true;
-    protected TargetSystemAuditMarker markerRepository;
+    protected TargetSystemAuditMarker auditMarker;
 
     public TransactionalTargetSystem(String id) {
         super(id);
     }
 
     public boolean hasMarker() {
-        TargetSystemAuditMarker onGoingChangeStatusRepository = getOnGoingChangeStatusRepository();
+        TargetSystemAuditMarker onGoingChangeStatusRepository = getAuditMarker();
         return onGoingChangeStatusRepository != null && !(onGoingChangeStatusRepository instanceof NoOpTargetSystemAuditMarker);
     }
 
@@ -87,8 +85,8 @@ public abstract class TransactionalTargetSystem<HOLDER extends TransactionalTarg
      *
      * @return the audit marker instance
      */
-    public TargetSystemAuditMarker getOnGoingChangeStatusRepository() {
-        return markerRepository;
+    public TargetSystemAuditMarker getAuditMarker() {
+        return auditMarker;
     }
 
     /**

@@ -119,7 +119,7 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
         txWrapper = new MongoDBSyncTxWrapper(txManager);
 
         //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
-        markerRepository = new NoOpTargetSystemAuditMarker(this.getId());
+        auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
     }
 
     private void validate() {
