@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CloudExecutionPlanner extends ExecutionPlanner {
@@ -56,19 +57,19 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private final ExecutionPlannerClient client;
 
-    private final TargetSystemAuditMarker ongoingStatusRepository;
+    private final List<TargetSystemAuditMarker> auditMarkers;
 
     public CloudExecutionPlanner(RunnerId runnerId,
                                  ExecutionPlannerClient client,
                                  CoreConfigurable coreConfiguration,
                                  CloudLockService lockService,
-                                 TargetSystemAuditMarker ongoingStatusRepository,
+                                 List<TargetSystemAuditMarker> auditMarkers,
                                  TimeService timeService) {
         this.client = client;
         this.runnerId = runnerId;
         this.coreConfiguration = coreConfiguration;
         this.lockService = lockService;
-        this.ongoingStatusRepository = ongoingStatusRepository;
+        this.auditMarkers = auditMarkers;
         this.timeService = timeService;
     }
 
@@ -135,7 +136,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
 
     private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
 
-        Map<String, TargetSystemAuditMarkType> auditMarks = getOngoingStatuses()
+        Map<String, TargetSystemAuditMarkType> auditMarks = getAuditMarkers()
                 .stream()
                 .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
@@ -149,8 +150,14 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return responsePlan;
     }
 
-    private Collection<TargetSystemAuditMark> getOngoingStatuses() {
-        return ongoingStatusRepository != null ? ongoingStatusRepository.listAll() : Collections.emptySet();
+    private Collection<TargetSystemAuditMark> getAuditMarkers() {
+        if (auditMarkers == null || auditMarkers.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return auditMarkers.stream()
+                .map(TargetSystemAuditMarker::listAll)
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
     }
 
     private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {

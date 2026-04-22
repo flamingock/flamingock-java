@@ -39,7 +39,6 @@ import org.mockito.internal.verification.Times;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -142,12 +141,12 @@ public class CloudTransactionTest {
         runner.execute();
 
         //THEN
-        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(2)).listAll();
-        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template", TargetSystemAuditMarkType.APPLIED));
+        verify(cloudTargetSystem.getAuditMarker(), new Times(2)).listAll();
+        verify(cloudTargetSystem.getAuditMarker(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template", TargetSystemAuditMarkType.APPLIED));
 
         ArgumentCaptor<String> changeIdValuesCaptor = ArgumentCaptor.forClass(String.class);
-        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template-2", TargetSystemAuditMarkType.APPLIED));
-        verify(cloudTargetSystem.getOnGoingChangeStatusRepository(), new Times(2)).clearMark(changeIdValuesCaptor.capture());
+        verify(cloudTargetSystem.getAuditMarker(), new Times(1)).mark(new TargetSystemAuditMark("create-persons-table-from-template-2", TargetSystemAuditMarkType.APPLIED));
+        verify(cloudTargetSystem.getAuditMarker(), new Times(2)).clearMark(changeIdValuesCaptor.capture());
         List<String> allValues = changeIdValuesCaptor.getAllValues();
 
         Assertions.assertEquals("create-persons-table-from-template", allValues.get(0));

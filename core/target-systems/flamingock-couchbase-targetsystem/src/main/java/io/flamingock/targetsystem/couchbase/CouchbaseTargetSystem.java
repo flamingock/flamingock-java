@@ -83,7 +83,7 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
         txWrapper = new CouchbaseTxWrapper(cluster, txManager);
 
         //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
-        markerRepository = new NoOpTargetSystemAuditMarker(this.getId());
+        auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
     }
 
     private void validate() {

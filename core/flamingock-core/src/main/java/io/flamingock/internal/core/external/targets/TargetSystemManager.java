@@ -28,7 +28,9 @@ import org.slf4j.Logger;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Internal registry for managing {@link TargetSystem} instances.
@@ -106,6 +108,16 @@ public class TargetSystemManager implements ContextInitializable {
         }
     }
 
+
+    /**
+     * Returns all registered {@link TransactionalTargetSystem} instances.
+     */
+    public List<TransactionalTargetSystem<?>> getTransactionalTargetSystems() {
+        return targetSystemMap.values().stream()
+                .filter(ts -> ts instanceof TransactionalTargetSystem)
+                .map(ts -> (TransactionalTargetSystem<?>) ts)
+                .collect(Collectors.toList());
+    }
 
     /**
      * Validates that the target system is non-null and has a valid ID.

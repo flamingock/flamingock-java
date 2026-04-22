@@ -67,7 +67,9 @@ public interface TargetSystemAuditMarker {
      * Creates or updates a local audit mark.
      * <p>
      * Implementations should ensure this operation is idempotent. The write operation must
-     * participate in the same transaction as the Target System operation that is being confirmed.
+     * participate in the same transaction as the Target System operation that is being confirmed. THis is achieved
+     * by using the same Tx sessionId, which is supposed to be the changeId, encapsulated in the
+     * ExecutionRuntime.getSessionId() when the Target System operation performed.
      *
      * @param auditMark the mark to persist.
      * @throws FlamingockException if the operation fails (e.g., storage unavailable).
