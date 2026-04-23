@@ -107,7 +107,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
         private final DataSource dataSource;
         private final TransactionManager<Connection> txManager;
         private SqlAuditMarkerDialectHelper dialectHelper;
-        private String tableName = "FLAMINGOCK_ONGOING_CHANGES";
+        private String tableName = "flamingock_audit_marks";
         private boolean autoCreate = true;
 
         public Builder(DataSource dataSource, TransactionManager<Connection> txManager) {

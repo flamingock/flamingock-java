@@ -57,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -197,5 +198,110 @@ class CloudExecutionPlannerTest {
 
         ChangeRequest changeRequest = requestCaptor.getValue().getClientSubmission().getStages().get(0).getChanges().get(0);
         assertEquals(CloudTargetSystemAuditMarkType.NONE, changeRequest.getOngoingStatus());
+    }
+
+    @Test
+    @DisplayName("Should clear marks when response has synchronizedMarks=true")
+    void shouldClearMarksWhenResponseHasSynchronizedMarksTrue() {
+        TargetSystemAuditMarker marker1 = mock(TargetSystemAuditMarker.class);
+        when(marker1.listAll()).thenReturn(new HashSet<>(Collections.singletonList(
+                new TargetSystemAuditMark(change1.getId(), TargetSystemAuditMarkType.APPLIED)
+        )));
+
+        TargetSystemAuditMarker marker2 = mock(TargetSystemAuditMarker.class);
+        when(marker2.listAll()).thenReturn(new HashSet<>(Collections.singletonList(
+                new TargetSystemAuditMark(change2.getId(), TargetSystemAuditMarkType.ROLLED_BACK)
+        )));
+
+        CloudExecutionPlanner planner = buildPlanner(Arrays.asList(marker1, marker2));
+
+        ExecutionPlanResponse response = buildSyncResponse(CloudExecutionAction.CONTINUE, true);
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
+
+        List<AbstractLoadedStage> stages = Collections.singletonList(
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
+
+        planner.getNextExecution(stages);
+
+        verify(marker1).clearMark(change1.getId());
+        verify(marker2).clearMark(change2.getId());
+    }
+
+    @Test
+    @DisplayName("Should not clear marks when response has synchronizedMarks=false")
+    void shouldNotClearMarksWhenResponseHasSynchronizedMarksFalse() {
+        TargetSystemAuditMarker marker1 = mock(TargetSystemAuditMarker.class);
+        when(marker1.listAll()).thenReturn(new HashSet<>(Collections.singletonList(
+                new TargetSystemAuditMark(change1.getId(), TargetSystemAuditMarkType.APPLIED)
+        )));
+
+        CloudExecutionPlanner planner = buildPlanner(Collections.singletonList(marker1));
+
+        ExecutionPlanResponse response = buildSyncResponse(CloudExecutionAction.CONTINUE, false);
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
+
+        List<AbstractLoadedStage> stages = Collections.singletonList(
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
+
+        planner.getNextExecution(stages);
+
+        verify(marker1, never()).clearMark(any());
+    }
+
+    @Test
+    @DisplayName("Should clear marks regardless of response action (ABORT)")
+    void shouldClearMarksRegardlessOfResponseAction() {
+        TargetSystemAuditMarker marker1 = mock(TargetSystemAuditMarker.class);
+        when(marker1.listAll()).thenReturn(new HashSet<>(Collections.singletonList(
+                new TargetSystemAuditMark(change1.getId(), TargetSystemAuditMarkType.APPLIED)
+        )));
+
+        CloudExecutionPlanner planner = buildPlanner(Collections.singletonList(marker1));
+
+        ExecutionPlanResponse response = buildSyncResponse(CloudExecutionAction.ABORT, true);
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
+
+        List<AbstractLoadedStage> stages = Collections.singletonList(
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
+
+        planner.getNextExecution(stages);
+
+        verify(marker1).clearMark(change1.getId());
+    }
+
+    @Test
+    @DisplayName("Should only clear marks that were captured in the snapshot, not new ones")
+    void shouldNotClearNewMarksWrittenAfterRequest() {
+        TargetSystemAuditMarker marker1 = mock(TargetSystemAuditMarker.class);
+        // At snapshot time, only change1 has a mark
+        when(marker1.listAll()).thenReturn(new HashSet<>(Collections.singletonList(
+                new TargetSystemAuditMark(change1.getId(), TargetSystemAuditMarkType.APPLIED)
+        )));
+
+        CloudExecutionPlanner planner = buildPlanner(Collections.singletonList(marker1));
+
+        ExecutionPlanResponse response = buildSyncResponse(CloudExecutionAction.CONTINUE, true);
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(response);
+
+        List<AbstractLoadedStage> stages = Collections.singletonList(
+                new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
+
+        planner.getNextExecution(stages);
+
+        // Only change1 should be cleared (was in snapshot), not change2
+        verify(marker1).clearMark(change1.getId());
+        verify(marker1, never()).clearMark(change2.getId());
+    }
+
+    private ExecutionPlanResponse buildSyncResponse(CloudExecutionAction action, boolean synchronizedMarks) {
+        ExecutionPlanResponse response = new ExecutionPlanResponse(
+                action, "exec-1", null,
+                Collections.singletonList(new StageResponse("stage-1", 0,
+                        Arrays.asList(
+                                new ChangeResponse(change1.getId(), CloudChangeAction.SKIP),
+                                new ChangeResponse(change2.getId(), CloudChangeAction.SKIP))))
+        );
+        response.setSynchronizedMarks(synchronizedMarks);
+        return response;
     }
 }

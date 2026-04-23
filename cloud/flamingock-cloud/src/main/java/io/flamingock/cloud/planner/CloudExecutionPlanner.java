@@ -38,6 +38,8 @@ import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,6 +78,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     @Override
     public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
 
+        AuditMarkSnapshot snapshot = buildAuditMarkSnapshot();
 
         //In every execution, as it start a stopwatch
         ThreadSleeper lockThreadSleeper = new ThreadSleeper(
@@ -87,8 +90,13 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         do {
             try {
                 logger.info("Requesting cloud execution plan - elapsed[{}ms]", counterPerGuid.getElapsed());
-                ExecutionPlanResponse response = createExecution(loadedStages, lastOwnerGuid, counterPerGuid.getElapsed());
+                ExecutionPlanResponse response = createExecution(loadedStages, snapshot.getMarks(), lastOwnerGuid, counterPerGuid.getElapsed());
                 logger.info("Obtained cloud execution plan: {}", response.getAction());
+
+                if (response.isSynchronizedMarks()) {
+                    snapshot = clearSynchronizedMarks(snapshot);
+                }
+
                 if (response.isContinue()) {
                     List<ExecutableStage> executableStages = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
                     return ExecutionPlan.CONTINUE(executableStages);
@@ -134,30 +142,49 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         } while (true);
     }
 
-    private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages, String lastAcquisitionId, long elapsedMillis) {
+    private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages,
+                                                  Collection<TargetSystemAuditMark> auditMarks,
+                                                  String lastAcquisitionId,
+                                                  long elapsedMillis) {
 
-        Map<String, TargetSystemAuditMarkType> auditMarks = getAuditMarkers()
+        Map<String, TargetSystemAuditMarkType> auditMarksMap = auditMarks
                 .stream()
                 .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
         ExecutionPlanRequest requestBody = CloudExecutionPlanMapper.toRequest(
                 loadedStages,
                 coreConfiguration.getLockAcquiredForMillis(),
-                auditMarks);
+                auditMarksMap);
 
         ExecutionPlanResponse responsePlan = client.createExecution(requestBody, lastAcquisitionId, elapsedMillis);
         responsePlan.validate();
         return responsePlan;
     }
 
-    private Collection<TargetSystemAuditMark> getAuditMarkers() {
+    private AuditMarkSnapshot buildAuditMarkSnapshot() {
         if (auditMarkers == null || auditMarkers.isEmpty()) {
-            return Collections.emptySet();
+            return AuditMarkSnapshot.empty();
         }
-        return auditMarkers.stream()
-                .map(TargetSystemAuditMarker::listAll)
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
+        Set<TargetSystemAuditMark> allMarks = new HashSet<>();
+        Map<String, TargetSystemAuditMarker> markerByChangeId = new HashMap<>();
+        for (TargetSystemAuditMarker marker : auditMarkers) {
+            for (TargetSystemAuditMark mark : marker.listAll()) {
+                allMarks.add(mark);
+                markerByChangeId.put(mark.getChangeId(), marker);
+            }
+        }
+        return new AuditMarkSnapshot(allMarks, markerByChangeId);
+    }
+
+    private AuditMarkSnapshot clearSynchronizedMarks(AuditMarkSnapshot snapshot) {
+        Map<String, TargetSystemAuditMarker> markerByChangeId = snapshot.getMarkerByChangeId();
+        for (Map.Entry<String, TargetSystemAuditMarker> entry : markerByChangeId.entrySet()) {
+            entry.getValue().clearMark(entry.getKey());
+        }
+        if (!markerByChangeId.isEmpty()) {
+            logger.info("Cleared {} synchronized audit marks", markerByChangeId.size());
+        }
+        return AuditMarkSnapshot.empty();
     }
 
     private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {
@@ -168,4 +195,25 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         );
     }
 
+    static class AuditMarkSnapshot {
+        private final Collection<TargetSystemAuditMark> marks;
+        private final Map<String, TargetSystemAuditMarker> markerByChangeId;
+
+        static AuditMarkSnapshot empty() {
+            return new AuditMarkSnapshot(Collections.emptySet(), Collections.emptyMap());
+        }
+
+        AuditMarkSnapshot(Collection<TargetSystemAuditMark> marks, Map<String, TargetSystemAuditMarker> markerByChangeId) {
+            this.marks = marks;
+            this.markerByChangeId = markerByChangeId;
+        }
+
+        Collection<TargetSystemAuditMark> getMarks() {
+            return marks;
+        }
+
+        Map<String, TargetSystemAuditMarker> getMarkerByChangeId() {
+            return markerByChangeId;
+        }
+    }
 }
