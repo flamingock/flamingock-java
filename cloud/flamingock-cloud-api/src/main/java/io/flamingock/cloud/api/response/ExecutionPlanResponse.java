@@ -22,14 +22,15 @@ import java.util.List;
 
 public class ExecutionPlanResponse {
 
+    private String executionId;
 
     private CloudExecutionAction action;
-
-    private String executionId;
 
     private LockInfoResponse lock;
 
     private List<StageResponse> stages;
+
+    private boolean synchronizedMarks;
 
 
     public ExecutionPlanResponse() {
@@ -45,10 +46,19 @@ public class ExecutionPlanResponse {
                                  String executionId,
                                  LockInfoResponse lock,
                                  List<StageResponse> stages) {
+        this(action, executionId, lock, stages, false);
+    }
+
+    public ExecutionPlanResponse(CloudExecutionAction action,
+                                 String executionId,
+                                 LockInfoResponse lock,
+                                 List<StageResponse> stages,
+                                 boolean synchronizedMarks) {
         this.action = action;
         this.executionId = executionId;
         this.lock = lock;
         this.stages = stages;
+        this.synchronizedMarks = synchronizedMarks;
     }
 
     public void setAction(CloudExecutionAction action) {
@@ -97,6 +107,14 @@ public class ExecutionPlanResponse {
 
     public boolean isAbort() {
         return action == CloudExecutionAction.ABORT;
+    }
+
+    public boolean isSynchronizedMarks() {
+        return synchronizedMarks;
+    }
+
+    public void setSynchronizedMarks(boolean synchronizedMarks) {
+        this.synchronizedMarks = synchronizedMarks;
     }
 
     public void validate() {
