@@ -21,16 +21,17 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
+import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
+import io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB;
 import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
+import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
+import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
-import io.flamingock.importer.mongock.mongodb.MongockImporterMongoDB;
-import io.flamingock.externalsystem.mongodb.api.MongoDBExternalSystem;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -38,6 +39,7 @@ import java.util.Optional;
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
 public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSyncTargetSystem> implements MongoDBExternalSystem {
 
@@ -110,16 +112,18 @@ public class MongoDBSyncTargetSystem extends TransactionalTargetSystem<MongoDBSy
         this.validate();
         targetSystemContext.addDependency(mongoClient);
         database = mongoClient.getDatabase(databaseName)
-            .withReadConcern(readConcern)
-            .withReadPreference(readPreference)
-            .withWriteConcern(writeConcern);
+                .withReadConcern(readConcern)
+                .withReadPreference(readPreference)
+                .withWriteConcern(writeConcern);
         targetSystemContext.addDependency(database);
 
         TransactionManager<ClientSession> txManager = new TransactionManager<>(mongoClient::startSession);
         txWrapper = new MongoDBSyncTxWrapper(txManager);
+        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
 
-        //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
-        auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
+        auditMarker = edition == COMMUNITY
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                :MongoDBSyncAuditMarker.builder(database, txManager).build();
     }
 
     private void validate() {

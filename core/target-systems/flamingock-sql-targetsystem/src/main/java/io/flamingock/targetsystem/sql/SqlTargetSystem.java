@@ -29,7 +29,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import static io.flamingock.internal.core.builder.FlamingockEdition.CLOUD;
 import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
 public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> implements SqlExternalSystem {
@@ -58,9 +57,9 @@ public class SqlTargetSystem extends TransactionalTargetSystem<SqlTargetSystem> 
 
         //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
         FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
-        auditMarker = edition == CLOUD
-                ? SqlTargetSystemAuditMarker.builder(dataSource, txManager).build()
-                : new NoOpTargetSystemAuditMarker(this.getId());
+        auditMarker = edition == COMMUNITY
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                : SqlAuditMarker.builder(dataSource, txManager).build();
 
     }
 

@@ -22,7 +22,7 @@ allprojects {
     extra["templateApiVersion"] = "1.3.2"
     extra["coreApiVersion"] = "1.3.1"
     extra["sqlVersion"] = "1.2.0"
-    extra["mongodbTemplateVersion"] = "1.2.0"
+    extra["mongodbTemplateVersion"] = "1.3.0-SNAPSHOT"
 
     repositories {
         mavenLocal()
