@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
+public class SqlAuditMarker implements TargetSystemAuditMarker {
 
     private final String tableName;
     private final DataSource dataSource;
@@ -44,10 +44,10 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
         return new Builder(dataSource, txManager);
     }
 
-    private SqlTargetSystemAuditMarker(DataSource dataSource,
-                                      String tableName,
-                                      TransactionManager<Connection> txManager,
-                                      SqlAuditMarkerDialectHelper dialectHelper) {
+    private SqlAuditMarker(DataSource dataSource,
+                           String tableName,
+                           TransactionManager<Connection> txManager,
+                           SqlAuditMarkerDialectHelper dialectHelper) {
         this.dataSource = dataSource;
         this.tableName = tableName;
         this.txManager = txManager;
@@ -130,7 +130,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
             return this;
         }
 
-        public SqlTargetSystemAuditMarker build() {
+        public SqlAuditMarker build() {
             try (Connection connection = dataSource.getConnection()) {
                 this.dialectHelper = new SqlAuditMarkerDialectHelper(connection);
             } catch (SQLException ex) {
@@ -139,7 +139,7 @@ public class SqlTargetSystemAuditMarker implements TargetSystemAuditMarker {
             if (autoCreate) {
                 createTableIfNotExists();
             }
-            return new SqlTargetSystemAuditMarker(dataSource, tableName, txManager, dialectHelper);
+            return new SqlAuditMarker(dataSource, tableName, txManager, dialectHelper);
         }
 
         private void createTableIfNotExists() {

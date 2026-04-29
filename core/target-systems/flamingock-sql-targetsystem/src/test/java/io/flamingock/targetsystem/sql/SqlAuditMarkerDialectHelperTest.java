@@ -45,7 +45,7 @@ public class SqlAuditMarkerDialectHelperTest {
     private static final String ONGOING_CHANGES_TABLE = "FLAMINGOCK_ONGOING_CHANGES";
 
     private DataSource dataSource;
-    private SqlTargetSystemAuditMarker sqlTargetSystemAuditMarker;
+    private SqlAuditMarker sqlTargetSystemAuditMarker;
     private TransactionManager<Connection> txManager;
 
     private JdbcDatabaseContainer<?> createContainerForDialect(SqlDialect dialect) {
@@ -126,7 +126,7 @@ public class SqlAuditMarkerDialectHelperTest {
             }
         });
 
-        sqlTargetSystemAuditMarker = SqlTargetSystemAuditMarker.builder(dataSource, txManager)
+        sqlTargetSystemAuditMarker = SqlAuditMarker.builder(dataSource, txManager)
             .withTableName(ONGOING_CHANGES_TABLE)
             .build();
     }

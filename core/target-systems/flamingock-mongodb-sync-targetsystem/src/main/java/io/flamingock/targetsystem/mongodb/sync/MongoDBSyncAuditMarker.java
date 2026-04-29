@@ -22,46 +22,51 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import io.flamingock.internal.core.transaction.TransactionManager;
-import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
-import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
-import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.mongodb.CollectionInitializator;
+import io.flamingock.internal.common.mongodb.MongoDBSyncCollectionHelper;
+import io.flamingock.internal.common.mongodb.MongoDBSyncDocumentHelper;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMark;
 import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker;
+import io.flamingock.internal.core.transaction.TransactionManager;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import org.bson.Document;
 
 import java.util.HashSet;
 import java.util.Set;
 
 
-public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMarker {
+public class MongoDBSyncAuditMarker implements TargetSystemAuditMarker {
     public static final String OPERATION = "operation";
     private static final String CHANGE_ID = "changeId";
-    private final MongoCollection<Document> onGoingChangeStatusCollection;
+    private final MongoCollection<Document> auditMarkerCollection;
     private final TransactionManager<ClientSession> txManager;
+
+    public MongoDBSyncAuditMarker(MongoCollection<Document> auditMarkerCollection,
+                                  TransactionManager<ClientSession> txManager) {
+        this.auditMarkerCollection = auditMarkerCollection;
+        this.txManager = txManager;
+    }
 
     public static Builder builder(MongoDatabase mongoDatabase, TransactionManager<ClientSession> txManager) {
         return new Builder(mongoDatabase, txManager);
     }
 
-    public MongoDBSyncTargetSystemAuditMarker(MongoCollection<Document> onGoingChangeStatusCollection,
-                                            TransactionManager<ClientSession> txManager) {
-        this.onGoingChangeStatusCollection = onGoingChangeStatusCollection;
-        this.txManager = txManager;
+    public static TargetSystemAuditMark mapToOnGoingStatus(Document document) {
+        TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(document.getString(OPERATION));
+        return new TargetSystemAuditMark(document.getString(CHANGE_ID), operation);
     }
 
     @Override
     public Set<TargetSystemAuditMark> listAll() {
-        return onGoingChangeStatusCollection.find()
-                .map(MongoDBSyncTargetSystemAuditMarker::mapToOnGoingStatus)
+        return auditMarkerCollection.find()
+                .map(MongoDBSyncAuditMarker::mapToOnGoingStatus)
                 .into(new HashSet<>());
     }
 
     @Override
     public void clearMark(String changeId) {
-        onGoingChangeStatusCollection.deleteMany(Filters.eq(CHANGE_ID, changeId));
+        auditMarkerCollection.deleteMany(Filters.eq(CHANGE_ID, changeId));
     }
 
     @Override
@@ -74,18 +79,12 @@ public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMark
                 .append(OPERATION, auditMark.getOperation().name());
 
         ClientSession clientSession = txManager.getSessionOrThrow(auditMark.getChangeId());
-        onGoingChangeStatusCollection.updateOne(
+        auditMarkerCollection.updateOne(
                 clientSession,
                 filter,
                 new Document("$set", newDocument),
                 new com.mongodb.client.model.UpdateOptions().upsert(true));
     }
-
-    public static TargetSystemAuditMark mapToOnGoingStatus(Document document) {
-        TargetSystemAuditMarkType operation = TargetSystemAuditMarkType.valueOf(document.getString(OPERATION));
-        return new TargetSystemAuditMark(document.getString(CHANGE_ID), operation);
-    }
-
 
     public static class Builder {
 
@@ -127,7 +126,7 @@ public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMark
             return this;
         }
 
-        public MongoDBSyncTargetSystemAuditMarker build() {
+        public MongoDBSyncAuditMarker build() {
             MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName)
 //                    .withReadConcern(readConcern)
 //                    .withReadPreference(readPreference)
@@ -144,7 +143,7 @@ public class MongoDBSyncTargetSystemAuditMarker implements TargetSystemAuditMark
             } else {
                 initializer.justValidateCollection();
             }
-            return new MongoDBSyncTargetSystemAuditMarker(collection, txManager);
+            return new MongoDBSyncAuditMarker(collection, txManager);
         }
     }
 }
