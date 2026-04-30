@@ -81,7 +81,7 @@ public class CommunityLock extends Lock {
             }
 
         } while (keepLooping);
-        logger.debug("Process lock acquired [expires_at={}]", expiresAt());
+        logger.info("Lock acquired [lock_key={} owner={} expires_at={}]", lockKey, owner, expiresAt());
     }
 
 }

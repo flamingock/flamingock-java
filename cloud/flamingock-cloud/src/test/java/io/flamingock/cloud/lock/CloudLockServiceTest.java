@@ -57,7 +57,7 @@ class CloudLockServiceTest {
     @BeforeEach
     void setUp() {
         client = mock(LockServiceClient.class);
-        service = new CloudLockService(client);
+        service = new CloudLockService(client, owner);
     }
 
     @Test
@@ -107,14 +107,43 @@ class CloudLockServiceTest {
     }
 
     @Test
-    @DisplayName("getLockInfo: throws UnsupportedOperationException because cloud has no read-only endpoint")
-    void getLockInfoThrowsUnsupported() {
-        UnsupportedOperationException ex = assertThrows(
-                UnsupportedOperationException.class,
+    @DisplayName("getLockInfo: returns LockAcquisition derived from the GET /lock response")
+    void getLockInfoHappyPath() {
+        LockInfoResponse response = lockInfo(owner.toString(), 22_000L);
+        when(client.getLockInfo(eq(lockKey), eq(owner))).thenReturn(response);
+
+        LockAcquisition acquisition = service.getLockInfo(lockKey);
+
+        assertEquals(owner, acquisition.getOwner());
+        assertEquals(22_000L, acquisition.getAcquiredForMillis());
+        verify(client, times(1)).getLockInfo(lockKey, owner);
+    }
+
+    @Test
+    @DisplayName("getLockInfo: returns null when the client reports no lock for this key (R_LOCK_03)")
+    void getLockInfoReturnsNullForAbsentLock() {
+        when(client.getLockInfo(eq(lockKey), eq(owner))).thenReturn(null);
+
+        LockAcquisition acquisition = service.getLockInfo(lockKey);
+
+        assertEquals(null, acquisition);
+    }
+
+    @Test
+    @DisplayName("getLockInfo: maps ServerException to LockServiceException, preserving request/body")
+    void getLockInfoMapsServerException() {
+        ServerException serverException = new ServerException(
+                "GET http://server/lock",
+                null,
+                new FlamingockError("R_GEN_01", true, "flamingock-runner-id header missing"));
+        when(client.getLockInfo(eq(lockKey), eq(owner))).thenThrow(serverException);
+
+        LockServiceException ex = assertThrows(
+                LockServiceException.class,
                 () -> service.getLockInfo(lockKey));
 
-        assertTrue(ex.getMessage().contains("getLockInfo"));
-        assertTrue(ex.getMessage().contains("cloud"));
+        assertEquals("GET http://server/lock", ex.getAcquireLockQuery());
+        assertTrue(ex.getErrorDetail().contains("Error retrieving lock"));
     }
 
     @Test

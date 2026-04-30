@@ -27,7 +27,7 @@ import java.time.ZoneId;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 
-public class Lock {
+public abstract class Lock {
 
     public static final String LOG_EXPIRED_TEMPLATE = "Lock[{}] not refreshed at[{}] because the it's canceled/expired[{}]";
     private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
@@ -144,10 +144,14 @@ public class Lock {
                 }
                 LockAcquisition lockAcquisition = lockService.extendLock(lockKey, owner, leaseMillis);
                 updateLease(lockAcquisition.getAcquiredForMillis());
-                logger.debug("Flamingock refreshed the lock until: {}", expiresAt());
+                logger.info("Lock extended [lock_key={} owner={} expires_at={}]", lockKey, owner, expiresAt());
                 return true;
             }
 
+        } catch (LockServiceException ex) {
+            // Preserve the original exception so callers (notably ensure()/handleLockException)
+            // can inspect getNewLockEntity / getAcquireLockQuery / getErrorDetail.
+            throw ex;
         } catch (Exception ex) {
             throw new LockException(ex);
         }
@@ -167,7 +171,7 @@ public class Lock {
                 released = true;
                 updateLease(timeService.daysToMills(-1));//forces expiring
                 lockService.releaseLock(lockKey, owner);
-                logger.debug("Lock released successfully");
+                logger.info("Lock released [lock_key={} owner={}]", lockKey, owner);
             } catch (Exception ex) {
                 logger.warn("Error removing the lock. Doesn't need manual intervention.", ex);
             }
@@ -214,6 +218,10 @@ public class Lock {
      * when the lock's lifecycle ends.
      */
     public final synchronized void startDaemonIfEnabled() {
+        if (released) {
+            logger.debug("Lock refresh daemon not started: lock is already released [lock_key={}]", lockKey);
+            return;
+        }
         if (!refreshDaemonEnabled) {
             logger.debug("Lock refresh daemon disabled by configuration [lock_key={}]", lockKey);
             return;
@@ -228,7 +236,7 @@ public class Lock {
 
     @Override
     public String toString() {
-        return "MongockLock{" +
+        return "Lock{" +
                 "owner='" + owner + '\'' +
                 ", leaseMillis=" + leaseMillis +
                 ", retryFrequencyMillis=" + retryFrequencyMillis +

@@ -26,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -89,6 +92,32 @@ class LockTest {
     }
 
     @Test
+    @DisplayName("startDaemonIfEnabled: no-op once the lock has been released")
+    void startDaemonIfEnabledIsNoOpAfterRelease() {
+        Lock lock = lockWithFutureExpiry(true);
+        lock.release();
+
+        lock.startDaemonIfEnabled();
+
+        assertNull(lock.activeDaemon, "starting a daemon on a released Lock must be a no-op");
+    }
+
+    @Test
+    @DisplayName("extend: rethrows LockServiceException unchanged so handleLockException can read its rich data")
+    void extendRethrowsLockServiceException() {
+        LockServiceException original = new LockServiceException("query", "newLock", "dbDetail");
+        when(lockService.extendLock(any(), any(), anyLong())).thenThrow(original);
+
+        Lock lock = lockWithFutureExpiry(false);
+
+        LockServiceException thrown = assertThrows(LockServiceException.class, lock::extend);
+        assertSame(original, thrown, "extend() must rethrow the same instance, not wrap it");
+        assertEquals("query", thrown.getAcquireLockQuery());
+        assertEquals("newLock", thrown.getNewLockEntity());
+        assertEquals("dbDetail", thrown.getErrorDetail());
+    }
+
+    @Test
     @DisplayName("isReleased: false until release() is called, true forever after")
     void releasedFlagFlipsOnRelease() {
         Lock lock = lockWithFutureExpiry(false);
@@ -117,6 +146,8 @@ class LockTest {
     }
 
     private Lock lockWithFutureExpiry(boolean refreshDaemonEnabled) {
+        // Anonymous concrete subclass: Lock is abstract by design (instantiation is reserved
+        // for the CommunityLock/CloudLock factories). Tests only need a concrete carrier.
         Lock lock = new Lock(
                 owner,
                 lockKey,
@@ -126,7 +157,8 @@ class LockTest {
                 lockService,
                 timeService,
                 refreshDaemonEnabled
-        );
+        ) {
+        };
         // Set expiresAt to the future so the daemon's first iteration succeeds and proceeds to
         // sleep (rather than seeing the lock expired and exiting immediately).
         lock.updateLease(LEASE_MILLIS);

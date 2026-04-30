@@ -22,8 +22,12 @@ import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.core.external.store.lock.LockService;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
+import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import org.slf4j.Logger;
 
 public class CloudLock extends Lock {
+
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
 
 
     private CloudLock(RunnerId owner,
@@ -54,6 +58,8 @@ public class CloudLock extends Lock {
                 timeService,
                 coreConfiguration.isEnableRefreshDaemon()
         );
+        logger.info("Lock acquired [lock_key={} owner={} expires_at={} acquisition_id={}]",
+                cloudLock.lockKey, owner, cloudLock.expiresAt(), lockInfo.getAcquisitionId());
         cloudLock.startDaemonIfEnabled();
         return cloudLock;
     }

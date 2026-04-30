@@ -33,11 +33,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -188,6 +191,83 @@ class HttpLockServiceClientWireTest {
                 .withHeader("Authorization", equalTo("Bearer " + JWT))
                 .withHeader("flamingock-runner-id", equalTo(OWNER))
                 .withRequestBody(absent()));
+    }
+
+    @Test
+    @DisplayName("extendLock: throws when server's owner echo does not match the requested runner-id")
+    void extendLockRejectsOwnerMismatch() {
+        server.stubFor(post(urlPathEqualTo(EXTENSION_PATH))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"status\":\"EXTENDED\","
+                                + "\"lock\":{\"key\":\"" + LOCK_KEY + "\","
+                                + "\"owner\":\"someone-else\","
+                                + "\"acquisitionId\":\"someone-else-x\","
+                                + "\"acquiredForMillis\":30000}}")));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> client.extendLock(lockKey, runnerId));
+        assertNotNull(ex.getMessage());
+        org.junit.jupiter.api.Assertions.assertTrue(ex.getMessage().contains("owner mismatch"),
+                "exception message should call out the owner mismatch: " + ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("getLockInfo: GETs /api/v1/{key}/lock with auth + runner-id headers and parses LockInfoResponse")
+    void getLockInfoHappyPath() {
+        server.stubFor(get(urlPathEqualTo(LOCK_PATH))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"key\":\"" + LOCK_KEY + "\","
+                                + "\"owner\":\"" + OWNER + "\","
+                                + "\"acquisitionId\":\"" + OWNER + "-aaaa\","
+                                + "\"acquiredForMillis\":12345}")));
+
+        LockInfoResponse response = client.getLockInfo(lockKey, runnerId);
+
+        assertNotNull(response);
+        assertEquals(LOCK_KEY, response.getKey());
+        assertEquals(OWNER, response.getOwner());
+        assertEquals(OWNER + "-aaaa", response.getAcquisitionId());
+        assertEquals(12345L, response.getAcquiredForMillis());
+
+        server.verify(getRequestedFor(urlPathEqualTo(LOCK_PATH))
+                .withHeader("Authorization", equalTo("Bearer " + JWT))
+                .withHeader("flamingock-runner-id", equalTo(OWNER))
+                .withRequestBody(absent()));
+    }
+
+    @Test
+    @DisplayName("getLockInfo: returns null on 404 R_LOCK_03 (no lock for this key)")
+    void getLockInfoReturnsNullOn404() {
+        server.stubFor(get(urlPathEqualTo(LOCK_PATH))
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"code\":\"R_LOCK_03\","
+                                + "\"message\":\"Lock not found\","
+                                + "\"recoverable\":true,\"details\":[]}")));
+
+        LockInfoResponse response = client.getLockInfo(lockKey, runnerId);
+
+        assertNull(response);
+    }
+
+    @Test
+    @DisplayName("getLockInfo: surfaces R_GEN_01 missing-runner-id error from server as ServerException")
+    void getLockInfoBadRequestRGen01() {
+        server.stubFor(get(urlPathEqualTo(LOCK_PATH))
+                .willReturn(aResponse()
+                        .withStatus(400)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"code\":\"R_GEN_01\","
+                                + "\"message\":\"flamingock-runner-id header missing\","
+                                + "\"recoverable\":true,\"details\":[]}")));
+
+        ServerException ex = assertThrows(ServerException.class, () -> client.getLockInfo(lockKey, runnerId));
+        assertEquals("R_GEN_01", ex.getError().getCode());
     }
 
     @Test

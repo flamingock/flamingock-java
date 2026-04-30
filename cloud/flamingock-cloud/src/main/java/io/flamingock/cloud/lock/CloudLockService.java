@@ -30,9 +30,11 @@ public class CloudLockService implements LockService {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudLock");
 
     private final LockServiceClient client;
+    private final RunnerId runnerId;
 
-    public CloudLockService(LockServiceClient client) {
+    public CloudLockService(LockServiceClient client, RunnerId runnerId) {
         this.client = client;
+        this.runnerId = runnerId;
     }
 
     /**
@@ -60,16 +62,27 @@ public class CloudLockService implements LockService {
         }
     }
 
-    /**
-     * Not supported on cloud: the lock REST API exposes no read-only "get current lock state"
-     * endpoint. The Java client never needs to read lock state out-of-band — acquisition is
-     * materialised from the execution-plan response, and extend / release are owner-asserted
-     * server-side. Throws to surface any unexpected caller loudly.
-     */
     @Override
     public LockAcquisition getLockInfo(LockKey lockKey) {
-        throw new UnsupportedOperationException(
-                "getLockInfo is not supported on cloud: the lock REST API has no read-only endpoint");
+        try {
+            LockInfoResponse response = client.getLockInfo(lockKey, runnerId);
+            if (response == null) {
+                return null;
+            }
+            return new LockAcquisition(RunnerId.fromString(response.getOwner()), response.getAcquiredForMillis());
+        } catch (ServerException ex) {
+            throw new LockServiceException(
+                    ex.getRequestString(),
+                    ex.getBodyString(),
+                    String.format("Error retrieving lock[%s]: %s", lockKey, ex.getMessage())
+            );
+        } catch (Throwable ex) {
+            throw new LockServiceException(
+                    "n/a",
+                    "n/a",
+                    String.format("Unexpected error retrieving lock[%s]: %s", lockKey, ex.getMessage())
+            );
+        }
     }
 
     @Override

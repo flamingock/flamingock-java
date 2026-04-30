@@ -59,7 +59,35 @@ public class HttpLockServiceClient implements LockServiceClient {
                     "Lock extension contract violation: expected status[%s] with non-null lock, got[%s]",
                     CloudLockStatus.EXTENDED, response));
         }
-        return response.getLock();
+        LockInfoResponse lock = response.getLock();
+        if (!runnerId.toString().equals(lock.getOwner())) {
+            // Defensive: the server should always echo back the same owner. A mismatch could
+            // indicate a routing bug, response confusion, or impersonation — fail loudly.
+            throw new IllegalStateException(String.format(
+                    "Lock extension owner mismatch: requested[%s] but server returned[%s]",
+                    runnerId, lock.getOwner()));
+        }
+        return lock;
+    }
+
+    @Override
+    public LockInfoResponse getLockInfo(LockKey lockKey, RunnerId runnerId) {
+        try {
+            return httpFactory
+                    .GET(pathTemplate)
+                    .withBearerToken(authManager.getJwtToken())
+                    .addPathParameter(SERVICE_PARAM, lockKey.toString())
+                    .withRunnerId(runnerId)
+                    .execute(LockInfoResponse.class);
+        } catch (io.flamingock.internal.util.ServerException ex) {
+            // Per the doc, R_LOCK_03 is "no lock for this key in this environment" — that's a
+            // legitimate "absent" state, not an error. Surface as null to honour the
+            // LockService.getLockInfo contract. All other ServerExceptions propagate.
+            if (ex.getError() != null && "R_LOCK_03".equals(ex.getError().getCode())) {
+                return null;
+            }
+            throw ex;
+        }
     }
 
     @Override

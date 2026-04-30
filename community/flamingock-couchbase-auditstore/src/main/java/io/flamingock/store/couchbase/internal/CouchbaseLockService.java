@@ -74,7 +74,8 @@ public class CouchbaseLockService implements CommunityLockService {
                         existingLock.getKey());
                 collection.replace(keyId, mapper.toDocument(newLock), ReplaceOptions.replaceOptions().cas(result.cas()));
                 logger.debug("Lock with key {} updated", keyId);
-            } else if (LocalDateTime.now().isBefore(existingLock.getExpiresAt())) {
+            } else {
+                // Held by another owner and not expired (including the now == expiresAt boundary).
                 logger.debug("Already locked by {}, will expire at {}", existingLock.getOwner(),
                         existingLock.getExpiresAt());
                 throw new LockServiceException("Get By" + keyId, newLock.toString(),
@@ -139,6 +140,11 @@ public class CouchbaseLockService implements CommunityLockService {
             }
         } catch (DocumentNotFoundException documentNotFoundException) {
             logger.debug("Lock for key {} is not found, nothing to do", key);
+        } catch (Exception ex) {
+            // Best-effort: a CAS mismatch (someone else has rewritten the lock concurrently) or
+            // any other Couchbase-side failure must not propagate up through ExecutionPlan.close()
+            // where it could mask a primary failure. Lock.release() already wraps in try/catch.
+            logger.warn("Couldn't release lock for key {}: {}", key, ex.getMessage());
         }
     }
 
