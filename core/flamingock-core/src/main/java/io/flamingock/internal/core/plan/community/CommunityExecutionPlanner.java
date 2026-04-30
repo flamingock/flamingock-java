@@ -154,9 +154,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
 
             logPlanChanges(initialStages, validatedStages);
 
-            if (configuration.isEnableRefreshDaemon()) {
-                new LockRefreshDaemon(lock, TimeService.getDefault()).start();
-            }
+            lock.startDaemonIfEnabled();
 
             String executionId = ExecutionId.getNewExecutionId();
             return ExecutionPlan.newExecution(
@@ -179,7 +177,8 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
                 configuration.getLockTryFrequencyMillis(),
                 instanceId,
                 lockService,
-                TimeService.getDefault()
+                TimeService.getDefault(),
+                configuration.isEnableRefreshDaemon()
         );
     }
 

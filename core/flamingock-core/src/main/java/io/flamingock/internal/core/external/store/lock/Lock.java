@@ -16,8 +16,8 @@
 package io.flamingock.internal.core.external.store.lock;
 
 
-import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -29,10 +29,8 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 
 public class Lock {
 
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
-
     public static final String LOG_EXPIRED_TEMPLATE = "Lock[{}] not refreshed at[{}] because the it's canceled/expired[{}]";
-
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
     protected final LockKey lockKey;
 
     //injections
@@ -41,13 +39,10 @@ public class Lock {
     protected final TimeService timeService;
 
     protected final RunnerId owner;
-
     protected final long leaseMillis;
-
     protected final long retryFrequencyMillis;
-
     protected final long stopTryingAfterMillis;
-
+    private final boolean refreshDaemonEnabled;
     /**
      * It should never be null(after acquisition), just acquired(after now) or expired(before now)
      */
@@ -60,7 +55,8 @@ public class Lock {
                 long stopTryingAfterMillis,
                 long retryFrequencyMillis,
                 LockService lockService,
-                TimeService timeService) {
+                TimeService timeService,
+                boolean refreshDaemonEnabled) {
         this.lockKey = lockKey;
         this.leaseMillis = leaseMillis;
         this.stopTryingAfterMillis = stopTryingAfterMillis;
@@ -68,13 +64,14 @@ public class Lock {
         this.owner = owner;
         this.lockService = lockService;
         this.timeService = timeService;
+        this.refreshDaemonEnabled = refreshDaemonEnabled;
     }
 
 
     /**
      * Ensures the lock is safely acquired(safely here means it's acquired with enough margin to operate),
      * or throws an exception otherwise.
-     *
+     * <p>
      * In case the lock is about to expire, it will try to refresh it. In this scenario, the lock won't be considered
      * ensured until it's successfully extended. However, this scenario shouldn't happen, when a well configured daemon
      * is set up.
@@ -170,6 +167,13 @@ public class Lock {
         return timeService.isPast(expiresAt());
     }
 
+
+    //TODO ensure we only have one daemon running
+    public void startDaemonIfEnabled() {
+        if (refreshDaemonEnabled) {
+            new LockRefreshDaemon(this, timeService).start();
+        }
+    }
 
     @Override
     public String toString() {
