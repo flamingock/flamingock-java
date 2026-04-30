@@ -50,7 +50,7 @@ public class MongoDBSyncTxWrapper implements TransactionWrapper {
         Dependency clienteSessionDependency;
 
         try (ClientSession clientSession = sessionManager.startSession(sessionId)) {
-            clienteSessionDependency = new Dependency(clientSession);
+            clienteSessionDependency = new Dependency(ClientSession.class, clientSession, false);
             String connectionInfo = getConnectionInfo(clientSession);
 
             logger.debug("Starting MongoDB transaction [connection={}]", connectionInfo);
