@@ -89,6 +89,18 @@ class LockTest {
     }
 
     @Test
+    @DisplayName("isReleased: false until release() is called, true forever after")
+    void releasedFlagFlipsOnRelease() {
+        Lock lock = lockWithFutureExpiry(false);
+
+        assertFalse(lock.isReleased(), "fresh Lock must report isReleased() == false");
+
+        lock.release();
+
+        assertTrue(lock.isReleased(), "release() must set isReleased() == true");
+    }
+
+    @Test
     @DisplayName("release: clears the active daemon reference and interrupts the daemon thread so it terminates promptly")
     void releaseStopsRunningDaemon() throws InterruptedException {
         Lock lock = lockWithFutureExpiry(true);

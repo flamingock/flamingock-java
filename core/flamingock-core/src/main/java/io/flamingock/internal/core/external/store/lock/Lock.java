@@ -56,6 +56,18 @@ public class Lock {
      */
     LockRefreshDaemon activeDaemon;
 
+    /**
+     * Lifecycle flag: flipped to {@code true} by {@link #release()} and never reset. Independent
+     * of {@link #expiresAt} — a Lock can be expired without being released, and (once
+     * {@link #extend()} grows re-acquisition behaviour) released without being expired. The
+     * refresh daemon uses this as its exclusive exit signal so its lifecycle does not depend on
+     * whatever {@code extend()} chooses to return on expiry.
+     *
+     * <p>Volatile to give readers (notably the daemon thread) immediate visibility of the
+     * transition without taking the Lock monitor.</p>
+     */
+    private volatile boolean released = false;
+
 
     public Lock(RunnerId owner,
                 LockKey lockKey,
@@ -152,6 +164,7 @@ public class Lock {
         final LockRefreshDaemon daemonToStop;
         synchronized (this) {
             try {
+                released = true;
                 updateLease(timeService.daysToMills(-1));//forces expiring
                 lockService.releaseLock(lockKey, owner);
                 logger.debug("Lock released successfully");
@@ -162,10 +175,18 @@ public class Lock {
             activeDaemon = null;
         }
         if (daemonToStop != null) {
-            // Wake the daemon if it is sleeping so it observes expiry and exits promptly,
-            // instead of waiting for its next scheduled iteration.
+            // Wake the daemon if it is sleeping so it observes the released flag and exits
+            // promptly, instead of waiting for its next scheduled iteration.
             daemonToStop.interrupt();
         }
+    }
+
+    /**
+     * Whether {@link #release()} has been called on this Lock. Once true, never reverts.
+     * Read by the refresh daemon to decide whether to keep refreshing.
+     */
+    public final boolean isReleased() {
+        return released;
     }
 
 

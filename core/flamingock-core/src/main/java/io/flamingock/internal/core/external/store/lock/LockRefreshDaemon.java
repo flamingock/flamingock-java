@@ -37,18 +37,24 @@ public class LockRefreshDaemon extends Thread {
     @Override
     public void run() {
         logger.debug("Starting lock refresh daemon [lock_key={}]", lock.lockKey);
-        boolean keepRefreshing = true;
-        do {
+        // Lifecycle is governed solely by Lock#isReleased — we keep refreshing until the
+        // owner explicitly releases the lock, regardless of what extend() returns. This
+        // decouples the daemon's exit signal from the (possibly evolving) semantics of
+        // extend()-on-expiry.
+        while (!lock.isReleased()) {
             try {
                 logger.trace("Lock daemon refreshing lock [lock_key={}]", lock.lockKey);
-                keepRefreshing = lock.extend();
+                lock.extend();
             } catch (LockException e) {
                 logger.warn("Lock daemon refresh failed [lock_key={} error={}]", lock.lockKey, e.getMessage());
             } catch (Exception e) {
                 logger.warn("Lock daemon encountered unexpected error [lock_key={} error={}]", lock.lockKey, e.getMessage());
             }
+            if (lock.isReleased()) {
+                break;
+            }
             reposeIfRequired();
-        } while (keepRefreshing);
+        }
         logger.debug("Lock refresh daemon stopped [lock_key={}]", lock.lockKey);
     }
 
