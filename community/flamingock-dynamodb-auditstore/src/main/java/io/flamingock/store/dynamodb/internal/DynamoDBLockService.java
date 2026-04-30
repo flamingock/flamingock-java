@@ -108,7 +108,7 @@ public class DynamoDBLockService implements CommunityLockService {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         LockEntryEntity existingLockEntity = table.getItem(
                 Key.builder()
                         .partitionValue(lockKey.toString())

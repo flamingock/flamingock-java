@@ -16,11 +16,14 @@
 package io.flamingock.cloud.lock.client;
 
 import io.flamingock.cloud.auth.AuthManager;
-import io.flamingock.cloud.api.request.LockExtensionRequest;
 import io.flamingock.cloud.api.response.LockInfoResponse;
+import io.flamingock.cloud.api.response.LockResponse;
+import io.flamingock.cloud.api.vo.CloudLockStatus;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.http.Http;
+
+import java.util.Collections;
 
 public class HttpLockServiceClient implements LockServiceClient {
 
@@ -42,25 +45,21 @@ public class HttpLockServiceClient implements LockServiceClient {
     }
 
     @Override
-    public LockInfoResponse extendLock(LockKey lockKey,
-                               RunnerId runnerId,
-                               LockExtensionRequest extensionRequest) {
-        return httpFactory
+    public LockInfoResponse extendLock(LockKey lockKey, RunnerId runnerId) {
+        LockResponse response = httpFactory
                 .POST(pathTemplate + "/extension")
                 .withBearerToken(authManager.getJwtToken())
                 .addPathParameter(SERVICE_PARAM, lockKey.toString())
                 .withRunnerId(runnerId)
-                .setBody(extensionRequest)
-                .execute(LockInfoResponse.class);
-    }
+                .setBody(Collections.emptyMap())
+                .execute(LockResponse.class);
 
-    @Override
-    public LockInfoResponse getLock(LockKey lockKey) {
-        return httpFactory
-                .GET(pathTemplate)
-                .withBearerToken(authManager.getJwtToken())
-                .addPathParameter(SERVICE_PARAM, lockKey.toString())
-                .execute(LockInfoResponse.class);
+        if (response == null || response.getStatus() != CloudLockStatus.EXTENDED || response.getLock() == null) {
+            throw new IllegalStateException(String.format(
+                    "Lock extension contract violation: expected status[%s] with non-null lock, got[%s]",
+                    CloudLockStatus.EXTENDED, response));
+        }
+        return response.getLock();
     }
 
     @Override

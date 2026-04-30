@@ -182,7 +182,7 @@ public class Lock {
     }
 
     protected void handleLockException(boolean acquiringLock, Instant shouldStopTryingAt, LockServiceException ex) {
-        LockAcquisition currentLock = lockService.getLock(lockKey);
+        LockAcquisition currentLock = lockService.getLockInfo(lockKey);
         if (timeService.isPast(shouldStopTryingAt)) {
             throw new LockException(String.format(
                     "Quit trying lock after %s millis due to LockPersistenceException: \n\tcurrent lock:  %s\n\tnew lock: %s\n\tacquireLockQuery: %s\n\tdb error detail: %s",

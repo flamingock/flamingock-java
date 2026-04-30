@@ -222,7 +222,7 @@ public class SqlLockService implements CommunityLockService {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         String keyStr = lockKey.toString();
         try (Connection conn = dataSource.getConnection()) {
             CommunityLockEntry entry = getLockEntry(conn, keyStr);

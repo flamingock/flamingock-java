@@ -61,8 +61,8 @@ public class InternalInMemoryLockService implements CommunityLockService {
     }
     
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
-        return lockStorage.getLock(lockKey);
+    public LockAcquisition getLockInfo(LockKey lockKey) {
+        return lockStorage.getLockInfo(lockKey);
     }
     
     @Override

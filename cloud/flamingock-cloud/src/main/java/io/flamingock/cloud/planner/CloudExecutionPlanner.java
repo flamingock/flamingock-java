@@ -187,7 +187,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return AuditMarkSnapshot.empty();
     }
 
-    private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {
+    private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages,
+                                                 ExecutionPlanResponse response) {
         return ExecutionPlan.newExecution(
                 response.getExecutionId(),
                 CloudExecutionPlanMapper.extractLockFromResponse(response, coreConfiguration, runnerId, lockService, timeService),

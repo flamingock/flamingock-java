@@ -46,7 +46,7 @@ class InMemoryLockStorage {
         locks.put(key, acquisition);
     }
 
-    public synchronized LockAcquisition getLock(LockKey key) {
+    public synchronized LockAcquisition getLockInfo(LockKey key) {
         return locks.get(key);
     }
 

@@ -114,7 +114,7 @@ public class CouchbaseLockService implements CommunityLockService {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         String key = toKey(lockKey);
         try {
             GetResult result = collection.get(key);

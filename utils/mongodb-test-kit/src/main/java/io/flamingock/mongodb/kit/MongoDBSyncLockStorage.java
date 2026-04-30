@@ -65,7 +65,7 @@ public class MongoDBSyncLockStorage implements LockStorage {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey key) {
+    public LockAcquisition getLockInfo(LockKey key) {
         Document doc = lockCollection.find(new Document("_id", key.toString())).first();
         if (doc == null) {
             return null;

@@ -78,7 +78,7 @@ public class DynamoDBLockStorage implements LockStorage {
     }
     
     @Override
-    public LockAcquisition getLock(LockKey key) {
+    public LockAcquisition getLockInfo(LockKey key) {
         try {
             DynamoDBLockEntity entity = table.getItem(Key.builder()
                 .partitionValue(key.toString())

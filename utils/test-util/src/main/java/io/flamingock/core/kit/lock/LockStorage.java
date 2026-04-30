@@ -49,11 +49,11 @@ public interface LockStorage {
     void storeLock(LockKey key, LockAcquisition acquisition);
 
     /**
-     * Retrieves a lock acquisition by key.
+     * Retrieves a lock acquisition by key. Pure read; no side effects.
      * @param key the lock key
      * @return lock acquisition if exists, null otherwise
      */
-    LockAcquisition getLock(LockKey key);
+    LockAcquisition getLockInfo(LockKey key);
 
     /**
      * Retrieves all stored locks.

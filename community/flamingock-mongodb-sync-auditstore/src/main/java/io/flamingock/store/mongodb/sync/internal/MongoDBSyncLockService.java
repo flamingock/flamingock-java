@@ -110,7 +110,7 @@ public class MongoDBSyncLockService implements CommunityLockService {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         Document result = collection.find(new Document().append(KEY_FIELD, lockKey.toString())).first();
         if (result != null) {
             return mapper.fromDocument(new MongoDBSyncDocumentHelper(result));
