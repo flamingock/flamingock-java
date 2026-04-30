@@ -48,6 +48,14 @@ public class Lock {
      */
     protected volatile LocalDateTime expiresAt;
 
+    /**
+     * The single refresh daemon associated with this Lock instance, if any. Guarded by
+     * {@code synchronized(this)} together with {@link #expiresAt} mutations in {@link #release()}
+     * and {@link #startDaemonIfEnabled()}. Package-private so tests in the same package can
+     * inspect daemon state without needing a public accessor.
+     */
+    LockRefreshDaemon activeDaemon;
+
 
     public Lock(RunnerId owner,
                 LockKey lockKey,
@@ -141,6 +149,7 @@ public class Lock {
      */
     public final void release() {
         logger.debug("Releasing the lock");
+        final LockRefreshDaemon daemonToStop;
         synchronized (this) {
             try {
                 updateLease(timeService.daysToMills(-1));//forces expiring
@@ -149,6 +158,13 @@ public class Lock {
             } catch (Exception ex) {
                 logger.warn("Error removing the lock. Doesn't need manual intervention.", ex);
             }
+            daemonToStop = activeDaemon;
+            activeDaemon = null;
+        }
+        if (daemonToStop != null) {
+            // Wake the daemon if it is sleeping so it observes expiry and exits promptly,
+            // instead of waiting for its next scheduled iteration.
+            daemonToStop.interrupt();
         }
     }
 
@@ -168,11 +184,25 @@ public class Lock {
     }
 
 
-    //TODO ensure we only have one daemon running
-    public void startDaemonIfEnabled() {
-        if (refreshDaemonEnabled) {
-            new LockRefreshDaemon(this, timeService).start();
+    /**
+     * Starts the lock refresh daemon if {@code refreshDaemonEnabled} was set on this Lock and
+     * one isn't already running for this instance. Idempotent: subsequent calls while a daemon
+     * is already alive are no-ops, so callers higher up in the planner/cloud-mapper code paths
+     * cannot accidentally spawn parallel daemons for the same Lock. The daemon is bound to this
+     * specific Lock instance and is interrupted by {@link #release()} so it terminates promptly
+     * when the lock's lifecycle ends.
+     */
+    public final synchronized void startDaemonIfEnabled() {
+        if (!refreshDaemonEnabled) {
+            logger.debug("Lock refresh daemon disabled by configuration [lock_key={}]", lockKey);
+            return;
         }
+        if (activeDaemon != null && activeDaemon.isAlive()) {
+            logger.debug("Lock refresh daemon already running [lock_key={}]", lockKey);
+            return;
+        }
+        activeDaemon = new LockRefreshDaemon(this, timeService);
+        activeDaemon.start();
     }
 
     @Override
