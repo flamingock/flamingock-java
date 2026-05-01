@@ -155,7 +155,7 @@ public class SqlLockStorage implements LockStorage {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey key) {
+    public LockAcquisition getLockInfo(LockKey key) {
         try (Connection connection = dataSource.getConnection()) {
             CommunityLockEntry entry = getLockEntry(connection, key.toString());
             if (entry != null) {

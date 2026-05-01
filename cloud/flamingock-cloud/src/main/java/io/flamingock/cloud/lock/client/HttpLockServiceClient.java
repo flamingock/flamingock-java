@@ -16,11 +16,14 @@
 package io.flamingock.cloud.lock.client;
 
 import io.flamingock.cloud.auth.AuthManager;
-import io.flamingock.cloud.api.request.LockExtensionRequest;
 import io.flamingock.cloud.api.response.LockInfoResponse;
+import io.flamingock.cloud.api.response.LockResponse;
+import io.flamingock.cloud.api.vo.CloudLockStatus;
 import io.flamingock.internal.core.external.store.lock.LockKey;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.http.Http;
+
+import java.util.Collections;
 
 public class HttpLockServiceClient implements LockServiceClient {
 
@@ -42,25 +45,49 @@ public class HttpLockServiceClient implements LockServiceClient {
     }
 
     @Override
-    public LockInfoResponse extendLock(LockKey lockKey,
-                               RunnerId runnerId,
-                               LockExtensionRequest extensionRequest) {
-        return httpFactory
+    public LockInfoResponse extendLock(LockKey lockKey, RunnerId runnerId) {
+        LockResponse response = httpFactory
                 .POST(pathTemplate + "/extension")
                 .withBearerToken(authManager.getJwtToken())
                 .addPathParameter(SERVICE_PARAM, lockKey.toString())
                 .withRunnerId(runnerId)
-                .setBody(extensionRequest)
-                .execute(LockInfoResponse.class);
+                .setBody(Collections.emptyMap())
+                .execute(LockResponse.class);
+
+        if (response == null || response.getStatus() != CloudLockStatus.EXTENDED || response.getLock() == null) {
+            throw new IllegalStateException(String.format(
+                    "Lock extension contract violation: expected status[%s] with non-null lock, got[%s]",
+                    CloudLockStatus.EXTENDED, response));
+        }
+        LockInfoResponse lock = response.getLock();
+        if (!runnerId.toString().equals(lock.getOwner())) {
+            // Defensive: the server should always echo back the same owner. A mismatch could
+            // indicate a routing bug, response confusion, or impersonation — fail loudly.
+            throw new IllegalStateException(String.format(
+                    "Lock extension owner mismatch: requested[%s] but server returned[%s]",
+                    runnerId, lock.getOwner()));
+        }
+        return lock;
     }
 
     @Override
-    public LockInfoResponse getLock(LockKey lockKey) {
-        return httpFactory
-                .GET(pathTemplate)
-                .withBearerToken(authManager.getJwtToken())
-                .addPathParameter(SERVICE_PARAM, lockKey.toString())
-                .execute(LockInfoResponse.class);
+    public LockInfoResponse getLockInfo(LockKey lockKey, RunnerId runnerId) {
+        try {
+            return httpFactory
+                    .GET(pathTemplate)
+                    .withBearerToken(authManager.getJwtToken())
+                    .addPathParameter(SERVICE_PARAM, lockKey.toString())
+                    .withRunnerId(runnerId)
+                    .execute(LockInfoResponse.class);
+        } catch (io.flamingock.internal.util.ServerException ex) {
+            // Per the doc, R_LOCK_03 is "no lock for this key in this environment" — that's a
+            // legitimate "absent" state, not an error. Surface as null to honour the
+            // LockService.getLockInfo contract. All other ServerExceptions propagate.
+            if (ex.getError() != null && "R_LOCK_03".equals(ex.getError().getCode())) {
+                return null;
+            }
+            throw ex;
+        }
     }
 
     @Override

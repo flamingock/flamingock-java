@@ -37,27 +37,26 @@ public class CommunityLock extends Lock {
                                long retryFrequencyMillis,
                                RunnerId owner,
                                CommunityLockService lockService,
-                               TimeService timeService) {
-        CommunityLock lock = new CommunityLock(leaseMillis, stopTryingAfterMillis, retryFrequencyMillis, owner, lockService, timeService);
+                               TimeService timeService,
+                               boolean refreshDaemonEnabled) {
+        CommunityLock lock = new CommunityLock(leaseMillis, stopTryingAfterMillis, retryFrequencyMillis, owner, lockService, timeService, refreshDaemonEnabled);
         lock.acquire();
         return lock;
-
     }
-
 
     private CommunityLock(long leaseMillis,
                           long stopTryingAfterMillis,
                           long retryFrequencyMillis,
                           RunnerId owner,
                           CommunityLockService lockService,
-                          TimeService timeService) {
-        super(owner, LockKey.fromString("DEFAULT_KEY"), leaseMillis, stopTryingAfterMillis, retryFrequencyMillis, lockService, timeService);
+                          TimeService timeService,
+                          boolean refreshDaemonEnabled) {
+        super(owner, LockKey.fromString("DEFAULT_KEY"), leaseMillis, stopTryingAfterMillis, retryFrequencyMillis, lockService, timeService, refreshDaemonEnabled);
     }
 
     private CommunityLockService getLockService() {
         return (CommunityLockService) lockService;
     }
-
 
     /**
      * This is supposed to be called just once, per lock, from the static method `getLock`
@@ -82,7 +81,7 @@ public class CommunityLock extends Lock {
             }
 
         } while (keepLooping);
-        logger.debug("Process lock acquired [expires_at={}]", expiresAt());
+        logger.info("Lock acquired [lock_key={} owner={} expires_at={}]", lockKey, owner, expiresAt());
     }
 
 }

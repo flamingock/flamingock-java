@@ -16,8 +16,8 @@
 package io.flamingock.internal.core.external.store.lock;
 
 
-import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
+import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -27,12 +27,10 @@ import java.time.ZoneId;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 
-public class Lock {
-
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
+public abstract class Lock {
 
     public static final String LOG_EXPIRED_TEMPLATE = "Lock[{}] not refreshed at[{}] because the it's canceled/expired[{}]";
-
+    private static final Logger logger = FlamingockLoggerFactory.getLogger("Lock");
     protected final LockKey lockKey;
 
     //injections
@@ -41,17 +39,34 @@ public class Lock {
     protected final TimeService timeService;
 
     protected final RunnerId owner;
-
     protected final long leaseMillis;
-
     protected final long retryFrequencyMillis;
-
     protected final long stopTryingAfterMillis;
-
+    private final boolean refreshDaemonEnabled;
     /**
      * It should never be null(after acquisition), just acquired(after now) or expired(before now)
      */
     protected volatile LocalDateTime expiresAt;
+
+    /**
+     * The single refresh daemon associated with this Lock instance, if any. Guarded by
+     * {@code synchronized(this)} together with {@link #expiresAt} mutations in {@link #release()}
+     * and {@link #startDaemonIfEnabled()}. Package-private so tests in the same package can
+     * inspect daemon state without needing a public accessor.
+     */
+    LockRefreshDaemon activeDaemon;
+
+    /**
+     * Lifecycle flag: flipped to {@code true} by {@link #release()} and never reset. Independent
+     * of {@link #expiresAt} — a Lock can be expired without being released, and (once
+     * {@link #extend()} grows re-acquisition behaviour) released without being expired. The
+     * refresh daemon uses this as its exclusive exit signal so its lifecycle does not depend on
+     * whatever {@code extend()} chooses to return on expiry.
+     *
+     * <p>Volatile to give readers (notably the daemon thread) immediate visibility of the
+     * transition without taking the Lock monitor.</p>
+     */
+    private volatile boolean released = false;
 
 
     public Lock(RunnerId owner,
@@ -60,7 +75,8 @@ public class Lock {
                 long stopTryingAfterMillis,
                 long retryFrequencyMillis,
                 LockService lockService,
-                TimeService timeService) {
+                TimeService timeService,
+                boolean refreshDaemonEnabled) {
         this.lockKey = lockKey;
         this.leaseMillis = leaseMillis;
         this.stopTryingAfterMillis = stopTryingAfterMillis;
@@ -68,13 +84,14 @@ public class Lock {
         this.owner = owner;
         this.lockService = lockService;
         this.timeService = timeService;
+        this.refreshDaemonEnabled = refreshDaemonEnabled;
     }
 
 
     /**
      * Ensures the lock is safely acquired(safely here means it's acquired with enough margin to operate),
      * or throws an exception otherwise.
-     *
+     * <p>
      * In case the lock is about to expire, it will try to refresh it. In this scenario, the lock won't be considered
      * ensured until it's successfully extended. However, this scenario shouldn't happen, when a well configured daemon
      * is set up.
@@ -127,10 +144,14 @@ public class Lock {
                 }
                 LockAcquisition lockAcquisition = lockService.extendLock(lockKey, owner, leaseMillis);
                 updateLease(lockAcquisition.getAcquiredForMillis());
-                logger.debug("Flamingock refreshed the lock until: {}", expiresAt());
+                logger.info("Lock extended [lock_key={} owner={} expires_at={}]", lockKey, owner, expiresAt());
                 return true;
             }
 
+        } catch (LockServiceException ex) {
+            // Preserve the original exception so callers (notably ensure()/handleLockException)
+            // can inspect getNewLockEntity / getAcquireLockQuery / getErrorDetail.
+            throw ex;
         } catch (Exception ex) {
             throw new LockException(ex);
         }
@@ -144,15 +165,32 @@ public class Lock {
      */
     public final void release() {
         logger.debug("Releasing the lock");
+        final LockRefreshDaemon daemonToStop;
         synchronized (this) {
             try {
+                released = true;
                 updateLease(timeService.daysToMills(-1));//forces expiring
                 lockService.releaseLock(lockKey, owner);
-                logger.debug("Lock released successfully");
+                logger.info("Lock released [lock_key={} owner={}]", lockKey, owner);
             } catch (Exception ex) {
                 logger.warn("Error removing the lock. Doesn't need manual intervention.", ex);
             }
+            daemonToStop = activeDaemon;
+            activeDaemon = null;
         }
+        if (daemonToStop != null) {
+            // Wake the daemon if it is sleeping so it observes the released flag and exits
+            // promptly, instead of waiting for its next scheduled iteration.
+            daemonToStop.interrupt();
+        }
+    }
+
+    /**
+     * Whether {@link #release()} has been called on this Lock. Once true, never reverts.
+     * Read by the refresh daemon to decide whether to keep refreshing.
+     */
+    public final boolean isReleased() {
+        return released;
     }
 
 
@@ -171,9 +209,34 @@ public class Lock {
     }
 
 
+    /**
+     * Starts the lock refresh daemon if {@code refreshDaemonEnabled} was set on this Lock and
+     * one isn't already running for this instance. Idempotent: subsequent calls while a daemon
+     * is already alive are no-ops, so callers higher up in the planner/cloud-mapper code paths
+     * cannot accidentally spawn parallel daemons for the same Lock. The daemon is bound to this
+     * specific Lock instance and is interrupted by {@link #release()} so it terminates promptly
+     * when the lock's lifecycle ends.
+     */
+    public final synchronized void startDaemonIfEnabled() {
+        if (released) {
+            logger.debug("Lock refresh daemon not started: lock is already released [lock_key={}]", lockKey);
+            return;
+        }
+        if (!refreshDaemonEnabled) {
+            logger.debug("Lock refresh daemon disabled by configuration [lock_key={}]", lockKey);
+            return;
+        }
+        if (activeDaemon != null && activeDaemon.isAlive()) {
+            logger.debug("Lock refresh daemon already running [lock_key={}]", lockKey);
+            return;
+        }
+        activeDaemon = new LockRefreshDaemon(this, timeService);
+        activeDaemon.start();
+    }
+
     @Override
     public String toString() {
-        return "MongockLock{" +
+        return "Lock{" +
                 "owner='" + owner + '\'' +
                 ", leaseMillis=" + leaseMillis +
                 ", retryFrequencyMillis=" + retryFrequencyMillis +
@@ -182,7 +245,7 @@ public class Lock {
     }
 
     protected void handleLockException(boolean acquiringLock, Instant shouldStopTryingAt, LockServiceException ex) {
-        LockAcquisition currentLock = lockService.getLock(lockKey);
+        LockAcquisition currentLock = lockService.getLockInfo(lockKey);
         if (timeService.isPast(shouldStopTryingAt)) {
             throw new LockException(String.format(
                     "Quit trying lock after %s millis due to LockPersistenceException: \n\tcurrent lock:  %s\n\tnew lock: %s\n\tacquireLockQuery: %s\n\tdb error detail: %s",

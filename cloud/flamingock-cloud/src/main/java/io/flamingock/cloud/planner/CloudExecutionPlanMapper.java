@@ -135,19 +135,4 @@ public final class CloudExecutionPlanMapper {
         return ChangeAction.valueOf(cloudAction.name());
     }
 
-    public static Lock extractLockFromResponse(ExecutionPlanResponse response,
-                                               CoreConfigurable coreConfiguration,
-                                               RunnerId owner,
-                                               CloudLockService lockService,
-                                               TimeService timeService) {
-        return new Lock(
-                owner,
-                LockKey.fromString(response.getLock().getKey()),
-                response.getLock().getAcquiredForMillis(),
-                coreConfiguration.getLockQuitTryingAfterMillis(),
-                coreConfiguration.getLockTryFrequencyMillis(),
-                lockService,
-                timeService
-        );
-    }
 }

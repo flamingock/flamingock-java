@@ -84,7 +84,7 @@ public class CouchbaseLockStorage implements LockStorage {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         String key = toKey(lockKey);
         try {
             GetResult result = lockCollection.get(key);

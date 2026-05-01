@@ -108,7 +108,7 @@ public class DynamoDBLockService implements CommunityLockService {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         LockEntryEntity existingLockEntity = table.getItem(
                 Key.builder()
                         .partitionValue(lockKey.toString())
@@ -124,25 +124,23 @@ public class DynamoDBLockService implements CommunityLockService {
 
     @Override
     public void releaseLock(LockKey lockKey, RunnerId owner) {
-        LockEntryEntity existingLockEntity = table.getItem(
-                Key.builder()
-                        .partitionValue(lockKey.toString())
-                        .build()
-        );
-        if (existingLockEntity != null) {
-            CommunityLockEntry existingLock = existingLockEntity.toLockEntry();
-            if (owner.equals(RunnerId.fromString(existingLock.getOwner()))) {
-                logger.debug("Lock for key {} belongs to us, so removing.", lockKey);
-                table.deleteItem(
-                        Key.builder()
-                                .partitionValue(lockKey.toString())
-                                .build()
-                );
-            } else {
-                logger.debug("Lock for key {} belongs to other owner, can not delete.", existingLock.getKey());
-            }
-        } else {
-            logger.debug("Lock for key {} is not found, nothing to do", lockKey);
+        // Atomic conditional delete: removes the row only if the current owner matches the
+        // caller. Replaces a previous get-then-delete pattern that had a TOCTOU race where
+        // another runner could acquire between the read and the unconditional delete, and we
+        // would then wipe their lock.
+        try {
+            table.deleteItem(software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest.builder()
+                    .key(Key.builder().partitionValue(lockKey.toString()).build())
+                    .conditionExpression(Expression.builder()
+                            .expression("attribute_exists(partitionKey) AND lockOwner = :ownerVal")
+                            .putExpressionValue(":ownerVal", AttributeValue.builder().s(owner.toString()).build())
+                            .build())
+                    .build());
+            logger.debug("Lock for key {} removed (conditional on owner)", lockKey);
+        } catch (software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException ex) {
+            // Either the lock no longer exists, or it belongs to a different runner — both are
+            // benign for release: do nothing.
+            logger.debug("Lock for key {} not removed (no row, or owned by another runner)", lockKey);
         }
     }
 }

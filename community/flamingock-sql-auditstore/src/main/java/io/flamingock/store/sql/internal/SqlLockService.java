@@ -222,7 +222,7 @@ public class SqlLockService implements CommunityLockService {
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         String keyStr = lockKey.toString();
         try (Connection conn = dataSource.getConnection()) {
             CommunityLockEntry entry = getLockEntry(conn, keyStr);
@@ -230,10 +230,12 @@ public class SqlLockService implements CommunityLockService {
                 return new LockAcquisition(RunnerId.fromString(entry.getOwner()),
                         java.sql.Timestamp.valueOf(entry.getExpiresAt()).getTime() - System.currentTimeMillis());
             }
+            return null;
         } catch (SQLException e) {
-            // ignore
+            // Surface the failure rather than masking it as "no lock". Callers
+            // (e.g. handleLockException) need to distinguish "we couldn't read" from "no row".
+            throw new LockServiceException("getLockInfo", keyStr, e.getMessage());
         }
-        return null;
     }
 
     @Override
@@ -256,7 +258,10 @@ public class SqlLockService implements CommunityLockService {
                 }
             }
         } catch (SQLException e) {
-            // ignore
+            // Propagate so that operators see release failures. Lock.release() wraps in
+            // try/catch to keep the user-facing release best-effort, so this won't blow up
+            // the calling flow.
+            throw new LockServiceException("releaseLock", keyStr, e.getMessage());
         }
     }
 

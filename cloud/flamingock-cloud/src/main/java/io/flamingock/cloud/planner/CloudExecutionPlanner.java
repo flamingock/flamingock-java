@@ -15,6 +15,8 @@
  */
 package io.flamingock.cloud.planner;
 
+import io.flamingock.cloud.lock.CloudLock;
+import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.StopWatch;
 import io.flamingock.internal.util.ThreadSleeper;
@@ -93,6 +95,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 ExecutionPlanResponse response = createExecution(loadedStages, snapshot.getMarks(), lastOwnerGuid, counterPerGuid.getElapsed());
                 logger.info("Obtained cloud execution plan: {}", response.getAction());
 
+                //TODO should check if it has the lock?
                 if (response.isSynchronizedMarks()) {
                     snapshot = clearSynchronizedMarks(snapshot);
                 }
@@ -102,7 +105,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                     return ExecutionPlan.CONTINUE(executableStages);
 
                 } else if (response.isExecute()) {
-                    return buildNextExecutionPlan(loadedStages, response);
+                    Lock lock = CloudLock.initialiseLocal(response.getLock(), coreConfiguration, runnerId, lockService, timeService);
+                    return buildNextExecutionPlan(loadedStages, response, lock);
 
                 } else if (response.isAwait()) {
                     if (lastOwnerGuid == null || !lastOwnerGuid.equals(response.getLock().getAcquisitionId())) {
@@ -187,10 +191,12 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         return AuditMarkSnapshot.empty();
     }
 
-    private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages, ExecutionPlanResponse response) {
+    private ExecutionPlan buildNextExecutionPlan(List<AbstractLoadedStage> loadedStages,
+                                                 ExecutionPlanResponse response,
+                                                 Lock lock) {
         return ExecutionPlan.newExecution(
                 response.getExecutionId(),
-                CloudExecutionPlanMapper.extractLockFromResponse(response, coreConfiguration, runnerId, lockService, timeService),
+                lock,
                 CloudExecutionPlanMapper.getExecutableStages(response, loadedStages)
         );
     }

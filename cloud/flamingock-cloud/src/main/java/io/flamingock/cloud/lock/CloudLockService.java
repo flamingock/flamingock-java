@@ -15,7 +15,6 @@
  */
 package io.flamingock.cloud.lock;
 
-import io.flamingock.cloud.api.request.LockExtensionRequest;
 import io.flamingock.cloud.api.response.LockInfoResponse;
 import io.flamingock.cloud.lock.client.LockServiceClient;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
@@ -30,51 +29,58 @@ import org.slf4j.Logger;
 public class CloudLockService implements LockService {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("CloudLock");
 
-
     private final LockServiceClient client;
+    private final RunnerId runnerId;
 
-    public CloudLockService(LockServiceClient client) {
+    public CloudLockService(LockServiceClient client, RunnerId runnerId) {
         this.client = client;
+        this.runnerId = runnerId;
     }
 
+    /**
+     * On cloud, the lease duration is fixed at acquire time and the server echoes it back; the
+     * {@code leaseMillis} parameter from the {@link LockService} contract is unused here.
+     */
     @Override
     public LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException {
         try {
-            LockInfoResponse lockExtension = client.extendLock(key, owner, new LockExtensionRequest(leaseMillis));
+            LockInfoResponse lockExtension = client.extendLock(key, owner);
             return new LockAcquisition(RunnerId.fromString(lockExtension.getOwner()), lockExtension.getAcquiredForMillis());
 
         } catch (ServerException ex) {
             throw new LockServiceException(
                     ex.getRequestString(),
                     ex.getBodyString(),
-                    String.format("Error extending lock[%s] for runner[%s]: %s", key.toString(), owner.toString(), ex.getMessage())
+                    String.format("Error extending lock[%s] for runner[%s]: %s", key, owner, ex.getMessage())
             );
         } catch (Throwable ex) {
             throw new LockServiceException(
                     "n/a",
                     "n/a",
-                    String.format("Unexpected error extending lock[%s] for runner[%s]: %s", key.toString(), owner.toString(), ex.getMessage())
+                    String.format("Unexpected error extending lock[%s] for runner[%s]: %s", key, owner, ex.getMessage())
             );
         }
     }
 
     @Override
-    public LockAcquisition getLock(LockKey lockKey) {
+    public LockAcquisition getLockInfo(LockKey lockKey) {
         try {
-            LockInfoResponse response = client.getLock(lockKey);
+            LockInfoResponse response = client.getLockInfo(lockKey, runnerId);
+            if (response == null) {
+                return null;
+            }
             return new LockAcquisition(RunnerId.fromString(response.getOwner()), response.getAcquiredForMillis());
-
         } catch (ServerException ex) {
             throw new LockServiceException(
                     ex.getRequestString(),
                     ex.getBodyString(),
-                    String.format("Error retrieving lock[%s]: %s", lockKey.toString(), ex.getMessage())
+                    String.format("Error retrieving lock[%s]: %s", lockKey, ex.getMessage())
             );
         } catch (Throwable ex) {
             throw new LockServiceException(
                     "n/a",
                     "n/a",
-                    String.format("Unexpected error retrieving lock[%s]: %s", lockKey.toString(), ex.getMessage())
+                    String.format("Unexpected error retrieving lock[%s]: %s", lockKey, ex.getMessage())
             );
         }
     }
@@ -83,13 +89,10 @@ public class CloudLockService implements LockService {
     public void releaseLock(LockKey lockKey, RunnerId owner) {
         try {
             client.releaseLock(lockKey, owner);
-
         } catch (ServerException ex) {
-//            logger.warn(String.format("Error while connecting to server to release the lock[%s]: %s", lockKey.toString(), ex.getMessage()), ex);
+            logger.warn("Server rejected lock[{}] release for runner[{}]: {}", lockKey, owner, ex.getMessage());
         } catch (Throwable ex) {
-//            logger.warn(String.format("Error releasing lock[%s]: %s", lockKey.toString(), ex.getMessage()), ex);
+            logger.warn("Unexpected error releasing lock[{}] for runner[{}]: {}", lockKey, owner, ex.getMessage(), ex);
         }
-
     }
-
 }

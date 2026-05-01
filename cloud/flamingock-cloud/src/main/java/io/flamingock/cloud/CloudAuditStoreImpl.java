@@ -176,7 +176,7 @@ public class CloudAuditStoreImpl implements CloudAuditStore {
                 runnerId,
                 executionPlannerClient,
                 coreConfiguration,
-                new CloudLockService(lockClient),
+                new CloudLockService(lockClient, runnerId),
                 auditMarkers,
                 TimeService.getDefault()
         );

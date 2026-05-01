@@ -36,7 +36,7 @@ import java.util.Map;
  * assertTrue(helper.hasLock(lockKey));
  * 
  * // Verify lock ownership
- * LockAcquisition acquisition = helper.getLock(lockKey);
+ * LockAcquisition acquisition = helper.getLockInfo(lockKey);
  * assertEquals(runnerId, acquisition.getOwner());
  * }</pre>
  */
@@ -53,11 +53,11 @@ public class LockTestHelper {
     }
 
     public boolean hasLock(LockKey lockKey) {
-        return lockStorage.getLock(lockKey) != null;
+        return lockStorage.getLockInfo(lockKey) != null;
     }
 
-    public LockAcquisition getLock(LockKey lockKey) {
-        return lockStorage.getLock(lockKey);
+    public LockAcquisition getLockInfo(LockKey lockKey) {
+        return lockStorage.getLockInfo(lockKey);
     }
 
     public void addLock(LockKey lockKey, String owner, long leaseMillis) {

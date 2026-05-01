@@ -18,45 +18,70 @@ package io.flamingock.internal.core.external.store.lock;
 import io.flamingock.internal.util.id.RunnerId;
 
 /**
- * <p>Repository interface to manage lock in database, which will be used by LockManager</p>
+ * Operations against the persistent lock store.
+ *
+ * <p>This interface intentionally exposes only the post-acquisition operations
+ * needed by the runtime: extending an already-held lock, reading current lock
+ * state, and releasing. <strong>Acquisition is not part of this interface.</strong>
+ * Each implementation owns its own acquisition path:</p>
+ *
+ * <ul>
+ *   <li>Community implementations acquire a lock via {@code CommunityLockService.upsert(...)},
+ *       called from inside {@code CommunityLock.acquire()}.</li>
+ *   <li>The cloud implementation receives the lock as part of the execution-plan
+ *       response and never calls a dedicated acquisition method on this interface.</li>
+ * </ul>
  */
 public interface LockService {
 // TODO remove keys and runnerId from methods. LockService(and others) should be only for a specific runner and service
 
 
     /**
-     * The only goal of this method is to update(mainly to extend the expiry date) the lock in case is already owned. So
-     * it requires a Lock for the same key and owner {@code (existingLock.key==newLock.key && existingLoc.owner==newLock.owner)}.
-     * <p>
-     * If there is no lock for the key, or it doesn't belong to newLock.owner(), a LockPersistenceException is thrown.
-     * <p>
-     * Take into account that if it's already expired, but still with the same owner, we are lucky, no one has taken it yet,
-     * so we can still extend the expiration time.
+     * Refreshes (extends) a lock that the caller already owns.
      *
-     * @param key Specially important in cloud execution as it represents a service
-     * @param owner It references the running instance
-     * @param leaseMillis How long(in millis) the lock will be acquired for.
-     * @return the lockAcquisition with the owner and leaseMillis, among others
-     * @throws LockServiceException if there is a lock in database with same key, but is expired and belong to
-     *                                  another owner or cannot insert/update the lock for any other reason
+     * <p>Asserts that {@code (existingLock.key == newLock.key && existingLock.owner == newLock.owner)}
+     * and rotates internal lock state (e.g. on cloud, the {@code acquisitionId}). This method
+     * does <strong>not</strong> grant ownership: a missing lock or a lock held by a different
+     * owner causes {@link LockServiceException}. If the lock has already expired but is still
+     * recorded against the same owner, extending succeeds (no other process has taken it yet).</p>
+     *
+     * @param key         lock key (typically the service id in cloud)
+     * @param owner       caller's runner id; must equal the existing lock's owner
+     * @param leaseMillis requested lease duration in milliseconds. Honored by community
+     *                    implementations; ignored on cloud (the server keeps the duration set
+     *                    at acquire time and echoes it back).
+     * @return a {@link LockAcquisition} describing the lock after extension
+     * @throws LockServiceException if no lock exists for {@code key}, the lock belongs to a
+     *                              different owner, or the underlying store rejects the update
      */
     LockAcquisition extendLock(LockKey key, RunnerId owner, long leaseMillis) throws LockServiceException;
 
 
     /**
-     * Retrieves a lock by key
+     * Reads the current state of a lock.
      *
-     * @param lockKey key
-     * @return LockEntry
-     */
-    //TODO Optional
-    LockAcquisition getLock(LockKey lockKey);
-
-    /**
-     * Removes from database all the locks with the same key(only can be one) and owner
+     * <p><strong>Pure read.</strong> This method has no side effects: it never creates,
+     * extends, takes over, or releases a lock. It exists for diagnostic / error-recovery
+     * paths that need to inspect who currently holds a contended lock.</p>
+     *
+     * <p>Note: not every backend can support this operation. The cloud implementation
+     * throws {@link UnsupportedOperationException} because the lock REST API exposes no
+     * read-only endpoint.</p>
      *
      * @param lockKey lock key
-     * @param owner   lock owner
+     * @return current lock state, or {@code null} if no lock is recorded for {@code lockKey}
+     */
+    LockAcquisition getLockInfo(LockKey lockKey);
+
+    /**
+     * Releases (deletes) the lock identified by {@code lockKey} when the caller is the owner.
+     *
+     * <p>Best-effort: implementations should not throw on contention or transient errors,
+     * because release is typically called from cleanup paths where rethrowing would mask
+     * the original failure. A lock not owned by {@code owner} is left untouched.</p>
+     *
+     * @param lockKey lock key
+     * @param owner   caller's runner id
      */
     void releaseLock(LockKey lockKey, RunnerId owner);
 

@@ -36,38 +36,49 @@ public class LockRefreshDaemon extends Thread {
 
     @Override
     public void run() {
-        logger.debug("Starting lock refresh daemon [lock_key={}]", lock.lockKey);
-        boolean keepRefreshing = true;
-        do {
+        logger.info("Lock refresh daemon started [lock_key={}]", lock.lockKey);
+        // Lifecycle is governed solely by Lock#isReleased — we keep refreshing until the
+        // owner explicitly releases the lock, regardless of what extend() returns. This
+        // decouples the daemon's exit signal from the (possibly evolving) semantics of
+        // extend()-on-expiry.
+        while (!lock.isReleased()) {
             try {
                 logger.trace("Lock daemon refreshing lock [lock_key={}]", lock.lockKey);
-                keepRefreshing = lock.extend();
+                lock.extend();
             } catch (LockException e) {
                 logger.warn("Lock daemon refresh failed [lock_key={} error={}]", lock.lockKey, e.getMessage());
             } catch (Exception e) {
                 logger.warn("Lock daemon encountered unexpected error [lock_key={} error={}]", lock.lockKey, e.getMessage());
             }
+            if (lock.isReleased()) {
+                break;
+            }
             reposeIfRequired();
-        } while (keepRefreshing);
-        logger.debug("Lock refresh daemon stopped [lock_key={}]", lock.lockKey);
+        }
+        logger.info("Lock refresh daemon stopped [lock_key={}]", lock.lockKey);
     }
 
-    private void reposeIfRequired() {
-
-
-        if (!lock.isExpired()) {
-            try {
-                long sleepingTime = TimeUtil.diffInMillis(lock.expiresAt(), timeService.currentDateTime()) / 3;
-                logAcquisitionUntil(sleepingTime);
-                sleep(sleepingTime);
-
-            } catch (InterruptedException ex) {
-                logger.warn("Interrupted exception ignored");
-            }
+    void reposeIfRequired() {
+        long diff = TimeUtil.diffInMillis(lock.expiresAt(), timeService.currentDateTime());
+        long sleepingTime;
+        if (diff > 0) {
+            sleepingTime = diff / 3;
+            logAcquisitionUntil(sleepingTime);
         } else {
+            // Expired but not released: floor the retry rate so we don't tight-loop while the
+            // daemon repeatedly fails to refresh (or extend() simply returns false on expiry).
             logger.trace("Lock daemon detected expired lock [expires_at={} lock_key={}]", lock.expiresAt(), lock.lockKey);
+            sleepingTime = lock.retryFrequencyMillis;
         }
-
+        if (sleepingTime <= 0) {
+            return;
+        }
+        try {
+            sleep(sleepingTime);
+        } catch (InterruptedException ex) {
+            logger.warn("Interrupted exception ignored");
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void logAcquisitionUntil(long sleepingTime) {

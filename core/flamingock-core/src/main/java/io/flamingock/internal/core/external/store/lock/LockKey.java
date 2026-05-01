@@ -27,10 +27,4 @@ public class LockKey extends StringId {
     private LockKey(String key) {
         super(key);
     }
-
-
-    @Override
-    public boolean equals(Object o) {
-        return super.equals(o) && o instanceof LockKey;
-    }
 }
