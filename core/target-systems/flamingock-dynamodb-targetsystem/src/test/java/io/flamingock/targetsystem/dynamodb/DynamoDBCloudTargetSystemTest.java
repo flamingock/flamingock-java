@@ -115,6 +115,8 @@ public class DynamoDBCloudTargetSystemTest {
         //tear down
         logger.info("Stopping Mock Server...");
         mockRunnerServer.stop();
+        dynamoDBTestHelper.dropTable(UserEntity.tableName);
+        dynamoDBTestHelper.dropTable(dynamoDBTestHelper.tableName);
     }
 
     @Test
@@ -168,14 +170,12 @@ public class DynamoDBCloudTargetSystemTest {
                             .table(UserEntity.tableName, TableSchema.fromBean(UserEntity.class)),
                     1);
 
-            //TODO when cloud enabled
             // check ongoing status
-//            dynamoDBTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
+            dynamoDBTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
         }
     }
 
     @Test
-    @Disabled("adapt when adding cloud support")
     @DisplayName("Should rollback the ongoing deletion when a change fails")
     void failedChanges() {
         String executionId = "execution-1";
@@ -216,9 +216,9 @@ public class DynamoDBCloudTargetSystemTest {
                     .build();
 
             //THEN
-            mockRunnerServer.verifyAllCalls();
-
             OperationException ex = Assertions.assertThrows(OperationException.class, runner::run);
+
+            mockRunnerServer.verifyAllCalls();
 
             // check clients changes
             dynamoDBTestHelper.checkCount(

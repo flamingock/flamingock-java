@@ -33,6 +33,7 @@ import io.flamingock.common.test.cloud.mock.MockRequestResponseChange;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
 import io.flamingock.internal.util.Trio;
+import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
@@ -125,6 +126,7 @@ public class MongoDBSyncTargetSystemTest {
         mockRunnerServer.stop();
 
         testDatabase.getCollection(CLIENTS_COLLECTION).drop();
+        testDatabase.getCollection(CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME).drop();
     }
 
     @Test
@@ -178,7 +180,6 @@ public class MongoDBSyncTargetSystemTest {
     }
 
     @Test
-    @Disabled("adapt when adding cloud support")
     @DisplayName("Should rollback the ongoing deletion when a change fails")
     void failedChanges() {
         String executionId = "execution-1";
@@ -223,16 +224,15 @@ public class MongoDBSyncTargetSystemTest {
                     .build();
 
             //THEN
-            mockRunnerServer.verifyAllCalls();
-
             OperationException ex = Assertions.assertThrows(OperationException.class, runner::run);
+
+            mockRunnerServer.verifyAllCalls();
 
             // check clients changes
             mongoDBTestHelper.checkCount(testDatabase.getCollection(CLIENTS_COLLECTION), 0);
 
-            //TODO when cloud enabled
             // check ongoing status
-//            mongoDBTestHelper.checkEmptyTargetSystemAudiMarker();
+            mongoDBTestHelper.checkEmptyTargetSystemAudiMarker();
         }
     }
 

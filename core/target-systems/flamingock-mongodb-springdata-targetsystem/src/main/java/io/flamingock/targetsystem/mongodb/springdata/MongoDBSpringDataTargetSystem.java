@@ -24,6 +24,7 @@ import io.flamingock.internal.common.core.audit.AuditHistoryReader;
 import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
@@ -36,6 +37,7 @@ import java.util.Optional;
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
 
 public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<MongoDBSpringDataTargetSystem>
@@ -106,8 +108,10 @@ public class MongoDBSpringDataTargetSystem extends TransactionalTargetSystem<Mon
                 .writeConcern(writeConcern)
                 .build();
 
-        //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
-        auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
+        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
+        auditMarker = edition == COMMUNITY
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                : MongoDBSpringDataAuditMarker.builder(mongoTemplate).build();
     }
 
     private void validate() {
