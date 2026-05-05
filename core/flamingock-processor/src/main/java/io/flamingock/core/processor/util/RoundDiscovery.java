@@ -44,9 +44,9 @@ public final class RoundDiscovery {
         pluginFinder.loadAndInitializePlugins(roundEnv, logger);
 
         return new RoundInputs(
-                annotationFinder.getPipelineAnnotation(),
+                annotationFinder.getPipelineAnnotation().orElse(null),
                 annotationFinder.findAnnotatedChanges(pluginFinder.getChangeDiscoverers()),
-                annotationFinder.findBuilderProvider(),
+                annotationFinder.findBuilderProvider().orElse(null),
                 collectPluginProperties(pluginFinder.getConfigurationPropertiesProviders()));
     }
 

@@ -26,17 +26,21 @@ import java.util.Optional;
 /**
  * Snapshot of everything the annotation processor discovered in a single compilation round —
  * the canonical input for every processing phase. Carries no behaviour; just a typed bag.
+ *
+ * <p>Stores nullable fields directly (per Brian Goetz's guidance against {@link Optional} as
+ * fields/parameters); getters expose the optional ones via {@code Optional} for ergonomic
+ * call-site chaining.
  */
 public final class RoundInputs {
 
-    private final Optional<EnableFlamingock> enableAnnotation;
+    private final EnableFlamingock enableAnnotation;
     private final Collection<CodePreviewChange> roundChanges;
-    private final Optional<BuilderProviderInfo> builderProvider;
+    private final BuilderProviderInfo builderProvider;
     private final Map<String, String> pluginProperties;
 
-    public RoundInputs(Optional<EnableFlamingock> enableAnnotation,
+    public RoundInputs(EnableFlamingock enableAnnotation,
                        Collection<CodePreviewChange> roundChanges,
-                       Optional<BuilderProviderInfo> builderProvider,
+                       BuilderProviderInfo builderProvider,
                        Map<String, String> pluginProperties) {
         this.enableAnnotation = enableAnnotation;
         this.roundChanges = roundChanges;
@@ -45,7 +49,7 @@ public final class RoundInputs {
     }
 
     public Optional<EnableFlamingock> getEnableAnnotation() {
-        return enableAnnotation;
+        return Optional.ofNullable(enableAnnotation);
     }
 
     public Collection<CodePreviewChange> getRoundChanges() {
@@ -53,7 +57,7 @@ public final class RoundInputs {
     }
 
     public Optional<BuilderProviderInfo> getBuilderProvider() {
-        return builderProvider;
+        return Optional.ofNullable(builderProvider);
     }
 
     public Map<String, String> getPluginProperties() {
@@ -62,9 +66,9 @@ public final class RoundInputs {
 
     /** True when the round has no Flamingock-relevant inputs at all. */
     public boolean isEmpty() {
-        return !enableAnnotation.isPresent()
+        return enableAnnotation == null
                 && roundChanges.isEmpty()
-                && !builderProvider.isPresent()
+                && builderProvider == null
                 && pluginProperties.isEmpty();
     }
 }
