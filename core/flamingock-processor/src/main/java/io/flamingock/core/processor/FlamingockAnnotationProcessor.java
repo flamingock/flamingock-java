@@ -20,21 +20,19 @@ import io.flamingock.api.annotations.Change;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.FlamingockCliBuilder;
 import io.flamingock.api.annotations.Stage;
-import io.flamingock.core.processor.util.AnnotationFinder;
 import io.flamingock.core.processor.util.FlamingockMetadataMerger;
 import io.flamingock.core.processor.util.FlamingockMetadataStore;
 import io.flamingock.core.processor.util.PathResolver;
-import io.flamingock.core.processor.util.PluginFinder;
 import io.flamingock.core.processor.util.ProjectRootDetector;
+import io.flamingock.core.processor.util.RoundDiscovery;
+import io.flamingock.core.processor.util.RoundInputs;
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.pipeline.PipelineHelper;
-import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
 import io.flamingock.internal.common.core.preview.SystemPreviewStage;
-import io.flamingock.internal.common.core.processor.ConfigurationPropertiesProvider;
 import io.flamingock.internal.common.core.change.ChangeDescriptor;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 /**
@@ -208,88 +205,98 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
         }
 
         logger.info("Processing pipeline configuration");
-        PluginFinder pluginFinder = new PluginFinder();
-        AnnotationFinder annotationFinder = new AnnotationFinder(roundEnv, logger, processingEnv);
-        pluginFinder.loadAndInitializePlugins(roundEnv, logger);
-
-        Optional<EnableFlamingock> enableAnnotation = annotationFinder.getPipelineAnnotation();
-        Collection<CodePreviewChange> roundChanges =
-                annotationFinder.findAnnotatedChanges(pluginFinder.getChangeDiscoverers());
-        Optional<BuilderProviderInfo> builderProvider = annotationFinder.findBuilderProvider();
-        Map<String, String> pluginProperties =
-                getPluginsConfigurationProperties(pluginFinder.getConfigurationPropertiesProviders());
-
-        boolean hasAnythingRelevant = enableAnnotation.isPresent()
-                || !roundChanges.isEmpty()
-                || builderProvider.isPresent()
-                || !pluginProperties.isEmpty();
-        if (!hasAnythingRelevant) {
+        RoundInputs inputs = new RoundDiscovery(processingEnv, logger).discover(roundEnv);
+        if (inputs.isEmpty()) {
             logger.verbose("No Flamingock-relevant elements in this round; skipping.");
             return false;
         }
 
         FlamingockMetadataStore store = new FlamingockMetadataStore(processingEnv, logger);
 
-        if (enableAnnotation.isPresent()) {
-            EnableFlamingock flamingockAnnotation = enableAnnotation.get();
+        applyStructureAndChanges(store, inputs);
+        applyBuilderProvider(store, inputs);
+        applyProperties(store, inputs);
+        applyDeletionPrune(store);
 
-            List<CodePreviewChange> systemChanges = roundChanges.stream().filter(ChangeDescriptor::isSystem).collect(Collectors.toList());
-            List<CodePreviewChange> legacyChanges = roundChanges.stream().filter(CodePreviewChange::isLegacy).collect(Collectors.toList());
-            List<CodePreviewChange> standardChanges = roundChanges.stream().filter(ChangeDescriptor::isStandard).collect(Collectors.toList());
+        store.commit();
+        logSummary(store);
 
-            Map<String, List<CodePreviewChange>> standardChangesMapByPackage = getCodeChangesMapByPackage(standardChanges);
-            PreviewPipeline freshPipeline = getPipelineFromProcessChanges(
-                    systemChanges,
-                    legacyChanges,
-                    standardChangesMapByPackage,
-                    flamingockAnnotation
-            );
+        hasProcessed = true;
+        return true;
+    }
 
-            // Diagnostic only: warns when in-round changes have no covering stage. The strict
-            // gate is now at runtime via OrphanChangeValidator, since orphans may be rehomed
-            // by a future round.
-            validateAllChangesAreMappedToStages(standardChangesMapByPackage, freshPipeline);
-
-            String configFile = flamingockAnnotation.configFile();
-            boolean strict = flamingockAnnotation.strictStageMapping();
-            // Pass the round's full code-changes list explicitly so unified placement applies
-            // covers semantics (longest-prefix wins) rather than the old exact-match drop.
-            List<CodePreviewChange> allRoundCodeChanges = new ArrayList<>(roundChanges);
-            store.update(metadata -> {
-                FlamingockMetadataMerger.mergePipeline(
-                        metadata, freshPipeline, allRoundCodeChanges, strict);
-                metadata.setPipelineFile(configFile);
-            });
-        } else if (!roundChanges.isEmpty()) {
-            List<CodePreviewChange> codeChanges = new ArrayList<>(roundChanges);
-            store.update(metadata -> {
-                List<CodePreviewChange> unmapped =
-                        FlamingockMetadataMerger.upsertChangesByPackage(metadata, codeChanges);
-                FlamingockMetadataMerger.addOrphans(metadata, unmapped);
-                if (!unmapped.isEmpty()) {
-                    String unmappedIds = unmapped.stream()
-                            .map(ChangeDescriptor::getId)
-                            .collect(Collectors.joining(", "));
-                    logger.warn("Parked " + unmapped.size()
-                            + " change(s) as orphans (no covering stage in cached pipeline): "
-                            + unmappedIds);
-                }
-            });
+    /**
+     * Phase: build a fresh pipeline structure when {@code @EnableFlamingock} is in the round
+     * (otherwise leave the existing structure — possibly null), then route every code-change
+     * candidate via the unified merger entry point.
+     */
+    private void applyStructureAndChanges(FlamingockMetadataStore store, RoundInputs inputs) {
+        if (!inputs.getEnableAnnotation().isPresent() && inputs.getRoundChanges().isEmpty()) {
+            // Nothing structural and nothing to place — skip to avoid spurious dirty marking.
+            return;
         }
 
-        builderProvider.ifPresent(bp -> store.update(metadata ->
-                FlamingockMetadataMerger.setBuilderProvider(metadata, bp)));
+        PreviewPipeline freshStructure = null;
+        boolean strict;
+        String configFile = null;
+        if (inputs.getEnableAnnotation().isPresent()) {
+            EnableFlamingock anno = inputs.getEnableAnnotation().get();
+            freshStructure = buildFreshStructure(inputs.getRoundChanges(), anno);
+            strict = anno.strictStageMapping();
+            configFile = anno.configFile();
+        } else {
+            // Inherit strict flag from existing metadata; defaults to false on first round.
+            strict = store.peek()
+                    .map(FlamingockMetadata::isStrictStageMapping)
+                    .orElse(false);
+        }
 
+        PreviewPipeline finalStructure = freshStructure;
+        boolean finalStrict = strict;
+        String finalConfigFile = configFile;
+        List<CodePreviewChange> roundCodeChanges = new ArrayList<>(inputs.getRoundChanges());
+        store.update(metadata -> {
+            FlamingockMetadataMerger.applyRound(metadata, finalStructure, roundCodeChanges, finalStrict);
+            if (finalConfigFile != null) {
+                metadata.setPipelineFile(finalConfigFile);
+            }
+        });
+    }
+
+    /** Builds the fresh pipeline structure (with in-round changes pre-placed by the existing helpers). */
+    private PreviewPipeline buildFreshStructure(Collection<CodePreviewChange> roundChanges,
+                                                EnableFlamingock annotation) {
+        List<CodePreviewChange> systemChanges = roundChanges.stream().filter(ChangeDescriptor::isSystem).collect(Collectors.toList());
+        List<CodePreviewChange> legacyChanges = roundChanges.stream().filter(CodePreviewChange::isLegacy).collect(Collectors.toList());
+        List<CodePreviewChange> standardChanges = roundChanges.stream().filter(ChangeDescriptor::isStandard).collect(Collectors.toList());
+        Map<String, List<CodePreviewChange>> standardChangesByPackage = getCodeChangesMapByPackage(standardChanges);
+        return getPipelineFromProcessChanges(systemChanges, legacyChanges, standardChangesByPackage, annotation);
+    }
+
+    /** Phase: replace builder provider when {@code @FlamingockCliBuilder} is in the round. */
+    private void applyBuilderProvider(FlamingockMetadataStore store, RoundInputs inputs) {
+        inputs.getBuilderProvider().ifPresent(bp ->
+                store.update(metadata -> FlamingockMetadataMerger.setBuilderProvider(metadata, bp)));
+    }
+
+    /** Phase: merge plugin-provided configuration properties into the metadata. */
+    private void applyProperties(FlamingockMetadataStore store, RoundInputs inputs) {
+        Map<String, String> pluginProperties = inputs.getPluginProperties();
         if (!pluginProperties.isEmpty()) {
             store.update(metadata -> FlamingockMetadataMerger.mergeProperties(metadata, pluginProperties));
         }
+    }
 
-        // Prune entries whose source class no longer exists in this compilation. Runs before
-        // commit so all writes go through a single Filer.createResource (the Filer doesn't
-        // allow reopening a resource within the same javac invocation). Single-module-safe.
-        // Note: Elements.getTypeElement requires the canonical name (dot-separated) but
-        // CodePreviewChange.getSource() stores the binary name (dollar-separated for nested
-        // classes), so convert before lookup.
+    /**
+     * Phase: prune entries whose source class no longer exists in this compilation. Runs before
+     * commit so all writes go through a single Filer.createResource (the Filer doesn't allow
+     * reopening a resource within the same javac invocation). Single-module-safe.
+     *
+     * <p>{@code Elements.getTypeElement} requires the canonical name (dot-separated) but
+     * {@code CodePreviewChange.getSource()} stores the binary name (dollar-separated for nested
+     * classes), so convert before lookup.
+     */
+    private void applyDeletionPrune(FlamingockMetadataStore store) {
         store.peek().ifPresent(metadata -> {
             boolean pruned = FlamingockMetadataMerger.pruneDeletedClasses(metadata,
                     fqcn -> processingEnv.getElementUtils()
@@ -299,42 +306,27 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
                 logger.info("Pruned deleted @Change classes from metadata");
             }
         });
-
-        store.commit();
-
-        store.peek().ifPresent(metadata -> {
-            PreviewPipeline pipeline = metadata.getPipeline();
-            if (pipeline != null) {
-                int totalStages = (pipeline.getStages() != null ? pipeline.getStages().size() : 0)
-                        + (pipeline.getSystemStage() != null ? 1 : 0);
-                int totalChanges = 0;
-                if (pipeline.getSystemStage() != null && pipeline.getSystemStage().getChanges() != null) {
-                    totalChanges += pipeline.getSystemStage().getChanges().size();
-                }
-                if (pipeline.getStages() != null) {
-                    for (PreviewStage stage : pipeline.getStages()) {
-                        if (stage.getChanges() != null) {
-                            totalChanges += stage.getChanges().size();
-                        }
-                    }
-                }
-                logger.info("Generated metadata: " + totalStages + " stages, " + totalChanges + " changes");
-            }
-        });
-
-        hasProcessed = true;
-        return true;
     }
 
-    private Map<String, String> getPluginsConfigurationProperties(List<ConfigurationPropertiesProvider> providers) {
-        // Process all plugins that implements ConfigurationPropertiesProvider interfaces, to get custom properties
-        // and finally add them to 'properties' map.
-        Map<String, String> properties = new HashMap<>();
-        providers.stream()
-                .map(ConfigurationPropertiesProvider::getConfigurationProperties)
-                .flatMap(m -> m.entrySet().stream())
-                .forEach(e -> properties.put(e.getKey(), e.getValue()));
-        return properties;
+    private void logSummary(FlamingockMetadataStore store) {
+        store.peek().ifPresent(metadata -> {
+            PreviewPipeline pipeline = metadata.getPipeline();
+            if (pipeline == null) return;
+            int totalStages = (pipeline.getStages() != null ? pipeline.getStages().size() : 0)
+                    + (pipeline.getSystemStage() != null ? 1 : 0);
+            int totalChanges = 0;
+            if (pipeline.getSystemStage() != null && pipeline.getSystemStage().getChanges() != null) {
+                totalChanges += pipeline.getSystemStage().getChanges().size();
+            }
+            if (pipeline.getStages() != null) {
+                for (PreviewStage stage : pipeline.getStages()) {
+                    if (stage.getChanges() != null) {
+                        totalChanges += stage.getChanges().size();
+                    }
+                }
+            }
+            logger.info("Generated metadata: " + totalStages + " stages, " + totalChanges + " changes");
+        });
     }
 
     private Map<String, List<CodePreviewChange>> getCodeChangesMapByPackage(Collection<CodePreviewChange> changes) {
@@ -769,89 +761,5 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     }
 
-    /**
-     * Diagnostic check that warns when in-round code-changes have no covering stage in the
-     * fresh pipeline. Always warn-only — the strict gate is enforced at runtime by
-     * {@code OrphanChangeValidator}, which sees the full picture across rounds (orphans may
-     * be rehomed by a later round).
-     *
-     * @param standardChanges non-legacy changes grouped by source package
-     * @param pipeline built preview pipeline
-     */
-    private void validateAllChangesAreMappedToStages(Map<String, List<CodePreviewChange>> standardChanges,
-                                                     PreviewPipeline pipeline) {
-        if (standardChanges == null || standardChanges.isEmpty()) {
-            return;
-        }
-
-        // Helper to test if a change package is covered by a stage package (exact or parent)
-        BiPredicate<String, String> covers = (stagePkg, changePkg) -> {
-            if (stagePkg == null || changePkg == null) return false;
-            return changePkg.equals(stagePkg) || changePkg.startsWith(stagePkg + ".");
-        };
-
-        List<String> unmapped = new ArrayList<>();
-
-        for (String pkg : standardChanges.keySet()) {
-            if (pkg == null) {
-                continue;
-            }
-            boolean matched = false;
-
-            // Check system stage
-            PreviewStage system = pipeline.getSystemStage();
-            if (system != null) {
-                String sysPkg = system.getSourcesPackage();
-                if (covers.test(sysPkg, pkg)) {
-                    matched = true;
-                } else if (system.getChanges() != null) {
-                    for (AbstractPreviewChange change : system.getChanges()) {
-                        if (change instanceof CodePreviewChange) {
-                            String changePkg = ((CodePreviewChange) change).getSourcePackage();
-                            if (covers.test(changePkg, pkg)) {
-                                matched = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Check regular stages
-            if (!matched && pipeline.getStages() != null) {
-                for (PreviewStage stage : pipeline.getStages()) {
-                    String stagePkg = stage.getSourcesPackage();
-                    if (covers.test(stagePkg, pkg)) {
-                        matched = true;
-                        break;
-                    }
-                    if (stage.getChanges() != null) {
-                        for (AbstractPreviewChange change : stage.getChanges()) {
-                            if (change instanceof CodePreviewChange) {
-                                String changePkg = ((CodePreviewChange) change).getSourcePackage();
-                                if (covers.test(changePkg, pkg)) {
-                                    matched = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (matched) break;
-                    }
-                }
-            }
-
-            if (!matched) {
-                unmapped.add(formatPackageForMessage(pkg));
-            }
-        }
-
-        if (!unmapped.isEmpty()) {
-            logger.warn("Changes are not mapped to any stage: " + String.join(", ", unmapped));
-        }
-    }
-
-    private String formatPackageForMessage(String pkg) {
-        return pkg.isEmpty() ? "<default-package>" : pkg;
-    }
 
 }

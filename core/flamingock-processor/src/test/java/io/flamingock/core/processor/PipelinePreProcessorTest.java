@@ -277,62 +277,14 @@ public class PipelinePreProcessorTest {
         }
     }
 
-    @Test
-    @DisplayName("validateAllChangesAreMappedToStages no longer throws — strict gate moved to runtime")
-    void validatorNeverThrowsForUnmappedChanges() throws Exception {
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        setProcessorField(processor, "logger", new LoggerPreProcessor(createMockProcessingEnvironment()));
-
-        Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
-        changesByPackage.put("com.example.migrations", Collections.emptyList());
-        changesByPackage.put("com.example.unmapped", Collections.emptyList()); // Unmapped
-
-        io.flamingock.internal.common.core.preview.CodePreviewChange mockChange = new io.flamingock.internal.common.core.preview.CodePreviewChange();
-        PreviewStage mappedStage = PreviewStage.defaultBuilder(StageType.DEFAULT)
-                .setName("migrations")
-                .setSourcesPackage("com.example.migrations")
-                .setSourcesRoots(Collections.emptyList())
-                .setResourcesRoot("src/main/resources")
-                .setChanges(Collections.singletonList(mockChange))
-                .build();
-
-        PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
-
-        Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class);
-        validator.setAccessible(true);
-
-        // Must not throw regardless of unmapped packages — runtime is the new gate.
-        validator.invoke(processor, changesByPackage, pipeline);
-    }
-
-    @Test
-    @DisplayName("validateAllChangesAreMappedToStages does not throw for default-package unmapped changes")
-    void validatorDoesNotThrowForDefaultPackageUnmapped() throws Exception {
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        setProcessorField(processor, "logger", new LoggerPreProcessor(createMockProcessingEnvironment()));
-
-        Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
-        changesByPackage.put("", Collections.emptyList());
-
-        PreviewStage mappedStage = PreviewStage.defaultBuilder(StageType.DEFAULT)
-                .setName("migrations")
-                .setSourcesPackage("com.example.migrations")
-                .setSourcesRoots(Collections.emptyList())
-                .setResourcesRoot("src/main/resources")
-                .setChanges(Collections.singletonList(new io.flamingock.internal.common.core.preview.CodePreviewChange()))
-                .build();
-
-        PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
-
-        Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class);
-        validator.setAccessible(true);
-
-        // No throw — only a warning is emitted via the logger.
-        validator.invoke(processor, changesByPackage, pipeline);
-    }
-
+    // The validateAllChangesAreMappedToStages helper was removed in Phase 3 — its job is now
+    // performed by FlamingockMetadataMerger.applyRound (changes that don't fit any stage end
+    // up in target.orphanChanges, and the runtime OrphanChangeValidator enforces strictness).
+    // The "no throw on unmapped" guarantee is therefore covered by:
+    //   * FlamingockMetadataMergerTest.applyRoundState3ParksAllAsOrphans
+    //   * FlamingockMetadataMergerTest.applyRoundState2NoCoveringStageGoesToOrphans
+    //   * IncrementalProcessingIT.changeWithoutExistingMetadataIsHeldAsOrphan
+    //   * OrphanChangeValidatorTest.throwsWhenStrictAndOrphansPresent
 
 
     // Helper methods using reflection to test the internal pipeline building logic

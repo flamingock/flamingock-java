@@ -54,7 +54,7 @@ class FlamingockMetadataMergerTest {
         PreviewPipeline fresh = pipeline(stage("default", "com.example.changes",
                 change("id-1", "com.example.changes.A")));
 
-        FlamingockMetadataMerger.mergePipeline(target, fresh, false);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), false);
 
         PreviewStage merged = first(target.getPipeline().getStages());
         List<String> mergedIds = ids(merged.getChanges());
@@ -72,7 +72,7 @@ class FlamingockMetadataMergerTest {
         PreviewPipeline fresh = pipeline(stage("kept", "com.example.kept",
                 change("k-1", "com.example.kept.K")));
 
-        FlamingockMetadataMerger.mergePipeline(target, fresh, false);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), false);
 
         Collection<PreviewStage> stages = target.getPipeline().getStages();
         assertEquals(1, stages.size());
@@ -93,7 +93,7 @@ class FlamingockMetadataMergerTest {
                 Collections.singletonList(systemChange("s-1", "com.example.sys.S1")));
         PreviewPipeline fresh = new PreviewPipeline(freshSystem, Collections.emptyList());
 
-        FlamingockMetadataMerger.mergePipeline(target, fresh, false);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), false);
 
         PreviewStage system = target.getPipeline().getSystemStage();
         assertNotNull(system);
@@ -112,7 +112,7 @@ class FlamingockMetadataMergerTest {
         PreviewPipeline fresh = pipeline(stage("new-name", "com.example.changes",
                 change("id-1", "com.example.changes.A")));
 
-        FlamingockMetadataMerger.mergePipeline(target, fresh, false);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), false);
 
         PreviewStage merged = first(target.getPipeline().getStages());
         assertEquals("new-name", merged.getName());
@@ -120,65 +120,57 @@ class FlamingockMetadataMergerTest {
     }
 
     @Test
-    @DisplayName("upsertChangesByPackage replaces a change with same id in covered stage")
-    void upsertChangesReplaceById() {
+    @DisplayName("applyRound (state 2): in-round change with same id replaces existing in covered stage")
+    void applyRoundState2ReplacesById() {
         FlamingockMetadata target = new FlamingockMetadata();
-        CodePreviewChange original = change("id-1", "com.example.changes.A");
         target.setPipeline(pipeline(stage("default", "com.example.changes",
-                original,
+                change("id-1", "com.example.changes.A"),
                 change("id-2", "com.example.changes.B"))));
 
         CodePreviewChange replacement = change("id-1", "com.example.changes.A");
-        List<CodePreviewChange> unmapped = FlamingockMetadataMerger.upsertChangesByPackage(
-                target, Collections.singletonList(replacement));
+        FlamingockMetadataMerger.applyRound(target, null,
+                Collections.singletonList(replacement), false);
 
-        assertTrue(unmapped.isEmpty());
         PreviewStage stage = first(target.getPipeline().getStages());
         assertEquals(Arrays.asList("id-1", "id-2"), ids(stage.getChanges()));
         assertSame(replacement, first(stage.getChanges()), "id-1 entry must be the replacement");
+        assertTrue(target.getOrphanChanges() == null || target.getOrphanChanges().isEmpty());
     }
 
     @Test
-    @DisplayName("upsertChangesByPackage appends a new change in covered stage")
-    void upsertChangesAppendNew() {
+    @DisplayName("applyRound (state 2): new in-round change is placed alongside existing in covered stage")
+    void applyRoundState2AppendsNew() {
         FlamingockMetadata target = new FlamingockMetadata();
         target.setPipeline(pipeline(stage("default", "com.example.changes",
                 change("id-1", "com.example.changes.A"))));
 
         CodePreviewChange added = change("id-3", "com.example.changes.C");
-        List<CodePreviewChange> unmapped = FlamingockMetadataMerger.upsertChangesByPackage(
-                target, Collections.singletonList(added));
+        FlamingockMetadataMerger.applyRound(target, null,
+                Collections.singletonList(added), false);
 
-        assertTrue(unmapped.isEmpty());
         PreviewStage stage = first(target.getPipeline().getStages());
-        assertEquals(Arrays.asList("id-1", "id-3"), ids(stage.getChanges()));
+        // applyRound places candidates in priority order: in-round first, then existing.
+        // Final order in metadata is irrelevant at runtime (pipeline sorts by `order` field).
+        assertEquals(2, stage.getChanges().size());
+        java.util.Set<String> placedIds = new java.util.HashSet<>(ids(stage.getChanges()));
+        assertEquals(new java.util.HashSet<>(Arrays.asList("id-1", "id-3")), placedIds);
+        assertTrue(target.getOrphanChanges() == null || target.getOrphanChanges().isEmpty());
     }
 
     @Test
-    @DisplayName("upsertChangesByPackage returns unmapped when no covering stage exists")
-    void upsertChangesUnmapped() {
+    @DisplayName("applyRound (state 2): in-round change with no covering stage lands in orphans")
+    void applyRoundState2NoCoveringStageGoesToOrphans() {
         FlamingockMetadata target = new FlamingockMetadata();
         target.setPipeline(pipeline(stage("default", "com.example.changes",
                 change("id-1", "com.example.changes.A"))));
 
         CodePreviewChange orphan = change("id-9", "com.other.changes.X");
-        List<CodePreviewChange> unmapped = FlamingockMetadataMerger.upsertChangesByPackage(
-                target, Collections.singletonList(orphan));
+        FlamingockMetadataMerger.applyRound(target, null,
+                Collections.singletonList(orphan), false);
 
-        assertEquals(1, unmapped.size());
-        assertEquals("id-9", unmapped.get(0).getId());
-    }
-
-    @Test
-    @DisplayName("upsertChangesByPackage with null pipeline returns all changes as unmapped")
-    void upsertChangesNullPipeline() {
-        FlamingockMetadata target = new FlamingockMetadata();
-
-        CodePreviewChange c = change("id-1", "com.example.changes.A");
-        List<CodePreviewChange> unmapped = FlamingockMetadataMerger.upsertChangesByPackage(
-                target, Collections.singletonList(c));
-
-        assertEquals(1, unmapped.size());
+        assertNotNull(target.getOrphanChanges());
+        assertEquals(1, target.getOrphanChanges().size());
+        assertEquals("id-9", target.getOrphanChanges().get(0).getId());
     }
 
     @Test
@@ -212,16 +204,35 @@ class FlamingockMetadataMergerTest {
     }
 
     @Test
-    @DisplayName("mergePipeline with null fresh pipeline is a no-op")
-    void mergePipelineNullFresh() {
+    @DisplayName("applyRound with null structure preserves the existing pipeline reference (state 2)")
+    void applyRoundNullStructurePreservesExisting() {
         FlamingockMetadata target = new FlamingockMetadata();
         target.setPipeline(pipeline(stage("default", "com.example.changes",
                 change("id-1", "com.example.changes.A"))));
         PreviewPipeline before = target.getPipeline();
 
-        FlamingockMetadataMerger.mergePipeline(target, null, false);
+        FlamingockMetadataMerger.applyRound(target, null, Collections.emptyList(), false);
 
+        // No fresh structure → existing pipeline kept (same reference). Code changes are
+        // stripped and re-routed by covers; here id-1 lands back in the same stage.
         assertSame(before, target.getPipeline());
+        assertEquals(Collections.singletonList("id-1"),
+                ids(target.getPipeline().getStages().iterator().next().getChanges()));
+    }
+
+    @Test
+    @DisplayName("applyRound state 3: null structure + no existing pipeline parks all in-round as orphans")
+    void applyRoundState3ParksAllAsOrphans() {
+        FlamingockMetadata target = new FlamingockMetadata();
+        // No existing pipeline.
+        FlamingockMetadataMerger.applyRound(target, null,
+                Arrays.asList(change("id-1", "com.example.A"), change("id-2", "com.example.B")),
+                false);
+
+        assertNull(target.getPipeline(), "no structure provided and none existed");
+        assertNotNull(target.getOrphanChanges());
+        assertEquals(Arrays.asList("id-1", "id-2"),
+                target.getOrphanChanges().stream().map(c -> c.getId()).collect(java.util.stream.Collectors.toList()));
     }
 
     @Test
@@ -235,7 +246,7 @@ class FlamingockMetadataMergerTest {
         PreviewPipeline fresh = pipeline(stage("kept", "com.example.kept",
                 change("k-1", "com.example.kept.K")));
 
-        FlamingockMetadataMerger.mergePipeline(target, fresh, false);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), false);
 
         assertEquals(1, target.getPipeline().getStages().size());
         assertNotNull(target.getOrphanChanges());
@@ -251,7 +262,7 @@ class FlamingockMetadataMergerTest {
                 change("id-orphan", "com.example.changes.X"))));
 
         PreviewPipeline fresh = pipeline(stage("default", "com.example.changes"));
-        FlamingockMetadataMerger.mergePipeline(target, fresh, false);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), false);
 
         PreviewStage merged = first(target.getPipeline().getStages());
         assertEquals(Collections.singletonList("id-orphan"), ids(merged.getChanges()));
@@ -264,39 +275,31 @@ class FlamingockMetadataMergerTest {
         FlamingockMetadata target = new FlamingockMetadata();
         PreviewPipeline fresh = pipeline(stage("default", "com.example.changes"));
 
-        FlamingockMetadataMerger.mergePipeline(target, fresh, true);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), true);
         assertTrue(target.isStrictStageMapping());
 
-        FlamingockMetadataMerger.mergePipeline(target, fresh, false);
+        FlamingockMetadataMerger.applyRound(target, fresh, Collections.emptyList(), false);
         assertFalse(target.isStrictStageMapping());
     }
 
     @Test
-    @DisplayName("addOrphans is id-based upsert; incoming wins on id collision")
-    void addOrphansUpsertsById() {
+    @DisplayName("applyRound (state 3): in-round change replaces previous orphan with same id")
+    void applyRoundState3InRoundOverwritesOrphan() {
         FlamingockMetadata target = new FlamingockMetadata();
-        CodePreviewChange first = change("id-1", "com.example.changes.A");
-        FlamingockMetadataMerger.addOrphans(target, Collections.singletonList(first));
-        assertEquals(1, target.getOrphanChanges().size());
+        // Previous orphan with id-1.
+        target.setOrphanChanges(new ArrayList<>(Collections.singletonList(
+                change("id-1", "com.example.changes.A"))));
 
         CodePreviewChange replacement = change("id-1", "com.example.changes.A");
         CodePreviewChange other = change("id-2", "com.example.changes.B");
-        FlamingockMetadataMerger.addOrphans(target, Arrays.asList(replacement, other));
+        FlamingockMetadataMerger.applyRound(target, null,
+                Arrays.asList(replacement, other), false);
 
+        assertNull(target.getPipeline());
         assertEquals(2, target.getOrphanChanges().size());
-        assertSame(replacement, target.getOrphanChanges().get(0));
+        assertSame(replacement, target.getOrphanChanges().get(0),
+                "in-round wins over previous orphan with same id");
         assertEquals("id-2", target.getOrphanChanges().get(1).getId());
-    }
-
-    @Test
-    @DisplayName("addOrphans is null-safe on both arguments")
-    void addOrphansNullSafe() {
-        FlamingockMetadata target = new FlamingockMetadata();
-        FlamingockMetadataMerger.addOrphans(target, null);
-        assertNull(target.getOrphanChanges());
-
-        FlamingockMetadataMerger.addOrphans(target, Collections.emptyList());
-        assertNull(target.getOrphanChanges());
     }
 
     // -------------------------- F3: covers-based unified placement --------------------------
@@ -310,7 +313,7 @@ class FlamingockMetadataMergerTest {
         // In-round change in a SUB-package — old exact-match code would silently drop this.
         CodePreviewChange subPackageChange = change("id-sub", "com.example.changes.sub.MyChange");
 
-        FlamingockMetadataMerger.mergePipeline(target, freshStructure,
+        FlamingockMetadataMerger.applyRound(target, freshStructure,
                 Collections.singletonList(subPackageChange), false);
 
         PreviewStage placed = first(target.getPipeline().getStages());
@@ -328,7 +331,7 @@ class FlamingockMetadataMergerTest {
                 stage("inner", "com.example.changes.sub"));
         CodePreviewChange c = change("id-1", "com.example.changes.sub.A");
 
-        FlamingockMetadataMerger.mergePipeline(target, freshStructure,
+        FlamingockMetadataMerger.applyRound(target, freshStructure,
                 Collections.singletonList(c), false);
 
         PreviewStage outer = stagesByName(target.getPipeline()).get("outer");
@@ -352,7 +355,7 @@ class FlamingockMetadataMergerTest {
         PreviewPipeline freshStructure = pipeline(stage("default", "com.example.changes"));
 
         // No in-round changes.
-        FlamingockMetadataMerger.mergePipeline(target, freshStructure,
+        FlamingockMetadataMerger.applyRound(target, freshStructure,
                 Collections.emptyList(), false);
 
         assertNotNull(target.getPipeline().getSystemStage(),
@@ -373,7 +376,7 @@ class FlamingockMetadataMergerTest {
         CodePreviewChange newVersion = change("id-1", "com.example.changes.A");
         PreviewPipeline freshStructure = pipeline(stage("default", "com.example.changes"));
 
-        FlamingockMetadataMerger.mergePipeline(target, freshStructure,
+        FlamingockMetadataMerger.applyRound(target, freshStructure,
                 Collections.singletonList(newVersion), false);
 
         PreviewStage placed = first(target.getPipeline().getStages());

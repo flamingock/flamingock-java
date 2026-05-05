@@ -61,38 +61,49 @@ public final class FlamingockMetadataMerger {
     }
 
     /**
-     * Backward-compatible 3-arg form: equivalent to {@link #mergePipeline(FlamingockMetadata,
-     * PreviewPipeline, Collection, boolean)} with no explicit in-round changes (any code changes
-     * pre-placed in {@code freshPipeline} are treated as in-round candidates).
-     */
-    public static void mergePipeline(FlamingockMetadata target,
-                                     PreviewPipeline freshPipeline,
-                                     boolean strictStageMapping) {
-        mergePipeline(target, freshPipeline, Collections.emptyList(), strictStageMapping);
-    }
-
-    /**
-     * Merge a freshly built pipeline structure with the existing metadata, re-placing every
-     * known code change via the routing rules above. Templates in {@code freshStructure} are
-     * preserved as-is. {@code target.orphanChanges} is rebuilt from scratch each call.
+     * Apply a compilation round's contributions to {@code target}: optionally swap the pipeline
+     * structure, then re-place every known code change (in-round + previously-known +
+     * previously-orphan) via the routing rules above. Always rebuilds {@code orphanChanges}
+     * from scratch and persists {@code strictStageMapping}.
      *
-     * @param target              metadata to mutate
-     * @param freshStructure      fresh pipeline (may have pre-placed code changes — they're
-     *                            treated as in-round; templates are preserved)
-     * @param inRoundChanges      explicit in-round code changes (highest priority on id collision)
-     * @param strictStageMapping  persisted on target for runtime consumption
+     * <p>Handles all three structure states:
+     * <ol>
+     *   <li>{@code freshStructureOrNull != null} — fresh structure replaces existing.</li>
+     *   <li>{@code freshStructureOrNull == null && target.pipeline != null} — existing
+     *       structure is kept; code-changes are stripped and re-routed.</li>
+     *   <li>{@code freshStructureOrNull == null && target.pipeline == null} — no structure
+     *       anywhere. Every candidate (in-round + previous orphans) lands in
+     *       {@code orphanChanges}; {@code target.pipeline} stays null.</li>
+     * </ol>
+     *
+     * <p>Templates ({@code TemplatePreviewChange}) inside any pipeline stage are preserved —
+     * they are file-driven and re-discovered each round by the YAML scan.
      */
-    public static void mergePipeline(FlamingockMetadata target,
-                                     PreviewPipeline freshStructure,
-                                     Collection<CodePreviewChange> inRoundChanges,
-                                     boolean strictStageMapping) {
-        if (freshStructure == null) {
-            target.setStrictStageMapping(strictStageMapping);
-            return;
+    public static void applyRound(FlamingockMetadata target,
+                                  PreviewPipeline freshStructureOrNull,
+                                  Collection<CodePreviewChange> inRoundChanges,
+                                  boolean strictStageMapping) {
+        // 1. Snapshot existing code-changes BEFORE any structural mutation.
+        Map<String, CodePreviewChange> existingById = new LinkedHashMap<>();
+        PreviewPipeline existing = target.getPipeline();
+        if (existing != null) {
+            addCodeChangesIfAbsent(existing, existingById);
+        }
+        if (target.getOrphanChanges() != null) {
+            for (CodePreviewChange c : target.getOrphanChanges()) {
+                if (c != null && c.getId() != null) {
+                    existingById.putIfAbsent(c.getId(), c);
+                }
+            }
         }
 
-        // 1. Build candidate map by id with the priority order:
-        //    explicit in-round > pre-placed in freshStructure > existing pipeline > orphans.
+        // 2. Determine effective pipeline (may be null in state 3).
+        PreviewPipeline effective = freshStructureOrNull != null
+                ? freshStructureOrNull
+                : target.getPipeline();
+
+        // 3. Build candidate map (in-round wins on id collision, then pre-placed-in-fresh,
+        //    then existing-snapshot).
         Map<String, CodePreviewChange> candidatesById = new LinkedHashMap<>();
         if (inRoundChanges != null) {
             for (CodePreviewChange c : inRoundChanges) {
@@ -101,82 +112,43 @@ public final class FlamingockMetadataMerger {
                 }
             }
         }
-        addCodeChangesIfAbsent(freshStructure, candidatesById);
-        PreviewPipeline existing = target.getPipeline();
-        if (existing != null) {
-            addCodeChangesIfAbsent(existing, candidatesById);
+        if (freshStructureOrNull != null) {
+            addCodeChangesIfAbsent(freshStructureOrNull, candidatesById);
         }
-        if (target.getOrphanChanges() != null) {
-            for (CodePreviewChange c : target.getOrphanChanges()) {
-                if (c != null && c.getId() != null) {
-                    candidatesById.putIfAbsent(c.getId(), c);
-                }
-            }
+        for (Map.Entry<String, CodePreviewChange> e : existingById.entrySet()) {
+            candidatesById.putIfAbsent(e.getKey(), e.getValue());
         }
 
-        // 2. Strip code changes from freshStructure (templates remain).
-        clearCodeChangesOnly(freshStructure);
+        // 4. Prepare effective pipeline: strip code-changes (templates stay), ensure
+        //    system/legacy stages when needed.
+        if (effective != null) {
+            clearCodeChangesOnly(effective);
+            ensureSystemStageIfNeeded(effective, candidatesById.values());
+            ensureLegacyStageIfNeeded(effective, candidatesById.values());
+        }
 
-        // 3. Conditionally add system/legacy stages if any candidate flag demands one.
-        ensureSystemStageIfNeeded(freshStructure, candidatesById.values());
-        ensureLegacyStageIfNeeded(freshStructure, candidatesById.values());
-
-        // 4. Install fresh structure, reset orphans, persist strict flag.
-        target.setPipeline(freshStructure);
+        // 5. Install effective pipeline, reset orphans, persist strict flag.
+        target.setPipeline(effective);
         target.setOrphanChanges(new ArrayList<>());
         target.setStrictStageMapping(strictStageMapping);
 
-        // 5. Route and place each candidate.
+        // 6. Route and place each candidate.
         List<CodePreviewChange> orphans = new ArrayList<>();
         for (CodePreviewChange c : candidatesById.values()) {
-            if (!routeAndPlace(freshStructure, c)) {
+            if (effective == null || !routeAndPlace(effective, c)) {
                 orphans.add(c);
             }
         }
-
         if (!orphans.isEmpty()) {
-            addOrphans(target, orphans);
+            addOrphansInternal(target, orphans);
         }
-    }
-
-    /**
-     * For an incremental round without {@code @EnableFlamingock}: upsert each new change into
-     * the existing pipeline's matching stage by package coverage (exact or strict parent).
-     *
-     * @return the changes that could not be placed (caller should hand to {@link #addOrphans})
-     */
-    public static List<CodePreviewChange> upsertChangesByPackage(FlamingockMetadata target,
-                                                                 Collection<CodePreviewChange> changes) {
-        if (changes == null || changes.isEmpty()) {
-            return Collections.emptyList();
-        }
-        PreviewPipeline pipeline = target.getPipeline();
-        if (pipeline == null) {
-            return new ArrayList<>(changes);
-        }
-
-        Map<PreviewStage, List<CodePreviewChange>> grouped = new LinkedHashMap<>();
-        List<CodePreviewChange> unmapped = new ArrayList<>();
-        for (CodePreviewChange change : changes) {
-            PreviewStage match = findMostSpecificStageForChange(pipeline, change);
-            if (match == null) {
-                unmapped.add(change);
-            } else {
-                grouped.computeIfAbsent(match, k -> new ArrayList<>()).add(change);
-            }
-        }
-
-        for (Map.Entry<PreviewStage, List<CodePreviewChange>> entry : grouped.entrySet()) {
-            upsertChangesInPlace(entry.getKey(), entry.getValue());
-        }
-
-        return unmapped;
     }
 
     /**
      * Append {@code incoming} to {@code target.orphanChanges} with id-based replace-on-conflict.
+     * Used by {@link #applyRound} for state 3 placement.
      */
-    public static void addOrphans(FlamingockMetadata target, Collection<CodePreviewChange> incoming) {
+    private static void addOrphansInternal(FlamingockMetadata target, Collection<CodePreviewChange> incoming) {
         if (incoming == null || incoming.isEmpty()) {
             return;
         }
@@ -403,68 +375,12 @@ public final class FlamingockMetadataMerger {
         return candidates.get(0);
     }
 
-    /** Covers test used by {@link #upsertChangesByPackage}: most-specific covers match. */
-    private static PreviewStage findMostSpecificStageForChange(PreviewPipeline pipeline,
-                                                               CodePreviewChange change) {
-        String changePkg = change.getSourcePackage();
-        if (changePkg == null) return null;
-        List<PreviewStage> candidates = new ArrayList<>();
-        if (pipeline.getSystemStage() != null
-                && covers(pipeline.getSystemStage().getSourcesPackage(), changePkg)) {
-            candidates.add(pipeline.getSystemStage());
-        }
-        if (pipeline.getStages() != null) {
-            for (PreviewStage s : pipeline.getStages()) {
-                if (covers(s.getSourcesPackage(), changePkg)) {
-                    candidates.add(s);
-                }
-            }
-        }
-        if (candidates.isEmpty()) return null;
-        candidates.sort(Comparator.<PreviewStage>comparingInt(
-                s -> s.getSourcesPackage() == null ? -1 : s.getSourcesPackage().length()
-        ).reversed());
-        return candidates.get(0);
-    }
-
     private static void appendToStage(PreviewStage stage, CodePreviewChange change) {
         Collection<? extends AbstractPreviewChange> current = stage.getChanges();
         List<AbstractPreviewChange> next = new ArrayList<>();
         if (current != null) next.addAll(current);
         next.add(change);
         stage.setChanges(next);
-    }
-
-    /**
-     * Replace existing changes in {@code stage} that share an id with one in {@code newChanges},
-     * append the rest. Builds a fresh list and assigns via {@code setChanges}.
-     */
-    private static void upsertChangesInPlace(PreviewStage stage, List<CodePreviewChange> newChanges) {
-        Collection<? extends AbstractPreviewChange> current = stage.getChanges();
-        Map<String, CodePreviewChange> incomingById = new LinkedHashMap<>();
-        for (CodePreviewChange c : newChanges) {
-            if (c.getId() != null) {
-                incomingById.put(c.getId(), c);
-            }
-        }
-        List<AbstractPreviewChange> merged = new ArrayList<>();
-        Set<String> consumed = new HashSet<>();
-        if (current != null) {
-            for (AbstractPreviewChange c : current) {
-                if (c.getId() != null && incomingById.containsKey(c.getId())) {
-                    merged.add(incomingById.get(c.getId()));
-                    consumed.add(c.getId());
-                } else {
-                    merged.add(c);
-                }
-            }
-        }
-        for (Map.Entry<String, CodePreviewChange> e : incomingById.entrySet()) {
-            if (!consumed.contains(e.getKey())) {
-                merged.add(e.getValue());
-            }
-        }
-        stage.setChanges(merged);
     }
 
     private static boolean pruneStage(PreviewStage stage, java.util.function.Predicate<String> typeExists) {
