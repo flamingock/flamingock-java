@@ -278,48 +278,39 @@ public class PipelinePreProcessorTest {
     }
 
     @Test
-    @DisplayName("Should throw error when changes exist that are not mapped to any stage and mapping is strict")
-    void shouldThrowErrorForUnmappedChanges() throws Exception {
+    @DisplayName("validateAllChangesAreMappedToStages no longer throws — strict gate moved to runtime")
+    void validatorNeverThrowsForUnmappedChanges() throws Exception {
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        setProcessorField(processor, "logger", new LoggerPreProcessor(createMockProcessingEnvironment()));
 
-        // Prepare changes map with one mapped and one unmapped package (lists can be empty for this test)
         Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
         changesByPackage.put("com.example.migrations", Collections.emptyList());
         changesByPackage.put("com.example.unmapped", Collections.emptyList()); // Unmapped
 
-        // Provide a non-empty changes list for the mapped stage so the builder doesn't throw
         io.flamingock.internal.common.core.preview.CodePreviewChange mockChange = new io.flamingock.internal.common.core.preview.CodePreviewChange();
-
-        // Build a pipeline with a single stage covering com.example.migrations
         PreviewStage mappedStage = PreviewStage.defaultBuilder(StageType.DEFAULT)
                 .setName("migrations")
                 .setSourcesPackage("com.example.migrations")
                 .setSourcesRoots(Collections.emptyList())
                 .setResourcesRoot("src/main/resources")
-                .setChanges(Collections.singletonList(mockChange)) // <- non-empty list
+                .setChanges(Collections.singletonList(mockChange))
                 .build();
 
         PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
 
-        // Invoke private validator by reflection and assert it throws (InvocationTargetException wraps the RuntimeException)
         Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class, Boolean.class);
+                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class);
         validator.setAccessible(true);
 
-        InvocationTargetException ex = assertThrows(InvocationTargetException.class, () ->
-                validator.invoke(processor, changesByPackage, pipeline, true));
-
-        Throwable cause = ex.getCause();
-        assertNotNull(cause, "Validator should throw a RuntimeException cause");
-        assertInstanceOf(RuntimeException.class, cause, "Cause should be RuntimeException");
-        assertTrue(cause.getMessage().contains("not mapped to any stage"), "Should have error about unmapped changes");
-        assertTrue(cause.getMessage().contains("com.example.unmapped"), "Should mention the unmapped package");
+        // Must not throw regardless of unmapped packages — runtime is the new gate.
+        validator.invoke(processor, changesByPackage, pipeline);
     }
 
     @Test
-    @DisplayName("Should report default package when empty package changes are not mapped")
-    void shouldReportDefaultPackageForUnmappedEmptyPackageChanges() throws Exception {
+    @DisplayName("validateAllChangesAreMappedToStages does not throw for default-package unmapped changes")
+    void validatorDoesNotThrowForDefaultPackageUnmapped() throws Exception {
         FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        setProcessorField(processor, "logger", new LoggerPreProcessor(createMockProcessingEnvironment()));
 
         Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
         changesByPackage.put("", Collections.emptyList());
@@ -335,16 +326,11 @@ public class PipelinePreProcessorTest {
         PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
 
         Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class, Boolean.class);
+                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class);
         validator.setAccessible(true);
 
-        InvocationTargetException ex = assertThrows(InvocationTargetException.class, () ->
-                validator.invoke(processor, changesByPackage, pipeline, true));
-
-        Throwable cause = ex.getCause();
-        assertNotNull(cause, "Validator should throw a RuntimeException cause");
-        assertInstanceOf(RuntimeException.class, cause, "Cause should be RuntimeException");
-        assertEquals("Changes are not mapped to any stage: <default-package>", cause.getMessage());
+        // No throw — only a warning is emitted via the logger.
+        validator.invoke(processor, changesByPackage, pipeline);
     }
 
 

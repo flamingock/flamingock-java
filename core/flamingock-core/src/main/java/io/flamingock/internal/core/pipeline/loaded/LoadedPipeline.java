@@ -195,10 +195,12 @@ public class LoadedPipeline implements PipelineDescriptor {
 
         public LoadedPipeline build() {
             List<AbstractLoadedStage> allSortedStages = new LinkedList<>(transformListToLoadedStages(beforeUserStages));
-            allSortedStages.addAll(transformListToLoadedStages(previewPipeline.getStages()));
+            Collection<PreviewStage> userStages = previewPipeline != null ? previewPipeline.getStages() : null;
+            allSortedStages.addAll(transformListToLoadedStages(userStages));
             allSortedStages.addAll(transformListToLoadedStages(afterUserStages));
 
-            return transformToLoadedStage(previewPipeline.getSystemStage())
+            PreviewStage systemStage = previewPipeline != null ? previewPipeline.getSystemStage() : null;
+            return transformToLoadedStage(systemStage)
                     .map(abstractLoadedStage -> new LoadedPipeline(
                             abstractLoadedStage,
                             allSortedStages,

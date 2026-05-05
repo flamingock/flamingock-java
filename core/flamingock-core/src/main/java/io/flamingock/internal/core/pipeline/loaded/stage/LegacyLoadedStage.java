@@ -46,6 +46,11 @@ public class LegacyLoadedStage extends AbstractLoadedStage {
 
     @Override
     public List<ValidationError> getValidationErrors(PipelineValidationContext context) {
+        // Legacy stages may legitimately be empty (e.g. no Mongock audit history to import) —
+        // skip the parent's emptiness check that's enforced for default stages.
+        if (getChanges() == null || getChanges().isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
         List<ValidationError> errors = super.getValidationErrors(context);
 
         for (AbstractLoadedChange change : getChanges()) {
