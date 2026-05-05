@@ -16,7 +16,6 @@
 package io.flamingock.core.processor.util;
 
 import io.flamingock.api.StageType;
-import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
@@ -57,6 +56,10 @@ import static org.mockito.Mockito.when;
 
 class FlamingockMetadataStoreTest {
 
+    /** Stable per-module test paths. Real builds get unique suffixes; tests can use anything. */
+    private static final String METADATA_PATH = "META-INF/flamingock/metadata_test01.json";
+    private static final String REFLECT_PATH = "META-INF/flamingock/reflection-classes_test01.txt";
+
     @TempDir
     Path tempDir;
 
@@ -74,7 +77,7 @@ class FlamingockMetadataStoreTest {
         FakeFiler filer = new FakeFiler(file);
         ProcessingEnvironment env = mockEnv(filer);
 
-        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env));
+        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env), METADATA_PATH, REFLECT_PATH);
         store.update(metadata -> {
             assertEquals("flamingock/pipeline.yaml", metadata.getPipelineFile());
             assertEquals("v", metadata.getProperties().get("k"));
@@ -86,7 +89,7 @@ class FlamingockMetadataStoreTest {
         FakeFiler filer = new FakeFiler(tempDir.resolve("does-not-exist.json"));
         ProcessingEnvironment env = mockEnv(filer);
 
-        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env));
+        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env), METADATA_PATH, REFLECT_PATH);
         store.update(metadata -> {
             assertNotNull(metadata);
             assertFalse(metadata.hasValidBuilderProvider());
@@ -101,9 +104,9 @@ class FlamingockMetadataStoreTest {
         FakeFiler filer = new FakeFiler(readPath, tempDir);
         ProcessingEnvironment env = mockEnv(filer);
 
-        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env));
+        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env), METADATA_PATH, REFLECT_PATH);
 
-        Path metadataOut = tempDir.resolve(Constants.FULL_PIPELINE_FILE_PATH);
+        Path metadataOut = tempDir.resolve(METADATA_PATH);
 
         // No update called → commit must be a no-op
         store.commit();
@@ -124,11 +127,11 @@ class FlamingockMetadataStoreTest {
         FakeFiler filer = new FakeFiler(tempDir.resolve("does-not-exist.json"), tempDir);
         ProcessingEnvironment env = mockEnv(filer);
 
-        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env));
+        FlamingockMetadataStore store = new FlamingockMetadataStore(env, new LoggerPreProcessor(env), METADATA_PATH, REFLECT_PATH);
         assertTrue(store.peek().isPresent());
 
         store.commit();
-        assertFalse(Files.exists(tempDir.resolve(Constants.FULL_PIPELINE_FILE_PATH)),
+        assertFalse(Files.exists(tempDir.resolve(METADATA_PATH)),
                 "peek must not mark store dirty");
     }
 
@@ -193,10 +196,11 @@ class FlamingockMetadataStoreTest {
         @Override
         public FileObject getResource(javax.tools.JavaFileManager.Location location, CharSequence pkg, CharSequence relativeName) {
             if (eqLocation(location, StandardLocation.CLASS_OUTPUT)
-                    && relativeName.toString().equals(Constants.FULL_PIPELINE_FILE_PATH)) {
+                    && relativeName.toString().equals(METADATA_PATH)) {
                 return new PathFileObject(readPath, false);
             }
-            throw new IllegalArgumentException("Unsupported location: " + location);
+            throw new IllegalArgumentException("Unsupported location: " + location
+                    + " path: " + relativeName);
         }
 
         private static boolean eqLocation(javax.tools.JavaFileManager.Location a, javax.tools.JavaFileManager.Location b) {

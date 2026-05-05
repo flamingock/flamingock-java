@@ -15,7 +15,7 @@
  */
 package io.flamingock.core.processor;
 
-import io.flamingock.internal.common.core.metadata.Constants;
+import io.flamingock.core.processor.util.MetadataModuleIdentity;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
@@ -78,25 +78,24 @@ class IncrementalProcessingIT {
         boolean ok1 = compile(src, round1Out, allJavaFilesIn(src));
         assertTrue(ok1, "round 1 must succeed");
 
-        Path metadataR1 = round1Out.resolve(Constants.FULL_PIPELINE_FILE_PATH);
+        Path metadataR1 = metadataPathIn(round1Out);
         assertTrue(Files.exists(metadataR1), "round 1 must produce metadata.json");
         FlamingockMetadata afterR1 = readMetadata(metadataR1);
         assertEquals(2, totalChanges(afterR1.getPipeline()),
                 "round 1 must record both changes");
 
         // ROUND 2: simulate incremental compile of only ChangeOne. Pre-seed CLASS_OUTPUT
-        // with round 1's metadata.json so the processor reads it via Filer.getResource(...).
+        // with round 1's META-INF (SPI file + metadata) so the processor finds the persisted
+        // suffix and reads its metadata via Filer.getResource(...).
         resetProcessorState();
         Path round2Out = Files.createDirectories(workDir.resolve("out2"));
-        Path seeded = round2Out.resolve(Constants.FULL_PIPELINE_FILE_PATH);
-        Files.createDirectories(seeded.getParent());
-        Files.copy(metadataR1, seeded);
+        seedFromPreviousRound(round1Out, round2Out);
 
         Path changeOneOnly = src.resolve("com/example/changes/_0001__ChangeOne.java");
         boolean ok2 = compile(src, round2Out, Collections.singletonList(changeOneOnly));
         assertTrue(ok2, "round 2 must succeed even without @EnableFlamingock in the round");
 
-        FlamingockMetadata afterR2 = readMetadata(seeded);
+        FlamingockMetadata afterR2 = readMetadata(metadataPathIn(round2Out));
         assertEquals(2, totalChanges(afterR2.getPipeline()),
                 "round 2 must preserve previously-known change id-2");
         List<String> ids = changeIds(afterR2.getPipeline());
@@ -114,8 +113,9 @@ class IncrementalProcessingIT {
         Path out = Files.createDirectories(workDir.resolve("out"));
         boolean ok = compile(src, out, allJavaFilesIn(src));
         assertTrue(ok, "compilation must succeed");
-        assertFalse(Files.exists(out.resolve(Constants.FULL_PIPELINE_FILE_PATH)),
-                "no metadata file should be created when nothing relevant is processed");
+        assertFalse(metadataWasGenerated(out),
+                "no metadata file (and no SPI registration) should be created "
+                        + "when nothing relevant is processed");
     }
 
     @Test
@@ -129,7 +129,8 @@ class IncrementalProcessingIT {
         boolean ok = compile(src, out, allJavaFilesIn(src));
         assertTrue(ok, "must succeed: missing @EnableFlamingock no longer fails the build");
 
-        Path metadataPath = out.resolve(Constants.FULL_PIPELINE_FILE_PATH);
+        Path metadataPath = metadataPathIn(out);
+        assertNotNull(metadataPath, "SPI file expected for an orphan-only round");
         assertTrue(Files.exists(metadataPath), "metadata file is written with the change as orphan");
         FlamingockMetadata metadata = readMetadata(metadataPath);
         assertNull(metadata.getPipeline(), "no pipeline yet — only orphans");
@@ -152,22 +153,20 @@ class IncrementalProcessingIT {
         Path changeSrc = src.resolve("com/example/changes/_0001__ChangeOnly.java");
         boolean ok1 = compile(src, round1Out, Collections.singletonList(changeSrc));
         assertTrue(ok1);
-        FlamingockMetadata r1 = readMetadata(round1Out.resolve(Constants.FULL_PIPELINE_FILE_PATH));
+        FlamingockMetadata r1 = readMetadata(metadataPathIn(round1Out));
         assertEquals(1, r1.getOrphanChanges().size());
 
         // Round 2: introduce Config.java with covering stage; only Config + previous metadata.
         writeFile(src, "com/example/Config.java", configClass());
         resetProcessorState();
         Path round2Out = Files.createDirectories(workDir.resolve("out2"));
-        Path seeded = round2Out.resolve(Constants.FULL_PIPELINE_FILE_PATH);
-        Files.createDirectories(seeded.getParent());
-        Files.copy(round1Out.resolve(Constants.FULL_PIPELINE_FILE_PATH), seeded);
+        seedFromPreviousRound(round1Out, round2Out);
 
         Path configSrc = src.resolve("com/example/Config.java");
         boolean ok2 = compile(src, round2Out, Collections.singletonList(configSrc));
         assertTrue(ok2);
 
-        FlamingockMetadata r2 = readMetadata(seeded);
+        FlamingockMetadata r2 = readMetadata(metadataPathIn(round2Out));
         assertNotNull(r2.getPipeline(), "round 2 builds the pipeline");
         assertTrue(r2.getOrphanChanges() == null || r2.getOrphanChanges().isEmpty(),
                 "orphan should have been rehomed into the new stage");
@@ -190,21 +189,19 @@ class IncrementalProcessingIT {
         Path round1Out = Files.createDirectories(workDir.resolve("out1"));
         boolean ok1 = compile(src, round1Out, allJavaFilesIn(src));
         assertTrue(ok1);
-        FlamingockMetadata r1 = readMetadata(round1Out.resolve(Constants.FULL_PIPELINE_FILE_PATH));
+        FlamingockMetadata r1 = readMetadata(metadataPathIn(round1Out));
         assertEquals(2, totalChanges(r1.getPipeline()));
 
         // Round 2: simulate deletion — remove the source file. Recompile remaining sources +
         // seed previous metadata. Last-round pruning should drop id-del.
         Files.delete(deletedSrc);
         Path round2Out = Files.createDirectories(workDir.resolve("out2"));
-        Path seeded = round2Out.resolve(Constants.FULL_PIPELINE_FILE_PATH);
-        Files.createDirectories(seeded.getParent());
-        Files.copy(round1Out.resolve(Constants.FULL_PIPELINE_FILE_PATH), seeded);
+        seedFromPreviousRound(round1Out, round2Out);
 
         boolean ok2 = compile(src, round2Out, allJavaFilesIn(src));
         assertTrue(ok2);
 
-        FlamingockMetadata r2 = readMetadata(seeded);
+        FlamingockMetadata r2 = readMetadata(metadataPathIn(round2Out));
         assertEquals(1, totalChanges(r2.getPipeline()),
                 "deleted @Change should be pruned at the last round");
         assertTrue(changeIds(r2.getPipeline()).contains("id-keep"));
@@ -226,7 +223,7 @@ class IncrementalProcessingIT {
         boolean ok = compile(src, out, allJavaFilesIn(src));
         assertTrue(ok);
 
-        FlamingockMetadata md = readMetadata(out.resolve(Constants.FULL_PIPELINE_FILE_PATH));
+        FlamingockMetadata md = readMetadata(metadataPathIn(out));
         // Without the fix, the prune step would wrongly drop the nested change here.
         assertEquals(1, totalChanges(md.getPipeline()),
                 "nested @Change must NOT be pruned (binary name with $ converts to canonical for getTypeElement)");
@@ -251,7 +248,7 @@ class IncrementalProcessingIT {
         boolean ok = compile(src, out, allJavaFilesIn(src));
         assertTrue(ok);
 
-        FlamingockMetadata md = readMetadata(out.resolve(Constants.FULL_PIPELINE_FILE_PATH));
+        FlamingockMetadata md = readMetadata(metadataPathIn(out));
         assertEquals(1, totalChanges(md.getPipeline()),
                 "sub-package change must be placed via covers semantics, not dropped");
         assertTrue(changeIds(md.getPipeline()).contains("id-sub"));
@@ -272,7 +269,7 @@ class IncrementalProcessingIT {
         Path round1Out = Files.createDirectories(workDir.resolve("out1"));
         boolean ok1 = compile(src, round1Out, allJavaFilesIn(src));
         assertTrue(ok1);
-        FlamingockMetadata r1 = readMetadata(round1Out.resolve(Constants.FULL_PIPELINE_FILE_PATH));
+        FlamingockMetadata r1 = readMetadata(metadataPathIn(round1Out));
         assertEquals(2, totalChanges(r1.getPipeline()));
 
         // Round 2: rewrite Config.java to drop the 'removed' stage (keeping 'kept').
@@ -280,14 +277,12 @@ class IncrementalProcessingIT {
         Files.write(src.resolve("com/example/Config.java"), configClassKeptOnly().getBytes());
         resetProcessorState();
         Path round2Out = Files.createDirectories(workDir.resolve("out2"));
-        Path seeded = round2Out.resolve(Constants.FULL_PIPELINE_FILE_PATH);
-        Files.createDirectories(seeded.getParent());
-        Files.copy(round1Out.resolve(Constants.FULL_PIPELINE_FILE_PATH), seeded);
+        seedFromPreviousRound(round1Out, round2Out);
 
         boolean ok2 = compile(src, round2Out, allJavaFilesIn(src));
         assertTrue(ok2);
 
-        FlamingockMetadata r2 = readMetadata(seeded);
+        FlamingockMetadata r2 = readMetadata(metadataPathIn(round2Out));
         // 'kept' stage covers com.example.kept → id-keep stays placed there.
         assertEquals(1, totalChanges(r2.getPipeline()));
         assertTrue(changeIds(r2.getPipeline()).contains("id-keep"));
@@ -357,6 +352,45 @@ class IncrementalProcessingIT {
     }
 
     // ---------------------------- inspection helpers ----------------------------
+
+    /**
+     * Resolve the per-module metadata file path inside {@code classOutputDir} by reading the
+     * generated SPI registration file. Returns {@code null} if no SPI registration was
+     * produced (i.e. the round was a no-op).
+     */
+    private static Path metadataPathIn(Path classOutputDir) throws IOException {
+        return MetadataModuleIdentity.discoverFromClassOutput(classOutputDir)
+                .map(id -> classOutputDir.resolve(id.getMetadataResourcePath()))
+                .orElse(null);
+    }
+
+    /** True iff the SPI file exists in {@code classOutputDir} — i.e. the round was relevant. */
+    private static boolean metadataWasGenerated(Path classOutputDir) throws IOException {
+        return MetadataModuleIdentity.discoverFromClassOutput(classOutputDir).isPresent();
+    }
+
+    /**
+     * Seed an incremental round's CLASS_OUTPUT with the previous round's META-INF directory
+     * (SPI file + metadata file together). The processor needs the SPI file in the new
+     * CLASS_OUTPUT to discover the persisted suffix and read the per-module metadata.
+     */
+    private static void seedFromPreviousRound(Path previousOut, Path currentOut) throws IOException {
+        Path source = previousOut.resolve("META-INF");
+        if (!Files.exists(source)) return;
+        Files.walk(source).forEach(src -> {
+            try {
+                Path target = currentOut.resolve(previousOut.relativize(src));
+                if (Files.isDirectory(src)) {
+                    Files.createDirectories(target);
+                } else {
+                    Files.createDirectories(target.getParent());
+                    Files.copy(src, target);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
 
     private static FlamingockMetadata readMetadata(Path file) throws IOException {
         return JsonObjectMapper.DEFAULT_INSTANCE.readValue(file.toFile(), FlamingockMetadata.class);

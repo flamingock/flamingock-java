@@ -198,8 +198,10 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         RunnerId runnerId = generateRunnerId();
 
         FlamingockMetadata flamingockMetadata = coreConfiguration.getFlamingockMetadata();
-
-        OrphanChangeValidator.validate(flamingockMetadata);
+        // Per-module strict-mapping orphan validation has already happened inside
+        // MetadataLoader.loadAggregated(); the composite metadata reaching us here is
+        // pre-validated. The remaining LoadedPipeline.validate() below still catches
+        // structural issues (empty stages, duplicate change IDs, etc.).
 
         PriorityContext hierarchicalContext = buildContext(flamingockMetadata);
 

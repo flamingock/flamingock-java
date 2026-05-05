@@ -16,7 +16,7 @@
 package io.flamingock.internal.core.configuration.core;
 
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +58,7 @@ public class CoreConfiguration implements CoreConfigurable {
 
     @Override
     public FlamingockMetadata getFlamingockMetadata() {
-        return Deserializer.readMetadataFromFile();
+        return MetadataLoader.loadAggregated();
     }
 
 

@@ -22,6 +22,8 @@ import io.flamingock.api.annotations.FlamingockCliBuilder;
 import io.flamingock.api.annotations.Stage;
 import io.flamingock.core.processor.util.FlamingockMetadataMerger;
 import io.flamingock.core.processor.util.FlamingockMetadataStore;
+import io.flamingock.core.processor.util.MetadataModuleIdentity;
+import io.flamingock.core.processor.util.MetadataProviderWriter;
 import io.flamingock.core.processor.util.PathResolver;
 import io.flamingock.core.processor.util.ProjectRootDetector;
 import io.flamingock.core.processor.util.RoundDiscovery;
@@ -211,7 +213,16 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
             return false;
         }
 
-        FlamingockMetadataStore store = new FlamingockMetadataStore(processingEnv, logger);
+        // Resolve this module's persistent identity (provider class FQN + metadata file path).
+        // First build → fresh suffix; subsequent builds → reuse the suffix encoded in the
+        // existing META-INF/services SPI registration.
+        MetadataModuleIdentity identity = MetadataModuleIdentity.resolve(processingEnv, logger);
+        if (!identity.isPersisted()) {
+            MetadataProviderWriter.write(processingEnv, identity, logger);
+        }
+
+        FlamingockMetadataStore store = new FlamingockMetadataStore(processingEnv, logger,
+                identity.getMetadataResourcePath(), identity.getReflectClassesResourcePath());
 
         applyStructureAndChanges(store, inputs);
         applyBuilderProvider(store, inputs);

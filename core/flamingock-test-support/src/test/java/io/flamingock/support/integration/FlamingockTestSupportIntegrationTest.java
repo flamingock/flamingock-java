@@ -17,7 +17,7 @@ package io.flamingock.support.integration;
 
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.support.FlamingockTestSupport;
 import io.flamingock.support.inmemory.InMemoryFlamingockBuilder;
@@ -40,8 +40,8 @@ class FlamingockTestSupportIntegrationTest {
     @DisplayName("Should execute non-transactional change")
     void shouldExecuteNonTransactionalChange() {
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -62,8 +62,8 @@ class FlamingockTestSupportIntegrationTest {
     @DisplayName("Should verify multiple changes execute in correct sequence with complete audit flow")
     void shouldVerifyMultipleChangesInSequence() {
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_003__MultiTest1NonTransactionalChange.class, Collections.emptyList()),
                             new CodeChangeTestDefinition(_004__MultiTest2TransactionalChange.class, Collections.emptyList())
@@ -88,8 +88,8 @@ class FlamingockTestSupportIntegrationTest {
     @DisplayName("Should verify failing transactional change triggers rollback with correct audit trail")
     void shouldVerifyFailingTransactionalChangeTriggersRollback() {
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_006__FailingTransactionalChange.class, Collections.emptyList(), Collections.emptyList())
                     )
@@ -115,8 +115,8 @@ class FlamingockTestSupportIntegrationTest {
     @DisplayName("Should verify already-applied changes are skipped on subsequent runs")
     void shouldVerifyAlreadyAppliedChangesAreSkipped() {
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_005__SecondRunNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -147,8 +147,8 @@ class FlamingockTestSupportIntegrationTest {
         NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka")
                 .addDependency(counter);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_007__SimpleNonTransactionalChangeWithError.class,
                                     Collections.singletonList(Counter.class),
@@ -176,8 +176,8 @@ class FlamingockTestSupportIntegrationTest {
     @DisplayName("Should verify transactional change executes successfully with correct audit entries")
     void shouldVerifyTransactionalChangeExecutesSuccessfully() {
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_002__SimpleTransactionalChange.class, Collections.emptyList())
                     )

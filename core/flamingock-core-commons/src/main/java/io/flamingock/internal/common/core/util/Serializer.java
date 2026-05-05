@@ -17,7 +17,6 @@ package io.flamingock.internal.common.core.util;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.flamingock.internal.util.JsonObjectMapper;
-import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -42,13 +41,21 @@ public class Serializer {
     }
 
 
-    public void serializeFullPipeline(FlamingockMetadata metadata) {
-        serializePipelineTo(metadata);
-        serializeClassesList(metadata);
+    /**
+     * Serialize the metadata JSON and the GraalVM reflection-classes list to the supplied
+     * module-unique resource paths. Each module owns its own pair of paths (Phase 2
+     * multi-module support); a single project that previously ran the processor will see
+     * paths suffixed with the per-module identity hash.
+     */
+    public void serializeFullPipeline(FlamingockMetadata metadata,
+                                      String metadataResourcePath,
+                                      String reflectClassesResourcePath) {
+        serializePipelineTo(metadata, metadataResourcePath);
+        serializeClassesList(metadata, reflectClassesResourcePath);
     }
 
-    private void serializePipelineTo(FlamingockMetadata metadata) {
-        writeToFile(Constants.FULL_PIPELINE_FILE_PATH, writer -> {
+    private void serializePipelineTo(FlamingockMetadata metadata, String resourcePath) {
+        writeToFile(resourcePath, writer -> {
             try {
                 writer.write(JsonObjectMapper.DEFAULT_INSTANCE.enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(metadata));
             } catch (IOException e) {
@@ -57,7 +64,7 @@ public class Serializer {
         });
     }
 
-    private void serializeClassesList(FlamingockMetadata metadata) {
+    private void serializeClassesList(FlamingockMetadata metadata, String resourcePath) {
         // Collect classnames into a stable-ordered set first to dedup. The pipeline can carry
         // the same class via multiple paths (e.g. orphan + builder provider) and successive
         // commits during a build could otherwise produce duplicate lines in the file.
@@ -84,7 +91,7 @@ public class Serializer {
             }
         }
 
-        writeToFile(Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH, writer -> {
+        writeToFile(resourcePath, writer -> {
             try {
                 for (String name : classNames) {
                     writer.write(name);

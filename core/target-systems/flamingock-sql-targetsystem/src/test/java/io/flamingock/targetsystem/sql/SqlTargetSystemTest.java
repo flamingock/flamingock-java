@@ -32,7 +32,7 @@ import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.*;
@@ -138,7 +138,7 @@ public class SqlTargetSystemTest {
         );
 
         //GIVEN
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
@@ -150,7 +150,7 @@ public class SqlTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)
@@ -185,7 +185,7 @@ public class SqlTargetSystemTest {
         );
 
         //GIVEN
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
@@ -198,7 +198,7 @@ public class SqlTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(Connection.class), Collections.singletonList(Connection.class))
@@ -234,7 +234,7 @@ public class SqlTargetSystemTest {
         );
 
         //GIVEN
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
             mysqlTestHelper.insertOngoingExecution("insert-clients");
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
@@ -247,7 +247,7 @@ public class SqlTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsTableChange.class, Collections.singletonList(Connection.class), null),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Connection.class), null)

@@ -15,7 +15,6 @@
  */
 package io.flamingock.core.processor.util;
 
-import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import io.flamingock.internal.common.core.util.Serializer;
@@ -46,14 +45,27 @@ public final class FlamingockMetadataStore {
 
     private final ProcessingEnvironment processingEnv;
     private final LoggerPreProcessor logger;
+    private final String metadataResourcePath;
+    private final String reflectClassesResourcePath;
 
     private FlamingockMetadata cached;
     private boolean loaded = false;
     private boolean dirty = false;
 
-    public FlamingockMetadataStore(ProcessingEnvironment processingEnv, LoggerPreProcessor logger) {
+    /**
+     * @param metadataResourcePath module-unique JSON resource path to read/write the metadata
+     *                             at (e.g. {@code META-INF/flamingock/metadata_<suffix>.json}).
+     * @param reflectClassesResourcePath module-unique reflection-classes file path written
+     *                                   alongside the metadata for GraalVM native image support.
+     */
+    public FlamingockMetadataStore(ProcessingEnvironment processingEnv,
+                                   LoggerPreProcessor logger,
+                                   String metadataResourcePath,
+                                   String reflectClassesResourcePath) {
         this.processingEnv = processingEnv;
         this.logger = logger;
+        this.metadataResourcePath = metadataResourcePath;
+        this.reflectClassesResourcePath = reflectClassesResourcePath;
     }
 
     /**
@@ -88,7 +100,8 @@ public final class FlamingockMetadataStore {
         if (!dirty) {
             return;
         }
-        new Serializer(processingEnv, logger).serializeFullPipeline(cached);
+        new Serializer(processingEnv, logger)
+                .serializeFullPipeline(cached, metadataResourcePath, reflectClassesResourcePath);
         dirty = false;
     }
 
@@ -106,7 +119,7 @@ public final class FlamingockMetadataStore {
     private Optional<FlamingockMetadata> readExisting() {
         try {
             FileObject file = processingEnv.getFiler().getResource(
-                    StandardLocation.CLASS_OUTPUT, "", Constants.FULL_PIPELINE_FILE_PATH);
+                    StandardLocation.CLASS_OUTPUT, "", metadataResourcePath);
             try (InputStream in = file.openInputStream()) {
                 FlamingockMetadata metadata = JsonObjectMapper.DEFAULT_INSTANCE
                         .readValue(in, FlamingockMetadata.class);
