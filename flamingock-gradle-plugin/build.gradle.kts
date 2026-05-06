@@ -29,6 +29,7 @@ gradlePlugin {
 }
 
 tasks.processResources {
+    inputs.property("pluginVersion", project.version)
     filesMatching("flamingock-plugin.properties") {
         expand("pluginVersion" to project.version)
     }
