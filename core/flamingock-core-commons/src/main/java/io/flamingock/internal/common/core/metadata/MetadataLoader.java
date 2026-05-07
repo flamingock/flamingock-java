@@ -15,14 +15,24 @@
  */
 package io.flamingock.internal.common.core.metadata;
 
+import io.flamingock.api.StageType;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
+import io.flamingock.internal.common.core.preview.PreviewPipeline;
+import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.preview.SystemPreviewStage;
 import io.flamingock.internal.common.core.util.Deserializer;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -88,7 +98,7 @@ public final class MetadataLoader {
                         + "). Inconsistent build artifacts.");
             }
             return Deserializer.readFromStream(stream);
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Failed reading Flamingock metadata at '"
                     + resourcePath + "'", e);
         }
@@ -169,18 +179,17 @@ public final class MetadataLoader {
 
     /** Concatenates default + legacy stages, collapses system stages and legacy stages. */
     static final class CompositePipelineBuilder {
-        io.flamingock.internal.common.core.preview.PreviewPipeline buildFrom(
-                List<FlamingockMetadata> modules) {
+        PreviewPipeline buildFrom(List<FlamingockMetadata> modules) {
             // Stage assembly preserves stage instances by reference — no defensive copies — but
             // routes through helpers that deduplicate stage names with a warning so we don't
             // silently overlap two modules' stages.
-            List<io.flamingock.internal.common.core.preview.PreviewStage> defaultStages = new ArrayList<>();
-            List<io.flamingock.internal.common.core.preview.PreviewStage> legacyStages = new ArrayList<>();
-            io.flamingock.internal.common.core.preview.SystemPreviewStage systemStage = null;
-            java.util.Set<String> seenStageNames = new java.util.HashSet<>();
+            List<PreviewStage> defaultStages = new ArrayList<>();
+            List<PreviewStage> legacyStages = new ArrayList<>();
+            SystemPreviewStage systemStage = null;
+            Set<String> seenStageNames = new HashSet<>();
 
             for (FlamingockMetadata md : modules) {
-                io.flamingock.internal.common.core.preview.PreviewPipeline pipeline = md.getPipeline();
+                PreviewPipeline pipeline = md.getPipeline();
                 if (pipeline == null) continue;
 
                 if (pipeline.getSystemStage() != null) {
@@ -188,12 +197,12 @@ public final class MetadataLoader {
                 }
 
                 if (pipeline.getStages() != null) {
-                    for (io.flamingock.internal.common.core.preview.PreviewStage s : pipeline.getStages()) {
+                    for (PreviewStage s : pipeline.getStages()) {
                         if (!seenStageNames.add(s.getName())) {
                             logger.warn("Duplicate stage name '{}' across modules — proceeding with both.",
                                     s.getName());
                         }
-                        if (s.getType() == io.flamingock.api.StageType.LEGACY) {
+                        if (s.getType() == StageType.LEGACY) {
                             legacyStages.add(s);
                         } else {
                             defaultStages.add(s);
@@ -202,30 +211,26 @@ public final class MetadataLoader {
                 }
             }
 
-            io.flamingock.internal.common.core.preview.PreviewStage collapsedLegacy =
-                    collapseLegacyStages(legacyStages);
+            PreviewStage collapsedLegacy = collapseLegacyStages(legacyStages);
 
-            List<io.flamingock.internal.common.core.preview.PreviewStage> allStages = new ArrayList<>();
+            List<PreviewStage> allStages = new ArrayList<>();
             if (collapsedLegacy != null) allStages.add(collapsedLegacy);
             allStages.addAll(defaultStages);
 
             return systemStage != null
-                    ? new io.flamingock.internal.common.core.preview.PreviewPipeline(systemStage, allStages)
-                    : new io.flamingock.internal.common.core.preview.PreviewPipeline(allStages);
+                    ? new PreviewPipeline(systemStage, allStages)
+                    : new PreviewPipeline(allStages);
         }
 
-        private static io.flamingock.internal.common.core.preview.SystemPreviewStage mergeSystem(
-                io.flamingock.internal.common.core.preview.SystemPreviewStage soFar,
-                io.flamingock.internal.common.core.preview.PreviewStage incoming) {
+        private static SystemPreviewStage mergeSystem(SystemPreviewStage soFar, PreviewStage incoming) {
             // PreviewPipeline.getSystemStage returns PreviewStage (declared) but the field is
             // SystemPreviewStage; safe to cast.
-            io.flamingock.internal.common.core.preview.SystemPreviewStage in =
-                    (io.flamingock.internal.common.core.preview.SystemPreviewStage) incoming;
+            SystemPreviewStage in = (SystemPreviewStage) incoming;
             if (soFar == null) return in;
-            List<io.flamingock.internal.common.core.preview.AbstractPreviewChange> merged = new ArrayList<>();
+            List<AbstractPreviewChange> merged = new ArrayList<>();
             if (soFar.getChanges() != null) merged.addAll(soFar.getChanges());
             if (in.getChanges() != null) {
-                java.util.Set<String> existingIds = new java.util.HashSet<>();
+                Set<String> existingIds = new HashSet<>();
                 if (soFar.getChanges() != null) {
                     soFar.getChanges().forEach(c -> existingIds.add(c.getId()));
                 }
@@ -233,41 +238,36 @@ public final class MetadataLoader {
                         .filter(c -> !existingIds.contains(c.getId()))
                         .forEach(merged::add);
             }
-            io.flamingock.internal.common.core.preview.SystemPreviewStage out =
-                    new io.flamingock.internal.common.core.preview.SystemPreviewStage(
-                            soFar.getName(), soFar.getDescription(),
-                            soFar.getSourcesPackage(), soFar.getResourcesDir(), merged);
-            return out;
+            return new SystemPreviewStage(soFar.getName(), soFar.getDescription(),
+                    soFar.getSourcesPackage(), soFar.getResourcesDir(), merged);
         }
 
-        private static io.flamingock.internal.common.core.preview.PreviewStage collapseLegacyStages(
-                List<io.flamingock.internal.common.core.preview.PreviewStage> legacyStages) {
+        private static PreviewStage collapseLegacyStages(List<PreviewStage> legacyStages) {
             if (legacyStages.isEmpty()) return null;
             if (legacyStages.size() == 1) return legacyStages.get(0);
             // Multiple legacy stages: collapse changes into the first (id-deduped).
-            io.flamingock.internal.common.core.preview.PreviewStage first = legacyStages.get(0);
-            List<io.flamingock.internal.common.core.preview.AbstractPreviewChange> merged = new ArrayList<>();
-            java.util.Set<String> seenIds = new java.util.HashSet<>();
+            PreviewStage first = legacyStages.get(0);
+            List<AbstractPreviewChange> merged = new ArrayList<>();
+            Set<String> seenIds = new HashSet<>();
             if (first.getChanges() != null) {
                 first.getChanges().forEach(c -> { merged.add(c); seenIds.add(c.getId()); });
             }
             for (int i = 1; i < legacyStages.size(); i++) {
-                io.flamingock.internal.common.core.preview.PreviewStage extra = legacyStages.get(i);
+                PreviewStage extra = legacyStages.get(i);
                 if (extra.getChanges() == null) continue;
                 extra.getChanges().stream()
                         .filter(c -> seenIds.add(c.getId()))
                         .forEach(merged::add);
             }
-            return new io.flamingock.internal.common.core.preview.PreviewStage(
-                    first.getName(), first.getType(), first.getDescription(),
+            return new PreviewStage(first.getName(), first.getType(), first.getDescription(),
                     first.getSourcesPackage(), first.getResourcesDir(), merged);
         }
     }
 
     /** Union map; later modules win on key clash. */
     static final class PropertiesMerger {
-        java.util.Map<String, String> merge(List<FlamingockMetadata> modules) {
-            java.util.Map<String, String> result = new java.util.HashMap<>();
+        Map<String, String> merge(List<FlamingockMetadata> modules) {
+            Map<String, String> result = new HashMap<>();
             for (FlamingockMetadata md : modules) {
                 if (md.getProperties() != null) result.putAll(md.getProperties());
             }

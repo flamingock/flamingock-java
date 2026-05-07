@@ -119,14 +119,16 @@ public class Serializer {
         try {
             file = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", filePath);
         } catch (IOException e) {
-            logger.error("Failed to creating flamingock metadata file: " + e.getMessage());
-            throw new RuntimeException(e);
+            String message = "Failed to create Flamingock resource at '" + filePath + "': " + e.getMessage();
+            logger.error(message);
+            throw new RuntimeException(message, e);
         }
         try (Writer writer = file.openWriter()) {
             writerConsumer.accept(writer);
         } catch (IOException e) {
-            logger.error("Failed to write AnnotatedClasses file: " + e.getMessage());
-            throw new RuntimeException("Failed to write AnnotatedClasses file: " + e.getMessage());
+            String message = "Failed to write Flamingock resource at '" + filePath + "': " + e.getMessage();
+            logger.error(message);
+            throw new RuntimeException(message, e);
         }
 
     }
