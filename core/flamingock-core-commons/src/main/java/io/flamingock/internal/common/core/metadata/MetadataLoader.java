@@ -211,6 +211,14 @@ public final class MetadataLoader {
                 }
             }
 
+            // Surface the rare case where a user-defined stage clashes with the system-stage
+            // name. The system stage is always emitted last in the composite, so we couldn't
+            // detect it inside the per-module loop above.
+            if (systemStage != null && seenStageNames.contains(systemStage.getName())) {
+                logger.warn("Stage name '{}' is also the system-stage name — proceeding with both.",
+                        systemStage.getName());
+            }
+
             PreviewStage collapsedLegacy = collapseLegacyStages(legacyStages);
 
             List<PreviewStage> allStages = new ArrayList<>();
@@ -234,9 +242,14 @@ public final class MetadataLoader {
                 if (soFar.getChanges() != null) {
                     soFar.getChanges().forEach(c -> existingIds.add(c.getId()));
                 }
-                in.getChanges().stream()
-                        .filter(c -> !existingIds.contains(c.getId()))
-                        .forEach(merged::add);
+                for (AbstractPreviewChange c : in.getChanges()) {
+                    if (existingIds.contains(c.getId())) {
+                        logger.debug("Deduplicated system change id '{}' (already contributed by an earlier module)",
+                                c.getId());
+                    } else {
+                        merged.add(c);
+                    }
+                }
             }
             return new SystemPreviewStage(soFar.getName(), soFar.getDescription(),
                     soFar.getSourcesPackage(), soFar.getResourcesDir(), merged);

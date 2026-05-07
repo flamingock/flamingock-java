@@ -15,10 +15,20 @@
  */
 package io.flamingock.core.processor;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.flamingock.core.processor.util.MetadataModuleIdentity;
+import io.flamingock.internal.common.core.change.RecoveryDescriptor;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
 import io.flamingock.internal.common.core.metadata.MetadataLoader;
+import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
+import io.flamingock.internal.common.core.preview.PreviewConstructor;
+import io.flamingock.internal.common.core.preview.PreviewMethod;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
+import io.flamingock.internal.common.core.preview.SystemPreviewStage;
+import io.flamingock.internal.common.core.preview.builder.CodePreviewChangeBuilder;
+import io.flamingock.internal.util.JsonObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -30,15 +40,19 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -145,6 +159,95 @@ class MultiModuleProcessingIT {
                 "error must reference strict-mode orphan failure; got: " + ex.getMessage());
         assertTrue(ex.getMessage().contains("id-orphan"),
                 "error must mention the orphan id; got: " + ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Same system change id from multiple modules is deduplicated in the composite")
+    void sameSystemChangeAcrossModulesIsDeduplicated() throws Exception {
+        // Two normal modules — each compiles cleanly with one default-stage @Change.
+        Path modAOut = compileModule("modA",
+                file("com/example/modA/Config.java",
+                        configClass("com.example.modA.changes")),
+                file("com/example/modA/changes/_0001__ChangeA.java",
+                        changeClass("_0001__ChangeA", "id-A1", "com.example.modA.changes")));
+
+        Path modBOut = compileModule("modB",
+                file("com/example/modB/Config.java",
+                        configClass("com.example.modB.changes")),
+                file("com/example/modB/changes/_0001__ChangeB.java",
+                        changeClass("_0001__ChangeB", "id-B1", "com.example.modB.changes")));
+
+        // The @Change annotation has no `system` flag (system changes today are produced
+        // only by AnnotationProcessorPlugins like MongockAnnotationProcessorPlugin), so
+        // simulate the "every module ships the same system change" reality by patching
+        // each generated metadata.json with an identical SystemPreviewStage.
+        String sharedId = "system-change-shared";
+        injectIdenticalSystemChange(modAOut, sharedId);
+        injectIdenticalSystemChange(modBOut, sharedId);
+
+        FlamingockMetadata composite = loadAggregatedAcross(modAOut, modBOut);
+
+        assertNotNull(composite.getPipeline());
+        PreviewStage compositeSystemStage = composite.getPipeline().getSystemStage();
+        assertNotNull(compositeSystemStage,
+                "Composite must surface a single merged system stage when modules carry one");
+
+        Collection<? extends AbstractPreviewChange> systemChanges = compositeSystemStage.getChanges();
+        assertNotNull(systemChanges);
+        assertEquals(1, systemChanges.size(),
+                "Identical system change ids across modules must be deduplicated to one entry");
+        assertEquals(sharedId, systemChanges.iterator().next().getId());
+
+        // Sanity: regular per-module changes still flow through aggregation.
+        List<String> ids = changeIds(composite.getPipeline());
+        assertTrue(ids.contains("id-A1"));
+        assertTrue(ids.contains("id-B1"));
+    }
+
+    /**
+     * Locate the module's generated metadata.json (the suffix lives in the SPI registration
+     * file the AP just wrote), parse it, install a {@link SystemPreviewStage} that holds one
+     * synthetic system change with id {@code sharedId}, and persist back. Mimics the per-module
+     * output that an {@code AnnotationProcessorPlugin} like the Mongock importer plugin would
+     * have produced — minus the dependency on that plugin.
+     */
+    private static void injectIdenticalSystemChange(Path classOutput, String sharedId) throws IOException {
+        Optional<MetadataModuleIdentity> identity =
+                MetadataModuleIdentity.discoverFromClassOutput(classOutput);
+        assertTrue(identity.isPresent(),
+                "Compiled module should have produced an SPI registration: " + classOutput);
+        Path metadataFile = classOutput.resolve(identity.get().getMetadataResourcePath());
+
+        FlamingockMetadata metadata;
+        try (InputStream in = Files.newInputStream(metadataFile)) {
+            metadata = JsonObjectMapper.DEFAULT_INSTANCE.readValue(in, FlamingockMetadata.class);
+        }
+
+        CodePreviewChange systemChange = CodePreviewChangeBuilder.instance()
+                .setId(sharedId)
+                .setOrder("00100")
+                .setAuthor("test-system")
+                .setSourceClassPath("io.flamingock.test.SystemChangeStub")
+                .setConstructor(PreviewConstructor.getDefault())
+                .setApplyMethod(new PreviewMethod("apply", Collections.emptyList()))
+                .setSystem(true)
+                .setRecovery(RecoveryDescriptor.getDefault())
+                .setTransactionalFlag(true)
+                .build();
+
+        SystemPreviewStage systemStage = new SystemPreviewStage(
+                "flamingock-system-stage",
+                "Dedicated stage for system-level changes",
+                null, null,
+                Collections.singletonList(systemChange));
+
+        metadata.getPipeline().setSystemStage(systemStage);
+
+        try (Writer out = Files.newBufferedWriter(metadataFile)) {
+            out.write(JsonObjectMapper.DEFAULT_INSTANCE
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .writeValueAsString(metadata));
+        }
     }
 
     // ============================================================================
