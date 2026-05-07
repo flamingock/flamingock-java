@@ -204,6 +204,193 @@ class MultiModuleProcessingIT {
         assertTrue(ids.contains("id-B1"));
     }
 
+    @Test
+    @DisplayName("Multiple modules with the same legacy-stage name → one merged stage in the composite")
+    void sameNameLegacyStagesAreMergedAcrossModules() throws Exception {
+        Path modAOut = compileModule("modA",
+                file("com/example/modA/Config.java",
+                        configClass("com.example.modA.changes")),
+                file("com/example/modA/changes/_0001__ChangeA.java",
+                        changeClass("_0001__ChangeA", "id-A1", "com.example.modA.changes")));
+
+        Path modBOut = compileModule("modB",
+                file("com/example/modB/Config.java",
+                        configClass("com.example.modB.changes")),
+                file("com/example/modB/changes/_0001__ChangeB.java",
+                        changeClass("_0001__ChangeB", "id-B1", "com.example.modB.changes")));
+
+        // Both modules carry the same legacy stage name (today's Mongock pattern) with
+        // disjoint change ids — should collapse to one stage carrying both.
+        injectLegacyStage(modAOut, "flamingock-legacy-stage", Arrays.asList("legacy-A1", "legacy-A2"));
+        injectLegacyStage(modBOut, "flamingock-legacy-stage", Arrays.asList("legacy-B1"));
+
+        FlamingockMetadata composite = loadAggregatedAcross(modAOut, modBOut);
+
+        List<PreviewStage> legacyStages = legacyStagesOf(composite.getPipeline());
+        assertEquals(1, legacyStages.size(),
+                "Same-named legacy stages from multiple modules must collapse to one");
+        PreviewStage merged = legacyStages.get(0);
+        assertEquals("flamingock-legacy-stage", merged.getName());
+        assertEquals(3, merged.getChanges().size(),
+                "Merged stage carries the union of legacy changes");
+        List<String> mergedIds = merged.getChanges().stream()
+                .map(AbstractPreviewChange::getId).collect(Collectors.toList());
+        assertTrue(mergedIds.containsAll(Arrays.asList("legacy-A1", "legacy-A2", "legacy-B1")));
+
+        // Sanity: the regular default-stage changes still flow through.
+        List<String> ids = changeIds(composite.getPipeline());
+        assertTrue(ids.contains("id-A1"));
+        assertTrue(ids.contains("id-B1"));
+    }
+
+    @Test
+    @DisplayName("Multiple modules with differently-named legacy stages → distinct stages preserved")
+    void differentlyNamedLegacyStagesArePreservedAsDistinctStages() throws Exception {
+        Path modAOut = compileModule("modA",
+                file("com/example/modA/Config.java",
+                        configClass("com.example.modA.changes")),
+                file("com/example/modA/changes/_0001__ChangeA.java",
+                        changeClass("_0001__ChangeA", "id-A1", "com.example.modA.changes")));
+
+        Path modBOut = compileModule("modB",
+                file("com/example/modB/Config.java",
+                        configClass("com.example.modB.changes")),
+                file("com/example/modB/changes/_0001__ChangeB.java",
+                        changeClass("_0001__ChangeB", "id-B1", "com.example.modB.changes")));
+
+        injectLegacyStage(modAOut, "flamingock-legacy-stage",
+                Arrays.asList("mongock-A1", "mongock-A2"));
+        injectLegacyStage(modBOut, "flamingock-liquibase-legacy-stage",
+                Arrays.asList("liquibase-B1"));
+
+        FlamingockMetadata composite = loadAggregatedAcross(modAOut, modBOut);
+
+        List<PreviewStage> legacyStages = legacyStagesOf(composite.getPipeline());
+        assertEquals(2, legacyStages.size(),
+                "Differently-named legacy stages must remain as distinct peers");
+        List<String> legacyNames = legacyStages.stream()
+                .map(PreviewStage::getName).collect(Collectors.toList());
+        assertTrue(legacyNames.contains("flamingock-legacy-stage"));
+        assertTrue(legacyNames.contains("flamingock-liquibase-legacy-stage"));
+
+        PreviewStage mongock = legacyStages.stream()
+                .filter(s -> "flamingock-legacy-stage".equals(s.getName())).findFirst().get();
+        PreviewStage liquibase = legacyStages.stream()
+                .filter(s -> "flamingock-liquibase-legacy-stage".equals(s.getName())).findFirst().get();
+        assertEquals(2, mongock.getChanges().size());
+        assertEquals(1, liquibase.getChanges().size());
+    }
+
+    @Test
+    @DisplayName("Mix of same-named and differently-named legacy stages → group-by-name merge")
+    void legacyStagesGroupByName() throws Exception {
+        Path modAOut = compileModule("modA",
+                file("com/example/modA/Config.java",
+                        configClass("com.example.modA.changes")),
+                file("com/example/modA/changes/_0001__ChangeA.java",
+                        changeClass("_0001__ChangeA", "id-A1", "com.example.modA.changes")));
+
+        Path modBOut = compileModule("modB",
+                file("com/example/modB/Config.java",
+                        configClass("com.example.modB.changes")),
+                file("com/example/modB/changes/_0001__ChangeB.java",
+                        changeClass("_0001__ChangeB", "id-B1", "com.example.modB.changes")));
+
+        Path modCOut = compileModule("modC",
+                file("com/example/modC/Config.java",
+                        configClass("com.example.modC.changes")),
+                file("com/example/modC/changes/_0001__ChangeC.java",
+                        changeClass("_0001__ChangeC", "id-C1", "com.example.modC.changes")));
+
+        // modA + modB share the Mongock legacy stage name with overlapping ids;
+        // modC has a differently-named legacy stage that must stay separate.
+        injectLegacyStage(modAOut, "flamingock-legacy-stage",
+                Arrays.asList("mongock-shared", "mongock-A-only"));
+        injectLegacyStage(modBOut, "flamingock-legacy-stage",
+                Arrays.asList("mongock-shared", "mongock-B-only"));
+        injectLegacyStage(modCOut, "flamingock-liquibase-legacy-stage",
+                Arrays.asList("liquibase-C1"));
+
+        FlamingockMetadata composite = loadAggregatedAcross(modAOut, modBOut, modCOut);
+
+        List<PreviewStage> legacyStages = legacyStagesOf(composite.getPipeline());
+        assertEquals(2, legacyStages.size(),
+                "Output is one stage per distinct legacy-stage name");
+
+        PreviewStage mongock = legacyStages.stream()
+                .filter(s -> "flamingock-legacy-stage".equals(s.getName())).findFirst().get();
+        List<String> mongockIds = mongock.getChanges().stream()
+                .map(AbstractPreviewChange::getId).collect(Collectors.toList());
+        assertEquals(3, mongockIds.size(), "id-deduped union of modA + modB Mongock changes");
+        assertTrue(mongockIds.containsAll(
+                Arrays.asList("mongock-shared", "mongock-A-only", "mongock-B-only")));
+
+        PreviewStage liquibase = legacyStages.stream()
+                .filter(s -> "flamingock-liquibase-legacy-stage".equals(s.getName())).findFirst().get();
+        assertEquals(1, liquibase.getChanges().size());
+        assertEquals("liquibase-C1", liquibase.getChanges().iterator().next().getId());
+    }
+
+    /**
+     * Locate the module's generated metadata.json, parse it, append a {@link PreviewStage}
+     * of type {@link io.flamingock.api.StageType#LEGACY} carrying one stub change per supplied
+     * id, and persist back. Mirrors {@link #injectIdenticalSystemChange} but for the legacy
+     * branch of the aggregator.
+     */
+    private static void injectLegacyStage(Path classOutput, String stageName, List<String> changeIds) throws IOException {
+        Optional<MetadataModuleIdentity> identity =
+                MetadataModuleIdentity.discoverFromClassOutput(classOutput);
+        assertTrue(identity.isPresent(),
+                "Compiled module should have produced an SPI registration: " + classOutput);
+        Path metadataFile = classOutput.resolve(identity.get().getMetadataResourcePath());
+
+        FlamingockMetadata metadata;
+        try (InputStream in = Files.newInputStream(metadataFile)) {
+            metadata = JsonObjectMapper.DEFAULT_INSTANCE.readValue(in, FlamingockMetadata.class);
+        }
+
+        List<CodePreviewChange> changes = new ArrayList<>();
+        for (String id : changeIds) {
+            changes.add(CodePreviewChangeBuilder.instance()
+                    .setId(id)
+                    .setOrder("01000")
+                    .setAuthor("test-legacy")
+                    .setSourceClassPath("io.flamingock.test.LegacyChangeStub_" + id)
+                    .setConstructor(PreviewConstructor.getDefault())
+                    .setApplyMethod(new PreviewMethod("apply", Collections.emptyList()))
+                    .setRecovery(RecoveryDescriptor.getDefault())
+                    .setTransactionalFlag(true)
+                    .build());
+        }
+
+        PreviewStage legacyStage = new PreviewStage(
+                stageName,
+                io.flamingock.api.StageType.LEGACY,
+                "Synthetic legacy stage for tests",
+                null, null,
+                changes);
+
+        Collection<PreviewStage> existing = metadata.getPipeline().getStages();
+        List<PreviewStage> updated = new ArrayList<>();
+        if (existing != null) updated.addAll(existing);
+        updated.add(legacyStage);
+        metadata.getPipeline().setStages(updated);
+
+        try (Writer out = Files.newBufferedWriter(metadataFile)) {
+            out.write(JsonObjectMapper.DEFAULT_INSTANCE
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .writeValueAsString(metadata));
+        }
+    }
+
+    /** All stages typed as LEGACY in the composite, in their pipeline order. */
+    private static List<PreviewStage> legacyStagesOf(PreviewPipeline pipeline) {
+        if (pipeline == null || pipeline.getStages() == null) return Collections.emptyList();
+        return pipeline.getStages().stream()
+                .filter(s -> s.getType() == io.flamingock.api.StageType.LEGACY)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Locate the module's generated metadata.json (the suffix lives in the SPI registration
      * file the AP just wrote), parse it, install a {@link SystemPreviewStage} that holds one

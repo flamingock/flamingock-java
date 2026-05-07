@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -180,13 +181,14 @@ public final class MetadataLoader {
     /** Concatenates default + legacy stages, collapses system stages and legacy stages. */
     static final class CompositePipelineBuilder {
         PreviewPipeline buildFrom(List<FlamingockMetadata> modules) {
-            // Stage assembly preserves stage instances by reference — no defensive copies — but
-            // routes through helpers that deduplicate stage names with a warning so we don't
-            // silently overlap two modules' stages.
+            // Stage assembly preserves stage instances by reference — no defensive copies.
+            // Default stages are kept as-is (duplicate names across modules surface a warning
+            // because that's likely a configuration mistake). Legacy stages are merged
+            // group-by-name via collapseLegacyStagesByName; same-name legacy stages across
+            // modules are merged silently because that's the documented design.
             List<PreviewStage> defaultStages = new ArrayList<>();
             List<PreviewStage> legacyStages = new ArrayList<>();
             SystemPreviewStage systemStage = null;
-            Set<String> seenStageNames = new HashSet<>();
 
             for (FlamingockMetadata md : modules) {
                 PreviewPipeline pipeline = md.getPipeline();
@@ -198,10 +200,6 @@ public final class MetadataLoader {
 
                 if (pipeline.getStages() != null) {
                     for (PreviewStage s : pipeline.getStages()) {
-                        if (!seenStageNames.add(s.getName())) {
-                            logger.warn("Duplicate stage name '{}' across modules — proceeding with both.",
-                                    s.getName());
-                        }
                         if (s.getType() == StageType.LEGACY) {
                             legacyStages.add(s);
                         } else {
@@ -211,19 +209,34 @@ public final class MetadataLoader {
                 }
             }
 
-            // Surface the rare case where a user-defined stage clashes with the system-stage
-            // name. The system stage is always emitted last in the composite, so we couldn't
-            // detect it inside the per-module loop above.
-            if (systemStage != null && seenStageNames.contains(systemStage.getName())) {
-                logger.warn("Stage name '{}' is also the system-stage name — proceeding with both.",
-                        systemStage.getName());
+            // Warn on duplicate names among DEFAULT stages only — for LEGACY, collapsing
+            // same-name stages is the intended outcome and would otherwise surface false
+            // positives in any project with multiple Mongock-using modules.
+            Set<String> seenDefaultNames = new HashSet<>();
+            for (PreviewStage s : defaultStages) {
+                if (!seenDefaultNames.add(s.getName())) {
+                    logger.warn("Duplicate stage name '{}' across modules — proceeding with both.",
+                            s.getName());
+                }
             }
 
-            PreviewStage collapsedLegacy = collapseLegacyStages(legacyStages);
+            List<PreviewStage> collapsedLegacy = collapseLegacyStagesByName(legacyStages);
 
             List<PreviewStage> allStages = new ArrayList<>();
-            if (collapsedLegacy != null) allStages.add(collapsedLegacy);
+            allStages.addAll(collapsedLegacy);
             allStages.addAll(defaultStages);
+
+            // Surface the rare case where the system stage name clashes with any
+            // resolved (post-legacy-collapse) stage name in the composite.
+            if (systemStage != null) {
+                for (PreviewStage s : allStages) {
+                    if (systemStage.getName().equals(s.getName())) {
+                        logger.warn("Stage name '{}' is also the system-stage name — proceeding with both.",
+                                s.getName());
+                        break;
+                    }
+                }
+            }
 
             return systemStage != null
                     ? new PreviewPipeline(systemStage, allStages)
@@ -255,22 +268,51 @@ public final class MetadataLoader {
                     soFar.getSourcesPackage(), soFar.getResourcesDir(), merged);
         }
 
-        private static PreviewStage collapseLegacyStages(List<PreviewStage> legacyStages) {
-            if (legacyStages.isEmpty()) return null;
-            if (legacyStages.size() == 1) return legacyStages.get(0);
-            // Multiple legacy stages: collapse changes into the first (id-deduped).
-            PreviewStage first = legacyStages.get(0);
+        /**
+         * Group legacy stages by name and merge each group independently. Returns one
+         * {@link PreviewStage} per distinct legacy-stage name, in first-seen order across
+         * modules (deterministic for a given module discovery order).
+         *
+         * <p>Stages with different names stay separate — historically Mongock was the only
+         * producer (always {@code flamingock-legacy-stage}), but a future legacy source can
+         * declare its own stage name and is preserved as a peer alongside Mongock's.
+         */
+        private static List<PreviewStage> collapseLegacyStagesByName(List<PreviewStage> legacyStages) {
+            if (legacyStages.isEmpty()) return new ArrayList<>();
+            LinkedHashMap<String, List<PreviewStage>> byName = new LinkedHashMap<>();
+            for (PreviewStage s : legacyStages) {
+                byName.computeIfAbsent(s.getName(), k -> new ArrayList<>()).add(s);
+            }
+            List<PreviewStage> result = new ArrayList<>(byName.size());
+            for (List<PreviewStage> group : byName.values()) {
+                result.add(group.size() == 1 ? group.get(0) : mergeSameNameLegacyStages(group));
+            }
+            return result;
+        }
+
+        /**
+         * id-deduplicated union of changes for legacy stages that already share a name. The
+         * first stage's name/description/sourcesPackage/resourcesDir wins; subsequent stages
+         * contribute only changes whose ids haven't been seen yet.
+         */
+        private static PreviewStage mergeSameNameLegacyStages(List<PreviewStage> sameName) {
+            PreviewStage first = sameName.get(0);
             List<AbstractPreviewChange> merged = new ArrayList<>();
             Set<String> seenIds = new HashSet<>();
             if (first.getChanges() != null) {
                 first.getChanges().forEach(c -> { merged.add(c); seenIds.add(c.getId()); });
             }
-            for (int i = 1; i < legacyStages.size(); i++) {
-                PreviewStage extra = legacyStages.get(i);
+            for (int i = 1; i < sameName.size(); i++) {
+                PreviewStage extra = sameName.get(i);
                 if (extra.getChanges() == null) continue;
-                extra.getChanges().stream()
-                        .filter(c -> seenIds.add(c.getId()))
-                        .forEach(merged::add);
+                for (AbstractPreviewChange c : extra.getChanges()) {
+                    if (seenIds.add(c.getId())) {
+                        merged.add(c);
+                    } else {
+                        logger.debug("Deduplicated legacy change id '{}' in stage '{}' (already contributed by an earlier module)",
+                                c.getId(), first.getName());
+                    }
+                }
             }
             return new PreviewStage(first.getName(), first.getType(), first.getDescription(),
                     first.getSourcesPackage(), first.getResourcesDir(), merged);
