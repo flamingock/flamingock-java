@@ -314,8 +314,8 @@ class IncrementalProcessingIT {
             StringWriter err = new StringWriter();
             List<String> options = Arrays.asList(
                     "-proc:only",
-                    "-Asources=" + src.toAbsolutePath(),
-                    "-Aresources=" + src.toAbsolutePath()
+                    "-Aflamingock.sources=" + src.toAbsolutePath(),
+                    "-Aflamingock.resources=" + src.toAbsolutePath()
             );
             JavaCompiler.CompilationTask task = compiler.getTask(
                     err, fm, null, options, null, javaSources);

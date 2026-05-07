@@ -205,6 +205,74 @@ class MultiModuleProcessingIT {
     }
 
     @Test
+    @DisplayName("Filer-first detection finds the submodule when user.dir points elsewhere")
+    void filerFirstDetectionLandsOnSubmoduleNotWorkingDirectory() throws Exception {
+        // Realistic multi-module Gradle layout: per-submodule build.gradle.kts and the
+        // standard src/main/java + build/classes/java/main pair. With Filer-first detection
+        // the AP walks up from CLASS_OUTPUT and stops at the per-submodule marker; the YAML
+        // template in src/main/java/<pkg>/changes is then scanned and lands in the metadata.
+        // Crucially this test does NOT pass -Aflamingock.sources= so detection is exercised.
+        Path moduleDir = Files.createDirectories(workDir.resolve("synthetic-submodule"));
+        Files.write(moduleDir.resolve("build.gradle.kts"), "// per-submodule marker\n".getBytes());
+
+        String pkg = "com.example.detect";
+        Path srcRoot = Files.createDirectories(moduleDir.resolve("src/main/java"));
+        Path pkgDir = Files.createDirectories(srcRoot.resolve(pkg.replace('.', '/') + "/changes"));
+        // Java config class with @EnableFlamingock.
+        Files.write(pkgDir.getParent().resolve("Config.java"), configClass(pkg + ".changes").getBytes());
+        // YAML template that should be discovered via filesystem scan.
+        Files.write(pkgDir.resolve("_0001__synthetic_template.yaml"),
+                ("id: SyntheticTemplateChange\n"
+                        + "transactional: false\n"
+                        + "template: SqlTemplate\n"
+                        + "targetSystem:\n"
+                        + "  id: \"detect-target\"\n"
+                        + "apply: \"SELECT 1;\"\n"
+                        + "rollback: \"SELECT 1;\"\n").getBytes());
+
+        Path classOutput = Files.createDirectories(moduleDir.resolve("build/classes/java/main"));
+        runJavac(moduleDir, srcRoot, classOutput);
+
+        FlamingockMetadata composite = loadAggregatedAcross(classOutput);
+        List<String> changeIds = changeIds(composite.getPipeline());
+        assertTrue(changeIds.contains("SyntheticTemplateChange"),
+                "YAML template change must be present once detection lands on the submodule. Got: " + changeIds);
+    }
+
+    /**
+     * In-process javac invocation for the realistic-layout test. Mirrors {@link #compileModule}
+     * but takes explicit src/out paths so the test can place them under a synthetic submodule
+     * directory tree, and deliberately omits {@code -Aflamingock.sources=} so source-root
+     * detection runs.
+     */
+    private void runJavac(Path moduleDir, Path src, Path out) throws IOException {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+            throw new IllegalStateException("No system Java compiler. Tests must run on a JDK.");
+        }
+        try (StandardJavaFileManager fm = compiler.getStandardFileManager(null, null, null)) {
+            fm.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singletonList(out.toFile()));
+            fm.setLocation(StandardLocation.SOURCE_PATH, Collections.singletonList(src.toFile()));
+            fm.setLocation(StandardLocation.CLASS_PATH, currentClasspath());
+
+            List<JavaFileObject> javaSources = new ArrayList<>();
+            try (Stream<Path> walk = Files.walk(src)) {
+                walk.filter(p -> p.toString().endsWith(".java"))
+                        .forEach(p -> fm.getJavaFileObjectsFromFiles(Collections.singletonList(p.toFile()))
+                                .forEach(javaSources::add));
+            }
+
+            StringWriter err = new StringWriter();
+            JavaCompiler.CompilationTask task = compiler.getTask(
+                    err, fm, null, Collections.emptyList(), null, javaSources);
+            task.setProcessors(Collections.singletonList(new FlamingockAnnotationProcessor()));
+            if (!task.call()) {
+                throw new IllegalStateException("Compilation failed at " + moduleDir + ":\n" + err);
+            }
+        }
+    }
+
+    @Test
     @DisplayName("Multiple modules with the same legacy-stage name → one merged stage in the composite")
     void sameNameLegacyStagesAreMergedAcrossModules() throws Exception {
         Path modAOut = compileModule("modA",
@@ -476,8 +544,8 @@ class MultiModuleProcessingIT {
             // No -proc:only here: we need the generated provider class compiled too so
             // ServiceLoader can find it on the synthetic runtime classpath built later.
             List<String> options = Arrays.asList(
-                    "-Asources=" + src.toAbsolutePath(),
-                    "-Aresources=" + src.toAbsolutePath());
+                    "-Aflamingock.sources=" + src.toAbsolutePath(),
+                    "-Aflamingock.resources=" + src.toAbsolutePath());
             JavaCompiler.CompilationTask task = compiler.getTask(
                     err, fm, null, options, null, javaSources);
             task.setProcessors(Collections.singletonList(new FlamingockAnnotationProcessor()));

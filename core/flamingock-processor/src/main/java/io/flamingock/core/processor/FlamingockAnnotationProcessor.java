@@ -42,11 +42,11 @@ import javax.lang.model.element.TypeElement;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Annotation processor for Flamingock that generates metadata files containing information
@@ -121,9 +121,11 @@ import java.util.Set;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
-    private static final String RESOURCES_PATH_ARG = "resources";
+    private static final String RESOURCES_PATH_ARG = "flamingock.resources";
 
-    private static final String SOURCES_PATH_ARG = "sources";
+    private static final String SOURCES_PATH_ARG = "flamingock.sources";
+
+    private static final String VERBOSE_ARG = "flamingock.verbose";
 
     private static final String DEFAULT_RESOURCES_PATH = "src/main/resources";
 
@@ -153,7 +155,7 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        return new HashSet<>(Arrays.asList("sources", "resources", "flamingock.verbose"));
+        return new HashSet<>(Arrays.asList(SOURCES_PATH_ARG, RESOURCES_PATH_ARG, VERBOSE_ARG));
     }
 
     @Override
@@ -302,11 +304,19 @@ public class FlamingockAnnotationProcessor extends AbstractProcessor {
 
     @NotNull
     private List<String> getSourcesPathList() {
-        // Priority 1: Use explicitly provided parameter
+        // Priority 1: Use explicitly provided parameter. Multiple roots can be passed in one
+        // value separated by File.pathSeparator (`:` on *nix, `;` on Windows) so the Gradle
+        // plugin can hand over Java + Kotlin + Groovy + Scala + custom roots in a single arg.
         if (processingEnv.getOptions().containsKey(SOURCES_PATH_ARG)) {
             String sourcesPath = processingEnv.getOptions().get(SOURCES_PATH_ARG);
             logger.verbose("Using explicitly provided sources path: " + sourcesPath);
-            return Collections.singletonList(sourcesPath);
+            String[] parts = sourcesPath.split(Pattern.quote(File.pathSeparator));
+            List<String> result = new ArrayList<>(parts.length);
+            for (String part : parts) {
+                String trimmed = part.trim();
+                if (!trimmed.isEmpty()) result.add(trimmed);
+            }
+            return result;
         }
 
         // Priority 2: Auto-detect project root and convert to absolute paths
