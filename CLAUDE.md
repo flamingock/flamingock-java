@@ -497,10 +497,15 @@ Dependencies are resolved from the `ContextResolver` based on type matching.
 
 ### GraalVM Support
 
-Templates must declare reflective classes for native image compilation:
-- Override `getReflectiveClasses()` in template
-- Pass additional classes to `AbstractChangeTemplate` constructor
-- `RegistrationFeature` in `flamingock-graalvm` module handles registration
+The `RegistrationFeature` in `flamingock-graalvm` registers templates for native-image reflection without instantiating them at build time (instantiation would fire each template's `<clinit>` and pull SLF4J/Logback into the build heap).
+
+Per-template reflection metadata comes from class-readable sources only:
+- Generic type parameters of `AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>` — auto-registered.
+- `@ChangeTemplate(reflectiveClasses = {...})` — for any extra classes the template's apply/rollback methods touch reflectively that aren't in the generic type signature.
+
+Template authors writing their own templates should:
+- Annotate with `@ChangeTemplate(name = "...", reflectiveClasses = {...})` — the `reflectiveClasses` element is optional and defaults to empty.
+- Avoid heavy work in `<clinit>`. In particular, the conventional `private static final Logger log = LoggerFactory.getLogger(...)` pattern is fine for runtime but can be defensive against future native-image changes; consider a lazy holder pattern if the template ships in a library that other projects native-compile.
 
 ### Evolution Proposals
 

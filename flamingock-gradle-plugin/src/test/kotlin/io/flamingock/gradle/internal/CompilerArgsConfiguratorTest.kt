@@ -118,6 +118,60 @@ class CompilerArgsConfiguratorTest {
     }
 
     @Test
+    fun `configureKapt reflectively pushes args into KaptExtension-shaped object`() {
+        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        project.plugins.apply("java")
+
+        val kapt = StubKaptExtension()
+        project.extensions.add(StubKaptExtension::class.java, "kapt", kapt)
+
+        val main = project.extensions.getByType(SourceSetContainer::class.java).getByName("main")
+        CompilerArgsConfigurator.configureKapt(project, main)
+
+        assertEquals(srcDir(project, "main", "java"),
+                kapt.arguments.collected["flamingock.sources"])
+        assertEquals(srcDir(project, "main", "resources"),
+                kapt.arguments.collected["flamingock.resources"])
+    }
+
+    @Test
+    fun `configureKsp reflectively pushes args into KspExtension-shaped object`() {
+        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        project.plugins.apply("java")
+
+        val ksp = StubKspExtension()
+        project.extensions.add(StubKspExtension::class.java, "ksp", ksp)
+
+        val main = project.extensions.getByType(SourceSetContainer::class.java).getByName("main")
+        CompilerArgsConfigurator.configureKsp(project, main)
+
+        assertEquals(srcDir(project, "main", "java"), ksp.collected["flamingock.sources"])
+        assertEquals(srcDir(project, "main", "resources"), ksp.collected["flamingock.resources"])
+    }
+
+    @Test
+    fun `KAPT and KSP no-op when their plugins are never applied`() {
+        // The full configure() path registers withId callbacks for kapt and ksp; without
+        // those plugins ever applied, the callbacks don't fire and the stub extensions
+        // stay untouched. This test verifies that wiring at the public API surface.
+        val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
+        project.plugins.apply("java")
+
+        val kapt = StubKaptExtension()
+        val ksp = StubKspExtension()
+        project.extensions.add(StubKaptExtension::class.java, "kapt", kapt)
+        project.extensions.add(StubKspExtension::class.java, "ksp", ksp)
+
+        CompilerArgsConfigurator.configure(project)
+        // Intentionally do NOT apply the kapt/ksp plugins.
+
+        assertTrue(kapt.arguments.collected.isEmpty(),
+                "KAPT must remain untouched; got ${kapt.arguments.collected}")
+        assertTrue(ksp.collected.isEmpty(),
+                "KSP must remain untouched; got ${ksp.collected}")
+    }
+
+    @Test
     fun `compileJava and compileTestJava receive their own source-set's args`() {
         val project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
         project.plugins.apply("java")
@@ -153,4 +207,37 @@ class CompilerArgsConfiguratorTest {
 
     private fun srcDir(project: org.gradle.api.Project, sourceSet: String, kind: String): String =
             project.file("src/$sourceSet/$kind").absolutePath
+
+    /**
+     * Mirrors the shape of `KaptAnnotationProcessorOptions` enough for our reflective
+     * lookup: an `arg(name: Any, vararg values: Any)` method that records into a map.
+     */
+    open class StubKaptArguments {
+        val collected = mutableMapOf<String, String>()
+        fun arg(name: Any, vararg values: Any) {
+            collected[name.toString()] = values.joinToString(" ") { it.toString() }
+        }
+    }
+
+    /**
+     * Mirrors the shape of `KaptExtension` enough for our reflective lookup: an
+     * `arguments(Action<KaptAnnotationProcessorOptions>)` method.
+     */
+    open class StubKaptExtension {
+        val arguments = StubKaptArguments()
+        fun arguments(action: org.gradle.api.Action<StubKaptArguments>) {
+            action.execute(arguments)
+        }
+    }
+
+    /**
+     * Mirrors the shape of `KspExtension` enough for our reflective lookup: an
+     * `arg(String, String)` method.
+     */
+    open class StubKspExtension {
+        val collected = mutableMapOf<String, String>()
+        fun arg(k: String, v: String) {
+            collected[k] = v
+        }
+    }
 }

@@ -15,50 +15,31 @@
  */
 package io.flamingock.graalvm;
 
-import io.flamingock.internal.common.core.metadata.FlamingockMetadataProvider;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
-public final class FileUtil {
+/**
+ * Generic resource-reading helpers for the GraalVM feature. SPI-aware aggregation lives in
+ * {@link MetadataModuleInfoLoader} — keep this class strictly about reading text resources from
+ * the classloader.
+ */
+final class FileUtil {
 
     private FileUtil() {
     }
 
     /**
-     * Aggregate every Flamingock-aware module's reflection-classes file into a single list.
-     * Each module advertises its own per-module file path via the
-     * {@link FlamingockMetadataProvider} SPI; missing files are tolerated (a module without
-     * code-changes may legitimately produce no reflection classes), but if NO provider is
-     * registered we fail fast with the same error the runtime would have thrown.
+     * Read a classpath resource as a list of lines. Returns an empty list when the resource
+     * is missing — used by the SPI walk to tolerate modules that legitimately produce no
+     * reflection classes (e.g. a Flamingock-aware module with only template-based changes).
      */
-    static List<String> getClassesForRegistration() {
-        List<String> all = new ArrayList<>();
-        boolean providerSeen = false;
-        for (FlamingockMetadataProvider provider :
-                ServiceLoader.load(FlamingockMetadataProvider.class,
-                        RegistrationFeature.class.getClassLoader())) {
-            providerSeen = true;
-            all.addAll(fromFile(provider.getReflectClassesResourcePath()));
-        }
-        if (!providerSeen) {
-            throw new RuntimeException(
-                    "Flamingock: no FlamingockMetadataProvider found on the classpath. "
-                            + "Add the flamingock-processor as an annotation processor to a "
-                            + "Flamingock-aware module.");
-        }
-        return all;
-    }
-
-    private static List<String> fromFile(String filePath) {
+    static List<String> fromFile(String filePath) {
         ClassLoader classLoader = RegistrationFeature.class.getClassLoader();
         try (InputStream inputStream = classLoader.getResourceAsStream(filePath)) {
             if (inputStream == null) {

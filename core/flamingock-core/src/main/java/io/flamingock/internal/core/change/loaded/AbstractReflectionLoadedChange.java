@@ -66,7 +66,13 @@ import java.util.regex.Pattern;
  * @see AbstractLoadedChange
  */
 public abstract class AbstractReflectionLoadedChange extends AbstractLoadedChange {
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("ReflectionChange");
+    // Lazy holder: keeps SLF4J off the build-time class-init chain. Subclasses are
+    // explicitly initializeAtBuildTime'd by RegistrationFeature, which forces this
+    // parent's <clinit>; touching org.slf4j.LoggerFactory there would pull SLF4J/Logback
+    // into the image heap and break Spring Boot Native.
+    private static final class LoggerHolder {
+        static final Logger INSTANCE = FlamingockLoggerFactory.getLogger("ReflectionChange");
+    }
     /**
      * Regex pattern for validating the order field in Changes.
      * The pattern requires at least 3 alphanumeric characters (a-z, A-Z, 0-9) anywhere in the string.
@@ -231,7 +237,7 @@ public abstract class AbstractReflectionLoadedChange extends AbstractLoadedChang
             }
 
         } else if (order != null) {
-            logger.warn("Change[{}] is in an auto-sorted stage but order value was provided - order will be ignored and managed automatically by Flamingock", id);
+            LoggerHolder.INSTANCE.warn("Change[{}] is in an auto-sorted stage but order value was provided - order will be ignored and managed automatically by Flamingock", id);
 
         }
         return Optional.empty();

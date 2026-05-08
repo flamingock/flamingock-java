@@ -38,32 +38,56 @@ import java.io.File
  *  - take the first resources src dir (the universal default; multi-resource support is
  *    deferred until a real use case appears).
  *
- * The args land on every [JavaCompile] task — `compileJava`, `compileTestJava`, and any
- * source-set–derived equivalents created by user code or third-party plugins. KAPT and KSP
- * task wiring is intentionally out of scope for this configurator and will land in a
- * follow-up.
+ * The args land on:
+ *  - every [JavaCompile] task — `compileJava`, `compileTestJava`, and any source-set–derived
+ *    equivalents created by user code or third-party plugins (per-source-set);
+ *  - the KAPT extension if `org.jetbrains.kotlin.kapt` is applied (project-global; main
+ *    source set's roots);
+ *  - the KSP extension if `com.google.devtools.ksp` is applied (project-global; main
+ *    source set's roots).
+ *
+ * KAPT/KSP detection is reflective so this configurator never takes a compile-time dependency
+ * on the Kotlin or KSP classpaths — if a plugin isn't on the classpath, its `plugins.withId`
+ * callback simply never fires.
  */
 internal object CompilerArgsConfigurator {
 
     private const val SOURCES_OPTION = "flamingock.sources"
     private const val RESOURCES_OPTION = "flamingock.resources"
 
+    private const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
+    private const val KSP_PLUGIN_ID = "com.google.devtools.ksp"
+
     fun configure(project: Project) {
         val sourceSets = project.extensions.findByType(SourceSetContainer::class.java) ?: return
         sourceSets.configureEach(Action<SourceSet> {
-            val sourceDirs = collectSourceDirs(this)
+            val ss = this
+            val sourceDirs = collectSourceDirs(ss)
             if (sourceDirs.isEmpty()) return@Action
 
             val sourcesArg = sourceDirs.joinToString(File.pathSeparator) { it.absolutePath }
-            val resourcesArg = this.resources.srcDirs.firstOrNull()?.absolutePath
+            val resourcesArg = ss.resources.srcDirs.firstOrNull()?.absolutePath
 
-            project.tasks.named(this.compileJavaTaskName, JavaCompile::class.java)
+            project.tasks.named(ss.compileJavaTaskName, JavaCompile::class.java)
                 .configure(Action<JavaCompile> {
                     options.compilerArgs.add("-A$SOURCES_OPTION=$sourcesArg")
                     if (resourcesArg != null) {
                         options.compilerArgs.add("-A$RESOURCES_OPTION=$resourcesArg")
                     }
                 })
+
+            // KAPT/KSP only get configured for the MAIN source set since their option-passing
+            // API is project-scoped — there is no per-source-set hook for arguments. Use
+            // plugins.withId so the configuration kicks in regardless of plugin-application
+            // order; if a plugin is never applied, the callback never fires.
+            if (ss.name == SourceSet.MAIN_SOURCE_SET_NAME) {
+                project.plugins.withId(KAPT_PLUGIN_ID) {
+                    configureKapt(project, ss)
+                }
+                project.plugins.withId(KSP_PLUGIN_ID) {
+                    configureKsp(project, ss)
+                }
+            }
         })
     }
 
@@ -79,5 +103,78 @@ internal object CompilerArgsConfigurator {
             if (ext is SourceDirectorySet) all.addAll(ext.srcDirs)
         }
         return all
+    }
+
+    /**
+     * Reflectively call `KaptExtension.arguments(Action<KaptAnnotationProcessorOptions>)`
+     * to add `flamingock.sources` / `flamingock.resources`. KAPT's `arg(name: Any, vararg
+     * values: Any)` takes a vararg, so the reflected signature is `arg(Object, Object[])`.
+     *
+     * Visible to the same module so tests can invoke the dispatch path directly without
+     * needing the real Kotlin/KAPT plugin classpath.
+     */
+    internal fun configureKapt(project: Project, ss: SourceSet) {
+        val sourcesArg = sourcesArgFor(ss) ?: return
+        val resourcesArg = ss.resources.srcDirs.firstOrNull()?.absolutePath
+
+        val kaptExt = project.extensions.findByName("kapt") ?: return
+        val argumentsMethod = kaptExt::class.java.methods.firstOrNull {
+            it.name == "arguments" && it.parameterCount == 1
+        } ?: return
+
+        // Plain SAM impl rather than the kotlin-dsl `Action<Any> { ... }` form because the
+        // DSL form makes the parameter the implicit `this` and the receiver type Any tends
+        // to confuse Kotlin's SAM inference here.
+        val action = object : Action<Any> {
+            override fun execute(argsObj: Any) {
+                invokeArg(argsObj, SOURCES_OPTION, sourcesArg)
+                if (resourcesArg != null) invokeArg(argsObj, RESOURCES_OPTION, resourcesArg)
+            }
+        }
+        argumentsMethod.invoke(kaptExt, action)
+    }
+
+    /**
+     * Reflectively call `KspExtension.arg(String, String)` for each option. Visible to the
+     * same module so tests can invoke the dispatch path directly.
+     */
+    internal fun configureKsp(project: Project, ss: SourceSet) {
+        val sourcesArg = sourcesArgFor(ss) ?: return
+        val resourcesArg = ss.resources.srcDirs.firstOrNull()?.absolutePath
+
+        val kspExt = project.extensions.findByName("ksp") ?: return
+        invokeArg(kspExt, SOURCES_OPTION, sourcesArg)
+        if (resourcesArg != null) invokeArg(kspExt, RESOURCES_OPTION, resourcesArg)
+    }
+
+    private fun sourcesArgFor(ss: SourceSet): String? {
+        val sourceDirs = collectSourceDirs(ss)
+        if (sourceDirs.isEmpty()) return null
+        return sourceDirs.joinToString(File.pathSeparator) { it.absolutePath }
+    }
+
+    /**
+     * Look up an `arg` method on [target] by signature. Supports KSP's `arg(String, String)`
+     * and KAPT's `arg(Object, Object[])` vararg form. Falls back silently on incompatible
+     * shapes — the caller treats this as best-effort.
+     */
+    private fun invokeArg(target: Any, name: String, value: String) {
+        val cls = target::class.java
+        val stringString = cls.methods.firstOrNull {
+            it.name == "arg" && it.parameterCount == 2
+                    && it.parameterTypes[0] == String::class.java
+                    && it.parameterTypes[1] == String::class.java
+        }
+        if (stringString != null) {
+            stringString.invoke(target, name, value)
+            return
+        }
+        val vararg = cls.methods.firstOrNull {
+            it.name == "arg" && it.parameterCount == 2
+                    && it.parameterTypes[1].isArray
+        }
+        if (vararg != null) {
+            vararg.invoke(target, name, arrayOf<Any>(value))
+        }
     }
 }
