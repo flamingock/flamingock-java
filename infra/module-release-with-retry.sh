@@ -1,11 +1,20 @@
 #!/bin/bash
 
+module=$1
 maxAttempts=${2:-3}
 waitingSeconds=${3:-20}
+shift 3 2>/dev/null || true
+extraFlags="$*"
 
-echo "Releasing bundle[$1] to Central Portal with max attempts[$maxAttempts] and $waitingSeconds seconds delay"
+if [ -n "$module" ]; then
+  MODULE_FLAG="-Pmodule=$module"
+  echo "Releasing bundle[$module] to Central Portal with max attempts[$maxAttempts] and $waitingSeconds seconds delay"
+else
+  MODULE_FLAG=""
+  echo "Releasing bundle to Central Portal with max attempts[$maxAttempts] and $waitingSeconds seconds delay"
+fi
 for (( i=1; i<=maxAttempts; i++ )); do
-  if ./gradlew jreleaserDeploy -Pmodule="$1" --no-daemon --stacktrace; then
+  if ./gradlew jreleaserDeploy $MODULE_FLAG $extraFlags --no-daemon --stacktrace; then
     exit 0
   fi
   if [ "$i" -eq "$maxAttempts" ]; then

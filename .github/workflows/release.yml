@@ -29,7 +29,7 @@ jobs:
           github-token: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
 
       - name: Unit and Integration tests
-        run: ./gradlew clean build
+        run: ./gradlew clean build -Prelease
 
   flamingock-core:
     needs: [ build ]
@@ -568,7 +568,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Publish to Gradle Plugin Portal
-        run: ./gradlew :flamingock-gradle-plugin:publishPlugins
+        run: ./gradlew :flamingock-gradle-plugin:publishPlugins -Prelease
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
