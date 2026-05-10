@@ -23,10 +23,10 @@ allprojects {
     version = VersionManager.resolveVersion(declaredVersion, project.hasProperty("release"))
 
     extra["generalUtilVersion"] = "1.5.3"
-    extra["templateApiVersion"] = "1.3.4-SNAPSHOT"
-    extra["coreApiVersion"] = "1.3.3-SNAPSHOT"
-    extra["sqlVersion"] = "1.3.2-SNAPSHOT"
-    extra["mongodbTemplateVersion"] = "1.3.2-SNAPSHOT"
+    extra["templateApiVersion"] = "1.3.4"
+    extra["coreApiVersion"] = "1.3.3"
+    extra["sqlVersion"] = "1.3.2"
+    extra["mongodbTemplateVersion"] = "1.3.2"
 
     repositories {
         mavenLocal()
