@@ -15,115 +15,101 @@
  */
 package io.flamingock.graalvm;
 
-import io.flamingock.api.RecoveryStrategy;
-import io.flamingock.api.template.AbstractChangeTemplate;
-import io.flamingock.api.template.ChangeTemplate;
-import io.flamingock.api.template.TemplateField;
-import io.flamingock.api.template.TemplatePayload;
-import io.flamingock.api.template.TemplateStep;
-import io.flamingock.api.template.wrappers.TemplateString;
-import io.flamingock.api.template.wrappers.TemplateVoid;
-import io.flamingock.internal.util.ReflectionUtil;
 import io.flamingock.graalvm.MetadataModuleInfoLoader.MetadataModuleInfo;
-import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.preview.*;
-import io.flamingock.internal.common.core.change.AbstractChangeDescriptor;
-import io.flamingock.internal.common.core.change.RecoveryDescriptor;
-import io.flamingock.internal.common.core.change.TargetSystemDescriptor;
-import io.flamingock.internal.common.core.change.ChangeDescriptor;
-import io.flamingock.internal.common.core.template.ChangeTemplateManager;
-import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
-import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
-import io.flamingock.internal.core.change.loaded.AbstractReflectionLoadedChange;
-import io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange;
-import io.flamingock.internal.core.change.loaded.CodeLoadedChange;
-import io.flamingock.internal.core.change.loaded.SimpleTemplateLoadedChange;
-import io.flamingock.internal.core.change.loaded.MultiStepTemplateLoadedChange;
-import io.flamingock.internal.util.log.FlamingockLoggerFactory;
+import io.flamingock.internal.util.ReflectionUtil;
 import org.graalvm.nativeimage.hosted.Feature;
-import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 import org.graalvm.nativeimage.hosted.RuntimeResourceAccess;
+import org.jetbrains.annotations.NotNull;
 
-
-import java.nio.charset.CoderResult;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.ServiceLoader;
 
 
+/**
+ * GraalVM Feature that wires Flamingock for native-image build at compile time.
+ *
+ * <p>This class deliberately keeps zero compile-time dependencies on Flamingock's runtime
+ * classes. Every Flamingock class it touches is referenced by fully-qualified name and
+ * loaded via {@link Class#forName(String, boolean, ClassLoader)} with {@code initialize=false}.
+ * The reasons:
+ * <ul>
+ *   <li>Allows {@code flamingock-graalvm} to compile against {@code flamingock-general-util}
+ *       only, regardless of which Flamingock edition (community / cloud / etc.) the user
+ *       brings to the build.</li>
+ *   <li>Keeps the Feature class's {@code <clinit>} as light as possible — there are no
+ *       static field initializers that could pull problematic transitive classes (slf4j,
+ *       logback, etc.) into the build-time image heap.</li>
+ *   <li>{@code Class.forName(name, false, loader)} returns a {@code Class<?>} reference
+ *       without firing the target's {@code <clinit>}; subsequent
+ *       {@link RuntimeReflection#register} calls also skip initialization. So none of the
+ *       registered classes get build-time-initialized through this Feature.</li>
+ * </ul>
+ */
 public class RegistrationFeature implements Feature {
 
     private static final Logger logger = new Logger();
 
+    private static final String CHANGE_TEMPLATE_INTERFACE_FQN =
+            "io.flamingock.api.template.ChangeTemplate";
+    private static final String ABSTRACT_CHANGE_TEMPLATE_FQN =
+            "io.flamingock.api.template.AbstractChangeTemplate";
+    private static final String CHANGE_TEMPLATE_ANNOTATION_FQN =
+            "io.flamingock.api.annotations.ChangeTemplate";
+
+    @Override
+    public void beforeAnalysis(BeforeAnalysisAccess access) {
+        logger.startProcess("GraalVM classes registration and initialization");
+        registerInternalClasses();
+        registerCloudApiClasses();
+        registerTemplates();
+        registerProviderInfo();
+        logger.finishedProcess("GraalVM classes registration and initialization");
+    }
+
     private static void registerInternalClasses() {
         logger.startRegistrationProcess("internal classes");
 
-        registerClassForReflection(ChangeDescriptor.class.getName());
-        registerClassForReflection(AbstractChangeDescriptor.class.getName());
+        registerClassForReflection("io.flamingock.internal.common.core.change.ChangeDescriptor");
+        registerClassForReflection("io.flamingock.internal.common.core.change.AbstractChangeDescriptor");
 
         //preview
-        registerClassForReflection(PreviewPipeline.class.getName());
-        registerClassForReflection(PreviewStage.class.getName());
-        registerClassForReflection(PreviewConstructor.class.getName());
-        registerClassForReflection(SystemPreviewStage.class.getName());
-        registerClassForReflection(CodePreviewChange.class.getName());
-        registerClassForReflection(PreviewMethod.class);
-        registerClassForReflection(TemplatePreviewChange.class.getName());
-        registerClassForReflection(FlamingockMetadata.class.getName());
-        registerClassForReflection(TargetSystemDescriptor.class.getName());
-        registerClassForReflection(RecoveryDescriptor.class.getName());
+        registerClassForReflection("io.flamingock.internal.common.core.preview.PreviewPipeline");
+        registerClassForReflection("io.flamingock.internal.common.core.preview.PreviewStage");
+        registerClassForReflection("io.flamingock.internal.common.core.preview.PreviewConstructor");
+        registerClassForReflection("io.flamingock.internal.common.core.preview.SystemPreviewStage");
+        registerClassForReflection("io.flamingock.internal.common.core.preview.CodePreviewChange");
+        registerClassForReflection("io.flamingock.internal.common.core.preview.PreviewMethod");
+        registerClassForReflection("io.flamingock.internal.common.core.preview.TemplatePreviewChange");
+        registerClassForReflection("io.flamingock.internal.common.core.metadata.FlamingockMetadata");
+        registerClassForReflection("io.flamingock.internal.common.core.change.TargetSystemDescriptor");
+        registerClassForReflection("io.flamingock.internal.common.core.change.RecoveryDescriptor");
 
         //Loaded
-        registerClassForReflection(LoadedPipeline.class.getName());
-        registerClassForReflection(AbstractLoadedStage.class.getName());
-        registerClassForReflection(AbstractLoadedChange.class.getName());
-        registerClassForReflection(AbstractReflectionLoadedChange.class.getName());
-        registerClassForReflection(CodeLoadedChange.class.getName());
-        registerClassForReflection(AbstractTemplateLoadedChange.class);
-        registerClassForReflection(SimpleTemplateLoadedChange.class);
-        registerClassForReflection(MultiStepTemplateLoadedChange.class);
+        registerClassForReflection("io.flamingock.internal.core.pipeline.loaded.LoadedPipeline");
+        registerClassForReflection("io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage");
+        registerClassForReflection("io.flamingock.internal.core.change.loaded.AbstractLoadedChange");
+        registerClassForReflection("io.flamingock.internal.core.change.loaded.AbstractReflectionLoadedChange");
+        registerClassForReflection("io.flamingock.internal.core.change.loaded.CodeLoadedChange");
+        registerClassForReflection("io.flamingock.internal.core.change.loaded.AbstractTemplateLoadedChange");
+        registerClassForReflection("io.flamingock.internal.core.change.loaded.SimpleTemplateLoadedChange");
+        registerClassForReflection("io.flamingock.internal.core.change.loaded.MultiStepTemplateLoadedChange");
 
         //others
-        registerClassForReflection(CoderResult.class.getName());
+        registerClassForReflection("java.nio.charset.CoderResult");
 
 
         logger.completedRegistrationProcess("internal classes");
     }
 
-    private static void initializeInternalClassesAtBuildTime() {
-        logger.startInitializationProcess("internal classes");
-//        initializeClassAtBuildTime(CodeLoadedChange.class);
-        // Commented out: <clinit> reaches slf4j (directly or via parent class), which
-        // conflicts with Spring Boot Native (and any environment that marks slf4j
-        // init-at-runtime). Re-enable only after refactoring the offending static logger
-        // to a lazy-holder pattern so the parent class's <clinit> no longer touches slf4j.
-        // initializeClassAtBuildTime(AbstractTemplateLoadedChange.class);
-        // initializeClassAtBuildTime(SimpleTemplateLoadedChange.class);
-        // initializeClassAtBuildTime(MultiStepTemplateLoadedChange.class);
-        // initializeClassAtBuildTime(ChangeTemplateManager.class);
-        // RecoveryDescriptor's <clinit> stores a RecoveryStrategy enum constant in
-        // DEFAULT_INSTANCE; GraalVM 25+ rejects image-heap objects whose class isn't
-        // also init-at-build-time, so RecoveryStrategy must come along.
-//        initializeClassAtBuildTime(RecoveryStrategy.class);
-//        initializeClassAtBuildTime(RecoveryDescriptor.class);
-//        initializeClassAtBuildTime(FlamingockLoggerFactory.class);
-        logger.completeInitializationProcess("internal classes");
-    }
-
-    private static void initializeExternalClassesAtBuildTime() {
-        logger.startInitializationProcess("external classes");
-//        initializeClassAtBuildTime(LoggerFactory.class);
-        logger.completeInitializationProcess("external classes");
-    }
-
     /**
-     * Walk the {@link io.flamingock.internal.common.core.metadata.FlamingockMetadataProvider}
-     * SPI once and do both registration passes off the resulting collection: per-module
-     * metadata.json files become runtime resources, per-module reflection classes become
-     * reflection-registered. The SPI service file and the generated provider impl classes
-     * are intentionally not registered here — GraalVM's automatic
-     * {@code ServiceLoader.load(...)} detection (triggered by the static call in
+     * Walk the {@code FlamingockMetadataProvider} SPI once and do both registration passes
+     * off the resulting collection: per-module metadata.json files become runtime resources,
+     * per-module reflection classes become reflection-registered. The SPI service file and
+     * the generated provider impl classes are intentionally not registered here — GraalVM's
+     * automatic {@code ServiceLoader.load(...)} detection (triggered by the static call in
      * {@code MetadataLoader.loadAll()}) handles both.
      */
     private static void registerProviderInfo() {
@@ -146,20 +132,13 @@ public class RegistrationFeature implements Feature {
 
     private static void registerClassForReflection(String className) {
         try {
-            // initialize=false — load the Class<?> reference without firing <clinit>.
-            // Default native-image behavior (init at runtime) takes over from here, which
-            // is the safe default. Classes that genuinely require build-time init opt in
-            // explicitly via initializeInternalClassesAtBuildTime().
-            registerClassForReflection(Class.forName(
-                    className, false, RegistrationFeature.class.getClassLoader()));
-            // Commented out: this redundant explicit init was the second path that pulled
-            // user @Change classes' <clinit> into build time, breaking Spring Boot Native
-            // when those classes had static loggers. Reflection registration alone suffices.
-            // initializeClassAtBuildTime(Class.forName(className));
+            registerClassForReflection(getClass(className));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
+
+
 
     /**
      * Optionally register a class by name — silently skips if it is not on the classpath.
@@ -168,8 +147,7 @@ public class RegistrationFeature implements Feature {
      */
     private static void tryRegisterClassForReflection(String className) {
         try {
-            registerClassForReflection(Class.forName(
-                    className, false, RegistrationFeature.class.getClassLoader()));
+            registerClassForReflection(getClass(className));
         } catch (ClassNotFoundException ignored) {
             // module not on classpath — nothing to register
         }
@@ -217,35 +195,20 @@ public class RegistrationFeature implements Feature {
         RuntimeReflection.register(clazz.getDeclaredMethods());
     }
 
-    private static void initializeClassAtBuildTime(Class<?> clazz) {
-        logger.startClassInitialization(clazz);
-        RuntimeClassInitialization.initializeAtBuildTime(clazz);
-    }
-
-    @Override
-    public void beforeAnalysis(BeforeAnalysisAccess access) {
-        logger.startProcess("GraalVM classes registration and initialization");
-        initializeInternalClassesAtBuildTime();
-        initializeExternalClassesAtBuildTime();
-        registerInternalClasses();
-        registerCloudApiClasses();
-        registerTemplates();
-        registerProviderInfo();
-        logger.finishedProcess("GraalVM classes registration and initialization");
-    }
-
     private void registerTemplates() {
         logger.startRegistrationProcess("templates");
         // Static infrastructure registrations — Flamingock-internal classes with clean
-        // <clinit>; safe to register/initialize at build time.
-        registerClassForReflection(ChangeTemplateManager.class);
-        registerClassForReflection(ChangeTemplate.class);
-        registerClassForReflection(AbstractChangeTemplate.class);
-        registerClassForReflection(TemplateStep.class);
-        registerClassForReflection(TemplateField.class);
-        registerClassForReflection(TemplatePayload.class);
-        registerClassForReflection(TemplateString.class);
-        registerClassForReflection(TemplateVoid.class);
+        // <clinit>; safe to register at build time. Class.forName(name, false, loader) inside
+        // registerClassForReflection(String) loads the Class<?> reference without firing
+        // <clinit>, so this is also a no-init operation.
+        registerClassForReflection("io.flamingock.internal.common.core.template.ChangeTemplateManager");
+        registerClassForReflection(CHANGE_TEMPLATE_INTERFACE_FQN);
+        registerClassForReflection(ABSTRACT_CHANGE_TEMPLATE_FQN);
+        registerClassForReflection("io.flamingock.api.template.TemplateStep");
+        registerClassForReflection("io.flamingock.api.template.TemplateField");
+        registerClassForReflection("io.flamingock.api.template.TemplatePayload");
+        registerClassForReflection("io.flamingock.api.template.wrappers.TemplateString");
+        registerClassForReflection("io.flamingock.api.template.wrappers.TemplateVoid");
 
         // Per-template registration. Critical: never instantiate the template class at build
         // time. Templates routinely declare `static final Logger log = LoggerFactory.getLogger(
@@ -255,8 +218,17 @@ public class RegistrationFeature implements Feature {
         // initialized. The Class<?> overload of registerClassForReflection used below also
         // skips initialization; getAnnotation() and ReflectionUtil.resolveTypeArgumentsAsClasses
         // are pre-init operations too.
-        ServiceLoader.load(ChangeTemplate.class).stream()
-                .map(provider -> (Class<? extends ChangeTemplate<?, ?, ?>>) provider.type())
+        Class<?> changeTemplateInterface;
+        try {
+            changeTemplateInterface = getClass(CHANGE_TEMPLATE_INTERFACE_FQN);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        ServiceLoader<?> templateProviders = ServiceLoader.load((Class) changeTemplateInterface,
+                RegistrationFeature.class.getClassLoader());
+        templateProviders.stream()
+                .map(provider -> (Class<?>) provider.type())
                 .forEach(this::registerTemplateClass);
 
         logger.completedRegistrationProcess("templates");
@@ -265,31 +237,52 @@ public class RegistrationFeature implements Feature {
     /**
      * Register a single template class for reflection without initializing it. Reads
      * everything we need (generic type args + {@code @ChangeTemplate.reflectiveClasses})
-     * from class-level metadata only.
+     * from class-level metadata only, via reflection on classes loaded with
+     * {@code initialize=false}. {@link ReflectiveOperationException} covers
+     * {@link ClassNotFoundException}, {@link NoSuchMethodException},
+     * {@link IllegalAccessException}, and
+     * {@link java.lang.reflect.InvocationTargetException} — any of which here indicates a
+     * misconfigured Flamingock classpath at native-image build time and warrants failing
+     * the build.
      */
-    private void registerTemplateClass(Class<? extends ChangeTemplate<?, ?, ?>> templateClass) {
+    private void registerTemplateClass(Class<?> templateClass) {
         // Class<?> overload — does not initialize the class.
         registerClassForReflection(templateClass);
 
-        // Generic type args (configuration / apply / rollback payload classes) — same
-        // resolution AbstractChangeTemplate's runtime constructor uses, but here it runs
-        // off the templateClass so no instance is needed.
-        Class<?>[] typeArgs = ReflectionUtil.resolveTypeArgumentsAsClasses(
-                templateClass, AbstractChangeTemplate.class);
-        for (Class<?> arg : typeArgs) {
-            registerClassForReflection(arg);
-        }
-
-        // @ChangeTemplate(reflectiveClasses = {...}) — getAnnotation is a pre-init operation.
-        // Default annotation value is empty array, so simple templates contribute nothing here.
-        io.flamingock.api.annotations.ChangeTemplate annotation =
-                templateClass.getAnnotation(io.flamingock.api.annotations.ChangeTemplate.class);
-        if (annotation != null) {
-            for (Class<?> extra : annotation.reflectiveClasses()) {
-                registerClassForReflection(extra);
+        try {
+            // Generic type args (configuration / apply / rollback payload classes) — same
+            // resolution AbstractChangeTemplate's runtime constructor uses, but here it runs
+            // off the templateClass so no instance is needed.
+            Class<?> abstractChangeTemplateClass = getClass(ABSTRACT_CHANGE_TEMPLATE_FQN);
+            Class<?>[] typeArgs = ReflectionUtil.resolveTypeArgumentsAsClasses(
+                    templateClass, abstractChangeTemplateClass);
+            for (Class<?> arg : typeArgs) {
+                registerClassForReflection(arg);
             }
+
+            // @ChangeTemplate(reflectiveClasses = {...}) — getAnnotation is a pre-init
+            // operation. Default annotation value is empty array, so simple templates
+            // contribute nothing here.
+            @SuppressWarnings("unchecked")
+            Class<? extends Annotation> annotationClass =
+                    (Class<? extends Annotation>) getClass(CHANGE_TEMPLATE_ANNOTATION_FQN);
+            Annotation annotation = templateClass.getAnnotation(annotationClass);
+            if (annotation != null) {
+                Method reflectiveClasses = annotationClass.getMethod("reflectiveClasses");
+                Class<?>[] extras = (Class<?>[]) reflectiveClasses.invoke(annotation);
+                for (Class<?> extra : extras) {
+                    registerClassForReflection(extra);
+                }
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    @NotNull
+    private static Class<?> getClass(String className) throws ClassNotFoundException {
+        return Class.forName(
+                className, false, RegistrationFeature.class.getClassLoader());
+    }
 
 }

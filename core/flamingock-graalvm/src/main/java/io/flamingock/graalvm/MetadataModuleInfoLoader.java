@@ -15,24 +15,29 @@
  */
 package io.flamingock.graalvm;
 
-import io.flamingock.internal.common.core.metadata.FlamingockMetadataProvider;
-
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
 /**
  * Build-time SPI walker for the GraalVM {@link RegistrationFeature}. Iterates every
- * {@link FlamingockMetadataProvider} registered on the classpath and packages each module's
- * GraalVM-relevant data into a {@link MetadataModuleInfo} record so the feature can do its
- * registration passes off a single collection.
+ * {@code FlamingockMetadataProvider} registered on the classpath and packages each
+ * module's GraalVM-relevant data into a {@link MetadataModuleInfo} record so the feature
+ * can do its registration passes off a single collection.
  *
- * <p>Single source of truth for the per-module SPI walk; replaces the older two-pass
- * approach where the SPI was iterated separately to read reflection classes and to register
- * metadata resources. One walk, one fail-fast, and a per-provider record that's easy to
- * extend if more registration data becomes per-module in the future.
+ * <p>Like {@link RegistrationFeature}, this class deliberately keeps zero compile-time
+ * dependencies on Flamingock's runtime classes. The {@code FlamingockMetadataProvider}
+ * SPI interface is referenced by fully-qualified name and loaded via
+ * {@link Class#forName(String, boolean, ClassLoader)} with {@code initialize=false}.
+ * Provider-instance method calls ({@code getMetadataResourcePath},
+ * {@code getReflectClassesResourcePath}) go through {@link Method#invoke}.
  */
 final class MetadataModuleInfoLoader {
+
+    private static final String PROVIDER_INTERFACE_FQN =
+            "io.flamingock.internal.common.core.metadata.FlamingockMetadataProvider";
 
     /**
      * Per-module GraalVM data assembled at native-image build time. Carries the module
@@ -46,20 +51,43 @@ final class MetadataModuleInfoLoader {
     }
 
     /**
-     * Walk the {@link FlamingockMetadataProvider} SPI and collect one {@link MetadataModuleInfo}
+     * Walk the {@code FlamingockMetadataProvider} SPI and collect one {@link MetadataModuleInfo}
      * per registered module. Fails fast when no provider is on the classpath — same error
      * the runtime {@code MetadataLoader} would throw, surfaced earlier so a misconfigured
      * native-image build doesn't silently produce a binary with an empty pipeline.
      */
     static List<MetadataModuleInfo> load() {
+        Class<?> providerInterface;
+        Method getMetadataResourcePath;
+        Method getReflectClassesResourcePath;
+        try {
+            providerInterface = Class.forName(PROVIDER_INTERFACE_FQN, false,
+                    RegistrationFeature.class.getClassLoader());
+            getMetadataResourcePath = providerInterface.getMethod("getMetadataResourcePath");
+            getReflectClassesResourcePath = providerInterface.getMethod("getReflectClassesResourcePath");
+        } catch (ClassNotFoundException | NoSuchMethodException e) {
+            throw new RuntimeException(
+                    "Flamingock SPI interface not found on the classpath: "
+                            + PROVIDER_INTERFACE_FQN, e);
+        }
+
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        ServiceLoader<?> loader = ServiceLoader.load((Class) providerInterface,
+                RegistrationFeature.class.getClassLoader());
+
         List<MetadataModuleInfo> result = new ArrayList<>();
-        for (FlamingockMetadataProvider provider :
-                ServiceLoader.load(FlamingockMetadataProvider.class,
-                        RegistrationFeature.class.getClassLoader())) {
-            result.add(new MetadataModuleInfo(
-                    provider.getClass().getModule(),
-                    provider.getMetadataResourcePath(),
-                    FileUtil.fromFile(provider.getReflectClassesResourcePath())));
+        for (Object provider : loader) {
+            try {
+                String metadataPath = (String) getMetadataResourcePath.invoke(provider);
+                String reflectPath = (String) getReflectClassesResourcePath.invoke(provider);
+                result.add(new MetadataModuleInfo(
+                        provider.getClass().getModule(),
+                        metadataPath,
+                        FileUtil.fromFile(reflectPath)));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException("Failed to read metadata resource path from provider "
+                        + provider.getClass().getName(), e);
+            }
         }
         if (result.isEmpty()) {
             throw new RuntimeException(
