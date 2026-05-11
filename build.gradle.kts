@@ -37,7 +37,15 @@ allprojects {
 subprojects {
     if (project.file("build.gradle.kts").exists()) {
         apply(plugin = "flamingock.project-structure")
-        apply(plugin = "flamingock.release-management")
+        @Suppress("UNCHECKED_CAST")
+        val gradlePluginProjects = project.extra["gradlePluginProjects"] as Set<String>
+        // The gradle plugin publishes through com.gradle.plugin-publish to the Gradle
+        // Plugin Portal (release.yml: publishPlugins step), not through JReleaser to
+        // Maven Central. Keep flamingock.release-management — and the org.jreleaser
+        // plugin it brings — off this subproject entirely.
+        if (project.name !in gradlePluginProjects) {
+            apply(plugin = "flamingock.release-management")
+        }
     }
 }
 
