@@ -1,11 +1,9 @@
-val jacksonVersion = "2.15.2"
+val generalUtilVersion: String by extra
 dependencies {
-    //this way the user doesn't need to import the core
-    api(project(":core:flamingock-core"))
+    api("io.flamingock:flamingock-general-util:${generalUtilVersion}")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-
-    // GraalVM SDK for native image support
+    // GraalVM SDK for native image support — compileOnly because it's only needed at
+    // native-image build time, never at JVM runtime.
     compileOnly("org.graalvm.sdk:graal-sdk:22.3.0")
 }
 

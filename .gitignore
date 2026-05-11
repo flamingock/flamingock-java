@@ -29,6 +29,7 @@ hs_err_pid*
 .gradle
 .
 build/
+!buildSrc/src/main/kotlin/io/flamingock/build/
 volume
 classes
 libs

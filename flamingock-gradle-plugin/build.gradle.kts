@@ -6,7 +6,7 @@ plugins {
 
 dependencies {
     implementation(gradleApi())
-    testImplementation(kotlin("test"))
+    testImplementation(gradleTestKit())
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 }
 
@@ -29,6 +29,7 @@ gradlePlugin {
 }
 
 tasks.processResources {
+    inputs.property("pluginVersion", project.version)
     filesMatching("flamingock-plugin.properties") {
         expand("pluginVersion" to project.version)
     }

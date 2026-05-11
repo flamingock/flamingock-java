@@ -24,32 +24,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.flamingock.internal.common.core.metadata.Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH;
+/**
+ * Generic resource-reading helpers for the GraalVM feature. SPI-aware aggregation lives in
+ * {@link MetadataModuleInfoLoader} — keep this class strictly about reading text resources from
+ * the classloader.
+ */
+final class FileUtil {
 
-public final class FileUtil {
-
-    private FileUtil(){}
-
-    static List<String> getClassesForRegistration() {
-        List<String> classesToRegister = fromFile(FULL_GRAALVM_REFLECT_CLASSES_PATH);
-        if (!classesToRegister.isEmpty()) {
-            return classesToRegister;
-        }
-        throw new RuntimeException("Flamingock: No valid reflection file found");
+    private FileUtil() {
     }
 
-    private static List<String> fromFile(String filePath) {
+    /**
+     * Read a classpath resource as a list of lines. Returns an empty list when the resource
+     * is missing — used by the SPI walk to tolerate modules that legitimately produce no
+     * reflection classes (e.g. a Flamingock-aware module with only template-based changes).
+     */
+    static List<String> fromFile(String filePath) {
         ClassLoader classLoader = RegistrationFeature.class.getClassLoader();
-
         try (InputStream inputStream = classLoader.getResourceAsStream(filePath)) {
             if (inputStream == null) {
                 return Collections.emptyList();
             }
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                 return reader.lines().collect(Collectors.toList());
             }
-
         } catch (IOException e) {
             throw new RuntimeException(String.format("Error reading file `%s`", filePath), e);
         }

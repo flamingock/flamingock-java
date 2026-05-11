@@ -24,7 +24,7 @@ import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
@@ -112,8 +112,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.FAILED, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -145,8 +145,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -178,8 +178,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SEPARATE_NO_MARKER, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -211,8 +211,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -244,8 +244,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLBACK_FAILED, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -293,8 +293,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -324,8 +324,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SEPARATE_NO_MARKER, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -355,8 +355,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -465,8 +465,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(changeClass, Collections.emptyList())
                     )
@@ -499,8 +499,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(changeClass, Collections.emptyList())
                     )

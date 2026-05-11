@@ -17,7 +17,7 @@ package io.flamingock.common.test.pipeline;
 
 import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -43,8 +43,8 @@ public class PipelineTestHelper {
 
     public static void testWithMockedPipeline(List<ChangeTestDefinition> changeTestDefinitions,
                       Runnable testOperation) {
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(changeTestDefinitions)
             );
             testOperation.run();

@@ -82,6 +82,11 @@ public class CodePreviewChange extends AbstractPreviewChange {
 
     @Transient
     public String getSourcePackage() {
+        if (sourcePackage == null) {
+            // Lazily derive from sourceClassPath when missing — happens after Jackson
+            // deserialization (constructor is bypassed, field-level @Transient skips serialization).
+            sourcePackage = extractSourcePackage(getSource());
+        }
         return sourcePackage;
     }
 

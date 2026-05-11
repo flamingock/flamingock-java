@@ -22,7 +22,7 @@ import io.flamingock.core.e2e.changes._009__TargetSystemIdInjectionChange;
 import io.flamingock.core.e2e.helpers.Counter;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.core.external.targets.TargetSystemManager;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.junit.jupiter.api.DisplayName;
@@ -53,8 +53,8 @@ class BuilderE2ETest {
         NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka")
                 .addDependency(counter);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(
                                     _008__TargetSystemManagerInjectionChange.class,
@@ -92,8 +92,8 @@ class BuilderE2ETest {
         NonTransactionalTargetSystem targetSystem = new NonTransactionalTargetSystem("kafka")
                 .addDependency(counter);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(
                                     _009__TargetSystemIdInjectionChange.class,

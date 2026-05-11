@@ -18,7 +18,7 @@ package io.flamingock.core.kit.audit;
 import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.core.kit.TestKit;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -114,9 +114,9 @@ public class AuditTestSupport {
             throw new IllegalStateException("Test code must be configured");
         }
         
-        try (MockedStatic<Deserializer> mockedDeserializer = Mockito.mockStatic(Deserializer.class)) {
-            // Set up the Deserializer mock with the configured changes
-            mockedDeserializer.when(Deserializer::readMetadataFromFile)
+        try (MockedStatic<MetadataLoader> mockedLoader = Mockito.mockStatic(MetadataLoader.class)) {
+            // Set up the loader mock with the configured changes — bypasses ServiceLoader at runtime.
+            mockedLoader.when(MetadataLoader::loadAggregated)
                 .thenReturn(PipelineTestHelper.getPreviewPipeline(changes));
             
             // Execute the test code

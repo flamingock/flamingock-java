@@ -17,7 +17,7 @@ package io.flamingock.core.cli;
 
 import io.flamingock.internal.common.core.metadata.BuilderProviderInfo;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.core.builder.AbstractChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.runner.Runner;
 
@@ -43,7 +43,7 @@ public class FlamingockCliMainEntryPoint {
     public static void main(String[] args) {
         try {
             // 1. Load metadata using existing Deserializer
-            FlamingockMetadata metadata = Deserializer.readMetadataFromFile();
+            FlamingockMetadata metadata = MetadataLoader.loadAggregated();
 
             // 2. Validate builder provider is configured (both class and method must be present)
             if (!metadata.hasValidBuilderProvider()) {

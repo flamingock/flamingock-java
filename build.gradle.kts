@@ -1,3 +1,6 @@
+import io.flamingock.build.VersionManager
+import io.flamingock.build.PrintVersionTask
+
 buildscript {
     repositories {
         mavenCentral()
@@ -16,13 +19,14 @@ plugins {
 
 allprojects {
     group = "io.flamingock"
-    version = "1.3.0-SNAPSHOT"
+    val declaredVersion = "1.3.0-SNAPSHOT"
+    version = VersionManager.resolveVersion(declaredVersion, project.hasProperty("release"))
 
     extra["generalUtilVersion"] = "1.5.3"
-    extra["templateApiVersion"] = "1.3.3"
-    extra["coreApiVersion"] = "1.3.2"
-    extra["sqlVersion"] = "1.3.1"
-    extra["mongodbTemplateVersion"] = "1.3.1"
+    extra["templateApiVersion"] = "1.3.4"
+    extra["coreApiVersion"] = "1.3.3"
+    extra["sqlVersion"] = "1.3.2"
+    extra["mongodbTemplateVersion"] = "1.3.2"
 
     repositories {
         mavenLocal()
@@ -36,3 +40,5 @@ subprojects {
         apply(plugin = "flamingock.release-management")
     }
 }
+
+tasks.register<PrintVersionTask>("printVersion")
