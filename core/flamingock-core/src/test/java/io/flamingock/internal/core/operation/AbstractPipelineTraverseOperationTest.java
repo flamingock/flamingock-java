@@ -26,6 +26,7 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.util.id.RunnerId;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class AbstractPipelineTraverseOperationTest {
@@ -48,7 +49,7 @@ class AbstractPipelineTraverseOperationTest {
         ExecutionPlan abortPlan = ExecutionPlan.ABORT(Collections.singletonList(stage));
 
         ExecutionPlanner planner = mock(ExecutionPlanner.class);
-        when(planner.getNextExecution(anyList())).thenReturn(abortPlan);
+        when(planner.getNextExecution(any(PipelineRun.class))).thenReturn(abortPlan);
 
         LoadedPipeline pipeline = mockPipeline();
         ExecuteApplyOperation operation = buildOperation(planner);
@@ -67,7 +68,7 @@ class AbstractPipelineTraverseOperationTest {
         ExecutionPlan abortPlan = ExecutionPlan.ABORT(Collections.singletonList(stage));
 
         ExecutionPlanner planner = mock(ExecutionPlanner.class);
-        when(planner.getNextExecution(anyList())).thenReturn(abortPlan);
+        when(planner.getNextExecution(any(PipelineRun.class))).thenReturn(abortPlan);
 
         StageExecutor stageExecutor = mock(StageExecutor.class);
         LoadedPipeline pipeline = mockPipeline();

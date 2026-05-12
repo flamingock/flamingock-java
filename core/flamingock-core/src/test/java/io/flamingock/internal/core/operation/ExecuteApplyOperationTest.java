@@ -156,6 +156,7 @@ class ExecuteApplyOperationTest {
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
+        when(loadedStage.getName()).thenReturn("stage-1");
         when(loadedStage.getChanges()).thenReturn(Collections.singletonList(loadedChange));
         when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
 
