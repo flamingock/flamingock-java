@@ -36,6 +36,7 @@ import io.flamingock.internal.core.external.targets.mark.TargetSystemAuditMarker
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.DefaultLoadedStage;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.core.cloud.changes._001__CloudChange1;
@@ -110,7 +111,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
 
-        ExecutionPlan plan = planner.getNextExecution(stages);
+        ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(stages));
 
         assertTrue(plan.isAborted());
         assertThrows(ManualInterventionRequiredException.class, plan::validate);
@@ -131,7 +132,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
 
-        ExecutionPlan plan = planner.getNextExecution(stages);
+        ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(stages));
 
         assertTrue(plan.isAborted());
         assertThrows(io.flamingock.internal.common.core.error.FlamingockException.class, plan::validate);
@@ -163,7 +164,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
 
-        planner.getNextExecution(stages);
+        planner.getNextExecution(PipelineRun.of(stages));
 
         ArgumentCaptor<ExecutionPlanRequest> requestCaptor = ArgumentCaptor.forClass(ExecutionPlanRequest.class);
         verify(client).createExecution(requestCaptor.capture(), any(), anyLong());
@@ -191,7 +192,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
 
-        planner.getNextExecution(stages);
+        planner.getNextExecution(PipelineRun.of(stages));
 
         ArgumentCaptor<ExecutionPlanRequest> requestCaptor = ArgumentCaptor.forClass(ExecutionPlanRequest.class);
         verify(client).createExecution(requestCaptor.capture(), any(), anyLong());
@@ -221,7 +222,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
 
-        planner.getNextExecution(stages);
+        planner.getNextExecution(PipelineRun.of(stages));
 
         verify(marker1).clearMark(change1.getId());
         verify(marker2).clearMark(change2.getId());
@@ -243,7 +244,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
 
-        planner.getNextExecution(stages);
+        planner.getNextExecution(PipelineRun.of(stages));
 
         verify(marker1, never()).clearMark(any());
     }
@@ -264,7 +265,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Collections.singletonList(change1)));
 
-        planner.getNextExecution(stages);
+        planner.getNextExecution(PipelineRun.of(stages));
 
         verify(marker1).clearMark(change1.getId());
     }
@@ -286,7 +287,7 @@ class CloudExecutionPlannerTest {
         List<AbstractLoadedStage> stages = Collections.singletonList(
                 new DefaultLoadedStage("stage-1", StageType.DEFAULT, Arrays.asList(change1, change2)));
 
-        planner.getNextExecution(stages);
+        planner.getNextExecution(PipelineRun.of(stages));
 
         // Only change1 should be cleared (was in snapshot), not change2
         verify(marker1).clearMark(change1.getId());

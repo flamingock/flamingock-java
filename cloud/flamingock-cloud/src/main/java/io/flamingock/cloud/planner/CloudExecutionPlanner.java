@@ -35,6 +35,7 @@ import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.LockException;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -78,7 +79,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
+    public ExecutionPlan getNextExecution(PipelineRun pipelineRun) throws LockException {
+        List<AbstractLoadedStage> loadedStages = pipelineRun.getLoadedStages();
 
         AuditMarkSnapshot snapshot = buildAuditMarkSnapshot();
 

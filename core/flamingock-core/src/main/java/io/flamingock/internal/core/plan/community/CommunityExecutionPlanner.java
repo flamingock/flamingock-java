@@ -31,6 +31,7 @@ import io.flamingock.internal.core.external.store.lock.LockException;
 import io.flamingock.internal.core.external.store.lock.LockRefreshDaemon;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
@@ -114,12 +115,15 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      * <p><b>Error Handling:</b> If any exception occurs after acquiring the lock, the lock is released
      * in the catch block to prevent lock leaks.</p>
      *
-     * @param loadedStages the list of loaded stages containing all defined changes
+     * @param pipelineRun the in-flight run aggregate; this implementation reads the loaded
+     *                    stages from it ({@code pipelineRun.getLoadedStages()}) and does not
+     *                    yet consult per-stage state (deferred to a later phase)
      * @return ExecutionPlan containing either stages to execute (with lock held) or CONTINUE (no lock)
      * @throws LockException if unable to acquire the distributed lock within the configured timeout
      */
     @Override
-    public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
+    public ExecutionPlan getNextExecution(PipelineRun pipelineRun) throws LockException {
+        List<AbstractLoadedStage> loadedStages = pipelineRun.getLoadedStages();
         Map<String, AuditEntry> initialSnapshot = auditReader.getAuditSnapshotByChangeId();
         logger.debug("Pulled initial remote state:\n{}", initialSnapshot);
 
@@ -139,6 +143,8 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
             Map<String, AuditEntry> validatedSnapshot = auditReader.getAuditSnapshotByChangeId();
 
             List<ExecutableStage> validatedStages = buildExecutableStages(loadedStages, validatedSnapshot);
+
+            //TODO add hasManualInterventionChanges here too, after lock acquisition
 
             Optional<ExecutableStage> nextStageOpt = getFirstExecutableStage(validatedStages);
 

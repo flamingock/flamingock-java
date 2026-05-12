@@ -18,9 +18,7 @@ package io.flamingock.internal.core.operation;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.error.PendingChangesException;
-import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
-import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.PipelineFailedEvent;
@@ -30,7 +28,6 @@ import io.flamingock.internal.core.event.model.impl.StageFailedEvent;
 import io.flamingock.internal.core.event.model.impl.StageStartedEvent;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
 import io.flamingock.internal.core.operation.execute.ExecuteResult;
-import io.flamingock.internal.core.operation.result.ExecutionResultBuilder;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.ExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
@@ -38,6 +35,7 @@ import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.Lock;
@@ -96,7 +94,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         } catch (OperationException operationException) {
             throw operationException;
         } catch (Throwable throwable) {
-            throw processAndGetFlamingockException(throwable, null);
+            throw processAndGetFlamingockException(throwable);
         } finally {
             this.finalizer.run();
         }
@@ -122,11 +120,13 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         logger.info("Flamingock execution started [stages={} changes={}]", stageCount, changeCount);
 
         eventPublisher.publish(new PipelineStartedEvent());
-        ExecutionResultBuilder resultBuilder = new ExecutionResultBuilder().startTimer();
+
+        PipelineRun pipelineRun = PipelineRun.of(pipeline);
+        pipelineRun.start();
 
         do {
-            List<AbstractLoadedStage> stages = validateAndGetExecutableStages(pipeline);
-            try (ExecutionPlan execution = executionPlanner.getNextExecution(stages)) {
+            validateAndGetExecutableStages(pipeline);
+            try (ExecutionPlan execution = executionPlanner.getNextExecution(pipelineRun)) {
                 // Validate execution plan for manual intervention requirements
                 // This centralized validation ensures both community and cloud paths are validated
                 execution.validate();
@@ -135,10 +135,8 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
                     if (validateOnlyMode()) {
                         throw new PendingChangesException();
                     }
-                    execution.applyOnEach((executionId, lock, executableStage) -> {
-                        StageResult stageResult = runStage(executionId, lock, executableStage);
-                        resultBuilder.addStage(stageResult);
-                    });
+                    execution.applyOnEach((executionId, lock, executableStage) ->
+                            runStage(executionId, lock, executableStage, pipelineRun));
                 } else {
                     break;
                 }
@@ -154,15 +152,24 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
                 }
                 break;
             } catch (StageExecutionException e) {
-                resultBuilder.addStage(e.getResult());
-                resultBuilder.stopTimer().failed();
-                resultBuilder.error(ErrorInfo.fromThrowable(e.getCause(), e.getFailedChangeId(), e.getResult().getStageId()));
-                throw OperationException.fromExisting(e.getCause(), resultBuilder.build());
+                // Defensive: runStage normally records the failure into pipelineRun before
+                // rethrowing. If for some reason this exception arrives here without that
+                // having happened (e.g. thrown by something other than runStage), make sure
+                // the failure is reflected in the response.
+                String stageName = e.getResult() != null ? e.getResult().getStageName() : null;
+                if (stageName != null) {
+                    io.flamingock.internal.core.pipeline.run.StageRun stageRun = pipelineRun.getStageRun(stageName);
+                    if (stageRun != null && !stageRun.getState().isFailed()) {
+                        pipelineRun.markStageFailed(stageName, e);
+                    }
+                }
+                pipelineRun.stop();
+                throw OperationException.fromExisting(e.getCause(), pipelineRun.toResponse());
             }
         } while (true);
 
-        resultBuilder.stopTimer().success();
-        ExecuteResponseData result = resultBuilder.build();
+        pipelineRun.stop();
+        ExecuteResponseData result = pipelineRun.toResponse();
 
         logger.info("Flamingock execution completed [duration={}ms applied={} skipped={}]",
                 result.getTotalDurationMs(), result.getAppliedChanges(), result.getSkippedChanges());
@@ -172,29 +179,31 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         return result;
     }
 
-    private StageResult runStage(String executionId, Lock lock, ExecutableStage executableStage) {
+    private void runStage(String executionId, Lock lock, ExecutableStage executableStage, PipelineRun pipelineRun) {
         try {
-            return startStage(executionId, lock, executableStage);
+            startStage(executionId, lock, executableStage, pipelineRun);
         } catch (StageExecutionException exception) {
+            pipelineRun.markStageFailed(executableStage.getName(), exception);
             eventPublisher.publish(new StageFailedEvent(exception));
             eventPublisher.publish(new PipelineFailedEvent(exception));
             throw exception;
         } catch (Throwable generalException) {
-            throw processAndGetFlamingockException(generalException, null);
+            throw processAndGetFlamingockException(generalException);
         }
     }
 
-    private StageResult startStage(String executionId, Lock lock, ExecutableStage executableStage) throws StageExecutionException {
+    private void startStage(String executionId, Lock lock, ExecutableStage executableStage, PipelineRun pipelineRun) throws StageExecutionException {
+        pipelineRun.markStageStarted(executableStage.getName());
         eventPublisher.publish(new StageStartedEvent());
         logger.debug("Applied state to process:\n{}", executableStage);
 
         ExecutionContext executionContext = new ExecutionContext(executionId, orphanExecutionContext.getHostname(), orphanExecutionContext.getMetadata());
         StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock);
+        pipelineRun.markStageCompleted(executableStage.getName(), executionOutput.getResult());
         eventPublisher.publish(new StageCompletedEvent(executionOutput));
-        return executionOutput.getResult();
     }
 
-    private FlamingockException processAndGetFlamingockException(Throwable exception, ExecutionResultBuilder resultBuilder) throws FlamingockException {
+    private FlamingockException processAndGetFlamingockException(Throwable exception) throws FlamingockException {
         FlamingockException flamingockException;
         if (exception instanceof OperationException) {
             OperationException pipelineException = (OperationException) exception;
