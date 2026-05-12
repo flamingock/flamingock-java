@@ -21,7 +21,6 @@ import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
 import io.flamingock.internal.core.operation.execute.ExecuteResult;
 import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
-import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
@@ -137,10 +136,7 @@ class ValidateApplyOperationTest {
         ExecutableStage executableStage = mock(ExecutableStage.class);
         doReturn(pendingChanges).when(executableStage).getChanges();
 
-        ExecutablePipeline executablePipeline = mock(ExecutablePipeline.class);
-        when(executablePipeline.getExecutableStages()).thenReturn(Collections.singletonList(executableStage));
-
-        ExecutionPlan executionPlan = mockPendingPlan(executablePipeline);
+        ExecutionPlan executionPlan = mockPendingPlan(Collections.singletonList(executableStage));
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
@@ -174,10 +170,10 @@ class ValidateApplyOperationTest {
      * Creates an ExecutionPlan mock where execution is required
      * (i.e., there are pending changes) and the pipeline exposes the given executable stages.
      */
-    private ExecutionPlan mockPendingPlan(ExecutablePipeline executablePipeline) {
+    private ExecutionPlan mockPendingPlan(List<ExecutableStage> stages) {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(true);
-        when(plan.getPipeline()).thenReturn(executablePipeline);
+        when(plan.getExecutableStages()).thenReturn(stages);
         doNothing().when(plan).validate();
         doNothing().when(plan).close();
         return plan;

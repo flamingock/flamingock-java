@@ -17,7 +17,6 @@ package io.flamingock.internal.core.plan;
 
 import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.external.store.lock.Lock;
-import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.common.core.error.FlamingockException;
@@ -49,7 +48,7 @@ public class ExecutionPlan implements AutoCloseable {
 
     private final Lock lock;
 
-    private final ExecutablePipeline pipeline;
+    private final List<ExecutableStage> executableStages;
 
     private final boolean aborted;
 
@@ -65,7 +64,7 @@ public class ExecutionPlan implements AutoCloseable {
         this.executionId = executionId;
         this.lock = lock;
         this.aborted = aborted;
-        this.pipeline = new ExecutablePipeline(stages);
+        this.executableStages = stages;
     }
 
     public boolean isAborted() {
@@ -73,17 +72,16 @@ public class ExecutionPlan implements AutoCloseable {
     }
 
     public boolean isExecutionRequired() {
-        return !aborted && pipeline.isExecutionRequired();
+        return !aborted && executableStages.stream().anyMatch(ExecutableStage::isExecutionRequired);
     }
 
-    public ExecutablePipeline getPipeline() {
-        return pipeline;
+    public List<ExecutableStage> getExecutableStages() {
+        return executableStages;
     }
 
     public void applyOnEach(TriConsumer<String, Lock, ExecutableStage> consumer) {
         if (isExecutionRequired()) {
-            pipeline.getExecutableStages()
-                    .forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
+            executableStages.forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
         }
     }
 
@@ -105,7 +103,7 @@ public class ExecutionPlan implements AutoCloseable {
         String firstStageName = "unknown";
         boolean hasStages = false;
 
-        for (ExecutableStage stage : pipeline.getExecutableStages()) {
+        for (ExecutableStage stage : executableStages) {
             if (!hasStages) {
                 firstStageName = stage.getName();
                 hasStages = true;
