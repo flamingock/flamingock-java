@@ -15,23 +15,33 @@
  */
 package io.flamingock.internal.common.core.response.data;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Contains error information when an execution fails.
+ *
+ * <p>{@code changeIds} carries the change identifiers associated with the error. It may be
+ * empty (e.g., lock or validate-time failures with no specific change), a single id (most
+ * stage-level failures), or several (e.g., a stage blocked by manual intervention because
+ * multiple changes need recovery).
  */
 public class ErrorInfo {
 
     private String errorType;
     private String message;
-    private String changeId;
+    private List<String> changeIds;
     private String stageId;
 
     public ErrorInfo() {
+        this.changeIds = new ArrayList<>();
     }
 
-    public ErrorInfo(String errorType, String message, String changeId, String stageId) {
+    public ErrorInfo(String errorType, String message, List<String> changeIds, String stageId) {
         this.errorType = errorType;
         this.message = message;
-        this.changeId = changeId;
+        this.changeIds = changeIds != null ? changeIds : new ArrayList<>();
         this.stageId = stageId;
     }
 
@@ -51,12 +61,12 @@ public class ErrorInfo {
         this.message = message;
     }
 
-    public String getChangeId() {
-        return changeId;
+    public List<String> getChangeIds() {
+        return changeIds;
     }
 
-    public void setChangeId(String changeId) {
-        this.changeId = changeId;
+    public void setChangeIds(List<String> changeIds) {
+        this.changeIds = changeIds != null ? changeIds : new ArrayList<>();
     }
 
     public String getStageId() {
@@ -68,11 +78,13 @@ public class ErrorInfo {
     }
 
     /**
-     * Creates an ErrorInfo from a Throwable.
+     * Creates an ErrorInfo from a Throwable. Pass {@link Collections#emptyList()} when no
+     * specific change is associated with the failure, or {@link Collections#singletonList(Object)}
+     * for single-change cases.
      */
-    public static ErrorInfo fromThrowable(Throwable throwable, String changeId, String stageId) {
+    public static ErrorInfo fromThrowable(Throwable throwable, List<String> changeIds, String stageId) {
         String errorType = throwable.getClass().getSimpleName();
         String message = throwable.getMessage();
-        return new ErrorInfo(errorType, message, changeId, stageId);
+        return new ErrorInfo(errorType, message, changeIds, stageId);
     }
 }

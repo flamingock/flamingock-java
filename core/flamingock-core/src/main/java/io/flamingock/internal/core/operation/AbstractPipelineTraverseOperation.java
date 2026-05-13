@@ -141,7 +141,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
                     break;
                 }
             } catch (LockException exception) {
-
+                pipelineRun.markPipelineFailed(exception);
                 eventPublisher.publish(new StageFailedEvent(exception));
                 eventPublisher.publish(new PipelineFailedEvent(exception));
                 if (throwExceptionIfCannotObtainLock) {
@@ -165,6 +165,20 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
                 }
                 pipelineRun.stop();
                 throw OperationException.fromExisting(e.getCause(), pipelineRun.toResponse());
+            } catch (ManualInterventionRequiredException miEx) {
+                // Per-stage attribution: each RecoveryIssue is mapped to its owning stage and that
+                // stage's state becomes BLOCKED_MANUAL_INTERVENTION with the subset of issues
+                // affecting it. The blocked stages carry their own ErrorInfo, so no pipeline-level
+                // mark is needed.
+                pipelineRun.markStagesBlockedFromMI(miEx);
+                throw miEx;
+            } catch (FlamingockException e) {
+                // Validate-time exceptions (aborted FlamingockException, PendingChangesException)
+                // and any FlamingockException that bubbles up from runStage's generic-throwable
+                // handler. Stage-level failures (if any) have already been recorded; pipeline-level
+                // marking is idempotent (first-wins) and toResponse() keeps the stage error as primary.
+                pipelineRun.markPipelineFailed(e);
+                throw e;
             }
         } while (true);
 
@@ -188,6 +202,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
             eventPublisher.publish(new PipelineFailedEvent(exception));
             throw exception;
         } catch (Throwable generalException) {
+            pipelineRun.markStageFailed(executableStage.getName(), generalException);
             throw processAndGetFlamingockException(generalException);
         }
     }
@@ -203,7 +218,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         eventPublisher.publish(new StageCompletedEvent(executionOutput));
     }
 
-    private FlamingockException processAndGetFlamingockException(Throwable exception) throws FlamingockException {
+private FlamingockException processAndGetFlamingockException(Throwable exception) throws FlamingockException {
         FlamingockException flamingockException;
         if (exception instanceof OperationException) {
             OperationException pipelineException = (OperationException) exception;
