@@ -25,6 +25,7 @@ import io.flamingock.internal.core.external.store.lock.LockAcquisition;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +79,7 @@ class CommunityExecutionPlannerTest {
         snapshot.put("change-1", buildAuditEntry("change-1", AuditEntry.Status.FAILED, AuditTxType.NON_TX));
         when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
 
-        ExecutionPlan plan = planner.getNextExecution(Collections.singletonList(stage));
+        ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(Collections.singletonList(stage)));
 
         assertTrue(plan.isAborted());
         verify(lockService, never()).upsert(any(), any(), anyLong());
@@ -94,7 +95,7 @@ class CommunityExecutionPlannerTest {
         when(lockService.upsert(any(), any(), anyLong()))
                 .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
 
-        ExecutionPlan plan = planner.getNextExecution(Collections.singletonList(stage));
+        ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(Collections.singletonList(stage)));
 
         assertFalse(plan.isAborted());
         assertTrue(plan.isExecutionRequired());
@@ -111,7 +112,7 @@ class CommunityExecutionPlannerTest {
         snapshot.put("change-1", buildAuditEntry("change-1", AuditEntry.Status.APPLIED, null));
         when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
 
-        ExecutionPlan plan = planner.getNextExecution(Collections.singletonList(stage));
+        ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(Collections.singletonList(stage)));
 
         assertFalse(plan.isAborted());
         assertFalse(plan.isExecutionRequired());
