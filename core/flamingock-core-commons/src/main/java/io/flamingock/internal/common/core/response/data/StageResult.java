@@ -25,18 +25,19 @@ public class StageResult {
 
     private String stageId;
     private String stageName;
-    private StageStatus status;
+    private StageState state;
     private long durationMs;
     private List<ChangeResult> changes;
 
     public StageResult() {
         this.changes = new ArrayList<>();
+        this.state = StageState.NOT_STARTED;
     }
 
     private StageResult(Builder builder) {
         this.stageId = builder.stageId;
         this.stageName = builder.stageName;
-        this.status = builder.status;
+        this.state = builder.state != null ? builder.state : StageState.NOT_STARTED;
         this.durationMs = builder.durationMs;
         this.changes = builder.changes != null ? builder.changes : new ArrayList<>();
     }
@@ -57,12 +58,12 @@ public class StageResult {
         this.stageName = stageName;
     }
 
-    public StageStatus getStatus() {
-        return status;
+    public StageState getState() {
+        return state;
     }
 
-    public void setStatus(StageStatus status) {
-        this.status = status;
+    public void setState(StageState state) {
+        this.state = state;
     }
 
     public long getDurationMs() {
@@ -82,11 +83,11 @@ public class StageResult {
     }
 
     public boolean isFailed() {
-        return status == StageStatus.FAILED;
+        return state.isFailed();
     }
 
     public boolean isCompleted() {
-        return status == StageStatus.COMPLETED;
+        return state.isCompleted();
     }
 
     public int getAppliedCount() {
@@ -111,10 +112,23 @@ public class StageResult {
         return new Builder();
     }
 
+    /**
+     * Creates a builder pre-populated from an existing result (useful for transitions that
+     * preserve identity fields and tweak the state).
+     */
+    public static Builder builder(StageResult source) {
+        return new Builder()
+                .stageId(source.stageId)
+                .stageName(source.stageName)
+                .state(source.state)
+                .durationMs(source.durationMs)
+                .changes(new ArrayList<>(source.changes));
+    }
+
     public static class Builder {
         private String stageId;
         private String stageName;
-        private StageStatus status;
+        private StageState state;
         private long durationMs;
         private List<ChangeResult> changes = new ArrayList<>();
 
@@ -128,8 +142,8 @@ public class StageResult {
             return this;
         }
 
-        public Builder status(StageStatus status) {
-            this.status = status;
+        public Builder state(StageState state) {
+            this.state = state;
             return this;
         }
 

@@ -16,18 +16,21 @@
 package io.flamingock.internal.core.pipeline.run;
 
 import io.flamingock.internal.common.core.response.data.StageResult;
+import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
-
-import java.util.Optional;
 
 public class StageRun {
 
     private final AbstractLoadedStage loadedStage;
-    private StageState state = StageState.NOT_STARTED;
     private StageResult result;
 
     public StageRun(AbstractLoadedStage loadedStage) {
         this.loadedStage = loadedStage;
+        this.result = StageResult.builder()
+                .stageId(loadedStage.getName())
+                .stageName(loadedStage.getName())
+                .state(StageState.NOT_STARTED)
+                .build();
     }
 
     public String getName() {
@@ -38,16 +41,12 @@ public class StageRun {
         return loadedStage;
     }
 
+    public StageResult getResult() {
+        return result;
+    }
+
     public StageState getState() {
-        return state;
-    }
-
-    public Optional<StageResult> getResult() {
-        return Optional.ofNullable(result);
-    }
-
-    void setState(StageState state) {
-        this.state = state;
+        return result.getState();
     }
 
     void setResult(StageResult result) {

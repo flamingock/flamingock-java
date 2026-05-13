@@ -18,6 +18,7 @@ package io.flamingock.internal.core.operation;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.execute.ExecuteApplyOperation;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
@@ -51,7 +52,7 @@ class AbstractPipelineTraverseOperationTest {
         ExecutionPlanner planner = mock(ExecutionPlanner.class);
         when(planner.getNextExecution(any(PipelineRun.class))).thenReturn(abortPlan);
 
-        LoadedPipeline pipeline = mockPipeline();
+        LoadedPipeline pipeline = mockPipeline("change-1");
         ExecuteApplyOperation operation = buildOperation(planner);
 
         ManualInterventionRequiredException ex = assertThrows(
@@ -95,9 +96,19 @@ class AbstractPipelineTraverseOperationTest {
         );
     }
 
-    private static LoadedPipeline mockPipeline() {
+    private static LoadedPipeline mockPipeline(String... loadedChangeIds) {
+        AbstractLoadedStage loadedStage = mock(AbstractLoadedStage.class);
+        when(loadedStage.getName()).thenReturn("stage-1");
+        java.util.List<AbstractLoadedChange> loadedChanges = new java.util.ArrayList<>();
+        for (String id : loadedChangeIds) {
+            AbstractLoadedChange ch = mock(AbstractLoadedChange.class);
+            when(ch.getId()).thenReturn(id);
+            loadedChanges.add(ch);
+        }
+        when(loadedStage.getChanges()).thenReturn(loadedChanges);
+
         LoadedPipeline pipeline = mock(LoadedPipeline.class);
-        when(pipeline.getStages()).thenReturn(Collections.singletonList(mock(AbstractLoadedStage.class)));
+        when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         doNothing().when(pipeline).validate();
         return pipeline;

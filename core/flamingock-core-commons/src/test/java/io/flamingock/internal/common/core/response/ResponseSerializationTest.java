@@ -23,7 +23,7 @@ import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
-import io.flamingock.internal.common.core.response.data.StageStatus;
+import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.util.JsonObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -71,7 +71,7 @@ class ResponseSerializationTest {
                 .addStage(StageResult.builder()
                         .stageId("stage-1")
                         .stageName("Stage One")
-                        .status(StageStatus.COMPLETED)
+                        .state(StageState.COMPLETED)
                         .durationMs(500)
                         .addChange(ChangeResult.builder()
                                 .changeId("change-001")
@@ -97,7 +97,7 @@ class ResponseSerializationTest {
         assertEquals(0, deserialized.getFailedChanges());
         assertEquals(1, deserialized.getStages().size());
         assertEquals("stage-1", deserialized.getStages().get(0).getStageId());
-        assertEquals(StageStatus.COMPLETED, deserialized.getStages().get(0).getStatus());
+        assertTrue(deserialized.getStages().get(0).getState().isCompleted());
         assertEquals(1, deserialized.getStages().get(0).getChanges().size());
         assertEquals("change-001", deserialized.getStages().get(0).getChanges().get(0).getChangeId());
     }

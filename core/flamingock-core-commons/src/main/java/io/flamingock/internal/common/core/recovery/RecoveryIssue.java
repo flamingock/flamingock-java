@@ -15,16 +15,20 @@
  */
 package io.flamingock.internal.common.core.recovery;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents a recovery issue that requires manual intervention during pipeline execution.
  * This domain object is specifically designed for recovery scenarios and avoids the
  * inappropriate use of audit-specific objects for recovery purposes.
  */
 public class RecoveryIssue {
-    
+
     private final String changeId;
-    
-    public RecoveryIssue(String changeId) {
+
+    @JsonCreator
+    public RecoveryIssue(@JsonProperty("changeId") String changeId) {
         this.changeId = changeId;
     }
     

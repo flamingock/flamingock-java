@@ -19,7 +19,7 @@ import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
-import io.flamingock.internal.common.core.response.data.StageStatus;
+import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.execute.ExecuteApplyOperation;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
@@ -173,7 +173,7 @@ class ExecuteApplyOperationTest {
         StageResult.Builder builder = StageResult.builder()
                 .stageId(stageId)
                 .stageName(stageId)
-                .status(StageStatus.COMPLETED)
+                .state(StageState.COMPLETED)
                 .durationMs(100);
 
         for (int i = 0; i < applied; i++) {
@@ -198,7 +198,7 @@ class ExecuteApplyOperationTest {
         return StageResult.builder()
                 .stageId(stageId)
                 .stageName(stageId)
-                .status(StageStatus.FAILED)
+                .state(StageState.failed(null))
                 .durationMs(50)
                 .addChange(ChangeResult.builder()
                         .changeId(failedChangeId)

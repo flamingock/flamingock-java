@@ -15,13 +15,16 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
+import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
-import io.flamingock.internal.common.core.response.data.StageStatus;
+import io.flamingock.internal.common.core.response.data.StageState;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
@@ -33,6 +36,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PipelineRun {
@@ -56,6 +60,7 @@ public class PipelineRun {
     private final Map<String, StageRun> byName;
     private Instant startedAt;
     private Instant stoppedAt;
+    private ErrorInfo pipelineError;
 
     private PipelineRun(List<StageRun> stageRuns) {
         this.stageRuns = Collections.unmodifiableList(stageRuns);
@@ -89,25 +94,90 @@ public class PipelineRun {
     }
 
     public void markStageStarted(String stageName) {
-        lookupOrThrow(stageName).setState(StageState.STARTED);
+        StageRun run = lookupOrThrow(stageName);
+        run.setResult(StageResult.builder(run.getResult())
+                .state(StageState.STARTED)
+                .build());
     }
 
     public void markStageCompleted(String stageName, StageResult result) {
-        StageRun run = lookupOrThrow(stageName);
-        run.setState(StageState.COMPLETED);
-        run.setResult(result);
+        // Incoming result from the executor already carries state=COMPLETED.
+        lookupOrThrow(stageName).setResult(result);
     }
 
     public void markStageFailed(String stageName, StageExecutionException exception) {
-        StageResult result = exception.getResult();
+        StageResult resultFromExecutor = exception.getResult();
         ErrorInfo errorInfo = ErrorInfo.fromThrowable(
                 exception.getCause(),
-                exception.getFailedChangeId(),
-                result.getStageId()
+                Collections.singletonList(exception.getFailedChangeId()),
+                resultFromExecutor.getStageId()
         );
         StageRun run = lookupOrThrow(stageName);
-        run.setState(StageState.failed(errorInfo));
-        run.setResult(result);
+        run.setResult(StageResult.builder(resultFromExecutor)
+                .state(StageState.failed(errorInfo))
+                .build());
+    }
+
+    /**
+     * Stage-scope failure for non-{@link StageExecutionException} Throwables (no enriched
+     * {@link StageResult} from the executor; we rebuild the existing one with a Failed state).
+     */
+    public void markStageFailed(String stageName, Throwable cause) {
+        StageRun run = lookupOrThrow(stageName);
+        ErrorInfo errorInfo = ErrorInfo.fromThrowable(cause, Collections.emptyList(), stageName);
+        run.setResult(StageResult.builder(run.getResult())
+                .state(StageState.failed(errorInfo))
+                .build());
+    }
+
+    /**
+     * Attributes a {@link ManualInterventionRequiredException} to its owning stages. Each
+     * {@link RecoveryIssue} is resolved to the stage that owns the change, and that stage's
+     * state becomes {@link StageState#blockedManualIntervention(String, List)} with the subset
+     * of issues that affect it.
+     *
+     * @throws IllegalStateException if any issue's changeId can't be resolved to a loaded
+     *         stage (signals a planner/loaded-stage inconsistency).
+     */
+    public void markStagesBlockedFromMI(ManualInterventionRequiredException exception) {
+        Map<String, List<RecoveryIssue>> issuesByStage = new LinkedHashMap<>();
+        for (RecoveryIssue issue : exception.getConflictingChanges()) {
+            String stageName = findStageForChange(issue.getChangeId());
+            issuesByStage.computeIfAbsent(stageName, k -> new ArrayList<>()).add(issue);
+        }
+        for (Map.Entry<String, List<RecoveryIssue>> entry : issuesByStage.entrySet()) {
+            StageRun run = lookupOrThrow(entry.getKey());
+            run.setResult(StageResult.builder(run.getResult())
+                    .state(StageState.blockedManualIntervention(entry.getKey(), entry.getValue()))
+                    .build());
+        }
+    }
+
+    private String findStageForChange(String changeId) {
+        for (StageRun stageRun : stageRuns) {
+            for (AbstractLoadedChange change : stageRun.getLoadedStage().getChanges()) {
+                if (changeId.equals(change.getId())) {
+                    return stageRun.getName();
+                }
+            }
+        }
+        throw new IllegalStateException(
+                "Cannot attribute manual-intervention issue: changeId '" + changeId
+                        + "' is not part of any loaded stage in this run. "
+                        + "This indicates a planner/loaded-stage inconsistency.");
+    }
+
+    /**
+     * Pipeline-wide failure marker. Idempotent: first call wins.
+     */
+    public void markPipelineFailed(Throwable cause) {
+        if (this.pipelineError == null) {
+            this.pipelineError = ErrorInfo.fromThrowable(cause, Collections.emptyList(), null);
+        }
+    }
+
+    public Optional<ErrorInfo> getPipelineError() {
+        return Optional.ofNullable(pipelineError);
     }
 
     private StageRun lookupOrThrow(String stageName) {
@@ -131,17 +201,19 @@ public class PipelineRun {
         boolean anyFailed = false;
 
         for (StageRun stageRun : stageRuns) {
-            StageResult stageResult = stageRun.getResult().orElse(null);
-            if (stageResult == null) {
-                continue;
-            }
+            StageResult stageResult = stageRun.getResult();
             stages.add(stageResult);
             totalStages++;
 
-            if (stageResult.getStatus() == StageStatus.COMPLETED) {
+            StageState state = stageResult.getState();
+            if (state.isCompleted()) {
                 completedStages++;
-            } else if (stageResult.getStatus() == StageStatus.FAILED) {
+            } else if (state.isFailed()) {
                 failedStages++;
+                anyFailed = true;
+                if (error == null) {
+                    error = state.getErrorInfo().orElse(null);
+                }
             }
 
             if (stageResult.getChanges() != null) {
@@ -156,16 +228,13 @@ public class PipelineRun {
                     }
                 }
             }
-
-            if (stageRun.getState().isFailed()) {
-                anyFailed = true;
-                if (error == null) {
-                    error = stageRun.getState().getErrorInfo().orElse(null);
-                }
-            }
         }
 
-        ExecutionStatus status = anyFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        if (error == null) {
+            error = this.pipelineError;
+        }
+        boolean pipelineFailed = anyFailed || this.pipelineError != null;
+        ExecutionStatus status = pipelineFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
         long durationMs = (startedAt != null && stoppedAt != null)
                 ? Duration.between(startedAt, stoppedAt).toMillis()
                 : 0L;
