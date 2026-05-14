@@ -38,8 +38,14 @@ import org.junit.jupiter.api.Test;
 
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.request.ChangeRequest;
+import io.flamingock.cloud.api.request.StageRequest;
+import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
+import io.flamingock.internal.common.core.response.data.StageResult;
+import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -202,13 +208,52 @@ class CloudExecutionPlanMapperTest {
         HashMap<String, TargetSystemAuditMarkType> ongoingStatusesMap = new HashMap<>();
         ongoingStatusesMap.put(change1.getId(), TargetSystemAuditMarkType.APPLIED);
 
-        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(loadedStages, 60000L, ongoingStatusesMap);
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
+                PipelineRun.of(loadedStages), 60000L, ongoingStatusesMap);
 
         Map<String, CloudTargetSystemAuditMarkType> marksByChangeId = request.getClientSubmission().getStages().get(0).getChanges().stream()
                 .collect(Collectors.toMap(ChangeRequest::getId, ChangeRequest::getOngoingStatus));
 
         assertEquals(CloudTargetSystemAuditMarkType.APPLIED, marksByChangeId.get(change1.getId()));
         assertEquals(CloudTargetSystemAuditMarkType.NONE, marksByChangeId.get(change2.getId()));
+    }
+
+    @Test
+    @DisplayName("Should map per-stage status from PipelineRun into StageRequest.status")
+    void shouldMapPerStageStatusFromPipelineRun() {
+        // change2 lives ONLY in stage-blocked so the MI exception resolves to that stage
+        // (markStagesBlockedFromMI maps recovery issues to the first stage whose changes match).
+        AbstractLoadedStage notStartedStage = buildStage("stage-not-started", change1);
+        AbstractLoadedStage completedStage = buildStage("stage-completed", change1);
+        AbstractLoadedStage failedStage = buildStage("stage-failed", change1);
+        AbstractLoadedStage blockedStage = buildStage("stage-blocked", change2);
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(
+                notStartedStage, completedStage, failedStage, blockedStage));
+
+        // Mark states explicitly.
+        pipelineRun.markStageCompleted("stage-completed",
+                StageResult.builder().stageId("stage-completed").stageName("stage-completed")
+                        .state(StageState.COMPLETED).build());
+        pipelineRun.markStageFailed("stage-failed", new RuntimeException("boom"));
+        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(
+                Collections.singletonList(new RecoveryIssue(change2.getId())), "stage-blocked");
+        pipelineRun.markStagesBlockedFromMI(miEx);
+
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
+                pipelineRun, 60000L, Collections.emptyMap());
+
+        // Plain loop because Collectors.toMap rejects null values; NOT_STARTED maps to null.
+        Map<String, CloudStageStatus> statusByName = new HashMap<>();
+        for (StageRequest stageRequest : request.getClientSubmission().getStages()) {
+            statusByName.put(stageRequest.getName(), stageRequest.getStatus());
+        }
+
+        // NOT_STARTED is encoded as null on the wire (back-compat: missing field == not started).
+        assertNull(statusByName.get("stage-not-started"));
+        assertEquals(CloudStageStatus.COMPLETED, statusByName.get("stage-completed"));
+        assertEquals(CloudStageStatus.FAILED, statusByName.get("stage-failed"));
+        assertEquals(CloudStageStatus.BLOCKED_MANUAL_INTERVENTION, statusByName.get("stage-blocked"));
     }
 
     private static DefaultLoadedStage buildStage(String name, AbstractLoadedChange... changes) {

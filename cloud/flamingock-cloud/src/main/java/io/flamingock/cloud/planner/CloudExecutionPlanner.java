@@ -94,7 +94,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         do {
             try {
                 logger.info("Requesting cloud execution plan - elapsed[{}ms]", counterPerGuid.getElapsed());
-                ExecutionPlanResponse response = createExecution(loadedStages, snapshot.getMarks(), lastOwnerGuid, counterPerGuid.getElapsed());
+                ExecutionPlanResponse response = createExecution(pipelineRun, snapshot.getMarks(), lastOwnerGuid, counterPerGuid.getElapsed());
                 logger.info("Obtained cloud execution plan: {}", response.getAction());
 
                 //TODO should check if it has the lock?
@@ -148,7 +148,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         } while (true);
     }
 
-    private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages,
+    private ExecutionPlanResponse createExecution(PipelineRun pipelineRun,
                                                   Collection<TargetSystemAuditMark> auditMarks,
                                                   String lastAcquisitionId,
                                                   long elapsedMillis) {
@@ -158,7 +158,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
         ExecutionPlanRequest requestBody = CloudExecutionPlanMapper.toRequest(
-                loadedStages,
+                pipelineRun,
                 coreConfiguration.getLockAcquiredForMillis(),
                 auditMarksMap);
 

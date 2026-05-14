@@ -119,8 +119,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      * @param pipelineRun the in-flight run aggregate; this implementation considers only the
      *                    stages still eligible for planning — i.e., it excludes stages whose
      *                    state has reached a terminal failed shape
-     *                    ({@link io.flamingock.internal.common.core.response.data.StageState.Failed}
-     *                    or its subclass {@code BlockedForMI}). See
+     *                    ({@code StageState.Failed} or its subclass {@code BlockedForMI}). See
      *                    {@link #stagesEligibleForPlanning(PipelineRun)}.
      * @return ExecutionPlan containing either stages to execute (with lock held) or CONTINUE (no lock)
      * @throws LockException if unable to acquire the distributed lock within the configured timeout

@@ -315,7 +315,9 @@ public final class MockRunnerServerOld {
 
             ExecutionPlanResponse response = getExecutionPlanResponse(0);
             ExecutionPlanRequest request = getExecutionPlanRequest(0);
-            wireMockServer.stubFor(post(urlPathEqualTo(executionUrl)).withRequestBody(equalToJson(toJson(request))).willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
+            // ignoreArrayOrder=true, ignoreExtraElements=true — tolerate forward-compatible additions
+            // to the wire (e.g. StageRequest.status) without breaking pre-existing stubs.
+            wireMockServer.stubFor(post(urlPathEqualTo(executionUrl)).withRequestBody(equalToJson(toJson(request), true, true)).willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
 
         } else {
             String scenarioName = "Execution-plan-request";
@@ -331,7 +333,7 @@ public final class MockRunnerServerOld {
                     scenarioMappingBuilder.willSetStateTo("execution-state-" + (i + 1));
                 }
                 String json = toJson(request);
-                wireMockServer.stubFor(scenarioMappingBuilder.withRequestBody(equalToJson(json)).willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
+                wireMockServer.stubFor(scenarioMappingBuilder.withRequestBody(equalToJson(json, true, true)).willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
             }
         }
 
