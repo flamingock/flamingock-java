@@ -19,6 +19,8 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
@@ -100,6 +102,73 @@ class CommunityExecutionPlannerTest {
         assertFalse(plan.isAborted());
         assertTrue(plan.isExecutionRequired());
         verify(lockService).upsert(any(), any(), anyLong());
+    }
+
+    @Test
+    @DisplayName("Should skip stages already marked Failed in the run and plan only the remaining stages")
+    void shouldSkipFailedStagesAndPlanRemaining() {
+        AbstractLoadedChange change1 = mockLoadedChange("change-1");
+        AbstractLoadedChange change2 = mockLoadedChange("change-2");
+        AbstractLoadedStage stage1 = mockStage("stage-1", change1);
+        AbstractLoadedStage stage2 = mockStage("stage-2", change2);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(stage1, stage2));
+        pipelineRun.markStageFailed("stage-1", new RuntimeException("boom"));
+
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        // stage-1 was Failed → filtered before action-building. stage-2 was eligible → planned.
+        verify(stage1, never()).applyActions(any());
+        verify(stage2, atLeastOnce()).applyActions(any());
+    }
+
+    @Test
+    @DisplayName("Should skip stages in BlockedForMI (subtype of Failed) and plan only the remaining stages")
+    void shouldSkipBlockedForMIStagesAndPlanRemaining() {
+        AbstractLoadedChange change1 = mockLoadedChange("change-1");
+        AbstractLoadedChange change2 = mockLoadedChange("change-2");
+        AbstractLoadedStage stage1 = mockStage("stage-1", change1);
+        AbstractLoadedStage stage2 = mockStage("stage-2", change2);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(stage1, stage2));
+        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(
+                Collections.singletonList(new RecoveryIssue("change-1")), "stage-1");
+        pipelineRun.markStagesBlockedFromMI(miEx);
+
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        verify(stage1, never()).applyActions(any());
+        verify(stage2, atLeastOnce()).applyActions(any());
+    }
+
+    @Test
+    @DisplayName("Should return CONTINUE without acquiring lock when every remaining stage is already failed")
+    void shouldReturnContinueWhenAllRemainingStagesAreFailed() {
+        AbstractLoadedChange change = mockLoadedChange("change-1");
+        AbstractLoadedStage stage = mockStage("stage-1", change);
+
+        PipelineRun pipelineRun = PipelineRun.of(Collections.singletonList(stage));
+        pipelineRun.markStageFailed("stage-1", new RuntimeException("boom"));
+
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertFalse(plan.isExecutionRequired());
+        verify(lockService, never()).upsert(any(), any(), anyLong());
     }
 
     @Test

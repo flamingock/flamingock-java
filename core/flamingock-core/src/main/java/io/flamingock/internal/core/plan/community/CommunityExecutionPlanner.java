@@ -32,6 +32,7 @@ import io.flamingock.internal.core.external.store.lock.LockRefreshDaemon;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
+import io.flamingock.internal.core.pipeline.run.StageRun;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
@@ -115,15 +116,18 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      * <p><b>Error Handling:</b> If any exception occurs after acquiring the lock, the lock is released
      * in the catch block to prevent lock leaks.</p>
      *
-     * @param pipelineRun the in-flight run aggregate; this implementation reads the loaded
-     *                    stages from it ({@code pipelineRun.getLoadedStages()}) and does not
-     *                    yet consult per-stage state (deferred to a later phase)
+     * @param pipelineRun the in-flight run aggregate; this implementation considers only the
+     *                    stages still eligible for planning — i.e., it excludes stages whose
+     *                    state has reached a terminal failed shape
+     *                    ({@link io.flamingock.internal.common.core.response.data.StageState.Failed}
+     *                    or its subclass {@code BlockedForMI}). See
+     *                    {@link #stagesEligibleForPlanning(PipelineRun)}.
      * @return ExecutionPlan containing either stages to execute (with lock held) or CONTINUE (no lock)
      * @throws LockException if unable to acquire the distributed lock within the configured timeout
      */
     @Override
     public ExecutionPlan getNextExecution(PipelineRun pipelineRun) throws LockException {
-        List<AbstractLoadedStage> loadedStages = pipelineRun.getLoadedStages();
+        List<AbstractLoadedStage> loadedStages = stagesEligibleForPlanning(pipelineRun);
         Map<String, AuditEntry> initialSnapshot = auditReader.getAuditSnapshotByChangeId();
         logger.debug("Pulled initial remote state:\n{}", initialSnapshot);
 
@@ -174,6 +178,20 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
             lock.release();
             throw e;
         }
+    }
+
+    /**
+     * Returns the loaded stages this planner considers eligible to plan in the current iteration.
+     *
+     * <p>Today's policy: exclude any stage already in a terminal failed shape
+     * ({@code StageState.Failed} or its subclass {@code BlockedForMI}). Future evolution may
+     * narrow this (e.g., retry stages that failed with a recoverable cause).
+     */
+    private static List<AbstractLoadedStage> stagesEligibleForPlanning(PipelineRun pipelineRun) {
+        return pipelineRun.getStageRuns().stream()
+                .filter(stageRun -> !stageRun.getState().isFailed())
+                .map(StageRun::getLoadedStage)
+                .collect(Collectors.toList());
     }
 
     private Lock acquireLock() {
