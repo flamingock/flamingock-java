@@ -18,14 +18,9 @@ package io.flamingock.internal.core.plan;
 import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
-import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.recovery.action.ChangeAction;
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
-import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 
 import java.util.List;
-import java.util.ArrayList;
 
 public class ExecutionPlan implements AutoCloseable {
 
@@ -86,40 +81,14 @@ public class ExecutionPlan implements AutoCloseable {
     }
 
     /**
-     * Validates the execution plan.
-     * <p>
-     * Checks two conditions:
-     * <ol>
-     *   <li>If any changes require manual intervention, throws {@link ManualInterventionRequiredException}</li>
-     *   <li>If the plan is aborted (even without MI changes), throws {@link FlamingockException}
-     *       — the execution planner decided to abort for reasons beyond individual change state</li>
-     * </ol>
+     * Validates the execution plan. If the planner decided to abort the run for reasons beyond
+     * individual change state, throws {@link FlamingockException}.
      *
-     * @throws ManualInterventionRequiredException if any changes require manual intervention
-     * @throws FlamingockException if the plan is aborted without specific MI changes
+     * <p>Manual-intervention validation is no longer performed here: it is per-stage and lives in
+     * {@code ExecutableStage.validate()}, called inside the operation lambda so a single stage's
+     * MI state never aborts the rest of the pipeline.
      */
     public void validate() {
-        List<RecoveryIssue> recoveryIssues = new ArrayList<>();
-        String firstStageName = "unknown";
-        boolean hasStages = false;
-
-        for (ExecutableStage stage : executableStages) {
-            if (!hasStages) {
-                firstStageName = stage.getName();
-                hasStages = true;
-            }
-
-            for (ExecutableChange change : stage.getChanges()) {
-                if (change.getAction() == ChangeAction.MANUAL_INTERVENTION) {
-                    recoveryIssues.add(new RecoveryIssue(change.getId()));
-                }
-            }
-        }
-
-        if (!recoveryIssues.isEmpty()) {
-            throw new ManualInterventionRequiredException(recoveryIssues, firstStageName);
-        }
-
         if (aborted) {
             throw new FlamingockException("Execution aborted by the execution planner");
         }

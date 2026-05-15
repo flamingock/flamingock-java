@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
@@ -167,9 +166,9 @@ class PipelineRunToResponseTest {
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(alpha));
 
         pipelineRun.start();
-        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(
-                java.util.Arrays.asList(new RecoveryIssue("c1")), "alpha");
-        pipelineRun.markStagesBlockedFromMI(miEx);
+        pipelineRun.markStageBlockedFromMI(
+                "alpha",
+                java.util.Arrays.asList(new RecoveryIssue("c1")));
         pipelineRun.stop();
 
         ExecuteResponseData response = pipelineRun.toResponse();

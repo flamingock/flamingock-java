@@ -28,6 +28,7 @@ import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.cloud.api.vo.CloudAuditStatus;
 import io.flamingock.internal.core.external.store.lock.LockException;
+import io.flamingock.internal.core.operation.PipelineExecuteOperationException;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -202,9 +203,13 @@ public class CloudAuditPersistenceTest {
 
 
         //THEN
-        Assertions.assertTrue(exception instanceof LockException);
-        Assertions.assertTrue(exception.getMessage().startsWith("Quit trying to acquire the lock after"));
-        Assertions.assertTrue(exception.getMessage().endsWith("[ Maximum waiting millis reached: 375 ]"));
+        // LockException is now wrapped in PipelineExecuteOperationException so the response data
+        // travels with the failure; the original LockException is preserved as cause.
+        Assertions.assertTrue(exception instanceof PipelineExecuteOperationException);
+        Throwable cause = exception.getCause();
+        Assertions.assertTrue(cause instanceof LockException, "Expected LockException as cause, got: " + cause);
+        Assertions.assertTrue(cause.getMessage().startsWith("Quit trying to acquire the lock after"));
+        Assertions.assertTrue(cause.getMessage().endsWith("[ Maximum waiting millis reached: 375 ]"));
     }
 
 

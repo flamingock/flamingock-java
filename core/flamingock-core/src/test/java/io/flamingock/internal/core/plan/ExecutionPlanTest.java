@@ -16,7 +16,6 @@
 package io.flamingock.internal.core.plan;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
@@ -36,7 +35,7 @@ class ExecutionPlanTest {
     @DisplayName("ABORT plan should not require execution")
     void abortPlanShouldNotRequireExecution() {
         ExecutionPlan plan = ExecutionPlan.ABORT(Collections.singletonList(
-                stageWith(mockChange("change-1", ChangeAction.MANUAL_INTERVENTION))
+                stageWith(mockChange("change-1", ChangeAction.APPLY))
         ));
         assertFalse(plan.isExecutionRequired());
     }
@@ -49,27 +48,13 @@ class ExecutionPlanTest {
     }
 
     @Test
-    @DisplayName("ABORT plan with MANUAL_INTERVENTION changes should throw on validate")
-    void abortPlanShouldThrowOnValidateWhenManualInterventionChanges() {
-        ExecutionPlan plan = ExecutionPlan.ABORT(Collections.singletonList(
-                stageWith(
-                        mockChange("change-1", ChangeAction.APPLY),
-                        mockChange("change-2", ChangeAction.MANUAL_INTERVENTION)
-                )
-        ));
-        ManualInterventionRequiredException ex = assertThrows(
-                ManualInterventionRequiredException.class, plan::validate);
-        assertTrue(ex.getConflictingSummary().contains("change-2"));
-    }
-
-    @Test
-    @DisplayName("ABORT plan without MANUAL_INTERVENTION changes should throw FlamingockException on validate")
-    void abortPlanShouldThrowFlamingockExceptionWhenNoManualInterventionChanges() {
+    @DisplayName("ABORT plan should throw generic FlamingockException on validate")
+    void abortPlanShouldThrowFlamingockExceptionOnValidate() {
         ExecutionPlan plan = ExecutionPlan.ABORT(Collections.singletonList(
                 stageWith(mockChange("change-1", ChangeAction.APPLY))
         ));
         FlamingockException ex = assertThrows(FlamingockException.class, plan::validate);
-        assertFalse(ex instanceof ManualInterventionRequiredException);
+        assertEquals("Execution aborted by the execution planner", ex.getMessage());
     }
 
     @Test

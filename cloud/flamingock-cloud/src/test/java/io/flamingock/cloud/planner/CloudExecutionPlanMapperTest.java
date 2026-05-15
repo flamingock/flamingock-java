@@ -164,17 +164,18 @@ class CloudExecutionPlanMapperTest {
     }
 
     @Test
-    @DisplayName("Should throw ManualInterventionRequiredException when validate() is called on plan with MANUAL_INTERVENTION")
-    void shouldThrowManualInterventionOnValidate() {
+    @DisplayName("Should throw ManualInterventionRequiredException when ExecutableStage.validate() is called with a MANUAL_INTERVENTION change")
+    void shouldThrowManualInterventionOnStageValidate() {
         List<AbstractLoadedStage> loadedStages = Arrays.asList(buildStage("stage-1", change1));
         ExecutionPlanResponse response = buildResponse(
                 buildStageResponse("stage-1", 0, changeResponse(change1.getId(), CloudChangeAction.MANUAL_INTERVENTION))
         );
 
         List<ExecutableStage> stages = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
-        ExecutionPlan plan = ExecutionPlan.newExecution("exec-1", null, stages);
 
-        assertThrows(ManualInterventionRequiredException.class, plan::validate);
+        // MI is now a per-stage concern: ExecutableStage.validate() throws so the operation lambda
+        // can demote the stage to BlockedForMI without affecting the rest of the pipeline.
+        assertThrows(ManualInterventionRequiredException.class, stages.get(0)::validate);
     }
 
     @Test
@@ -236,9 +237,9 @@ class CloudExecutionPlanMapperTest {
                 StageResult.builder().stageId("stage-completed").stageName("stage-completed")
                         .state(StageState.COMPLETED).build());
         pipelineRun.markStageFailed("stage-failed", new RuntimeException("boom"));
-        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(
-                Collections.singletonList(new RecoveryIssue(change2.getId())), "stage-blocked");
-        pipelineRun.markStagesBlockedFromMI(miEx);
+        pipelineRun.markStageBlockedFromMI(
+                "stage-blocked",
+                Collections.singletonList(new RecoveryIssue(change2.getId())));
 
         ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
                 pipelineRun, 60000L, Collections.emptyMap());

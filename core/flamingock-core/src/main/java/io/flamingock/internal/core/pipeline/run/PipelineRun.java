@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
@@ -24,7 +23,6 @@ import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
-import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
@@ -131,40 +129,15 @@ public class PipelineRun {
     }
 
     /**
-     * Attributes a {@link ManualInterventionRequiredException} to its owning stages. Each
-     * {@link RecoveryIssue} is resolved to the stage that owns the change, and that stage's
-     * state becomes {@link StageState#blockedManualIntervention(String, List)} with the subset
-     * of issues that affect it.
-     *
-     * @throws IllegalStateException if any issue's changeId can't be resolved to a loaded
-     *         stage (signals a planner/loaded-stage inconsistency).
+     * Marks a single stage as blocked for manual intervention with its attributed recovery
+     * issues. Per-stage attribution: each stage owns its own MI state, so a single stage's
+     * BlockedForMI does not affect the rest of the pipeline.
      */
-    public void markStagesBlockedFromMI(ManualInterventionRequiredException exception) {
-        Map<String, List<RecoveryIssue>> issuesByStage = new LinkedHashMap<>();
-        for (RecoveryIssue issue : exception.getConflictingChanges()) {
-            String stageName = findStageForChange(issue.getChangeId());
-            issuesByStage.computeIfAbsent(stageName, k -> new ArrayList<>()).add(issue);
-        }
-        for (Map.Entry<String, List<RecoveryIssue>> entry : issuesByStage.entrySet()) {
-            StageRun run = lookupOrThrow(entry.getKey());
-            run.setResult(StageResult.builder(run.getResult())
-                    .state(StageState.blockedManualIntervention(entry.getKey(), entry.getValue()))
-                    .build());
-        }
-    }
-
-    private String findStageForChange(String changeId) {
-        for (StageRun stageRun : stageRuns) {
-            for (AbstractLoadedChange change : stageRun.getLoadedStage().getChanges()) {
-                if (changeId.equals(change.getId())) {
-                    return stageRun.getName();
-                }
-            }
-        }
-        throw new IllegalStateException(
-                "Cannot attribute manual-intervention issue: changeId '" + changeId
-                        + "' is not part of any loaded stage in this run. "
-                        + "This indicates a planner/loaded-stage inconsistency.");
+    public void markStageBlockedFromMI(String stageName, List<RecoveryIssue> issues) {
+        StageRun run = lookupOrThrow(stageName);
+        run.setResult(StageResult.builder(run.getResult())
+                .state(StageState.blockedManualIntervention(stageName, issues))
+                .build());
     }
 
     /**

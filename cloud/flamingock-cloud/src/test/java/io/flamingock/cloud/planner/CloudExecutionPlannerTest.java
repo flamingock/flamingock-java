@@ -26,6 +26,7 @@ import io.flamingock.cloud.api.vo.CloudExecutionAction;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
@@ -113,8 +114,12 @@ class CloudExecutionPlannerTest {
 
         ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(stages));
 
+        // ExecutionPlan.validate() now only signals the abort itself; MI is a per-stage concern
+        // enforced by ExecutableStage.validate() inside the operation lambda.
         assertTrue(plan.isAborted());
-        assertThrows(ManualInterventionRequiredException.class, plan::validate);
+        assertThrows(FlamingockException.class, plan::validate);
+        assertThrows(ManualInterventionRequiredException.class,
+                () -> plan.getExecutableStages().get(0).validate());
     }
 
     @Test

@@ -46,6 +46,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -146,10 +147,15 @@ class ValidateApplyOperationTest {
         ExecuteArgs args = new ExecuteArgs(pipeline);
 
         // When / Then
-        PendingChangesException thrown = assertThrows(
-                PendingChangesException.class,
+        // PendingChangesException is now wrapped as a pipeline-wide failure carrying response data,
+        // so callers see PipelineExecuteOperationException with the PendingChangesException as cause.
+        PipelineExecuteOperationException thrown = assertThrows(
+                PipelineExecuteOperationException.class,
                 () -> operation.execute(args)
         );
+        assertTrue(thrown.getCause() instanceof PendingChangesException,
+                "Expected PendingChangesException as cause, got: " + thrown.getCause());
+        assertNotNull(thrown.getResult());
     }
 
     // ─────────────────────────── Helpers ───────────────────────────

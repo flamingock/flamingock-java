@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.StageResult;
@@ -143,53 +142,34 @@ class PipelineRunTest {
     }
 
     @Test
-    void markStagesBlockedFromMIGroupsIssuesByOwningStage() {
-        AbstractLoadedChange alphaChange1 = mockChange("alpha-c1");
-        AbstractLoadedChange alphaChange2 = mockChange("alpha-c2");
-        AbstractLoadedChange betaChange = mockChange("beta-c1");
+    void markStageBlockedFromMISetsBlockedForMIState() {
+        AbstractLoadedChange alphaChange = mockChange("alpha-c1");
+        AbstractLoadedStage alpha = mockStageWithChanges("alpha", alphaChange);
+        AbstractLoadedStage beta = mockStageWithChanges("beta");
 
-        AbstractLoadedStage alpha = mockStageWithChanges("alpha", alphaChange1, alphaChange2);
-        AbstractLoadedStage beta = mockStageWithChanges("beta", betaChange);
-        AbstractLoadedStage gamma = mockStageWithChanges("gamma");   // no MI'd changes
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(alpha, beta));
 
-        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(alpha, beta, gamma));
-
-        List<RecoveryIssue> issues = Arrays.asList(
-                new RecoveryIssue("alpha-c1"),
-                new RecoveryIssue("alpha-c2"),
-                new RecoveryIssue("beta-c1"));
-        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(issues, "alpha");
-
-        pipelineRun.markStagesBlockedFromMI(miEx);
+        pipelineRun.markStageBlockedFromMI(
+                "alpha",
+                Arrays.asList(new RecoveryIssue("alpha-c1")));
 
         StageState alphaState = pipelineRun.getStageRun("alpha").getState();
         assertTrue(alphaState.isBlockedForManualIntervention());
-        assertEquals(2, alphaState.getRecoveryIssues().size());
+        assertEquals(1, alphaState.getRecoveryIssues().size());
 
-        StageState betaState = pipelineRun.getStageRun("beta").getState();
-        assertTrue(betaState.isBlockedForManualIntervention());
-        assertEquals(1, betaState.getRecoveryIssues().size());
-        assertEquals("beta-c1", betaState.getRecoveryIssues().get(0).getChangeId());
-
-        // No MI'd changes for gamma → stays NOT_STARTED.
-        assertSame(StageState.NOT_STARTED, pipelineRun.getStageRun("gamma").getState());
+        // Other stages are unaffected by a single stage's MI block — independent stage state.
+        assertSame(StageState.NOT_STARTED, pipelineRun.getStageRun("beta").getState());
     }
 
     @Test
-    void markStagesBlockedFromMIThrowsForUnknownChange() {
+    void markStageBlockedFromMIThrowsForUnknownStage() {
         AbstractLoadedStage alpha = mockStageWithChanges("alpha", mockChange("alpha-c1"));
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(alpha));
 
-        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(
-                Arrays.asList(new RecoveryIssue("ghost-change")), "alpha");
-
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
-                () -> pipelineRun.markStagesBlockedFromMI(miEx));
-        assertTrue(ex.getMessage().contains("ghost-change"));
-
-        // No partial state — the alpha stage stays NOT_STARTED.
-        assertSame(StageState.NOT_STARTED, pipelineRun.getStageRun("alpha").getState());
+        assertThrows(IllegalArgumentException.class,
+                () -> pipelineRun.markStageBlockedFromMI(
+                        "ghost-stage",
+                        Arrays.asList(new RecoveryIssue("alpha-c1"))));
     }
 
     @Test

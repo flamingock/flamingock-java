@@ -1,0 +1,113 @@
+/*
+ * Copyright 2023 Flamingock (https://www.flamingock.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.flamingock.internal.core.operation;
+
+import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+import io.flamingock.internal.util.ThrowableUtil;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.UndeclaredThrowableException;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+
+/**
+ * Parent of execute-operation failures. Always carries the {@link ExecuteResponseData} produced
+ * during the run so callers (the runner, the CLI) can render per-stage results even on failure.
+ *
+ * <p>Two concrete subclasses:
+ * <ul>
+ *   <li>{@link StagedExecuteOperationException} — one or more stages ended in a failed state but
+ *       the iteration completed (stage-scoped failure).</li>
+ *   <li>{@link PipelineExecuteOperationException} — a pipeline-wide error broke the iteration
+ *       (e.g. {@code LockException}); carries the originating cause.</li>
+ * </ul>
+ */
+public abstract class ExecuteOperationException extends OperationException {
+
+    private static final int MAX_UNWRAP_DEPTH = 32;
+
+    /**
+     * Builds a {@link PipelineExecuteOperationException} from a raw throwable, unwrapping common
+     * reflective/async wrappers ({@link InvocationTargetException}, {@link UndeclaredThrowableException},
+     * {@link ExecutionException}, {@link CompletionException}) and the redundant outermost
+     * {@link FlamingockException} layer if it only carries a cause.
+     */
+    public static PipelineExecuteOperationException fromExisting(Throwable exception, ExecuteResponseData result) {
+        Throwable root = unwrapKnownWrappers(exception);
+
+        if (root instanceof FlamingockException) {
+            Throwable cause = root.getCause();
+            if (cause != null) {
+                return new PipelineExecuteOperationException(cause, result);
+            }
+            // Leaf FlamingockException (no further cause): preserve the throwable itself as cause
+            // so callers can read the original type/message.
+            return new PipelineExecuteOperationException(ThrowableUtil.messageOf(root), root, result);
+        }
+
+        return new PipelineExecuteOperationException(root, result);
+    }
+
+    private static Throwable unwrapKnownWrappers(Throwable t) {
+        if (t == null) return new NullPointerException("Throwable is null");
+
+        Throwable cur = t;
+        int guard = 0;
+
+        while (guard++ < MAX_UNWRAP_DEPTH) {
+            if (cur instanceof InvocationTargetException) {
+                Throwable next = ((InvocationTargetException) cur).getTargetException();
+                if (next != null && next != cur) { cur = next; continue; }
+                break;
+            }
+            if (cur instanceof UndeclaredThrowableException) {
+                Throwable next = ((UndeclaredThrowableException) cur).getUndeclaredThrowable();
+                if (next != null && next != cur) { cur = next; continue; }
+                break;
+            }
+            if (cur instanceof ExecutionException
+                    || cur instanceof CompletionException) {
+                Throwable next = cur.getCause();
+                if (next != null && next != cur) { cur = next; continue; }
+                break;
+            }
+            break;
+        }
+        return cur;
+    }
+
+    private final ExecuteResponseData result;
+
+    protected ExecuteOperationException(String message, ExecuteResponseData result) {
+        super(message);
+        this.result = result;
+    }
+
+    protected ExecuteOperationException(Throwable cause, ExecuteResponseData result) {
+        super(cause);
+        this.result = result;
+    }
+
+    protected ExecuteOperationException(String message, Throwable cause, ExecuteResponseData result) {
+        super(message, cause);
+        this.result = result;
+    }
+
+    public ExecuteResponseData getResult() {
+        return result;
+    }
+}

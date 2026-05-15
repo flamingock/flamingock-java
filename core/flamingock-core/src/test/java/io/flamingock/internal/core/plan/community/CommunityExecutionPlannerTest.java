@@ -19,7 +19,6 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
@@ -72,19 +71,22 @@ class CommunityExecutionPlannerTest {
     }
 
     @Test
-    @DisplayName("Should return ABORT without acquiring lock when manual intervention is required")
-    void shouldReturnAbortWithoutAcquiringLockWhenManualInterventionRequired() {
+    @DisplayName("Should acquire lock and return execution plan even when changes require manual intervention (MI is now a per-stage concern)")
+    void shouldProceedEvenWhenManualInterventionRequired() {
         AbstractLoadedChange change = mockLoadedChange("change-1");
         AbstractLoadedStage stage = mockStage("stage-1", change);
 
         Map<String, AuditEntry> snapshot = new HashMap<>();
         snapshot.put("change-1", buildAuditEntry("change-1", AuditEntry.Status.FAILED, AuditTxType.NON_TX));
         when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
 
         ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(Collections.singletonList(stage)));
 
-        assertTrue(plan.isAborted());
-        verify(lockService, never()).upsert(any(), any(), anyLong());
+        // The planner no longer aborts based on MI; the operation lambda gates MI per stage.
+        assertFalse(plan.isAborted());
+        verify(lockService).upsert(any(), any(), anyLong());
     }
 
     @Test
@@ -137,9 +139,9 @@ class CommunityExecutionPlannerTest {
         AbstractLoadedStage stage2 = mockStage("stage-2", change2);
 
         PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(stage1, stage2));
-        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(
-                Collections.singletonList(new RecoveryIssue("change-1")), "stage-1");
-        pipelineRun.markStagesBlockedFromMI(miEx);
+        pipelineRun.markStageBlockedFromMI(
+                "stage-1",
+                Collections.singletonList(new RecoveryIssue("change-1")));
 
         when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
         when(lockService.upsert(any(), any(), anyLong()))

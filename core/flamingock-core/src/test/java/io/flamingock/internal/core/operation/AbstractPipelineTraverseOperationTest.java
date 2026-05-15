@@ -15,8 +15,9 @@
  */
 package io.flamingock.internal.core.operation;
 
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.event.EventPublisher;
@@ -43,27 +44,33 @@ import static org.mockito.Mockito.*;
 class AbstractPipelineTraverseOperationTest {
 
     @Test
-    @DisplayName("Should throw ManualInterventionRequiredException when planner returns ABORT with MI changes")
-    void shouldThrowManualInterventionWhenPlannerReturnsAbort() {
+    @DisplayName("MI changes per stage should mark the stage BLOCKED_FOR_MI and throw StagedExecuteOperationException")
+    void miChangesPerStageShouldBlockStageAndThrowStagedException() {
         ExecutableChange miChange = mockChange("change-1", ChangeAction.MANUAL_INTERVENTION);
         ExecutableStage stage = new ExecutableStage("stage-1", Collections.singletonList(miChange));
-        ExecutionPlan abortPlan = ExecutionPlan.ABORT(Collections.singletonList(stage));
+        ExecutionPlan plan = ExecutionPlan.newExecution("exec-1", null, Collections.singletonList(stage));
+        ExecutionPlan continuePlan = ExecutionPlan.CONTINUE(Collections.emptyList());
 
         ExecutionPlanner planner = mock(ExecutionPlanner.class);
-        when(planner.getNextExecution(any(PipelineRun.class))).thenReturn(abortPlan);
+        when(planner.getNextExecution(any(PipelineRun.class))).thenReturn(plan, continuePlan);
 
         LoadedPipeline pipeline = mockPipeline("change-1");
-        ExecuteApplyOperation operation = buildOperation(planner);
+        StageExecutor stageExecutor = mock(StageExecutor.class);
+        ExecuteApplyOperation operation = buildOperation(planner, stageExecutor);
 
-        ManualInterventionRequiredException ex = assertThrows(
-                ManualInterventionRequiredException.class,
+        StagedExecuteOperationException ex = assertThrows(
+                StagedExecuteOperationException.class,
                 () -> operation.execute(new ExecuteArgs(pipeline)));
-        assertTrue(ex.getConflictingSummary().contains("change-1"));
+
+        StageResult stageResult = ex.getResult().getStages().get(0);
+        assertEquals("stage-1", stageResult.getStageName());
+        assertTrue(stageResult.getState().isBlockedForManualIntervention());
+        verify(stageExecutor, never()).executeStage(any(), any(), any());
     }
 
     @Test
-    @DisplayName("Should throw FlamingockException and not execute changes when plan is ABORT without MI changes")
-    void shouldNotExecuteChangesWhenPlanIsAbort() {
+    @DisplayName("ABORT plan without MI should throw PipelineExecuteOperationException with abort cause")
+    void abortPlanShouldThrowPipelineExecuteOperationException() {
         ExecutableChange change = mockChange("change-1", ChangeAction.APPLY);
         ExecutableStage stage = new ExecutableStage("stage-1", Collections.singletonList(change));
         ExecutionPlan abortPlan = ExecutionPlan.ABORT(Collections.singletonList(stage));
@@ -75,13 +82,17 @@ class AbstractPipelineTraverseOperationTest {
         LoadedPipeline pipeline = mockPipeline();
         ExecuteApplyOperation operation = buildOperation(planner, stageExecutor);
 
-        assertThrows(io.flamingock.internal.common.core.error.FlamingockException.class,
+        ExecuteOperationException ex = assertThrows(
+                PipelineExecuteOperationException.class,
                 () -> operation.execute(new ExecuteArgs(pipeline)));
+        assertNotNull(ex.getResult());
+        // The abort is signalled as a generic FlamingockException carrying the planner message.
+        assertTrue(ex.getMessage() != null && ex.getMessage().contains("Execution aborted")
+                        || (ex.getCause() instanceof FlamingockException
+                            && ex.getCause().getMessage().contains("Execution aborted")),
+                "Expected the planner abort message to be propagated, got: " + ex.getMessage()
+                        + " / cause=" + ex.getCause());
         verify(stageExecutor, never()).executeStage(any(), any(), any());
-    }
-
-    private static ExecuteApplyOperation buildOperation(ExecutionPlanner planner) {
-        return buildOperation(planner, mock(StageExecutor.class));
     }
 
     private static ExecuteApplyOperation buildOperation(ExecutionPlanner planner, StageExecutor stageExecutor) {

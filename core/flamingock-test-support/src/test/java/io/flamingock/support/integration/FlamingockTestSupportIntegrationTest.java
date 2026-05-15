@@ -19,6 +19,7 @@ import io.flamingock.common.test.pipeline.CodeChangeTestDefinition;
 import io.flamingock.common.test.pipeline.PipelineTestHelper;
 import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.core.operation.StagedExecuteOperationException;
 import io.flamingock.support.FlamingockTestSupport;
 import io.flamingock.support.inmemory.InMemoryFlamingockBuilder;
 import io.flamingock.support.integration.changes.*;
@@ -159,8 +160,17 @@ class FlamingockTestSupportIntegrationTest {
             FlamingockTestSupport
                     .givenBuilder(InMemoryFlamingockBuilder.create().addTargetSystem(targetSystem))
                     .whenRun()
-                    .thenExpectException(OperationException.class, ex -> {
-                        assertTrue(ex.getMessage().contains("Intentional failure"));
+                    .thenExpectException(StagedExecuteOperationException.class, ex -> {
+                        // The per-stage error info carries the original throwable message; the
+                        // exception itself only signals the staged failure.
+                        StagedExecuteOperationException stagedEx = (StagedExecuteOperationException) ex;
+                        boolean foundIntentional = stagedEx.getResult().getStages().stream()
+                                .filter(s -> s.getState().isFailed())
+                                .map(s -> s.getState().getErrorInfo().orElse(null))
+                                .filter(java.util.Objects::nonNull)
+                                .anyMatch(info -> info.getMessage() != null
+                                        && info.getMessage().contains("Intentional failure"));
+                        assertTrue(foundIntentional, "Expected a stage error mentioning 'Intentional failure'");
                         assertTrue(counter.isExecuted(), "Counter should be executed");
                         assertTrue(counter.isRollbacked(), "Counter should be rolled back");
                     })

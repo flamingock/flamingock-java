@@ -24,6 +24,7 @@ import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.execute.ExecuteApplyOperation;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
 import io.flamingock.internal.core.operation.execute.ExecuteResult;
+import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
@@ -31,6 +32,7 @@ import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
+import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
@@ -141,7 +143,7 @@ class ExecuteApplyOperationTest {
     }
 
     @Test
-    @DisplayName("Should throw OperationException on stage failure")
+    @DisplayName("Should throw StagedExecuteOperationException on stage failure and continue past it")
     void shouldThrowOperationExceptionOnStageFailure() throws Exception {
         // Given
         RuntimeException originalException = new RuntimeException("Change failed");
@@ -152,18 +154,25 @@ class ExecuteApplyOperationTest {
                 "change-001"
         );
 
-        ExecutionPlan executionPlan = mockExecutionRequiredPlanWithException(stageException);
+        ExecutableStage executableStage = mock(ExecutableStage.class);
+        when(executableStage.getName()).thenReturn("stage-1");
+        doNothing().when(executableStage).validate();
+
+        when(stageExecutor.executeStage(any(), any(), any())).thenThrow(stageException);
+
+        ExecutionPlan failingPlan = mockPlanInvokingConsumerWith(executableStage);
+        ExecutionPlan continuePlan = mockNoExecutionRequiredPlan();
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
         when(loadedStage.getName()).thenReturn("stage-1");
         when(loadedStage.getChanges()).thenReturn(Collections.singletonList(loadedChange));
-        when(executionPlanner.getNextExecution(any())).thenReturn(executionPlan);
+        when(executionPlanner.getNextExecution(any())).thenReturn(failingPlan, continuePlan);
 
         ExecuteArgs args = new ExecuteArgs(pipeline);
 
         // When / Then
-        OperationException thrown = assertThrows(OperationException.class, () -> operation.execute(args));
+        StagedExecuteOperationException thrown = assertThrows(StagedExecuteOperationException.class, () -> operation.execute(args));
         assertNotNull(thrown.getResult());
         assertEquals(ExecutionStatus.FAILED, thrown.getResult().getStatus());
         assertEquals(1, thrown.getResult().getFailedStages());
@@ -218,13 +227,17 @@ class ExecuteApplyOperationTest {
         return plan;
     }
 
-    private ExecutionPlan mockExecutionRequiredPlanWithException(StageExecutionException exception) {
+    private ExecutionPlan mockPlanInvokingConsumerWith(ExecutableStage executableStage) {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(true);
         doNothing().when(plan).validate();
         doNothing().when(plan).close();
         doAnswer(invocation -> {
-            throw exception;
+            @SuppressWarnings("unchecked")
+            TriConsumer<String, io.flamingock.internal.core.external.store.lock.Lock, ExecutableStage> consumer =
+                    invocation.getArgument(0);
+            consumer.accept("exec-1", null, executableStage);
+            return null;
         }).when(plan).applyOnEach(any());
         return plan;
     }

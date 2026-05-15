@@ -17,7 +17,6 @@ package io.flamingock.internal.core.plan.community;
 
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
 import io.flamingock.internal.core.plan.ExecutionId;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLock;
@@ -132,10 +131,6 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
 
         List<ExecutableStage> initialStages = buildExecutableStages(loadedStages, initialSnapshot);
 
-        if (hasManualInterventionChanges(initialStages)) {
-            return ExecutionPlan.ABORT(initialStages);
-        }
-
         if (!hasExecutableStages(initialStages)) {
             return ExecutionPlan.CONTINUE(initialStages);
         }
@@ -146,8 +141,6 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
             Map<String, AuditEntry> validatedSnapshot = auditReader.getAuditSnapshotByChangeId();
 
             List<ExecutableStage> validatedStages = buildExecutableStages(loadedStages, validatedSnapshot);
-
-            //TODO add hasManualInterventionChanges here too, after lock acquisition
 
             Optional<ExecutableStage> nextStageOpt = getFirstExecutableStage(validatedStages);
 
@@ -225,12 +218,6 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
                     return loadedStage.applyActions(changeActionMap);
                 })
                 .collect(Collectors.toList());
-    }
-
-    private boolean hasManualInterventionChanges(List<ExecutableStage> stages) {
-        return stages.stream()
-                .flatMap(stage -> stage.getChanges().stream())
-                .anyMatch(change -> change.getAction() == ChangeAction.MANUAL_INTERVENTION);
     }
 
     /**

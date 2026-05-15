@@ -17,8 +17,12 @@ package io.flamingock.internal.core.pipeline.execution;
 
 import io.flamingock.internal.common.core.pipeline.StageDescriptor;
 import io.flamingock.internal.common.core.change.ChangeDescriptor;
+import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
+import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -54,5 +58,21 @@ public class ExecutableStage implements StageDescriptor {
                 .anyMatch(executableChange -> !executableChange.isAlreadyApplied());
     }
 
+    /**
+     * Validates this stage before execution. Throws {@link ManualInterventionRequiredException}
+     * if any change has {@link ChangeAction#MANUAL_INTERVENTION} so the caller can demote the
+     * stage to a {@code BlockedForMI} state without affecting other stages.
+     */
+    public void validate() {
+        List<RecoveryIssue> recoveryIssues = new ArrayList<>();
+        for (ExecutableChange change : changes) {
+            if (change != null && change.getAction() == ChangeAction.MANUAL_INTERVENTION) {
+                recoveryIssues.add(new RecoveryIssue(change.getId()));
+            }
+        }
+        if (!recoveryIssues.isEmpty()) {
+            throw new ManualInterventionRequiredException(recoveryIssues, name);
+        }
+    }
 
 }
