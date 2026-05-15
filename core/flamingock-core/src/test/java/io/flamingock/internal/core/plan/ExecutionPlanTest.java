@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.plan;
 
-import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
@@ -25,7 +24,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,27 +34,15 @@ class ExecutionPlanTest {
     @Test
     @DisplayName("ABORT plan should not require execution")
     void abortPlanShouldNotRequireExecution() {
-        ExecutionPlan plan = ExecutionPlan.ABORT(Collections.singletonList(
-                stageWith(mockChange("change-1", ChangeAction.APPLY))
-        ));
+        ExecutionPlan plan = ExecutionPlan.ABORT();
         assertFalse(plan.isExecutionRequired());
     }
 
     @Test
     @DisplayName("ABORT plan should be marked as aborted")
     void abortPlanShouldBeAborted() {
-        ExecutionPlan plan = ExecutionPlan.ABORT(Collections.emptyList());
+        ExecutionPlan plan = ExecutionPlan.ABORT();
         assertTrue(plan.isAborted());
-    }
-
-    @Test
-    @DisplayName("ABORT plan should throw generic FlamingockException on validate")
-    void abortPlanShouldThrowFlamingockExceptionOnValidate() {
-        ExecutionPlan plan = ExecutionPlan.ABORT(Collections.singletonList(
-                stageWith(mockChange("change-1", ChangeAction.APPLY))
-        ));
-        FlamingockException ex = assertThrows(FlamingockException.class, plan::validate);
-        assertEquals("Execution aborted by the execution planner", ex.getMessage());
     }
 
     @Test
@@ -68,7 +56,7 @@ class ExecutionPlanTest {
     @Test
     @DisplayName("CONTINUE plan should not be aborted")
     void continuePlanShouldNotBeAborted() {
-        ExecutionPlan plan = ExecutionPlan.CONTINUE(Collections.emptyList());
+        ExecutionPlan plan = ExecutionPlan.CONTINUE();
         assertFalse(plan.isAborted());
     }
 

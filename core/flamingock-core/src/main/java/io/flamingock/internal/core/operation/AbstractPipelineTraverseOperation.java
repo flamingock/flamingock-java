@@ -19,6 +19,7 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.error.PendingChangesException;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.PipelineFailedEvent;
@@ -121,7 +122,10 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
 
         do {
             try (ExecutionPlan execution = executionPlanner.getNextExecution(pipelineRun)) {
-                execution.validate();
+                if (execution.isAborted()) {
+                    logger.info("Pipeline execution aborted by the planner — earlier block has failures or another structural reason");
+                    break;
+                }
 
                 if (!execution.isExecutionRequired()) {
                     break;
@@ -134,7 +138,6 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
                 execution.applyOnEach((executionId, lock, executableStage) ->
                         runStage(executionId, lock, executableStage, pipelineRun));
             } catch (LockException exception) {
-                pipelineRun.markPipelineFailed(exception);
                 pipelineLevelError = exception;
                 if (throwExceptionIfCannotObtainLock) {
                     logger.debug("Required process lock not acquired - ABORTING OPERATION", exception);
@@ -143,17 +146,19 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
                     throwPipelineLevelError = false;
                 }
                 break;
-            } catch (Throwable  exception) {
-                pipelineRun.markPipelineFailed(exception);
+            } catch (Throwable exception) {
                 pipelineLevelError = exception;
                 break;
-            }//FlamingockException
+            }
         } while (true);
 
         pipelineRun.stop();
         ExecuteResponseData result = pipelineRun.toResponse();
 
         if (pipelineLevelError != null) {
+            // toResponse() derives status from per-stage state; override to FAILED so the
+            // response reflects the pipeline-wide error carried in pipelineLevelError.
+            result.setStatus(ExecutionStatus.FAILED);
             logger.debug("Error executing the process. ABORTED OPERATION", pipelineLevelError);
             eventPublisher.publish(new PipelineFailedEvent(toException(pipelineLevelError)));
             if (throwPipelineLevelError) {

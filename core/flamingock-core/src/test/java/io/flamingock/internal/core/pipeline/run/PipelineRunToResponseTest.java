@@ -52,7 +52,6 @@ class PipelineRunToResponseTest {
         assertEquals(0, response.getCompletedStages());
         assertEquals(0, response.getFailedStages());
         assertEquals(0, response.getTotalChanges());
-        assertNull(response.getError());
         assertNotNull(response.getStartTime());
         assertNotNull(response.getEndTime());
     }
@@ -78,7 +77,6 @@ class PipelineRunToResponseTest {
         assertEquals(3, response.getAppliedChanges());   // 2 + 1
         assertEquals(1, response.getSkippedChanges());   // 1 + 0
         assertEquals(0, response.getFailedChanges());
-        assertNull(response.getError());
     }
 
     @Test
@@ -105,58 +103,13 @@ class PipelineRunToResponseTest {
         assertEquals(2, response.getTotalChanges());     // 1 applied + 1 failed
         assertEquals(1, response.getAppliedChanges());
         assertEquals(1, response.getFailedChanges());
-        ErrorInfo error = response.getError();
+
+        // Per-stage error info lives on the StageResult's state, accessed via getErrorInfo().
+        ErrorInfo error = response.getStages().get(1).getState().getErrorInfo().get();
         assertEquals(java.util.Collections.singletonList("change-b1"), error.getChangeIds());
         assertEquals("beta", error.getStageId());
         assertEquals("RuntimeException", error.getErrorType());
         assertEquals("boom", error.getMessage());
-    }
-
-    @Test
-    void pipelineFailedWithNoStageFailuresYieldsFailedAndPipelineError() {
-        AbstractLoadedStage stageA = mockStage("alpha");
-        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stageA));
-
-        pipelineRun.start();
-        pipelineRun.markPipelineFailed(new RuntimeException("lock not acquired"));
-        pipelineRun.stop();
-
-        ExecuteResponseData response = pipelineRun.toResponse();
-
-        assertEquals(ExecutionStatus.FAILED, response.getStatus());
-        // Stage was NOT_STARTED — it appears in response.stages with state=NOT_STARTED, but
-        // it doesn't count toward failedStages/completedStages.
-        assertEquals(1, response.getTotalStages());
-        assertEquals(0, response.getCompletedStages());
-        assertEquals(0, response.getFailedStages());
-        assertTrue(response.getStages().get(0).getState().isNotStarted());
-        ErrorInfo error = response.getError();
-        assertEquals("RuntimeException", error.getErrorType());
-        assertEquals("lock not acquired", error.getMessage());
-    }
-
-    @Test
-    void stageErrorTakesPrecedenceOverPipelineError() {
-        AbstractLoadedStage stageA = mockStage("alpha");
-        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stageA));
-
-        RuntimeException stageCause = new RuntimeException("stage boom");
-        StageExecutionException stageException = StageExecutionException.fromResult(
-                stageCause, failedStageResult("alpha"), "change-1");
-
-        pipelineRun.start();
-        pipelineRun.markStageFailed("alpha", stageException);
-        pipelineRun.markPipelineFailed(new IllegalStateException("late pipeline error"));
-        pipelineRun.stop();
-
-        ExecuteResponseData response = pipelineRun.toResponse();
-
-        assertEquals(ExecutionStatus.FAILED, response.getStatus());
-        ErrorInfo error = response.getError();
-        // Stage-level error wins over pipeline-level
-        assertEquals("RuntimeException", error.getErrorType());
-        assertEquals("stage boom", error.getMessage());
-        assertEquals("alpha", error.getStageId());
     }
 
     @Test
@@ -181,9 +134,8 @@ class PipelineRunToResponseTest {
         assertEquals(1, response.getFailedStages());
         assertTrue(response.getStages().get(0).getState().isBlockedForManualIntervention());
         assertEquals(1, response.getStages().get(0).getState().getRecoveryIssues().size());
-        // Pipeline-level failure surfaces via pipelineError as today.
+        // BlockedForMI is a Failed subtype → counts toward failedStages → status FAILED.
         assertEquals(ExecutionStatus.FAILED, response.getStatus());
-        assertNotNull(response.getError());
     }
 
     @Test

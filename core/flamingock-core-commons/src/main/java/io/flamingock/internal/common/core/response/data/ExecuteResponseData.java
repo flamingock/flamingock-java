@@ -44,15 +44,6 @@ public class ExecuteResponseData {
     // Per-stage breakdown
     private List<StageResult> stages;
 
-    /**
-     * @deprecated Per-stage error info is the authoritative carrier (see {@link StageResult} /
-     * {@code StageState.getErrorInfo()}). The top-level field is kept temporarily to preserve the
-     * JSON contract with the CLI; it is populated by {@code PipelineRun.toResponse()} from the
-     * first failed stage's {@link ErrorInfo} and will be removed in a follow-up.
-     */
-    @Deprecated
-    private ErrorInfo error;
-
     public ExecuteResponseData() {
         this.stages = new ArrayList<>();
     }
@@ -70,7 +61,6 @@ public class ExecuteResponseData {
         this.skippedChanges = builder.skippedChanges;
         this.failedChanges = builder.failedChanges;
         this.stages = builder.stages != null ? builder.stages : new ArrayList<>();
-        this.error = builder.error;
     }
 
     public ExecutionStatus getStatus() {
@@ -169,22 +159,6 @@ public class ExecuteResponseData {
         this.stages = stages;
     }
 
-    /**
-     * @deprecated See {@link #error}.
-     */
-    @Deprecated
-    public ErrorInfo getError() {
-        return error;
-    }
-
-    /**
-     * @deprecated See {@link #error}.
-     */
-    @Deprecated
-    public void setError(ErrorInfo error) {
-        this.error = error;
-    }
-
     public boolean isSuccess() {
         return status == ExecutionStatus.SUCCESS || status == ExecutionStatus.NO_CHANGES;
     }
@@ -210,7 +184,6 @@ public class ExecuteResponseData {
         private int skippedChanges;
         private int failedChanges;
         private List<StageResult> stages = new ArrayList<>();
-        private ErrorInfo error;
 
         public Builder status(ExecutionStatus status) {
             this.status = status;
@@ -277,15 +250,6 @@ public class ExecuteResponseData {
                 this.stages = new ArrayList<>();
             }
             this.stages.add(stage);
-            return this;
-        }
-
-        /**
-         * @deprecated See {@link ExecuteResponseData#error}.
-         */
-        @Deprecated
-        public Builder error(ErrorInfo error) {
-            this.error = error;
             return this;
         }
 

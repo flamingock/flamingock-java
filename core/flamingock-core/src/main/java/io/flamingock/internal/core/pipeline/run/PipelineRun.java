@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PipelineRun {
@@ -98,7 +97,6 @@ public class PipelineRun {
     private final Map<String, StageRun> byName;
     private Instant startedAt;
     private Instant stoppedAt;
-    private ErrorInfo pipelineError;
 
     private PipelineRun(List<StageRun> stageRuns, List<StageRunBlock> stageBlocks) {
         this.stageRuns = Collections.unmodifiableList(stageRuns);
@@ -205,19 +203,6 @@ public class PipelineRun {
                 .build());
     }
 
-    /**
-     * Pipeline-wide failure marker. Idempotent: first call wins.
-     */
-    public void markPipelineFailed(Throwable cause) {
-        if (this.pipelineError == null) {
-            this.pipelineError = ErrorInfo.fromThrowable(cause, Collections.emptyList(), null);
-        }
-    }
-
-    public Optional<ErrorInfo> getPipelineError() {
-        return Optional.ofNullable(pipelineError);
-    }
-
     private StageRun lookupOrThrow(String stageName) {
         StageRun run = byName.get(stageName);
         if (run == null) {
@@ -226,6 +211,12 @@ public class PipelineRun {
         return run;
     }
 
+    /**
+     * Builds the response data view derived purely from per-stage state. Status is FAILED iff any
+     * stage failed, else SUCCESS. Pipeline-wide errors (e.g., LockException) that aren't reflected
+     * in any stage state are signalled by the operation post-loop via
+     * {@code ExecuteResponseData.setStatus(FAILED)} after {@code toResponse()} returns.
+     */
     public ExecuteResponseData toResponse() {
         List<StageResult> stages = new ArrayList<>();
         int totalStages = 0;
@@ -235,7 +226,6 @@ public class PipelineRun {
         int appliedChanges = 0;
         int skippedChanges = 0;
         int failedChanges = 0;
-        ErrorInfo error = null;
         boolean anyFailed = false;
 
         for (StageRun stageRun : stageRuns) {
@@ -249,9 +239,6 @@ public class PipelineRun {
             } else if (state.isFailed()) {
                 failedStages++;
                 anyFailed = true;
-                if (error == null) {
-                    error = state.getErrorInfo().orElse(null);
-                }
             }
 
             if (stageResult.getChanges() != null) {
@@ -268,11 +255,7 @@ public class PipelineRun {
             }
         }
 
-        if (error == null) {
-            error = this.pipelineError;
-        }
-        boolean pipelineFailed = anyFailed || this.pipelineError != null;
-        ExecutionStatus status = pipelineFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        ExecutionStatus status = anyFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
         long durationMs = (startedAt != null && stoppedAt != null)
                 ? Duration.between(startedAt, stoppedAt).toMillis()
                 : 0L;
@@ -290,7 +273,6 @@ public class PipelineRun {
                 .skippedChanges(skippedChanges)
                 .failedChanges(failedChanges)
                 .stages(stages)
-                .error(error)
                 .build();
     }
 }

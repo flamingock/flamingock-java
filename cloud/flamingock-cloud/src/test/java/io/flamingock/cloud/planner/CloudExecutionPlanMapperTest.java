@@ -29,7 +29,6 @@ import io.flamingock.internal.core.change.executable.ExecutableChange;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.DefaultLoadedStage;
-import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.core.cloud.changes._001__CloudChange1;
 import io.flamingock.core.cloud.changes._002__CloudChange2;
 import org.junit.jupiter.api.BeforeAll;
@@ -190,11 +189,10 @@ class CloudExecutionPlanMapperTest {
         );
 
         List<ExecutableStage> result = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
-        ExecutionPlan plan = ExecutionPlan.ABORT(result);
 
-        assertTrue(plan.isAborted());
-        assertFalse(plan.isExecutionRequired());
-
+        // CloudExecutionPlanMapper.getExecutableStages preserves change actions on the mapped
+        // ExecutableStage regardless of the response action; verify that mapping directly.
+        // ExecutionPlan.ABORT() no longer carries stages — that's a planner-control-flow concern.
         Map<String, ChangeAction> actions = result.get(0).getChanges().stream()
                 .collect(Collectors.toMap(ExecutableChange::getId, ExecutableChange::getAction));
         assertEquals(ChangeAction.MANUAL_INTERVENTION, actions.get(change1.getId()));

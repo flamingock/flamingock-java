@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -118,27 +117,6 @@ class PipelineRunTest {
         assertEquals("alpha", info.getStageId());
         assertEquals("RuntimeException", info.getErrorType());
         assertEquals("boom", info.getMessage());
-    }
-
-    @Test
-    void markPipelineFailedIsIdempotentFirstWins() {
-        AbstractLoadedStage a = mockStage("alpha");
-        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(a));
-
-        pipelineRun.markPipelineFailed(new RuntimeException("first"));
-        pipelineRun.markPipelineFailed(new IllegalStateException("second"));
-
-        ErrorInfo info = pipelineRun.getPipelineError().get();
-        assertEquals("RuntimeException", info.getErrorType());
-        assertEquals("first", info.getMessage());
-    }
-
-    @Test
-    void getPipelineErrorIsEmptyUntilMarked() {
-        AbstractLoadedStage a = mockStage("alpha");
-        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(a));
-
-        assertFalse(pipelineRun.getPipelineError().isPresent());
     }
 
     @Test

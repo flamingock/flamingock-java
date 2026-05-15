@@ -167,7 +167,6 @@ class ValidateApplyOperationTest {
     private ExecutionPlan mockNoPendingPlan() {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(false);
-        doNothing().when(plan).validate();
         doNothing().when(plan).close();
         return plan;
     }
@@ -180,7 +179,6 @@ class ValidateApplyOperationTest {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(true);
         when(plan.getExecutableStages()).thenReturn(stages);
-        doNothing().when(plan).validate();
         doNothing().when(plan).close();
         return plan;
     }

@@ -222,7 +222,6 @@ class ExecuteApplyOperationTest {
     private ExecutionPlan mockNoExecutionRequiredPlan() {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(false);
-        doNothing().when(plan).validate();
         doNothing().when(plan).close();
         return plan;
     }
@@ -230,7 +229,6 @@ class ExecuteApplyOperationTest {
     private ExecutionPlan mockPlanInvokingConsumerWith(ExecutableStage executableStage) {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(true);
-        doNothing().when(plan).validate();
         doNothing().when(plan).close();
         doAnswer(invocation -> {
             @SuppressWarnings("unchecked")

@@ -18,12 +18,28 @@ package io.flamingock.internal.core.plan;
 import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.external.store.lock.Lock;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
-import io.flamingock.internal.common.core.error.FlamingockException;
 
+import java.util.Collections;
 import java.util.List;
 
+/**
+ * One iteration's planner verdict.
+ *
+ * <ul>
+ *   <li>{@link #newExecution(String, Lock, List)} — carries a list of stages to execute under the
+ *       given lock. {@link #isExecutionRequired()} reflects whether any of those stages still has
+ *       work pending.</li>
+ *   <li>{@link #CONTINUE()} — pipeline finished. Successfully. Nothing else to do.</li>
+ *   <li>{@link #ABORT()} — stop early. Something went wrong (e.g., an earlier block failed and
+ *       its dependents cannot proceed). The operation reads {@link #isAborted()} to break out of
+ *       the run loop.</li>
+ * </ul>
+ *
+ * <p>{@code CONTINUE} and {@code ABORT} carry no stages — the run-loop only needs the verdict.
+ * The pipeline-level state lives in {@code PipelineRun}; block-aware queries should read
+ * {@code PipelineRun.getStageBlocks()} directly.
+ */
 public class ExecutionPlan implements AutoCloseable {
-
 
     public static ExecutionPlan newExecution(String executionId,
                                              Lock lock,
@@ -31,12 +47,12 @@ public class ExecutionPlan implements AutoCloseable {
         return new ExecutionPlan(executionId, lock, stages);
     }
 
-    public static ExecutionPlan CONTINUE(List<ExecutableStage> stages) {
-        return new ExecutionPlan(false, stages);
+    public static ExecutionPlan CONTINUE() {
+        return new ExecutionPlan(false, Collections.emptyList());
     }
 
-    public static ExecutionPlan ABORT(List<ExecutableStage> stages) {
-        return new ExecutionPlan(true, stages);
+    public static ExecutionPlan ABORT() {
+        return new ExecutionPlan(true, Collections.emptyList());
     }
 
     private final String executionId;
@@ -77,20 +93,6 @@ public class ExecutionPlan implements AutoCloseable {
     public void applyOnEach(TriConsumer<String, Lock, ExecutableStage> consumer) {
         if (isExecutionRequired()) {
             executableStages.forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
-        }
-    }
-
-    /**
-     * Validates the execution plan. If the planner decided to abort the run for reasons beyond
-     * individual change state, throws {@link FlamingockException}.
-     *
-     * <p>Manual-intervention validation is no longer performed here: it is per-stage and lives in
-     * {@code ExecutableStage.validate()}, called inside the operation lambda so a single stage's
-     * MI state never aborts the rest of the pipeline.
-     */
-    public void validate() {
-        if (aborted) {
-            throw new FlamingockException("Execution aborted by the execution planner");
         }
     }
 
