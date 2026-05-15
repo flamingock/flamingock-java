@@ -106,9 +106,12 @@ internal object CompilerArgsConfigurator {
     }
 
     /**
-     * Reflectively call `KaptExtension.arguments(Action<KaptAnnotationProcessorOptions>)`
-     * to add `flamingock.sources` / `flamingock.resources`. KAPT's `arg(name: Any, vararg
-     * values: Any)` takes a vararg, so the reflected signature is `arg(Object, Object[])`.
+     * Reflectively call `KaptExtension.arguments(action: KaptArguments.() -> Unit)` to add
+     * `flamingock.sources` / `flamingock.resources`. The DSL is a Kotlin lambda receiver,
+     * which compiles to a `Function1<KaptArguments, Unit>` parameter — NOT a Gradle `Action`.
+     * KAPT also exposes a sibling `arguments(Closure)` overload for Groovy; we deliberately
+     * skip that one. KAPT's `arg(name: Any, vararg values: Any)` takes a vararg, so the
+     * reflected signature is `arg(Object, Object[])`.
      *
      * Visible to the same module so tests can invoke the dispatch path directly without
      * needing the real Kotlin/KAPT plugin classpath.
@@ -119,17 +122,14 @@ internal object CompilerArgsConfigurator {
 
         val kaptExt = project.extensions.findByName("kapt") ?: return
         val argumentsMethod = kaptExt::class.java.methods.firstOrNull {
-            it.name == "arguments" && it.parameterCount == 1
+            it.name == "arguments"
+                    && it.parameterCount == 1
+                    && Function1::class.java.isAssignableFrom(it.parameterTypes[0])
         } ?: return
 
-        // Plain SAM impl rather than the kotlin-dsl `Action<Any> { ... }` form because the
-        // DSL form makes the parameter the implicit `this` and the receiver type Any tends
-        // to confuse Kotlin's SAM inference here.
-        val action = object : Action<Any> {
-            override fun execute(argsObj: Any) {
-                invokeArg(argsObj, SOURCES_OPTION, sourcesArg)
-                if (resourcesArg != null) invokeArg(argsObj, RESOURCES_OPTION, resourcesArg)
-            }
+        val action: (Any) -> Unit = { argsObj ->
+            invokeArg(argsObj, SOURCES_OPTION, sourcesArg)
+            if (resourcesArg != null) invokeArg(argsObj, RESOURCES_OPTION, resourcesArg)
         }
         argumentsMethod.invoke(kaptExt, action)
     }

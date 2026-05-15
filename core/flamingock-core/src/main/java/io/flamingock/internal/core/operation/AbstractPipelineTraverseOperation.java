@@ -19,6 +19,7 @@ import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.error.PendingChangesException;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.model.impl.PipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.impl.PipelineFailedEvent;
@@ -34,8 +35,8 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
-import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
+import io.flamingock.internal.core.pipeline.run.StageRun;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.Lock;
@@ -44,11 +45,17 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Common execution flow for Apply and Validate operations
+ * Common execution flow for Apply and Validate operations.
+ *
+ * <p>Stages are independent: a stage failure (Failed or BlockedForMI) does NOT abort the
+ * pipeline. The do-while keeps asking the planner for the next stage; failed stages are
+ * excluded from subsequent iterations by the planner. Only pipeline-wide errors
+ * ({@link LockException}, {@link PendingChangesException}, or unexpected throwables from
+ * outside a stage) break the loop and produce a {@link PipelineExecuteOperationException}.
+ * When all stages have been visited and at least one failed, the operation throws
+ * {@link StagedExecuteOperationException}. Otherwise it returns the response data.
  */
 public abstract class AbstractPipelineTraverseOperation implements Operation<ExecuteArgs, ExecuteResult> {
 
@@ -88,122 +95,116 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
 
     @Override
     public ExecuteResult execute(ExecuteArgs args) {
-        ExecuteResponseData result;
         try {
-            result = this.execute(args.getPipeline());
-        } catch (OperationException operationException) {
-            throw operationException;
-        } catch (Throwable throwable) {
-            throw processAndGetFlamingockException(throwable);
+            return this.execute(args.getPipeline());
         } finally {
             this.finalizer.run();
         }
-        return new ExecuteResult(result);
     }
 
-    private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
-        pipeline.validate();
-        List<AbstractLoadedStage> stages = new ArrayList<>();
-        if (pipeline.getSystemStage().isPresent()) {
-            stages.add(pipeline.getSystemStage().get());
-        }
-        stages.addAll(pipeline.getStages());
-        return stages;
-    }
+    private ExecuteResult execute(LoadedPipeline pipeline) {
+        // Single transform point: PipelineRun.of(pipeline) validates static structure, partitions
+        // stages by type into StageRunBlocks (SYSTEM -> LEGACY -> DEFAULT, sparse), and becomes the
+        // single source of truth for the rest of this method. LoadedPipeline is not referenced again.
+        PipelineRun pipelineRun = PipelineRun.of(pipeline);
 
-    private ExecuteResponseData execute(LoadedPipeline pipeline) throws FlamingockException {
-        List<AbstractLoadedStage> allStages = validateAndGetExecutableStages(pipeline);
-        int stageCount = allStages.size();
-        long changeCount = allStages.stream()
-                .mapToLong(stage -> stage.getChanges().size())
-                .sum();
-        logger.info("Flamingock execution started [stages={} changes={}]", stageCount, changeCount);
+        logger.info(
+                "Flamingock execution started [stages={} changes={}]",
+                pipelineRun.getStageCount(),
+                pipelineRun.getTotalChangeCount());
 
         eventPublisher.publish(new PipelineStartedEvent());
 
-        PipelineRun pipelineRun = PipelineRun.of(pipeline);
         pipelineRun.start();
 
-        do {
-            validateAndGetExecutableStages(pipeline);
-            try (ExecutionPlan execution = executionPlanner.getNextExecution(pipelineRun)) {
-                // Validate execution plan for manual intervention requirements
-                // This centralized validation ensures both community and cloud paths are validated
-                execution.validate();
+        Throwable pipelineLevelError = null;
+        boolean throwPipelineLevelError = true;
 
-                if (execution.isExecutionRequired()) {
-                    if (validateOnlyMode()) {
-                        throw new PendingChangesException();
-                    }
-                    execution.applyOnEach((executionId, lock, executableStage) ->
-                            runStage(executionId, lock, executableStage, pipelineRun));
-                } else {
+        do {
+            try (ExecutionPlan execution = executionPlanner.getNextExecution(pipelineRun)) {
+                if (execution.isAborted()) {
+                    logger.info("Pipeline execution aborted by the planner — earlier block has failures or another structural reason");
                     break;
                 }
+
+                if (!execution.isExecutionRequired()) {
+                    break;
+                }
+
+                if (validateOnlyMode()) {
+                    throw new PendingChangesException();
+                }
+
+                execution.applyOnEach((executionId, lock, executableStage) ->
+                        runStage(executionId, lock, executableStage, pipelineRun));
             } catch (LockException exception) {
-                pipelineRun.markPipelineFailed(exception);
-                eventPublisher.publish(new StageFailedEvent(exception));
-                eventPublisher.publish(new PipelineFailedEvent(exception));
+                pipelineLevelError = exception;
                 if (throwExceptionIfCannotObtainLock) {
                     logger.debug("Required process lock not acquired - ABORTING OPERATION", exception);
-                    throw exception;
                 } else {
                     logger.warn("Process lock not acquired but throwExceptionIfCannotObtainLock=false - CONTINUING WITHOUT LOCK", exception);
+                    throwPipelineLevelError = false;
                 }
                 break;
-            } catch (StageExecutionException e) {
-                // Defensive: runStage normally records the failure into pipelineRun before
-                // rethrowing. If for some reason this exception arrives here without that
-                // having happened (e.g. thrown by something other than runStage), make sure
-                // the failure is reflected in the response.
-                String stageName = e.getResult() != null ? e.getResult().getStageName() : null;
-                if (stageName != null) {
-                    io.flamingock.internal.core.pipeline.run.StageRun stageRun = pipelineRun.getStageRun(stageName);
-                    if (stageRun != null && !stageRun.getState().isFailed()) {
-                        pipelineRun.markStageFailed(stageName, e);
-                    }
-                }
-                pipelineRun.stop();
-                throw OperationException.fromExisting(e.getCause(), pipelineRun.toResponse());
-            } catch (ManualInterventionRequiredException miEx) {
-                // Per-stage attribution: each RecoveryIssue is mapped to its owning stage and that
-                // stage's state becomes BLOCKED_MANUAL_INTERVENTION with the subset of issues
-                // affecting it. The blocked stages carry their own ErrorInfo, so no pipeline-level
-                // mark is needed.
-                pipelineRun.markStagesBlockedFromMI(miEx);
-                throw miEx;
-            } catch (FlamingockException e) {
-                // Validate-time exceptions (aborted FlamingockException, PendingChangesException)
-                // and any FlamingockException that bubbles up from runStage's generic-throwable
-                // handler. Stage-level failures (if any) have already been recorded; pipeline-level
-                // marking is idempotent (first-wins) and toResponse() keeps the stage error as primary.
-                pipelineRun.markPipelineFailed(e);
-                throw e;
+            } catch (Throwable exception) {
+                pipelineLevelError = exception;
+                break;
             }
         } while (true);
 
         pipelineRun.stop();
         ExecuteResponseData result = pipelineRun.toResponse();
 
+        if (pipelineLevelError != null) {
+            // toResponse() derives status from per-stage state; override to FAILED so the
+            // response reflects the pipeline-wide error carried in pipelineLevelError.
+            result.setStatus(ExecutionStatus.FAILED);
+            logger.debug("Error executing the process. ABORTED OPERATION", pipelineLevelError);
+            eventPublisher.publish(new PipelineFailedEvent(toException(pipelineLevelError)));
+            if (throwPipelineLevelError) {
+                throw ExecuteOperationException.fromExisting(pipelineLevelError, result);
+            }
+            return new ExecuteResult(result);
+        }
+
+        if (hasAnyFailedStage(pipelineRun)) {
+            logger.info("Flamingock execution finished with stage failures [duration={}ms applied={} skipped={} failed={}]",
+                    result.getTotalDurationMs(), result.getAppliedChanges(), result.getSkippedChanges(), result.getFailedChanges());
+            StagedExecuteOperationException stagedException = new StagedExecuteOperationException(result);
+            eventPublisher.publish(new PipelineFailedEvent(stagedException));
+            throw stagedException;
+        }
+
         logger.info("Flamingock execution completed [duration={}ms applied={} skipped={}]",
                 result.getTotalDurationMs(), result.getAppliedChanges(), result.getSkippedChanges());
 
         eventPublisher.publish(new PipelineCompletedEvent());
 
-        return result;
+        return new ExecuteResult(result);
     }
 
     private void runStage(String executionId, Lock lock, ExecutableStage executableStage, PipelineRun pipelineRun) {
+        String stageName = executableStage.getName();
+        try {
+            executableStage.validate();
+        } catch (ManualInterventionRequiredException miException) {
+            logger.warn("ABORTED STAGE '{}' - Manual intervention required for changes: [{}]",
+                    stageName, miException.getConflictingSummary());
+            pipelineRun.markStageStarted(stageName);
+            eventPublisher.publish(new StageStartedEvent());
+            pipelineRun.markStageBlockedFromMI(stageName, miException.getConflictingChanges());
+            eventPublisher.publish(new StageFailedEvent(miException));
+            return;
+        }
+
         try {
             startStage(executionId, lock, executableStage, pipelineRun);
         } catch (StageExecutionException exception) {
-            pipelineRun.markStageFailed(executableStage.getName(), exception);
+            pipelineRun.markStageFailed(stageName, exception);
             eventPublisher.publish(new StageFailedEvent(exception));
-            eventPublisher.publish(new PipelineFailedEvent(exception));
-            throw exception;
         } catch (Throwable generalException) {
-            pipelineRun.markStageFailed(executableStage.getName(), generalException);
-            throw processAndGetFlamingockException(generalException);
+            pipelineRun.markStageFailed(stageName, generalException);
+            eventPublisher.publish(new StageFailedEvent(toException(generalException)));
         }
     }
 
@@ -218,28 +219,16 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         eventPublisher.publish(new StageCompletedEvent(executionOutput));
     }
 
-private FlamingockException processAndGetFlamingockException(Throwable exception) throws FlamingockException {
-        FlamingockException flamingockException;
-        if (exception instanceof OperationException) {
-            OperationException pipelineException = (OperationException) exception;
-            if (pipelineException.getCause() instanceof FlamingockException) {
-                flamingockException = (FlamingockException) pipelineException.getCause();
-            } else {
-                flamingockException = (OperationException) exception;
+    private static boolean hasAnyFailedStage(PipelineRun pipelineRun) {
+        for (StageRun stageRun : pipelineRun.getStageRuns()) {
+            if (stageRun.getState().isFailed()) {
+                return true;
             }
-        } else if (exception instanceof FlamingockException) {
-            flamingockException = (FlamingockException) exception;
-        } else {
-            flamingockException = new FlamingockException(exception);
         }
-        if (flamingockException instanceof ManualInterventionRequiredException) {
-            ManualInterventionRequiredException miException = (ManualInterventionRequiredException) flamingockException;
-            logger.error("ABORTED OPERATION - Manual intervention required for changes: [{}]", miException.getConflictingSummary());
-        } else {
-            logger.debug("Error executing the process. ABORTED OPERATION", exception);
-        }
-        eventPublisher.publish(new StageFailedEvent(flamingockException));
-        eventPublisher.publish(new PipelineFailedEvent(flamingockException));
-        return flamingockException;
+        return false;
+    }
+
+    private static Exception toException(Throwable throwable) {
+        return throwable instanceof Exception ? (Exception) throwable : new FlamingockException(throwable);
     }
 }

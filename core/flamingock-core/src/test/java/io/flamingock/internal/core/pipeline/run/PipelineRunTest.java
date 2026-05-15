@@ -15,7 +15,6 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.StageResult;
@@ -29,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -122,74 +120,34 @@ class PipelineRunTest {
     }
 
     @Test
-    void markPipelineFailedIsIdempotentFirstWins() {
-        AbstractLoadedStage a = mockStage("alpha");
-        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(a));
+    void markStageBlockedFromMISetsBlockedForMIState() {
+        AbstractLoadedChange alphaChange = mockChange("alpha-c1");
+        AbstractLoadedStage alpha = mockStageWithChanges("alpha", alphaChange);
+        AbstractLoadedStage beta = mockStageWithChanges("beta");
 
-        pipelineRun.markPipelineFailed(new RuntimeException("first"));
-        pipelineRun.markPipelineFailed(new IllegalStateException("second"));
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(alpha, beta));
 
-        ErrorInfo info = pipelineRun.getPipelineError().get();
-        assertEquals("RuntimeException", info.getErrorType());
-        assertEquals("first", info.getMessage());
-    }
-
-    @Test
-    void getPipelineErrorIsEmptyUntilMarked() {
-        AbstractLoadedStage a = mockStage("alpha");
-        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(a));
-
-        assertFalse(pipelineRun.getPipelineError().isPresent());
-    }
-
-    @Test
-    void markStagesBlockedFromMIGroupsIssuesByOwningStage() {
-        AbstractLoadedChange alphaChange1 = mockChange("alpha-c1");
-        AbstractLoadedChange alphaChange2 = mockChange("alpha-c2");
-        AbstractLoadedChange betaChange = mockChange("beta-c1");
-
-        AbstractLoadedStage alpha = mockStageWithChanges("alpha", alphaChange1, alphaChange2);
-        AbstractLoadedStage beta = mockStageWithChanges("beta", betaChange);
-        AbstractLoadedStage gamma = mockStageWithChanges("gamma");   // no MI'd changes
-
-        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(alpha, beta, gamma));
-
-        List<RecoveryIssue> issues = Arrays.asList(
-                new RecoveryIssue("alpha-c1"),
-                new RecoveryIssue("alpha-c2"),
-                new RecoveryIssue("beta-c1"));
-        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(issues, "alpha");
-
-        pipelineRun.markStagesBlockedFromMI(miEx);
+        pipelineRun.markStageBlockedFromMI(
+                "alpha",
+                Arrays.asList(new RecoveryIssue("alpha-c1")));
 
         StageState alphaState = pipelineRun.getStageRun("alpha").getState();
         assertTrue(alphaState.isBlockedForManualIntervention());
-        assertEquals(2, alphaState.getRecoveryIssues().size());
+        assertEquals(1, alphaState.getRecoveryIssues().size());
 
-        StageState betaState = pipelineRun.getStageRun("beta").getState();
-        assertTrue(betaState.isBlockedForManualIntervention());
-        assertEquals(1, betaState.getRecoveryIssues().size());
-        assertEquals("beta-c1", betaState.getRecoveryIssues().get(0).getChangeId());
-
-        // No MI'd changes for gamma → stays NOT_STARTED.
-        assertSame(StageState.NOT_STARTED, pipelineRun.getStageRun("gamma").getState());
+        // Other stages are unaffected by a single stage's MI block — independent stage state.
+        assertSame(StageState.NOT_STARTED, pipelineRun.getStageRun("beta").getState());
     }
 
     @Test
-    void markStagesBlockedFromMIThrowsForUnknownChange() {
+    void markStageBlockedFromMIThrowsForUnknownStage() {
         AbstractLoadedStage alpha = mockStageWithChanges("alpha", mockChange("alpha-c1"));
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(alpha));
 
-        ManualInterventionRequiredException miEx = new ManualInterventionRequiredException(
-                Arrays.asList(new RecoveryIssue("ghost-change")), "alpha");
-
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
-                () -> pipelineRun.markStagesBlockedFromMI(miEx));
-        assertTrue(ex.getMessage().contains("ghost-change"));
-
-        // No partial state — the alpha stage stays NOT_STARTED.
-        assertSame(StageState.NOT_STARTED, pipelineRun.getStageRun("alpha").getState());
+        assertThrows(IllegalArgumentException.class,
+                () -> pipelineRun.markStageBlockedFromMI(
+                        "ghost-stage",
+                        Arrays.asList(new RecoveryIssue("alpha-c1"))));
     }
 
     @Test
@@ -205,9 +163,74 @@ class PipelineRunTest {
         assertSame(b, loaded.get(1));
     }
 
+    @Test
+    void getStageBlocksReturnsBlocksInSystemThenLegacyThenDefaultOrder() {
+        AbstractLoadedStage userStage = mockStage("user", io.flamingock.api.StageType.DEFAULT);
+        AbstractLoadedStage systemStage = mockStage("system", io.flamingock.api.StageType.SYSTEM);
+        AbstractLoadedStage legacyStage = mockStage("legacy", io.flamingock.api.StageType.LEGACY);
+
+        // Input order is intentionally NOT dependency order to verify partitioning re-orders.
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage, legacyStage));
+
+        List<StageRunBlock> blocks = pipelineRun.getStageBlocks();
+        assertEquals(3, blocks.size());
+        assertSame(io.flamingock.api.StageType.SYSTEM, blocks.get(0).getType());
+        assertEquals("system", blocks.get(0).getStageRuns().get(0).getName());
+        assertSame(io.flamingock.api.StageType.LEGACY, blocks.get(1).getType());
+        assertEquals("legacy", blocks.get(1).getStageRuns().get(0).getName());
+        assertSame(io.flamingock.api.StageType.DEFAULT, blocks.get(2).getType());
+        assertEquals("user", blocks.get(2).getStageRuns().get(0).getName());
+    }
+
+    @Test
+    void getStageBlocksOmitsEmptyTypes() {
+        AbstractLoadedStage user1 = mockStage("user1", io.flamingock.api.StageType.DEFAULT);
+        AbstractLoadedStage user2 = mockStage("user2", io.flamingock.api.StageType.DEFAULT);
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(user1, user2));
+
+        List<StageRunBlock> blocks = pipelineRun.getStageBlocks();
+        assertEquals(1, blocks.size());
+        assertSame(io.flamingock.api.StageType.DEFAULT, blocks.get(0).getType());
+        assertEquals(2, blocks.get(0).getStageRuns().size());
+    }
+
+    @Test
+    void flatStageRunsListIsConcatenationOfBlocksInOrder() {
+        AbstractLoadedStage userStage = mockStage("user", io.flamingock.api.StageType.DEFAULT);
+        AbstractLoadedStage systemStage = mockStage("system", io.flamingock.api.StageType.SYSTEM);
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage));
+
+        // Flat list is canonicalised: SYSTEM block first, then DEFAULT block, regardless of input
+        // order. This is the new single source of truth.
+        List<StageRun> flat = pipelineRun.getStageRuns();
+        assertEquals(2, flat.size());
+        assertEquals("system", flat.get(0).getName());
+        assertEquals("user", flat.get(1).getName());
+    }
+
+    @Test
+    void getTotalChangeCountSumsAcrossAllStages() {
+        AbstractLoadedStage alpha = mockStageWithChanges("alpha", mockChange("c1"), mockChange("c2"));
+        AbstractLoadedStage beta = mockStageWithChanges("beta", mockChange("c3"));
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(alpha, beta));
+
+        assertEquals(2, pipelineRun.getStageCount());
+        assertEquals(3L, pipelineRun.getTotalChangeCount());
+    }
+
     private static AbstractLoadedStage mockStage(String name) {
         AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
         when(stage.getName()).thenReturn(name);
+        return stage;
+    }
+
+    private static AbstractLoadedStage mockStage(String name, io.flamingock.api.StageType type) {
+        AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
+        when(stage.getName()).thenReturn(name);
+        when(stage.getType()).thenReturn(type);
         return stage;
     }
 

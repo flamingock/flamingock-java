@@ -26,7 +26,6 @@ import io.flamingock.cloud.api.vo.CloudExecutionAction;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.cloud.planner.client.ExecutionPlannerClient;
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.change.loaded.LoadedChangeBuilder;
@@ -97,7 +96,7 @@ class CloudExecutionPlannerTest {
     }
 
     @Test
-    @DisplayName("Should return ABORT plan when server returns ABORT with MANUAL_INTERVENTION changes")
+    @DisplayName("Should return ABORT plan when server returns ABORT (regardless of change actions)")
     void shouldReturnAbortPlanWhenServerReturnsAbort() {
         CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
 
@@ -113,12 +112,14 @@ class CloudExecutionPlannerTest {
 
         ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(stages));
 
+        // ABORT is a control-flow signal — the operation reads isAborted() and breaks the loop.
+        // No exception flows from ExecutionPlan itself. MI per-stage is tested separately on
+        // ExecutableStage.validate() (see core's ExecutableStageTest / AbstractPipelineTraverseOperationTest).
         assertTrue(plan.isAborted());
-        assertThrows(ManualInterventionRequiredException.class, plan::validate);
     }
 
     @Test
-    @DisplayName("Should return ABORT plan that throws FlamingockException when server returns ABORT but no MI changes")
+    @DisplayName("Should return ABORT plan when server returns ABORT (no MI changes)")
     void shouldReturnAbortPlanWhenServerReturnsAbortWithNoMIChanges() {
         CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
 
@@ -135,7 +136,6 @@ class CloudExecutionPlannerTest {
         ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(stages));
 
         assertTrue(plan.isAborted());
-        assertThrows(io.flamingock.internal.common.core.error.FlamingockException.class, plan::validate);
     }
 
     @Test

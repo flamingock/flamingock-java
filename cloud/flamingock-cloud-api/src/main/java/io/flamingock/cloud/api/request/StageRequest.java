@@ -15,6 +15,8 @@
  */
 package io.flamingock.cloud.api.request;
 
+import io.flamingock.cloud.api.vo.CloudStageStatus;
+
 import java.util.List;
 
 public class StageRequest {
@@ -22,14 +24,25 @@ public class StageRequest {
 
     private int order;
 
+    /**
+     * Per-stage status reported by the client. Nullable for back-compat with older clients;
+     * servers must treat {@code null} as {@link CloudStageStatus#NOT_STARTED}.
+     */
+    private CloudStageStatus status;
+
     private List<ChangeRequest> changes;
 
     public StageRequest() {
     }
 
     public StageRequest(String name, int order, List<ChangeRequest> changes) {
+        this(name, order, null, changes);
+    }
+
+    public StageRequest(String name, int order, CloudStageStatus status, List<ChangeRequest> changes) {
         this.name = name;
         this.order = order;
+        this.status = status;
         this.changes = changes;
     }
 
@@ -39,6 +52,10 @@ public class StageRequest {
 
     public int getOrder() {
         return order;
+    }
+
+    public CloudStageStatus getStatus() {
+        return status;
     }
 
     public List<ChangeRequest> getChanges() {
@@ -53,6 +70,10 @@ public class StageRequest {
         this.order = order;
     }
 
+    public void setStatus(CloudStageStatus status) {
+        this.status = status;
+    }
+
     public void setChanges(List<ChangeRequest> changes) {
         this.changes = changes;
     }
@@ -64,11 +85,12 @@ public class StageRequest {
         StageRequest that = (StageRequest) o;
         return order == that.order
                 && java.util.Objects.equals(name, that.name)
+                && status == that.status
                 && java.util.Objects.equals(changes, that.changes);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(name, order, changes);
+        return java.util.Objects.hash(name, order, status, changes);
     }
 }

@@ -24,7 +24,10 @@ import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
 import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.response.data.ErrorInfo;
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.operation.OperationException;
+import io.flamingock.internal.core.operation.StagedExecuteOperationException;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -244,7 +247,7 @@ class CoreStrategiesE2ETest {
                     )
             );
 
-            OperationException exception = assertThrows(OperationException.class, () -> {
+            StagedExecuteOperationException exception = assertThrows(StagedExecuteOperationException.class, () -> {
                 testKit.createBuilder()
                         .addTargetSystem(targetSystem)
                         .build()
@@ -252,7 +255,15 @@ class CoreStrategiesE2ETest {
             });
 
             assertNotNull(exception);
-            assertTrue(exception.getMessage().contains("Intentional failure"));
+            StageResult failedStage = exception.getResult().getStages().stream()
+                    .filter(s -> s.getState().isFailed())
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Expected at least one failed stage in the response"));
+            ErrorInfo errorInfo = failedStage.getState().getErrorInfo()
+                    .orElseThrow(() -> new AssertionError("Failed stage should carry an ErrorInfo"));
+            assertNotNull(errorInfo.getMessage());
+            assertTrue(errorInfo.getMessage().contains("Intentional failure"),
+                    "Expected per-stage error to contain 'Intentional failure', got: " + errorInfo.getMessage());
         }
 
         assertTrue(counter.isExecuted(), "Counter.executed should be true after execution");

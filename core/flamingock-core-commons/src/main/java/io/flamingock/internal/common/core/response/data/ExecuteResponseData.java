@@ -44,9 +44,6 @@ public class ExecuteResponseData {
     // Per-stage breakdown
     private List<StageResult> stages;
 
-    // Error information (if failed)
-    private ErrorInfo error;
-
     public ExecuteResponseData() {
         this.stages = new ArrayList<>();
     }
@@ -64,7 +61,6 @@ public class ExecuteResponseData {
         this.skippedChanges = builder.skippedChanges;
         this.failedChanges = builder.failedChanges;
         this.stages = builder.stages != null ? builder.stages : new ArrayList<>();
-        this.error = builder.error;
     }
 
     public ExecutionStatus getStatus() {
@@ -163,14 +159,6 @@ public class ExecuteResponseData {
         this.stages = stages;
     }
 
-    public ErrorInfo getError() {
-        return error;
-    }
-
-    public void setError(ErrorInfo error) {
-        this.error = error;
-    }
-
     public boolean isSuccess() {
         return status == ExecutionStatus.SUCCESS || status == ExecutionStatus.NO_CHANGES;
     }
@@ -196,7 +184,6 @@ public class ExecuteResponseData {
         private int skippedChanges;
         private int failedChanges;
         private List<StageResult> stages = new ArrayList<>();
-        private ErrorInfo error;
 
         public Builder status(ExecutionStatus status) {
             this.status = status;
@@ -263,11 +250,6 @@ public class ExecuteResponseData {
                 this.stages = new ArrayList<>();
             }
             this.stages.add(stage);
-            return this;
-        }
-
-        public Builder error(ErrorInfo error) {
-            this.error = error;
             return this;
         }
 

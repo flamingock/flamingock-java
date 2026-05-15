@@ -24,8 +24,11 @@ import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.StageResponse;
 import io.flamingock.cloud.api.response.ChangeResponse;
 import io.flamingock.cloud.api.vo.CloudChangeAction;
+import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.cloud.CloudApiMapper;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
+import io.flamingock.internal.core.pipeline.run.StageRun;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
@@ -51,19 +54,22 @@ import java.util.stream.Collectors;
 
 public final class CloudExecutionPlanMapper {
 
-    public static ExecutionPlanRequest toRequest(List<AbstractLoadedStage> loadedStages,
+    public static ExecutionPlanRequest toRequest(PipelineRun pipelineRun,
                                                  long lockAcquiredForMillis,
                                                  Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
 
-        List<StageRequest> requestStages = new ArrayList<>(loadedStages.size());
-        for (int i = 0; i < loadedStages.size(); i++) {
-            AbstractLoadedStage currentStage = loadedStages.get(i);
+        List<StageRun> stageRuns = pipelineRun.getStageRuns();
+        List<StageRequest> requestStages = new ArrayList<>(stageRuns.size());
+        for (int i = 0; i < stageRuns.size(); i++) {
+            StageRun stageRun = stageRuns.get(i);
+            AbstractLoadedStage currentStage = stageRun.getLoadedStage();
             List<ChangeRequest> stageChanges = currentStage
                     .getChanges()
                     .stream()
                     .map(descriptor -> CloudExecutionPlanMapper.mapToChangeRequest(descriptor, ongoingStatusesMap))
                     .collect(Collectors.toList());
-            requestStages.add(new StageRequest(currentStage.getName(), i, stageChanges));
+            CloudStageStatus status = CloudApiMapper.toCloud(stageRun.getState());
+            requestStages.add(new StageRequest(currentStage.getName(), i, status, stageChanges));
         }
 
         return new ExecutionPlanRequest(lockAcquiredForMillis, requestStages);

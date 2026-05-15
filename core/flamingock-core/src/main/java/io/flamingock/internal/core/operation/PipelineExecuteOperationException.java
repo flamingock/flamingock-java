@@ -15,24 +15,20 @@
  */
 package io.flamingock.internal.core.operation;
 
-import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 
 /**
- * Parent of every operation-thrown exception. Concrete operations throw their own subclass
- * (e.g. {@link ExecuteOperationException} for execute). Higher layers can catch
- * {@code OperationException} generically when they don't need to differentiate.
+ * Thrown when a pipeline-wide error breaks iteration (e.g. {@code LockException}, planner abort,
+ * unexpected throwable). Always carries the response data assembled so far plus the originating
+ * cause.
  */
-public abstract class OperationException extends FlamingockException {
+public class PipelineExecuteOperationException extends ExecuteOperationException {
 
-    protected OperationException(String message) {
-        super(message);
+    public PipelineExecuteOperationException(Throwable cause, ExecuteResponseData result) {
+        super(cause, result);
     }
 
-    protected OperationException(Throwable cause) {
-        super(cause);
-    }
-
-    protected OperationException(String message, Throwable cause) {
-        super(message, cause);
+    public PipelineExecuteOperationException(String message, Throwable cause, ExecuteResponseData result) {
+        super(message, cause, result);
     }
 }

@@ -221,12 +221,15 @@ class CompilerArgsConfiguratorTest {
 
     /**
      * Mirrors the shape of `KaptExtension` enough for our reflective lookup: an
-     * `arguments(Action<KaptAnnotationProcessorOptions>)` method.
+     * `arguments(action: StubKaptArguments.() -> Unit)` method. The Kotlin lambda receiver
+     * compiles to a `Function1<StubKaptArguments, Unit>` parameter, mirroring the real
+     * `KaptExtension.arguments` JVM signature so the production reflective dispatch is
+     * exercised the same way as it would be against the real Kotlin plugin classpath.
      */
     open class StubKaptExtension {
         val arguments = StubKaptArguments()
-        fun arguments(action: org.gradle.api.Action<StubKaptArguments>) {
-            action.execute(arguments)
+        fun arguments(action: StubKaptArguments.() -> Unit) {
+            arguments.action()
         }
     }
 

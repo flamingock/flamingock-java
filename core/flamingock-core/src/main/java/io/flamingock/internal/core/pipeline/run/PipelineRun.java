@@ -15,7 +15,7 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
+import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
@@ -24,7 +24,6 @@ import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
-import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
@@ -32,16 +31,27 @@ import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PipelineRun {
 
+    /**
+     * Block-dependency ordering: every stage in an earlier block must succeed before the next
+     * block may execute. SYSTEM is the foundation, LEGACY runs second, DEFAULT (user) runs last.
+     */
+    private static final List<StageType> BLOCK_ORDER =
+            Arrays.asList(StageType.SYSTEM, StageType.LEGACY, StageType.DEFAULT);
+
     public static PipelineRun of(LoadedPipeline pipeline) {
+        // Static-structure validation runs as part of construction. Builder-time validation in
+        // AbstractChangeRunnerBuilder still fails fast on malformed pipelines; this call covers
+        // the runtime entry point so callers don't have to validate separately.
+        pipeline.validate();
         List<AbstractLoadedStage> stages = new ArrayList<>();
         pipeline.getSystemStage().ifPresent(stages::add);
         stages.addAll(pipeline.getStages());
@@ -49,21 +59,48 @@ public class PipelineRun {
     }
 
     public static PipelineRun of(List<AbstractLoadedStage> stages) {
-        List<StageRun> runs = new ArrayList<>();
-        for (AbstractLoadedStage stage : stages) {
-            runs.add(new StageRun(stage));
+        // Partition by StageType in dependency order, skipping empty types (sparse). The resulting
+        // flat list is the concatenation of blocks in canonical order — a single source of truth
+        // for stage ordering across the rest of the runtime.
+        Map<StageType, List<StageRun>> byType = new LinkedHashMap<>();
+        for (StageType type : BLOCK_ORDER) {
+            byType.put(type, new ArrayList<>());
         }
-        return new PipelineRun(runs);
+        for (AbstractLoadedStage stage : stages) {
+            byType.get(resolveType(stage)).add(new StageRun(stage));
+        }
+
+        List<StageRunBlock> blocks = new ArrayList<>();
+        List<StageRun> flat = new ArrayList<>();
+        for (StageType type : BLOCK_ORDER) {
+            List<StageRun> blockRuns = byType.get(type);
+            if (!blockRuns.isEmpty()) {
+                blocks.add(new StageRunBlock(type, blockRuns));
+                flat.addAll(blockRuns);
+            }
+        }
+        return new PipelineRun(flat, blocks);
+    }
+
+    /**
+     * Defensive null-handling: production stages always carry a {@link StageType}; legacy test
+     * mocks may not stub {@code getType()} and yield null. Treat null as DEFAULT (the most common
+     * type, what a normal user stage would be).
+     */
+    private static StageType resolveType(AbstractLoadedStage stage) {
+        StageType type = stage.getType();
+        return type != null ? type : StageType.DEFAULT;
     }
 
     private final List<StageRun> stageRuns;
+    private final List<StageRunBlock> stageBlocks;
     private final Map<String, StageRun> byName;
     private Instant startedAt;
     private Instant stoppedAt;
-    private ErrorInfo pipelineError;
 
-    private PipelineRun(List<StageRun> stageRuns) {
+    private PipelineRun(List<StageRun> stageRuns, List<StageRunBlock> stageBlocks) {
         this.stageRuns = Collections.unmodifiableList(stageRuns);
+        this.stageBlocks = Collections.unmodifiableList(stageBlocks);
         Map<String, StageRun> index = new LinkedHashMap<>();
         for (StageRun run : stageRuns) {
             index.put(run.getName(), run);
@@ -77,6 +114,30 @@ public class PipelineRun {
 
     public StageRun getStageRun(String name) {
         return byName.get(name);
+    }
+
+    /**
+     * Stages grouped into typed blocks in dependency order. Empty blocks are omitted (sparse): if
+     * a pipeline has no SYSTEM stages, no SYSTEM block is returned. Consumers treat the list as
+     * an ordered execution dependency — every stage in {@code blocks[i]} must complete
+     * successfully before any stage in {@code blocks[i+1]} may run.
+     */
+    public List<StageRunBlock> getStageBlocks() {
+        return stageBlocks;
+    }
+
+    /** Number of stages in this run, across all blocks. */
+    public int getStageCount() {
+        return stageRuns.size();
+    }
+
+    /** Total number of changes across all stages. */
+    public long getTotalChangeCount() {
+        long count = 0;
+        for (StageRun stageRun : stageRuns) {
+            count += stageRun.getLoadedStage().getChanges().size();
+        }
+        return count;
     }
 
     public List<AbstractLoadedStage> getLoadedStages() {
@@ -131,53 +192,15 @@ public class PipelineRun {
     }
 
     /**
-     * Attributes a {@link ManualInterventionRequiredException} to its owning stages. Each
-     * {@link RecoveryIssue} is resolved to the stage that owns the change, and that stage's
-     * state becomes {@link StageState#blockedManualIntervention(String, List)} with the subset
-     * of issues that affect it.
-     *
-     * @throws IllegalStateException if any issue's changeId can't be resolved to a loaded
-     *         stage (signals a planner/loaded-stage inconsistency).
+     * Marks a single stage as blocked for manual intervention with its attributed recovery
+     * issues. Per-stage attribution: each stage owns its own MI state, so a single stage's
+     * BlockedForMI does not affect the rest of the pipeline.
      */
-    public void markStagesBlockedFromMI(ManualInterventionRequiredException exception) {
-        Map<String, List<RecoveryIssue>> issuesByStage = new LinkedHashMap<>();
-        for (RecoveryIssue issue : exception.getConflictingChanges()) {
-            String stageName = findStageForChange(issue.getChangeId());
-            issuesByStage.computeIfAbsent(stageName, k -> new ArrayList<>()).add(issue);
-        }
-        for (Map.Entry<String, List<RecoveryIssue>> entry : issuesByStage.entrySet()) {
-            StageRun run = lookupOrThrow(entry.getKey());
-            run.setResult(StageResult.builder(run.getResult())
-                    .state(StageState.blockedManualIntervention(entry.getKey(), entry.getValue()))
-                    .build());
-        }
-    }
-
-    private String findStageForChange(String changeId) {
-        for (StageRun stageRun : stageRuns) {
-            for (AbstractLoadedChange change : stageRun.getLoadedStage().getChanges()) {
-                if (changeId.equals(change.getId())) {
-                    return stageRun.getName();
-                }
-            }
-        }
-        throw new IllegalStateException(
-                "Cannot attribute manual-intervention issue: changeId '" + changeId
-                        + "' is not part of any loaded stage in this run. "
-                        + "This indicates a planner/loaded-stage inconsistency.");
-    }
-
-    /**
-     * Pipeline-wide failure marker. Idempotent: first call wins.
-     */
-    public void markPipelineFailed(Throwable cause) {
-        if (this.pipelineError == null) {
-            this.pipelineError = ErrorInfo.fromThrowable(cause, Collections.emptyList(), null);
-        }
-    }
-
-    public Optional<ErrorInfo> getPipelineError() {
-        return Optional.ofNullable(pipelineError);
+    public void markStageBlockedFromMI(String stageName, List<RecoveryIssue> issues) {
+        StageRun run = lookupOrThrow(stageName);
+        run.setResult(StageResult.builder(run.getResult())
+                .state(StageState.blockedManualIntervention(stageName, issues))
+                .build());
     }
 
     private StageRun lookupOrThrow(String stageName) {
@@ -188,6 +211,12 @@ public class PipelineRun {
         return run;
     }
 
+    /**
+     * Builds the response data view derived purely from per-stage state. Status is FAILED iff any
+     * stage failed, else SUCCESS. Pipeline-wide errors (e.g., LockException) that aren't reflected
+     * in any stage state are signalled by the operation post-loop via
+     * {@code ExecuteResponseData.setStatus(FAILED)} after {@code toResponse()} returns.
+     */
     public ExecuteResponseData toResponse() {
         List<StageResult> stages = new ArrayList<>();
         int totalStages = 0;
@@ -197,7 +226,6 @@ public class PipelineRun {
         int appliedChanges = 0;
         int skippedChanges = 0;
         int failedChanges = 0;
-        ErrorInfo error = null;
         boolean anyFailed = false;
 
         for (StageRun stageRun : stageRuns) {
@@ -211,9 +239,6 @@ public class PipelineRun {
             } else if (state.isFailed()) {
                 failedStages++;
                 anyFailed = true;
-                if (error == null) {
-                    error = state.getErrorInfo().orElse(null);
-                }
             }
 
             if (stageResult.getChanges() != null) {
@@ -230,11 +255,7 @@ public class PipelineRun {
             }
         }
 
-        if (error == null) {
-            error = this.pipelineError;
-        }
-        boolean pipelineFailed = anyFailed || this.pipelineError != null;
-        ExecutionStatus status = pipelineFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        ExecutionStatus status = anyFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
         long durationMs = (startedAt != null && stoppedAt != null)
                 ? Duration.between(startedAt, stoppedAt).toMillis()
                 : 0L;
@@ -252,7 +273,6 @@ public class PipelineRun {
                 .skippedChanges(skippedChanges)
                 .failedChanges(failedChanges)
                 .stages(stages)
-                .error(error)
                 .build();
     }
 }

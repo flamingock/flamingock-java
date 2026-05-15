@@ -17,10 +17,12 @@ package io.flamingock.cloud;
 
 import io.flamingock.cloud.api.vo.CloudAuditStatus;
 import io.flamingock.cloud.api.vo.CloudChangeType;
+import io.flamingock.cloud.api.vo.CloudStageStatus;
 import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.cloud.api.vo.CloudTxStrategy;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
+import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 
 public final class CloudApiMapper {
@@ -42,6 +44,25 @@ public final class CloudApiMapper {
 
     public static CloudChangeType toCloud(AuditEntry.ChangeType changeType) {
         return CloudChangeType.valueOf(changeType.name());
+    }
+
+    /**
+     * Maps the internal {@link StageState} hierarchy to the wire enum {@link CloudStageStatus}.
+     *
+     * <p>Returns {@code null} for {@code NOT_STARTED} (or a null state) — the canonical wire
+     * shape for "not started" is field absence/null, matching back-compat semantics with older
+     * clients that don't populate the field. The server treats {@code null} as {@code NOT_STARTED}.
+     *
+     * <p>Order is important: {@code BlockedForMI} extends {@code Failed}, so the
+     * blocked-for-MI check must come before the generic failed check.
+     */
+    public static CloudStageStatus toCloud(StageState state) {
+        if (state == null || state.isNotStarted()) return null;
+        if (state.isBlockedForManualIntervention()) return CloudStageStatus.BLOCKED_MANUAL_INTERVENTION;
+        if (state.isFailed()) return CloudStageStatus.FAILED;
+        if (state.isCompleted()) return CloudStageStatus.COMPLETED;
+        if (state.isStarted()) return CloudStageStatus.STARTED;
+        throw new IllegalStateException("Unknown StageState: " + state);
     }
 
 }

@@ -17,8 +17,8 @@ package io.flamingock.internal.core.plan.community;
 
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import io.flamingock.internal.common.core.recovery.action.ChangeAction;
 import io.flamingock.internal.common.core.recovery.action.ChangeActionMap;
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.plan.ExecutionId;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLock;
 import io.flamingock.internal.core.external.store.lock.community.CommunityLockService;
@@ -32,6 +32,8 @@ import io.flamingock.internal.core.external.store.lock.LockRefreshDaemon;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
+import io.flamingock.internal.core.pipeline.run.StageRun;
+import io.flamingock.internal.core.pipeline.run.StageRunBlock;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
@@ -43,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static io.flamingock.internal.common.core.response.data.StageState.COMPLETED;
 
 public class CommunityExecutionPlanner extends ExecutionPlanner {
     private static final Logger logger = FlamingockLoggerFactory.getLogger("LocalExecution");
@@ -115,36 +119,61 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      * <p><b>Error Handling:</b> If any exception occurs after acquiring the lock, the lock is released
      * in the catch block to prevent lock leaks.</p>
      *
-     * @param pipelineRun the in-flight run aggregate; this implementation reads the loaded
-     *                    stages from it ({@code pipelineRun.getLoadedStages()}) and does not
-     *                    yet consult per-stage state (deferred to a later phase)
-     * @return ExecutionPlan containing either stages to execute (with lock held) or CONTINUE (no lock)
+     * @param pipelineRun the in-flight run aggregate. The planner walks
+     *                    {@link PipelineRun#getStageBlocks()} in dependency order and plans from
+     *                    the first non-terminal block. Blocks already terminal+successful are
+     *                    skipped; if a terminal block has failures, the planner returns
+     *                    {@code ABORT} so the operation stops before later-dependent blocks run.
+     * @return ExecutionPlan: {@code newExecution} with a single stage when there's work,
+     *         {@code CONTINUE} when the pipeline is fully done, or {@code ABORT} when an earlier
+     *         block has failures and downstream work must not proceed.
      * @throws LockException if unable to acquire the distributed lock within the configured timeout
      */
     @Override
     public ExecutionPlan getNextExecution(PipelineRun pipelineRun) throws LockException {
-        List<AbstractLoadedStage> loadedStages = pipelineRun.getLoadedStages();
-        Map<String, AuditEntry> initialSnapshot = auditReader.getAuditSnapshotByChangeId();
-        logger.debug("Pulled initial remote state:\n{}", initialSnapshot);
+        // Inner loop: skip past blocks whose stages have no work to do per audit (e.g., legacy
+        // stages whose changes were already applied in a previous run). Such blocks are not
+        // marked Completed by the runtime — there's no executor invocation — so we mark them
+        // here, then re-run block selection to advance to the next block. The loop terminates
+        // either when we find work (return newExecution) or when block selection yields
+        // CONTINUE / ABORT.
+        while (true) {
+            BlockSelection selection = selectActiveBlock(pipelineRun);
+            if (selection.isAborted()) {
+                return ExecutionPlan.ABORT();
+            }
+            if (!selection.getActiveBlock().isPresent()) {
+                return ExecutionPlan.CONTINUE();
+            }
 
-        List<ExecutableStage> initialStages = buildExecutableStages(loadedStages, initialSnapshot);
+            StageRunBlock activeBlock = selection.getActiveBlock().get();
+            List<AbstractLoadedStage> loadedStages = eligibleLoadedStagesFor(activeBlock);
+            Map<String, AuditEntry> initialSnapshot = auditReader.getAuditSnapshotByChangeId();
+            logger.debug("Pulled initial remote state:\n{}", initialSnapshot);
 
-        if (hasManualInterventionChanges(initialStages)) {
-            return ExecutionPlan.ABORT(initialStages);
+            List<ExecutableStage> initialStages = buildExecutableStages(loadedStages, initialSnapshot);
+
+            if (!hasExecutableStages(initialStages)) {
+                // Optimistic view says no work in the active block. The block's stages are
+                // effectively done per audit — mark them Completed (synthetically) and advance to
+                // the next block. Trust the optimistic view; the two-phase dance below is only
+                // needed when we actually have work to do under the lock.
+                markBlockSyntheticallyCompleted(pipelineRun, activeBlock);
+                continue;
+            }
+
+            return planWorkUnderLock(loadedStages, initialStages);
         }
+    }
 
-        if (!hasExecutableStages(initialStages)) {
-            return ExecutionPlan.CONTINUE(initialStages);
-        }
-
+    private ExecutionPlan planWorkUnderLock(List<AbstractLoadedStage> loadedStages,
+                                            List<ExecutableStage> initialStages) throws LockException {
         Lock lock = acquireLock();
 
         try {
             Map<String, AuditEntry> validatedSnapshot = auditReader.getAuditSnapshotByChangeId();
 
             List<ExecutableStage> validatedStages = buildExecutableStages(loadedStages, validatedSnapshot);
-
-            //TODO add hasManualInterventionChanges here too, after lock acquisition
 
             Optional<ExecutableStage> nextStageOpt = getFirstExecutableStage(validatedStages);
 
@@ -155,7 +184,7 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
                     "Releasing lock and continuing."
                 );
                 lock.release();
-                return ExecutionPlan.CONTINUE(validatedStages);
+                return ExecutionPlan.CONTINUE();
             }
 
             logPlanChanges(initialStages, validatedStages);
@@ -173,6 +202,85 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
             logger.error("Error during execution planning - releasing lock", e);
             lock.release();
             throw e;
+        }
+    }
+
+    /**
+     * Walks {@link PipelineRun#getStageBlocks()} in dependency order and decides what to do:
+     * <ul>
+     *   <li>First non-terminal block → that's the active block. Plan from it.</li>
+     *   <li>Block is terminal + has failures → ABORT (downstream blocks must not run).</li>
+     *   <li>Block is terminal + successful → skip and check the next block.</li>
+     *   <li>All blocks terminal + successful → pipeline is fully done, return ALL_DONE.</li>
+     * </ul>
+     */
+    private static BlockSelection selectActiveBlock(PipelineRun pipelineRun) {
+        for (StageRunBlock block : pipelineRun.getStageBlocks()) {
+            if (!block.isTerminal()) {
+                return BlockSelection.proceed(block);
+            }
+            if (block.hasFailures()) {
+                return BlockSelection.ABORT;
+            }
+            // terminal + successful → move to next block
+        }
+        return BlockSelection.ALL_DONE;
+    }
+
+    /**
+     * Eligible loaded stages within the active block: every stage in the block whose runtime
+     * state is not yet a terminal failed shape ({@code Failed} / {@code BlockedForMI}). Within
+     * a non-terminal block these are the stages still candidates for execution.
+     */
+    private static List<AbstractLoadedStage> eligibleLoadedStagesFor(StageRunBlock activeBlock) {
+        return activeBlock.getStageRuns().stream()
+                .filter(stageRun -> !stageRun.getState().isFailed())
+                .map(StageRun::getLoadedStage)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Marks every non-failed, non-completed stage in the block as Completed. Used when the
+     * planner detects that the active block has no executable work per audit — its stages are
+     * already done from the runtime's perspective, so we reflect that in {@link PipelineRun} and
+     * advance to the next block.
+     */
+    private static void markBlockSyntheticallyCompleted(PipelineRun pipelineRun, StageRunBlock block) {
+        for (StageRun stageRun : block.getStageRuns()) {
+            if (stageRun.getState().isFailed() || stageRun.getState().isCompleted()) {
+                continue;
+            }
+            StageResult completed = StageResult.builder(stageRun.getResult()).state(COMPLETED).build();
+            pipelineRun.markStageCompleted(stageRun.getName(), completed);
+        }
+    }
+
+    /**
+     * Compact three-state value: ABORT (singleton), ALL_DONE (singleton), or PROCEED with an
+     * active block. Avoids leaking the "decision shape" outside the planner.
+     */
+    private static final class BlockSelection {
+        private static final BlockSelection ABORT = new BlockSelection(null, true);
+        private static final BlockSelection ALL_DONE = new BlockSelection(null, false);
+
+        static BlockSelection proceed(StageRunBlock block) {
+            return new BlockSelection(block, false);
+        }
+
+        private final StageRunBlock activeBlock;
+        private final boolean aborted;
+
+        private BlockSelection(StageRunBlock activeBlock, boolean aborted) {
+            this.activeBlock = activeBlock;
+            this.aborted = aborted;
+        }
+
+        public Optional<StageRunBlock> getActiveBlock() {
+            return Optional.ofNullable(activeBlock);
+        }
+
+        public boolean isAborted() {
+            return aborted;
         }
     }
 
@@ -208,12 +316,6 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
                     return loadedStage.applyActions(changeActionMap);
                 })
                 .collect(Collectors.toList());
-    }
-
-    private boolean hasManualInterventionChanges(List<ExecutableStage> stages) {
-        return stages.stream()
-                .flatMap(stage -> stage.getChanges().stream())
-                .anyMatch(change -> change.getAction() == ChangeAction.MANUAL_INTERVENTION);
     }
 
     /**

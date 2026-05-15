@@ -19,6 +19,7 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.api.RecoveryStrategy;
 import io.flamingock.internal.common.core.change.RecoveryDescriptor;
+import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.external.store.audit.community.CommunityAuditReader;
 import io.flamingock.internal.core.external.store.lock.LockAcquisition;
@@ -70,19 +71,22 @@ class CommunityExecutionPlannerTest {
     }
 
     @Test
-    @DisplayName("Should return ABORT without acquiring lock when manual intervention is required")
-    void shouldReturnAbortWithoutAcquiringLockWhenManualInterventionRequired() {
+    @DisplayName("Should acquire lock and return execution plan even when changes require manual intervention (MI is now a per-stage concern)")
+    void shouldProceedEvenWhenManualInterventionRequired() {
         AbstractLoadedChange change = mockLoadedChange("change-1");
         AbstractLoadedStage stage = mockStage("stage-1", change);
 
         Map<String, AuditEntry> snapshot = new HashMap<>();
         snapshot.put("change-1", buildAuditEntry("change-1", AuditEntry.Status.FAILED, AuditTxType.NON_TX));
         when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
 
         ExecutionPlan plan = planner.getNextExecution(PipelineRun.of(Collections.singletonList(stage)));
 
-        assertTrue(plan.isAborted());
-        verify(lockService, never()).upsert(any(), any(), anyLong());
+        // The planner no longer aborts based on MI; the operation lambda gates MI per stage.
+        assertFalse(plan.isAborted());
+        verify(lockService).upsert(any(), any(), anyLong());
     }
 
     @Test
@@ -103,6 +107,75 @@ class CommunityExecutionPlannerTest {
     }
 
     @Test
+    @DisplayName("Should skip stages already marked Failed in the run and plan only the remaining stages")
+    void shouldSkipFailedStagesAndPlanRemaining() {
+        AbstractLoadedChange change1 = mockLoadedChange("change-1");
+        AbstractLoadedChange change2 = mockLoadedChange("change-2");
+        AbstractLoadedStage stage1 = mockStage("stage-1", change1);
+        AbstractLoadedStage stage2 = mockStage("stage-2", change2);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(stage1, stage2));
+        pipelineRun.markStageFailed("stage-1", new RuntimeException("boom"));
+
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        // stage-1 was Failed → filtered before action-building. stage-2 was eligible → planned.
+        verify(stage1, never()).applyActions(any());
+        verify(stage2, atLeastOnce()).applyActions(any());
+    }
+
+    @Test
+    @DisplayName("Should skip stages in BlockedForMI (subtype of Failed) and plan only the remaining stages")
+    void shouldSkipBlockedForMIStagesAndPlanRemaining() {
+        AbstractLoadedChange change1 = mockLoadedChange("change-1");
+        AbstractLoadedChange change2 = mockLoadedChange("change-2");
+        AbstractLoadedStage stage1 = mockStage("stage-1", change1);
+        AbstractLoadedStage stage2 = mockStage("stage-2", change2);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(stage1, stage2));
+        pipelineRun.markStageBlockedFromMI(
+                "stage-1",
+                Collections.singletonList(new RecoveryIssue("change-1")));
+
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        verify(stage1, never()).applyActions(any());
+        verify(stage2, atLeastOnce()).applyActions(any());
+    }
+
+    @Test
+    @DisplayName("Should return ABORT without acquiring lock when every stage in the only block has failed")
+    void shouldReturnAbortWhenAllStagesInTheOnlyBlockHaveFailed() {
+        AbstractLoadedChange change = mockLoadedChange("change-1");
+        AbstractLoadedStage stage = mockStage("stage-1", change);
+
+        PipelineRun pipelineRun = PipelineRun.of(Collections.singletonList(stage));
+        pipelineRun.markStageFailed("stage-1", new RuntimeException("boom"));
+
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        // The only block is now terminal+hasFailures → ABORT. Lock is not acquired (block
+        // selection happens before the audit dance).
+        assertTrue(plan.isAborted());
+        assertFalse(plan.isExecutionRequired());
+        verify(lockService, never()).upsert(any(), any(), anyLong());
+    }
+
+    @Test
     @DisplayName("Should return CONTINUE without lock when all changes are already applied")
     void shouldReturnContinueWithoutLockWhenAllChangesApplied() {
         AbstractLoadedChange change = mockLoadedChange("change-1");
@@ -119,6 +192,108 @@ class CommunityExecutionPlannerTest {
         verify(lockService, never()).upsert(any(), any(), anyLong());
     }
 
+    @Test
+    @DisplayName("Should return CONTINUE when every block is terminal+successful (multi-block, all done)")
+    void shouldReturnContinueWhenAllBlocksAreSuccessful() {
+        AbstractLoadedChange systemChange = mockLoadedChange("sys-c1");
+        AbstractLoadedChange userChange = mockLoadedChange("user-c1");
+        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageType.SYSTEM, systemChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(systemStage, userStage));
+        // Both stages completed in this run.
+        pipelineRun.markStageCompleted("flamingock-system-stage", io.flamingock.internal.common.core.response.data.StageResult.builder()
+                .stageId("flamingock-system-stage").stageName("flamingock-system-stage")
+                .state(io.flamingock.internal.common.core.response.data.StageState.COMPLETED).build());
+        pipelineRun.markStageCompleted("changes", io.flamingock.internal.common.core.response.data.StageResult.builder()
+                .stageId("changes").stageName("changes")
+                .state(io.flamingock.internal.common.core.response.data.StageState.COMPLETED).build());
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertFalse(plan.isExecutionRequired());
+        verify(lockService, never()).upsert(any(), any(), anyLong());
+        verify(auditReader, never()).getAuditSnapshotByChangeId();
+    }
+
+    @Test
+    @DisplayName("Should return ABORT when an earlier block is terminal+hasFailures (block dependency)")
+    void shouldReturnAbortWhenAnEarlierBlockHasFailures() {
+        AbstractLoadedChange systemChange = mockLoadedChange("sys-c1");
+        AbstractLoadedChange userChange = mockLoadedChange("user-c1");
+        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageType.SYSTEM, systemChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(systemStage, userStage));
+        // System block fails — earlier block's failure must block downstream work.
+        pipelineRun.markStageFailed("flamingock-system-stage", new RuntimeException("system stage exploded"));
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertTrue(plan.isAborted());
+        verify(lockService, never()).upsert(any(), any(), anyLong());
+        verify(auditReader, never()).getAuditSnapshotByChangeId();
+    }
+
+    @Test
+    @DisplayName("Should synthetically complete a block with no executable work (changes already applied per audit) and plan from the next block")
+    void shouldAdvancePastBlockWithNoExecutableWorkAndPlanFromNextBlock() {
+        AbstractLoadedChange legacyChange = mockLoadedChange("legacy-c1");
+        AbstractLoadedChange userChange = mockLoadedChange("user-c1");
+        AbstractLoadedStage legacyStage = mockTypedStage("flamingock-legacy-stage", io.flamingock.api.StageType.LEGACY, legacyChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(legacyStage, userStage));
+        // Legacy stages are NOT_STARTED in the runtime view but the audit says their changes are
+        // already applied (a previous run / another instance). The planner must advance past the
+        // legacy block, synthetically marking it Completed, then plan from the user (DEFAULT) block.
+        Map<String, AuditEntry> snapshot = new HashMap<>();
+        snapshot.put("legacy-c1", buildAuditEntry("legacy-c1", AuditEntry.Status.APPLIED, null));
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        // Legacy block was inspected, found no executable work, and synthetically completed.
+        assertTrue(pipelineRun.getStageRun("flamingock-legacy-stage").getState().isCompleted(),
+                "Legacy stage should be synthetically marked Completed when its changes are already applied per audit");
+        // Planner advanced to the DEFAULT block and acquired the lock for actual work.
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        verify(legacyStage, atLeastOnce()).applyActions(any());
+        verify(userStage, atLeastOnce()).applyActions(any());
+        verify(lockService, atLeastOnce()).upsert(any(), any(), anyLong());
+    }
+
+    @Test
+    @DisplayName("Should plan from active block, skipping earlier successful blocks (block dependency)")
+    void shouldPlanFromActiveBlockSkippingEarlierSuccessfulBlock() {
+        AbstractLoadedChange systemChange = mockLoadedChange("sys-c1");
+        AbstractLoadedChange userChange = mockLoadedChange("user-c1");
+        AbstractLoadedStage systemStage = mockTypedStage("flamingock-system-stage", io.flamingock.api.StageType.SYSTEM, systemChange);
+        AbstractLoadedStage userStage = mockTypedStage("changes", io.flamingock.api.StageType.DEFAULT, userChange);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(systemStage, userStage));
+        // System block done; DEFAULT block (user stages) still pending.
+        pipelineRun.markStageCompleted("flamingock-system-stage", io.flamingock.internal.common.core.response.data.StageResult.builder()
+                .stageId("flamingock-system-stage").stageName("flamingock-system-stage")
+                .state(io.flamingock.internal.common.core.response.data.StageState.COMPLETED).build());
+
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+        when(lockService.upsert(any(), any(), anyLong()))
+                .thenReturn(new LockAcquisition(RunnerId.fromString("test-runner"), 60000L));
+
+        ExecutionPlan plan = planner.getNextExecution(pipelineRun);
+
+        assertFalse(plan.isAborted());
+        assertTrue(plan.isExecutionRequired());
+        // The completed system stage was skipped — only the user-block stage was action-built.
+        verify(systemStage, never()).applyActions(any());
+        verify(userStage, atLeastOnce()).applyActions(any());
+    }
+
     private static AbstractLoadedChange mockLoadedChange(String id) {
         AbstractLoadedChange change = mock(AbstractLoadedChange.class);
         when(change.getId()).thenReturn(id);
@@ -130,8 +305,17 @@ class CommunityExecutionPlannerTest {
     }
 
     private static AbstractLoadedStage mockStage(String name, AbstractLoadedChange... changes) {
+        return mockTypedStage(name, null, changes);
+    }
+
+    private static AbstractLoadedStage mockTypedStage(String name,
+                                                      io.flamingock.api.StageType type,
+                                                      AbstractLoadedChange... changes) {
         AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
         when(stage.getName()).thenReturn(name);
+        if (type != null) {
+            when(stage.getType()).thenReturn(type);
+        }
         List<AbstractLoadedChange> changeList = java.util.Arrays.asList(changes);
         when(stage.getChanges()).thenReturn(changeList);
 
