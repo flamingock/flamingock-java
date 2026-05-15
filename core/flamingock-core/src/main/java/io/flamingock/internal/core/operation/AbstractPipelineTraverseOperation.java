@@ -34,7 +34,6 @@ import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
 import io.flamingock.internal.core.pipeline.loaded.LoadedPipeline;
-import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.core.pipeline.run.StageRun;
 import io.flamingock.internal.core.plan.ExecutionPlan;
@@ -45,8 +44,6 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Common execution flow for Apply and Validate operations.
@@ -104,34 +101,25 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         }
     }
 
-    private static List<AbstractLoadedStage> validateAndGetExecutableStages(LoadedPipeline pipeline) {
-        pipeline.validate();
-        List<AbstractLoadedStage> stages = new ArrayList<>();
-        if (pipeline.getSystemStage().isPresent()) {
-            stages.add(pipeline.getSystemStage().get());
-        }
-        stages.addAll(pipeline.getStages());
-        return stages;
-    }
-
     private ExecuteResult execute(LoadedPipeline pipeline) {
-        List<AbstractLoadedStage> allStages = validateAndGetExecutableStages(pipeline);
-        int stageCount = allStages.size();
-        long changeCount = allStages.stream()
-                .mapToLong(stage -> stage.getChanges().size())
-                .sum();
-        logger.info("Flamingock execution started [stages={} changes={}]", stageCount, changeCount);
+        // Single transform point: PipelineRun.of(pipeline) validates static structure, partitions
+        // stages by type into StageRunBlocks (SYSTEM -> LEGACY -> DEFAULT, sparse), and becomes the
+        // single source of truth for the rest of this method. LoadedPipeline is not referenced again.
+        PipelineRun pipelineRun = PipelineRun.of(pipeline);
+
+        logger.info(
+                "Flamingock execution started [stages={} changes={}]",
+                pipelineRun.getStageCount(),
+                pipelineRun.getTotalChangeCount());
 
         eventPublisher.publish(new PipelineStartedEvent());
 
-        PipelineRun pipelineRun = PipelineRun.of(pipeline);
         pipelineRun.start();
 
         Throwable pipelineLevelError = null;
         boolean throwPipelineLevelError = true;
 
         do {
-            validateAndGetExecutableStages(pipeline);
             try (ExecutionPlan execution = executionPlanner.getNextExecution(pipelineRun)) {
                 execution.validate();
 

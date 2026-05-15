@@ -185,9 +185,74 @@ class PipelineRunTest {
         assertSame(b, loaded.get(1));
     }
 
+    @Test
+    void getStageBlocksReturnsBlocksInSystemThenLegacyThenDefaultOrder() {
+        AbstractLoadedStage userStage = mockStage("user", io.flamingock.api.StageType.DEFAULT);
+        AbstractLoadedStage systemStage = mockStage("system", io.flamingock.api.StageType.SYSTEM);
+        AbstractLoadedStage legacyStage = mockStage("legacy", io.flamingock.api.StageType.LEGACY);
+
+        // Input order is intentionally NOT dependency order to verify partitioning re-orders.
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage, legacyStage));
+
+        List<StageRunBlock> blocks = pipelineRun.getStageBlocks();
+        assertEquals(3, blocks.size());
+        assertSame(io.flamingock.api.StageType.SYSTEM, blocks.get(0).getType());
+        assertEquals("system", blocks.get(0).getStageRuns().get(0).getName());
+        assertSame(io.flamingock.api.StageType.LEGACY, blocks.get(1).getType());
+        assertEquals("legacy", blocks.get(1).getStageRuns().get(0).getName());
+        assertSame(io.flamingock.api.StageType.DEFAULT, blocks.get(2).getType());
+        assertEquals("user", blocks.get(2).getStageRuns().get(0).getName());
+    }
+
+    @Test
+    void getStageBlocksOmitsEmptyTypes() {
+        AbstractLoadedStage user1 = mockStage("user1", io.flamingock.api.StageType.DEFAULT);
+        AbstractLoadedStage user2 = mockStage("user2", io.flamingock.api.StageType.DEFAULT);
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(user1, user2));
+
+        List<StageRunBlock> blocks = pipelineRun.getStageBlocks();
+        assertEquals(1, blocks.size());
+        assertSame(io.flamingock.api.StageType.DEFAULT, blocks.get(0).getType());
+        assertEquals(2, blocks.get(0).getStageRuns().size());
+    }
+
+    @Test
+    void flatStageRunsListIsConcatenationOfBlocksInOrder() {
+        AbstractLoadedStage userStage = mockStage("user", io.flamingock.api.StageType.DEFAULT);
+        AbstractLoadedStage systemStage = mockStage("system", io.flamingock.api.StageType.SYSTEM);
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage));
+
+        // Flat list is canonicalised: SYSTEM block first, then DEFAULT block, regardless of input
+        // order. This is the new single source of truth.
+        List<StageRun> flat = pipelineRun.getStageRuns();
+        assertEquals(2, flat.size());
+        assertEquals("system", flat.get(0).getName());
+        assertEquals("user", flat.get(1).getName());
+    }
+
+    @Test
+    void getTotalChangeCountSumsAcrossAllStages() {
+        AbstractLoadedStage alpha = mockStageWithChanges("alpha", mockChange("c1"), mockChange("c2"));
+        AbstractLoadedStage beta = mockStageWithChanges("beta", mockChange("c3"));
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(alpha, beta));
+
+        assertEquals(2, pipelineRun.getStageCount());
+        assertEquals(3L, pipelineRun.getTotalChangeCount());
+    }
+
     private static AbstractLoadedStage mockStage(String name) {
         AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
         when(stage.getName()).thenReturn(name);
+        return stage;
+    }
+
+    private static AbstractLoadedStage mockStage(String name, io.flamingock.api.StageType type) {
+        AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
+        when(stage.getName()).thenReturn(name);
+        when(stage.getType()).thenReturn(type);
         return stage;
     }
 

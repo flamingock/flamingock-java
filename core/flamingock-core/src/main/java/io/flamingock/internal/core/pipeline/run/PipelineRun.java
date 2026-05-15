@@ -15,6 +15,7 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
+import io.flamingock.api.StageType;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 import io.flamingock.internal.common.core.response.data.ChangeResult;
 import io.flamingock.internal.common.core.response.data.ChangeStatus;
@@ -30,6 +31,7 @@ import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,7 +41,18 @@ import java.util.stream.Collectors;
 
 public class PipelineRun {
 
+    /**
+     * Block-dependency ordering: every stage in an earlier block must succeed before the next
+     * block may execute. SYSTEM is the foundation, LEGACY runs second, DEFAULT (user) runs last.
+     */
+    private static final List<StageType> BLOCK_ORDER =
+            Arrays.asList(StageType.SYSTEM, StageType.LEGACY, StageType.DEFAULT);
+
     public static PipelineRun of(LoadedPipeline pipeline) {
+        // Static-structure validation runs as part of construction. Builder-time validation in
+        // AbstractChangeRunnerBuilder still fails fast on malformed pipelines; this call covers
+        // the runtime entry point so callers don't have to validate separately.
+        pipeline.validate();
         List<AbstractLoadedStage> stages = new ArrayList<>();
         pipeline.getSystemStage().ifPresent(stages::add);
         stages.addAll(pipeline.getStages());
@@ -47,21 +60,49 @@ public class PipelineRun {
     }
 
     public static PipelineRun of(List<AbstractLoadedStage> stages) {
-        List<StageRun> runs = new ArrayList<>();
-        for (AbstractLoadedStage stage : stages) {
-            runs.add(new StageRun(stage));
+        // Partition by StageType in dependency order, skipping empty types (sparse). The resulting
+        // flat list is the concatenation of blocks in canonical order — a single source of truth
+        // for stage ordering across the rest of the runtime.
+        Map<StageType, List<StageRun>> byType = new LinkedHashMap<>();
+        for (StageType type : BLOCK_ORDER) {
+            byType.put(type, new ArrayList<>());
         }
-        return new PipelineRun(runs);
+        for (AbstractLoadedStage stage : stages) {
+            byType.get(resolveType(stage)).add(new StageRun(stage));
+        }
+
+        List<StageRunBlock> blocks = new ArrayList<>();
+        List<StageRun> flat = new ArrayList<>();
+        for (StageType type : BLOCK_ORDER) {
+            List<StageRun> blockRuns = byType.get(type);
+            if (!blockRuns.isEmpty()) {
+                blocks.add(new StageRunBlock(type, blockRuns));
+                flat.addAll(blockRuns);
+            }
+        }
+        return new PipelineRun(flat, blocks);
+    }
+
+    /**
+     * Defensive null-handling: production stages always carry a {@link StageType}; legacy test
+     * mocks may not stub {@code getType()} and yield null. Treat null as DEFAULT (the most common
+     * type, what a normal user stage would be).
+     */
+    private static StageType resolveType(AbstractLoadedStage stage) {
+        StageType type = stage.getType();
+        return type != null ? type : StageType.DEFAULT;
     }
 
     private final List<StageRun> stageRuns;
+    private final List<StageRunBlock> stageBlocks;
     private final Map<String, StageRun> byName;
     private Instant startedAt;
     private Instant stoppedAt;
     private ErrorInfo pipelineError;
 
-    private PipelineRun(List<StageRun> stageRuns) {
+    private PipelineRun(List<StageRun> stageRuns, List<StageRunBlock> stageBlocks) {
         this.stageRuns = Collections.unmodifiableList(stageRuns);
+        this.stageBlocks = Collections.unmodifiableList(stageBlocks);
         Map<String, StageRun> index = new LinkedHashMap<>();
         for (StageRun run : stageRuns) {
             index.put(run.getName(), run);
@@ -75,6 +116,30 @@ public class PipelineRun {
 
     public StageRun getStageRun(String name) {
         return byName.get(name);
+    }
+
+    /**
+     * Stages grouped into typed blocks in dependency order. Empty blocks are omitted (sparse): if
+     * a pipeline has no SYSTEM stages, no SYSTEM block is returned. Consumers treat the list as
+     * an ordered execution dependency — every stage in {@code blocks[i]} must complete
+     * successfully before any stage in {@code blocks[i+1]} may run.
+     */
+    public List<StageRunBlock> getStageBlocks() {
+        return stageBlocks;
+    }
+
+    /** Number of stages in this run, across all blocks. */
+    public int getStageCount() {
+        return stageRuns.size();
+    }
+
+    /** Total number of changes across all stages. */
+    public long getTotalChangeCount() {
+        long count = 0;
+        for (StageRun stageRun : stageRuns) {
+            count += stageRun.getLoadedStage().getChanges().size();
+        }
+        return count;
     }
 
     public List<AbstractLoadedStage> getLoadedStages() {
