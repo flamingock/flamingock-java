@@ -94,7 +94,7 @@ public class DynamoDBTargetSystemAuditMarker implements TargetSystemAuditMarker 
 
 
     public static class Builder {
-        protected static DynamoDBUtil dynamoDBUtil;
+        private final DynamoDBUtil dynamoDBUtil;
         private final TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager;
         private String tableName = CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME;
         private boolean autoCreate = true;
