@@ -23,6 +23,8 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 
 import java.util.function.Predicate;
 
@@ -40,6 +42,13 @@ public class DynamoDBTestHelper {
 
     public boolean tableExists(String tableName) {
         return dynamoDBUtil.getDynamoDBClient().listTables().tableNames().contains(tableName);
+    }
+
+    public void dropTable(String tableName) {
+        try {
+            dynamoDBUtil.getDynamoDBClient().deleteTable(DeleteTableRequest.builder().tableName(tableName).build());
+        } catch (ResourceNotFoundException ignored) {
+        }
     }
 
     public DynamoDbClient getDynamoDBClient() {

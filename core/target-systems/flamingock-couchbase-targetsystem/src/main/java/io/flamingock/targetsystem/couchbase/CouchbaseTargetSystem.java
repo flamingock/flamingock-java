@@ -25,16 +25,19 @@ import io.flamingock.internal.common.core.audit.AuditReaderType;
 import io.flamingock.internal.common.core.context.ContextResolver;
 import io.flamingock.internal.common.core.error.FlamingockException;
 import io.flamingock.internal.common.couchbase.CouchbaseUtils;
+import io.flamingock.internal.core.builder.FlamingockEdition;
 import io.flamingock.internal.core.external.targets.TransactionalTargetSystem;
 import io.flamingock.internal.core.external.targets.mark.NoOpTargetSystemAuditMarker;
 import io.flamingock.internal.core.transaction.TransactionManager;
 import io.flamingock.internal.core.transaction.TransactionWrapper;
+import java.util.function.Supplier;
 
 import java.util.Objects;
 import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
 public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTargetSystem> implements CouchbaseExternalSystem {
 
@@ -79,11 +82,18 @@ public class CouchbaseTargetSystem extends TransactionalTargetSystem<CouchbaseTa
         targetSystemContext.addDependency(bucket);
 
 
-        TransactionManager<TransactionAttemptContext> txManager = new TransactionManager<>(null); //TODO: update as needed
+        Supplier<TransactionAttemptContext> couchbaseTxSupplier = () -> {
+            throw new FlamingockException(
+                    "Couchbase TransactionAttemptContext can only be obtained inside cluster.transactions().run(); "
+                            + "the wrapper must register the session via TransactionManager.startSession(sessionId, ctx).");
+        };
+        TransactionManager<TransactionAttemptContext> txManager = new TransactionManager<>(couchbaseTxSupplier);
         txWrapper = new CouchbaseTxWrapper(cluster, txManager);
 
-        //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
-        auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
+        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
+        auditMarker = edition == COMMUNITY
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                : CouchbaseTargetSystemAuditMarker.builder(cluster, bucket, txManager).build();
     }
 
     private void validate() {

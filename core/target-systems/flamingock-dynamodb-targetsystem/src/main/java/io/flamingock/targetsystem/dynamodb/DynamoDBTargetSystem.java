@@ -35,6 +35,7 @@ import java.util.Optional;
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
+import static io.flamingock.internal.core.builder.FlamingockEdition.COMMUNITY;
 
 public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTargetSystem> implements DynamoDBExternalSystem {
 
@@ -63,14 +64,13 @@ public class DynamoDBTargetSystem extends TransactionalTargetSystem<DynamoDBTarg
         this.validate();
         targetSystemContext.addDependency(client);
 
-        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class)
-                .orElse(FlamingockEdition.CLOUD);
-
         TransactionManager<TransactWriteItemsEnhancedRequest.Builder> txManager = new TransactionManager<>(TransactWriteItemsEnhancedRequest::builder);
         txWrapper = new DynamoDBTxWrapper(client, txManager);
 
-        //TODO: inject marker repository based on edition(baseContext.getDependencyValue(FlamingockEdition.class))
-        auditMarker = new NoOpTargetSystemAuditMarker(this.getId());
+        FlamingockEdition edition = baseContext.getDependencyValue(FlamingockEdition.class).orElse(COMMUNITY);
+        auditMarker = edition == COMMUNITY
+                ? new NoOpTargetSystemAuditMarker(this.getId())
+                : DynamoDBTargetSystemAuditMarker.builder(client, txManager).build();
     }
 
     private void validate() {

@@ -136,6 +136,7 @@ public class CouchbaseTargetSystemTest {
         //tear down
         mockRunnerServer.stop();
         CouchbaseCollectionHelper.dropCollectionIfExists(cluster, BUCKET_NAME, SCOPE_NAME, CLIENTS_COLLECTION);
+        CouchbaseCollectionHelper.dropCollectionIfExists(cluster, BUCKET_NAME, SCOPE_NAME, CommunityPersistenceConstants.DEFAULT_MARKER_STORE_NAME);
     }
 
     @Test
@@ -182,14 +183,12 @@ public class CouchbaseTargetSystemTest {
 
             // check clients changes
             couchbaseTestHelper.checkCount(bucket.scope(SCOPE_NAME).collection(CLIENTS_COLLECTION), 1);
-            //TODO add when cloud added
             // check ongoing status
-//            couchbaseTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
+            couchbaseTestHelper.checkOngoingChange(ongoingCount -> ongoingCount == 0);
         }
     }
 
     @Test
-    @Disabled("adapt when adding cloud support")
     @DisplayName("Should rollback the ongoing deletion when a change fails")
     void failedChanges() {
         String executionId = "execution-1";
@@ -230,16 +229,15 @@ public class CouchbaseTargetSystemTest {
                     .build();
 
             //THEN
-            mockRunnerServer.verifyAllCalls();
-
             OperationException ex = Assertions.assertThrows(OperationException.class, runner::run);
+
+            mockRunnerServer.verifyAllCalls();
 
             // check clients changes
             couchbaseTestHelper.checkCount(bucket.scope(SCOPE_NAME).collection(CLIENTS_COLLECTION), 0);
 
-            //TODO when cloud enabled
             // check ongoing status
-//            couchbaseTestHelper.checkEmptyTargetSystemAuditMarker();
+            couchbaseTestHelper.checkEmptyTargetSystemAuditMarker();
         }
     }
 
