@@ -198,6 +198,10 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         RunnerId runnerId = generateRunnerId();
 
         FlamingockMetadata flamingockMetadata = coreConfiguration.getFlamingockMetadata();
+        // Per-module strict-mapping orphan validation has already happened inside
+        // MetadataLoader.loadAggregated(); the composite metadata reaching us here is
+        // pre-validated. The remaining LoadedPipeline.validate() below still catches
+        // structural issues (empty stages, duplicate change IDs, etc.).
 
         PriorityContext hierarchicalContext = buildContext(flamingockMetadata);
 
@@ -209,6 +213,10 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         //Loads the pipeline
         //This contribution to the context is fine after components initialization as it's only used
         LoadedPipeline pipeline = loadPipeline(flamingockMetadata);
+        // Runtime gate: enforces stage non-emptiness, no duplicate ids, etc. Used to be
+        // partially enforced at compile time inside PreviewStage builder; moved here so
+        // incremental rounds can produce temporarily-empty stages without failing the build.
+        pipeline.validate();
         pipeline.contributeToContext(hierarchicalContext);
 
         FlamingockArguments flamingockArgs = FlamingockArguments.parse(applicationArgs);

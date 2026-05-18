@@ -15,49 +15,28 @@
  */
 package io.flamingock.internal.common.core.util;
 
-import io.flamingock.internal.util.JsonObjectMapper;
-import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
-import io.flamingock.internal.util.log.FlamingockLoggerFactory;
-import org.slf4j.Logger;
+import io.flamingock.internal.util.JsonObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Optional;
 
+/**
+ * Thin Jackson wrapper for {@link FlamingockMetadata}. The fixed-path discovery used in
+ * Phase 1 has been replaced by per-module SPI discovery in
+ * {@code io.flamingock.internal.common.core.metadata.MetadataLoader}; this class now exists
+ * only to host the deserialization step that the loader composes with.
+ */
 public final class Deserializer {
-
-    private static final Logger logger = FlamingockLoggerFactory.getLogger("Deserializer");
-
-    private static final ClassLoader CLASS_LOADER = FlamingockMetadata.class.getClassLoader();
-
 
     private Deserializer() {
     }
 
-    public static FlamingockMetadata readMetadataFromFile() {
-        return readMetadataOptional()
-                .orElseThrow(() -> new RuntimeException("Flamingock metadata file not found"));
-    }
-
     /**
-     * Attempts to read a file and deserialize it into a FlamingockMetadata.
-     *
-     * @return An Optional containing the deserialized FlamingockMetadata if successful, otherwise empty
+     * Read a {@link FlamingockMetadata} JSON document from a stream. Caller owns the stream
+     * and is responsible for closing it.
      */
-    private static Optional<FlamingockMetadata> readMetadataOptional() {
-        try (InputStream inputStream = CLASS_LOADER.getResourceAsStream(Constants.FULL_PIPELINE_FILE_PATH)) {
-            if (inputStream == null) {
-                logger.debug("Flamingock metadata file not found at the specified path: '{}'", Constants.FULL_PIPELINE_FILE_PATH);
-                return Optional.empty();
-            }
-
-            FlamingockMetadata metadata = JsonObjectMapper.DEFAULT_INSTANCE.readValue(inputStream, FlamingockMetadata.class);
-            logger.debug("Successfully deserialized Flamingock metadata from file: '{}'", Constants.FULL_PIPELINE_FILE_PATH);
-            return Optional.of(metadata);
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading Flamingock metadata file at: " + Constants.FULL_PIPELINE_FILE_PATH, e);
-        }
+    public static FlamingockMetadata readFromStream(InputStream stream) throws IOException {
+        return JsonObjectMapper.DEFAULT_INSTANCE.readValue(stream, FlamingockMetadata.class);
     }
-
 }

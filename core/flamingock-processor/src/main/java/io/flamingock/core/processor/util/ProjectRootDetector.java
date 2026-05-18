@@ -56,16 +56,21 @@ public final class ProjectRootDetector {
      * @return the project root directory, or {@code null} if detection fails
      */
     public static File detectProjectRoot(ProcessingEnvironment processingEnv) {
-        // Strategy 1: Search from working directory
-        File fromWorkingDir = findFromWorkingDirectory();
-        if (fromWorkingDir != null) {
-            return fromWorkingDir;
-        }
-
-        // Strategy 2: Infer from Filer's output location
+        // Strategy 1: Infer from Filer's CLASS_OUTPUT location. Walks up from the actual
+        // compilation output directory (e.g. <submodule>/build/classes/java/main in Gradle
+        // or <submodule>/target/classes in Maven), so multi-module builds correctly land on
+        // the per-submodule build script rather than the multi-module root.
         File fromFiler = findFromFilerOutput(processingEnv);
         if (fromFiler != null) {
             return fromFiler;
+        }
+
+        // Strategy 2: Fallback to working directory. Useful when CLASS_OUTPUT is not a
+        // useful anchor (e.g. some IDE-internal compile setups) or in single-module
+        // projects where both strategies would agree anyway.
+        File fromWorkingDir = findFromWorkingDirectory();
+        if (fromWorkingDir != null) {
+            return fromWorkingDir;
         }
 
         return null;

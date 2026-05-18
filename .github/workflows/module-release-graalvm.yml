@@ -57,13 +57,13 @@ jobs:
           GPG_SECRET_KEY: ${{ secrets.FLAMINGOCK_JRELEASER_GPG_SECRET_KEY }}
 
       - name: Prepare maven publish for module ${{ inputs.module }}
-        run: ./gradlew publish -Pmodule=${{ inputs.module }}
+        run: ./gradlew publish -Prelease -Pmodule=${{ inputs.module }}
         env:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_PASSWORD }}
 
       - name: Releasing  ${{ inputs.module }} to Maven Central portal
-        run: ./infra/module-release-with-retry.sh ${{ inputs.module }} 5 20
+        run: ./infra/module-release-with-retry.sh "${{ inputs.module }}" 5 20 -Prelease
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.FLAMINGOCK_JRELEASER_GITHUB_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.FLAMINGOCK_JRELEASER_MAVENCENTRAL_USERNAME }}

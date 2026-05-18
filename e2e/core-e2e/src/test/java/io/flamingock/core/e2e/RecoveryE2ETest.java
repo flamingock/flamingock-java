@@ -24,12 +24,13 @@ import io.flamingock.core.kit.audit.AuditEntryExpectation;
 import io.flamingock.core.kit.audit.AuditEntryTestFactory;
 import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.core.kit.inmemory.InternalInMemoryTestKit;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.internal.common.core.audit.AuditTxType;
 import io.flamingock.targetsystem.nontransactional.NonTransactionalTargetSystem;
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
 import io.flamingock.internal.common.core.recovery.RecoveryIssue;
+import io.flamingock.internal.common.core.response.data.StageResult;
+import io.flamingock.internal.core.operation.StagedExecuteOperationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.util.Collections;
+import java.util.List;
 
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.FAILED;
@@ -112,8 +114,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.FAILED, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -145,8 +147,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -178,8 +180,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SEPARATE_NO_MARKER, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -211,8 +213,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLED_BACK, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -244,15 +246,15 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.ROLLBACK_FAILED, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
             );
 
-            ManualInterventionRequiredException exception = assertThrows(
-                    ManualInterventionRequiredException.class,
+            StagedExecuteOperationException exception = assertThrows(
+                    StagedExecuteOperationException.class,
                     () -> {
                         testKit.createBuilder()
                                 .addTargetSystem(new NonTransactionalTargetSystem("kafka"))
@@ -262,21 +264,16 @@ class RecoveryE2ETest {
                     }
             );
 
-            // Then - Verify exception details
-            assertNotNull(exception.getConflictingChanges());
-            assertEquals(1, exception.getConflictingChanges().size());
+            // Then - Verify the affected stage is BlockedForMI with the expected RecoveryIssue.
+            StageResult blockedStage = exception.getResult().getStages().stream()
+                    .filter(s -> s.getState().isBlockedForManualIntervention())
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Expected a BlockedForMI stage in the response"));
 
-            RecoveryIssue recoveryIssue = exception.getConflictingChanges().get(0);
-            assertEquals(changeId, recoveryIssue.getChangeId());
-
-            // Verify exception message contains expected recovery guidance
-            String message = exception.getMessage();
-            assertTrue(message.contains("MANUAL INTERVENTION REQUIRED"),
-                    "Exception should indicate manual intervention is required");
-            assertTrue(message.contains(changeId),
-                    "Exception message should mention the specific change ID");
-            assertTrue(message.contains("flamingock mark"),
-                    "Exception should provide CLI command guidance");
+            List<RecoveryIssue> recoveryIssues = blockedStage.getState().getRecoveryIssues();
+            assertNotNull(recoveryIssues);
+            assertEquals(1, recoveryIssues.size());
+            assertEquals(changeId, recoveryIssues.get(0).getChangeId());
         }
 
         // Then - Verify audit log remains unchanged (only the pre-inserted ROLLBACK_FAILED entry)
@@ -293,8 +290,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.NON_TX, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -324,8 +321,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SEPARATE_NO_MARKER, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -355,8 +352,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, AuditEntry.Status.APPLIED, AuditTxType.TX_SHARED, _001__SimpleNonTransactionalChange.class);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(_001__SimpleNonTransactionalChange.class, Collections.emptyList())
                     )
@@ -465,8 +462,8 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(changeClass, Collections.emptyList())
                     )
@@ -499,15 +496,15 @@ class RecoveryE2ETest {
         AuditEntry preExistingEntry = AuditEntryTestFactory.createTestAuditEntry(changeId, previousState, txStrategy, changeClass);
         testKit.getAuditStorage().addAuditEntry(preExistingEntry);
 
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(
                     PipelineTestHelper.getPreviewPipeline(
                             new CodeChangeTestDefinition(changeClass, Collections.emptyList())
                     )
             );
 
-            ManualInterventionRequiredException exception = assertThrows(
-                    ManualInterventionRequiredException.class,
+            StagedExecuteOperationException exception = assertThrows(
+                    StagedExecuteOperationException.class,
                     () -> {
                         testKit.createBuilder()
                                 .addTargetSystem(new NonTransactionalTargetSystem("keycloak"))
@@ -517,21 +514,18 @@ class RecoveryE2ETest {
                     }
             );
 
-            // Then - Verify exception details
-            assertNotNull(exception.getConflictingChanges());
-            assertEquals(1, exception.getConflictingChanges().size());
+            // Then - Verify the affected stage is BlockedForMI with the expected RecoveryIssue.
+            // MI is now a per-stage state (no longer a thrown ManualInterventionRequiredException)
+            // so callers inspect the per-stage data carried by the response.
+            StageResult blockedStage = exception.getResult().getStages().stream()
+                    .filter(s -> s.getState().isBlockedForManualIntervention())
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Expected a BlockedForMI stage in the response"));
 
-            RecoveryIssue recoveryIssue = exception.getConflictingChanges().get(0);
-            assertEquals(changeId, recoveryIssue.getChangeId());
-
-            // Verify exception message contains expected recovery guidance
-            String message = exception.getMessage();
-            assertTrue(message.contains("MANUAL INTERVENTION REQUIRED"),
-                    "Exception should indicate manual intervention is required");
-            assertTrue(message.contains(changeId),
-                    "Exception message should mention the specific change ID");
-            assertTrue(message.contains("flamingock mark"),
-                    "Exception should provide CLI command guidance");
+            List<RecoveryIssue> recoveryIssues = blockedStage.getState().getRecoveryIssues();
+            assertNotNull(recoveryIssues);
+            assertEquals(1, recoveryIssues.size());
+            assertEquals(changeId, recoveryIssues.get(0).getChangeId());
         }
 
         // Then - Verify audit log shows expected sequence (usually just the pre-existing entry)

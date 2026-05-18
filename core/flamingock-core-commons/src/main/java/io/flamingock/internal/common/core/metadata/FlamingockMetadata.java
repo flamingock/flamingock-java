@@ -15,8 +15,10 @@
  */
 package io.flamingock.internal.common.core.metadata;
 
+import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 
+import java.util.List;
 import java.util.Map;
 
 public class FlamingockMetadata {
@@ -25,6 +27,8 @@ public class FlamingockMetadata {
     private String configFile;
     private Map<String, String> properties;
     private BuilderProviderInfo builderProvider;
+    private List<CodePreviewChange> orphanChanges;
+    private boolean strictStageMapping;
 
     public FlamingockMetadata() {
     }
@@ -75,11 +79,40 @@ public class FlamingockMetadata {
         return builderProvider != null && builderProvider.isValid();
     }
 
+    /**
+     * Code-changes that have not yet been placed into any stage. Populated when an incremental
+     * compilation round discovers a {@code @Change} whose package isn't covered by any stage in
+     * the cached pipeline. They are rehomed by the merger when {@code @EnableFlamingock} is
+     * processed in a subsequent round and a stage now covers their package.
+     */
+    public List<CodePreviewChange> getOrphanChanges() {
+        return orphanChanges;
+    }
+
+    public void setOrphanChanges(List<CodePreviewChange> orphanChanges) {
+        this.orphanChanges = orphanChanges;
+    }
+
+    /**
+     * Whether {@code @EnableFlamingock.strictStageMapping} was true when the metadata was last
+     * generated. Persisted so the runtime can fail when orphans remain.
+     */
+    public boolean isStrictStageMapping() {
+        return strictStageMapping;
+    }
+
+    public void setStrictStageMapping(boolean strictStageMapping) {
+        this.strictStageMapping = strictStageMapping;
+    }
+
     @Override
     public String toString() {
+        int orphans = orphanChanges == null ? 0 : orphanChanges.size();
         return "FlamingockMetadata{" + "pipeline=" + pipeline +
                 ", configFile='" + configFile + '\'' +
                 ", builderProvider=" + builderProvider +
+                ", orphanChanges=" + orphans +
+                ", strictStageMapping=" + strictStageMapping +
                 '}';
     }
 }

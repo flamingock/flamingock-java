@@ -329,9 +329,9 @@ public class PreviewStage {
                     ? changes
                     : Collections.emptyList();
 
-            if (resourcesDirectories.isEmpty() && changeClassesList.isEmpty()) {
-                throw new RuntimeException("No changes provided for stage: " + name);
-            }
+            // Empty stages are tolerated at compile time. Enforcement now happens at runtime
+            // via LoadedPipeline.validate(), so an incremental round can produce a stage that
+            // is temporarily empty (e.g. before any @Change has been added to its package).
 
             Collection<AbstractPreviewChange> templatedChangesDescriptors = getTemplatedChangeDescriptors(resourcesDirectories);
             Collection<AbstractPreviewChange> allDescriptors = Stream.concat(templatedChangesDescriptors.stream(), changeClassesList.stream())

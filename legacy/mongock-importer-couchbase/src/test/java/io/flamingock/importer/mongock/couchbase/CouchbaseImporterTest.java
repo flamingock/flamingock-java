@@ -28,10 +28,11 @@ import io.flamingock.core.kit.audit.AuditTestHelper;
 import io.flamingock.couchbase.kit.CouchbaseTestKit;
 import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.store.couchbase.CouchbaseAuditStore;
-import io.flamingock.internal.common.core.error.FlamingockException;
+import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.runner.Runner;
+import io.flamingock.internal.core.operation.StagedExecuteOperationException;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.support.mongock.annotations.MongockSupport;
 import io.flamingock.targetsystem.couchbase.CouchbaseTargetSystem;
@@ -215,8 +216,9 @@ public class CouchbaseImporterTest {
                 .addTargetSystem(targetSystem)
                 .build();
 
-        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
-        assertEquals("No audit entries found when importing from 'couchbase-target-system'.", ex.getMessage());
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("No audit entries found when importing from 'couchbase-target-system'.",
+                firstFailedStageErrorMessage(ex));
 
     }
 
@@ -233,8 +235,9 @@ public class CouchbaseImporterTest {
                 .setProperty(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY, Boolean.FALSE.toString())
                 .build();
 
-        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
-        assertEquals("No audit entries found when importing from 'couchbase-target-system'.", ex.getMessage());
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("No audit entries found when importing from 'couchbase-target-system'.",
+                firstFailedStageErrorMessage(ex));
 
     }
 
@@ -333,9 +336,18 @@ public class CouchbaseImporterTest {
                 .setProperty(MONGOCK_IMPORT_SKIP_PROPERTY_KEY, SKIP_IMPORT_VALUE) // only allows empty / true / false
                 .build();
 
-        FlamingockException ex = assertThrows(FlamingockException.class, flamingock::run);
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
         assertEquals("Invalid value for " + MONGOCK_IMPORT_SKIP_PROPERTY_KEY + ": " + SKIP_IMPORT_VALUE
-                + " (expected \"true\" or \"false\" or empty)", ex.getMessage());
+                + " (expected \"true\" or \"false\" or empty)", firstFailedStageErrorMessage(ex));
+    }
+
+    private static String firstFailedStageErrorMessage(StagedExecuteOperationException ex) {
+        return ex.getResult().getStages().stream()
+                .filter(s -> s.getState().isFailed())
+                .findFirst()
+                .flatMap(s -> s.getState().getErrorInfo())
+                .map(ErrorInfo::getMessage)
+                .orElseThrow(() -> new AssertionError("Expected a failed stage with ErrorInfo"));
     }
 
     @Test

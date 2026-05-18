@@ -15,8 +15,10 @@
  */
 package io.flamingock.gradle
 
+import io.flamingock.gradle.internal.CompilerArgsConfigurator
 import io.flamingock.gradle.internal.DependencyConfigurator
 import io.flamingock.gradle.internal.FlamingockConstants
+import io.flamingock.gradle.internal.YamlTemplateInputsConfigurator
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -54,6 +56,16 @@ class FlamingockPlugin : Plugin<Project> {
             FlamingockConstants.EXTENSION_NAME,
             FlamingockExtension::class.java
         )
+
+        // Phase 3: register YAML template files as inputs of every compile task that may run
+        // the annotation processor, so YAML-only changes invalidate the compile task and
+        // trigger annotation processing. Lazy registration — does not require afterEvaluate.
+        YamlTemplateInputsConfigurator.configure(project)
+
+        // Pass Gradle's authoritative source/resource roots to the AP via -A options. Skips
+        // the AP-side filesystem detection in multi-module Gradle layouts where it can land
+        // on the wrong directory.
+        CompilerArgsConfigurator.configure(project)
 
         // Configure dependencies after project evaluation
         project.afterEvaluate {

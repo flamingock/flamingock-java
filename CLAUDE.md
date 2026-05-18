@@ -204,6 +204,28 @@ This is a multi-module Gradle project using Kotlin DSL.
 - Test resources in `src/test/resources/flamingock/pipeline.yaml`
 - Each module has isolated test suite
 
+### Validation Policy (when changing code)
+
+Two tiers — use them in order:
+
+**Tier 1 — Incremental validation (during iteration):**
+- Run targeted module tests for fast feedback: `./gradlew :core:flamingock-core:test`, `./gradlew :legacy:mongock-importer-mongodb:test`, etc.
+- Use `--tests "fully.qualified.ClassName"` to narrow further when iterating on a specific test.
+- Cheap, quick, good for confirming a focused change compiles and the obvious cases pass.
+
+**Tier 2 — Final validation (before declaring a task done):**
+- Run `./gradlew clean build` from the repo root. This is the **authoritative, definitive check**.
+- It surfaces failures that targeted/incremental runs miss:
+  - Cross-module integration regressions.
+  - Stale Gradle / annotation-processor caches masking compile errors.
+  - License-header drift (`spotlessCheck` runs as part of `build`).
+  - Test-resource generation issues (annotation processors regenerating pipeline metadata).
+  - Module-dependency ordering bugs.
+- A passing per-module test run is **not sufficient** to claim a task complete. Per-module runs use cached artifacts and may not exercise the full graph.
+- Do not skip this step on the grounds that "the affected module passed in isolation." If you reach the end of a task without a clean full build, say so explicitly rather than implying success.
+
+If `clean build` is too slow to run on every minor iteration, that's expected — Tier 1 is for iteration. But the **final hand-off** must include a clean build.
+
 ### Java Version
 - Target Java 8 compatibility
 - Kotlin stdlib used in build scripts only
@@ -497,10 +519,15 @@ Dependencies are resolved from the `ContextResolver` based on type matching.
 
 ### GraalVM Support
 
-Templates must declare reflective classes for native image compilation:
-- Override `getReflectiveClasses()` in template
-- Pass additional classes to `AbstractChangeTemplate` constructor
-- `RegistrationFeature` in `flamingock-graalvm` module handles registration
+The `RegistrationFeature` in `flamingock-graalvm` registers templates for native-image reflection without instantiating them at build time (instantiation would fire each template's `<clinit>` and pull SLF4J/Logback into the build heap).
+
+Per-template reflection metadata comes from class-readable sources only:
+- Generic type parameters of `AbstractChangeTemplate<CONFIG, APPLY, ROLLBACK>` — auto-registered.
+- `@ChangeTemplate(reflectiveClasses = {...})` — for any extra classes the template's apply/rollback methods touch reflectively that aren't in the generic type signature.
+
+Template authors writing their own templates should:
+- Annotate with `@ChangeTemplate(name = "...", reflectiveClasses = {...})` — the `reflectiveClasses` element is optional and defaults to empty.
+- Avoid heavy work in `<clinit>`. In particular, the conventional `private static final Logger log = LoggerFactory.getLogger(...)` pattern is fine for runtime but can be defensive against future native-image changes; consider a lazy holder pattern if the template ships in a library that other projects native-compile.
 
 ### Evolution Proposals
 

@@ -21,7 +21,6 @@ import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.operation.execute.ExecuteArgs;
 import io.flamingock.internal.core.operation.execute.ExecuteResult;
 import io.flamingock.internal.core.operation.validate.ValidateApplyOperation;
-import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.execution.OrphanExecutionContext;
 import io.flamingock.internal.core.pipeline.execution.StageExecutor;
@@ -47,6 +46,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -137,10 +137,7 @@ class ValidateApplyOperationTest {
         ExecutableStage executableStage = mock(ExecutableStage.class);
         doReturn(pendingChanges).when(executableStage).getChanges();
 
-        ExecutablePipeline executablePipeline = mock(ExecutablePipeline.class);
-        when(executablePipeline.getExecutableStages()).thenReturn(Collections.singletonList(executableStage));
-
-        ExecutionPlan executionPlan = mockPendingPlan(executablePipeline);
+        ExecutionPlan executionPlan = mockPendingPlan(Collections.singletonList(executableStage));
 
         when(pipeline.getSystemStage()).thenReturn(java.util.Optional.empty());
         when(pipeline.getStages()).thenReturn(Collections.singletonList(loadedStage));
@@ -150,10 +147,15 @@ class ValidateApplyOperationTest {
         ExecuteArgs args = new ExecuteArgs(pipeline);
 
         // When / Then
-        PendingChangesException thrown = assertThrows(
-                PendingChangesException.class,
+        // PendingChangesException is now wrapped as a pipeline-wide failure carrying response data,
+        // so callers see PipelineExecuteOperationException with the PendingChangesException as cause.
+        PipelineExecuteOperationException thrown = assertThrows(
+                PipelineExecuteOperationException.class,
                 () -> operation.execute(args)
         );
+        assertTrue(thrown.getCause() instanceof PendingChangesException,
+                "Expected PendingChangesException as cause, got: " + thrown.getCause());
+        assertNotNull(thrown.getResult());
     }
 
     // ─────────────────────────── Helpers ───────────────────────────
@@ -165,7 +167,6 @@ class ValidateApplyOperationTest {
     private ExecutionPlan mockNoPendingPlan() {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(false);
-        doNothing().when(plan).validate();
         doNothing().when(plan).close();
         return plan;
     }
@@ -174,11 +175,10 @@ class ValidateApplyOperationTest {
      * Creates an ExecutionPlan mock where execution is required
      * (i.e., there are pending changes) and the pipeline exposes the given executable stages.
      */
-    private ExecutionPlan mockPendingPlan(ExecutablePipeline executablePipeline) {
+    private ExecutionPlan mockPendingPlan(List<ExecutableStage> stages) {
         ExecutionPlan plan = mock(ExecutionPlan.class);
         when(plan.isExecutionRequired()).thenReturn(true);
-        when(plan.getPipeline()).thenReturn(executablePipeline);
-        doNothing().when(plan).validate();
+        when(plan.getExecutableStages()).thenReturn(stages);
         doNothing().when(plan).close();
         return plan;
     }

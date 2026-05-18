@@ -37,7 +37,7 @@ import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.*;
@@ -142,7 +142,7 @@ public class MongoDBSyncTargetSystemTest {
         );
 
         //GIVEN
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
@@ -155,7 +155,7 @@ public class MongoDBSyncTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
@@ -193,7 +193,7 @@ public class MongoDBSyncTargetSystemTest {
 
         //GIVEN
         try (
-                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
         ) {
             MongoDBSyncTargetSystem mongoTargetSystem = new MongoDBSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
 
@@ -211,7 +211,7 @@ public class MongoDBSyncTargetSystemTest {
             MongoDBSyncTargetSystem mongoSyncCloudTransactioner = Mockito.spy(mongoTargetSystem);
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))
@@ -253,7 +253,7 @@ public class MongoDBSyncTargetSystemTest {
 
         //GIVEN
         try (
-                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
 
         ) {
             MongoDBSyncTargetSystem mongoTargetSystem = new MongoDBSyncTargetSystem("mongodb-ts", mongoClient, DB_NAME);
@@ -271,7 +271,7 @@ public class MongoDBSyncTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(MongoDatabase.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(MongoDatabase.class))

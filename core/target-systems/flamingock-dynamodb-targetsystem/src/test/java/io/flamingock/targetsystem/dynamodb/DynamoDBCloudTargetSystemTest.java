@@ -32,7 +32,7 @@ import io.flamingock.internal.util.Trio;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.core.operation.OperationException;
 import io.flamingock.internal.core.builder.runner.Runner;
 import org.junit.jupiter.api.*;
@@ -133,7 +133,7 @@ public class DynamoDBCloudTargetSystemTest {
 
         //GIVEN
         try (
-            MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+            MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
         ) {
 
             mockRunnerServer
@@ -148,7 +148,7 @@ public class DynamoDBCloudTargetSystemTest {
 
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))
@@ -189,7 +189,7 @@ public class DynamoDBCloudTargetSystemTest {
 
         //GIVEN
         try (
-                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
         ) {
 
             mockRunnerServer
@@ -206,7 +206,7 @@ public class DynamoDBCloudTargetSystemTest {
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
                     new Trio<>(_002__UnhappyInsertionClientsChange.class, Collections.singletonList(DynamoDbClient.class))
@@ -249,7 +249,7 @@ public class DynamoDBCloudTargetSystemTest {
 
         //GIVEN
         try (
-                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
         ) {
 
             dynamoDBTestHelper.insertOngoingExecution("insert-clients");
@@ -266,7 +266,7 @@ public class DynamoDBCloudTargetSystemTest {
             DynamoDBTargetSystem dynamoTargetSystem = new DynamoDBTargetSystem("dynamodb-ts", dynamoDBTestHelper.getDynamoDBClient());
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateTableClientsChange.class, Collections.singletonList(DynamoDbClient.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(DynamoDbClient.class))

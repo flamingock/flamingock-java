@@ -15,6 +15,7 @@
  */
 package io.flamingock.core.processor;
 
+import io.flamingock.core.processor.util.PipelineStructureBuilder;
 import io.flamingock.internal.common.core.util.LoggerPreProcessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,12 +26,13 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Comprehensive test suite for the resolvePipelineFile() method in FlamingockAnnotationProcessor.
+ * Comprehensive test suite for {@link PipelineStructureBuilder#resolvePipelineFile(String)}.
  * Tests the 5-step file resolution logic with various file locations and priority scenarios.
  */
 class ResolvePipelineFileTest {
@@ -38,25 +40,24 @@ class ResolvePipelineFileTest {
     @TempDir
     Path tempDir;
 
-    private FlamingockAnnotationProcessor processor;
+    private PipelineStructureBuilder builder;
     private LoggerPreProcessor mockLogger;
     private Path mainResourcesDir;
     private Path testResourcesDir;
-    
+
     @BeforeEach
     void setUp() throws Exception {
-        processor = spy(new FlamingockAnnotationProcessor());
         mockLogger = mock(LoggerPreProcessor.class);
-        
-        // Setup directory structure
+
         mainResourcesDir = tempDir.resolve("src/main/resources");
         testResourcesDir = tempDir.resolve("src/test/resources");
         mainResourcesDir.toFile().mkdirs();
         testResourcesDir.toFile().mkdirs();
-        
-        // Set private fields
-        setPrivateField("logger", mockLogger);
-        setPrivateField("resourcesRoot", mainResourcesDir.toString());
+
+        builder = new PipelineStructureBuilder(
+                Collections.singletonList(tempDir.toString()),
+                mainResourcesDir.toString(),
+                mockLogger);
     }
 
     @Test
@@ -271,14 +272,8 @@ class ResolvePipelineFileTest {
     }
 
     private File invokeResolvePipelineFile(String configFilePath) throws Exception {
-        Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod("resolvePipelineFile", String.class);
+        Method method = PipelineStructureBuilder.class.getDeclaredMethod("resolvePipelineFile", String.class);
         method.setAccessible(true);
-        return (File) method.invoke(processor, configFilePath);
-    }
-
-    private void setPrivateField(String fieldName, Object value) throws Exception {
-        java.lang.reflect.Field field = FlamingockAnnotationProcessor.class.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(processor, value);
+        return (File) method.invoke(builder, configFilePath);
     }
 }

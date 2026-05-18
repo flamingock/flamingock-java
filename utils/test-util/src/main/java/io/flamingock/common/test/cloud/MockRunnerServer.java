@@ -236,7 +236,9 @@ public final class MockRunnerServer {
             String requestJson = toJson(executionPlanBuilder.getRequest(requestResponse));
 
 
-            wireMockServer.stubFor(post(urlPathEqualTo(executionUrl)).withRequestBody(equalToJson(requestJson))
+            // ignoreArrayOrder=true, ignoreExtraElements=true — tolerate forward-compatible
+            // additions to the wire (e.g. StageRequest.status) without breaking existing stubs.
+            wireMockServer.stubFor(post(urlPathEqualTo(executionUrl)).withRequestBody(equalToJson(requestJson, true, true))
                     .willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json").withBody(toJson(response))));
 
 //            verificableRequests.add(postRequestedFor(urlEqualTo(executionUrl))
@@ -262,7 +264,7 @@ public final class MockRunnerServer {
                         .withHeader("Content-Type", "application/json")
                         .withBody(toJson(executionPlanBuilder.getResponse(requestResponse)));
 
-                wireMockServer.stubFor(scenarioMappingBuilder.withRequestBody(equalToJson(requestJson)).willReturn(responseDefBuilder));
+                wireMockServer.stubFor(scenarioMappingBuilder.withRequestBody(equalToJson(requestJson, true, true)).willReturn(responseDefBuilder));
 
 //                verificableRequests.add(postRequestedFor(urlEqualTo(executionUrl))
 //                        .withHeader("Content-Type", equalTo("application/json"))

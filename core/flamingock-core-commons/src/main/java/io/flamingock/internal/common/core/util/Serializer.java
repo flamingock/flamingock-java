@@ -17,7 +17,6 @@ package io.flamingock.internal.common.core.util;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.flamingock.internal.util.JsonObjectMapper;
-import io.flamingock.internal.common.core.metadata.Constants;
 import io.flamingock.internal.common.core.preview.CodePreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.metadata.FlamingockMetadata;
@@ -42,13 +41,21 @@ public class Serializer {
     }
 
 
-    public void serializeFullPipeline(FlamingockMetadata metadata) {
-        serializePipelineTo(metadata);
-        serializeClassesList(metadata);
+    /**
+     * Serialize the metadata JSON and the GraalVM reflection-classes list to the supplied
+     * module-unique resource paths. Each module owns its own pair of paths (Phase 2
+     * multi-module support); a single project that previously ran the processor will see
+     * paths suffixed with the per-module identity hash.
+     */
+    public void serializeFullPipeline(FlamingockMetadata metadata,
+                                      String metadataResourcePath,
+                                      String reflectClassesResourcePath) {
+        serializePipelineTo(metadata, metadataResourcePath);
+        serializeClassesList(metadata, reflectClassesResourcePath);
     }
 
-    private void serializePipelineTo(FlamingockMetadata metadata) {
-        writeToFile(Constants.FULL_PIPELINE_FILE_PATH, writer -> {
+    private void serializePipelineTo(FlamingockMetadata metadata, String resourcePath) {
+        writeToFile(resourcePath, writer -> {
             try {
                 writer.write(JsonObjectMapper.DEFAULT_INSTANCE.enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(metadata));
             } catch (IOException e) {
@@ -57,39 +64,51 @@ public class Serializer {
         });
     }
 
-    private void serializeClassesList(FlamingockMetadata metadata) {
-        writeToFile(Constants.FULL_GRAALVM_REFLECT_CLASSES_PATH, writer -> {
-            // Add builder provider class for GraalVM reflection
-            if (metadata.hasValidBuilderProvider()) {
-                try {
-                    writer.write(metadata.getBuilderProvider().getClassName());
-                    writer.write(System.lineSeparator());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+    private void serializeClassesList(FlamingockMetadata metadata, String resourcePath) {
+        // Collect classnames into a stable-ordered set first to dedup. The pipeline can carry
+        // the same class via multiple paths (e.g. orphan + builder provider) and successive
+        // commits during a build could otherwise produce duplicate lines in the file.
+        java.util.LinkedHashSet<String> classNames = new java.util.LinkedHashSet<>();
+        if (metadata.hasValidBuilderProvider()) {
+            classNames.add(metadata.getBuilderProvider().getClassName());
+        }
+        PreviewPipeline pipeline = metadata.getPipeline();
+        if (pipeline != null) {
+            if (pipeline.getSystemStage() != null) {
+                collectClassNamesFromStage(pipeline.getSystemStage(), classNames);
+            }
+            if (pipeline.getStages() != null) {
+                for (PreviewStage stage : pipeline.getStages()) {
+                    collectClassNamesFromStage(stage, classNames);
                 }
             }
-
-            PreviewPipeline pipeline = metadata.getPipeline();
-            if(pipeline.getSystemStage() != null) {
-                serializeClassesFromStage(writer, pipeline.getSystemStage());;
+        }
+        if (metadata.getOrphanChanges() != null) {
+            for (CodePreviewChange orphan : metadata.getOrphanChanges()) {
+                if (orphan.getSource() != null) {
+                    classNames.add(orphan.getSource());
+                }
             }
+        }
 
-            for (PreviewStage stage : pipeline.getStages()) {
-                serializeClassesFromStage(writer, stage);
+        writeToFile(resourcePath, writer -> {
+            try {
+                for (String name : classNames) {
+                    writer.write(name);
+                    writer.write(System.lineSeparator());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         });
     }
 
-    private static void serializeClassesFromStage(Writer writer, PreviewStage stage) {
+    private static void collectClassNamesFromStage(PreviewStage stage, java.util.Set<String> sink) {
+        if (stage.getChanges() == null) return;
         for (ChangeDescriptor change : stage.getChanges()) {
-
-            if(CodePreviewChange.class.isAssignableFrom(change.getClass())) {
-                try {
-                    writer.write(change.getSource());
-                    writer.write(System.lineSeparator());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            if (CodePreviewChange.class.isAssignableFrom(change.getClass())
+                    && change.getSource() != null) {
+                sink.add(change.getSource());
             }
         }
     }
@@ -100,14 +119,16 @@ public class Serializer {
         try {
             file = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", filePath);
         } catch (IOException e) {
-            logger.error("Failed to creating flamingock metadata file: " + e.getMessage());
-            throw new RuntimeException(e);
+            String message = "Failed to create Flamingock resource at '" + filePath + "': " + e.getMessage();
+            logger.error(message);
+            throw new RuntimeException(message, e);
         }
         try (Writer writer = file.openWriter()) {
             writerConsumer.accept(writer);
         } catch (IOException e) {
-            logger.error("Failed to write AnnotatedClasses file: " + e.getMessage());
-            throw new RuntimeException("Failed to write AnnotatedClasses file: " + e.getMessage());
+            String message = "Failed to write Flamingock resource at '" + filePath + "': " + e.getMessage();
+            logger.error(message);
+            throw new RuntimeException(message, e);
         }
 
     }

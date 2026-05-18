@@ -17,19 +17,29 @@ package io.flamingock.internal.core.plan;
 
 import io.flamingock.internal.util.TriConsumer;
 import io.flamingock.internal.core.external.store.lock.Lock;
-import io.flamingock.internal.core.pipeline.execution.ExecutablePipeline;
 import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
-import io.flamingock.internal.core.change.executable.ExecutableChange;
-import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.recovery.action.ChangeAction;
-import io.flamingock.internal.common.core.recovery.ManualInterventionRequiredException;
-import io.flamingock.internal.common.core.recovery.RecoveryIssue;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
 
+/**
+ * One iteration's planner verdict.
+ *
+ * <ul>
+ *   <li>{@link #newExecution(String, Lock, List)} — carries a list of stages to execute under the
+ *       given lock. {@link #isExecutionRequired()} reflects whether any of those stages still has
+ *       work pending.</li>
+ *   <li>{@link #CONTINUE()} — pipeline finished. Successfully. Nothing else to do.</li>
+ *   <li>{@link #ABORT()} — stop early. Something went wrong (e.g., an earlier block failed and
+ *       its dependents cannot proceed). The operation reads {@link #isAborted()} to break out of
+ *       the run loop.</li>
+ * </ul>
+ *
+ * <p>{@code CONTINUE} and {@code ABORT} carry no stages — the run-loop only needs the verdict.
+ * The pipeline-level state lives in {@code PipelineRun}; block-aware queries should read
+ * {@code PipelineRun.getStageBlocks()} directly.
+ */
 public class ExecutionPlan implements AutoCloseable {
-
 
     public static ExecutionPlan newExecution(String executionId,
                                              Lock lock,
@@ -37,19 +47,19 @@ public class ExecutionPlan implements AutoCloseable {
         return new ExecutionPlan(executionId, lock, stages);
     }
 
-    public static ExecutionPlan CONTINUE(List<ExecutableStage> stages) {
-        return new ExecutionPlan(false, stages);
+    public static ExecutionPlan CONTINUE() {
+        return new ExecutionPlan(false, Collections.emptyList());
     }
 
-    public static ExecutionPlan ABORT(List<ExecutableStage> stages) {
-        return new ExecutionPlan(true, stages);
+    public static ExecutionPlan ABORT() {
+        return new ExecutionPlan(true, Collections.emptyList());
     }
 
     private final String executionId;
 
     private final Lock lock;
 
-    private final ExecutablePipeline pipeline;
+    private final List<ExecutableStage> executableStages;
 
     private final boolean aborted;
 
@@ -65,7 +75,7 @@ public class ExecutionPlan implements AutoCloseable {
         this.executionId = executionId;
         this.lock = lock;
         this.aborted = aborted;
-        this.pipeline = new ExecutablePipeline(stages);
+        this.executableStages = stages;
     }
 
     public boolean isAborted() {
@@ -73,57 +83,16 @@ public class ExecutionPlan implements AutoCloseable {
     }
 
     public boolean isExecutionRequired() {
-        return !aborted && pipeline.isExecutionRequired();
+        return !aborted && executableStages.stream().anyMatch(ExecutableStage::isExecutionRequired);
     }
 
-    public ExecutablePipeline getPipeline() {
-        return pipeline;
+    public List<ExecutableStage> getExecutableStages() {
+        return executableStages;
     }
 
     public void applyOnEach(TriConsumer<String, Lock, ExecutableStage> consumer) {
         if (isExecutionRequired()) {
-            pipeline.getExecutableStages()
-                    .forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
-        }
-    }
-
-    /**
-     * Validates the execution plan.
-     * <p>
-     * Checks two conditions:
-     * <ol>
-     *   <li>If any changes require manual intervention, throws {@link ManualInterventionRequiredException}</li>
-     *   <li>If the plan is aborted (even without MI changes), throws {@link FlamingockException}
-     *       — the execution planner decided to abort for reasons beyond individual change state</li>
-     * </ol>
-     *
-     * @throws ManualInterventionRequiredException if any changes require manual intervention
-     * @throws FlamingockException if the plan is aborted without specific MI changes
-     */
-    public void validate() {
-        List<RecoveryIssue> recoveryIssues = new ArrayList<>();
-        String firstStageName = "unknown";
-        boolean hasStages = false;
-
-        for (ExecutableStage stage : pipeline.getExecutableStages()) {
-            if (!hasStages) {
-                firstStageName = stage.getName();
-                hasStages = true;
-            }
-
-            for (ExecutableChange change : stage.getChanges()) {
-                if (change.getAction() == ChangeAction.MANUAL_INTERVENTION) {
-                    recoveryIssues.add(new RecoveryIssue(change.getId()));
-                }
-            }
-        }
-
-        if (!recoveryIssues.isEmpty()) {
-            throw new ManualInterventionRequiredException(recoveryIssues, firstStageName);
-        }
-
-        if (aborted) {
-            throw new FlamingockException("Execution aborted by the execution planner");
+            executableStages.forEach(executableStage -> consumer.accept(executionId, lock, executableStage));
         }
     }
 

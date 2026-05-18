@@ -17,9 +17,11 @@ package io.flamingock.internal.common.core.metadata;
 
 public final class Constants {
 
-    public static final String FULL_PIPELINE_FILE_PATH = "META-INF/flamingock/metadata.json";
-
-    public static final String FULL_GRAALVM_REFLECT_CLASSES_PATH = "META-INF/flamingock/reflection-classes.txt";
+    // Phase 2: per-module metadata file paths are now dynamic (suffixed by an 8-hex
+    // identifier shared with the generated FlamingockMetadataProvider class). The legacy
+    // single-file constants `FULL_PIPELINE_FILE_PATH` / `FULL_GRAALVM_REFLECT_CLASSES_PATH`
+    // were removed. Resource discovery now goes through ServiceLoader on
+    // FlamingockMetadataProvider — see MetadataLoader for runtime usage.
 
     public static final String DEFAULT_MONGOCK_ORIGIN = "mongockChangeLog";
 

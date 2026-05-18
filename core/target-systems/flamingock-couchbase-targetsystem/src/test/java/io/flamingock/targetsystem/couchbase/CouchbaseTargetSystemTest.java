@@ -26,7 +26,7 @@ import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMoc
 import io.flamingock.common.test.cloud.mock.MockRequestResponseChange;
 import io.flamingock.common.test.cloud.prototype.PrototypeClientSubmission;
 import io.flamingock.common.test.cloud.prototype.PrototypeStage;
-import io.flamingock.internal.common.core.util.Deserializer;
+import io.flamingock.internal.common.core.metadata.MetadataLoader;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
 import io.flamingock.internal.core.builder.CloudChangeRunnerBuilder;
@@ -152,7 +152,7 @@ public class CouchbaseTargetSystemTest {
         );
 
         //GIVEN
-        try (MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)) {
+        try (MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)) {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
                     .withExecutionPlanRequestsExpectation(
@@ -165,7 +165,7 @@ public class CouchbaseTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
@@ -202,7 +202,7 @@ public class CouchbaseTargetSystemTest {
 
         //GIVEN
         try (
-                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
         ) {
             mockRunnerServer
                     .withClientSubmissionBase(prototypeClientSubmission)
@@ -216,7 +216,7 @@ public class CouchbaseTargetSystemTest {
                     ).start();
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__UnhappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
                     new Trio<>(_002__UnhappyInsertClientsChange.class, Collections.singletonList(Bucket.class))
@@ -257,7 +257,7 @@ public class CouchbaseTargetSystemTest {
 
         //GIVEN
         try (
-                MockedStatic<Deserializer> mocked = Mockito.mockStatic(Deserializer.class)
+                MockedStatic<MetadataLoader> mocked = Mockito.mockStatic(MetadataLoader.class)
         ) {
             couchbaseTestHelper.insertOngoingExecution("insert-clients");
             mockRunnerServer
@@ -272,7 +272,7 @@ public class CouchbaseTargetSystemTest {
 
 
             //WHEN
-            mocked.when(Deserializer::readMetadataFromFile).thenReturn(PipelineTestHelper.getPreviewPipeline(
+            mocked.when(MetadataLoader::loadAggregated).thenReturn(PipelineTestHelper.getPreviewPipeline(
                     "stage-1",
                     new Trio<>(_001__HappyCreateClientsCollectionChange.class, Collections.singletonList(Bucket.class)),
                     new Trio<>(_002__HappyInsertClientsChange.class, Collections.singletonList(Bucket.class))

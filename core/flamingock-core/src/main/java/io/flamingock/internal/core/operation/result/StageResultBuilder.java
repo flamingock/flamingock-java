@@ -16,8 +16,9 @@
 package io.flamingock.internal.core.operation.result;
 
 import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.StageResult;
-import io.flamingock.internal.common.core.response.data.StageStatus;
+import io.flamingock.internal.common.core.response.data.StageState;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ public class StageResultBuilder {
 
     private String stageId;
     private String stageName;
-    private StageStatus status;
+    private StageState state;
     private long durationMs;
     private List<ChangeResult> changes = new ArrayList<>();
     private LocalDateTime startTime;
@@ -61,28 +62,28 @@ public class StageResultBuilder {
         return this;
     }
 
-    public StageResultBuilder status(StageStatus status) {
-        this.status = status;
+    public StageResultBuilder state(StageState state) {
+        this.state = state;
         return this;
     }
 
     public StageResultBuilder completed() {
-        this.status = StageStatus.COMPLETED;
+        this.state = StageState.COMPLETED;
         return this;
     }
 
     public StageResultBuilder failed() {
-        this.status = StageStatus.FAILED;
+        this.state = StageState.failed(null);
         return this;
     }
 
-    public StageResultBuilder skipped() {
-        this.status = StageStatus.SKIPPED;
+    public StageResultBuilder failed(ErrorInfo errorInfo) {
+        this.state = StageState.failed(errorInfo);
         return this;
     }
 
     public StageResultBuilder notStarted() {
-        this.status = StageStatus.NOT_STARTED;
+        this.state = StageState.NOT_STARTED;
         return this;
     }
 
@@ -109,7 +110,7 @@ public class StageResultBuilder {
         return StageResult.builder()
                 .stageId(stageId)
                 .stageName(stageName)
-                .status(status)
+                .state(state)
                 .durationMs(durationMs)
                 .changes(changes)
                 .build();

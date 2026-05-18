@@ -16,76 +16,23 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.error.FlamingockException;
-import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
-import io.flamingock.internal.util.ThrowableUtil;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
+/**
+ * Parent of every operation-thrown exception. Concrete operations throw their own subclass
+ * (e.g. {@link ExecuteOperationException} for execute). Higher layers can catch
+ * {@code OperationException} generically when they don't need to differentiate.
+ */
+public abstract class OperationException extends FlamingockException {
 
-public class OperationException extends FlamingockException {
-
-    private static final int MAX_UNWRAP_DEPTH = 32;
-
-    public static OperationException fromExisting(Throwable exception, ExecuteResponseData result) {
-        Throwable root = unwrapKnownWrappers(exception);
-
-        if (root instanceof FlamingockException) {
-            Throwable cause = root.getCause();
-            if (cause != null) {
-                return new OperationException(cause, result);
-            }
-            OperationException oe = new OperationException(ThrowableUtil.messageOf(root), result);
-            oe.setStackTrace(root.getStackTrace());
-            return oe;
-        }
-
-        return new OperationException(root, result);
-    }
-
-
-    private static Throwable unwrapKnownWrappers(Throwable t) {
-        if (t == null) return new NullPointerException("Throwable is null");
-
-        Throwable cur = t;
-        int guard = 0;
-
-        while (guard++ < MAX_UNWRAP_DEPTH) {
-            if (cur instanceof InvocationTargetException) {
-                Throwable next = ((InvocationTargetException) cur).getTargetException();
-                if (next != null && next != cur) { cur = next; continue; }
-                break;
-            }
-            if (cur instanceof UndeclaredThrowableException) {
-                Throwable next = ((UndeclaredThrowableException) cur).getUndeclaredThrowable();
-                if (next != null && next != cur) { cur = next; continue; }
-                break;
-            }
-            if (cur instanceof ExecutionException
-                    || cur instanceof CompletionException) {
-                Throwable next = cur.getCause();
-                if (next != null && next != cur) { cur = next; continue; }
-                break;
-            }
-            break;
-        }
-        return cur;
-    }
-
-    private final ExecuteResponseData result;
-
-    private OperationException(String message, ExecuteResponseData result) {
+    protected OperationException(String message) {
         super(message);
-        this.result = result;
     }
 
-    private OperationException(Throwable throwable, ExecuteResponseData result) {
-        super(throwable);
-        this.result = result;
+    protected OperationException(Throwable cause) {
+        super(cause);
     }
 
-    public ExecuteResponseData getResult() {
-        return result;
+    protected OperationException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

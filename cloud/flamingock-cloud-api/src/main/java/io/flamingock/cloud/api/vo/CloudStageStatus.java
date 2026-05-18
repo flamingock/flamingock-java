@@ -13,29 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.flamingock.internal.common.core.response.data;
+package io.flamingock.cloud.api.vo;
 
 /**
- * Status of a stage execution.
+ * Wire-level per-stage status sent from the client to the cloud planner.
+ *
+ * <p>Mirrors the internal {@code StageState} hierarchy in shape; the cloud server uses this to
+ * decide what to do with each stage on the next iteration (e.g., skip stages already failed
+ * or blocked, route MI cases). Client-side mapping lives in {@code CloudApiMapper.toCloud(StageState)}.
  */
-public enum StageStatus {
-    /**
-     * Stage completed successfully with all changes applied.
-     */
+public enum CloudStageStatus {
+    NOT_STARTED,
+    STARTED,
     COMPLETED,
-
-    /**
-     * Stage failed during execution.
-     */
     FAILED,
-
-    /**
-     * Stage was skipped (all changes already applied).
-     */
-    SKIPPED,
-
-    /**
-     * Stage was not started (due to prior failure).
-     */
-    NOT_STARTED
+    BLOCKED_MANUAL_INTERVENTION
 }

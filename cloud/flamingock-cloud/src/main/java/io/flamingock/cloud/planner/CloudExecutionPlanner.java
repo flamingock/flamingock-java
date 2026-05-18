@@ -33,8 +33,8 @@ import io.flamingock.internal.core.configuration.core.CoreConfigurable;
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.external.store.lock.LockException;
-import io.flamingock.internal.core.pipeline.execution.ExecutableStage;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
+import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
@@ -78,7 +78,8 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
     }
 
     @Override
-    public ExecutionPlan getNextExecution(List<AbstractLoadedStage> loadedStages) throws LockException {
+    public ExecutionPlan getNextExecution(PipelineRun pipelineRun) throws LockException {
+        List<AbstractLoadedStage> loadedStages = pipelineRun.getLoadedStages();
 
         AuditMarkSnapshot snapshot = buildAuditMarkSnapshot();
 
@@ -92,7 +93,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         do {
             try {
                 logger.info("Requesting cloud execution plan - elapsed[{}ms]", counterPerGuid.getElapsed());
-                ExecutionPlanResponse response = createExecution(loadedStages, snapshot.getMarks(), lastOwnerGuid, counterPerGuid.getElapsed());
+                ExecutionPlanResponse response = createExecution(pipelineRun, snapshot.getMarks(), lastOwnerGuid, counterPerGuid.getElapsed());
                 logger.info("Obtained cloud execution plan: {}", response.getAction());
 
                 //TODO should check if it has the lock?
@@ -101,8 +102,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 }
 
                 if (response.isContinue()) {
-                    List<ExecutableStage> executableStages = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
-                    return ExecutionPlan.CONTINUE(executableStages);
+                    return ExecutionPlan.CONTINUE();
 
                 } else if (response.isExecute()) {
                     Lock lock = CloudLock.initialiseLocal(response.getLock(), coreConfiguration, runnerId, lockService, timeService);
@@ -130,8 +130,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                     );
 
                 } else if (response.isAbort()) {
-                    List<ExecutableStage> stages = CloudExecutionPlanMapper.getExecutableStages(response, loadedStages);
-                    return ExecutionPlan.ABORT(stages);
+                    return ExecutionPlan.ABORT();
 
                 } else {
                     throw new RuntimeException("Unrecognized action from response. Not within(CONTINUE, EXECUTE, AWAIT, ABORT)");
@@ -146,7 +145,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
         } while (true);
     }
 
-    private ExecutionPlanResponse createExecution(List<AbstractLoadedStage> loadedStages,
+    private ExecutionPlanResponse createExecution(PipelineRun pipelineRun,
                                                   Collection<TargetSystemAuditMark> auditMarks,
                                                   String lastAcquisitionId,
                                                   long elapsedMillis) {
@@ -156,7 +155,7 @@ public class CloudExecutionPlanner extends ExecutionPlanner {
                 .collect(Collectors.toMap(TargetSystemAuditMark::getChangeId, TargetSystemAuditMark::getOperation));
 
         ExecutionPlanRequest requestBody = CloudExecutionPlanMapper.toRequest(
-                loadedStages,
+                pipelineRun,
                 coreConfiguration.getLockAcquiredForMillis(),
                 auditMarksMap);
 

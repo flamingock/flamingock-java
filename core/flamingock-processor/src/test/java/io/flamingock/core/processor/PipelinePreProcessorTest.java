@@ -18,6 +18,7 @@ package io.flamingock.core.processor;
 import io.flamingock.api.StageType;
 import io.flamingock.api.annotations.EnableFlamingock;
 import io.flamingock.api.annotations.Stage;
+import io.flamingock.core.processor.util.PipelineStructureBuilder;
 import io.flamingock.internal.common.core.preview.AbstractPreviewChange;
 import io.flamingock.internal.common.core.preview.PreviewPipeline;
 import io.flamingock.internal.common.core.preview.PreviewStage;
@@ -67,10 +68,10 @@ public class PipelinePreProcessorTest {
         // Given - create annotation with stages including system stage
         EnableFlamingock annotation = createMockAnnotationWithStages();
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
-        
+
         // When - build pipeline from annotation using processor logic
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changes);
+        PipelineStructureBuilder builder = newBuilder();
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(builder, annotation, changes);
         
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
@@ -101,10 +102,10 @@ public class PipelinePreProcessorTest {
         createPipelineYamlFile();
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
-        
+
         // When - build pipeline from file using processor logic
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        PreviewPipeline pipeline = buildPipelineFromFile(processor, annotation, changes);
+        PipelineStructureBuilder builder = newBuilder();
+        PreviewPipeline pipeline = buildPipelineFromFile(builder, annotation, changes);
         
         // Then - verify the pipeline structure
         assertNotNull(pipeline, "Pipeline should be created");
@@ -139,11 +140,11 @@ public class PipelinePreProcessorTest {
             .withStages() // Empty stages array
             .build();
         Map<String, List<AbstractPreviewChange>> changes = new HashMap<>();
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+        PipelineStructureBuilder builder = newBuilder();
 
         // When & Then - should NOT throw exception (empty stages should be allowed)
 
-        assertDoesNotThrow(() -> callGetPipelineFromProcessChanges(processor, changes, annotation));
+        assertDoesNotThrow(() -> buildPipelineFromAnnotation(builder, annotation, changes));
     }
 
     /**
@@ -155,8 +156,8 @@ public class PipelinePreProcessorTest {
         // Given - create a pipeline
         EnableFlamingock annotation = createMockAnnotationWithStages();
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        PreviewPipeline pipeline = buildPipelineFromAnnotation(processor, annotation, changes);
+        PipelineStructureBuilder builder = newBuilder();
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(builder, annotation, changes);
         
         // Then - verify object structure (testing the actual objects, not JSON)
         assertNotNull(pipeline, "Pipeline should be created");
@@ -187,10 +188,10 @@ public class PipelinePreProcessorTest {
             )
             .build();
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        
+        PipelineStructureBuilder builder = newBuilder();
+
         // When - build pipeline (should not throw exception)
-        PreviewPipeline pipeline = callGetPipelineFromProcessChanges(processor, changes, annotation);
+        PreviewPipeline pipeline = buildPipelineFromAnnotation(builder, annotation, changes);
         
         // Then - verify multiple default stages are allowed
         assertNotNull(pipeline, "Pipeline should be created");
@@ -216,11 +217,11 @@ public class PipelinePreProcessorTest {
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        
+        PipelineStructureBuilder builder = newBuilder();
+
         // When - build pipeline from file
-        PreviewPipeline pipeline = buildPipelineFromFile(processor, annotation, changes);
-        
+        PreviewPipeline pipeline = buildPipelineFromFile(builder, annotation, changes);
+
         // Then - verify stages are sorted by type priority
         assertNotNull(pipeline, "Pipeline should be created");
         assertEquals(3, pipeline.getStages().size(), "Should have 3 stages");
@@ -261,11 +262,11 @@ public class PipelinePreProcessorTest {
         
         EnableFlamingock annotation = createMockAnnotationWithFile("pipeline.yaml");
         Map<String, List<AbstractPreviewChange>> changes = createMockChangesMap();
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-        
+        PipelineStructureBuilder builder = newBuilder();
+
         // When & Then - should throw RuntimeException
-        Exception exception = assertThrows(Exception.class, () -> 
-            callGetPipelineFromProcessChanges(processor, changes, annotation));
+        Exception exception = assertThrows(Exception.class, () ->
+            buildPipelineFromFile(builder, annotation, changes));
         
         Throwable cause = exception.getCause();
         if (cause instanceof RuntimeException) {
@@ -277,132 +278,59 @@ public class PipelinePreProcessorTest {
         }
     }
 
-    @Test
-    @DisplayName("Should throw error when changes exist that are not mapped to any stage and mapping is strict")
-    void shouldThrowErrorForUnmappedChanges() throws Exception {
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
+    // The validateAllChangesAreMappedToStages helper was removed in Phase 3 — its job is now
+    // performed by FlamingockMetadataMerger.applyRound (changes that don't fit any stage end
+    // up in target.orphanChanges, and the runtime OrphanChangeValidator enforces strictness).
+    // The "no throw on unmapped" guarantee is therefore covered by:
+    //   * FlamingockMetadataMergerTest.applyRoundState3ParksAllAsOrphans
+    //   * FlamingockMetadataMergerTest.applyRoundState2NoCoveringStageGoesToOrphans
+    //   * IncrementalProcessingIT.changeWithoutExistingMetadataIsHeldAsOrphan
+    //   * OrphanChangeValidatorTest.throwsWhenStrictAndOrphansPresent
 
-        // Prepare changes map with one mapped and one unmapped package (lists can be empty for this test)
-        Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
-        changesByPackage.put("com.example.migrations", Collections.emptyList());
-        changesByPackage.put("com.example.unmapped", Collections.emptyList()); // Unmapped
 
-        // Provide a non-empty changes list for the mapped stage so the builder doesn't throw
-        io.flamingock.internal.common.core.preview.CodePreviewChange mockChange = new io.flamingock.internal.common.core.preview.CodePreviewChange();
-
-        // Build a pipeline with a single stage covering com.example.migrations
-        PreviewStage mappedStage = PreviewStage.defaultBuilder(StageType.DEFAULT)
-                .setName("migrations")
-                .setSourcesPackage("com.example.migrations")
-                .setSourcesRoots(Collections.emptyList())
-                .setResourcesRoot("src/main/resources")
-                .setChanges(Collections.singletonList(mockChange)) // <- non-empty list
-                .build();
-
-        PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
-
-        // Invoke private validator by reflection and assert it throws (InvocationTargetException wraps the RuntimeException)
-        Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class, Boolean.class);
-        validator.setAccessible(true);
-
-        InvocationTargetException ex = assertThrows(InvocationTargetException.class, () ->
-                validator.invoke(processor, changesByPackage, pipeline, true));
-
-        Throwable cause = ex.getCause();
-        assertNotNull(cause, "Validator should throw a RuntimeException cause");
-        assertInstanceOf(RuntimeException.class, cause, "Cause should be RuntimeException");
-        assertTrue(cause.getMessage().contains("not mapped to any stage"), "Should have error about unmapped changes");
-        assertTrue(cause.getMessage().contains("com.example.unmapped"), "Should mention the unmapped package");
+    // Reflection seams for the private builder methods. The builder ctor takes (sourceRoots,
+    // resourcesRoot, logger); the tests use tempDir as both source-roots and resources-root
+    // because no actual file resolution is exercised in these tests (they pass a pre-built
+    // changesByPackage map).
+    private PipelineStructureBuilder newBuilder() {
+        return new PipelineStructureBuilder(
+                Collections.singletonList(tempDir.toString()),
+                tempDir.toString(),
+                new LoggerPreProcessor(createMockProcessingEnvironment()));
     }
 
-    @Test
-    @DisplayName("Should report default package when empty package changes are not mapped")
-    void shouldReportDefaultPackageForUnmappedEmptyPackageChanges() throws Exception {
-        FlamingockAnnotationProcessor processor = new FlamingockAnnotationProcessor();
-
-        Map<String, List<io.flamingock.internal.common.core.preview.CodePreviewChange>> changesByPackage = new HashMap<>();
-        changesByPackage.put("", Collections.emptyList());
-
-        PreviewStage mappedStage = PreviewStage.defaultBuilder(StageType.DEFAULT)
-                .setName("migrations")
-                .setSourcesPackage("com.example.migrations")
-                .setSourcesRoots(Collections.emptyList())
-                .setResourcesRoot("src/main/resources")
-                .setChanges(Collections.singletonList(new io.flamingock.internal.common.core.preview.CodePreviewChange()))
-                .build();
-
-        PreviewPipeline pipeline = new PreviewPipeline(Collections.singletonList(mappedStage));
-
-        Method validator = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-                "validateAllChangesAreMappedToStages", Map.class, PreviewPipeline.class, Boolean.class);
-        validator.setAccessible(true);
-
-        InvocationTargetException ex = assertThrows(InvocationTargetException.class, () ->
-                validator.invoke(processor, changesByPackage, pipeline, true));
-
-        Throwable cause = ex.getCause();
-        assertNotNull(cause, "Validator should throw a RuntimeException cause");
-        assertInstanceOf(RuntimeException.class, cause, "Cause should be RuntimeException");
-        assertEquals("Changes are not mapped to any stage: <default-package>", cause.getMessage());
-    }
-
-
-
-    // Helper methods using reflection to test the internal pipeline building logic
-    private PreviewPipeline buildPipelineFromAnnotation(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewChange>> changes) throws Exception {
-        // Set up minimal processor state
-        setProcessorField(processor, "resourcesRoot", tempDir.toString());
-        setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
-        
-        // Initialize logger field
-        javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
-        setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
-        
-        java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "buildPipelineFromAnnotation", EnableFlamingock.class, List.class, List.class, Map.class);
+    private PreviewPipeline buildPipelineFromAnnotation(PipelineStructureBuilder builder,
+                                                       EnableFlamingock annotation,
+                                                       Map<String, List<AbstractPreviewChange>> changes) throws Exception {
+        Method method = PipelineStructureBuilder.class.getDeclaredMethod(
+                "buildFromAnnotation", EnableFlamingock.class, List.class, List.class, Map.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, annotation, Collections.emptyList(), Collections.emptyList(), changes);
+        try {
+            return (PreviewPipeline) method.invoke(builder, annotation,
+                    Collections.emptyList(), Collections.emptyList(), changes);
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
+            throw e;
+        }
     }
 
-    private PreviewPipeline callGetPipelineFromProcessChanges(FlamingockAnnotationProcessor processor, Map<String, List<AbstractPreviewChange>> changes, EnableFlamingock annotation) throws Exception {
-        // Set up minimal processor state
-        setProcessorField(processor, "resourcesRoot", tempDir.toString());
-        setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
-        
-        // Initialize logger field
-        javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
-        setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
-        
-        java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "getPipelineFromProcessChanges", List.class, List.class, Map.class, EnableFlamingock.class);
+    private PreviewPipeline buildPipelineFromFile(PipelineStructureBuilder builder,
+                                                  EnableFlamingock annotation,
+                                                  Map<String, List<AbstractPreviewChange>> changes) throws Exception {
+        Method method = PipelineStructureBuilder.class.getDeclaredMethod(
+                "buildFromYaml", File.class, List.class, List.class, Map.class);
         method.setAccessible(true);
-        return (PreviewPipeline) method.invoke(processor, Collections.emptyList(), Collections.emptyList(), changes, annotation);
+        File configFile = new File(annotation.configFile());
+        try {
+            return (PreviewPipeline) method.invoke(builder, configFile,
+                    Collections.emptyList(), Collections.emptyList(), changes);
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
+            throw e;
+        }
     }
 
-    private PreviewPipeline buildPipelineFromFile(FlamingockAnnotationProcessor processor, EnableFlamingock annotation, Map<String, List<AbstractPreviewChange>> changes) throws Exception {
-        // Set up minimal processor state
-        setProcessorField(processor, "resourcesRoot", tempDir.toString());
-        setProcessorField(processor, "sourceRoots", Collections.singletonList(tempDir.toString()));
-        
-        // Initialize logger field
-        javax.annotation.processing.ProcessingEnvironment mockEnv = createMockProcessingEnvironment();
-        setProcessorField(processor, "logger", new LoggerPreProcessor(mockEnv));
-        
-        java.lang.reflect.Method method = FlamingockAnnotationProcessor.class.getDeclaredMethod(
-            "buildPipelineFromSpecifiedFile", File.class, List.class, List.class, Map.class);
-        method.setAccessible(true);
-        
-        File configFile = tempDir.resolve("pipeline.yaml").toFile();
-        return (PreviewPipeline) method.invoke(processor, configFile, Collections.emptyList(), Collections.emptyList(), changes);
-    }
 
-    private void setProcessorField(FlamingockAnnotationProcessor processor, String fieldName, Object value) throws Exception {
-        java.lang.reflect.Field field = FlamingockAnnotationProcessor.class.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(processor, value);
-    }
-    
     private javax.annotation.processing.ProcessingEnvironment createMockProcessingEnvironment() {
         return new javax.annotation.processing.ProcessingEnvironment() {
             @Override
