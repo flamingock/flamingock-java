@@ -28,6 +28,7 @@ public final class Constants {
     public static final String MONGOCK_IMPORT_SKIP_PROPERTY_KEY = "internal.mongock.import.skip";
     public static final String MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY = "internal.mongock.import.origin";
     public static final String MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY = "internal.mongock.import.emptyOriginAllowed";
+    public static final String MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY = "internal.mongock.import.ignoreUnknownAuditEntries";
 
     private Constants() {}
 

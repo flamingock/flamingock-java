@@ -31,9 +31,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.List;
+import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 
 /**
@@ -49,7 +51,8 @@ public class MongockImportChange {
                               @NonLockGuarded AuditWriter auditWriter,
                               @NonLockGuarded PipelineDescriptor pipelineDescriptor,
                               @Nullable @Named(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowed,
-                              @Nullable @Named(MONGOCK_IMPORT_SKIP_PROPERTY_KEY) String skipImport) {
+                              @Nullable @Named(MONGOCK_IMPORT_SKIP_PROPERTY_KEY) String skipImport,
+                              @Nullable @Named(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY) String ignoreUnknownAuditEntries) {
         if (resolveSkipImport(skipImport)) {
             logger.info("Mongock audit log import skipped (skipImport=true). No audit entries will be migrated.");
             return;
@@ -58,12 +61,26 @@ public class MongockImportChange {
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
+        boolean ignoreUnknownEntries = resolveIgnoreUnknownAuditEntries(ignoreUnknownAuditEntries);
         validate(legacyHistory, targetSystemId, emptyOriginAllowed);
         legacyHistory.forEach(auditEntryFromOrigin -> {
+            Optional<String> stageId = pipelineHelper.findStageId(auditEntryFromOrigin);
+            if (!stageId.isPresent()) {
+                if (ignoreUnknownEntries) {
+                    logger.warn("Ignored audit entry with changeId[{}] while importing audit history: no matching change was found in the current Flamingock pipeline. changeLogClass[{}], changeSetMethod[{}]",
+                            auditEntryFromOrigin.getChangeId(),
+                            auditEntryFromOrigin.getClassName(),
+                            auditEntryFromOrigin.getMethodName());
+                    return;
+                }
+                throw new FlamingockException(String.format(
+                        "Error importing audit entry with changeId[%s]: no matching change was found in the current Flamingock pipeline.",
+                        pipelineHelper.getBaseChangeId(auditEntryFromOrigin)));
+            }
             //This is the changeId present in the pipeline. If it's a system change or '..._before' won't appear
             AuditEntry auditEntryWithStageId = auditEntryFromOrigin.copyWithNewIdAndStageId(
                     pipelineHelper.getStorableChangeId(auditEntryFromOrigin),
-                    pipelineHelper.getStageId(auditEntryFromOrigin));
+                    stageId.get());
             auditWriter.writeEntry(auditEntryWithStageId);
         });
     }
@@ -98,24 +115,25 @@ public class MongockImportChange {
     }
 
     private boolean resolveEmptyOriginAllowed(String raw) {
-        if (raw == null || raw.trim().isEmpty()) {
-            return false; // default behaviour
-        }
-        String v = raw.trim();
-        if ("true".equalsIgnoreCase(v)) return true;
-        if ("false".equalsIgnoreCase(v)) return false;
-        throw new FlamingockException("Invalid value for " +  MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY + ": " + raw
-                + " (expected \"true\" or \"false\" or empty)");
+        return resolveBooleanPropertyValue(raw, MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY);
     }
 
     private boolean resolveSkipImport(String raw) {
+        return resolveBooleanPropertyValue(raw, MONGOCK_IMPORT_SKIP_PROPERTY_KEY);
+    }
+
+    private boolean resolveIgnoreUnknownAuditEntries(String raw) {
+        return resolveBooleanPropertyValue(raw, MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY);
+    }
+
+    private boolean resolveBooleanPropertyValue(String raw, String propertyName) {
         if (raw == null || raw.trim().isEmpty()) {
             return false; // default behaviour
         }
         String v = raw.trim();
         if ("true".equalsIgnoreCase(v)) return true;
         if ("false".equalsIgnoreCase(v)) return false;
-        throw new FlamingockException("Invalid value for " + MONGOCK_IMPORT_SKIP_PROPERTY_KEY + ": " + raw
+        throw new FlamingockException("Invalid value for " + propertyName + ": " + raw
                 + " (expected \"true\" or \"false\" or empty)");
     }
 }

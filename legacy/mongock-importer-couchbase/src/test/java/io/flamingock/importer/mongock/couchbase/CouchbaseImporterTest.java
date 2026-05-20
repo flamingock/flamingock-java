@@ -30,7 +30,6 @@ import io.flamingock.internal.common.core.audit.AuditEntry;
 import io.flamingock.store.couchbase.CouchbaseAuditStore;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.couchbase.CouchbaseCollectionHelper;
-import io.flamingock.internal.core.builder.FlamingockFactory;
 import io.flamingock.internal.core.builder.runner.Runner;
 import io.flamingock.internal.core.operation.StagedExecuteOperationException;
 import io.flamingock.internal.util.constants.CommunityPersistenceConstants;
@@ -53,6 +52,7 @@ import java.util.stream.Collectors;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
@@ -321,6 +321,108 @@ public class CouchbaseImporterTest {
     }
 
     @Test
+    @DisplayName("GIVEN Mongock audit history contains unknown entries " +
+            "AND relaxed import flag is not provided " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should fail with the current strict validation")
+    void GIVEN_unknownAuditEntriesAndImplicitStrictMode_WHEN_migratingToFlamingockCommunity_THEN_shouldFail() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("foreign-change-1", createAuditObject("foreign-change-1", false, "io.example.foreign.ForeignChangeUnit", "apply"));
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
+                .addTargetSystem(targetSystem)
+                .build();
+
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("Error importing audit entry with changeId[foreign-change-1]: no matching change was found in the current Flamingock pipeline.",
+                firstFailedStageErrorMessage(ex));
+    }
+
+    @Test
+    @DisplayName("GIVEN Mongock audit history contains unknown entries " +
+            "AND relaxed import flag is explicitly disabled " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should fail with the current strict validation")
+    void GIVEN_unknownAuditEntriesAndExplicitStrictMode_WHEN_migratingToFlamingockCommunity_THEN_shouldFail() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("foreign-change-1", createAuditObject("foreign-change-1", false, "io.example.foreign.ForeignChangeUnit", "apply"));
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, Boolean.FALSE.toString())
+                .build();
+
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("Error importing audit entry with changeId[foreign-change-1]: no matching change was found in the current Flamingock pipeline.",
+                firstFailedStageErrorMessage(ex));
+    }
+
+    @Test
+    @DisplayName("GIVEN Mongock audit history contains unknown entries " +
+            "AND relaxed import flag is enabled " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should skip the unknown entries and continue")
+    void GIVEN_unknownAuditEntriesAndRelaxedMode_WHEN_migratingToFlamingockCommunity_THEN_shouldSkipUnknownEntries() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+
+        originCollection.upsert("mongock-change-1", createAuditObject("mongock-change-1"));
+        originCollection.upsert("foreign-change-1", createAuditObject("foreign-change-1", false, "io.example.foreign.ForeignChangeUnit", "apply"));
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, Boolean.TRUE.toString())
+                .build();
+
+        flamingock.run();
+
+        auditHelper.verifyAuditSequenceStrict(
+                APPLIED("mongock-change-1"),
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+                STARTED("mongock-change-2"),
+                APPLIED("mongock-change-2"),
+                STARTED("flamingock-change"),
+                APPLIED("flamingock-change")
+        );
+    }
+
+    @Test
+    @DisplayName("GIVEN relaxed import flag with invalid value " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should throw exception")
+    void GIVEN_relaxedImportFlagWithInvalidValue_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        Collection originCollection = cluster.bucket(MONGOCK_BUCKET_NAME).scope(MONGOCK_SCOPE_NAME).collection(MONGOCK_COLLECTION_NAME);
+        originCollection.upsert("foreign-change-1", createAuditObject("foreign-change-1", false, "io.example.foreign.ForeignChangeUnit", "apply"));
+
+        final String flagValue = "invalid_value";
+
+        CouchbaseTargetSystem targetSystem = new CouchbaseTargetSystem("couchbase-target-system", cluster, FLAMINGOCK_BUCKET_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .setAuditStore(auditStore)
+                .addTargetSystem(targetSystem)
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, flagValue)
+                .build();
+
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("Invalid value for " + MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY + ": " + flagValue
+                + " (expected \"true\" or \"false\" or empty)", firstFailedStageErrorMessage(ex));
+    }
+
+    @Test
     @DisplayName("GIVEN skip import flag with invalid value " +
             "WHEN migrating to Flamingock Community" +
             "THEN should throw exception")
@@ -481,6 +583,10 @@ public class CouchbaseImporterTest {
     }
 
     private static JsonObject createAuditObject(String value) {
+        return createAuditObject(value, true, "io.flamingock.changelog.Class1", "method1");
+    }
+
+    private static JsonObject createAuditObject(String value, boolean systemChange, String changeLogClass, String changeSetMethod) {
         JsonObject doc = JsonObject.create()
                 .put("executionId", "exec-1")
                 .put("changeId", value)
@@ -488,13 +594,13 @@ public class CouchbaseImporterTest {
                 .put("timestamp", Instant.now().toEpochMilli())
                 .put("state", "EXECUTED")
                 .put("type", "EXECUTION")
-                .put("changeLogClass", "io.flamingock.changelog.Class1")
-                .put("changeSetMethod", "method1")
+                .put("changeLogClass", changeLogClass)
+                .put("changeSetMethod", changeSetMethod)
                 .putNull("metadata")
                 .put("executionMillis", 123L)
                 .put("executionHostName", "host1")
                 .putNull("errorTrace")
-                .put("systemChange", true)
+                .put("systemChange", systemChange)
                 .put("_doctype", "mongockChangeEntry");
         return doc;
     }

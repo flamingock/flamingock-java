@@ -127,4 +127,20 @@ public @interface MongockSupport {
      * @return {@code "true"} to allow empty origin, {@code "false"} to fail; empty treated as {@code "false"}
      */
     String emptyOriginAllowed() default "";
+
+    /**
+     * Determines whether Flamingock should skip imported Mongock audit entries that do not
+     * match any change in the current Flamingock pipeline.
+     * <p>
+     * Expected literal values are {@code "true"} or {@code "false"}.
+     * </p>
+     *
+     * <p>
+     * If empty (default), it will be treated as {@code "false"} and Flamingock will preserve
+     * the current strict behaviour.
+     * </p>
+     *
+     * @return {@code "true"} to skip unknown imported entries, {@code "false"} to fail; empty treated as {@code "false"}
+     */
+    String ignoreUnknownAuditEntries() default "";
 }

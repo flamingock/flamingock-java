@@ -16,14 +16,13 @@
 package io.flamingock.internal.common.core.pipeline;
 
 import io.flamingock.internal.common.core.audit.AuditEntry;
-import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
 
 public class PipelineHelper {
 
     public static final String SYSTEM_STAGE_ID = "flamingock-system-stage";
     public static final String LEGACY_STAGE_ID = "flamingock-legacy-stage";
-
-    private static final String errorTemplate = "importing change with id[%s] from database. It must be imported  to a flamingock stage";
 
     private final PipelineDescriptor pipelineDescriptor;
 
@@ -31,16 +30,13 @@ public class PipelineHelper {
         this.pipelineDescriptor = pipelineDescriptor;
     }
 
-    public String getStageId(AuditEntry auditEntryFromOrigin) {
+    public Optional<String> findStageId(AuditEntry auditEntryFromOrigin) {
         if (Boolean.TRUE.equals(auditEntryFromOrigin.getSystemChange())) {
-            return LEGACY_STAGE_ID;
-        } else {
-            String changeIdInPipeline = getBaseChangeId(auditEntryFromOrigin);
-            return pipelineDescriptor.getStageByChange(changeIdInPipeline).orElseThrow(() -> generateChangeIdException(changeIdInPipeline));
+            return Optional.of(LEGACY_STAGE_ID);
         }
+        String changeIdInPipeline = getBaseChangeId(auditEntryFromOrigin);
+        return pipelineDescriptor.getStageByChange(changeIdInPipeline);
     }
-
-
 
     public String getBaseChangeId(AuditEntry auditEntry) {
         String originalChangeId = auditEntry.getChangeId();
@@ -50,10 +46,5 @@ public class PipelineHelper {
 
     public String getStorableChangeId(AuditEntry auditEntry) {
         return auditEntry.getChangeId();
-    }
-
-    @NotNull
-    public IllegalArgumentException generateChangeIdException(String changeIdInPipeline) {
-        return new IllegalArgumentException(String.format(errorTemplate, changeIdInPipeline));
     }
 }

@@ -49,6 +49,7 @@ import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.DEFAULT_MONGOCK_ORIGIN;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -370,6 +371,99 @@ public class MongoDBImporterTest {
         Assertions.assertEquals("Backup", users.get(1).getString("name"));
         Assertions.assertEquals("backup@company.com", users.get(1).getString("email"));
         Assertions.assertEquals("readonly", users.get(1).getList("roles", String.class).get(0));
+    }
+
+    @Test
+    @DisplayName("GIVEN Mongock audit history contains unknown entries " +
+            "AND relaxed import flag is not provided " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should fail with the current strict validation")
+    void GIVEN_unknownAuditEntriesAndImplicitStrictMode_WHEN_migratingToFlamingockCommunity_THEN_shouldFail() {
+        mongockTestHelper.setupWithUnknownChange();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .build();
+
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("Error importing audit entry with changeId[foreign-change-1]: no matching change was found in the current Flamingock pipeline.",
+                firstFailedStageErrorMessage(ex));
+    }
+
+    @Test
+    @DisplayName("GIVEN Mongock audit history contains unknown entries " +
+            "AND relaxed import flag is explicitly disabled " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should fail with the current strict validation")
+    void GIVEN_unknownAuditEntriesAndExplicitStrictMode_WHEN_migratingToFlamingockCommunity_THEN_shouldFail() {
+        mongockTestHelper.setupWithUnknownChange();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, Boolean.FALSE.toString())
+                .build();
+
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("Error importing audit entry with changeId[foreign-change-1]: no matching change was found in the current Flamingock pipeline.",
+                firstFailedStageErrorMessage(ex));
+    }
+
+    @Test
+    @DisplayName("GIVEN Mongock audit history contains unknown entries " +
+            "AND relaxed import flag is enabled " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should skip the unknown entries and continue")
+    void GIVEN_unknownAuditEntriesAndRelaxedMode_WHEN_migratingToFlamingockCommunity_THEN_shouldSkipUnknownEntries() {
+        mongockTestHelper.setupWithUnknownChange();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, Boolean.TRUE.toString())
+                .build();
+
+        flamingock.run();
+
+        auditHelper.verifyAuditSequenceStrict(
+                APPLIED("system-change-00001_before"),
+                APPLIED("system-change-00001"),
+                APPLIED("mongock-change-1_before"),
+                APPLIED("mongock-change-1"),
+                APPLIED("mongock-change-2"),
+                STARTED("migration-mongock-to-flamingock-community"),
+                APPLIED("migration-mongock-to-flamingock-community"),
+                STARTED("create-users-collection-with-index"),
+                APPLIED("create-users-collection-with-index"),
+                STARTED("seed-users"),
+                APPLIED("seed-users")
+        );
+    }
+
+    @Test
+    @DisplayName("GIVEN relaxed import flag with invalid value " +
+            "WHEN migrating to Flamingock Community " +
+            "THEN should throw exception")
+    void GIVEN_relaxedImportFlagWithInvalidValue_WHEN_migratingToFlamingockCommunity_THEN_shouldThrowException() {
+        mongockTestHelper.setupWithUnknownChange();
+
+        MongoDBSyncTargetSystem mongodbTargetSystem = new MongoDBSyncTargetSystem("mongodb-target-system", mongoClient, DATABASE_NAME);
+
+        final String flagValue = "invalid_value";
+
+        Runner flamingock = testKit.createBuilder()
+                .addTargetSystem(mongodbTargetSystem)
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, flagValue)
+                .build();
+
+        StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
+        assertEquals("Invalid value for " + MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY + ": " + flagValue
+                + " (expected \"true\" or \"false\" or empty)",
+                firstFailedStageErrorMessage(ex));
     }
 
     @Test
