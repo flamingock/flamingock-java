@@ -19,6 +19,7 @@ import io.flamingock.internal.util.id.RunnerId;
 import io.flamingock.internal.util.TimeService;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
+import io.flamingock.cloud.api.request.StageBlockRequest;
 import io.flamingock.cloud.api.request.StageRequest;
 import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.StageResponse;
@@ -29,6 +30,7 @@ import io.flamingock.cloud.api.vo.CloudTargetSystemAuditMarkType;
 import io.flamingock.cloud.CloudApiMapper;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
 import io.flamingock.internal.core.pipeline.run.StageRun;
+import io.flamingock.internal.core.pipeline.run.StageRunBlock;
 import io.flamingock.internal.common.core.targets.TargetSystemAuditMarkType;
 import io.flamingock.cloud.lock.CloudLockService;
 import io.flamingock.internal.core.configuration.core.CoreConfigurable;
@@ -58,21 +60,30 @@ public final class CloudExecutionPlanMapper {
                                                  long lockAcquiredForMillis,
                                                  Map<String, TargetSystemAuditMarkType> ongoingStatusesMap) {
 
-        List<StageRun> stageRuns = pipelineRun.getStageRuns();
-        List<StageRequest> requestStages = new ArrayList<>(stageRuns.size());
-        for (int i = 0; i < stageRuns.size(); i++) {
-            StageRun stageRun = stageRuns.get(i);
-            AbstractLoadedStage currentStage = stageRun.getLoadedStage();
-            List<ChangeRequest> stageChanges = currentStage
-                    .getChanges()
-                    .stream()
-                    .map(descriptor -> CloudExecutionPlanMapper.mapToChangeRequest(descriptor, ongoingStatusesMap))
-                    .collect(Collectors.toList());
-            CloudStageStatus status = CloudApiMapper.toCloud(stageRun.getState());
-            requestStages.add(new StageRequest(currentStage.getName(), i, status, stageChanges));
+        // Walk the PipelineRun's block list verbatim — block grouping is owned by PipelineRun,
+        // not derived from StageType. Two blocks of the same StageType are preserved as two
+        // separate StageBlockRequests in input order.
+        List<StageRunBlock> blocks = pipelineRun.getStageBlocks();
+        List<StageBlockRequest> requestBlocks = new ArrayList<>(blocks.size());
+        // Stage order index is global across the request — preserves the same ordering used
+        // before block-awareness (each stage's index in the flat run list).
+        int stageOrder = 0;
+        for (StageRunBlock block : blocks) {
+            List<StageRequest> blockStages = new ArrayList<>(block.getStageRuns().size());
+            for (StageRun stageRun : block.getStageRuns()) {
+                AbstractLoadedStage currentStage = stageRun.getLoadedStage();
+                List<ChangeRequest> stageChanges = currentStage
+                        .getChanges()
+                        .stream()
+                        .map(descriptor -> CloudExecutionPlanMapper.mapToChangeRequest(descriptor, ongoingStatusesMap))
+                        .collect(Collectors.toList());
+                CloudStageStatus status = CloudApiMapper.toCloud(stageRun.getState());
+                blockStages.add(new StageRequest(currentStage.getName(), stageOrder++, status, stageChanges));
+            }
+            requestBlocks.add(new StageBlockRequest(block.getType(), blockStages));
         }
 
-        return new ExecutionPlanRequest(lockAcquiredForMillis, requestStages);
+        return new ExecutionPlanRequest(lockAcquiredForMillis, requestBlocks);
     }
 
     private static ChangeRequest mapToChangeRequest(AbstractLoadedChange descriptor,

@@ -17,22 +17,31 @@ package io.flamingock.cloud.api.request;
 
 import java.util.List;
 
+/**
+ * Payload submitted by the client describing the pipeline state for an execution-plan request.
+ * Stages are grouped into {@link StageBlockRequest}s where the block list order conveys the
+ * dependency order — {@code blocks.get(0)} must complete before {@code blocks.get(1)} may run.
+ *
+ * <p>Block membership is owned by the client's {@code PipelineRun.getStageBlocks()}; the server
+ * consumes the list as-is, with no {@code StageType}-based regrouping.
+ */
 public class ClientSubmissionRequest {
-    private List<StageRequest> stages;
+
+    private List<StageBlockRequest> blocks;
 
     public ClientSubmissionRequest() {
     }
 
-    public ClientSubmissionRequest(List<StageRequest> stages) {
-        this.stages = stages;
+    public ClientSubmissionRequest(List<StageBlockRequest> blocks) {
+        this.blocks = blocks;
     }
 
-    public List<StageRequest> getStages() {
-        return stages;
+    public List<StageBlockRequest> getBlocks() {
+        return blocks;
     }
 
-    public void setStages(List<StageRequest> stages) {
-        this.stages = stages;
+    public void setBlocks(List<StageBlockRequest> blocks) {
+        this.blocks = blocks;
     }
 
     @Override
@@ -40,11 +49,11 @@ public class ClientSubmissionRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ClientSubmissionRequest that = (ClientSubmissionRequest) o;
-        return java.util.Objects.equals(stages, that.stages);
+        return java.util.Objects.equals(blocks, that.blocks);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(stages);
+        return java.util.Objects.hash(blocks);
     }
 }

@@ -20,7 +20,9 @@ import io.flamingock.common.test.cloud.prototype.PrototypeChange;
 import io.flamingock.common.test.cloud.execution.ExecutionAwaitRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionBaseRequestResponseMock;
 import io.flamingock.common.test.cloud.execution.ExecutionPlanRequestResponseMock;
+import io.flamingock.api.StageType;
 import io.flamingock.cloud.api.request.ExecutionPlanRequest;
+import io.flamingock.cloud.api.request.StageBlockRequest;
 import io.flamingock.cloud.api.request.StageRequest;
 import io.flamingock.cloud.api.request.ChangeRequest;
 import io.flamingock.cloud.api.response.ExecutionPlanResponse;
@@ -61,7 +63,12 @@ public class MockExecutionPlanBuilder {
                         transformChangeRequests(stagePrototype.getChanges(), requestResponse))
                 ).collect(Collectors.toList());
 
-        return new ExecutionPlanRequest(requestResponse.getAcquiredForMillis(), stages);
+        // Wrap the prototype's flat stages into a single DEFAULT block. Existing tests that
+        // don't model block structure preserve their behaviour; tests that need multi-block
+        // scenarios should construct StageBlockRequest lists directly.
+        List<StageBlockRequest> blocks = java.util.Collections.singletonList(
+                new StageBlockRequest(StageType.DEFAULT, stages));
+        return new ExecutionPlanRequest(requestResponse.getAcquiredForMillis(), blocks);
     }
 
     public ExecutionPlanResponse getResponse(ExecutionBaseRequestResponseMock mockRequestResponse) {

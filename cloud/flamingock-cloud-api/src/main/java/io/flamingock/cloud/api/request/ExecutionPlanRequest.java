@@ -25,9 +25,9 @@ public class ExecutionPlanRequest {
     public ExecutionPlanRequest() {
     }
 
-    public ExecutionPlanRequest(long lockAcquiredForMillis, List<StageRequest> stages) {
+    public ExecutionPlanRequest(long lockAcquiredForMillis, List<StageBlockRequest> blocks) {
         this.lockAcquiredForMillis = lockAcquiredForMillis;
-        this.clientSubmission = new ClientSubmissionRequest(stages);
+        this.clientSubmission = new ClientSubmissionRequest(blocks);
     }
 
     public void setClientSubmission(ClientSubmissionRequest clientSubmission) {
