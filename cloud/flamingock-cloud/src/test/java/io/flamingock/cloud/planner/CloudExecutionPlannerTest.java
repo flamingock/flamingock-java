@@ -96,6 +96,51 @@ class CloudExecutionPlannerTest {
     }
 
     @Test
+    @DisplayName("Should send the multi-block PipelineRun on the wire, preserving block order and per-block stages")
+    void shouldSendMultiBlockPipelineRunOnTheWire() {
+        CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
+
+        // Stub the server to return CONTINUE so the planner doesn't loop or try to acquire a lock.
+        ExecutionPlanResponse continueResponse = new ExecutionPlanResponse();
+        continueResponse.setAction(CloudExecutionAction.CONTINUE);
+        when(client.createExecution(any(), any(), anyLong())).thenReturn(continueResponse);
+
+        // Build a PipelineRun with three blocks: SYSTEM (1 stage), LEGACY (1 stage), DEFAULT (2 stages).
+        AbstractLoadedStage systemStage = new DefaultLoadedStage("system-stage", StageType.SYSTEM,
+                Collections.singletonList(change1));
+        AbstractLoadedStage legacyStage = new DefaultLoadedStage("legacy-stage", StageType.LEGACY,
+                Collections.singletonList(change1));
+        AbstractLoadedStage userStageA = new DefaultLoadedStage("user-a", StageType.DEFAULT,
+                Collections.singletonList(change1));
+        AbstractLoadedStage userStageB = new DefaultLoadedStage("user-b", StageType.DEFAULT,
+                Collections.singletonList(change2));
+
+        planner.getNextExecution(PipelineRun.of(Arrays.asList(systemStage, legacyStage, userStageA, userStageB)));
+
+        ArgumentCaptor<ExecutionPlanRequest> requestCaptor = ArgumentCaptor.forClass(ExecutionPlanRequest.class);
+        verify(client).createExecution(requestCaptor.capture(), any(), anyLong());
+
+        List<io.flamingock.cloud.api.request.StageBlockRequest> blocks =
+                requestCaptor.getValue().getClientSubmission().getBlocks();
+
+        // Three blocks, in dependency order.
+        assertEquals(3, blocks.size());
+        assertEquals(StageType.SYSTEM, blocks.get(0).getType());
+        assertEquals(1, blocks.get(0).getStages().size());
+        assertEquals("system-stage", blocks.get(0).getStages().get(0).getName());
+
+        assertEquals(StageType.LEGACY, blocks.get(1).getType());
+        assertEquals(1, blocks.get(1).getStages().size());
+        assertEquals("legacy-stage", blocks.get(1).getStages().get(0).getName());
+
+        // DEFAULT block contains both user stages, in input order.
+        assertEquals(StageType.DEFAULT, blocks.get(2).getType());
+        assertEquals(2, blocks.get(2).getStages().size());
+        assertEquals("user-a", blocks.get(2).getStages().get(0).getName());
+        assertEquals("user-b", blocks.get(2).getStages().get(1).getName());
+    }
+
+    @Test
     @DisplayName("Should return ABORT plan when server returns ABORT (regardless of change actions)")
     void shouldReturnAbortPlanWhenServerReturnsAbort() {
         CloudExecutionPlanner planner = buildPlanner(Collections.emptyList());
@@ -170,7 +215,7 @@ class CloudExecutionPlannerTest {
         verify(client).createExecution(requestCaptor.capture(), any(), anyLong());
 
         ExecutionPlanRequest request = requestCaptor.getValue();
-        Map<String, CloudTargetSystemAuditMarkType> marksByChangeId = request.getClientSubmission().getStages().get(0).getChanges().stream()
+        Map<String, CloudTargetSystemAuditMarkType> marksByChangeId = request.getClientSubmission().getBlocks().get(0).getStages().get(0).getChanges().stream()
                 .collect(Collectors.toMap(ChangeRequest::getId, ChangeRequest::getOngoingStatus));
 
         assertEquals(CloudTargetSystemAuditMarkType.APPLIED, marksByChangeId.get(change1.getId()));
@@ -197,7 +242,7 @@ class CloudExecutionPlannerTest {
         ArgumentCaptor<ExecutionPlanRequest> requestCaptor = ArgumentCaptor.forClass(ExecutionPlanRequest.class);
         verify(client).createExecution(requestCaptor.capture(), any(), anyLong());
 
-        ChangeRequest changeRequest = requestCaptor.getValue().getClientSubmission().getStages().get(0).getChanges().get(0);
+        ChangeRequest changeRequest = requestCaptor.getValue().getClientSubmission().getBlocks().get(0).getStages().get(0).getChanges().get(0);
         assertEquals(CloudTargetSystemAuditMarkType.NONE, changeRequest.getOngoingStatus());
     }
 

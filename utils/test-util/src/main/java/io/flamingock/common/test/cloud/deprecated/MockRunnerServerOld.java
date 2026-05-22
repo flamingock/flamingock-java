@@ -403,7 +403,12 @@ public final class MockRunnerServerOld {
     private ExecutionPlanRequest getExecutionPlanRequest(int index) {
         ExecutionPlanRequestResponse executionPlanRequestResponse = executionRequestResponses.get(index);
         List<StageRequest> stages = executionExpectation != null ? executionExpectation.getStageRequest() : Collections.emptyList();
-        return new ExecutionPlanRequest(executionPlanRequestResponse.getAcquiredForMillis(), stages);
+        // Deprecated mock — wrap the flat stages in a single DEFAULT block to satisfy the new
+        // wire shape. Existing deprecated-flow tests preserve behaviour; multi-block tests use
+        // MockExecutionPlanBuilder / MockRunnerServer directly.
+        List<io.flamingock.cloud.api.request.StageBlockRequest> blocks = Collections.singletonList(
+                new io.flamingock.cloud.api.request.StageBlockRequest(io.flamingock.api.StageType.DEFAULT, stages));
+        return new ExecutionPlanRequest(executionPlanRequestResponse.getAcquiredForMillis(), blocks);
     }
 
     private ExecutionPlanResponse getExecutionPlanResponse(int index) {

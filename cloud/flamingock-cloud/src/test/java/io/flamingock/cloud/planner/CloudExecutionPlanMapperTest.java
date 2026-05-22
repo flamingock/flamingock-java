@@ -210,7 +210,7 @@ class CloudExecutionPlanMapperTest {
         ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
                 PipelineRun.of(loadedStages), 60000L, ongoingStatusesMap);
 
-        Map<String, CloudTargetSystemAuditMarkType> marksByChangeId = request.getClientSubmission().getStages().get(0).getChanges().stream()
+        Map<String, CloudTargetSystemAuditMarkType> marksByChangeId = request.getClientSubmission().getBlocks().get(0).getStages().get(0).getChanges().stream()
                 .collect(Collectors.toMap(ChangeRequest::getId, ChangeRequest::getOngoingStatus));
 
         assertEquals(CloudTargetSystemAuditMarkType.APPLIED, marksByChangeId.get(change1.getId()));
@@ -243,16 +243,87 @@ class CloudExecutionPlanMapperTest {
                 pipelineRun, 60000L, Collections.emptyMap());
 
         // Plain loop because Collectors.toMap rejects null values; NOT_STARTED maps to null.
+        // All four stages are typed DEFAULT (via the buildStage helper), so they end up in a
+        // single block; flatten the block list to iterate them.
         Map<String, CloudStageStatus> statusByName = new HashMap<>();
-        for (StageRequest stageRequest : request.getClientSubmission().getStages()) {
-            statusByName.put(stageRequest.getName(), stageRequest.getStatus());
-        }
+        request.getClientSubmission().getBlocks().forEach(block ->
+                block.getStages().forEach(stage ->
+                        statusByName.put(stage.getName(), stage.getStatus())));
 
         // NOT_STARTED is encoded as null on the wire (back-compat: missing field == not started).
         assertNull(statusByName.get("stage-not-started"));
         assertEquals(CloudStageStatus.COMPLETED, statusByName.get("stage-completed"));
         assertEquals(CloudStageStatus.FAILED, statusByName.get("stage-failed"));
         assertEquals(CloudStageStatus.BLOCKED_MANUAL_INTERVENTION, statusByName.get("stage-blocked"));
+    }
+
+    @Test
+    @DisplayName("toRequest() emits one block per StageRunBlock in dependency order with the right type and stage contents")
+    void toRequestEmitsOneBlockPerStageRunBlock() {
+        // Three stages of three different types — PipelineRun.of(...) groups them into
+        // SYSTEM -> LEGACY -> DEFAULT blocks (one stage each).
+        AbstractLoadedStage systemStage = new DefaultLoadedStage("system-stage", StageType.SYSTEM,
+                Collections.singletonList(change1));
+        AbstractLoadedStage legacyStage = new DefaultLoadedStage("legacy-stage", StageType.LEGACY,
+                Collections.singletonList(change1));
+        AbstractLoadedStage userStage = new DefaultLoadedStage("user-stage", StageType.DEFAULT,
+                Collections.singletonList(change1));
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(userStage, systemStage, legacyStage));
+
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
+                pipelineRun, 60000L, Collections.emptyMap());
+
+        // Block order is dependency order, not input order: SYSTEM -> LEGACY -> DEFAULT.
+        List<io.flamingock.cloud.api.request.StageBlockRequest> blocks =
+                request.getClientSubmission().getBlocks();
+        assertEquals(3, blocks.size());
+        assertEquals(StageType.SYSTEM, blocks.get(0).getType());
+        assertEquals(1, blocks.get(0).getStages().size());
+        assertEquals("system-stage", blocks.get(0).getStages().get(0).getName());
+        assertEquals(StageType.LEGACY, blocks.get(1).getType());
+        assertEquals("legacy-stage", blocks.get(1).getStages().get(0).getName());
+        assertEquals(StageType.DEFAULT, blocks.get(2).getType());
+        assertEquals("user-stage", blocks.get(2).getStages().get(0).getName());
+    }
+
+    @Test
+    @DisplayName("toRequest() preserves the global stage order index across blocks")
+    void toRequestPreservesGlobalStageOrderAcrossBlocks() {
+        // Two stages in the SYSTEM block, then one in DEFAULT — verify the per-stage `order`
+        // field increments globally across the flattened block sequence.
+        AbstractLoadedStage system1 = new DefaultLoadedStage("system-1", StageType.SYSTEM,
+                Collections.singletonList(change1));
+        AbstractLoadedStage system2 = new DefaultLoadedStage("system-2", StageType.SYSTEM,
+                Collections.singletonList(change2));
+        AbstractLoadedStage user1 = new DefaultLoadedStage("user-1", StageType.DEFAULT,
+                Collections.singletonList(change1));
+
+        PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(system1, system2, user1));
+
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
+                pipelineRun, 60000L, Collections.emptyMap());
+
+        List<io.flamingock.cloud.api.request.StageBlockRequest> blocks =
+                request.getClientSubmission().getBlocks();
+        assertEquals(2, blocks.size());
+        assertEquals(StageType.SYSTEM, blocks.get(0).getType());
+        assertEquals(0, blocks.get(0).getStages().get(0).getOrder());
+        assertEquals(1, blocks.get(0).getStages().get(1).getOrder());
+        assertEquals(StageType.DEFAULT, blocks.get(1).getType());
+        assertEquals(2, blocks.get(1).getStages().get(0).getOrder());
+    }
+
+    @Test
+    @DisplayName("toRequest() produces an empty blocks list when the PipelineRun has no stages")
+    void toRequestEmptyPipelineRunYieldsEmptyBlocks() {
+        PipelineRun pipelineRun = PipelineRun.of(Collections.<AbstractLoadedStage>emptyList());
+
+        ExecutionPlanRequest request = CloudExecutionPlanMapper.toRequest(
+                pipelineRun, 60000L, Collections.emptyMap());
+
+        assertNotNull(request.getClientSubmission().getBlocks());
+        assertTrue(request.getClientSubmission().getBlocks().isEmpty());
     }
 
     private static DefaultLoadedStage buildStage(String name, AbstractLoadedChange... changes) {
