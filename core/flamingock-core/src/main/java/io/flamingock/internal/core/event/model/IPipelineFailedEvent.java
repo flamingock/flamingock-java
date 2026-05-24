@@ -15,10 +15,12 @@
  */
 package io.flamingock.internal.core.event.model;
 
-public interface IPipelineFailedEvent extends Event {
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 
+public interface IPipelineFailedEvent extends Event {
 
     Exception getException();
 
+    ExecuteResponseData getResult();
 
 }

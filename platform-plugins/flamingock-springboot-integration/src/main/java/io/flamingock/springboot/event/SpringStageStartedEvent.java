@@ -15,11 +15,10 @@
  */
 package io.flamingock.springboot.event;
 
-import io.flamingock.internal.core.event.model.IPipelineStartedEvent;
 import io.flamingock.internal.core.event.model.IStageStartedEvent;
 import org.springframework.context.ApplicationEvent;
 
-public class SpringStageStartedEvent extends ApplicationEvent implements IPipelineStartedEvent {
+public class SpringStageStartedEvent extends ApplicationEvent implements IStageStartedEvent {
 
 
   private final IStageStartedEvent event;
@@ -37,7 +36,7 @@ public class SpringStageStartedEvent extends ApplicationEvent implements IPipeli
 
   @Override
   public String toString() {
-    return "SpringPipelineStartedEvent{" +
+    return "SpringStageStartedEvent{" +
             "event=" + event +
             ", source=" + source +
             '}';

@@ -15,11 +15,11 @@
  */
 package io.flamingock.springboot.event;
 
-import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.event.model.IStageFailedEvent;
 import org.springframework.context.ApplicationEvent;
 
-public class SpringStageFailedEvent extends ApplicationEvent implements IPipelineFailedEvent {
+public class SpringStageFailedEvent extends ApplicationEvent implements IStageFailedEvent {
     private final IStageFailedEvent event;
 
     /**
@@ -38,11 +38,14 @@ public class SpringStageFailedEvent extends ApplicationEvent implements IPipelin
         return event.getException();
     }
 
-
+    @Override
+    public StageResult getResult() {
+        return event.getResult();
+    }
 
     @Override
     public String toString() {
-        return "SpringPipelineFailedEvent{" +
+        return "SpringStageFailedEvent{" +
                 "event=" + event +
                 ", source=" + source +
                 '}';

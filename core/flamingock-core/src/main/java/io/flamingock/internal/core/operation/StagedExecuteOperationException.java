@@ -16,39 +16,27 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
-import io.flamingock.internal.common.core.response.data.StageResult;
-
-import java.util.stream.Collectors;
+import io.flamingock.internal.common.core.response.data.ExecutionReportFormatter;
 
 /**
  * Thrown when one or more stages ended in a failed state ({@code Failed} or
  * {@code BlockedForMI}) but the pipeline iteration completed. The per-stage error details live
  * in {@code getResult().getStages()}.
  *
- * <p>The exception message is a single-line, log-aggregator-friendly summary built from the
- * carried {@link ExecuteResponseData}: failed stage count + names, change counts, and run
- * duration. Multi-line / per-stage detail rendering is deferred to a future {@code toString()}
- * override and a default event listener (see {@code docs/ERROR_REPORTING_PROPOSAL.md}).
+ * <p>The {@link #getMessage()} is a single-line, log-aggregator-friendly summary (failed stage
+ * count + names, change counts, run duration, and the IDs of any change requiring manual
+ * intervention). The full multi-line per-stage report is available via {@link #toString()} —
+ * see {@code docs/ERROR_REPORTING_PROPOSAL.md} for why the two intentionally differ.
  */
 public class StagedExecuteOperationException extends ExecuteOperationException {
 
     public StagedExecuteOperationException(ExecuteResponseData result) {
-        super(buildMessage(result), result);
+        super(ExecutionReportFormatter.summary(result), result);
     }
 
-    private static String buildMessage(ExecuteResponseData result) {
-        String failedStageNames = result.getStages().stream()
-                .filter(s -> s.getState().isFailed())
-                .map(StageResult::getStageName)
-                .collect(Collectors.joining(", "));
-        return String.format(
-                "Flamingock execution failed: %d of %d stage(s) failed [%s]; changes applied=%d, failed=%d, skipped=%d; duration=%dms",
-                result.getFailedStages(),
-                result.getTotalStages(),
-                failedStageNames,
-                result.getAppliedChanges(),
-                result.getFailedChanges(),
-                result.getSkippedChanges(),
-                result.getTotalDurationMs());
+    // Rich multi-line report; getMessage() stays one-line for log aggregators.
+    @Override
+    public String toString() {
+        return ExecutionReportFormatter.report(getResult());
     }
 }

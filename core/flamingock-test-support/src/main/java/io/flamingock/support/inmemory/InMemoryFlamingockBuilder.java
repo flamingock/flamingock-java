@@ -47,13 +47,17 @@ public class InMemoryFlamingockBuilder extends CommunityChangeRunnerBuilder {
 
 
     public static InMemoryFlamingockBuilder create() {
-        return new InMemoryFlamingockBuilder(
+        InMemoryFlamingockBuilder builder = new InMemoryFlamingockBuilder(
                 new CoreConfiguration(),
                 new CommunityConfiguration(),
                 new SimpleContext(),
                 new DefaultPluginManager(),
                 InMemoryAuditStore.create()
         );
+        // Keep unit-test logs clean: opt out of the default FK-Report listener by default.
+        // Tests verifying report content can re-enable via setEnableDefaultExecutionReport(true).
+        builder.setEnableDefaultExecutionReport(false);
+        return builder;
     }
 
     private InMemoryFlamingockBuilder(CoreConfiguration coreConfiguration,

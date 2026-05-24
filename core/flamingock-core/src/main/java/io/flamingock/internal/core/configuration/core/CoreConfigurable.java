@@ -42,6 +42,10 @@ public interface CoreConfigurable {
 
     boolean isValidationOnly();
 
+    void setEnableDefaultExecutionReport(boolean enableDefaultExecutionReport);
+
+    boolean isEnableDefaultExecutionReport();
+
     void setServiceIdentifier(String serviceIdentifier);
 
     void setMetadata(Map<String, Object> metadata);

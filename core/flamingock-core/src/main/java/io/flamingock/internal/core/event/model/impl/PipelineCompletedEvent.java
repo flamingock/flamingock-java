@@ -15,12 +15,19 @@
  */
 package io.flamingock.internal.core.event.model.impl;
 
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
 
 public class PipelineCompletedEvent implements IPipelineCompletedEvent {
 
+    private final ExecuteResponseData result;
 
-    public PipelineCompletedEvent() {
+    public PipelineCompletedEvent(ExecuteResponseData result) {
+        this.result = result;
     }
 
+    @Override
+    public ExecuteResponseData getResult() {
+        return result;
+    }
 }

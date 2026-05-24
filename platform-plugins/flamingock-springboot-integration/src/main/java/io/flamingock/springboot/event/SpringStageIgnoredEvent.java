@@ -16,11 +16,10 @@
 package io.flamingock.springboot.event;
 
 
-import io.flamingock.internal.core.event.model.IPipelineIgnoredEvent;
 import io.flamingock.internal.core.event.model.IStageIgnoredEvent;
 import org.springframework.context.ApplicationEvent;
 
-public class SpringStageIgnoredEvent extends ApplicationEvent implements IPipelineIgnoredEvent {
+public class SpringStageIgnoredEvent extends ApplicationEvent implements IStageIgnoredEvent {
 
     private final IStageIgnoredEvent event;
 
@@ -38,7 +37,7 @@ public class SpringStageIgnoredEvent extends ApplicationEvent implements IPipeli
 
     @Override
     public String toString() {
-        return "SpringPipelineIgnoredEvent{" +
+        return "SpringStageIgnoredEvent{" +
                 "event=" + event +
                 ", source=" + source +
                 '}';

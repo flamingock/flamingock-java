@@ -43,6 +43,15 @@ public class CoreConfiguration implements CoreConfigurable {
     private boolean validationOnly = false;
 
     /**
+     * If true, Flamingock registers the default execution-report listener that writes the
+     * canonical multi-line report to SLF4J under the {@code FK-Report} logger on pipeline
+     * completion or failure. Set to false to opt out of the report entirely; SLF4J-level
+     * silencing (e.g. {@code <logger name="FK-Report" level="OFF"/>}) is the recommended
+     * fine-grained control. Default true.
+     */
+    private boolean enableDefaultExecutionReport = true;
+
+    /**
      * Service identifier.
      */
     private String serviceIdentifier = null;
@@ -101,6 +110,16 @@ public class CoreConfiguration implements CoreConfigurable {
     @Override
     public void setValidationOnly(boolean validationOnly) {
         this.validationOnly = validationOnly;
+    }
+
+    @Override
+    public void setEnableDefaultExecutionReport(boolean enableDefaultExecutionReport) {
+        this.enableDefaultExecutionReport = enableDefaultExecutionReport;
+    }
+
+    @Override
+    public boolean isEnableDefaultExecutionReport() {
+        return enableDefaultExecutionReport;
     }
 
     @Override

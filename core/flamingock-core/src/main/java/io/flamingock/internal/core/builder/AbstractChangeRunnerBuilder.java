@@ -36,6 +36,8 @@ import io.flamingock.internal.core.plan.ExecutionPlanner;
 import io.flamingock.internal.core.event.CompositeEventPublisher;
 import io.flamingock.internal.core.event.EventPublisher;
 import io.flamingock.internal.core.event.SimpleEventPublisher;
+import io.flamingock.internal.core.event.listener.DefaultPipelineCompletedReportListener;
+import io.flamingock.internal.core.event.listener.DefaultPipelineFailedReportListener;
 import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
 import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
 import io.flamingock.internal.core.event.model.IPipelineIgnoredEvent;
@@ -307,9 +309,9 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
         SimpleEventPublisher simpleEventPublisher = new SimpleEventPublisher()
                 //pipeline events
                 .addListener(IPipelineStartedEvent.class, getPipelineStartedListener())
-                .addListener(IPipelineCompletedEvent.class, getPipelineCompletedListener())
+                .addListener(IPipelineCompletedEvent.class, composedPipelineCompletedListener())
                 .addListener(IPipelineIgnoredEvent.class, getPipelineIgnoredListener())
-                .addListener(IPipelineFailedEvent.class, getPipelineFailureListener())
+                .addListener(IPipelineFailedEvent.class, composedPipelineFailedListener())
                 //stage events
                 .addListener(IStageStartedEvent.class, getStageStartedListener())
                 .addListener(IStageCompletedEvent.class, getStageCompletedListener())
@@ -324,6 +326,29 @@ public abstract class AbstractChangeRunnerBuilder<AUDIT_STORE extends AuditStore
                 .collect(Collectors.toList());
         eventPublishersFromPlugins.add(simpleEventPublisher);
         return new CompositeEventPublisher(eventPublishersFromPlugins);
+    }
+
+    /**
+     * Composes the default execution-report listener with the user-supplied listener when
+     * {@code enableDefaultExecutionReport} is on. Order is deterministic: default fires first,
+     * user fires after — so user code sees a stable log state when it runs.
+     */
+    private Consumer<IPipelineCompletedEvent> composedPipelineCompletedListener() {
+        Consumer<IPipelineCompletedEvent> userListener = getPipelineCompletedListener();
+        if (!coreConfiguration.isEnableDefaultExecutionReport()) {
+            return userListener;
+        }
+        Consumer<IPipelineCompletedEvent> defaultListener = new DefaultPipelineCompletedReportListener();
+        return userListener != null ? defaultListener.andThen(userListener) : defaultListener;
+    }
+
+    private Consumer<IPipelineFailedEvent> composedPipelineFailedListener() {
+        Consumer<IPipelineFailedEvent> userListener = getPipelineFailureListener();
+        if (!coreConfiguration.isEnableDefaultExecutionReport()) {
+            return userListener;
+        }
+        Consumer<IPipelineFailedEvent> defaultListener = new DefaultPipelineFailedReportListener();
+        return userListener != null ? defaultListener.andThen(userListener) : defaultListener;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////

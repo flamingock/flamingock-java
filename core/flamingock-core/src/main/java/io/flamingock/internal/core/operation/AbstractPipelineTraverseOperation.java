@@ -160,7 +160,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
             // response reflects the pipeline-wide error carried in pipelineLevelError.
             result.setStatus(ExecutionStatus.FAILED);
             logger.debug("Error executing the process. ABORTED OPERATION", pipelineLevelError);
-            eventPublisher.publish(new PipelineFailedEvent(toException(pipelineLevelError)));
+            eventPublisher.publish(new PipelineFailedEvent(toException(pipelineLevelError), result));
             if (throwPipelineLevelError) {
                 throw ExecuteOperationException.fromExisting(pipelineLevelError, result);
             }
@@ -168,17 +168,12 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         }
 
         if (hasAnyFailedStage(pipelineRun)) {
-            logger.info("Flamingock execution finished with stage failures [duration={}ms applied={} skipped={} failed={}]",
-                    result.getTotalDurationMs(), result.getAppliedChanges(), result.getSkippedChanges(), result.getFailedChanges());
             StagedExecuteOperationException stagedException = new StagedExecuteOperationException(result);
-            eventPublisher.publish(new PipelineFailedEvent(stagedException));
+            eventPublisher.publish(new PipelineFailedEvent(stagedException, result));
             throw stagedException;
         }
 
-        logger.info("Flamingock execution completed [duration={}ms applied={} skipped={}]",
-                result.getTotalDurationMs(), result.getAppliedChanges(), result.getSkippedChanges());
-
-        eventPublisher.publish(new PipelineCompletedEvent());
+        eventPublisher.publish(new PipelineCompletedEvent(result));
 
         return new ExecuteResult(result);
     }
@@ -193,7 +188,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
             pipelineRun.markStageStarted(stageName);
             eventPublisher.publish(new StageStartedEvent());
             pipelineRun.markStageBlockedFromMI(stageName, miException.getConflictingChanges());
-            eventPublisher.publish(new StageFailedEvent(miException));
+            eventPublisher.publish(new StageFailedEvent(miException, pipelineRun.getStageRun(stageName).getResult()));
             return;
         }
 
@@ -201,10 +196,10 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
             startStage(executionId, lock, executableStage, pipelineRun);
         } catch (StageExecutionException exception) {
             pipelineRun.markStageFailed(stageName, exception);
-            eventPublisher.publish(new StageFailedEvent(exception));
+            eventPublisher.publish(new StageFailedEvent(exception, pipelineRun.getStageRun(stageName).getResult()));
         } catch (Throwable generalException) {
             pipelineRun.markStageFailed(stageName, generalException);
-            eventPublisher.publish(new StageFailedEvent(toException(generalException)));
+            eventPublisher.publish(new StageFailedEvent(toException(generalException), pipelineRun.getStageRun(stageName).getResult()));
         }
     }
 
@@ -216,7 +211,7 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
         ExecutionContext executionContext = new ExecutionContext(executionId, orphanExecutionContext.getHostname(), orphanExecutionContext.getMetadata());
         StageExecutor.Output executionOutput = stageExecutor.executeStage(executableStage, executionContext, lock);
         pipelineRun.markStageCompleted(executableStage.getName(), executionOutput.getResult());
-        eventPublisher.publish(new StageCompletedEvent(executionOutput));
+        eventPublisher.publish(new StageCompletedEvent(executionOutput.getResult()));
     }
 
     private static boolean hasAnyFailedStage(PipelineRun pipelineRun) {

@@ -15,17 +15,19 @@
  */
 package io.flamingock.internal.core.event.model.impl;
 
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.event.model.IStageCompletedEvent;
 
 public class StageCompletedEvent implements IStageCompletedEvent {
 
-    private final Object result;
+    private final StageResult result;
 
-    public StageCompletedEvent(Object result) {
+    public StageCompletedEvent(StageResult result) {
         this.result = result;
     }
+
     @Override
-    public Object getResult() {
+    public StageResult getResult() {
         return result;
     }
 }

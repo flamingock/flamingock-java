@@ -15,18 +15,26 @@
  */
 package io.flamingock.internal.core.event.model.impl;
 
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
 
 public class PipelineFailedEvent implements IPipelineFailedEvent {
 
     private final Exception throwable;
+    private final ExecuteResponseData result;
 
-    public PipelineFailedEvent(Exception throwable) {
+    public PipelineFailedEvent(Exception throwable, ExecuteResponseData result) {
         this.throwable = throwable;
+        this.result = result;
     }
 
     @Override
     public Exception getException() {
         return throwable;
+    }
+
+    @Override
+    public ExecuteResponseData getResult() {
+        return result;
     }
 }

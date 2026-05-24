@@ -15,6 +15,7 @@
  */
 package io.flamingock.springboot.event;
 
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.core.event.model.IPipelineFailedEvent;
 import org.springframework.context.ApplicationEvent;
 
@@ -37,7 +38,10 @@ public class SpringPipelineFailedEvent extends ApplicationEvent implements IPipe
         return event.getException();
     }
 
-
+    @Override
+    public ExecuteResponseData getResult() {
+        return event.getResult();
+    }
 
     @Override
     public String toString() {

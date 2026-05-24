@@ -16,18 +16,26 @@
 package io.flamingock.internal.core.event.model.impl;
 
 
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.event.model.IStageFailedEvent;
 
 public class StageFailedEvent implements IStageFailedEvent {
 
     private final Exception throwable;
+    private final StageResult result;
 
-    public StageFailedEvent(Exception throwable) {
+    public StageFailedEvent(Exception throwable, StageResult result) {
         this.throwable = throwable;
+        this.result = result;
     }
 
     @Override
     public Exception getException() {
         return throwable;
+    }
+
+    @Override
+    public StageResult getResult() {
+        return result;
     }
 }

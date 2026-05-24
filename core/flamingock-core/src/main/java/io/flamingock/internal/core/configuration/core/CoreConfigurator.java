@@ -32,6 +32,10 @@ public interface CoreConfigurator<HOLDER> {
 
     HOLDER setEnabled(boolean enabled);
 
+    HOLDER setEnableDefaultExecutionReport(boolean enableDefaultExecutionReport);
+
+    boolean isEnableDefaultExecutionReport();
+
     HOLDER setServiceIdentifier(String serviceIdentifier);
 
     HOLDER setMetadata(Map<String, Object> metadata);
