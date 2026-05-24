@@ -148,6 +148,17 @@ public abstract class AbstractBuilder<AUDIT_STORE extends AuditStore<?>, HOLDER 
     }
 
     @Override
+    public HOLDER setEnableDefaultExecutionReport(boolean enableDefaultExecutionReport) {
+        coreConfiguration.setEnableDefaultExecutionReport(enableDefaultExecutionReport);
+        return getSelf();
+    }
+
+    @Override
+    public boolean isEnableDefaultExecutionReport() {
+        return coreConfiguration.isEnableDefaultExecutionReport();
+    }
+
+    @Override
     public HOLDER setServiceIdentifier(String serviceIdentifier) {
         coreConfiguration.setServiceIdentifier(serviceIdentifier);
         return getSelf();

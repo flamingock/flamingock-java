@@ -15,7 +15,9 @@
  */
 package io.flamingock.internal.core.event.model;
 
+import io.flamingock.internal.common.core.response.data.StageResult;
+
 public interface IStageCompletedEvent extends Event {
 
-  Object getResult();
+    StageResult getResult();
 }

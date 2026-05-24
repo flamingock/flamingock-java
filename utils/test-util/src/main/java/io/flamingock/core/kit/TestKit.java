@@ -70,12 +70,16 @@ public interface TestKit {
 
 
     default TestFlamingockBuilder createBuilderWithAuditStore(CommunityAuditStore auditStore) {
-        return new TestFlamingockBuilder(
+        TestFlamingockBuilder builder = new TestFlamingockBuilder(
             new CoreConfiguration(),
             new CommunityConfiguration(),
             new SimpleContext(),
             new DefaultPluginManager(),
             auditStore
         );
+        // Keep CI logs clean: opt out of the default FK-Report listener by default.
+        // Tests verifying report content can re-enable via setEnableDefaultExecutionReport(true).
+        builder.setEnableDefaultExecutionReport(false);
+        return builder;
     }
 }

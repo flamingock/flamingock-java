@@ -15,10 +15,12 @@
  */
 package io.flamingock.internal.core.event.model;
 
-public interface IStageFailedEvent extends Event {
+import io.flamingock.internal.common.core.response.data.StageResult;
 
+public interface IStageFailedEvent extends Event {
 
     Exception getException();
 
+    StageResult getResult();
 
 }

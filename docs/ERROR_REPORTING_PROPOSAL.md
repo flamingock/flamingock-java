@@ -1,11 +1,11 @@
 # Error reporting proposal — rich execution report via event listener
 
-**Status:** partially implemented.
-- **Step 1 (single-line `getMessage()` summary) — DONE** on `StagedExecuteOperationException`. The message now reads e.g. `"Flamingock execution failed: 1 of 3 stage(s) failed [flamingock-system-stage]; changes applied=3, failed=1, skipped=0; duration=312ms"`. The message-building helper is inlined as a `private static String buildMessage(ExecuteResponseData)` inside the exception class — natural seed to extract into a reusable `ExecutionReportFormatter.summary(...)` when step 2 lands.
-- **Step 2 (`toString()` override with rich multi-line report) — DEFERRED.**
-- **Step 3 (default event listener writing via SLF4J + builder opt-out) — DEFERRED.**
+**Status:** implemented (2026-05-24).
+- **Step 1 (single-line `getMessage()` summary) — DONE.** `StagedExecuteOperationException.getMessage()` delegates to `ExecutionReportFormatter.summary(...)`. MI change IDs are appended when any stage is blocked.
+- **Step 2 (`toString()` override with rich multi-line report) — DONE.** Both `StagedExecuteOperationException` and `PipelineExecuteOperationException` override `toString()` to return `ExecutionReportFormatter.report(...)`.
+- **Step 3 (default event listener writing via SLF4J + builder opt-out) — DONE.** Two separate listeners — `DefaultPipelineCompletedReportListener` (INFO) and `DefaultPipelineFailedReportListener` (ERROR) — both writing under the `FK-Report` logger. Composed with any user listener via `Consumer.andThen` when `enableDefaultExecutionReport(true)` (default). Inline summary `logger.info(...)` calls in `AbstractPipelineTraverseOperation` removed in favor of the listener.
 
-**Related code:** `core/flamingock-core/.../operation/AbstractPipelineTraverseOperation.java`, `ExecuteOperationException` / `StagedExecuteOperationException` / `PipelineExecuteOperationException`, `core/flamingock-core-commons/.../response/data/ExecuteResponseData.java`, `core/flamingock-core/.../event/`.
+**Related code:** `core/flamingock-core/.../operation/AbstractPipelineTraverseOperation.java`, `ExecuteOperationException` / `StagedExecuteOperationException` / `PipelineExecuteOperationException`, `core/flamingock-core-commons/.../response/data/{ExecuteResponseData,ExecutionReportFormatter}.java`, `core/flamingock-core/.../event/listener/`, `core/flamingock-core/.../builder/AbstractChangeRunnerBuilder.java`, `core/flamingock-core/.../configuration/core/CoreConfiguration.java`. Spring Boot wrappers under `platform-plugins/flamingock-springboot-integration/.../event/` pass `getResult()` through (and the four `SpringStage*Event` classes were re-typed to implement their correct `IStage*Event` interfaces — they were previously cross-wired to `IPipeline*Event`).
 
 ## Context
 

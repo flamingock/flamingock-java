@@ -101,6 +101,16 @@ public class SpringbootProperties
     }
 
     @Override
+    public void setEnableDefaultExecutionReport(boolean enableDefaultExecutionReport) {
+        coreConfiguration.setEnableDefaultExecutionReport(enableDefaultExecutionReport);
+    }
+
+    @Override
+    public boolean isEnableDefaultExecutionReport() {
+        return coreConfiguration.isEnableDefaultExecutionReport();
+    }
+
+    @Override
     public void setServiceIdentifier(String serviceIdentifier) {
         coreConfiguration.setServiceIdentifier(serviceIdentifier);
     }

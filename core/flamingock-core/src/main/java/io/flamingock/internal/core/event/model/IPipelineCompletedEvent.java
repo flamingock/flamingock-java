@@ -15,6 +15,10 @@
  */
 package io.flamingock.internal.core.event.model;
 
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
+
 public interface IPipelineCompletedEvent extends Event {
+
+    ExecuteResponseData getResult();
 
 }

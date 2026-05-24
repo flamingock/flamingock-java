@@ -16,11 +16,11 @@
 package io.flamingock.springboot.event;
 
 
-import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
+import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.core.event.model.IStageCompletedEvent;
 import org.springframework.context.ApplicationEvent;
 
-public class SpringStageCompletedEvent extends ApplicationEvent implements IPipelineCompletedEvent {
+public class SpringStageCompletedEvent extends ApplicationEvent implements IStageCompletedEvent {
 
   private final IStageCompletedEvent event;
 
@@ -35,10 +35,14 @@ public class SpringStageCompletedEvent extends ApplicationEvent implements IPipe
     this.event = event;
   }
 
+  @Override
+  public StageResult getResult() {
+    return event.getResult();
+  }
 
   @Override
   public String toString() {
-    return "SpringPipelineCompletedEvent{" +
+    return "SpringStageCompletedEvent{" +
             "event=" + event +
             ", source=" + source +
             '}';

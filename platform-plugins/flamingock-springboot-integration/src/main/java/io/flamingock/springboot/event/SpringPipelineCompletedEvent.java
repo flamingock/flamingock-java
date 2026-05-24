@@ -16,6 +16,7 @@
 package io.flamingock.springboot.event;
 
 
+import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.core.event.model.IPipelineCompletedEvent;
 import org.springframework.context.ApplicationEvent;
 
@@ -32,6 +33,11 @@ public class SpringPipelineCompletedEvent extends ApplicationEvent implements IP
   public SpringPipelineCompletedEvent(Object source, IPipelineCompletedEvent event) {
     super(source);
     this.event = event;
+  }
+
+  @Override
+  public ExecuteResponseData getResult() {
+    return event.getResult();
   }
 
   @Override
