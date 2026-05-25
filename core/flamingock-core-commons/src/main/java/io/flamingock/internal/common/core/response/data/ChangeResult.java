@@ -101,6 +101,10 @@ public class ChangeResult {
         return status == ChangeStatus.FAILED;
     }
 
+    public boolean isRolledBack() {
+        return status == ChangeStatus.ROLLED_BACK;
+    }
+
     public boolean isApplied() {
         return status == ChangeStatus.APPLIED;
     }

@@ -159,6 +159,34 @@ class PipelineRunToResponseTest {
         assertTrue(response.getStages().get(1).getState().isNotStarted());
     }
 
+    @Test
+    void rolledBackChangeIsCountedAsFailedInAggregate() {
+        // Mirrors the real-world MongoDB duplicate-key case: a transactional change failed and was
+        // auto-rolled-back. PipelineRun must count it in failedChanges (not silently drop it).
+        AbstractLoadedStage stage = mockStage("database-init");
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
+
+        StageResult stageResult = StageResult.builder()
+                .stageId("database-init").stageName("database-init")
+                .state(StageState.failed(null))
+                .addChange(ChangeResult.builder().changeId("c1").status(ChangeStatus.ALREADY_APPLIED).build())
+                .addChange(ChangeResult.builder().changeId("c2").status(ChangeStatus.ALREADY_APPLIED).build())
+                .addChange(ChangeResult.builder().changeId("c3").status(ChangeStatus.ROLLED_BACK).build())
+                .build();
+
+        pipelineRun.start();
+        pipelineRun.markStageFailed("database-init", StageExecutionException.fromResult(
+                new RuntimeException("boom"), stageResult, "c3"));
+        pipelineRun.stop();
+
+        ExecuteResponseData response = pipelineRun.toResponse();
+        assertEquals(3, response.getTotalChanges());
+        assertEquals(0, response.getAppliedChanges());
+        assertEquals(2, response.getSkippedChanges());
+        assertEquals(1, response.getFailedChanges(),
+                "ROLLED_BACK must be counted as failed in the user-facing aggregate");
+    }
+
     private static AbstractLoadedStage mockStage(String name) {
         AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
         when(stage.getName()).thenReturn(name);

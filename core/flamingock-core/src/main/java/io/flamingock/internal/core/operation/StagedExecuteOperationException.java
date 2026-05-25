@@ -25,18 +25,14 @@ import io.flamingock.internal.common.core.response.data.ExecutionReportFormatter
  *
  * <p>The {@link #getMessage()} is a single-line, log-aggregator-friendly summary (failed stage
  * count + names, change counts, run duration, and the IDs of any change requiring manual
- * intervention). The full multi-line per-stage report is available via {@link #toString()} —
- * see {@code docs/ERROR_REPORTING_PROPOSAL.md} for why the two intentionally differ.
+ * intervention). The rich multi-line per-stage report is emitted by the default execution-report
+ * listener under the {@code FK-Report} logger — see {@code docs/ERROR_REPORTING_PROPOSAL.md}.
+ * {@link #toString()} is intentionally not overridden; printing the exception (e.g. via
+ * {@code printStackTrace}) yields the same one-line summary, never the multi-line report.
  */
 public class StagedExecuteOperationException extends ExecuteOperationException {
 
     public StagedExecuteOperationException(ExecuteResponseData result) {
         super(ExecutionReportFormatter.summary(result), result);
-    }
-
-    // Rich multi-line report; getMessage() stays one-line for log aggregators.
-    @Override
-    public String toString() {
-        return ExecutionReportFormatter.report(getResult());
     }
 }

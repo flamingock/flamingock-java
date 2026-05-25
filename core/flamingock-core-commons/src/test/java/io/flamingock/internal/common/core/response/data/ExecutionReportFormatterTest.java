@@ -205,14 +205,80 @@ class ExecutionReportFormatterTest {
         assertTrue(out.contains("(unnamed)"), out);
     }
 
+    @Test
+    void reportCountsRolledBackChangeAsFailedAndListsItsId() {
+        // Scenario mirrors the real-world MongoDB duplicate-key case: 5 already-applied changes
+        // plus 1 transactional change that failed and was auto-rolled-back (status ROLLED_BACK).
+        // The user-facing report must show 1 failed and list the change ID.
+        StageResult stage = StageResult.builder()
+                .stageId("database-init").stageName("database-init")
+                .state(StageState.failed(new ErrorInfo("MongoWriteException",
+                        "E11000 duplicate key", Collections.singletonList("InsertSeedData"),
+                        "database-init")))
+                .durationMs(126)
+                .changes(Arrays.asList(
+                        skippedChange("CreateCustomersTable"),
+                        skippedChange("CreateOrdersTable"),
+                        skippedChange("InsertSeedData"),
+                        skippedChange("CreateEmployeesTable"),
+                        skippedChange("CreateEmployeesCollection"),
+                        rolledBackChange("InsertEmployeeSeedData", "MongoWriteException", "E11000 duplicate key")))
+                .build();
+        ExecuteResponseData result = ExecuteResponseData.builder()
+                .status(ExecutionStatus.FAILED)
+                .totalStages(1).failedStages(1)
+                .totalChanges(6).appliedChanges(0).skippedChanges(5).failedChanges(1)
+                .totalDurationMs(221)
+                .stages(Collections.singletonList(stage))
+                .build();
+
+        String out = ExecutionReportFormatter.report(result);
+        assertTrue(out.contains("0 applied, 5 skipped, 1 failed"),
+                "per-stage block must count ROLLED_BACK as failed: " + out);
+        assertTrue(out.contains("failed change(s): InsertEmployeeSeedData"),
+                "failed change(s) line must include the rolled-back change ID: " + out);
+    }
+
+    @Test
+    void summaryCountsRolledBackChangeAsFailed() {
+        StageResult stage = StageResult.builder()
+                .stageId("database-init").stageName("database-init")
+                .state(StageState.failed(new ErrorInfo("MongoWriteException", "boom",
+                        Collections.singletonList("InsertEmployeeSeedData"), "database-init")))
+                .changes(Collections.singletonList(rolledBackChange("InsertEmployeeSeedData", "MongoWriteException", "boom")))
+                .build();
+        ExecuteResponseData result = ExecuteResponseData.builder()
+                .status(ExecutionStatus.FAILED)
+                .totalStages(1).failedStages(1)
+                .totalChanges(1).failedChanges(1)
+                .stages(Collections.singletonList(stage))
+                .build();
+
+        String out = ExecutionReportFormatter.summary(result);
+        assertTrue(out.contains("failed=1"), "summary must reflect ROLLED_BACK in failed=N: " + out);
+    }
+
     private static ChangeResult appliedChange(String id) {
         return ChangeResult.builder().changeId(id).status(ChangeStatus.APPLIED).build();
+    }
+
+    private static ChangeResult skippedChange(String id) {
+        return ChangeResult.builder().changeId(id).status(ChangeStatus.ALREADY_APPLIED).build();
     }
 
     private static ChangeResult failedChange(String id, String errorType, String errorMessage) {
         return ChangeResult.builder()
                 .changeId(id)
                 .status(ChangeStatus.FAILED)
+                .errorType(errorType)
+                .errorMessage(errorMessage)
+                .build();
+    }
+
+    private static ChangeResult rolledBackChange(String id, String errorType, String errorMessage) {
+        return ChangeResult.builder()
+                .changeId(id)
+                .status(ChangeStatus.ROLLED_BACK)
                 .errorType(errorType)
                 .errorMessage(errorMessage)
                 .build();

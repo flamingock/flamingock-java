@@ -138,7 +138,9 @@ public final class ExecutionReportFormatter {
         List<ChangeResult> changes = stage.getChanges() != null ? stage.getChanges() : Collections.emptyList();
         int applied = (int) changes.stream().filter(c -> c != null && c.isApplied()).count();
         int skipped = (int) changes.stream().filter(c -> c != null && c.isAlreadyApplied()).count();
-        int failed = (int) changes.stream().filter(c -> c != null && c.isFailed()).count();
+        // ROLLED_BACK is widened into the failed bucket — the change did not succeed even though
+        // the system was left clean. See PipelineRun.toResponse() for the matching aggregate logic.
+        int failed = (int) changes.stream().filter(c -> c != null && (c.isFailed() || c.isRolledBack())).count();
         sb.append("               changes: ")
           .append(applied).append(" applied, ")
           .append(skipped).append(" skipped, ")
@@ -261,7 +263,7 @@ public final class ExecutionReportFormatter {
             return Collections.emptyList();
         }
         return changes.stream()
-                .filter(c -> c != null && c.isFailed() && c.getChangeId() != null)
+                .filter(c -> c != null && (c.isFailed() || c.isRolledBack()) && c.getChangeId() != null)
                 .map(ChangeResult::getChangeId)
                 .collect(Collectors.toList());
     }

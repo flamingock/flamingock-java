@@ -16,12 +16,12 @@
 package io.flamingock.internal.core.operation;
 
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
-import io.flamingock.internal.common.core.response.data.ExecutionReportFormatter;
 
 /**
  * Thrown when a pipeline-wide error breaks iteration (e.g. {@code LockException}, planner abort,
  * unexpected throwable). Always carries the response data assembled so far plus the originating
- * cause.
+ * cause. The rich multi-line execution report is emitted by the default execution-report listener
+ * under the {@code FK-Report} logger; this exception itself stays a clean one-line signal.
  */
 public class PipelineExecuteOperationException extends ExecuteOperationException {
 
@@ -31,11 +31,5 @@ public class PipelineExecuteOperationException extends ExecuteOperationException
 
     public PipelineExecuteOperationException(String message, Throwable cause, ExecuteResponseData result) {
         super(message, cause, result);
-    }
-
-    // Rich multi-line report; getMessage() stays as Throwable's default (cause-derived) for log aggregators.
-    @Override
-    public String toString() {
-        return ExecutionReportFormatter.report(getResult());
     }
 }

@@ -176,7 +176,7 @@ public class PipelineRun {
         StageRun run = lookupOrThrow(stageName);
         run.setResult(StageResult.builder(resultFromExecutor)
                 .state(StageState.failed(errorInfo))
-                .build());
+            .build());
     }
 
     /**
@@ -248,7 +248,10 @@ public class PipelineRun {
                         appliedChanges++;
                     } else if (change.getStatus() == ChangeStatus.ALREADY_APPLIED) {
                         skippedChanges++;
-                    } else if (change.getStatus() == ChangeStatus.FAILED) {
+                    } else if (change.getStatus() == ChangeStatus.FAILED
+                            || change.getStatus() == ChangeStatus.ROLLED_BACK) {
+                        // ROLLED_BACK counts as a failed attempt for the user-facing aggregate.
+                        // The per-change record retains the precise status for downstream consumers.
                         failedChanges++;
                     }
                 }
