@@ -50,10 +50,11 @@ public class MongockImportChange {
                               @NonLockGuarded TargetSystemManager targetSystemManager,
                               @NonLockGuarded AuditWriter auditWriter,
                               @NonLockGuarded PipelineDescriptor pipelineDescriptor,
-                              @Nullable @Named(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowed,
-                              @Nullable @Named(MONGOCK_IMPORT_SKIP_PROPERTY_KEY) String skipImport,
-                              @Nullable @Named(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY) String ignoreUnknownEntriesRaw) {
-        if (resolveSkipImport(skipImport)) {
+                              @Nullable @Named(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowedPropertyValue,
+                              @Nullable @Named(MONGOCK_IMPORT_SKIP_PROPERTY_KEY) String skipImportPropertyValue,
+                              @Nullable @Named(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY) String ignoreUnknownEntriesPropertyValue) {
+        boolean skipImport = resolveSkipImport(skipImportPropertyValue);
+        if (skipImport) {
             logger.info("Mongock audit log import skipped (skipImport=true). No audit entries will be migrated.");
             return;
         }
@@ -61,8 +62,8 @@ public class MongockImportChange {
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
-        boolean ignoreUnknownEntries = resolveIgnoreUnknownEntries(ignoreUnknownEntriesRaw);
-        validate(legacyHistory, targetSystemId, emptyOriginAllowed);
+        boolean ignoreUnknownEntries = resolveIgnoreUnknownEntries(ignoreUnknownEntriesPropertyValue);
+        validate(legacyHistory, targetSystemId, emptyOriginAllowedPropertyValue);
         legacyHistory.forEach(auditEntryFromOrigin -> {
             Optional<String> stageId = pipelineHelper.findStageId(auditEntryFromOrigin);
             if (!stageId.isPresent()) {
