@@ -56,14 +56,14 @@ public class MongockAuditEntry {
         this.author = author;
         this.timestamp = timestamp;
         this.state = MongockAuditEntry.MongockChangeState.valueOf(state);
-        this.type = MongockChangeType.valueOf(type);
+        this.type = parseType(type);
         this.changeLogClass = changeLogClass;
         this.changeSetMethod = changeSetMethod;
         this.metadata = metadata;
         this.executionMillis = executionMillis;
         this.executionHostname = executionHostname;
         this.errorTrace = errorTrace;
-        this.systemChange = systemChange;
+        this.systemChange = normalizeSystemChange(systemChange);
         this.originalTimestamp = originalTimestamp;
     }
 
@@ -112,7 +112,7 @@ public class MongockAuditEntry {
     }
 
     public void setType(String type) {
-        this.type = MongockChangeType.valueOf(type);
+        this.type = parseType(type);
     }
 
     public String getChangeLogClass() {
@@ -168,7 +168,7 @@ public class MongockAuditEntry {
     }
 
     public void setSystemChange(Boolean systemChange) {
-        this.systemChange = systemChange;
+        this.systemChange = normalizeSystemChange(systemChange);
     }
 
     public Date getOriginalTimestamp() {
@@ -181,6 +181,17 @@ public class MongockAuditEntry {
 
     public boolean shouldBeIgnored() {
         return state == MongockAuditEntry.MongockChangeState.IGNORED;
+    }
+
+    private static MongockChangeType parseType(String type) {
+        if (type == null || type.trim().isEmpty()) {
+            return MongockChangeType.EXECUTION;
+        }
+        return MongockChangeType.valueOf(type);
+    }
+
+    private static Boolean normalizeSystemChange(Boolean systemChange) {
+        return systemChange != null ? systemChange : Boolean.FALSE;
     }
 
 
