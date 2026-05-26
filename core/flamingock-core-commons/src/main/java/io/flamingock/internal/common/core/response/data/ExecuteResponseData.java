@@ -34,9 +34,11 @@ public class ExecuteResponseData {
 
     // Aggregate counts
     private int totalStages;
+    private int reachedStages;
     private int completedStages;
     private int failedStages;
     private int totalChanges;
+    private int reachedChanges;
     private int appliedChanges;
     private int skippedChanges;
     private int failedChanges;
@@ -54,9 +56,11 @@ public class ExecuteResponseData {
         this.endTime = builder.endTime;
         this.totalDurationMs = builder.totalDurationMs;
         this.totalStages = builder.totalStages;
+        this.reachedStages = builder.reachedStages;
         this.completedStages = builder.completedStages;
         this.failedStages = builder.failedStages;
         this.totalChanges = builder.totalChanges;
+        this.reachedChanges = builder.reachedChanges;
         this.appliedChanges = builder.appliedChanges;
         this.skippedChanges = builder.skippedChanges;
         this.failedChanges = builder.failedChanges;
@@ -103,6 +107,14 @@ public class ExecuteResponseData {
         this.totalStages = totalStages;
     }
 
+    public int getReachedStages() {
+        return reachedStages;
+    }
+
+    public void setReachedStages(int reachedStages) {
+        this.reachedStages = reachedStages;
+    }
+
     public int getCompletedStages() {
         return completedStages;
     }
@@ -125,6 +137,14 @@ public class ExecuteResponseData {
 
     public void setTotalChanges(int totalChanges) {
         this.totalChanges = totalChanges;
+    }
+
+    public int getReachedChanges() {
+        return reachedChanges;
+    }
+
+    public void setReachedChanges(int reachedChanges) {
+        this.reachedChanges = reachedChanges;
     }
 
     public int getAppliedChanges() {
@@ -177,9 +197,11 @@ public class ExecuteResponseData {
         private Instant endTime;
         private long totalDurationMs;
         private int totalStages;
+        private int reachedStages;
         private int completedStages;
         private int failedStages;
         private int totalChanges;
+        private int reachedChanges;
         private int appliedChanges;
         private int skippedChanges;
         private int failedChanges;
@@ -210,6 +232,11 @@ public class ExecuteResponseData {
             return this;
         }
 
+        public Builder reachedStages(int reachedStages) {
+            this.reachedStages = reachedStages;
+            return this;
+        }
+
         public Builder completedStages(int completedStages) {
             this.completedStages = completedStages;
             return this;
@@ -222,6 +249,11 @@ public class ExecuteResponseData {
 
         public Builder totalChanges(int totalChanges) {
             this.totalChanges = totalChanges;
+            return this;
+        }
+
+        public Builder reachedChanges(int reachedChanges) {
+            this.reachedChanges = reachedChanges;
             return this;
         }
 

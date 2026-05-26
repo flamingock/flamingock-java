@@ -212,10 +212,17 @@ class AbstractPipelineTraverseOperationTest {
     }
 
     private static StageExecutor.Output successOutput(String stageName) {
+        // Include one APPLIED ChangeResult so reachedChanges > 0 → status SUCCESS rather than
+        // NO_CHANGES. An empty changes list would correctly resolve to NO_CHANGES under the
+        // reached/total model — not what the happy-path test is exercising.
         StageResult result = StageResult.builder()
                 .stageId(stageName)
                 .stageName(stageName)
                 .state(StageState.COMPLETED)
+                .addChange(io.flamingock.internal.common.core.response.data.ChangeResult.builder()
+                        .changeId(stageName + "-c0")
+                        .status(io.flamingock.internal.common.core.response.data.ChangeStatus.APPLIED)
+                        .build())
                 .build();
         StageExecutor.Output output = mock(StageExecutor.Output.class);
         when(output.getResult()).thenReturn(result);

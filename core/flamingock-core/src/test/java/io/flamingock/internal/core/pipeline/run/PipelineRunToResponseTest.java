@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,30 +41,35 @@ import static org.mockito.Mockito.when;
 class PipelineRunToResponseTest {
 
     @Test
-    void emptyRunYieldsSuccessWithZeroCounts() {
+    void emptyRunYieldsNoChangesWithZeroCounts() {
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.<AbstractLoadedStage>emptyList());
         pipelineRun.start();
         pipelineRun.stop();
 
         ExecuteResponseData response = pipelineRun.toResponse();
 
-        assertEquals(ExecutionStatus.SUCCESS, response.getStatus());
+        // Empty pipeline → nothing reached, nothing failed → NO_CHANGES (not SUCCESS).
+        assertEquals(ExecutionStatus.NO_CHANGES, response.getStatus());
         assertEquals(0, response.getTotalStages());
+        assertEquals(0, response.getReachedStages());
         assertEquals(0, response.getCompletedStages());
         assertEquals(0, response.getFailedStages());
         assertEquals(0, response.getTotalChanges());
+        assertEquals(0, response.getReachedChanges());
         assertNotNull(response.getStartTime());
         assertNotNull(response.getEndTime());
     }
 
     @Test
     void twoCompletedStagesYieldsSuccessAndCountersRollUp() {
-        AbstractLoadedStage stageA = mockStage("alpha");
-        AbstractLoadedStage stageB = mockStage("beta");
+        AbstractLoadedStage stageA = mockStageWithChangeCount("alpha", 3);
+        AbstractLoadedStage stageB = mockStageWithChangeCount("beta", 1);
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(stageA, stageB));
 
         pipelineRun.start();
+        pipelineRun.markStageReached("alpha");
         pipelineRun.markStageCompleted("alpha", completedStageResult("alpha", 2 /*applied*/, 1 /*skipped*/));
+        pipelineRun.markStageReached("beta");
         pipelineRun.markStageCompleted("beta", completedStageResult("beta", 1, 0));
         pipelineRun.stop();
 
@@ -71,9 +77,11 @@ class PipelineRunToResponseTest {
 
         assertEquals(ExecutionStatus.SUCCESS, response.getStatus());
         assertEquals(2, response.getTotalStages());
+        assertEquals(2, response.getReachedStages());
         assertEquals(2, response.getCompletedStages());
         assertEquals(0, response.getFailedStages());
-        assertEquals(4, response.getTotalChanges());     // 2+1 + 1+0
+        assertEquals(4, response.getTotalChanges());     // 3 (loaded alpha) + 1 (loaded beta)
+        assertEquals(4, response.getReachedChanges());   // 3 (alpha result) + 1 (beta result)
         assertEquals(3, response.getAppliedChanges());   // 2 + 1
         assertEquals(1, response.getSkippedChanges());   // 1 + 0
         assertEquals(0, response.getFailedChanges());
@@ -81,8 +89,8 @@ class PipelineRunToResponseTest {
 
     @Test
     void oneCompletedAndOneFailedYieldsFailedAndPipelineErrorMatchesStage() {
-        AbstractLoadedStage stageA = mockStage("alpha");
-        AbstractLoadedStage stageB = mockStage("beta");
+        AbstractLoadedStage stageA = mockStageWithChangeCount("alpha", 1);
+        AbstractLoadedStage stageB = mockStageWithChangeCount("beta", 1);
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(stageA, stageB));
 
         RuntimeException betaCause = new RuntimeException("boom");
@@ -90,7 +98,9 @@ class PipelineRunToResponseTest {
                 betaCause, failedStageResult("beta"), "change-b1");
 
         pipelineRun.start();
+        pipelineRun.markStageReached("alpha");
         pipelineRun.markStageCompleted("alpha", completedStageResult("alpha", 1, 0));
+        pipelineRun.markStageReached("beta");
         pipelineRun.markStageFailed("beta", betaException);
         pipelineRun.stop();
 
@@ -98,9 +108,11 @@ class PipelineRunToResponseTest {
 
         assertEquals(ExecutionStatus.FAILED, response.getStatus());
         assertEquals(2, response.getTotalStages());
+        assertEquals(2, response.getReachedStages());
         assertEquals(1, response.getCompletedStages());
         assertEquals(1, response.getFailedStages());
-        assertEquals(2, response.getTotalChanges());     // 1 applied + 1 failed
+        assertEquals(2, response.getTotalChanges());     // 1 (loaded alpha) + 1 (loaded beta)
+        assertEquals(2, response.getReachedChanges());
         assertEquals(1, response.getAppliedChanges());
         assertEquals(1, response.getFailedChanges());
 
@@ -119,6 +131,7 @@ class PipelineRunToResponseTest {
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(alpha));
 
         pipelineRun.start();
+        pipelineRun.markStageReached("alpha");
         pipelineRun.markStageBlockedFromMI(
                 "alpha",
                 java.util.Arrays.asList(new RecoveryIssue("c1")));
@@ -140,30 +153,34 @@ class PipelineRunToResponseTest {
 
     @Test
     void notStartedStagesAreReportedInResponseWithNotStartedState() {
-        AbstractLoadedStage stageA = mockStage("alpha");
-        AbstractLoadedStage stageB = mockStage("beta");
+        AbstractLoadedStage stageA = mockStageWithChangeCount("alpha", 1);
+        AbstractLoadedStage stageB = mockStageWithChangeCount("beta", 2);
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(stageA, stageB));
 
         pipelineRun.start();
+        pipelineRun.markStageReached("alpha");
         pipelineRun.markStageCompleted("alpha", completedStageResult("alpha", 1, 0));
-        // beta never advances past NOT_STARTED — still appears in the response.
+        // beta never advances past NOT_STARTED — still appears in the response as unreached.
         pipelineRun.stop();
 
         ExecuteResponseData response = pipelineRun.toResponse();
 
         assertEquals(2, response.getTotalStages());
+        assertEquals(1, response.getReachedStages());
         assertEquals(1, response.getCompletedStages());
         assertEquals(0, response.getFailedStages());
         assertEquals(2, response.getStages().size());
         assertTrue(response.getStages().get(0).getState().isCompleted());
+        assertTrue(response.getStages().get(0).isWasExecuted());
         assertTrue(response.getStages().get(1).getState().isNotStarted());
+        assertFalse(response.getStages().get(1).isWasExecuted());
     }
 
     @Test
     void rolledBackChangeIsCountedAsFailedInAggregate() {
         // Mirrors the real-world MongoDB duplicate-key case: a transactional change failed and was
         // auto-rolled-back. PipelineRun must count it in failedChanges (not silently drop it).
-        AbstractLoadedStage stage = mockStage("database-init");
+        AbstractLoadedStage stage = mockStageWithChangeCount("database-init", 3);
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
 
         StageResult stageResult = StageResult.builder()
@@ -175,21 +192,65 @@ class PipelineRunToResponseTest {
                 .build();
 
         pipelineRun.start();
+        pipelineRun.markStageReached("database-init");
         pipelineRun.markStageFailed("database-init", StageExecutionException.fromResult(
                 new RuntimeException("boom"), stageResult, "c3"));
         pipelineRun.stop();
 
         ExecuteResponseData response = pipelineRun.toResponse();
         assertEquals(3, response.getTotalChanges());
+        assertEquals(3, response.getReachedChanges());
         assertEquals(0, response.getAppliedChanges());
         assertEquals(2, response.getSkippedChanges());
         assertEquals(1, response.getFailedChanges(),
                 "ROLLED_BACK must be counted as failed in the user-facing aggregate");
     }
 
+    @Test
+    void allStagesUnreachedYieldsNoChangesAndCarriesStructuralTotalChanges() {
+        // Run-2 case: every change in the pipeline is already applied; planner short-circuits,
+        // runStage never invoked. Stages stay NOT_STARTED + wasExecuted=false. The response
+        // must carry the structural totalChanges (6) so the report doesn't read "0 of nothing",
+        // and status must be NO_CHANGES.
+        AbstractLoadedStage stage = mockStageWithChangeCount("database-init", 6);
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
+
+        pipelineRun.start();
+        pipelineRun.stop();
+
+        ExecuteResponseData response = pipelineRun.toResponse();
+
+        assertEquals(ExecutionStatus.NO_CHANGES, response.getStatus());
+        assertEquals(1, response.getTotalStages());
+        assertEquals(0, response.getReachedStages());
+        assertEquals(6, response.getTotalChanges());
+        assertEquals(0, response.getReachedChanges());
+        assertEquals(0, response.getAppliedChanges());
+        assertEquals(0, response.getFailedChanges());
+        assertFalse(response.getStages().get(0).isWasExecuted());
+        // Structural change count stamped on the StageResult so the formatter's "Not reached" row
+        // can render "(N changes)" even though the per-change list is empty.
+        assertEquals(6, response.getStages().get(0).getTotalChanges());
+    }
+
     private static AbstractLoadedStage mockStage(String name) {
         AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
         when(stage.getName()).thenReturn(name);
+        // toResponse() reads loaded-stage change count to populate the structural totalChanges field.
+        // Default to empty list for tests that don't care; tests that assert totalChanges should
+        // use mockStageWithChangeCount(name, n) instead.
+        when(stage.getChanges()).thenReturn(java.util.Collections.emptyList());
+        return stage;
+    }
+
+    private static AbstractLoadedStage mockStageWithChangeCount(String name, int changeCount) {
+        AbstractLoadedStage stage = mock(AbstractLoadedStage.class);
+        when(stage.getName()).thenReturn(name);
+        java.util.List<AbstractLoadedChange> changes = new java.util.ArrayList<>(changeCount);
+        for (int i = 0; i < changeCount; i++) {
+            changes.add(mockChange(name + "-c" + i));
+        }
+        when(stage.getChanges()).thenReturn(changes);
         return stage;
     }
 

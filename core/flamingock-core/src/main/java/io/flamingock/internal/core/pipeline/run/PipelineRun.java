@@ -161,9 +161,31 @@ public class PipelineRun {
                 .build());
     }
 
+    /**
+     * Marks a stage as "reached" — the executor was invoked on it. Called from the operation
+     * layer at the very entry of {@code runStage}. Drives the reporter's "reached vs total"
+     * split: stages where the planner short-circuited (e.g. synthetic-completion in community,
+     * CONTINUE in cloud) keep {@code wasExecuted=false} and are excluded from the per-stage
+     * breakdown.
+     */
+    public void markStageReached(String stageName) {
+        StageRun run = lookupOrThrow(stageName);
+        run.setResult(StageResult.builder(run.getResult())
+                .wasExecuted(true)
+                .build());
+    }
+
     public void markStageCompleted(String stageName, StageResult result) {
-        // Incoming result from the executor already carries state=COMPLETED.
-        lookupOrThrow(stageName).setResult(result);
+        // Incoming result from the executor already carries state=COMPLETED. Preserve the
+        // wasExecuted / totalChanges fields that were set on the in-memory StageResult before
+        // execution started — the executor doesn't know about them and would otherwise reset
+        // them to defaults.
+        StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
+        run.setResult(StageResult.builder(result)
+                .wasExecuted(current.isWasExecuted())
+                .totalChanges(current.getTotalChanges())
+                .build());
     }
 
     public void markStageFailed(String stageName, StageExecutionException exception) {
@@ -174,9 +196,12 @@ public class PipelineRun {
                 resultFromExecutor.getStageId()
         );
         StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
         run.setResult(StageResult.builder(resultFromExecutor)
                 .state(StageState.failed(errorInfo))
-            .build());
+                .wasExecuted(current.isWasExecuted())
+                .totalChanges(current.getTotalChanges())
+                .build());
     }
 
     /**
@@ -212,17 +237,27 @@ public class PipelineRun {
     }
 
     /**
-     * Builds the response data view derived purely from per-stage state. Status is FAILED iff any
-     * stage failed, else SUCCESS. Pipeline-wide errors (e.g., LockException) that aren't reflected
-     * in any stage state are signalled by the operation post-loop via
-     * {@code ExecuteResponseData.setStatus(FAILED)} after {@code toResponse()} returns.
+     * Builds the response data view derived from per-stage state.
+     *
+     * <p>Two counter dimensions: {@code total*} comes from the loaded pipeline (structural,
+     * always known), {@code reached*} comes from this run (the executor was invoked on the
+     * stage). The {@code applied/skipped/failed} buckets only count changes from reached stages
+     * — by construction {@code applied + skipped + failed == reachedChanges}.
+     *
+     * <p>Status is {@code FAILED} iff any stage failed, {@code NO_CHANGES} iff nothing was
+     * reached and nothing failed (e.g. a re-run where the audit already covers every change),
+     * else {@code SUCCESS}. Pipeline-wide errors (e.g., LockException) are signalled by the
+     * operation post-loop via {@code ExecuteResponseData.setStatus(FAILED)} after
+     * {@code toResponse()} returns.
      */
     public ExecuteResponseData toResponse() {
         List<StageResult> stages = new ArrayList<>();
         int totalStages = 0;
+        int reachedStages = 0;
         int completedStages = 0;
         int failedStages = 0;
         int totalChanges = 0;
+        int reachedChanges = 0;
         int appliedChanges = 0;
         int skippedChanges = 0;
         int failedChanges = 0;
@@ -230,8 +265,22 @@ public class PipelineRun {
 
         for (StageRun stageRun : stageRuns) {
             StageResult stageResult = stageRun.getResult();
+            // Stamp the structural change count on the per-stage result so the formatter can
+            // render "(N changes)" for unreached stages where the per-change list is empty.
+            int loadedChangeCount = stageRun.getLoadedStage().getChanges() != null
+                    ? stageRun.getLoadedStage().getChanges().size()
+                    : 0;
+            stageResult.setTotalChanges(loadedChangeCount);
             stages.add(stageResult);
             totalStages++;
+            totalChanges += loadedChangeCount;
+
+            if (stageResult.isWasExecuted()) {
+                reachedStages++;
+                if (stageResult.getChanges() != null) {
+                    reachedChanges += stageResult.getChanges().size();
+                }
+            }
 
             StageState state = stageResult.getState();
             if (state.isCompleted()) {
@@ -243,7 +292,6 @@ public class PipelineRun {
 
             if (stageResult.getChanges() != null) {
                 for (ChangeResult change : stageResult.getChanges()) {
-                    totalChanges++;
                     if (change.getStatus() == ChangeStatus.APPLIED) {
                         appliedChanges++;
                     } else if (change.getStatus() == ChangeStatus.ALREADY_APPLIED) {
@@ -258,7 +306,16 @@ public class PipelineRun {
             }
         }
 
-        ExecutionStatus status = anyFailed ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        ExecutionStatus status;
+        if (anyFailed) {
+            status = ExecutionStatus.FAILED;
+        } else if (reachedChanges == 0) {
+            // Nothing was touched and nothing failed — pipeline is up to date.
+            status = ExecutionStatus.NO_CHANGES;
+        } else {
+            status = ExecutionStatus.SUCCESS;
+        }
+
         long durationMs = (startedAt != null && stoppedAt != null)
                 ? Duration.between(startedAt, stoppedAt).toMillis()
                 : 0L;
@@ -269,9 +326,11 @@ public class PipelineRun {
                 .endTime(stoppedAt)
                 .totalDurationMs(durationMs)
                 .totalStages(totalStages)
+                .reachedStages(reachedStages)
                 .completedStages(completedStages)
                 .failedStages(failedStages)
                 .totalChanges(totalChanges)
+                .reachedChanges(reachedChanges)
                 .appliedChanges(appliedChanges)
                 .skippedChanges(skippedChanges)
                 .failedChanges(failedChanges)

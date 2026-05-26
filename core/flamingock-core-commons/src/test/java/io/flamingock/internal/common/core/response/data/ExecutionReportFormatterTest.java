@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -106,6 +107,7 @@ class ExecutionReportFormatterTest {
                 .stageId("only").stageName("only-stage")
                 .state(StageState.COMPLETED).durationMs(75)
                 .changes(Collections.singletonList(appliedChange("c1")))
+                .wasExecuted(true).totalChanges(1)
                 .build();
 
         ExecuteResponseData result = ExecuteResponseData.builder()
@@ -113,17 +115,19 @@ class ExecutionReportFormatterTest {
                 .startTime(Instant.parse("2026-05-15T08:00:00Z"))
                 .endTime(Instant.parse("2026-05-15T08:00:00.075Z"))
                 .totalDurationMs(75)
-                .totalStages(1).completedStages(1).failedStages(0)
-                .totalChanges(1).appliedChanges(1)
+                .totalStages(1).reachedStages(1).completedStages(1).failedStages(0)
+                .totalChanges(1).reachedChanges(1).appliedChanges(1)
                 .stages(Collections.singletonList(done))
                 .build();
 
         String out = ExecutionReportFormatter.report(result);
         assertTrue(out.contains("Flamingock execution report — SUCCESS"), out);
-        assertTrue(out.contains("Stages:    1 total — 1 completed, 0 failed"), out);
+        assertTrue(out.contains("Stages:    1 total — 1 reached, 1 completed, 0 failed"), out);
+        assertTrue(out.contains("Changes:   1 total — 1 reached, 1 applied, 0 skipped, 0 failed"), out);
         assertTrue(out.contains("[COMPLETED]"), out);
         assertTrue(out.contains("only-stage"), out);
         assertTrue(out.contains("1 applied, 0 skipped, 0 failed"), out);
+        assertFalse(out.contains("Not reached"), "no Not-reached section when all stages reached: " + out);
     }
 
     @Test
@@ -133,12 +137,13 @@ class ExecutionReportFormatterTest {
                 .state(StageState.failed(new ErrorInfo("Boom", "kaboom\non two lines", Collections.singletonList("c1"), "bad-stage")))
                 .durationMs(42)
                 .changes(Collections.singletonList(failedChange("c1", "Boom", "kaboom")))
+                .wasExecuted(true).totalChanges(1)
                 .build();
 
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.FAILED)
-                .totalStages(1).failedStages(1)
-                .totalChanges(1).failedChanges(1)
+                .totalStages(1).reachedStages(1).failedStages(1)
+                .totalChanges(1).reachedChanges(1).failedChanges(1)
                 .totalDurationMs(42)
                 .stages(Collections.singletonList(failed))
                 .build();
@@ -158,11 +163,13 @@ class ExecutionReportFormatterTest {
                 .stageId("mi").stageName("mi-stage")
                 .state(StageState.blockedManualIntervention("mi-stage",
                         Arrays.asList(new RecoveryIssue("change-a"), new RecoveryIssue("change-b"))))
+                .wasExecuted(true).totalChanges(2)
                 .build();
 
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.FAILED)
-                .totalStages(1).failedStages(1)
+                .totalStages(1).reachedStages(1).failedStages(1)
+                .totalChanges(2)
                 .stages(Collections.singletonList(blocked))
                 .build();
 
@@ -193,9 +200,13 @@ class ExecutionReportFormatterTest {
         naked.setStageName(null);
         naked.setState(null);
         naked.setChanges(null);
+        // Mark reached so the breakdown renders it — that's the path being exercised here
+        // (defensive rendering of weird stage data). Unreached stages skip the breakdown entirely.
+        naked.setWasExecuted(true);
 
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.SUCCESS)
+                .reachedStages(1)
                 .stages(Collections.singletonList(naked))
                 .build();
 
@@ -223,11 +234,12 @@ class ExecutionReportFormatterTest {
                         skippedChange("CreateEmployeesTable"),
                         skippedChange("CreateEmployeesCollection"),
                         rolledBackChange("InsertEmployeeSeedData", "MongoWriteException", "E11000 duplicate key")))
+                .wasExecuted(true).totalChanges(6)
                 .build();
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.FAILED)
-                .totalStages(1).failedStages(1)
-                .totalChanges(6).appliedChanges(0).skippedChanges(5).failedChanges(1)
+                .totalStages(1).reachedStages(1).failedStages(1)
+                .totalChanges(6).reachedChanges(6).appliedChanges(0).skippedChanges(5).failedChanges(1)
                 .totalDurationMs(221)
                 .stages(Collections.singletonList(stage))
                 .build();
@@ -256,6 +268,94 @@ class ExecutionReportFormatterTest {
 
         String out = ExecutionReportFormatter.summary(result);
         assertTrue(out.contains("failed=1"), "summary must reflect ROLLED_BACK in failed=N: " + out);
+    }
+
+    @Test
+    void reportAllUpToDateShowsNoChangesHeadlineAndOmitsPerStageBreakdown() {
+        // Mirrors the Run-2 scenario: every change already applied; planner short-circuited,
+        // executor never invoked. Stage stays wasExecuted=false.
+        StageResult upToDate = StageResult.builder()
+                .stageId("database-init").stageName("database-init")
+                .state(StageState.NOT_STARTED)
+                .wasExecuted(false).totalChanges(6)
+                .build();
+        ExecuteResponseData result = ExecuteResponseData.builder()
+                .status(ExecutionStatus.NO_CHANGES)
+                .totalStages(1).reachedStages(0).completedStages(0).failedStages(0)
+                .totalChanges(6).reachedChanges(0)
+                .stages(Collections.singletonList(upToDate))
+                .build();
+
+        String out = ExecutionReportFormatter.report(result);
+        assertTrue(out.contains("Flamingock execution report — NO CHANGES"),
+                "headline must render NO_CHANGES with a space: " + out);
+        assertTrue(out.contains("Stages:    1 total — 0 reached"), out);
+        assertTrue(out.contains("Changes:   6 total — 0 reached"), out);
+        assertFalse(out.contains("Per-stage breakdown:"),
+                "per-stage section must be omitted when no stages reached: " + out);
+        assertFalse(out.contains("Not reached"),
+                "Not-reached section must be omitted when nothing reached at all (NO_CHANGES headline carries it): " + out);
+    }
+
+    @Test
+    void reportPartialCoverageListsNotReachedStagesSeparately() {
+        // Block 1 succeeds with work; block 2 fails; block 3 never reached.
+        StageResult block1 = StageResult.builder()
+                .stageId("block-1-stage").stageName("block-1-stage")
+                .state(StageState.COMPLETED).durationMs(50)
+                .changes(Arrays.asList(appliedChange("c1a"), appliedChange("c1b")))
+                .wasExecuted(true).totalChanges(2)
+                .build();
+        StageResult block2 = StageResult.builder()
+                .stageId("block-2-stage").stageName("block-2-stage")
+                .state(StageState.failed(new ErrorInfo("Boom", "kaboom",
+                        Collections.singletonList("c2-bad"), "block-2-stage")))
+                .durationMs(120)
+                .changes(Arrays.asList(appliedChange("c2a"), failedChange("c2-bad", "Boom", "kaboom")))
+                .wasExecuted(true).totalChanges(2)
+                .build();
+        StageResult block3 = StageResult.builder()
+                .stageId("block-3-stage").stageName("block-3-stage")
+                .state(StageState.NOT_STARTED)
+                .wasExecuted(false).totalChanges(3)
+                .build();
+
+        ExecuteResponseData result = ExecuteResponseData.builder()
+                .status(ExecutionStatus.FAILED)
+                .totalStages(3).reachedStages(2).completedStages(1).failedStages(1)
+                .totalChanges(7).reachedChanges(4).appliedChanges(3).skippedChanges(0).failedChanges(1)
+                .totalDurationMs(170)
+                .stages(Arrays.asList(block1, block2, block3))
+                .build();
+
+        String out = ExecutionReportFormatter.report(result);
+        assertTrue(out.contains("Stages:    3 total — 2 reached, 1 completed, 1 failed"), out);
+        assertTrue(out.contains("Changes:   7 total — 4 reached, 3 applied, 0 skipped, 1 failed"), out);
+        assertTrue(out.contains("Per-stage breakdown:"), out);
+        assertTrue(out.contains("[COMPLETED] block-1-stage"), out);
+        assertTrue(out.contains("[FAILED]") && out.contains("block-2-stage"), out);
+        assertFalse(out.contains("[PENDING]   block-3-stage"),
+                "unreached stages must NOT appear in per-stage breakdown: " + out);
+        assertTrue(out.contains("Not reached (1):"), out);
+        assertTrue(out.contains("- block-3-stage (3 changes)"),
+                "Not-reached entry must include the structural change count: " + out);
+    }
+
+    @Test
+    void summaryRendersNoChangesHeadlineWhenNothingReached() {
+        ExecuteResponseData result = ExecuteResponseData.builder()
+                .status(ExecutionStatus.NO_CHANGES)
+                .totalStages(1).reachedStages(0)
+                .totalChanges(6).reachedChanges(0)
+                .totalDurationMs(32)
+                .stages(Collections.emptyList())
+                .build();
+
+        String out = ExecutionReportFormatter.summary(result);
+        assertTrue(out.startsWith("Flamingock execution: no changes"), out);
+        assertTrue(out.contains("1 stage(s) already up to date"), out);
+        assertTrue(out.contains("duration=32ms"), out);
+        assertFalse(out.contains("failed="), "no failure counts should appear in NO_CHANGES summary: " + out);
     }
 
     private static ChangeResult appliedChange(String id) {

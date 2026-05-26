@@ -29,6 +29,21 @@ public class StageResult {
     private long durationMs;
     private List<ChangeResult> changes;
 
+    /**
+     * True if the executor was invoked on this stage during the run. False for stages the planner
+     * short-circuited past (e.g. nothing to do per audit, or skipped because an earlier block
+     * aborted). Drives the reporter's "reached" vs "total" split — see {@code ExecutionReportFormatter}.
+     */
+    private boolean wasExecuted;
+
+    /**
+     * Structural change count from the loaded pipeline — total changes declared on this stage,
+     * regardless of how many were actually evaluated this run. Populated by
+     * {@code PipelineRun.toResponse()} for every stage so the reporter can render
+     * "Not reached" rows with accurate "(N changes)" counts even when {@link #changes} is empty.
+     */
+    private int totalChanges;
+
     public StageResult() {
         this.changes = new ArrayList<>();
         this.state = StageState.NOT_STARTED;
@@ -40,6 +55,8 @@ public class StageResult {
         this.state = builder.state != null ? builder.state : StageState.NOT_STARTED;
         this.durationMs = builder.durationMs;
         this.changes = builder.changes != null ? builder.changes : new ArrayList<>();
+        this.wasExecuted = builder.wasExecuted;
+        this.totalChanges = builder.totalChanges;
     }
 
     public String getStageId() {
@@ -82,6 +99,22 @@ public class StageResult {
         this.changes = changes;
     }
 
+    public boolean isWasExecuted() {
+        return wasExecuted;
+    }
+
+    public void setWasExecuted(boolean wasExecuted) {
+        this.wasExecuted = wasExecuted;
+    }
+
+    public int getTotalChanges() {
+        return totalChanges;
+    }
+
+    public void setTotalChanges(int totalChanges) {
+        this.totalChanges = totalChanges;
+    }
+
     public boolean isFailed() {
         return state.isFailed();
     }
@@ -122,7 +155,9 @@ public class StageResult {
                 .stageName(source.stageName)
                 .state(source.state)
                 .durationMs(source.durationMs)
-                .changes(new ArrayList<>(source.changes));
+                .changes(new ArrayList<>(source.changes))
+                .wasExecuted(source.wasExecuted)
+                .totalChanges(source.totalChanges);
     }
 
     public static class Builder {
@@ -131,6 +166,8 @@ public class StageResult {
         private StageState state;
         private long durationMs;
         private List<ChangeResult> changes = new ArrayList<>();
+        private boolean wasExecuted;
+        private int totalChanges;
 
         public Builder stageId(String stageId) {
             this.stageId = stageId;
@@ -162,6 +199,16 @@ public class StageResult {
                 this.changes = new ArrayList<>();
             }
             this.changes.add(change);
+            return this;
+        }
+
+        public Builder wasExecuted(boolean wasExecuted) {
+            this.wasExecuted = wasExecuted;
+            return this;
+        }
+
+        public Builder totalChanges(int totalChanges) {
+            this.totalChanges = totalChanges;
             return this;
         }
 

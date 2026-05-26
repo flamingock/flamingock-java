@@ -180,6 +180,10 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
 
     private void runStage(String executionId, Lock lock, ExecutableStage executableStage, PipelineRun pipelineRun) {
         String stageName = executableStage.getName();
+        // Mark the stage as reached the moment we enter — covers all three downstream paths
+        // (MI-aborted, normal-completed, failed). The reporter uses this to distinguish stages
+        // the executor actually opened from those the planner short-circuited past.
+        pipelineRun.markStageReached(stageName);
         try {
             executableStage.validate();
         } catch (ManualInterventionRequiredException miException) {

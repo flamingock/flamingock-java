@@ -61,6 +61,11 @@ public final class ExecutionReportFormatter {
                     result.getFailedStages(),
                     result.getTotalStages(),
                     String.join(", ", failedStageNames));
+        } else if (result.getStatus() == ExecutionStatus.NO_CHANGES) {
+            return String.format(
+                    "Flamingock execution: no changes — %d stage(s) already up to date; duration=%dms",
+                    result.getTotalStages(),
+                    result.getTotalDurationMs());
         } else {
             headline = String.format(
                     "Flamingock execution completed: %d stage(s)",
@@ -98,23 +103,46 @@ public final class ExecutionReportFormatter {
 
         sb.append(" Stages:    ")
           .append(result.getTotalStages()).append(" total — ")
+          .append(result.getReachedStages()).append(" reached, ")
           .append(result.getCompletedStages()).append(" completed, ")
           .append(result.getFailedStages()).append(" failed")
           .append(NEWLINE);
         sb.append(" Changes:   ")
           .append(result.getTotalChanges()).append(" total — ")
+          .append(result.getReachedChanges()).append(" reached, ")
           .append(result.getAppliedChanges()).append(" applied, ")
           .append(result.getSkippedChanges()).append(" skipped, ")
           .append(result.getFailedChanges()).append(" failed")
           .append(NEWLINE);
 
+        // Per-stage breakdown: only stages the executor actually opened. Stages the planner
+        // short-circuited past are surfaced separately in the "Not reached" section below (when
+        // the coverage is partial — a fully up-to-date run shows neither, the headline carries it).
         List<StageResult> stages = nonNullStages(result);
-        if (!stages.isEmpty()) {
+        List<StageResult> reached = stages.stream()
+                .filter(StageResult::isWasExecuted)
+                .collect(Collectors.toList());
+        if (!reached.isEmpty()) {
             sb.append(NEWLINE).append(" Per-stage breakdown:").append(NEWLINE).append(NEWLINE);
-            for (StageResult stage : stages) {
+            for (StageResult stage : reached) {
                 appendStageBlock(sb, stage);
                 sb.append(NEWLINE);
             }
+        }
+
+        // "Not reached" only appears when there's a partial: some stages ran, some didn't. The
+        // all-up-to-date case (0 reached) is communicated by the NO_CHANGES headline alone.
+        List<StageResult> notReached = stages.stream()
+                .filter(s -> !s.isWasExecuted())
+                .collect(Collectors.toList());
+        if (!notReached.isEmpty() && result.getReachedStages() > 0) {
+            sb.append(NEWLINE).append(" Not reached (").append(notReached.size()).append("):").append(NEWLINE);
+            for (StageResult stage : notReached) {
+                String name = stage.getStageName() != null ? stage.getStageName() : "(unnamed)";
+                sb.append("   - ").append(name)
+                  .append(" (").append(stage.getTotalChanges()).append(" changes)").append(NEWLINE);
+            }
+            sb.append(NEWLINE);
         }
 
         sb.append(LINE);
@@ -208,7 +236,9 @@ public final class ExecutionReportFormatter {
         if (status == null) {
             return "UNKNOWN";
         }
-        return status.name();
+        // Render the enum name with underscores replaced by spaces so the headline reads naturally
+        // ("NO CHANGES" rather than "NO_CHANGES").
+        return status.name().replace('_', ' ');
     }
 
     private static boolean isFailedStatus(ExecutionStatus status) {

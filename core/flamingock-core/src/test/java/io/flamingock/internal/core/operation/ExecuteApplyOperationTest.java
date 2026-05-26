@@ -96,9 +96,9 @@ class ExecuteApplyOperationTest {
     }
 
     @Test
-    @DisplayName("Should return success result when all changes apply")
-    void shouldReturnSuccessResultWhenAllChangesApply() throws Exception {
-        // Given
+    @DisplayName("Should return NO_CHANGES result when planner short-circuits with nothing to do")
+    void shouldReturnNoChangesResultWhenPlannerShortCircuits() throws Exception {
+        // Given — planner returns CONTINUE immediately; no stage is reached.
         StageResult stageResult = createSuccessStageResult("stage-1", 2, 1);
         ExecutionPlan executionPlan = mockNoExecutionRequiredPlan();
 
@@ -112,15 +112,16 @@ class ExecuteApplyOperationTest {
         // When
         ExecuteResult result = operation.execute(args);
 
-        // Then
+        // Then — nothing reached, no failures → NO_CHANGES (new semantic; was SUCCESS before
+        // the reached/total split).
         assertNotNull(result);
         assertNotNull(result.getData());
-        assertEquals(ExecutionStatus.SUCCESS, result.getData().getStatus());
+        assertEquals(ExecutionStatus.NO_CHANGES, result.getData().getStatus());
         verify(eventPublisher, atLeastOnce()).publish(any());
     }
 
     @Test
-    @DisplayName("Should return result with correct counts")
+    @DisplayName("Should return result with correct counts when nothing to do")
     void shouldReturnResultWithCorrectCounts() throws Exception {
         // Given
         ExecutionPlan executionPlan = mockNoExecutionRequiredPlan();
@@ -135,11 +136,10 @@ class ExecuteApplyOperationTest {
         // When
         ExecuteResult result = operation.execute(args);
 
-        // Then
+        // Then — nothing reached, no failures → NO_CHANGES.
         assertNotNull(result);
         assertNotNull(result.getData());
-        // With no execution required, we expect no applied changes but success status
-        assertEquals(ExecutionStatus.SUCCESS, result.getData().getStatus());
+        assertEquals(ExecutionStatus.NO_CHANGES, result.getData().getStatus());
     }
 
     @Test
