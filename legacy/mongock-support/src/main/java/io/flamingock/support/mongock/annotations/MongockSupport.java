@@ -142,5 +142,5 @@ public @interface MongockSupport {
      *
      * @return {@code "true"} to skip unknown imported entries, {@code "false"} to fail; empty treated as {@code "false"}
      */
-    String ignoreUnknownAuditEntries() default "";
+    String ignoreUnknownEntries() default "";
 }

@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.APPLIED;
 import static io.flamingock.core.kit.audit.AuditEntryExpectation.STARTED;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static io.flamingock.internal.util.constants.AuditEntryFieldConstants.KEY_CREATED_AT;
@@ -359,7 +359,7 @@ public class CouchbaseImporterTest {
         Runner flamingock = testKit.createBuilder()
                 .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, Boolean.FALSE.toString())
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY, Boolean.FALSE.toString())
                 .build();
 
         StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
@@ -383,7 +383,7 @@ public class CouchbaseImporterTest {
         Runner flamingock = testKit.createBuilder()
                 .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, Boolean.TRUE.toString())
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY, Boolean.TRUE.toString())
                 .build();
 
         flamingock.run();
@@ -414,11 +414,11 @@ public class CouchbaseImporterTest {
         Runner flamingock = testKit.createBuilder()
                 .setAuditStore(auditStore)
                 .addTargetSystem(targetSystem)
-                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, flagValue)
+                .setProperty(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY, flagValue)
                 .build();
 
         StagedExecuteOperationException ex = assertThrows(StagedExecuteOperationException.class, flamingock::run);
-        assertEquals("Invalid value for " + MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY + ": " + flagValue
+        assertEquals("Invalid value for " + MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY + ": " + flagValue
                 + " (expected \"true\" or \"false\" or empty)", firstFailedStageErrorMessage(ex));
     }
 

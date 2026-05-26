@@ -35,7 +35,7 @@ import java.util.Optional;
 
 import static io.flamingock.internal.common.core.audit.AuditReaderType.MONGOCK;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 
 /**
@@ -52,7 +52,7 @@ public class MongockImportChange {
                               @NonLockGuarded PipelineDescriptor pipelineDescriptor,
                               @Nullable @Named(MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY) String emptyOriginAllowed,
                               @Nullable @Named(MONGOCK_IMPORT_SKIP_PROPERTY_KEY) String skipImport,
-                              @Nullable @Named(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY) String ignoreUnknownAuditEntries) {
+                              @Nullable @Named(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY) String ignoreUnknownEntries) {
         if (resolveSkipImport(skipImport)) {
             logger.info("Mongock audit log import skipped (skipImport=true). No audit entries will be migrated.");
             return;
@@ -61,7 +61,7 @@ public class MongockImportChange {
         AuditHistoryReader legacyHistoryReader = getAuditHistoryReader(targetSystemId, targetSystemManager);
         PipelineHelper pipelineHelper = new PipelineHelper(pipelineDescriptor);
         List<AuditEntry> legacyHistory = legacyHistoryReader.getAuditHistory();
-        boolean ignoreUnknownEntries = resolveIgnoreUnknownAuditEntries(ignoreUnknownAuditEntries);
+        boolean ignoreUnknownEntries = resolveIgnoreUnknownEntries(ignoreUnknownEntries);
         validate(legacyHistory, targetSystemId, emptyOriginAllowed);
         legacyHistory.forEach(auditEntryFromOrigin -> {
             Optional<String> stageId = pipelineHelper.findStageId(auditEntryFromOrigin);
@@ -122,8 +122,8 @@ public class MongockImportChange {
         return resolveBooleanPropertyValue(raw, MONGOCK_IMPORT_SKIP_PROPERTY_KEY);
     }
 
-    private boolean resolveIgnoreUnknownAuditEntries(String raw) {
-        return resolveBooleanPropertyValue(raw, MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY);
+    private boolean resolveIgnoreUnknownEntries(String raw) {
+        return resolveBooleanPropertyValue(raw, MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY);
     }
 
     private boolean resolveBooleanPropertyValue(String raw, String propertyName) {

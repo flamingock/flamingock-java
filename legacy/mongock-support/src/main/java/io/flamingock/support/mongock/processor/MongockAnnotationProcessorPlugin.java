@@ -52,7 +52,7 @@ import java.util.stream.Stream;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_EMPTY_ORIGIN_ALLOWED_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_SKIP_PROPERTY_KEY;
 import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_ORIGIN_PROPERTY_KEY;
-import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY;
+import static io.flamingock.internal.common.core.metadata.Constants.MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY;
 
 @SuppressWarnings("deprecation")
 public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlugin, ChangeDiscoverer, ConfigurationPropertiesProvider {
@@ -167,10 +167,10 @@ public class MongockAnnotationProcessorPlugin implements AnnotationProcessorPlug
         }
 
         // Ignore Unknown Audit Entries
-        ConfigValueParser.ConfigValue ignoreUnknownAuditEntriesValue =
-                ConfigValueParser.parse("ignoreUnknownAuditEntries", mongockSupport.ignoreUnknownAuditEntries(), ConfigValueParser.BOOLEAN_VALUE_VALIDATOR);
-        if (!ignoreUnknownAuditEntriesValue.isEmpty()) {
-            properties.put(MONGOCK_IMPORT_IGNORE_UNKNOWN_AUDIT_ENTRIES_PROPERTY_KEY, ignoreUnknownAuditEntriesValue.getRaw());
+        ConfigValueParser.ConfigValue ignoreUnknownEntriesValue =
+                ConfigValueParser.parse("ignoreUnknownEntries", mongockSupport.ignoreUnknownEntries(), ConfigValueParser.BOOLEAN_VALUE_VALIDATOR);
+        if (!ignoreUnknownEntriesValue.isEmpty()) {
+            properties.put(MONGOCK_IMPORT_IGNORE_UNKNOWN_ENTRIES_PROPERTY_KEY, ignoreUnknownEntriesValue.getRaw());
         }
     }
 }
