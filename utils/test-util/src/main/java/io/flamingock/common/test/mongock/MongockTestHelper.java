@@ -235,4 +235,30 @@ public interface MongockTestHelper {
             throw new RuntimeException("Failed to parse date", e);
         }
     }
+
+    default int setupWithUnknownChange() {
+        int writtenEntries = setupBasicScenario();
+
+        try {
+            write(new MongockChangeEntry(
+                    DEFAULT_EXECUTION_ID,
+                    "foreign-change-1",
+                    "mongock",
+                    DEFAULT_DATE_FORMAT.parse("2025-06-19T05:43:57.190Z"),
+                    MongockChangeState.EXECUTED,
+                    MongockChangeType.EXECUTION,
+                    "io.example.foreign.ForeignChangeUnit",
+                    "apply",
+                    null,
+                    15L,
+                    DEFAULT_HOSTNAME,
+                    null,
+                    false,
+                    null
+            ));
+            return writtenEntries + 1;
+        } catch (ParseException e) {
+            throw new RuntimeException("Failed to parse date", e);
+        }
+    }
 }
