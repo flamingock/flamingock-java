@@ -73,10 +73,11 @@ public final class ExecutionReportFormatter {
         }
 
         String counts = String.format(
-                "; changes applied=%d, failed=%d, skipped=%d; duration=%dms",
+                "; changes newly_applied=%d, already_applied=%d, failed=%d, not_reached=%d; duration=%dms",
                 result.getAppliedChanges(),
-                result.getFailedChanges(),
                 result.getSkippedChanges(),
+                result.getFailedChanges(),
+                result.getNotReachedChanges(),
                 result.getTotalDurationMs());
 
         StringBuilder sb = new StringBuilder(headline).append(counts);
@@ -110,9 +111,10 @@ public final class ExecutionReportFormatter {
           .append(NEWLINE);
         sb.append(" Changes:   ")
           .append(result.getTotalChanges()).append(" total — ")
-          .append(result.getAppliedChanges()).append(" applied, ")
-          .append(result.getSkippedChanges()).append(" already at target state, ")
-          .append(result.getFailedChanges()).append(" failed")
+          .append(result.getAppliedChanges()).append(" newly applied, ")
+          .append(result.getSkippedChanges()).append(" already applied, ")
+          .append(result.getFailedChanges()).append(" failed, ")
+          .append(result.getNotReachedChanges()).append(" not reached")
           .append(NEWLINE);
 
         // Per-stage breakdown: include any stage the operation touched (state != NOT_STARTED) OR
@@ -181,7 +183,7 @@ public final class ExecutionReportFormatter {
                     : 0;
             int reportableCount = alreadyAppliedCount > 0 ? alreadyAppliedCount : stage.getTotalChanges();
             sb.append("   ").append(label).append(' ').append(name)
-              .append("  (").append(reportableCount).append(" changes already at target state)")
+              .append("  (").append(reportableCount).append(" changes already applied)")
               .append(NEWLINE);
             return;
         }
@@ -195,10 +197,12 @@ public final class ExecutionReportFormatter {
         // ROLLED_BACK is widened into the failed bucket — the change did not succeed even though
         // the system was left clean. See PipelineRun.toResponse() for the matching aggregate logic.
         int failed = (int) changes.stream().filter(c -> c != null && (c.isFailed() || c.isRolledBack())).count();
+        int notReached = (int) changes.stream().filter(c -> c != null && c.isNotReached()).count();
         sb.append("               changes: ")
-          .append(applied).append(" applied, ")
-          .append(skipped).append(" already at target state, ")
-          .append(failed).append(" failed")
+          .append(applied).append(" newly applied, ")
+          .append(skipped).append(" already applied, ")
+          .append(failed).append(" failed, ")
+          .append(notReached).append(" not reached")
           .append(NEWLINE);
 
         StageState state = stage.getState();

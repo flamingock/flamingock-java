@@ -245,21 +245,24 @@ public class CommunityExecutionPlanner extends ExecutionPlanner {
      * <ul>
      *   <li>Per-change: for each change whose audit entry is in a successfully-applied terminal
      *       status, add an {@code ALREADY_APPLIED} {@link io.flamingock.internal.common.core.response.data.ChangeResult}.
-     *       Defensive merge ensures we never overwrite an operation-written record.</li>
+     *       Defensive merge in {@code markStageAlreadyAppliedFromAudit} ensures we never overwrite
+     *       an operation-written record (it skips IDs the operation has already recorded for,
+     *       regardless of that record's status).</li>
      *   <li>Per-stage verdict: {@code UP_TO_DATE} when every loaded change has a record (any
      *       writer) and every record is {@code ALREADY_APPLIED} or {@code APPLIED}; otherwise
-     *       {@code NEEDS_WORK}.</li>
+     *       {@code NEEDS_WORK}. Verdict transitions are monotone-forward.</li>
      * </ul>
      *
-     * <p>Stages whose {@code state} is already non-{@code NOT_STARTED} are skipped — the
-     * operation owns the truth there. Re-walking each iteration is safe: defensive merge +
-     * monotone verdict transitions guarantee no double-stamping and no downgrades.
+     * <p>Walks <strong>every</strong> stage on every iteration — including stages whose state has
+     * moved off {@code NOT_STARTED}. The defensive merge plus monotone-verdict invariants make
+     * this safe, and it picks up audit information the operation doesn't know about: external
+     * CLI marking ({@code mark-as-applied}) during a run, third-party audit-tool writes, and the
+     * upcoming parallel-stage feature where multiple instances apply different (non-dependent)
+     * changes from the same stage concurrently — the audit carries the full picture even though
+     * this instance's {@link PipelineRun} only knows what it applied.
      */
     private static void stampSnapshotFacts(PipelineRun pipelineRun, Map<String, AuditEntry> auditSnapshot) {
         for (StageRun stageRun : pipelineRun.getStageRuns()) {
-            if (!stageRun.getState().isNotStarted()) {
-                continue;
-            }
             List<String> alreadyAppliedIds = alreadyAppliedChangeIds(stageRun, auditSnapshot);
             if (!alreadyAppliedIds.isEmpty()) {
                 pipelineRun.markStageAlreadyAppliedFromAudit(stageRun.getName(), alreadyAppliedIds);

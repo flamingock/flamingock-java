@@ -34,11 +34,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PipelineRun {
@@ -165,13 +164,16 @@ public class PipelineRun {
     }
 
     public void markStageCompleted(String stageName, StageResult result) {
-        // Incoming result from the executor already carries state=COMPLETED. Preserve the
-        // totalChanges / plannerVerdict fields set on the in-memory StageResult before
-        // execution started — the executor doesn't know about them and would otherwise reset
-        // them to defaults.
+        // Incoming result from the executor already carries state=COMPLETED. Merge per-change
+        // records by ID: the executor's records win for the IDs it processed; records for
+        // changes the executor didn't process (i.e. NOT_REACHED records from PipelineRun
+        // construction) survive. Also preserve totalChanges / plannerVerdict — the executor
+        // doesn't know about them.
         StageRun run = lookupOrThrow(stageName);
         StageResult current = run.getResult();
+        List<ChangeResult> merged = mergeChangeRecords(current.getChanges(), result.getChanges());
         run.setResult(StageResult.builder(result)
+                .changes(merged)
                 .totalChanges(current.getTotalChanges())
                 .plannerVerdict(current.getPlannerVerdict())
                 .build());
@@ -186,11 +188,43 @@ public class PipelineRun {
         );
         StageRun run = lookupOrThrow(stageName);
         StageResult current = run.getResult();
+        // Same merge semantics as markStageCompleted: executor's records win for processed
+        // IDs; NOT_REACHED records for changes the executor never reached (stage stopped on
+        // a failure) stay intact.
+        List<ChangeResult> merged = mergeChangeRecords(current.getChanges(), resultFromExecutor.getChanges());
         run.setResult(StageResult.builder(resultFromExecutor)
                 .state(StageState.failed(errorInfo))
+                .changes(merged)
                 .totalChanges(current.getTotalChanges())
                 .plannerVerdict(current.getPlannerVerdict())
                 .build());
+    }
+
+    /**
+     * Merges two per-change record lists keyed by change ID. Incoming records (typically from
+     * the executor) take precedence for the IDs they carry; existing records (e.g. initial
+     * NOT_REACHED entries from {@code StageRun} construction) for any other ID survive. Order
+     * follows the first occurrence — existing entries keep their position; new IDs from
+     * {@code incoming} are appended.
+     */
+    private static List<ChangeResult> mergeChangeRecords(List<ChangeResult> existing,
+                                                          List<ChangeResult> incoming) {
+        LinkedHashMap<String, ChangeResult> byId = new LinkedHashMap<>();
+        if (existing != null) {
+            for (ChangeResult r : existing) {
+                if (r != null && r.getChangeId() != null) {
+                    byId.put(r.getChangeId(), r);
+                }
+            }
+        }
+        if (incoming != null) {
+            for (ChangeResult r : incoming) {
+                if (r != null && r.getChangeId() != null) {
+                    byId.put(r.getChangeId(), r);
+                }
+            }
+        }
+        return new ArrayList<>(byId.values());
     }
 
     /**
@@ -256,11 +290,15 @@ public class PipelineRun {
     }
 
     /**
-     * Adds {@link ChangeStatus#ALREADY_APPLIED} {@link ChangeResult}s for the given change IDs.
-     * Defensive merge: for any change ID the operation has already recorded a result for, the
-     * planner's would-be record is dropped — the operation's observation is more authoritative.
-     * This keeps the iterative planner→operation→planner cycle safe when audit re-reads see
-     * APPLIED entries the operation just wrote.
+     * Upgrades {@link ChangeStatus#NOT_REACHED} records to {@link ChangeStatus#ALREADY_APPLIED}
+     * for the given change IDs. Defensive merge: only upgrades records currently at NOT_REACHED;
+     * any record the operation (or a prior writer) has already populated with positive info
+     * (APPLIED / FAILED / ROLLED_BACK / ALREADY_APPLIED) is left untouched.
+     *
+     * <p>This codifies "operation wins, planner fills gaps" against the fully-populated record
+     * set that {@code StageRun} initializes with NOT_REACHED entries. As a fallback, IDs without
+     * an existing record (shouldn't happen — every loaded change starts with one — but defensive)
+     * get appended as fresh ALREADY_APPLIED.
      */
     public void markStageAlreadyAppliedFromAudit(String stageName, List<String> changeIds) {
         if (changeIds == null || changeIds.isEmpty()) {
@@ -271,21 +309,34 @@ public class PipelineRun {
         List<ChangeResult> merged = current.getChanges() != null
                 ? new ArrayList<>(current.getChanges())
                 : new ArrayList<>();
-        Set<String> existing = new HashSet<>();
-        for (ChangeResult c : merged) {
+        Map<String, Integer> indexById = new HashMap<>();
+        for (int i = 0; i < merged.size(); i++) {
+            ChangeResult c = merged.get(i);
             if (c != null && c.getChangeId() != null) {
-                existing.add(c.getChangeId());
+                indexById.put(c.getChangeId(), i);
             }
         }
         for (String id : changeIds) {
-            if (id == null || existing.contains(id)) {
+            if (id == null) {
                 continue;
             }
-            merged.add(ChangeResult.builder()
-                    .changeId(id)
-                    .status(ChangeStatus.ALREADY_APPLIED)
-                    .build());
-            existing.add(id);
+            Integer idx = indexById.get(id);
+            if (idx == null) {
+                // No existing record (defensive): append.
+                merged.add(ChangeResult.builder()
+                        .changeId(id)
+                        .status(ChangeStatus.ALREADY_APPLIED)
+                        .build());
+                indexById.put(id, merged.size() - 1);
+                continue;
+            }
+            if (merged.get(idx).isNotReached()) {
+                merged.set(idx, ChangeResult.builder()
+                        .changeId(id)
+                        .status(ChangeStatus.ALREADY_APPLIED)
+                        .build());
+            }
+            // else: operation (or prior planner write) has positive info — respect it.
         }
         run.setResult(StageResult.builder(current)
                 .changes(merged)
@@ -327,6 +378,7 @@ public class PipelineRun {
         int appliedChanges = 0;
         int skippedChanges = 0;
         int failedChanges = 0;
+        int notReachedChanges = 0;
         boolean anyFailed = false;
 
         for (StageRun stageRun : stageRuns) {
@@ -369,6 +421,8 @@ public class PipelineRun {
                         // ROLLED_BACK counts as a failed attempt for the user-facing aggregate.
                         // The per-change record retains the precise status for downstream consumers.
                         failedChanges++;
+                    } else if (change.getStatus() == ChangeStatus.NOT_REACHED) {
+                        notReachedChanges++;
                     }
                 }
             }
@@ -403,6 +457,7 @@ public class PipelineRun {
                 .appliedChanges(appliedChanges)
                 .skippedChanges(skippedChanges)
                 .failedChanges(failedChanges)
+                .notReachedChanges(notReachedChanges)
                 .stages(stages)
                 .build();
     }

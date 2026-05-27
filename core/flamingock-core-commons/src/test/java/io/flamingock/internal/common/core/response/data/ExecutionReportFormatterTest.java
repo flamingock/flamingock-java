@@ -122,10 +122,10 @@ class ExecutionReportFormatterTest {
         String out = ExecutionReportFormatter.report(result);
         assertTrue(out.contains("Flamingock execution report — SUCCESS"), out);
         assertTrue(out.contains("Stages:    1 total — 1 completed, 0 failed, 0 up to date, 0 not reached"), out);
-        assertTrue(out.contains("Changes:   1 total — 1 applied, 0 already at target state, 0 failed"), out);
+        assertTrue(out.contains("Changes:   1 total — 1 newly applied, 0 already applied, 0 failed, 0 not reached"), out);
         assertTrue(out.contains("[COMPLETED]"), out);
         assertTrue(out.contains("only-stage"), out);
-        assertTrue(out.contains("1 applied, 0 already at target state, 0 failed"), out);
+        assertTrue(out.contains("1 newly applied, 0 already applied, 0 failed, 0 not reached"), out);
         assertFalse(out.contains("Not reached"), "no Not-reached section when all stages reached: " + out);
     }
 
@@ -243,7 +243,7 @@ class ExecutionReportFormatterTest {
                 .build();
 
         String out = ExecutionReportFormatter.report(result);
-        assertTrue(out.contains("0 applied, 5 already at target state, 1 failed"),
+        assertTrue(out.contains("0 newly applied, 5 already applied, 1 failed"),
                 "per-stage block must count ROLLED_BACK as failed: " + out);
         assertTrue(out.contains("failed change(s): InsertEmployeeSeedData"),
                 "failed change(s) line must include the rolled-back change ID: " + out);
@@ -292,12 +292,12 @@ class ExecutionReportFormatterTest {
         assertTrue(out.contains("Flamingock execution report — NO CHANGES"),
                 "headline must render NO_CHANGES with a space: " + out);
         assertTrue(out.contains("Stages:    1 total — 0 completed, 0 failed, 1 up to date, 0 not reached"), out);
-        assertTrue(out.contains("Changes:   6 total — 0 applied, 6 already at target state, 0 failed"), out);
+        assertTrue(out.contains("Changes:   6 total — 0 newly applied, 6 already applied, 0 failed, 0 not reached"), out);
         assertTrue(out.contains("Per-stage breakdown:"),
                 "per-stage section should include [UP TO DATE] rows: " + out);
         assertTrue(out.contains("[UP TO DATE]"), out);
         assertTrue(out.contains("database-init"), out);
-        assertTrue(out.contains("(6 changes already at target state)"), out);
+        assertTrue(out.contains("(6 changes already applied)"), out);
         assertFalse(out.contains("Not reached"),
                 "Not-reached section must be omitted when nothing reached and nothing not-evaluated: " + out);
     }
@@ -321,7 +321,7 @@ class ExecutionReportFormatterTest {
 
         String out = ExecutionReportFormatter.report(result);
         assertTrue(out.contains("[UP TO DATE]"), out);
-        assertTrue(out.contains("(6 changes already at target state)"),
+        assertTrue(out.contains("(6 changes already applied)"),
                 "cloud-style up-to-date row should use totalChanges when per-change list is empty: " + out);
     }
 
@@ -359,14 +359,14 @@ class ExecutionReportFormatterTest {
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.FAILED)
                 .totalStages(4).completedStages(1).upToDateStages(1).notReachedStages(1).failedStages(1)
-                .totalChanges(10).appliedChanges(3).skippedChanges(3).failedChanges(1)
+                .totalChanges(10).appliedChanges(3).skippedChanges(3).failedChanges(1).notReachedChanges(3)
                 .totalDurationMs(170)
                 .stages(Arrays.asList(block1, block2, block3, block4))
                 .build();
 
         String out = ExecutionReportFormatter.report(result);
         assertTrue(out.contains("Stages:    4 total — 1 completed, 1 failed, 1 up to date, 1 not reached"), out);
-        assertTrue(out.contains("Changes:   10 total — 3 applied, 3 already at target state, 1 failed"), out);
+        assertTrue(out.contains("Changes:   10 total — 3 newly applied, 3 already applied, 1 failed, 3 not reached"), out);
         assertTrue(out.contains("Per-stage breakdown:"), out);
         assertTrue(out.contains("[COMPLETED] block-1"), out);
         assertTrue(out.contains("[UP TO DATE]") && out.contains("block-2"), out);

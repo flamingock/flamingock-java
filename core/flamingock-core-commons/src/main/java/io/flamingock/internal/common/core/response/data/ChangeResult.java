@@ -113,6 +113,10 @@ public class ChangeResult {
         return status == ChangeStatus.ALREADY_APPLIED;
     }
 
+    public boolean isNotReached() {
+        return status == ChangeStatus.NOT_REACHED;
+    }
+
     public static Builder builder() {
         return new Builder();
     }

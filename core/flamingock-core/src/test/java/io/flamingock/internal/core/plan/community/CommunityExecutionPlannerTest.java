@@ -313,6 +313,63 @@ class CommunityExecutionPlannerTest {
         verify(userStage, atLeastOnce()).applyActions(any());
     }
 
+    @Test
+    @DisplayName("Should enrich an operation-touched stage with audit-only changes (parallel-runner / external-marking scenario)")
+    void shouldEnrichOperationTouchedStageWithAuditOnlyChanges() {
+        // Stage has 2 changes. Operation applied c1 this run (state=COMPLETED, c1=APPLIED record).
+        // Audit shows both c1 AND c2 as APPLIED — c2 was applied by another instance (parallel
+        // runner) or by an external mark-as-applied. The planner should walk the stage despite its
+        // COMPLETED state and add c2 as ALREADY_APPLIED via defensive merge — without disturbing
+        // the operation's c1=APPLIED record or the stage's state.
+        AbstractLoadedChange c1 = mockLoadedChange("c1");
+        AbstractLoadedChange c2 = mockLoadedChange("c2");
+        AbstractLoadedStage stage = mockTypedStage("only-stage", io.flamingock.api.StageType.DEFAULT, c1, c2);
+
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
+        // Simulate operation's view: stage finished with only c1 recorded as APPLIED.
+        io.flamingock.internal.common.core.response.data.StageResult operationOutput =
+                io.flamingock.internal.common.core.response.data.StageResult.builder()
+                        .stageId("only-stage").stageName("only-stage")
+                        .state(io.flamingock.internal.common.core.response.data.StageState.COMPLETED)
+                        .addChange(io.flamingock.internal.common.core.response.data.ChangeResult.builder()
+                                .changeId("c1")
+                                .status(io.flamingock.internal.common.core.response.data.ChangeStatus.APPLIED)
+                                .build())
+                        .build();
+        pipelineRun.markStageCompleted("only-stage", operationOutput);
+
+        // Audit reflects what's authoritative system-wide: both c1 and c2 are applied.
+        Map<String, AuditEntry> snapshot = new HashMap<>();
+        snapshot.put("c1", buildAuditEntry("c1", AuditEntry.Status.APPLIED, null));
+        snapshot.put("c2", buildAuditEntry("c2", AuditEntry.Status.APPLIED, null));
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
+
+        planner.getNextExecution(pipelineRun);
+
+        StageRun run = pipelineRun.getStageRun("only-stage");
+        assertTrue(run.getState().isCompleted(),
+                "Operation's COMPLETED state must stand — planner never overwrites state");
+        // c1 stays APPLIED (operation wrote it; defensive merge preserves it). c2 added as
+        // ALREADY_APPLIED by the planner from the audit snapshot.
+        List<io.flamingock.internal.common.core.response.data.ChangeResult> records =
+                run.getResult().getChanges();
+        assertEquals(2, records.size(), "Planner should have added c2; total records = 2");
+        io.flamingock.internal.common.core.response.data.ChangeResult c1Record =
+                records.stream().filter(r -> "c1".equals(r.getChangeId())).findFirst().orElseThrow(AssertionError::new);
+        io.flamingock.internal.common.core.response.data.ChangeResult c2Record =
+                records.stream().filter(r -> "c2".equals(r.getChangeId())).findFirst().orElseThrow(AssertionError::new);
+        assertEquals(io.flamingock.internal.common.core.response.data.ChangeStatus.APPLIED, c1Record.getStatus(),
+                "c1 must remain APPLIED — operation's record is authoritative");
+        assertEquals(io.flamingock.internal.common.core.response.data.ChangeStatus.ALREADY_APPLIED, c2Record.getStatus(),
+                "c2 must be ALREADY_APPLIED — planner-added from audit");
+
+        // Aggregate reporting reflects the enriched view: 1 applied this run, 1 already at target.
+        io.flamingock.internal.common.core.response.data.ExecuteResponseData response = pipelineRun.toResponse();
+        assertEquals(1, response.getAppliedChanges());
+        assertEquals(1, response.getSkippedChanges());
+        assertEquals(0, response.getFailedChanges());
+    }
+
     private static AbstractLoadedChange mockLoadedChange(String id) {
         AbstractLoadedChange change = mock(AbstractLoadedChange.class);
         when(change.getId()).thenReturn(id);

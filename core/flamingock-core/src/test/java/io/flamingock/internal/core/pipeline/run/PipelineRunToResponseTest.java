@@ -244,28 +244,66 @@ class PipelineRunToResponseTest {
 
     @Test
     void markStageAlreadyAppliedFromAuditDefensiveMergeRespectsOperationWrites() {
-        // Operation already recorded c1 as APPLIED. Planner then attempts to add the same id
+        // Operation already recorded alpha-c0 as APPLIED. Planner then attempts to add the same id
         // as ALREADY_APPLIED on re-evaluation. Defensive merge: operation's APPLIED must stand.
+        // mockStageWithChangeCount generates IDs as "${stageName}-c${i}", so the 2 changes are
+        // alpha-c0 and alpha-c1; each starts as NOT_REACHED at PipelineRun.of() construction.
         AbstractLoadedStage stage = mockStageWithChangeCount("alpha", 2);
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
 
         StageResult executorOutput = StageResult.builder()
                 .stageId("alpha").stageName("alpha")
                 .state(StageState.COMPLETED)
-                .addChange(ChangeResult.builder().changeId("c1").status(ChangeStatus.APPLIED).build())
+                .addChange(ChangeResult.builder().changeId("alpha-c0").status(ChangeStatus.APPLIED).build())
                 .build();
 
         pipelineRun.start();
         pipelineRun.markStageCompleted("alpha", executorOutput);
-        // Planner re-evaluates and would add ALREADY_APPLIED for c1 and c2.
-        pipelineRun.markStageAlreadyAppliedFromAudit("alpha", Arrays.asList("c1", "c2"));
+        // Planner re-evaluates and would mark both as ALREADY_APPLIED. Defensive merge:
+        //   alpha-c0 has APPLIED already (operation wrote it) → stays APPLIED.
+        //   alpha-c1 is still NOT_REACHED → upgraded to ALREADY_APPLIED.
+        pipelineRun.markStageAlreadyAppliedFromAudit("alpha", Arrays.asList("alpha-c0", "alpha-c1"));
         pipelineRun.stop();
 
         ExecuteResponseData response = pipelineRun.toResponse();
-        // c1 stays APPLIED (operation wrote it); c2 is added as ALREADY_APPLIED by the planner.
-        assertEquals(1, response.getAppliedChanges());
-        assertEquals(1, response.getSkippedChanges());
+        assertEquals(1, response.getAppliedChanges(), "alpha-c0 stays APPLIED");
+        assertEquals(1, response.getSkippedChanges(), "alpha-c1 becomes ALREADY_APPLIED");
+        assertEquals(0, response.getNotReachedChanges(), "no NOT_REACHED records left");
         assertEquals(2, response.getStages().get(0).getChanges().size());
+    }
+
+    @Test
+    void midStageFailurePreservesNotReachedForUnprocessedChanges() {
+        // Mirrors the user's real-world SQL scenario: stage has 5 loaded changes; executor
+        // processed 3 (2 APPLIED + 1 FAILED) before stopping on the failure. The two
+        // unprocessed changes should remain NOT_REACHED so the report can show them explicitly.
+        AbstractLoadedStage stage = mockStageWithChangeCount("database-init", 5);
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
+
+        // Executor's view: 2 APPLIED + 1 FAILED; nothing for the trailing 2 changes.
+        StageResult executorOutput = StageResult.builder()
+                .stageId("database-init").stageName("database-init")
+                .state(StageState.failed(null))
+                .addChange(ChangeResult.builder().changeId("database-init-c0").status(ChangeStatus.APPLIED).build())
+                .addChange(ChangeResult.builder().changeId("database-init-c1").status(ChangeStatus.APPLIED).build())
+                .addChange(ChangeResult.builder().changeId("database-init-c2").status(ChangeStatus.FAILED).build())
+                .build();
+        StageExecutionException exception = StageExecutionException.fromResult(
+                new RuntimeException("boom"), executorOutput, "database-init-c2");
+
+        pipelineRun.start();
+        pipelineRun.markStageFailed("database-init", exception);
+        pipelineRun.stop();
+
+        ExecuteResponseData response = pipelineRun.toResponse();
+        assertEquals(5, response.getTotalChanges());
+        assertEquals(2, response.getAppliedChanges());
+        assertEquals(0, response.getSkippedChanges());
+        assertEquals(1, response.getFailedChanges());
+        assertEquals(2, response.getNotReachedChanges(),
+                "trailing unprocessed changes must remain NOT_REACHED after merge");
+        // Per-stage records contain entries for ALL 5 loaded changes.
+        assertEquals(5, response.getStages().get(0).getChanges().size());
     }
 
     @Test

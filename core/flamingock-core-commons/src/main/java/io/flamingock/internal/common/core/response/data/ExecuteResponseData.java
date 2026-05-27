@@ -42,6 +42,7 @@ public class ExecuteResponseData {
     private int appliedChanges;
     private int skippedChanges;
     private int failedChanges;
+    private int notReachedChanges;
 
     // Per-stage breakdown
     private List<StageResult> stages;
@@ -64,6 +65,7 @@ public class ExecuteResponseData {
         this.appliedChanges = builder.appliedChanges;
         this.skippedChanges = builder.skippedChanges;
         this.failedChanges = builder.failedChanges;
+        this.notReachedChanges = builder.notReachedChanges;
         this.stages = builder.stages != null ? builder.stages : new ArrayList<>();
     }
 
@@ -171,6 +173,14 @@ public class ExecuteResponseData {
         this.failedChanges = failedChanges;
     }
 
+    public int getNotReachedChanges() {
+        return notReachedChanges;
+    }
+
+    public void setNotReachedChanges(int notReachedChanges) {
+        this.notReachedChanges = notReachedChanges;
+    }
+
     public List<StageResult> getStages() {
         return stages;
     }
@@ -205,6 +215,7 @@ public class ExecuteResponseData {
         private int appliedChanges;
         private int skippedChanges;
         private int failedChanges;
+        private int notReachedChanges;
         private List<StageResult> stages = new ArrayList<>();
 
         public Builder status(ExecutionStatus status) {
@@ -269,6 +280,11 @@ public class ExecuteResponseData {
 
         public Builder failedChanges(int failedChanges) {
             this.failedChanges = failedChanges;
+            return this;
+        }
+
+        public Builder notReachedChanges(int notReachedChanges) {
+            this.notReachedChanges = notReachedChanges;
             return this;
         }
 
