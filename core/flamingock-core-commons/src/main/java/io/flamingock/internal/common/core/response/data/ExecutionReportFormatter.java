@@ -61,6 +61,11 @@ public final class ExecutionReportFormatter {
                     result.getFailedStages(),
                     result.getTotalStages(),
                     String.join(", ", failedStageNames));
+        } else if (result.getStatus() == ExecutionStatus.NO_CHANGES) {
+            return String.format(
+                    "Flamingock execution: no changes — %d stage(s) already up to date; duration=%dms",
+                    result.getTotalStages(),
+                    result.getTotalDurationMs());
         } else {
             headline = String.format(
                     "Flamingock execution completed: %d stage(s)",
@@ -68,10 +73,11 @@ public final class ExecutionReportFormatter {
         }
 
         String counts = String.format(
-                "; changes applied=%d, failed=%d, skipped=%d; duration=%dms",
+                "; changes newly_applied=%d, already_applied=%d, failed=%d, not_reached=%d; duration=%dms",
                 result.getAppliedChanges(),
-                result.getFailedChanges(),
                 result.getSkippedChanges(),
+                result.getFailedChanges(),
+                result.getNotReachedChanges(),
                 result.getTotalDurationMs());
 
         StringBuilder sb = new StringBuilder(headline).append(counts);
@@ -99,22 +105,52 @@ public final class ExecutionReportFormatter {
         sb.append(" Stages:    ")
           .append(result.getTotalStages()).append(" total — ")
           .append(result.getCompletedStages()).append(" completed, ")
-          .append(result.getFailedStages()).append(" failed")
+          .append(result.getFailedStages()).append(" failed, ")
+          .append(result.getUpToDateStages()).append(" up to date, ")
+          .append(result.getNotReachedStages()).append(" not reached")
           .append(NEWLINE);
         sb.append(" Changes:   ")
           .append(result.getTotalChanges()).append(" total — ")
-          .append(result.getAppliedChanges()).append(" applied, ")
-          .append(result.getSkippedChanges()).append(" skipped, ")
-          .append(result.getFailedChanges()).append(" failed")
+          .append(result.getAppliedChanges()).append(" newly applied, ")
+          .append(result.getSkippedChanges()).append(" already applied, ")
+          .append(result.getFailedChanges()).append(" failed, ")
+          .append(result.getNotReachedChanges()).append(" not reached")
           .append(NEWLINE);
 
+        // Per-stage breakdown: include any stage the operation touched (state != NOT_STARTED) OR
+        // the planner verdicted UP_TO_DATE. Stages with verdict NEEDS_WORK / NOT_EVALUATED and
+        // still-NOT_STARTED state fall into the "Not reached" section.
         List<StageResult> stages = nonNullStages(result);
-        if (!stages.isEmpty()) {
+        List<StageResult> inBreakdown = stages.stream()
+                .filter(s -> !s.getState().isNotStarted()
+                        || s.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE)
+                .collect(Collectors.toList());
+        if (!inBreakdown.isEmpty()) {
             sb.append(NEWLINE).append(" Per-stage breakdown:").append(NEWLINE).append(NEWLINE);
-            for (StageResult stage : stages) {
+            for (StageResult stage : inBreakdown) {
                 appendStageBlock(sb, stage);
                 sb.append(NEWLINE);
             }
+        }
+
+        // "Not reached" lists stages neither operation-touched nor verdicted UP_TO_DATE. Omitted
+        // when nothing was reached AND nothing was up to date (catastrophic-failure shape; the
+        // headline conveys it).
+        List<StageResult> notReached = stages.stream()
+                .filter(s -> s.getState().isNotStarted()
+                        && s.getPlannerVerdict() != PlannerVerdict.UP_TO_DATE)
+                .collect(Collectors.toList());
+        if (!notReached.isEmpty()
+                && (result.getCompletedStages() > 0
+                    || result.getFailedStages() > 0
+                    || result.getUpToDateStages() > 0)) {
+            sb.append(NEWLINE).append(" Not reached (").append(notReached.size()).append("):").append(NEWLINE);
+            for (StageResult stage : notReached) {
+                String name = stage.getStageName() != null ? stage.getStageName() : "(unnamed)";
+                sb.append("   - ").append(name)
+                  .append(" (").append(stage.getTotalChanges()).append(" changes)").append(NEWLINE);
+            }
+            sb.append(NEWLINE);
         }
 
         sb.append(LINE);
@@ -132,17 +168,41 @@ public final class ExecutionReportFormatter {
     private static void appendStageBlock(StringBuilder sb, StageResult stage) {
         String label = stageLabel(stage);
         String name = stage.getStageName() != null ? stage.getStageName() : "(unnamed)";
+
+        // [UP TO DATE] rows render without a duration (the executor never ran). Community has
+        // per-change ALREADY_APPLIED records (planner-populated from audit); cloud doesn't —
+        // we emit either a per-change line or a count-only line depending on what's available.
+        boolean isUpToDateOnly = stage.getState().isNotStarted()
+                && stage.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE;
+
+        if (isUpToDateOnly) {
+            int alreadyAppliedCount = stage.getChanges() != null
+                    ? (int) stage.getChanges().stream()
+                        .filter(c -> c != null && c.isAlreadyApplied())
+                        .count()
+                    : 0;
+            int reportableCount = alreadyAppliedCount > 0 ? alreadyAppliedCount : stage.getTotalChanges();
+            sb.append("   ").append(label).append(' ').append(name)
+              .append("  (").append(reportableCount).append(" changes already applied)")
+              .append(NEWLINE);
+            return;
+        }
+
         sb.append("   ").append(label).append(' ').append(name)
           .append(" (").append(stage.getDurationMs()).append(" ms)").append(NEWLINE);
 
         List<ChangeResult> changes = stage.getChanges() != null ? stage.getChanges() : Collections.emptyList();
         int applied = (int) changes.stream().filter(c -> c != null && c.isApplied()).count();
         int skipped = (int) changes.stream().filter(c -> c != null && c.isAlreadyApplied()).count();
-        int failed = (int) changes.stream().filter(c -> c != null && c.isFailed()).count();
+        // ROLLED_BACK is widened into the failed bucket — the change did not succeed even though
+        // the system was left clean. See PipelineRun.toResponse() for the matching aggregate logic.
+        int failed = (int) changes.stream().filter(c -> c != null && (c.isFailed() || c.isRolledBack())).count();
+        int notReached = (int) changes.stream().filter(c -> c != null && c.isNotReached()).count();
         sb.append("               changes: ")
-          .append(applied).append(" applied, ")
-          .append(skipped).append(" skipped, ")
-          .append(failed).append(" failed")
+          .append(applied).append(" newly applied, ")
+          .append(skipped).append(" already applied, ")
+          .append(failed).append(" failed, ")
+          .append(notReached).append(" not reached")
           .append(NEWLINE);
 
         StageState state = stage.getState();
@@ -179,6 +239,8 @@ public final class ExecutionReportFormatter {
     }
 
     private static String stageLabel(StageResult stage) {
+        // Two-dimensional resolution. State (operation-owned) wins whenever it's moved off
+        // NOT_STARTED. While state is still NOT_STARTED, the planner verdict decides.
         StageState state = stage.getState();
         if (state == null) {
             return "[UNKNOWN]   ";
@@ -195,10 +257,11 @@ public final class ExecutionReportFormatter {
         if (state.isStarted()) {
             return "[STARTED]  ";
         }
-        if (state.isNotStarted()) {
-            return "[PENDING]  ";
+        // state.isNotStarted() — verdict decides.
+        if (stage.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE) {
+            return "[UP TO DATE]";
         }
-        return "[UNKNOWN]   ";
+        return "[NOT REACHED]";
     }
 
     private static String statusLabel(ExecuteResponseData result) {
@@ -206,7 +269,9 @@ public final class ExecutionReportFormatter {
         if (status == null) {
             return "UNKNOWN";
         }
-        return status.name();
+        // Render the enum name with underscores replaced by spaces so the headline reads naturally
+        // ("NO CHANGES" rather than "NO_CHANGES").
+        return status.name().replace('_', ' ');
     }
 
     private static boolean isFailedStatus(ExecutionStatus status) {
@@ -261,7 +326,7 @@ public final class ExecutionReportFormatter {
             return Collections.emptyList();
         }
         return changes.stream()
-                .filter(c -> c != null && c.isFailed() && c.getChangeId() != null)
+                .filter(c -> c != null && (c.isFailed() || c.isRolledBack()) && c.getChangeId() != null)
                 .map(ChangeResult::getChangeId)
                 .collect(Collectors.toList());
     }

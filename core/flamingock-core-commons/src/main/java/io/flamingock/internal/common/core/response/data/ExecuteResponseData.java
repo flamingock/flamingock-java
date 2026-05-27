@@ -34,12 +34,15 @@ public class ExecuteResponseData {
 
     // Aggregate counts
     private int totalStages;
+    private int upToDateStages;
+    private int notReachedStages;
     private int completedStages;
     private int failedStages;
     private int totalChanges;
     private int appliedChanges;
     private int skippedChanges;
     private int failedChanges;
+    private int notReachedChanges;
 
     // Per-stage breakdown
     private List<StageResult> stages;
@@ -54,12 +57,15 @@ public class ExecuteResponseData {
         this.endTime = builder.endTime;
         this.totalDurationMs = builder.totalDurationMs;
         this.totalStages = builder.totalStages;
+        this.upToDateStages = builder.upToDateStages;
+        this.notReachedStages = builder.notReachedStages;
         this.completedStages = builder.completedStages;
         this.failedStages = builder.failedStages;
         this.totalChanges = builder.totalChanges;
         this.appliedChanges = builder.appliedChanges;
         this.skippedChanges = builder.skippedChanges;
         this.failedChanges = builder.failedChanges;
+        this.notReachedChanges = builder.notReachedChanges;
         this.stages = builder.stages != null ? builder.stages : new ArrayList<>();
     }
 
@@ -101,6 +107,22 @@ public class ExecuteResponseData {
 
     public void setTotalStages(int totalStages) {
         this.totalStages = totalStages;
+    }
+
+    public int getUpToDateStages() {
+        return upToDateStages;
+    }
+
+    public void setUpToDateStages(int upToDateStages) {
+        this.upToDateStages = upToDateStages;
+    }
+
+    public int getNotReachedStages() {
+        return notReachedStages;
+    }
+
+    public void setNotReachedStages(int notReachedStages) {
+        this.notReachedStages = notReachedStages;
     }
 
     public int getCompletedStages() {
@@ -151,6 +173,14 @@ public class ExecuteResponseData {
         this.failedChanges = failedChanges;
     }
 
+    public int getNotReachedChanges() {
+        return notReachedChanges;
+    }
+
+    public void setNotReachedChanges(int notReachedChanges) {
+        this.notReachedChanges = notReachedChanges;
+    }
+
     public List<StageResult> getStages() {
         return stages;
     }
@@ -177,12 +207,15 @@ public class ExecuteResponseData {
         private Instant endTime;
         private long totalDurationMs;
         private int totalStages;
+        private int upToDateStages;
+        private int notReachedStages;
         private int completedStages;
         private int failedStages;
         private int totalChanges;
         private int appliedChanges;
         private int skippedChanges;
         private int failedChanges;
+        private int notReachedChanges;
         private List<StageResult> stages = new ArrayList<>();
 
         public Builder status(ExecutionStatus status) {
@@ -207,6 +240,16 @@ public class ExecuteResponseData {
 
         public Builder totalStages(int totalStages) {
             this.totalStages = totalStages;
+            return this;
+        }
+
+        public Builder upToDateStages(int upToDateStages) {
+            this.upToDateStages = upToDateStages;
+            return this;
+        }
+
+        public Builder notReachedStages(int notReachedStages) {
+            this.notReachedStages = notReachedStages;
             return this;
         }
 
@@ -237,6 +280,11 @@ public class ExecuteResponseData {
 
         public Builder failedChanges(int failedChanges) {
             this.failedChanges = failedChanges;
+            return this;
+        }
+
+        public Builder notReachedChanges(int notReachedChanges) {
+            this.notReachedChanges = notReachedChanges;
             return this;
         }
 

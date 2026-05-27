@@ -34,7 +34,8 @@ import java.util.function.Consumer;
  */
 public final class DefaultPipelineFailedReportListener implements Consumer<IPipelineFailedEvent> {
 
-    public static final String LOGGER_NAME = "FK-Report";
+    // Bare component name; FlamingockLoggerFactory.getLogger prepends "FK-" → "FK-Report".
+    public static final String LOGGER_NAME = "Report";
 
     private static final Logger logger = FlamingockLoggerFactory.getLogger(LOGGER_NAME);
 

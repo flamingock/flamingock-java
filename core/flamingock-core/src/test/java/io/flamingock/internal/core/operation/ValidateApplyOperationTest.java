@@ -119,8 +119,9 @@ class ValidateApplyOperationTest {
         // Then
         assertNotNull(result);
         assertNotNull(result.getData());
-        // ValidateApplyOperation uses resultBuilder.noChanges() — status is SUCCESS when no pending changes
-        assertEquals(ExecutionStatus.SUCCESS, result.getData().getStatus());
+        // No pending changes → nothing reached, no failures → NO_CHANGES (new semantic; was
+        // SUCCESS before the reached/total split — see ERROR_REPORTING_PROPOSAL.md).
+        assertEquals(ExecutionStatus.NO_CHANGES, result.getData().getStatus());
     }
 
     @Test

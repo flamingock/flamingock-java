@@ -180,6 +180,9 @@ public abstract class AbstractPipelineTraverseOperation implements Operation<Exe
 
     private void runStage(String executionId, Lock lock, ExecutableStage executableStage, PipelineRun pipelineRun) {
         String stageName = executableStage.getName();
+        // The operation's downstream calls (markStageStarted in both MI and normal paths) move
+        // state off NOT_STARTED — that's the signal "executor was invoked" under the strict
+        // separation. No dedicated "reached" marker needed.
         try {
             executableStage.validate();
         } catch (ManualInterventionRequiredException miException) {

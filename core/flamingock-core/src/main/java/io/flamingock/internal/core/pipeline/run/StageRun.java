@@ -15,8 +15,11 @@
  */
 package io.flamingock.internal.core.pipeline.run;
 
+import io.flamingock.internal.common.core.response.data.ChangeResult;
+import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
+import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 
 public class StageRun {
@@ -26,11 +29,23 @@ public class StageRun {
 
     public StageRun(AbstractLoadedStage loadedStage) {
         this.loadedStage = loadedStage;
-        this.result = StageResult.builder()
+        // Every loaded change starts with a ChangeResult.NOT_REACHED record. Writers (operation
+        // via executor, planner via audit) transition records forward as they learn facts; any
+        // record still NOT_REACHED at end-of-run literally means "neither writer had positive
+        // info about this change."
+        StageResult.Builder builder = StageResult.builder()
                 .stageId(loadedStage.getName())
                 .stageName(loadedStage.getName())
-                .state(StageState.NOT_STARTED)
-                .build();
+                .state(StageState.NOT_STARTED);
+        if (loadedStage.getChanges() != null) {
+            for (AbstractLoadedChange change : loadedStage.getChanges()) {
+                builder.addChange(ChangeResult.builder()
+                        .changeId(change.getId())
+                        .status(ChangeStatus.NOT_REACHED)
+                        .build());
+            }
+        }
+        this.result = builder.build();
     }
 
     public String getName() {

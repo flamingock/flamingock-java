@@ -16,6 +16,7 @@
 package io.flamingock.internal.core.pipeline.run;
 
 import io.flamingock.api.StageType;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 
 import java.util.Collections;
 import java.util.List;
@@ -57,8 +58,10 @@ public final class StageRunBlock {
     }
 
     /**
-     * Every stage in this block has reached a terminal state (Completed / Failed / BlockedForMI).
-     * Vacuous true for an empty block.
+     * Every stage in this block has reached a terminal state — either by execution
+     * (Completed / Failed / BlockedForMI) or by planner verdict ({@link PlannerVerdict#UP_TO_DATE},
+     * which means the planner authoritatively confirmed no work needed). Vacuous true for an
+     * empty block.
      */
     public boolean isTerminal() {
         for (StageRun stageRun : stageRuns) {
@@ -70,12 +73,13 @@ public final class StageRunBlock {
     }
 
     /**
-     * Every stage in this block ended in {@code Completed}. Vacuous true for an empty block.
+     * Every stage in this block ended successfully — either Completed by execution or marked
+     * {@link PlannerVerdict#UP_TO_DATE} by the planner. Vacuous true for an empty block.
      * Precondition for the next block to safely begin under the future dependency-gating planner.
      */
     public boolean isSuccessful() {
         for (StageRun stageRun : stageRuns) {
-            if (!stageRun.getState().isCompleted()) {
+            if (!isSuccessfulStage(stageRun)) {
                 return false;
             }
         }
@@ -93,6 +97,13 @@ public final class StageRunBlock {
     }
 
     private static boolean isTerminalState(StageRun stageRun) {
-        return stageRun.getState().isCompleted() || stageRun.getState().isFailed();
+        return stageRun.getState().isCompleted()
+                || stageRun.getState().isFailed()
+                || stageRun.getResult().getPlannerVerdict() == PlannerVerdict.UP_TO_DATE;
+    }
+
+    private static boolean isSuccessfulStage(StageRun stageRun) {
+        return stageRun.getState().isCompleted()
+                || stageRun.getResult().getPlannerVerdict() == PlannerVerdict.UP_TO_DATE;
     }
 }

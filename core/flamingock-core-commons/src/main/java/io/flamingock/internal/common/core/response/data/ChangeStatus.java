@@ -20,27 +20,33 @@ package io.flamingock.internal.common.core.response.data;
  */
 public enum ChangeStatus {
     /**
-     * Change was successfully applied.
+     * Change was successfully applied during this run by the operation.
      */
     APPLIED,
 
     /**
-     * Change was already applied in a previous execution.
+     * Change was found already applied — either by the executor (SKIP action during this run)
+     * or by the planner (audit-confirmed without invoking the executor).
      */
     ALREADY_APPLIED,
 
     /**
-     * Change failed during execution.
+     * Change failed during execution this run.
      */
     FAILED,
 
     /**
-     * Change failed but was successfully rolled back.
+     * Change failed during execution this run and was successfully rolled back (transactional
+     * auto-rollback).
      */
     ROLLED_BACK,
 
     /**
-     * Change was not reached due to a prior failure.
+     * No positive information about this change in this run. Either the operation didn't process
+     * it (executor stopped on a prior failure, the stage was unreached, etc.) or the planner
+     * found no audit entry confirming it was applied. Default initial status assigned to every
+     * loaded change at {@code PipelineRun} construction; writers transition records forward as
+     * they learn facts.
      */
     NOT_REACHED
 }
