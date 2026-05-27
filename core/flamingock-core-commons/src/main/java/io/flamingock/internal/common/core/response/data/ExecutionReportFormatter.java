@@ -103,39 +103,45 @@ public final class ExecutionReportFormatter {
 
         sb.append(" Stages:    ")
           .append(result.getTotalStages()).append(" total — ")
-          .append(result.getReachedStages()).append(" reached, ")
           .append(result.getCompletedStages()).append(" completed, ")
-          .append(result.getFailedStages()).append(" failed")
+          .append(result.getFailedStages()).append(" failed, ")
+          .append(result.getUpToDateStages()).append(" up to date, ")
+          .append(result.getNotReachedStages()).append(" not reached")
           .append(NEWLINE);
         sb.append(" Changes:   ")
           .append(result.getTotalChanges()).append(" total — ")
-          .append(result.getReachedChanges()).append(" reached, ")
           .append(result.getAppliedChanges()).append(" applied, ")
-          .append(result.getSkippedChanges()).append(" skipped, ")
+          .append(result.getSkippedChanges()).append(" already at target state, ")
           .append(result.getFailedChanges()).append(" failed")
           .append(NEWLINE);
 
-        // Per-stage breakdown: only stages the executor actually opened. Stages the planner
-        // short-circuited past are surfaced separately in the "Not reached" section below (when
-        // the coverage is partial — a fully up-to-date run shows neither, the headline carries it).
+        // Per-stage breakdown: include any stage the operation touched (state != NOT_STARTED) OR
+        // the planner verdicted UP_TO_DATE. Stages with verdict NEEDS_WORK / NOT_EVALUATED and
+        // still-NOT_STARTED state fall into the "Not reached" section.
         List<StageResult> stages = nonNullStages(result);
-        List<StageResult> reached = stages.stream()
-                .filter(StageResult::isWasExecuted)
+        List<StageResult> inBreakdown = stages.stream()
+                .filter(s -> !s.getState().isNotStarted()
+                        || s.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE)
                 .collect(Collectors.toList());
-        if (!reached.isEmpty()) {
+        if (!inBreakdown.isEmpty()) {
             sb.append(NEWLINE).append(" Per-stage breakdown:").append(NEWLINE).append(NEWLINE);
-            for (StageResult stage : reached) {
+            for (StageResult stage : inBreakdown) {
                 appendStageBlock(sb, stage);
                 sb.append(NEWLINE);
             }
         }
 
-        // "Not reached" only appears when there's a partial: some stages ran, some didn't. The
-        // all-up-to-date case (0 reached) is communicated by the NO_CHANGES headline alone.
+        // "Not reached" lists stages neither operation-touched nor verdicted UP_TO_DATE. Omitted
+        // when nothing was reached AND nothing was up to date (catastrophic-failure shape; the
+        // headline conveys it).
         List<StageResult> notReached = stages.stream()
-                .filter(s -> !s.isWasExecuted())
+                .filter(s -> s.getState().isNotStarted()
+                        && s.getPlannerVerdict() != PlannerVerdict.UP_TO_DATE)
                 .collect(Collectors.toList());
-        if (!notReached.isEmpty() && result.getReachedStages() > 0) {
+        if (!notReached.isEmpty()
+                && (result.getCompletedStages() > 0
+                    || result.getFailedStages() > 0
+                    || result.getUpToDateStages() > 0)) {
             sb.append(NEWLINE).append(" Not reached (").append(notReached.size()).append("):").append(NEWLINE);
             for (StageResult stage : notReached) {
                 String name = stage.getStageName() != null ? stage.getStageName() : "(unnamed)";
@@ -160,6 +166,26 @@ public final class ExecutionReportFormatter {
     private static void appendStageBlock(StringBuilder sb, StageResult stage) {
         String label = stageLabel(stage);
         String name = stage.getStageName() != null ? stage.getStageName() : "(unnamed)";
+
+        // [UP TO DATE] rows render without a duration (the executor never ran). Community has
+        // per-change ALREADY_APPLIED records (planner-populated from audit); cloud doesn't —
+        // we emit either a per-change line or a count-only line depending on what's available.
+        boolean isUpToDateOnly = stage.getState().isNotStarted()
+                && stage.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE;
+
+        if (isUpToDateOnly) {
+            int alreadyAppliedCount = stage.getChanges() != null
+                    ? (int) stage.getChanges().stream()
+                        .filter(c -> c != null && c.isAlreadyApplied())
+                        .count()
+                    : 0;
+            int reportableCount = alreadyAppliedCount > 0 ? alreadyAppliedCount : stage.getTotalChanges();
+            sb.append("   ").append(label).append(' ').append(name)
+              .append("  (").append(reportableCount).append(" changes already at target state)")
+              .append(NEWLINE);
+            return;
+        }
+
         sb.append("   ").append(label).append(' ').append(name)
           .append(" (").append(stage.getDurationMs()).append(" ms)").append(NEWLINE);
 
@@ -171,7 +197,7 @@ public final class ExecutionReportFormatter {
         int failed = (int) changes.stream().filter(c -> c != null && (c.isFailed() || c.isRolledBack())).count();
         sb.append("               changes: ")
           .append(applied).append(" applied, ")
-          .append(skipped).append(" skipped, ")
+          .append(skipped).append(" already at target state, ")
           .append(failed).append(" failed")
           .append(NEWLINE);
 
@@ -209,6 +235,8 @@ public final class ExecutionReportFormatter {
     }
 
     private static String stageLabel(StageResult stage) {
+        // Two-dimensional resolution. State (operation-owned) wins whenever it's moved off
+        // NOT_STARTED. While state is still NOT_STARTED, the planner verdict decides.
         StageState state = stage.getState();
         if (state == null) {
             return "[UNKNOWN]   ";
@@ -225,10 +253,11 @@ public final class ExecutionReportFormatter {
         if (state.isStarted()) {
             return "[STARTED]  ";
         }
-        if (state.isNotStarted()) {
-            return "[PENDING]  ";
+        // state.isNotStarted() — verdict decides.
+        if (stage.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE) {
+            return "[UP TO DATE]";
         }
-        return "[UNKNOWN]   ";
+        return "[NOT REACHED]";
     }
 
     private static String statusLabel(ExecuteResponseData result) {

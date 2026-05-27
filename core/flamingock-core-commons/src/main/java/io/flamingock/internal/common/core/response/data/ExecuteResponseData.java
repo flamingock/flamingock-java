@@ -34,11 +34,11 @@ public class ExecuteResponseData {
 
     // Aggregate counts
     private int totalStages;
-    private int reachedStages;
+    private int upToDateStages;
+    private int notReachedStages;
     private int completedStages;
     private int failedStages;
     private int totalChanges;
-    private int reachedChanges;
     private int appliedChanges;
     private int skippedChanges;
     private int failedChanges;
@@ -56,11 +56,11 @@ public class ExecuteResponseData {
         this.endTime = builder.endTime;
         this.totalDurationMs = builder.totalDurationMs;
         this.totalStages = builder.totalStages;
-        this.reachedStages = builder.reachedStages;
+        this.upToDateStages = builder.upToDateStages;
+        this.notReachedStages = builder.notReachedStages;
         this.completedStages = builder.completedStages;
         this.failedStages = builder.failedStages;
         this.totalChanges = builder.totalChanges;
-        this.reachedChanges = builder.reachedChanges;
         this.appliedChanges = builder.appliedChanges;
         this.skippedChanges = builder.skippedChanges;
         this.failedChanges = builder.failedChanges;
@@ -107,12 +107,20 @@ public class ExecuteResponseData {
         this.totalStages = totalStages;
     }
 
-    public int getReachedStages() {
-        return reachedStages;
+    public int getUpToDateStages() {
+        return upToDateStages;
     }
 
-    public void setReachedStages(int reachedStages) {
-        this.reachedStages = reachedStages;
+    public void setUpToDateStages(int upToDateStages) {
+        this.upToDateStages = upToDateStages;
+    }
+
+    public int getNotReachedStages() {
+        return notReachedStages;
+    }
+
+    public void setNotReachedStages(int notReachedStages) {
+        this.notReachedStages = notReachedStages;
     }
 
     public int getCompletedStages() {
@@ -137,14 +145,6 @@ public class ExecuteResponseData {
 
     public void setTotalChanges(int totalChanges) {
         this.totalChanges = totalChanges;
-    }
-
-    public int getReachedChanges() {
-        return reachedChanges;
-    }
-
-    public void setReachedChanges(int reachedChanges) {
-        this.reachedChanges = reachedChanges;
     }
 
     public int getAppliedChanges() {
@@ -197,11 +197,11 @@ public class ExecuteResponseData {
         private Instant endTime;
         private long totalDurationMs;
         private int totalStages;
-        private int reachedStages;
+        private int upToDateStages;
+        private int notReachedStages;
         private int completedStages;
         private int failedStages;
         private int totalChanges;
-        private int reachedChanges;
         private int appliedChanges;
         private int skippedChanges;
         private int failedChanges;
@@ -232,8 +232,13 @@ public class ExecuteResponseData {
             return this;
         }
 
-        public Builder reachedStages(int reachedStages) {
-            this.reachedStages = reachedStages;
+        public Builder upToDateStages(int upToDateStages) {
+            this.upToDateStages = upToDateStages;
+            return this;
+        }
+
+        public Builder notReachedStages(int notReachedStages) {
+            this.notReachedStages = notReachedStages;
             return this;
         }
 
@@ -249,11 +254,6 @@ public class ExecuteResponseData {
 
         public Builder totalChanges(int totalChanges) {
             this.totalChanges = totalChanges;
-            return this;
-        }
-
-        public Builder reachedChanges(int reachedChanges) {
-            this.reachedChanges = reachedChanges;
             return this;
         }
 

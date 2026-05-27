@@ -27,6 +27,7 @@ import io.flamingock.internal.core.external.store.lock.community.CommunityLockSe
 import io.flamingock.internal.core.plan.ExecutionPlan;
 import io.flamingock.internal.core.pipeline.loaded.stage.AbstractLoadedStage;
 import io.flamingock.internal.core.pipeline.run.PipelineRun;
+import io.flamingock.internal.core.pipeline.run.StageRun;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
 import io.flamingock.internal.util.id.RunnerId;
 import org.junit.jupiter.api.BeforeEach;
@@ -209,12 +210,16 @@ class CommunityExecutionPlannerTest {
                 .stageId("changes").stageName("changes")
                 .state(io.flamingock.internal.common.core.response.data.StageState.COMPLETED).build());
 
+        // Always-walk reads the audit on every iteration (stamps planner verdicts onto stages
+        // operation hasn't terminal-stated). Provide an empty snapshot — the test isn't about
+        // verdicts, it's about CONTINUE shortcut when state already shows completion.
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
+
         ExecutionPlan plan = planner.getNextExecution(pipelineRun);
 
         assertFalse(plan.isAborted());
         assertFalse(plan.isExecutionRequired());
         verify(lockService, never()).upsert(any(), any(), anyLong());
-        verify(auditReader, never()).getAuditSnapshotByChangeId();
     }
 
     @Test
@@ -228,17 +233,18 @@ class CommunityExecutionPlannerTest {
         PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(systemStage, userStage));
         // System block fails — earlier block's failure must block downstream work.
         pipelineRun.markStageFailed("flamingock-system-stage", new RuntimeException("system stage exploded"));
+        // Always-walk reads audit every iteration; provide an empty snapshot.
+        when(auditReader.getAuditSnapshotByChangeId()).thenReturn(Collections.emptyMap());
 
         ExecutionPlan plan = planner.getNextExecution(pipelineRun);
 
         assertTrue(plan.isAborted());
         verify(lockService, never()).upsert(any(), any(), anyLong());
-        verify(auditReader, never()).getAuditSnapshotByChangeId();
     }
 
     @Test
-    @DisplayName("Should synthetically complete a block with no executable work (changes already applied per audit) and plan from the next block")
-    void shouldAdvancePastBlockWithNoExecutableWorkAndPlanFromNextBlock() {
+    @DisplayName("Should mark a block as UP_TO_DATE (planner verdict) when its changes are already applied per audit and plan from the next block")
+    void shouldMarkUpToDateBlockAndPlanFromNextBlock() {
         AbstractLoadedChange legacyChange = mockLoadedChange("legacy-c1");
         AbstractLoadedChange userChange = mockLoadedChange("user-c1");
         AbstractLoadedStage legacyStage = mockTypedStage("flamingock-legacy-stage", io.flamingock.api.StageType.LEGACY, legacyChange);
@@ -247,7 +253,9 @@ class CommunityExecutionPlannerTest {
         PipelineRun pipelineRun = PipelineRun.of(java.util.Arrays.asList(legacyStage, userStage));
         // Legacy stages are NOT_STARTED in the runtime view but the audit says their changes are
         // already applied (a previous run / another instance). The planner must advance past the
-        // legacy block, synthetically marking it Completed, then plan from the user (DEFAULT) block.
+        // legacy block by stamping UP_TO_DATE + ALREADY_APPLIED records, then plan the user
+        // (DEFAULT) block. The legacy stage's state stays NOT_STARTED — the verdict alone carries
+        // the "done" semantic.
         Map<String, AuditEntry> snapshot = new HashMap<>();
         snapshot.put("legacy-c1", buildAuditEntry("legacy-c1", AuditEntry.Status.APPLIED, null));
         when(auditReader.getAuditSnapshotByChangeId()).thenReturn(snapshot);
@@ -256,13 +264,24 @@ class CommunityExecutionPlannerTest {
 
         ExecutionPlan plan = planner.getNextExecution(pipelineRun);
 
-        // Legacy block was inspected, found no executable work, and synthetically completed.
-        assertTrue(pipelineRun.getStageRun("flamingock-legacy-stage").getState().isCompleted(),
-                "Legacy stage should be synthetically marked Completed when its changes are already applied per audit");
+        StageRun legacyRun = pipelineRun.getStageRun("flamingock-legacy-stage");
+        assertEquals(io.flamingock.internal.common.core.response.data.PlannerVerdict.UP_TO_DATE,
+                legacyRun.getResult().getPlannerVerdict(),
+                "Legacy stage should carry UP_TO_DATE verdict from the planner");
+        assertTrue(legacyRun.getState().isNotStarted(),
+                "Legacy stage state stays NOT_STARTED — verdict carries the done semantic; "
+                        + "operation never invoked the executor for this stage");
+        assertEquals(1, legacyRun.getResult().getChanges().size(),
+                "Planner should have populated one ALREADY_APPLIED ChangeResult from the audit snapshot");
+        assertEquals("legacy-c1", legacyRun.getResult().getChanges().get(0).getChangeId());
+        assertEquals(io.flamingock.internal.common.core.response.data.ChangeStatus.ALREADY_APPLIED,
+                legacyRun.getResult().getChanges().get(0).getStatus());
         // Planner advanced to the DEFAULT block and acquired the lock for actual work.
+        // The legacy block was verdicted UP_TO_DATE during stampSnapshotFacts and never reached
+        // buildExecutableStages — so applyActions is NOT called on legacyStage; only userStage.
         assertFalse(plan.isAborted());
         assertTrue(plan.isExecutionRequired());
-        verify(legacyStage, atLeastOnce()).applyActions(any());
+        verify(legacyStage, never()).applyActions(any());
         verify(userStage, atLeastOnce()).applyActions(any());
         verify(lockService, atLeastOnce()).upsert(any(), any(), anyLong());
     }

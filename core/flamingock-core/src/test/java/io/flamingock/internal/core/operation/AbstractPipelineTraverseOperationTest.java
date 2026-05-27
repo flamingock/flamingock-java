@@ -212,9 +212,9 @@ class AbstractPipelineTraverseOperationTest {
     }
 
     private static StageExecutor.Output successOutput(String stageName) {
-        // Include one APPLIED ChangeResult so reachedChanges > 0 → status SUCCESS rather than
-        // NO_CHANGES. An empty changes list would correctly resolve to NO_CHANGES under the
-        // reached/total model — not what the happy-path test is exercising.
+        // Include one APPLIED ChangeResult so appliedChanges > 0 → status SUCCESS rather than
+        // NO_CHANGES. An empty changes list would correctly resolve to NO_CHANGES — not what the
+        // happy-path test is exercising.
         StageResult result = StageResult.builder()
                 .stageId(stageName)
                 .stageName(stageName)

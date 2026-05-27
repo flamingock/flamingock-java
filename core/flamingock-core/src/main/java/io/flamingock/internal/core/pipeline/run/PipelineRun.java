@@ -22,6 +22,7 @@ import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.core.pipeline.execution.StageExecutionException;
@@ -33,9 +34,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PipelineRun {
@@ -161,30 +164,16 @@ public class PipelineRun {
                 .build());
     }
 
-    /**
-     * Marks a stage as "reached" — the executor was invoked on it. Called from the operation
-     * layer at the very entry of {@code runStage}. Drives the reporter's "reached vs total"
-     * split: stages where the planner short-circuited (e.g. synthetic-completion in community,
-     * CONTINUE in cloud) keep {@code wasExecuted=false} and are excluded from the per-stage
-     * breakdown.
-     */
-    public void markStageReached(String stageName) {
-        StageRun run = lookupOrThrow(stageName);
-        run.setResult(StageResult.builder(run.getResult())
-                .wasExecuted(true)
-                .build());
-    }
-
     public void markStageCompleted(String stageName, StageResult result) {
         // Incoming result from the executor already carries state=COMPLETED. Preserve the
-        // wasExecuted / totalChanges fields that were set on the in-memory StageResult before
+        // totalChanges / plannerVerdict fields set on the in-memory StageResult before
         // execution started — the executor doesn't know about them and would otherwise reset
         // them to defaults.
         StageRun run = lookupOrThrow(stageName);
         StageResult current = run.getResult();
         run.setResult(StageResult.builder(result)
-                .wasExecuted(current.isWasExecuted())
                 .totalChanges(current.getTotalChanges())
+                .plannerVerdict(current.getPlannerVerdict())
                 .build());
     }
 
@@ -199,8 +188,8 @@ public class PipelineRun {
         StageResult current = run.getResult();
         run.setResult(StageResult.builder(resultFromExecutor)
                 .state(StageState.failed(errorInfo))
-                .wasExecuted(current.isWasExecuted())
                 .totalChanges(current.getTotalChanges())
+                .plannerVerdict(current.getPlannerVerdict())
                 .build());
     }
 
@@ -228,6 +217,81 @@ public class PipelineRun {
                 .build());
     }
 
+    // -------------------------------------------------------------------------
+    //  Planner-side writers
+    // -------------------------------------------------------------------------
+    //
+    //  These methods are owned by the planner — they reflect facts the planner reads from audit
+    //  (community) or the cloud server. Conflict resolution rule: operation wins, planner fills
+    //  gaps. Both methods enforce that here so callers don't have to be careful.
+
+    /**
+     * Records the planner's verdict on a stage. Monotone forward through the chain
+     * NOT_EVALUATED → NEEDS_WORK → UP_TO_DATE:
+     * <ul>
+     *   <li>NOT_EVALUATED → anything: always allowed.</li>
+     *   <li>NEEDS_WORK → UP_TO_DATE: allowed (subsequent snapshot reads see new applies).</li>
+     *   <li>UP_TO_DATE → anything: rejected (UP_TO_DATE is terminal).</li>
+     *   <li>Any → NOT_EVALUATED: rejected (never move back to default).</li>
+     * </ul>
+     * Designed to be safe across the iterative {@code getNextExecution} loop where the planner
+     * re-walks the snapshot each iteration.
+     */
+    public void markStageVerdict(String stageName, PlannerVerdict verdict) {
+        if (verdict == null || verdict == PlannerVerdict.NOT_EVALUATED) {
+            return; // monotone-forward; never move back to default
+        }
+        StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
+        PlannerVerdict currentVerdict = current.getPlannerVerdict();
+        if (currentVerdict == PlannerVerdict.UP_TO_DATE) {
+            return; // UP_TO_DATE is terminal — no further transitions
+        }
+        if (currentVerdict == PlannerVerdict.NEEDS_WORK && verdict == PlannerVerdict.NEEDS_WORK) {
+            return; // no-op
+        }
+        run.setResult(StageResult.builder(current)
+                .plannerVerdict(verdict)
+                .build());
+    }
+
+    /**
+     * Adds {@link ChangeStatus#ALREADY_APPLIED} {@link ChangeResult}s for the given change IDs.
+     * Defensive merge: for any change ID the operation has already recorded a result for, the
+     * planner's would-be record is dropped — the operation's observation is more authoritative.
+     * This keeps the iterative planner→operation→planner cycle safe when audit re-reads see
+     * APPLIED entries the operation just wrote.
+     */
+    public void markStageAlreadyAppliedFromAudit(String stageName, List<String> changeIds) {
+        if (changeIds == null || changeIds.isEmpty()) {
+            return;
+        }
+        StageRun run = lookupOrThrow(stageName);
+        StageResult current = run.getResult();
+        List<ChangeResult> merged = current.getChanges() != null
+                ? new ArrayList<>(current.getChanges())
+                : new ArrayList<>();
+        Set<String> existing = new HashSet<>();
+        for (ChangeResult c : merged) {
+            if (c != null && c.getChangeId() != null) {
+                existing.add(c.getChangeId());
+            }
+        }
+        for (String id : changeIds) {
+            if (id == null || existing.contains(id)) {
+                continue;
+            }
+            merged.add(ChangeResult.builder()
+                    .changeId(id)
+                    .status(ChangeStatus.ALREADY_APPLIED)
+                    .build());
+            existing.add(id);
+        }
+        run.setResult(StageResult.builder(current)
+                .changes(merged)
+                .build());
+    }
+
     private StageRun lookupOrThrow(String stageName) {
         StageRun run = byName.get(stageName);
         if (run == null) {
@@ -237,27 +301,29 @@ public class PipelineRun {
     }
 
     /**
-     * Builds the response data view derived from per-stage state.
+     * Builds the response data view from per-stage state.
      *
-     * <p>Two counter dimensions: {@code total*} comes from the loaded pipeline (structural,
-     * always known), {@code reached*} comes from this run (the executor was invoked on the
-     * stage). The {@code applied/skipped/failed} buckets only count changes from reached stages
-     * — by construction {@code applied + skipped + failed == reachedChanges}.
+     * <p>Per-stage buckets are derived from the two-dimensional model:
+     * <ul>
+     *   <li>{@code completedStages} / {@code failedStages} — execution dimension (operation-owned).</li>
+     *   <li>{@code upToDateStages} — verdict dimension (planner confirmed up to date while state
+     *       was still NOT_STARTED).</li>
+     *   <li>{@code notReachedStages} — remaining stages (NOT_STARTED + no UP_TO_DATE verdict).</li>
+     * </ul>
      *
-     * <p>Status is {@code FAILED} iff any stage failed, {@code NO_CHANGES} iff nothing was
-     * reached and nothing failed (e.g. a re-run where the audit already covers every change),
-     * else {@code SUCCESS}. Pipeline-wide errors (e.g., LockException) are signalled by the
-     * operation post-loop via {@code ExecuteResponseData.setStatus(FAILED)} after
+     * <p>Status is {@code FAILED} iff any stage failed, {@code NO_CHANGES} iff no work happened
+     * (no applies, no failures), else {@code SUCCESS}. Pipeline-wide errors (e.g., LockException)
+     * are signalled by the operation post-loop via {@code ExecuteResponseData.setStatus(FAILED)} after
      * {@code toResponse()} returns.
      */
     public ExecuteResponseData toResponse() {
         List<StageResult> stages = new ArrayList<>();
         int totalStages = 0;
-        int reachedStages = 0;
+        int upToDateStages = 0;
+        int notReachedStages = 0;
         int completedStages = 0;
         int failedStages = 0;
         int totalChanges = 0;
-        int reachedChanges = 0;
         int appliedChanges = 0;
         int skippedChanges = 0;
         int failedChanges = 0;
@@ -266,7 +332,8 @@ public class PipelineRun {
         for (StageRun stageRun : stageRuns) {
             StageResult stageResult = stageRun.getResult();
             // Stamp the structural change count on the per-stage result so the formatter can
-            // render "(N changes)" for unreached stages where the per-change list is empty.
+            // render "(N changes)" for unreached / up-to-date stages where the per-change list
+            // may be empty.
             int loadedChangeCount = stageRun.getLoadedStage().getChanges() != null
                     ? stageRun.getLoadedStage().getChanges().size()
                     : 0;
@@ -275,19 +342,20 @@ public class PipelineRun {
             totalStages++;
             totalChanges += loadedChangeCount;
 
-            if (stageResult.isWasExecuted()) {
-                reachedStages++;
-                if (stageResult.getChanges() != null) {
-                    reachedChanges += stageResult.getChanges().size();
-                }
-            }
-
+            // Per-stage bucketing: state is operation-owned, plannerVerdict is planner-owned.
+            // Operation wins when present; planner verdict applies only while state is NOT_STARTED.
             StageState state = stageResult.getState();
-            if (state.isCompleted()) {
-                completedStages++;
-            } else if (state.isFailed()) {
+            if (state.isFailed()) {
                 failedStages++;
                 anyFailed = true;
+            } else if (state.isCompleted()) {
+                completedStages++;
+            } else if (state.isNotStarted()
+                    && stageResult.getPlannerVerdict() == PlannerVerdict.UP_TO_DATE) {
+                upToDateStages++;
+            } else {
+                // NOT_STARTED + verdict != UP_TO_DATE (NEEDS_WORK or NOT_EVALUATED), or rare STARTED.
+                notReachedStages++;
             }
 
             if (stageResult.getChanges() != null) {
@@ -309,8 +377,9 @@ public class PipelineRun {
         ExecutionStatus status;
         if (anyFailed) {
             status = ExecutionStatus.FAILED;
-        } else if (reachedChanges == 0) {
-            // Nothing was touched and nothing failed — pipeline is up to date.
+        } else if (appliedChanges == 0 && failedChanges == 0) {
+            // No work happened (no applies, no failures). Could be: every stage was up to date,
+            // or pipeline was empty. Either way → NO_CHANGES for the headline.
             status = ExecutionStatus.NO_CHANGES;
         } else {
             status = ExecutionStatus.SUCCESS;
@@ -326,11 +395,11 @@ public class PipelineRun {
                 .endTime(stoppedAt)
                 .totalDurationMs(durationMs)
                 .totalStages(totalStages)
-                .reachedStages(reachedStages)
+                .upToDateStages(upToDateStages)
+                .notReachedStages(notReachedStages)
                 .completedStages(completedStages)
                 .failedStages(failedStages)
                 .totalChanges(totalChanges)
-                .reachedChanges(reachedChanges)
                 .appliedChanges(appliedChanges)
                 .skippedChanges(skippedChanges)
                 .failedChanges(failedChanges)

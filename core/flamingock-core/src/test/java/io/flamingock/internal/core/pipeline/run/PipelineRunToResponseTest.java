@@ -21,6 +21,7 @@ import io.flamingock.internal.common.core.response.data.ChangeStatus;
 import io.flamingock.internal.common.core.response.data.ErrorInfo;
 import io.flamingock.internal.common.core.response.data.ExecuteResponseData;
 import io.flamingock.internal.common.core.response.data.ExecutionStatus;
+import io.flamingock.internal.common.core.response.data.PlannerVerdict;
 import io.flamingock.internal.common.core.response.data.StageResult;
 import io.flamingock.internal.common.core.response.data.StageState;
 import io.flamingock.internal.core.change.loaded.AbstractLoadedChange;
@@ -51,11 +52,9 @@ class PipelineRunToResponseTest {
         // Empty pipeline → nothing reached, nothing failed → NO_CHANGES (not SUCCESS).
         assertEquals(ExecutionStatus.NO_CHANGES, response.getStatus());
         assertEquals(0, response.getTotalStages());
-        assertEquals(0, response.getReachedStages());
         assertEquals(0, response.getCompletedStages());
         assertEquals(0, response.getFailedStages());
         assertEquals(0, response.getTotalChanges());
-        assertEquals(0, response.getReachedChanges());
         assertNotNull(response.getStartTime());
         assertNotNull(response.getEndTime());
     }
@@ -67,9 +66,7 @@ class PipelineRunToResponseTest {
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(stageA, stageB));
 
         pipelineRun.start();
-        pipelineRun.markStageReached("alpha");
         pipelineRun.markStageCompleted("alpha", completedStageResult("alpha", 2 /*applied*/, 1 /*skipped*/));
-        pipelineRun.markStageReached("beta");
         pipelineRun.markStageCompleted("beta", completedStageResult("beta", 1, 0));
         pipelineRun.stop();
 
@@ -77,11 +74,9 @@ class PipelineRunToResponseTest {
 
         assertEquals(ExecutionStatus.SUCCESS, response.getStatus());
         assertEquals(2, response.getTotalStages());
-        assertEquals(2, response.getReachedStages());
         assertEquals(2, response.getCompletedStages());
         assertEquals(0, response.getFailedStages());
         assertEquals(4, response.getTotalChanges());     // 3 (loaded alpha) + 1 (loaded beta)
-        assertEquals(4, response.getReachedChanges());   // 3 (alpha result) + 1 (beta result)
         assertEquals(3, response.getAppliedChanges());   // 2 + 1
         assertEquals(1, response.getSkippedChanges());   // 1 + 0
         assertEquals(0, response.getFailedChanges());
@@ -98,9 +93,7 @@ class PipelineRunToResponseTest {
                 betaCause, failedStageResult("beta"), "change-b1");
 
         pipelineRun.start();
-        pipelineRun.markStageReached("alpha");
         pipelineRun.markStageCompleted("alpha", completedStageResult("alpha", 1, 0));
-        pipelineRun.markStageReached("beta");
         pipelineRun.markStageFailed("beta", betaException);
         pipelineRun.stop();
 
@@ -108,11 +101,9 @@ class PipelineRunToResponseTest {
 
         assertEquals(ExecutionStatus.FAILED, response.getStatus());
         assertEquals(2, response.getTotalStages());
-        assertEquals(2, response.getReachedStages());
         assertEquals(1, response.getCompletedStages());
         assertEquals(1, response.getFailedStages());
         assertEquals(2, response.getTotalChanges());     // 1 (loaded alpha) + 1 (loaded beta)
-        assertEquals(2, response.getReachedChanges());
         assertEquals(1, response.getAppliedChanges());
         assertEquals(1, response.getFailedChanges());
 
@@ -131,7 +122,7 @@ class PipelineRunToResponseTest {
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(alpha));
 
         pipelineRun.start();
-        pipelineRun.markStageReached("alpha");
+        pipelineRun.markStageStarted("alpha");
         pipelineRun.markStageBlockedFromMI(
                 "alpha",
                 java.util.Arrays.asList(new RecoveryIssue("c1")));
@@ -158,7 +149,6 @@ class PipelineRunToResponseTest {
         PipelineRun pipelineRun = PipelineRun.of(Arrays.asList(stageA, stageB));
 
         pipelineRun.start();
-        pipelineRun.markStageReached("alpha");
         pipelineRun.markStageCompleted("alpha", completedStageResult("alpha", 1, 0));
         // beta never advances past NOT_STARTED — still appears in the response as unreached.
         pipelineRun.stop();
@@ -166,14 +156,12 @@ class PipelineRunToResponseTest {
         ExecuteResponseData response = pipelineRun.toResponse();
 
         assertEquals(2, response.getTotalStages());
-        assertEquals(1, response.getReachedStages());
         assertEquals(1, response.getCompletedStages());
         assertEquals(0, response.getFailedStages());
+        assertEquals(1, response.getNotReachedStages());
         assertEquals(2, response.getStages().size());
         assertTrue(response.getStages().get(0).getState().isCompleted());
-        assertTrue(response.getStages().get(0).isWasExecuted());
         assertTrue(response.getStages().get(1).getState().isNotStarted());
-        assertFalse(response.getStages().get(1).isWasExecuted());
     }
 
     @Test
@@ -192,14 +180,12 @@ class PipelineRunToResponseTest {
                 .build();
 
         pipelineRun.start();
-        pipelineRun.markStageReached("database-init");
         pipelineRun.markStageFailed("database-init", StageExecutionException.fromResult(
                 new RuntimeException("boom"), stageResult, "c3"));
         pipelineRun.stop();
 
         ExecuteResponseData response = pipelineRun.toResponse();
         assertEquals(3, response.getTotalChanges());
-        assertEquals(3, response.getReachedChanges());
         assertEquals(0, response.getAppliedChanges());
         assertEquals(2, response.getSkippedChanges());
         assertEquals(1, response.getFailedChanges(),
@@ -209,9 +195,8 @@ class PipelineRunToResponseTest {
     @Test
     void allStagesUnreachedYieldsNoChangesAndCarriesStructuralTotalChanges() {
         // Run-2 case: every change in the pipeline is already applied; planner short-circuits,
-        // runStage never invoked. Stages stay NOT_STARTED + wasExecuted=false. The response
-        // must carry the structural totalChanges (6) so the report doesn't read "0 of nothing",
-        // and status must be NO_CHANGES.
+        // runStage never invoked. Stages stay NOT_STARTED. The response must carry the structural
+        // totalChanges (6) so the report doesn't read "0 of nothing", and status must be NO_CHANGES.
         AbstractLoadedStage stage = mockStageWithChangeCount("database-init", 6);
         PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
 
@@ -222,15 +207,78 @@ class PipelineRunToResponseTest {
 
         assertEquals(ExecutionStatus.NO_CHANGES, response.getStatus());
         assertEquals(1, response.getTotalStages());
-        assertEquals(0, response.getReachedStages());
+        assertEquals(1, response.getNotReachedStages());
         assertEquals(6, response.getTotalChanges());
-        assertEquals(0, response.getReachedChanges());
         assertEquals(0, response.getAppliedChanges());
         assertEquals(0, response.getFailedChanges());
-        assertFalse(response.getStages().get(0).isWasExecuted());
+        assertTrue(response.getStages().get(0).getState().isNotStarted());
         // Structural change count stamped on the StageResult so the formatter's "Not reached" row
         // can render "(N changes)" even though the per-change list is empty.
         assertEquals(6, response.getStages().get(0).getTotalChanges());
+    }
+
+    @Test
+    void upToDateVerdictWithAuditPopulatedChangesAggregatesAsExpected() {
+        // Community case: planner marks UP_TO_DATE and populates ALREADY_APPLIED records from
+        // audit. Aggregate must show: 1 stage up-to-date, 0 reached, 6 changes already at target.
+        AbstractLoadedStage stage = mockStageWithChangeCount("database-init", 6);
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
+
+        pipelineRun.start();
+        pipelineRun.markStageAlreadyAppliedFromAudit("database-init",
+                Arrays.asList("database-init-c0", "database-init-c1", "database-init-c2",
+                              "database-init-c3", "database-init-c4", "database-init-c5"));
+        pipelineRun.markStageVerdict("database-init", PlannerVerdict.UP_TO_DATE);
+        pipelineRun.stop();
+
+        ExecuteResponseData response = pipelineRun.toResponse();
+        assertEquals(ExecutionStatus.NO_CHANGES, response.getStatus());
+        assertEquals(1, response.getUpToDateStages());
+        assertEquals(0, response.getNotReachedStages());
+        assertEquals(6, response.getSkippedChanges(),
+                "ALREADY_APPLIED records added by the planner must roll up into skippedChanges");
+        assertEquals(0, response.getAppliedChanges());
+        assertEquals(0, response.getFailedChanges());
+        assertEquals(PlannerVerdict.UP_TO_DATE, response.getStages().get(0).getPlannerVerdict());
+    }
+
+    @Test
+    void markStageAlreadyAppliedFromAuditDefensiveMergeRespectsOperationWrites() {
+        // Operation already recorded c1 as APPLIED. Planner then attempts to add the same id
+        // as ALREADY_APPLIED on re-evaluation. Defensive merge: operation's APPLIED must stand.
+        AbstractLoadedStage stage = mockStageWithChangeCount("alpha", 2);
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
+
+        StageResult executorOutput = StageResult.builder()
+                .stageId("alpha").stageName("alpha")
+                .state(StageState.COMPLETED)
+                .addChange(ChangeResult.builder().changeId("c1").status(ChangeStatus.APPLIED).build())
+                .build();
+
+        pipelineRun.start();
+        pipelineRun.markStageCompleted("alpha", executorOutput);
+        // Planner re-evaluates and would add ALREADY_APPLIED for c1 and c2.
+        pipelineRun.markStageAlreadyAppliedFromAudit("alpha", Arrays.asList("c1", "c2"));
+        pipelineRun.stop();
+
+        ExecuteResponseData response = pipelineRun.toResponse();
+        // c1 stays APPLIED (operation wrote it); c2 is added as ALREADY_APPLIED by the planner.
+        assertEquals(1, response.getAppliedChanges());
+        assertEquals(1, response.getSkippedChanges());
+        assertEquals(2, response.getStages().get(0).getChanges().size());
+    }
+
+    @Test
+    void markStageVerdictIsMonotone() {
+        AbstractLoadedStage stage = mockStageWithChangeCount("alpha", 1);
+        PipelineRun pipelineRun = PipelineRun.of(java.util.Collections.singletonList(stage));
+
+        pipelineRun.markStageVerdict("alpha", PlannerVerdict.UP_TO_DATE);
+        // Attempt to downgrade — must be silently ignored.
+        pipelineRun.markStageVerdict("alpha", PlannerVerdict.NEEDS_WORK);
+
+        ExecuteResponseData response = pipelineRun.toResponse();
+        assertEquals(PlannerVerdict.UP_TO_DATE, response.getStages().get(0).getPlannerVerdict());
     }
 
     private static AbstractLoadedStage mockStage(String name) {
