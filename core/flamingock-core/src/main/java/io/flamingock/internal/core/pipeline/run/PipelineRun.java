@@ -376,7 +376,7 @@ public class PipelineRun {
         int failedStages = 0;
         int totalChanges = 0;
         int appliedChanges = 0;
-        int skippedChanges = 0;
+        int alreadyAppliedChanges = 0;
         int failedChanges = 0;
         int notReachedChanges = 0;
         boolean anyFailed = false;
@@ -415,7 +415,7 @@ public class PipelineRun {
                     if (change.getStatus() == ChangeStatus.APPLIED) {
                         appliedChanges++;
                     } else if (change.getStatus() == ChangeStatus.ALREADY_APPLIED) {
-                        skippedChanges++;
+                        alreadyAppliedChanges++;
                     } else if (change.getStatus() == ChangeStatus.FAILED
                             || change.getStatus() == ChangeStatus.ROLLED_BACK) {
                         // ROLLED_BACK counts as a failed attempt for the user-facing aggregate.
@@ -455,7 +455,7 @@ public class PipelineRun {
                 .failedStages(failedStages)
                 .totalChanges(totalChanges)
                 .appliedChanges(appliedChanges)
-                .skippedChanges(skippedChanges)
+                .alreadyAppliedChanges(alreadyAppliedChanges)
                 .failedChanges(failedChanges)
                 .notReachedChanges(notReachedChanges)
                 .stages(stages)

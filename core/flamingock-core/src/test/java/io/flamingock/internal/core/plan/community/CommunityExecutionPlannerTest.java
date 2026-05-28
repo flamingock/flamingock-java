@@ -366,7 +366,7 @@ class CommunityExecutionPlannerTest {
         // Aggregate reporting reflects the enriched view: 1 applied this run, 1 already at target.
         io.flamingock.internal.common.core.response.data.ExecuteResponseData response = pipelineRun.toResponse();
         assertEquals(1, response.getAppliedChanges());
-        assertEquals(1, response.getSkippedChanges());
+        assertEquals(1, response.getAlreadyAppliedChanges());
         assertEquals(0, response.getFailedChanges());
     }
 

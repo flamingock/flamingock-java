@@ -40,7 +40,7 @@ public class ExecuteResponseData {
     private int failedStages;
     private int totalChanges;
     private int appliedChanges;
-    private int skippedChanges;
+    private int alreadyAppliedChanges;
     private int failedChanges;
     private int notReachedChanges;
 
@@ -63,7 +63,7 @@ public class ExecuteResponseData {
         this.failedStages = builder.failedStages;
         this.totalChanges = builder.totalChanges;
         this.appliedChanges = builder.appliedChanges;
-        this.skippedChanges = builder.skippedChanges;
+        this.alreadyAppliedChanges = builder.alreadyAppliedChanges;
         this.failedChanges = builder.failedChanges;
         this.notReachedChanges = builder.notReachedChanges;
         this.stages = builder.stages != null ? builder.stages : new ArrayList<>();
@@ -157,12 +157,12 @@ public class ExecuteResponseData {
         this.appliedChanges = appliedChanges;
     }
 
-    public int getSkippedChanges() {
-        return skippedChanges;
+    public int getAlreadyAppliedChanges() {
+        return alreadyAppliedChanges;
     }
 
-    public void setSkippedChanges(int skippedChanges) {
-        this.skippedChanges = skippedChanges;
+    public void setAlreadyAppliedChanges(int alreadyAppliedChanges) {
+        this.alreadyAppliedChanges = alreadyAppliedChanges;
     }
 
     public int getFailedChanges() {
@@ -213,7 +213,7 @@ public class ExecuteResponseData {
         private int failedStages;
         private int totalChanges;
         private int appliedChanges;
-        private int skippedChanges;
+        private int alreadyAppliedChanges;
         private int failedChanges;
         private int notReachedChanges;
         private List<StageResult> stages = new ArrayList<>();
@@ -273,8 +273,8 @@ public class ExecuteResponseData {
             return this;
         }
 
-        public Builder skippedChanges(int skippedChanges) {
-            this.skippedChanges = skippedChanges;
+        public Builder alreadyAppliedChanges(int alreadyAppliedChanges) {
+            this.alreadyAppliedChanges = alreadyAppliedChanges;
             return this;
         }
 
