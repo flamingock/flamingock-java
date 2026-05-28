@@ -78,7 +78,7 @@ class PipelineRunToResponseTest {
         assertEquals(0, response.getFailedStages());
         assertEquals(4, response.getTotalChanges());     // 3 (loaded alpha) + 1 (loaded beta)
         assertEquals(3, response.getAppliedChanges());   // 2 + 1
-        assertEquals(1, response.getSkippedChanges());   // 1 + 0
+        assertEquals(1, response.getAlreadyAppliedChanges());   // 1 + 0
         assertEquals(0, response.getFailedChanges());
     }
 
@@ -187,7 +187,7 @@ class PipelineRunToResponseTest {
         ExecuteResponseData response = pipelineRun.toResponse();
         assertEquals(3, response.getTotalChanges());
         assertEquals(0, response.getAppliedChanges());
-        assertEquals(2, response.getSkippedChanges());
+        assertEquals(2, response.getAlreadyAppliedChanges());
         assertEquals(1, response.getFailedChanges(),
                 "ROLLED_BACK must be counted as failed in the user-facing aggregate");
     }
@@ -235,8 +235,8 @@ class PipelineRunToResponseTest {
         assertEquals(ExecutionStatus.NO_CHANGES, response.getStatus());
         assertEquals(1, response.getUpToDateStages());
         assertEquals(0, response.getNotReachedStages());
-        assertEquals(6, response.getSkippedChanges(),
-                "ALREADY_APPLIED records added by the planner must roll up into skippedChanges");
+        assertEquals(6, response.getAlreadyAppliedChanges(),
+                "ALREADY_APPLIED records added by the planner must roll up into alreadyAppliedChanges");
         assertEquals(0, response.getAppliedChanges());
         assertEquals(0, response.getFailedChanges());
         assertEquals(PlannerVerdict.UP_TO_DATE, response.getStages().get(0).getPlannerVerdict());
@@ -267,7 +267,7 @@ class PipelineRunToResponseTest {
 
         ExecuteResponseData response = pipelineRun.toResponse();
         assertEquals(1, response.getAppliedChanges(), "alpha-c0 stays APPLIED");
-        assertEquals(1, response.getSkippedChanges(), "alpha-c1 becomes ALREADY_APPLIED");
+        assertEquals(1, response.getAlreadyAppliedChanges(), "alpha-c1 becomes ALREADY_APPLIED");
         assertEquals(0, response.getNotReachedChanges(), "no NOT_REACHED records left");
         assertEquals(2, response.getStages().get(0).getChanges().size());
     }
@@ -298,7 +298,7 @@ class PipelineRunToResponseTest {
         ExecuteResponseData response = pipelineRun.toResponse();
         assertEquals(5, response.getTotalChanges());
         assertEquals(2, response.getAppliedChanges());
-        assertEquals(0, response.getSkippedChanges());
+        assertEquals(0, response.getAlreadyAppliedChanges());
         assertEquals(1, response.getFailedChanges());
         assertEquals(2, response.getNotReachedChanges(),
                 "trailing unprocessed changes must remain NOT_REACHED after merge");

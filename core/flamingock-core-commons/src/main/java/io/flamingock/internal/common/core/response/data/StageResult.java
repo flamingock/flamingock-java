@@ -141,7 +141,7 @@ public class StageResult {
                 .count();
     }
 
-    public int getSkippedCount() {
+    public int getAlreadyAppliedCount() {
         return (int) changes.stream()
                 .filter(ChangeResult::isAlreadyApplied)
                 .count();

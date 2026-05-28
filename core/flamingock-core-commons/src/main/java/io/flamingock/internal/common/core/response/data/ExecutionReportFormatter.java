@@ -75,7 +75,7 @@ public final class ExecutionReportFormatter {
         String counts = String.format(
                 "; changes newly_applied=%d, already_applied=%d, failed=%d, not_reached=%d; duration=%dms",
                 result.getAppliedChanges(),
-                result.getSkippedChanges(),
+                result.getAlreadyAppliedChanges(),
                 result.getFailedChanges(),
                 result.getNotReachedChanges(),
                 result.getTotalDurationMs());
@@ -112,7 +112,7 @@ public final class ExecutionReportFormatter {
         sb.append(" Changes:   ")
           .append(result.getTotalChanges()).append(" total — ")
           .append(result.getAppliedChanges()).append(" newly applied, ")
-          .append(result.getSkippedChanges()).append(" already applied, ")
+          .append(result.getAlreadyAppliedChanges()).append(" already applied, ")
           .append(result.getFailedChanges()).append(" failed, ")
           .append(result.getNotReachedChanges()).append(" not reached")
           .append(NEWLINE);

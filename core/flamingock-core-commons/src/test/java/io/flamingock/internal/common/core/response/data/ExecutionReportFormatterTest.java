@@ -43,7 +43,7 @@ class ExecutionReportFormatterTest {
                 .failedStages(0)
                 .totalChanges(3)
                 .appliedChanges(3)
-                .skippedChanges(0)
+                .alreadyAppliedChanges(0)
                 .failedChanges(0)
                 .totalDurationMs(120)
                 .build();
@@ -237,7 +237,7 @@ class ExecutionReportFormatterTest {
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.FAILED)
                 .totalStages(1).failedStages(1)
-                .totalChanges(6).appliedChanges(0).skippedChanges(5).failedChanges(1)
+                .totalChanges(6).appliedChanges(0).alreadyAppliedChanges(5).failedChanges(1)
                 .totalDurationMs(221)
                 .stages(Collections.singletonList(stage))
                 .build();
@@ -284,7 +284,7 @@ class ExecutionReportFormatterTest {
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.NO_CHANGES)
                 .totalStages(1).upToDateStages(1).notReachedStages(0).failedStages(0)
-                .totalChanges(6).appliedChanges(0).skippedChanges(6).failedChanges(0)
+                .totalChanges(6).appliedChanges(0).alreadyAppliedChanges(6).failedChanges(0)
                 .stages(Collections.singletonList(upToDate))
                 .build();
 
@@ -359,7 +359,7 @@ class ExecutionReportFormatterTest {
         ExecuteResponseData result = ExecuteResponseData.builder()
                 .status(ExecutionStatus.FAILED)
                 .totalStages(4).completedStages(1).upToDateStages(1).notReachedStages(1).failedStages(1)
-                .totalChanges(10).appliedChanges(3).skippedChanges(3).failedChanges(1).notReachedChanges(3)
+                .totalChanges(10).appliedChanges(3).alreadyAppliedChanges(3).failedChanges(1).notReachedChanges(3)
                 .totalDurationMs(170)
                 .stages(Arrays.asList(block1, block2, block3, block4))
                 .build();

@@ -118,8 +118,8 @@ public class StageExecutor {
             resultBuilder.stopTimer().completed();
             Duration stageDuration = Duration.between(stageStart, LocalDateTime.now());
             StageResult stageResult = resultBuilder.build();
-            logger.info("Stage completed [stage={} duration={} applied={} skipped={}]",
-                    stageName, formatDuration(stageDuration), stageResult.getAppliedCount(), stageResult.getSkippedCount());
+            logger.info("Stage completed [stage={} duration={} applied={} alreadyApplied={}]",
+                    stageName, formatDuration(stageDuration), stageResult.getAppliedCount(), stageResult.getAlreadyAppliedCount());
             return new Output(stageResult);
 
         } catch (StageExecutionException stageExecutionException) {

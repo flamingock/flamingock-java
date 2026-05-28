@@ -66,7 +66,7 @@ class ResponseSerializationTest {
                 .failedStages(0)
                 .totalChanges(5)
                 .appliedChanges(3)
-                .skippedChanges(2)
+                .alreadyAppliedChanges(2)
                 .failedChanges(0)
                 .addStage(StageResult.builder()
                         .stageId("stage-1")
@@ -93,7 +93,7 @@ class ResponseSerializationTest {
         assertEquals(2, deserialized.getCompletedStages());
         assertEquals(5, deserialized.getTotalChanges());
         assertEquals(3, deserialized.getAppliedChanges());
-        assertEquals(2, deserialized.getSkippedChanges());
+        assertEquals(2, deserialized.getAlreadyAppliedChanges());
         assertEquals(0, deserialized.getFailedChanges());
         assertEquals(1, deserialized.getStages().size());
         assertEquals("stage-1", deserialized.getStages().get(0).getStageId());
@@ -156,7 +156,7 @@ class ResponseSerializationTest {
                 .completedStages(1)
                 .totalChanges(2)
                 .appliedChanges(2)
-                .skippedChanges(0)
+                .alreadyAppliedChanges(0)
                 .failedChanges(0)
                 .totalDurationMs(500)
                 .build();
