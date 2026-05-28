@@ -36,6 +36,8 @@ import io.flamingock.internal.util.TimeService;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
+import java.util.Optional;
+
 /**
  * Change process strategy for non-transactional target systems.
  *
@@ -119,9 +121,17 @@ public class NonTxChangeProcessStrategy extends AbstractChangeProcessStrategy<Ta
     }
 
     private void rollbackActualChangeAndChain(FailedAfterExecutionAuditStep rollableFailedStep, ExecutionContext executionContext) {
-        RollableStep rollableStep = rollableFailedStep.getRollbackStep();
-        ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
-        stepLogger.logManualRollbackResult(rolledBack);
-        auditAndLogManualRollback(rolledBack, executionContext);
+        Optional<RollableStep> rollableStepOpt = rollableFailedStep.getRollbackStep();
+        if (rollableStepOpt.isPresent()) {
+            ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(
+                    rollableStepOpt.get()::rollback, buildExecutionRuntime());
+            stepLogger.logManualRollbackResult(rolledBack);
+            auditAndLogManualRollback(rolledBack, executionContext);
+        } else {
+            // No @RollbackExecution declared: don't invoke rollback, don't write a manual-rollback
+            // audit entry. The upstream FAILED audit entry already written by auditAndLogExecution
+            // is the truth, and recovery is gated by the configured RecoveryStrategy.
+            stepLogger.logRollbackSkippedNoMethodDeclared(rollableFailedStep.getChange().getId());
+        }
     }
 }

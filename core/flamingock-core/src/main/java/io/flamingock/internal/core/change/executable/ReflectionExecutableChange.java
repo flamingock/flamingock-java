@@ -60,5 +60,10 @@ public abstract class ReflectionExecutableChange<LOADED_CHANGE extends AbstractR
         return rollbackMethod.getName();
     }
 
+    @Override
+    public boolean hasRollback() {
+        return rollbackMethod != null;
+    }
+
 
 }

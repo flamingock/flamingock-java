@@ -56,6 +56,12 @@ public class CodeExecutableChange<LOADED_CHANGE extends AbstractReflectionLoaded
 
     @Override
     public void rollback(ExecutionRuntime executionRuntime) {
+        if (rollbackMethod == null) {
+            // Invariant violation: callers must gate rollback() on hasRollback(). Surfacing this
+            // as a meaningful error instead of letting it manifest as an NPE inside reflection.
+            throw new IllegalStateException("Change [" + getId() + "] has no @RollbackExecution method; "
+                    + "rollback() must not be called. Callers should gate on hasRollback().");
+        }
         executeInternal(executionRuntime, rollbackMethod);
     }
 

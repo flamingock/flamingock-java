@@ -70,6 +70,16 @@ public class ChangeProcessLogger {
         logger.info("Change rolled back [change={} duration={}]", executableChange.getId(), formattedDuration);
     }
 
+    /**
+     * Logs a single WARN line when a failed change cannot be rolled back because it doesn't
+     * declare a {@code @RollbackExecution} method. The audit entry stays at {@code FAILED} (no
+     * manual-rollback entry follows); manual intervention is surfaced by the execution report
+     * separately, so this line stays terse.
+     */
+    public void logRollbackSkippedNoMethodDeclared(String changeId) {
+        logger.warn("Rollback skipped [change={}]: no rollback method provided", changeId);
+    }
+
     public void logManualRollbackResult(ManualRolledBackStep rolledBack) {
         String changeId = rolledBack.getChange().getId();
         String duration = formatDuration(rolledBack.getDuration());
