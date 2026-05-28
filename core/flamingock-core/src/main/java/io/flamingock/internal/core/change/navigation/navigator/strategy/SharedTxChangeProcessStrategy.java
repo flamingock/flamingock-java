@@ -39,6 +39,8 @@ import io.flamingock.internal.util.Wrapper;
 import io.flamingock.internal.util.log.FlamingockLoggerFactory;
 import org.slf4j.Logger;
 
+import java.util.Optional;
+
 /**
  * Change process strategy for transactional target systems with shared audit store.
  *
@@ -149,10 +151,18 @@ public class SharedTxChangeProcessStrategy extends AbstractChangeProcessStrategy
 
     private void rollbackChain(RollableFailedStep rollableFailedStep, ExecutionContext executionContext) {
         // Skip first rollback (main change) as transaction already rolled it back
-        RollableStep rollableStep = rollableFailedStep.getRollbackStep();
-        ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(rollableStep::rollback, buildExecutionRuntime());
-        stepLogger.logManualRollbackResult(rolledBack);
-        auditAndLogManualRollback(rolledBack, executionContext);
+        Optional<RollableStep> rollableStepOpt = rollableFailedStep.getRollbackStep();
+        if (rollableStepOpt.isPresent()) {
+            ManualRolledBackStep rolledBack = targetSystemOps.rollbackChange(
+                    rollableStepOpt.get()::rollback, buildExecutionRuntime());
+            stepLogger.logManualRollbackResult(rolledBack);
+            auditAndLogManualRollback(rolledBack, executionContext);
+        } else {
+            // No @RollbackExecution declared: don't invoke rollback, don't write a manual-rollback
+            // audit entry. The upstream FAILED audit entry stands as the truth, and recovery is
+            // gated by the configured RecoveryStrategy.
+            stepLogger.logRollbackSkippedNoMethodDeclared(rollableFailedStep.getChange().getId());
+        }
     }
 
 

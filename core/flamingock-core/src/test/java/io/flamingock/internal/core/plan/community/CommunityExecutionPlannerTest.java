@@ -451,6 +451,7 @@ class CommunityExecutionPlannerTest {
         @Override public String getApplyMethodName() { return "apply"; }
         @Override public void rollback(io.flamingock.internal.core.runtime.ExecutionRuntime rt) {}
         @Override public String getRollbackMethodName() { return null; }
+        @Override public boolean hasRollback() { return false; }
         @Override public java.util.Optional<String> getOrder() { return java.util.Optional.of("001"); }
         @Override public String getAuthor() { return "test"; }
         @Override public String getSource() { return "Test"; }
